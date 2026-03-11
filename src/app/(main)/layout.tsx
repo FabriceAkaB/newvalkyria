@@ -1,6 +1,5 @@
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { StickyCta } from "@/components/sticky-cta";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,7 +8,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <SiteHeader />
       <main className="pt-20">{children}</main>
       <SiteFooter />
-      <StickyCta />
     </>
   );
 }
