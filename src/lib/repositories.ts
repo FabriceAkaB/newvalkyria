@@ -216,3 +216,15 @@ export async function setCapacityConfig(category: string, maxSpots: number): Pro
 
   if (error) throw new Error(error.message);
 }
+
+export async function deleteLead(id: string): Promise<void> {
+  if (!isSupabaseAvailable()) {
+    // In mock mode there's no persistent store to delete from
+    return;
+  }
+
+  const supabase = getSupabaseAdminClient() as any;
+  const { error } = await supabase.from("leads").delete().eq("id", id);
+
+  if (error) throw new Error(error.message);
+}
