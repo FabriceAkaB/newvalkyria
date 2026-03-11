@@ -11,12 +11,24 @@ export function MainNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  // Lock scroll when menu open — position:fixed trick works on iOS Safari too
   useEffect(() => {
-    document.documentElement.style.overflow = open ? "hidden" : "";
-    document.body.style.overflow = open ? "hidden" : "";
+    if (open) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+    } else {
+      const scrollY = parseFloat(document.body.style.top || "0") * -1;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      if (scrollY) window.scrollTo({ top: scrollY, behavior: "instant" });
+    }
     return () => {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
     };
   }, [open]);
 

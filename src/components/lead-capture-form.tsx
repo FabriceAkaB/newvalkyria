@@ -8,12 +8,14 @@ import { CATEGORY_LABELS, CATEGORY_SUBLABELS } from "@/lib/categories";
 import type { AddonId, CheckoutResponse, LeadFormInput } from "@/types/contracts";
 
 const CITIES = [
-  "Rosemère",
-  "Mirabel",
-  "Saint-Thérèse",
-  "Boisbriand",
   "Blainville",
+  "Boisbriand",
+  "Mirabel",
+  "Pointe-Calumet",
+  "Rosemère",
+  "Saint-Eustache",
   "Sainte-Thérèse",
+  "Saint-Thérèse",
   "Autre"
 ];
 

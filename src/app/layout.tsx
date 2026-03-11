@@ -17,6 +17,12 @@ const archivoBlack = Archivo_Black({
   weight: "400"
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: "New Valkyria | Académie technique féminine",
   description:

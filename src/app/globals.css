@@ -22,10 +22,14 @@ body {
 
 html {
   overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 body {
   font-family: var(--font-body), sans-serif;
+  overflow-x: hidden;
+  max-width: 100%;
+  overscroll-behavior-x: none;
 }
 
 .font-display {
@@ -1143,8 +1147,7 @@ body {
 
 /*
   Panel positionné juste SOUS le header (top: 5rem = 80px).
-  z-index: 39 → sous le header sticky (z-40) et le sticky CTA (z-40),
-  mais au-dessus du contenu de page.
+  z-index: 45 → au-dessus du sticky CTA (z-40) pour le couvrir quand ouvert.
   Le header reste visible et sert de "barre de fermeture".
 */
 .mob-panel {
@@ -1153,7 +1156,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 39;
+  z-index: 45;
   display: flex;
   flex-direction: column;
   background: var(--color-ink);
@@ -1234,6 +1237,8 @@ body {
   border-top: 1px solid rgba(196, 164, 228, 0.2);
   background: rgba(11, 9, 18, 0.96);
   backdrop-filter: blur(14px);
+  /* iPhone home indicator safe area */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .sticky-cta-inner {
