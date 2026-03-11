@@ -4,6 +4,7 @@ import Stripe from "stripe";
 
 import { sendConfirmationEmail } from "@/lib/email";
 import { env } from "@/lib/env";
+import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
 import { hasProcessedStripeEvent, markLeadAsPaid, recordStripeEvent } from "@/lib/repositories";
 import { getStripeClient } from "@/lib/stripe";
@@ -50,6 +51,8 @@ export async function POST(request: Request) {
 
       if (lead.email) {
         emailToNotify = lead.email;
+        // Mise à jour du statut dans Google Sheets (fire-and-forget)
+        void markLeadPaidInSheet(lead.email, leadId);
       }
       if (lead.parent_name) {
         parentName = lead.parent_name;
