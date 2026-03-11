@@ -8,14 +8,15 @@ const MAX_PER_CAT = parseInt(process.env.ENROLLMENT_CAP ?? "10", 10);
 
 // ── Helpers ───────────────────────────────────────────────────
 
-function makeSlot(taken: number) {
-  const clamped = Math.min(taken, MAX_PER_CAT);
-  const remaining = MAX_PER_CAT - clamped;
+function makeSlot(taken: number, max: number) {
+  const clamped = Math.min(taken, max);
+  const remaining = max - clamped;
   return {
     taken: clamped,
     remaining,
+    max,
     isFull: remaining === 0,
-    percentage: Math.round((clamped / MAX_PER_CAT) * 100)
+    percentage: Math.round((clamped / max) * 100)
   };
 }
 
@@ -75,12 +76,22 @@ async function fetchCountsByCategory(): Promise<Record<AgeCategory, number>> {
   return zero;
 }
 
+/** Récupère les overrides de capacité par catégorie depuis Supabase (silencieux si indisponible). */
+async function fetchCapacityConfig(): Promise<Record<string, number>> {
+  try {
+    const { getCapacityConfig } = await import("@/lib/repositories");
+    return await getCapacityConfig();
+  } catch {
+    return {};
+  }
+}
+
 // ── Public types ──────────────────────────────────────────────
 
 export type CategoryCapacity = CategorySlot;
 
 export type CapacityData = {
-  /** Capacité max par catégorie */
+  /** Capacité max par défaut (global) */
   maxPerCategory: number;
   /** Détail par tranche d'âge */
   byCategory: Record<AgeCategory, CategoryCapacity>;
@@ -88,17 +99,21 @@ export type CapacityData = {
   total: { taken: number; remaining: number; isFull: boolean; percentage: number };
 };
 
-// ── Compute (sans cache) — pour l'API polling ─────────────────
+// ── Shared compute logic ───────────────────────────────────────
 
-export async function computeCapacityData(): Promise<CapacityData> {
-  const counts = await fetchCountsByCategory();
-
+function buildCapacityData(
+  counts: Record<AgeCategory, number>,
+  config: Record<string, number>
+): CapacityData {
   const byCategory = Object.fromEntries(
-    AGE_CATEGORIES.map((cat) => [cat, makeSlot(counts[cat])])
+    AGE_CATEGORIES.map((cat) => {
+      const max = config[cat] ?? MAX_PER_CAT;
+      return [cat, makeSlot(counts[cat], max)];
+    })
   ) as Record<AgeCategory, CategoryCapacity>;
 
-  const totalTaken = AGE_CATEGORIES.reduce((s, c) => s + byCategory[c].taken, 0);
-  const totalMax = MAX_PER_CAT * AGE_CATEGORIES.length;
+  const totalTaken     = AGE_CATEGORIES.reduce((s, c) => s + byCategory[c].taken, 0);
+  const totalMax       = AGE_CATEGORIES.reduce((s, c) => s + byCategory[c].max, 0);
   const totalRemaining = Math.max(0, totalMax - totalTaken);
 
   return {
@@ -113,30 +128,25 @@ export async function computeCapacityData(): Promise<CapacityData> {
   };
 }
 
+// ── Compute (sans cache) — pour l'API polling et l'admin ──────
+
+export async function computeCapacityData(): Promise<CapacityData> {
+  const [counts, config] = await Promise.all([
+    fetchCountsByCategory(),
+    fetchCapacityConfig()
+  ]);
+  return buildCapacityData(counts, config);
+}
+
 // ── Cached fetch ──────────────────────────────────────────────
 
 export const getCapacityData = unstable_cache(
   async (): Promise<CapacityData> => {
-    const counts = await fetchCountsByCategory();
-
-    const byCategory = Object.fromEntries(
-      AGE_CATEGORIES.map((cat) => [cat, makeSlot(counts[cat])])
-    ) as Record<AgeCategory, CategoryCapacity>;
-
-    const totalTaken = AGE_CATEGORIES.reduce((s, c) => s + byCategory[c].taken, 0);
-    const totalMax = MAX_PER_CAT * AGE_CATEGORIES.length;
-    const totalRemaining = Math.max(0, totalMax - totalTaken);
-
-    return {
-      maxPerCategory: MAX_PER_CAT,
-      byCategory,
-      total: {
-        taken: totalTaken,
-        remaining: totalRemaining,
-        isFull: totalRemaining === 0,
-        percentage: Math.round((totalTaken / totalMax) * 100)
-      }
-    };
+    const [counts, config] = await Promise.all([
+      fetchCountsByCategory(),
+      fetchCapacityConfig()
+    ]);
+    return buildCapacityData(counts, config);
   },
   ["enrollment-capacity"],
   { revalidate: 300 }

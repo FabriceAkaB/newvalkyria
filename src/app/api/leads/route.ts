@@ -8,9 +8,10 @@ import { leadFormSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
+    const isWaitlist = body.isWaitlist === true;
     const payload = leadFormSchema.parse(body);
-    const { leadId, mode } = await saveLead(payload);
+    const { leadId, mode } = await saveLead(payload, isWaitlist);
 
     // Fire-and-forget — ne bloque jamais le flow d'inscription
     void Promise.allSettled([

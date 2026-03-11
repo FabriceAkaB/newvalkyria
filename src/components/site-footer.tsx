@@ -36,6 +36,9 @@ export function SiteFooter() {
             <Link href="/mentions-legales" className="hover:text-white/50 transition-colors">
               Mentions légales
             </Link>
+            <Link href="/admin" className="text-white/8 hover:text-white/20 transition-colors" aria-label="Administration">
+              ·
+            </Link>
           </div>
         </div>
       </Container>

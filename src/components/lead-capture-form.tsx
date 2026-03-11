@@ -73,7 +73,7 @@ export function LeadCaptureForm({ addons = [], category, isWaitlist = false }: P
       const leadResponse = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify({ ...form, isWaitlist: isWaitlist || undefined })
       });
 
       if (!leadResponse.ok) {

@@ -19,7 +19,7 @@ function isSupabaseAvailable() {
   }
 }
 
-export async function saveLead(payload: LeadFormPayload) {
+export async function saveLead(payload: LeadFormPayload, isWaitlist = false) {
   if (!isSupabaseAvailable()) {
     return { leadId: createMockLead(payload).id, mode: "mock" as const };
   }
@@ -37,7 +37,8 @@ export async function saveLead(payload: LeadFormPayload) {
       goal: payload.goal,
       availability: payload.availability,
       consent: payload.consent,
-      status: "pending"
+      status: "pending",
+      is_waitlist: isWaitlist
     })
     .select("id")
     .single();
@@ -154,4 +155,64 @@ export async function markLeadAsPaid(leadId: string, paymentIntentId?: string) {
   }
 
   return data as { email?: string; parent_name?: string };
+}
+
+// ── Admin ──────────────────────────────────────────────────────────
+
+export interface AdminLead {
+  id: string;
+  created_at: string;
+  parent_name: string;
+  email: string;
+  phone: string;
+  player_age: string;
+  player_level: string;
+  city: string;
+  goal: string;
+  availability: string;
+  status: "pending" | "paid" | "cancelled";
+  is_waitlist: boolean;
+  stripe_checkout_session_id?: string;
+  stripe_payment_intent_id?: string;
+}
+
+export async function getAllLeads(): Promise<AdminLead[]> {
+  if (!isSupabaseAvailable()) return [];
+
+  const supabase = getSupabaseAdminClient() as any;
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AdminLead[];
+}
+
+export async function getCapacityConfig(): Promise<Record<string, number>> {
+  if (!isSupabaseAvailable()) return {};
+
+  const supabase = getSupabaseAdminClient() as any;
+  const { data, error } = await supabase
+    .from("capacity_config")
+    .select("category, max_spots");
+
+  if (error || !data) return {};
+
+  const config: Record<string, number> = {};
+  for (const row of data as { category: string; max_spots: number }[]) {
+    config[row.category] = row.max_spots;
+  }
+  return config;
+}
+
+export async function setCapacityConfig(category: string, maxSpots: number): Promise<void> {
+  if (!isSupabaseAvailable()) return;
+
+  const supabase = getSupabaseAdminClient() as any;
+  const { error } = await supabase
+    .from("capacity_config")
+    .upsert({ category, max_spots: maxSpots, updated_at: new Date().toISOString() });
+
+  if (error) throw new Error(error.message);
 }
