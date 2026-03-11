@@ -178,8 +178,8 @@ export default async function HomePage() {
           <div className="stats-grid">
             {academyStats.map((stat) => (
               <div key={stat.label} className="stats-item">
-                <p className="font-display text-3xl uppercase tracking-[0.05em] text-accent md:text-4xl whitespace-nowrap">{stat.metric}</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-white/60">{stat.label}</p>
+                <p className="font-display text-xl uppercase tracking-[0.04em] text-accent sm:text-2xl md:text-3xl lg:text-4xl">{stat.metric}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/60 sm:text-xs">{stat.label}</p>
               </div>
             ))}
           </div>
