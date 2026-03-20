@@ -125,7 +125,7 @@ export function AdminDashboard({ leads, capacity }: Props) {
                 <div key={lead.id} className="admin-recent-item">
                   <div className="admin-recent-info">
                     <span className="admin-recent-name">{lead.parent_name}</span>
-                    <span className="admin-recent-meta">
+                    <span className="admin-recent-meta" suppressHydrationWarning>
                       {lead.player_age} · {lead.city} · {formatDate(lead.created_at)}
                     </span>
                   </div>

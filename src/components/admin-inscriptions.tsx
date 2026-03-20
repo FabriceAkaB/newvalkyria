@@ -91,7 +91,7 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted }: DrawerProps) {
         <div className="admin-drawer-header">
           <div>
             <p className="admin-drawer-title">{lead.parent_name}</p>
-            <p className="admin-drawer-subtitle">
+            <p className="admin-drawer-subtitle" suppressHydrationWarning>
               Inscrit le {formatDate(lead.created_at)}
               {isNew && " · Nouveau"}
             </p>
@@ -523,7 +523,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
                         className="admin-tr-clickable"
                         onClick={() => setSelectedLead(lead)}
                       >
-                        <td className="admin-td-date">{formatDate(lead.created_at)}</td>
+                        <td className="admin-td-date" suppressHydrationWarning>{formatDate(lead.created_at)}</td>
                         <td className="admin-td-name">{lead.parent_name}</td>
                         <td className="admin-td-email">{lead.email}</td>
                         <td className="admin-td-phone">{lead.phone}</td>
