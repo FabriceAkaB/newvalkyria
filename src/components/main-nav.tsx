@@ -10,6 +10,9 @@ import { navItems } from "@/lib/site-content";
 export function MainNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Lock scroll when menu open — position:fixed trick works on iOS Safari too
   useEffect(() => {
@@ -91,7 +94,7 @@ export function MainNav() {
       </button>
 
       {/* ── Panel rendu directement dans body via portal ── */}
-      {typeof document !== "undefined" ? createPortal(panel, document.body) : null}
+      {mounted ? createPortal(panel, document.body) : panel}
     </>
   );
 }
