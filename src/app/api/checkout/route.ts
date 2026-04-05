@@ -20,9 +20,11 @@ const ADDONS: Record<AddonId, { label: string; amount: number }> = {
 export async function POST(request: Request) {
   try {
     const payload = checkoutSchema.parse(await request.json());
+    const checkoutType = payload.checkoutType ?? "elite";
+    const cancelPath = payload.cancelPath ?? "/inscription?cancelled=1";
 
     // ── Garde de capacité — retourne waitlistUrl si complet (race condition) ──
-    {
+    if (checkoutType === "elite") {
       const { getCapacityData } = await import("@/lib/capacity");
       const capacity = await getCapacityData();
       const isCatFull = payload.category
@@ -37,6 +39,46 @@ export async function POST(request: Request) {
 
     const stripe = getStripeClient();
     const baseUrl = getRequestOrigin(request);
+
+    if (checkoutType === "trial") {
+      const session = await stripe.checkout.sessions.create({
+        mode: "setup",
+        currency: "cad",
+        customer_creation: "always",
+        customer_email: payload.email,
+        payment_method_types: ["card"],
+        custom_text: {
+          submit: {
+            message: "**0 $ CAD aujourd'hui.** Nous validons seulement la carte pour réserver l'essai gratuit."
+          },
+          after_submit: {
+            message: "Aucun prélèvement ne sera effectué maintenant. La carte sert uniquement à confirmer la réservation de l'essai."
+          }
+        },
+        metadata: {
+          leadId: payload.leadId,
+          checkoutType,
+          trialYear: payload.trialYear!
+        },
+        setup_intent_data: {
+          metadata: {
+            leadId: payload.leadId,
+            checkoutType,
+            trialYear: payload.trialYear!
+          }
+        },
+        success_url: `${baseUrl}/confirmation?trial=true&year=${payload.trialYear}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}${cancelPath}`
+      });
+
+      await setLeadCheckoutSession(payload.leadId, session.id);
+
+      if (!session.url) {
+        throw new Error("Stripe n'a pas retourné d'URL de validation.");
+      }
+
+      return NextResponse.json({ sessionId: session.id, checkoutUrl: session.url });
+    }
 
     // Build base line item
     const baseItem = env.stripePriceId
@@ -70,11 +112,12 @@ export async function POST(request: Request) {
       line_items: [baseItem, ...addonItems],
       metadata: {
         leadId: payload.leadId,
+        checkoutType,
         addons: (payload.addons ?? []).join(","),
         ...(payload.category ? { category: payload.category } : {})
       },
       success_url: `${baseUrl}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/inscription?cancelled=1`
+      cancel_url: `${baseUrl}${cancelPath}`
     });
 
     await setLeadCheckoutSession(payload.leadId, session.id);

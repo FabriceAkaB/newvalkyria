@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 
 import { sendLeadNotificationEmail } from "@/lib/email";
 import { appendLeadToSheet } from "@/lib/google-sheets";
@@ -21,6 +22,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ leadId, mode }, { status: 201 });
   } catch (error) {
+    if (error instanceof ZodError) {
+      const firstMessage = error.issues[0]?.message ?? "Données invalides";
+      return jsonError(firstMessage, 422);
+    }
+
     if (error instanceof Error) {
       return jsonError(error.message, 422);
     }

@@ -25,21 +25,24 @@ export async function saveLead(payload: LeadFormPayload, isWaitlist = false) {
   }
 
   const supabase = getSupabaseAdminClient() as any;
+  const row: Record<string, unknown> = {
+    parent_name: payload.parent_name,
+    email: payload.email,
+    phone: payload.phone,
+    player_age: payload.player_age,
+    player_level: payload.player_level,
+    city: payload.city,
+    goal: payload.goal,
+    availability: payload.availability,
+    consent: payload.consent,
+    status: "pending"
+  };
+
+  if (isWaitlist) row.is_waitlist = true;
+
   const { data, error } = await supabase
     .from("leads")
-    .insert({
-      parent_name: payload.parent_name,
-      email: payload.email,
-      phone: payload.phone,
-      player_age: payload.player_age,
-      player_level: payload.player_level,
-      city: payload.city,
-      goal: payload.goal,
-      availability: payload.availability,
-      consent: payload.consent,
-      status: "pending",
-      is_waitlist: isWaitlist
-    })
+    .insert(row)
     .select("id")
     .single();
 

@@ -20,7 +20,7 @@ export async function PATCH(request: Request) {
   }
 
   await setCapacityConfig(category, maxSpots);
-  revalidateTag("enrollment-capacity", {});
+  revalidateTag("enrollment-capacity", "max");
 
   return NextResponse.json({ ok: true });
 }

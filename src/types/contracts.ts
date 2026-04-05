@@ -1,4 +1,4 @@
-export type PlayerLevel = "Débutante" | "Intermédiaire" | "Élite";
+export type PlayerLevel = "Débutante" | "Intermédiaire" | "Élite" | "D1" | "D2" | "D3";
 
 export interface LeadFormInput {
   parent_name: string;
@@ -10,6 +10,10 @@ export interface LeadFormInput {
   goal: string;
   availability: string;
   consent: boolean;
+  /** Tunnel fields (optional for backward compat with existing leads) */
+  player_name?: string;
+  player_position?: string;
+  player_club?: string;
 }
 
 export interface LeadRecord extends LeadFormInput {
@@ -21,11 +25,16 @@ export interface LeadRecord extends LeadFormInput {
 }
 
 export type AddonId = "tir" | "dribble" | "analyse";
+export type CheckoutType = "elite" | "trial";
 
 export interface CheckoutRequest {
   leadId: string;
   email: string;
   addons?: AddonId[];
+  category?: "2016-2017" | "2014-2015" | "2012-2013";
+  checkoutType?: CheckoutType;
+  trialYear?: "2016" | "2015" | "2014" | "2013";
+  cancelPath?: string;
 }
 
 export interface CheckoutResponse {

@@ -45,4 +45,14 @@ describe("checkoutSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  it("requires a trial year for trial checkout", () => {
+    const result = checkoutSchema.safeParse({
+      leadId: "3f8c67e5-1b1b-44ef-8a5d-0fc31d5169e6",
+      email: "parent@example.com",
+      checkoutType: "trial"
+    });
+
+    expect(result.success).toBe(false);
+  });
 });

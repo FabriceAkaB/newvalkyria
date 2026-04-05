@@ -888,6 +888,218 @@ body {
   margin: 0;
 }
 
+/* ── Trial info ── */
+.conf-trial-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(196, 164, 228, 0.06);
+  border: 1px solid rgba(196, 164, 228, 0.15);
+  margin-bottom: 1.75rem;
+  max-width: 360px;
+  margin-inline: auto;
+}
+
+.conf-trial-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.conf-trial-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+}
+
+/* ── Share / referral ── */
+.conf-share {
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 1.75rem;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.conf-share-title {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 0.35rem;
+}
+
+.conf-share-sub {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 1rem;
+}
+
+.conf-share-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.conf-share-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  border: none;
+}
+
+.conf-share-copy {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.conf-share-copy:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.conf-share-wa {
+  background: rgba(37, 211, 102, 0.12);
+  color: #25d366;
+  border: 1px solid rgba(37, 211, 102, 0.2);
+}
+
+.conf-share-wa:hover {
+  background: rgba(37, 211, 102, 0.2);
+}
+
+.conf-share-sms {
+  background: rgba(0, 122, 255, 0.1);
+  color: #4da3ff;
+  border: 1px solid rgba(0, 122, 255, 0.2);
+}
+
+.conf-share-sms:hover {
+  background: rgba(0, 122, 255, 0.18);
+}
+
+/* ── Recap summary ── */
+.conf-recap {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(196, 164, 228, 0.18);
+  background: rgba(196, 164, 228, 0.05);
+  overflow: hidden;
+}
+
+.conf-recap-header {
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-accent-soft);
+  padding: 0.85rem 1.25rem;
+  margin: 0;
+  border-bottom: 1px solid rgba(196, 164, 228, 0.12);
+}
+
+.conf-recap-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.conf-recap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.conf-recap-row:last-child {
+  border-bottom: none;
+}
+
+.conf-recap-row-highlight {
+  background: rgba(196, 164, 228, 0.08);
+}
+
+.conf-recap-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.conf-recap-value {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: right;
+}
+
+/* ── Contact section ── */
+.conf-contact {
+  text-align: center;
+  margin-bottom: 1.75rem;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.conf-contact-text {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 0 0.75rem;
+}
+
+.conf-contact-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.conf-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(196, 164, 228, 0.08);
+  color: var(--color-accent-soft);
+  border: 1px solid rgba(196, 164, 228, 0.18);
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.conf-contact-btn:hover {
+  background: rgba(196, 164, 228, 0.16);
+}
+
+/* ── Circle pop animation ── */
+.conf-circle-pop {
+  animation: conf-circle-scale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: center;
+}
+
 /* ── Animations ── */
 @keyframes conf-draw {
   to { stroke-dashoffset: 0; }
@@ -896,6 +1108,12 @@ body {
 @keyframes conf-breathe {
   0%, 100% { opacity: 0.6; transform: scale(1); }
   50%       { opacity: 1;   transform: scale(1.08); }
+}
+
+@keyframes conf-circle-scale {
+  0%   { r: 0; opacity: 0; }
+  60%  { r: 38; opacity: 1; }
+  100% { r: 34; opacity: 1; }
 }
 
 /* ── Method section redesign ────────────────────────────────────────── */
@@ -3204,6 +3422,348 @@ body {
   color: rgba(255, 255, 255, 0.28);
 }
 
+/* ── Pill selectors ────────────────────────────────── */
+.insc-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.insc-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.2;
+}
+
+.insc-pill:hover {
+  border-color: rgba(196, 164, 228, 0.35);
+  background: rgba(196, 164, 228, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.insc-pill-active {
+  border-color: var(--color-accent);
+  background: rgba(196, 164, 228, 0.15);
+  color: var(--color-accent-soft);
+  box-shadow: 0 0 0 1px var(--color-accent), 0 0 12px rgba(196, 164, 228, 0.15);
+}
+
+.insc-pill-main {
+  font-weight: 600;
+}
+
+.insc-pill-sub {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+}
+
+.insc-hidden-required {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  padding: 0;
+  margin: -1px;
+}
+
+/* ── Horaire badge ─────────────────────────────────── */
+.insc-horaire-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.1rem;
+  border-radius: 12px;
+  background: rgba(196, 164, 228, 0.08);
+  border: 1px solid rgba(196, 164, 228, 0.18);
+  color: var(--color-accent-soft);
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 1.75rem;
+}
+
+/* ── Offer grid ────────────────────────────────────── */
+.insc-offer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 700px) {
+  .insc-offer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.insc-offer-card {
+  border-radius: 16px;
+  padding: 1.75rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.insc-offer-elite {
+  border-color: rgba(196, 164, 228, 0.3);
+  background: rgba(196, 164, 228, 0.06);
+  box-shadow: 0 0 30px rgba(196, 164, 228, 0.08);
+}
+
+.insc-offer-badge-wrap {
+  margin-bottom: 0.75rem;
+}
+
+.insc-offer-recommended {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-ink);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.insc-offer-name {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 0.3rem;
+}
+
+.insc-offer-tagline {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 1.25rem;
+}
+
+.insc-offer-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.insc-offer-benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.35;
+}
+
+.insc-offer-benefits svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: var(--color-accent);
+}
+
+.insc-offer-price-block {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.insc-offer-value {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 0.25rem;
+}
+
+.insc-offer-strike {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.insc-offer-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.insc-offer-price {
+  font-family: var(--font-display), sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+}
+
+.insc-offer-price-free {
+  color: var(--color-accent);
+}
+
+.insc-offer-price-sub {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.insc-offer-saving {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(72, 199, 142, 0.12);
+  color: #48c78e;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.insc-offer-dates {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.insc-offer-dates-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 0 0.25rem;
+}
+
+.insc-offer-dates-value {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  margin: 0;
+}
+
+.insc-offer-note-small {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0.35rem 0 0;
+}
+
+.insc-offer-cta {
+  display: block;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s;
+  border: none;
+  margin-top: 1rem;
+}
+
+.insc-offer-cta-elite {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+.insc-offer-cta-elite:hover {
+  background: var(--color-accent-soft);
+  transform: translateY(-1px);
+}
+
+.insc-offer-cta-elite:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.insc-offer-cta-essai {
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid rgba(196, 164, 228, 0.3);
+}
+
+.insc-offer-cta-essai:hover {
+  background: rgba(196, 164, 228, 0.08);
+  border-color: rgba(196, 164, 228, 0.5);
+}
+
+.insc-offer-note {
+  text-align: center;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0.5rem 0 0;
+}
+
+.insc-offer-scarcity {
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  background: rgba(255, 165, 0, 0.08);
+  border: 1px solid rgba(255, 165, 0, 0.2);
+  color: #ffa500;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.insc-offer-full-notice {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.insc-offer-full-title {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 0.5rem;
+}
+
+.insc-offer-full-desc {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 1.5rem;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.insc-trust-row {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.insc-trust-row span {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .insc-hero {
@@ -3861,15 +4421,12 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1.25rem 3rem;
-  position: relative;
+  padding: 2.5rem 1.25rem 3rem;
 }
 
 .qual-logo {
-  position: absolute;
-  top: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
+  text-align: center;
+  margin-bottom: 1rem;
 }
 
 .qual-logo-text {
@@ -4086,6 +4643,472 @@ body {
 
   .qual-question {
     font-size: 1.3rem;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TUNNEL DE VENTE (qualification page)
+   ────────────────────────────────────────────────────────────── */
+
+/* ── Landing (ÉTAPE 1) ── */
+.tunnel-landing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.tunnel-landing-logo {
+  border-radius: 20px;
+  margin-bottom: 1rem;
+}
+
+.tunnel-landing-title {
+  font-family: var(--font-display), sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: white;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.tunnel-landing-sub {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tunnel-landing-desc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 1rem 0 1.5rem;
+  line-height: 1.5;
+}
+
+.tunnel-landing-cta {
+  background: linear-gradient(135deg, #c4a070, #d4b080);
+  color: #1a1020;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.tunnel-landing-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(196, 164, 112, 0.25);
+}
+
+.tunnel-landing-hint {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0.75rem 0 0;
+  letter-spacing: 0.05em;
+}
+
+/* ── Form (ÉTAPE 2) ── */
+.tunnel-form-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.tunnel-form-kicker {
+  font-size: 0.85rem;
+  color: var(--color-accent-soft);
+  margin: 0;
+  font-weight: 500;
+}
+
+.tunnel-form-card {
+  max-width: 480px;
+}
+
+.tunnel-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.tunnel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tunnel-field > span {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+}
+
+.tunnel-req {
+  color: var(--color-accent);
+}
+
+.tunnel-pills-wrap {
+  gap: 0.4rem;
+}
+
+.tunnel-error {
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: rgba(255, 70, 70, 0.1);
+  border: 1px solid rgba(255, 70, 70, 0.25);
+  color: #ff6b6b;
+  font-size: 0.82rem;
+  margin-bottom: 0.5rem;
+}
+
+.tunnel-submit {
+  width: 100%;
+  background: linear-gradient(135deg, #7e62b9, #c4a4e4);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.95rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.15s;
+  margin-top: 0.5rem;
+}
+
+.tunnel-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tunnel-submit:not(:disabled):hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ── Offer choice (ÉTAPE 3) ── */
+.tunnel-offer-shell {
+  padding-top: 4rem;
+  justify-content: flex-start;
+}
+
+.tunnel-offer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .tunnel-offer-grid {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+  }
+}
+
+.tunnel-offer-card {
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tunnel-offer-elite {
+  border-color: rgba(196, 164, 228, 0.3);
+  background: rgba(196, 164, 228, 0.04);
+}
+
+.tunnel-offer-title {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 0.3rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.tunnel-offer-title-sm {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 0.3rem;
+}
+
+.tunnel-offer-tagline {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 1.25rem;
+  line-height: 1.4;
+}
+
+.tunnel-offer-elite .tunnel-offer-tagline {
+  text-align: center;
+}
+
+/* Scarcity */
+.tunnel-scarcity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 165, 0, 0.1);
+  border: 1px solid rgba(255, 165, 0, 0.25);
+  color: #ffa500;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+.tunnel-scarcity-num {
+  font-weight: 800;
+}
+
+/* Benefits */
+.tunnel-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tunnel-benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.3;
+}
+
+.tunnel-check {
+  color: var(--color-accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Horaires */
+.tunnel-horaires {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tunnel-horaires p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Garantie */
+.tunnel-garantie {
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 70, 70, 0.06);
+  border: 1px solid rgba(255, 70, 70, 0.18);
+  margin-bottom: 1.25rem;
+}
+
+.tunnel-garantie-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ff6b6b;
+  margin: 0;
+}
+
+.tunnel-garantie-sub {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0.2rem 0 0;
+}
+
+/* Price anchoring */
+.tunnel-price-block {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.tunnel-price-anchor {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 0.15rem;
+}
+
+.tunnel-price-strike {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.tunnel-price-real {
+  font-family: var(--font-display), sans-serif;
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: white;
+  margin: 0;
+  line-height: 1;
+}
+
+.tunnel-price-sub {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0.25rem 0 0;
+}
+
+/* CTAs */
+.tunnel-cta-elite {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7e62b9, #c4a4e4);
+  color: white;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.15s;
+}
+
+.tunnel-cta-elite:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tunnel-cta-elite:not(:disabled):hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Essai gratuit card */
+.tunnel-offer-free {
+  position: relative;
+}
+
+.tunnel-free-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-ink);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tunnel-essai-dates {
+  margin-bottom: 1rem;
+}
+
+.tunnel-essai-group {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  margin: 0 0 0.4rem;
+}
+
+.tunnel-essai-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tunnel-essai-pill {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.78rem;
+}
+
+.tunnel-essai-horaires {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 1.25rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tunnel-essai-horaires p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tunnel-essai-horaires-title {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.2rem;
+}
+
+.tunnel-cta-essai {
+  display: block;
+  width: 100%;
+  padding: 0.9rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.tunnel-cta-essai:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.tunnel-essai-note {
+  text-align: center;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0.5rem 0 0;
+}
+
+@media (max-width: 560px) {
+  .tunnel-landing-title {
+    font-size: 2rem;
+  }
+
+  .tunnel-offer-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .tunnel-price-real {
+    font-size: 2.2rem;
   }
 }
 

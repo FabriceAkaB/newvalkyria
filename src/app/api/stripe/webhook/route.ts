@@ -37,17 +37,18 @@ export async function POST(request: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+    const checkoutType = session.metadata?.checkoutType ?? (session.mode === "setup" ? "trial" : "elite");
     const leadId = session.metadata?.leadId;
     const sessionEmail = session.customer_details?.email ?? session.customer_email ?? undefined;
     let emailToNotify = sessionEmail;
     let parentName = "Parent";
 
-    if (leadId) {
+    if (leadId && checkoutType !== "trial") {
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
       const lead = await markLeadAsPaid(leadId, paymentIntentId);
 
       // Invalide immédiatement le cache de capacité
-      revalidateTag("enrollment-capacity", {});
+      revalidateTag("enrollment-capacity", "max");
 
       if (lead.email) {
         emailToNotify = lead.email;
