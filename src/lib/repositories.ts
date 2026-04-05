@@ -192,32 +192,61 @@ export async function getAllLeads(): Promise<AdminLead[]> {
   return (data ?? []) as AdminLead[];
 }
 
-export async function getCapacityConfig(): Promise<Record<string, number>> {
-  if (!isSupabaseAvailable()) return {};
+/* ── Capacity config — in-memory with Supabase fallback ──────────── */
 
-  const supabase = getSupabaseAdminClient() as any;
-  const { data, error } = await supabase
-    .from("capacity_config")
-    .select("category, max_spots");
+// In-memory store (persists across requests in the same server process)
+const capacityMemoryStore: Record<string, number> = {};
 
-  if (error || !data) return {};
+async function trySupabaseCapacity(action: "get"): Promise<Record<string, number> | null>;
+async function trySupabaseCapacity(action: "set", category?: string, maxSpots?: number): Promise<boolean>;
+async function trySupabaseCapacity(action: "get" | "set", category?: string, maxSpots?: number): Promise<Record<string, number> | boolean | null> {
+  if (!isSupabaseAvailable()) return action === "get" ? null : false;
 
-  const config: Record<string, number> = {};
-  for (const row of data as { category: string; max_spots: number }[]) {
-    config[row.category] = row.max_spots;
+  try {
+    const supabase = getSupabaseAdminClient() as any;
+
+    if (action === "get") {
+      const { data, error } = await supabase
+        .from("capacity_config")
+        .select("category, max_spots");
+
+      if (error) return null;
+      if (!data) return {};
+
+      const config: Record<string, number> = {};
+      for (const row of data as { category: string; max_spots: number }[]) {
+        config[row.category] = row.max_spots;
+      }
+      return config;
+    }
+
+    // set
+    const { error } = await supabase
+      .from("capacity_config")
+      .upsert({ category, max_spots: maxSpots, updated_at: new Date().toISOString() });
+
+    return !error;
+  } catch {
+    return action === "get" ? null : false;
   }
-  return config;
+}
+
+export async function getCapacityConfig(): Promise<Record<string, number>> {
+  // Try Supabase first
+  const fromDb = await trySupabaseCapacity("get");
+  if (fromDb !== null) return fromDb;
+
+  // Fallback to in-memory
+  return { ...capacityMemoryStore };
 }
 
 export async function setCapacityConfig(category: string, maxSpots: number): Promise<void> {
-  if (!isSupabaseAvailable()) return;
+  // Always update in-memory
+  capacityMemoryStore[category] = maxSpots;
 
-  const supabase = getSupabaseAdminClient() as any;
-  const { error } = await supabase
-    .from("capacity_config")
-    .upsert({ category, max_spots: maxSpots, updated_at: new Date().toISOString() });
-
-  if (error) throw new Error(error.message);
+  // Try to persist to Supabase (non-blocking failure)
+  await trySupabaseCapacity("set", category, maxSpots);
+  // No throw — in-memory is the source of truth if Supabase table doesn't exist
 }
 
 export async function deleteLead(id: string): Promise<void> {
