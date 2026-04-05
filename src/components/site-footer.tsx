@@ -15,11 +15,6 @@ export function SiteFooter() {
                 info@newvalkyria.com
               </a>
             </p>
-            <p>
-              <a href="tel:+15146883600" className="hover:text-white/65 transition-colors">
-                514 688-3600
-              </a>
-            </p>
           </div>
         </div>
 
