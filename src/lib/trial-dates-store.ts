@@ -25,28 +25,28 @@ const DEFAULT_CONFIG: TrialConfig = {
     "2016": [
       {
         label: "Groupe 1 — 2015 & 2016",
-        dates: ["Lun 14 avril", "Mer 16 avril", "Ven 18 avril"],
+        dates: ["Mar 14 avril", "Jeu 16 avril", "Sam 18 avril"],
         horaires: ["2016 : 18h00 à 19h25", "2015 : 19h30 à 20h55"],
-        exception: "Exception — Dimanche 13 avril : 2016 de 13h30 à 14h55"
+        exception: "Exception — Sam 18 avril : 2016 de 13h30 à 14h55"
       }
     ],
     "2015": [
       {
         label: "Groupe 1 — 2015 & 2016",
-        dates: ["Lun 14 avril", "Mer 16 avril", "Ven 18 avril"],
+        dates: ["Mar 14 avril", "Jeu 16 avril", "Sam 18 avril"],
         horaires: ["2016 : 18h00 à 19h25", "2015 : 19h30 à 20h55"],
-        exception: "Exception — Dimanche 13 avril : 2015 de 15h00 à 16h30"
+        exception: "Exception — Sam 18 avril : 2015 de 15h00 à 16h30"
       },
       {
         label: "Groupe 2 — 2015, 2014 & 2013",
-        dates: ["Dim 13 avril", "Mar 15 avril", "Jeu 17 avril"],
+        dates: ["Lun 13 avril", "Mer 15 avril", "Ven 17 avril"],
         horaires: ["2015 : 18h00 à 19h25", "2013-2014 : 19h30 à 20h55"]
       }
     ],
     "2014-2013": [
       {
         label: "Groupe 2 — 2015, 2014 & 2013",
-        dates: ["Dim 13 avril", "Mar 15 avril", "Jeu 17 avril"],
+        dates: ["Lun 13 avril", "Mer 15 avril", "Ven 17 avril"],
         horaires: ["2015 : 18h00 à 19h25", "2013-2014 : 19h30 à 20h55"]
       }
     ]

@@ -21,14 +21,14 @@ interface RecapData {
 }
 
 const ESSAI_DATES: Record<string, string> = {
-  "2016":     "Lun 14, Mer 16, Ven 18 avril (+ Dim 13 avril)",
-  "2015":     "Groupe 1 : Lun 14, Mer 16, Ven 18 avril — Groupe 2 : Dim 13, Mar 15, Jeu 17 avril",
-  "2014-2013": "Dim 13, Mar 15, Jeu 17 avril"
+  "2016":     "Mar 14, Jeu 16, Sam 18 avril",
+  "2015":     "Groupe 1 : Mar 14, Jeu 16, Sam 18 avril — Groupe 2 : Lun 13, Mer 15, Ven 17 avril",
+  "2014-2013": "Lun 13, Mer 15, Ven 17 avril"
 };
 
 const HORAIRES: Record<string, string> = {
-  "2016":     "18h00 à 19h25 (Dim 13 : 13h30 à 14h55)",
-  "2015":     "Gr.1 : 19h30 à 20h55 / Gr.2 : 18h00 à 19h25 (Dim 13 : 15h00 à 16h30)",
+  "2016":     "18h00 à 19h25 (Sam 18 : 13h30 à 14h55)",
+  "2015":     "Gr.1 : 19h30 à 20h55 / Gr.2 : 18h00 à 19h25 (Sam 18 : 15h00 à 16h30)",
   "2014-2013": "19h30 à 20h55"
 };
 

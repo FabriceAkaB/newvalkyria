@@ -188,7 +188,7 @@ export function AdminEssais() {
                     onChange={(e) => updateGroup(cat, gi, "dates", e.target.value)}
                     className="admin-essais-textarea"
                     rows={3}
-                    placeholder={"Lun 14 avril\nMer 16 avril\nVen 18 avril"}
+                    placeholder={"Mar 14 avril\nJeu 16 avril\nSam 18 avril"}
                   />
                 </label>
 
@@ -210,7 +210,7 @@ export function AdminEssais() {
                     value={group.exception ?? ""}
                     onChange={(e) => updateGroup(cat, gi, "exception", e.target.value)}
                     className="admin-essais-input"
-                    placeholder="Ex: Exception — Dimanche 13 avril : 2016 de 13h30 à 14h55"
+                    placeholder="Ex: Exception — Sam 18 avril : 2016 de 13h30 à 14h55"
                   />
                 </label>
               </div>
