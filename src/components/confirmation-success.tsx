@@ -21,16 +21,18 @@ interface RecapData {
 }
 
 const ESSAI_DATES: Record<string, string> = {
-  "2016":     "Dimanche 13, Mardi 15, Jeudi 17 avril",
-  "2015":     "Dim 13 / Mar 15 / Jeu 17 avril  —  Lun 14 / Mer 16 / Ven 18 avril",
-  "2014-2013": "Lundi 14, Mercredi 16, Vendredi 18 avril"
+  "2016":     "Lun 14, Mer 16, Ven 18 avril (+ Dim 13 avril)",
+  "2015":     "Groupe 1 : Lun 14, Mer 16, Ven 18 avril — Groupe 2 : Dim 13, Mar 15, Jeu 17 avril",
+  "2014-2013": "Dim 13, Mar 15, Jeu 17 avril"
 };
 
 const HORAIRES: Record<string, string> = {
-  "2016":     "18h00 – 19h25",
-  "2015":     "19h30 – 20h55",
-  "2014-2013": "19h30 – 20h55"
+  "2016":     "18h00 à 19h25 (Dim 13 : 13h30 à 14h55)",
+  "2015":     "Gr.1 : 19h30 à 20h55 / Gr.2 : 18h00 à 19h25 (Dim 13 : 15h00 à 16h30)",
+  "2014-2013": "19h30 à 20h55"
 };
+
+const ESSAI_LIEU = "Terrain synthétique — Parc à Rosemère, Rue Charbonneau, Rosemère, QC J7A 1G1";
 
 const STEPS_REGULAR = [
   { icon: "✉", label: "Courriel de confirmation envoyé" },
@@ -171,11 +173,20 @@ export function ConfirmationSuccess({ sessionId, isWaitlist = false, isTrial = f
                 <span className="conf-recap-value">{horaire}</span>
               </div>
             )}
+            {essaiDates && (
+              <div className="conf-recap-row">
+                <span className="conf-recap-label">Lieu</span>
+                <span className="conf-recap-value">{ESSAI_LIEU}</span>
+              </div>
+            )}
             <div className="conf-recap-row conf-recap-row-highlight">
               <span className="conf-recap-label">Montant</span>
               <span className="conf-recap-value">{recap.montant}</span>
             </div>
           </div>
+          {essaiDates && (
+            <p className="conf-recap-note">* Le terrain peut changer — vous serez avertis par courriel.</p>
+          )}
         </div>
       )}
 

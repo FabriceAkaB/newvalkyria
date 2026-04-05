@@ -27,24 +27,38 @@ const YEAR_TO_CATEGORY: Record<string, AgeCategory> = {
 const POSITIONS = ["Gardien (GK)", "Défenseur", "Milieu", "Attaquant", "Ailier"];
 const LEVELS = ["D1", "D2", "D3"];
 
-const HORAIRES: Record<string, string> = {
-  "2016":     "18h00 – 19h25",
-  "2015":     "19h30 – 20h55",
-  "2014-2013": "19h30 – 20h55"
-};
-
-const ESSAI_DATES: Record<string, { label: string; dates: string[] }[]> = {
+const ESSAI_DATES: Record<string, { label: string; dates: string[]; horaires: string[]; exception?: string }[]> = {
   "2016": [
-    { label: "Groupe 2016", dates: ["Dim 13 avril", "Mar 15 avril", "Jeu 17 avril"] }
+    {
+      label: "Groupe 1 — 2015 & 2016",
+      dates: ["Lun 14 avril", "Mer 16 avril", "Ven 18 avril"],
+      horaires: ["2016 : 18h00 à 19h25", "2015 : 19h30 à 20h55"],
+      exception: "Exception — Dimanche 13 avril : 2016 de 13h30 à 14h55"
+    }
   ],
   "2015": [
-    { label: "Groupe 2015", dates: ["Dim 13 avril", "Mar 15 avril", "Jeu 17 avril"] },
-    { label: "Groupe 2015 & 2014-2013", dates: ["Lun 14 avril", "Mer 16 avril", "Ven 18 avril"] }
+    {
+      label: "Groupe 1 — 2015 & 2016",
+      dates: ["Lun 14 avril", "Mer 16 avril", "Ven 18 avril"],
+      horaires: ["2016 : 18h00 à 19h25", "2015 : 19h30 à 20h55"],
+      exception: "Exception — Dimanche 13 avril : 2015 de 15h00 à 16h30"
+    },
+    {
+      label: "Groupe 2 — 2015, 2014 & 2013",
+      dates: ["Dim 13 avril", "Mar 15 avril", "Jeu 17 avril"],
+      horaires: ["2015 : 18h00 à 19h25", "2013-2014 : 19h30 à 20h55"]
+    }
   ],
   "2014-2013": [
-    { label: "Groupe 2014 & 2013", dates: ["Lun 14 avril", "Mer 16 avril", "Ven 18 avril"] }
+    {
+      label: "Groupe 2 — 2015, 2014 & 2013",
+      dates: ["Dim 13 avril", "Mar 15 avril", "Jeu 17 avril"],
+      horaires: ["2015 : 18h00 à 19h25", "2013-2014 : 19h30 à 20h55"]
+    }
   ]
 };
+
+const ESSAI_LIEU = "Terrain synthétique — Parc à Rosemère, Rue Charbonneau, Rosemère, QC J7A 1G1";
 
 const ELITE_BENEFITS = [
   "15 pratiques spécialisées — 1x/semaine",
@@ -133,8 +147,8 @@ export function QualificationForm() {
   const catCap = category && liveCapacity ? (liveCapacity as Record<string, CategoryCapacity>)[category] : null;
   const remaining = catCap?.remaining ?? 20;
   const maxCap = catCap ? catCap.remaining + catCap.taken : 20;
-  const horaire = HORAIRES[form.category_year] ?? "";
   const essai = ESSAI_DATES[form.category_year] ?? null;
+  const horaire = essai?.[0]?.horaires?.join(" / ") ?? "";
 
   const saveQualificationState = (nextState?: Partial<QualificationState>) => {
     if (typeof window === "undefined") return;
@@ -238,7 +252,7 @@ export function QualificationForm() {
       programme,
       category_label: yearLabel,
       year: form.category_year,
-      horaire: HORAIRES[form.category_year] ?? "",
+      horaire,
       montant
     };
     localStorage.setItem("nv_recap", JSON.stringify(recap));
@@ -605,14 +619,21 @@ export function QualificationForm() {
                   <span key={d} className="tunnel-essai-pill">{d}</span>
                 ))}
               </div>
+              <div className="tunnel-essai-horaires">
+                {group.horaires.map((h) => (
+                  <p key={h}>{h}</p>
+                ))}
+                {group.exception && (
+                  <p className="tunnel-essai-exception">{group.exception}</p>
+                )}
+              </div>
             </div>
           ))}
 
-          <div className="tunnel-essai-horaires">
-            <p className="tunnel-essai-horaires-title">Horaires (85 min par pratique) :</p>
-            <p>2016 (U10) : 18h00 à 19h25</p>
-            <p>2015 (U11) : 19h30 à 20h55</p>
-            <p>2013-2014 (U12-U13) : 19h30 à 20h55</p>
+          <div className="tunnel-essai-lieu">
+            <p className="tunnel-essai-lieu-title">Lieu des essais</p>
+            <p>{ESSAI_LIEU}</p>
+            <p className="tunnel-essai-lieu-note">* Le terrain peut changer — vous serez avertis par courriel.</p>
           </div>
 
           <button

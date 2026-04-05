@@ -19,8 +19,17 @@ export async function PATCH(request: Request) {
     return jsonError("Paramètres invalides", 400);
   }
 
-  await setCapacityConfig(category, maxSpots);
-  revalidateTag("enrollment-capacity", "max");
+  try {
+    await setCapacityConfig(category, maxSpots);
+  } catch (err) {
+    return jsonError(err instanceof Error ? err.message : "Erreur de sauvegarde", 500);
+  }
+
+  try {
+    revalidateTag("enrollment-capacity", "max");
+  } catch {
+    // silencieux — le cache se rafraîchira naturellement
+  }
 
   return NextResponse.json({ ok: true });
 }
