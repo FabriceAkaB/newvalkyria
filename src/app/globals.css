@@ -6401,6 +6401,121 @@ body {
   margin: 0;
 }
 
+/* ── Admin Essais ─────────────────────────────────────────────── */
+
+.admin-essais-section {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.admin-essais-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-accent-soft);
+  margin: 0 0 0.75rem;
+}
+
+.admin-essais-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  color: white;
+  font-size: 0.8rem;
+}
+
+.admin-essais-input:focus {
+  outline: none;
+  border-color: rgba(196, 164, 228, 0.5);
+}
+
+.admin-essais-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  color: white;
+  font-size: 0.8rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.admin-essais-textarea:focus {
+  outline: none;
+  border-color: rgba(196, 164, 228, 0.5);
+}
+
+.admin-essais-group-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-essais-group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-essais-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.admin-essais-field span {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-essais-add-btn {
+  background: rgba(196, 164, 228, 0.08);
+  color: var(--color-accent-soft);
+  border: 1px solid rgba(196, 164, 228, 0.18);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.admin-essais-add-btn:hover {
+  background: rgba(196, 164, 228, 0.16);
+}
+
+.admin-essais-remove-btn {
+  background: rgba(248, 113, 113, 0.08);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.18);
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.admin-essais-remove-btn:hover {
+  background: rgba(248, 113, 113, 0.18);
+}
+
 /* ══════════════════════════════════════════════════════════════ */
 /* ── Admin v2 — Multi-page styles ─────────────────────────── */
 /* ══════════════════════════════════════════════════════════════ */

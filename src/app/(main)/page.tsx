@@ -90,7 +90,7 @@ const parentReviews = [
     parentName: "Bianca Giroux",
     role: "Mère d'une joueuse",
     quote:
-      "Notre fille a acquis beaucoup de technique sur le ballon depuis ses débuts. Le coach JP a su lui donner confiance en ses habiletés — elle est devenue plus menaçante pour ses adversaires. La rétroaction faite de façon assidue est très pertinente pour son avancement.",
+      "Notre fille a acquis beaucoup de technique sur le ballon depuis ses débuts. L'équipe a su lui donner confiance en ses habiletés — elle est devenue plus menaçante pour ses adversaires. La rétroaction faite de façon assidue est très pertinente pour son avancement.",
     rating: 5,
     detail: "Technique · Confiance · Feedback"
   },
@@ -99,7 +99,7 @@ const parentReviews = [
     parentName: "Benoit Cousineau",
     role: "Père d'une joueuse",
     quote:
-      "Tout le mérite te revient avec tes entraînements, tes motivations, ton support envers les joueuses et nous les parents. Tu fais plus que de former des joueuses de soccer, tu formes des futures femmes. Lâche pas JP.",
+      "Tout le mérite vous revient avec vos entraînements, vos motivations, votre support envers les joueuses et nous les parents. Vous faites plus que former des joueuses de soccer, vous formez des futures femmes. Continuez comme ça.",
     rating: 5,
     detail: "Support · Développement · Impact humain"
   }

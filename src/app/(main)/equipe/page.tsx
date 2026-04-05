@@ -64,38 +64,6 @@ export default function EquipePage() {
             </p>
           </div>
 
-          <hr className="ep-team-sep" aria-hidden />
-
-          {/* ── Jean-Paul Aka — Coach ── */}
-          <div className="ep-member-block">
-            <span className="ep-role-badge">Coach fondateur</span>
-            <h2 className="ep-member-name">{coachProfile.fullName}</h2>
-            <p className="ep-hero-mission">{coachProfile.mission}</p>
-
-            <div className="ep-certif-row">
-              {coachProfile.certifications.map((cert) => (
-                <span key={cert} className="ep-certif-badge">{cert}</span>
-              ))}
-              <span className="ep-certif-badge">{coachProfile.experienceYears} ans d&apos;expérience</span>
-            </div>
-
-            <div className="ep-hero-stats">
-              <div className="ep-stat">
-                <span className="font-display text-3xl uppercase tracking-[0.04em] text-accent">9–14</span>
-                <span className="ep-stat-label">Âge des joueuses</span>
-              </div>
-              <div className="ep-stat-sep" aria-hidden />
-              <div className="ep-stat">
-                <span className="font-display text-3xl uppercase tracking-[0.04em] text-accent">10</span>
-                <span className="ep-stat-label">Joueuses max/groupe</span>
-              </div>
-              <div className="ep-stat-sep" aria-hidden />
-              <div className="ep-stat">
-                <span className="font-display text-3xl uppercase tracking-[0.04em] text-accent">1:5</span>
-                <span className="ep-stat-label">Ratio renforcé</span>
-              </div>
-            </div>
-          </div>
         </Container>
       </section>
 
@@ -135,7 +103,7 @@ export default function EquipePage() {
               <p className="ep-quote-text">
                 Le cadre exigeant n&apos;est pas une contrainte — c&apos;est ce qui permet aux joueuses de se faire vraiment confiance.
               </p>
-              <p className="ep-quote-author">— {coachProfile.fullName}</p>
+              <p className="ep-quote-author">— L&apos;équipe New Valkyria</p>
             </div>
 
             <div className="ep-approach-list">

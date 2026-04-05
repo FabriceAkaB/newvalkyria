@@ -14,7 +14,7 @@ export async function sendLeadNotificationEmail(lead: LeadFormPayload) {
 
   await resend.emails.send({
     from: env.resendFrom,
-    to: "jpaka06@gmail.com",
+    to: "info@newvalkyria.com",
     subject: `Nouvelle inscription — ${lead.parent_name}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.6;color:#1a1a2e;max-width:600px">

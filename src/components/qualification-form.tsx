@@ -9,6 +9,7 @@ import type { AgeCategory } from "@/lib/categories";
 import { getCategoryFromYear } from "@/lib/categories";
 import type { CapacityData, CategoryCapacity } from "@/lib/capacity";
 import type { CheckoutResponse, LeadFormInput } from "@/types/contracts";
+import type { TrialConfig } from "@/lib/trial-dates-store";
 
 /* ── Données du tunnel ─────────────────────────────────────────────── */
 
@@ -123,6 +124,9 @@ export function QualificationForm() {
   const [liveCapacity, setLiveCapacity] = useState<Record<string, CategoryCapacity> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Dynamic trial dates from admin
+  const [dynamicTrialConfig, setDynamicTrialConfig] = useState<TrialConfig | null>(null);
+
   useEffect(() => {
     const poll = async () => {
       try {
@@ -137,6 +141,14 @@ export function QualificationForm() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, []);
 
+  // Fetch dynamic trial dates
+  useEffect(() => {
+    fetch("/api/essais")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: TrialConfig | null) => { if (data) setDynamicTrialConfig(data); })
+      .catch(() => { /* use hardcoded defaults */ });
+  }, []);
+
   useEffect(() => {
     if (step !== "landing") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -147,8 +159,10 @@ export function QualificationForm() {
   const catCap = category && liveCapacity ? (liveCapacity as Record<string, CategoryCapacity>)[category] : null;
   const remaining = catCap?.remaining ?? 20;
   const maxCap = catCap ? catCap.remaining + catCap.taken : 20;
-  const essai = ESSAI_DATES[form.category_year] ?? null;
+  const essai = (dynamicTrialConfig?.groups?.[form.category_year] ?? ESSAI_DATES[form.category_year]) ?? null;
   const horaire = essai?.[0]?.horaires?.join(" / ") ?? "";
+  const essaiLieu = dynamicTrialConfig?.lieu ?? ESSAI_LIEU;
+  const essaiLieuNote = dynamicTrialConfig?.lieuNote ?? "Le terrain peut changer — vous serez avertis par courriel.";
 
   const saveQualificationState = (nextState?: Partial<QualificationState>) => {
     if (typeof window === "undefined") return;
@@ -632,8 +646,8 @@ export function QualificationForm() {
 
           <div className="tunnel-essai-lieu">
             <p className="tunnel-essai-lieu-title">Lieu des essais</p>
-            <p>{ESSAI_LIEU}</p>
-            <p className="tunnel-essai-lieu-note">* Le terrain peut changer — vous serez avertis par courriel.</p>
+            <p>{essaiLieu}</p>
+            <p className="tunnel-essai-lieu-note">* {essaiLieuNote}</p>
           </div>
 
           <button

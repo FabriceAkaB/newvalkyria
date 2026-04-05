@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const sections = [
   {
     title: "Responsable du traitement",
-    content: `New Valkyria est responsable du traitement des données personnelles collectées via ce site. Pour toute question relative à la protection de vos données, vous pouvez nous contacter à l'adresse : jpaka06@gmail.com`
+    content: `New Valkyria est responsable du traitement des données personnelles collectées via ce site. Pour toute question relative à la protection de vos données, vous pouvez nous contacter à l'adresse : info@newvalkyria.com`
   },
   {
     title: "Données collectées",
@@ -35,7 +35,7 @@ const sections = [
   },
   {
     title: "Vos droits",
-    content: `Conformément à la Loi 25 (Loi modernisant des dispositions législatives en matière de protection des renseignements personnels) et à la Loi sur la protection des renseignements personnels dans le secteur privé (Québec), vous disposez des droits suivants :\n\n• Droit d'accès à vos données\n• Droit de rectification des données inexactes\n• Droit à l'effacement de vos données\n• Droit à la portabilité de vos données\n• Droit de retirer votre consentement à tout moment\n\nPour exercer ces droits, contactez-nous à : jpaka06@gmail.com`
+    content: `Conformément à la Loi 25 (Loi modernisant des dispositions législatives en matière de protection des renseignements personnels) et à la Loi sur la protection des renseignements personnels dans le secteur privé (Québec), vous disposez des droits suivants :\n\n• Droit d'accès à vos données\n• Droit de rectification des données inexactes\n• Droit à l'effacement de vos données\n• Droit à la portabilité de vos données\n• Droit de retirer votre consentement à tout moment\n\nPour exercer ces droits, contactez-nous à : info@newvalkyria.com`
   },
   {
     title: "Sécurité",
@@ -51,7 +51,7 @@ const sections = [
   },
   {
     title: "Contact",
-    content: `Pour toute question concernant cette politique ou l'exercice de vos droits :\n\nNew Valkyria\nLaurentides, Québec, Canada\njpaka06@gmail.com`
+    content: `Pour toute question concernant cette politique ou l'exercice de vos droits :\n\nNew Valkyria\nLaurentides, Québec, Canada\ninfo@newvalkyria.com`
   }
 ];
 

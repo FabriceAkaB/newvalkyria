@@ -11,8 +11,8 @@ export function SiteFooter() {
           <p>Académie technique féminine · Laurentides</p>
           <div className="pt-2 space-y-0.5 text-xs text-white/40">
             <p>
-              <a href="mailto:jpaka06@gmail.com" className="hover:text-white/65 transition-colors">
-                jpaka06@gmail.com
+              <a href="mailto:info@newvalkyria.com" className="hover:text-white/65 transition-colors">
+                info@newvalkyria.com
               </a>
             </p>
             <p>

@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/admin/inscriptions", label: "Inscriptions" },
   { href: "/admin/joueuses", label: "Joueuses" },
   { href: "/admin/capacite", label: "Capacité" },
+  { href: "/admin/essais", label: "Essais" },
 ];
 
 export function AdminTopbar() {

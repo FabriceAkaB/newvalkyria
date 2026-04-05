@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       const resend = getResendClient();
       void resend.emails.send({
         from: env.resendFrom,
-        to: "jpaka06@gmail.com",
+        to: "info@newvalkyria.com",
         subject: `Nouvelle qualification — ${email}`,
         html: `
           <div style="font-family:Arial,sans-serif;line-height:1.6;color:#1a1a2e;max-width:600px">

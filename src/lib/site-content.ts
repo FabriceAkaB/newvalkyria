@@ -52,7 +52,7 @@ export const seasonalOffer: ProgramOffer = {
 };
 
 export const coachProfile: CoachProfile = {
-  fullName: "Jean-Paul Aka",
+  fullName: "New Valkyria",
   experienceYears: 6,
   certifications: ["Certification C CONCACAF"],
   mission: "Développer le foot féminin avec un cadre exigeant et motivant.",
@@ -89,14 +89,14 @@ export const testimonials: Testimonial[] = [
     id: "t-2",
     name: "Bianca Giroux",
     role: "Mère d'une joueuse",
-    quote: "Notre fille a acquis beaucoup de technique sur le ballon. Le coach JP a su lui donner confiance en ses habiletés — elle est devenue plus menaçante pour ses adversaires.",
+    quote: "Notre fille a acquis beaucoup de technique sur le ballon. L'équipe a su lui donner confiance en ses habiletés — elle est devenue plus menaçante pour ses adversaires.",
     status: "verified"
   },
   {
     id: "t-3",
     name: "Benoit Cousineau",
     role: "Père d'une joueuse",
-    quote: "Tu fais plus que de former des joueuses de soccer, tu formes des futures femmes. Lâche pas JP.",
+    quote: "Vous faites plus que former des joueuses de soccer, vous formez des futures femmes. Continuez comme ça.",
     status: "verified"
   }
 ];

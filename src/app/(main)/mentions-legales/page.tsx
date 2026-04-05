@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const sections = [
   {
     title: "Éditeur du site",
-    content: `New Valkyria\nAcadémie technique de soccer féminin\nLaurentides, Québec, Canada\nCourriel : jpaka06@gmail.com\nSite web : www.newvalkyria.ca`
+    content: `New Valkyria\nAcadémie technique de soccer féminin\nLaurentides, Québec, Canada\nCourriel : info@newvalkyria.com\nSite web : www.newvalkyria.ca`
   },
   {
     title: "Hébergement",
@@ -47,7 +47,7 @@ const sections = [
   },
   {
     title: "Contact",
-    content: `Pour toute question ou réclamation :\n\nNew Valkyria\nLaurentides, Québec, Canada\njpaka06@gmail.com`
+    content: `Pour toute question ou réclamation :\n\nNew Valkyria\nLaurentides, Québec, Canada\ninfo@newvalkyria.com`
   }
 ];
 
