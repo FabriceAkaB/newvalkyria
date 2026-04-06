@@ -8,7 +8,7 @@ import { AGE_CATEGORIES, CATEGORY_LABELS, CATEGORY_SUBLABELS } from "@/lib/categ
 import type { AdminLead } from "@/lib/repositories";
 
 type FilterType = "all" | "paid" | "pending" | "waitlist" | "new";
-type CategoryFilter = "all" | "2016-2017" | "2014-2015" | "2012-2013";
+type CategoryFilter = "all" | "2016" | "2015" | "2014-2013";
 
 const SEEN_KEY = "nv_admin_seen_since";
 
@@ -35,6 +35,18 @@ function formatDate(iso: string) {
   });
 }
 
+/** Parse the `goal` field to extract child name, position, and club */
+function parseGoal(goal: string): { childName: string; position: string; club: string } {
+  const childMatch = goal.match(/Joueuse:\s*([^·]+)/);
+  const posMatch = goal.match(/Poste:\s*([^·]+)/);
+  const clubMatch = goal.match(/Club:\s*(.+)/);
+  return {
+    childName: childMatch?.[1]?.trim() ?? "",
+    position: posMatch?.[1]?.trim() ?? "",
+    club: clubMatch?.[1]?.trim() ?? "",
+  };
+}
+
 function StatusBadge({ lead, isNew }: { lead: AdminLead; isNew: boolean }) {
   return (
     <div className="admin-badge-group">
@@ -57,12 +69,47 @@ interface DrawerProps {
   isNew: boolean;
   onClose: () => void;
   onDeleted: () => void;
+  onUpdated: (lead: AdminLead) => void;
 }
 
-function LeadDrawer({ lead, isNew, onClose, onDeleted }: DrawerProps) {
+function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const parsed = parseGoal(lead.goal);
+
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(parsed.childName);
+  const [savingName, setSavingName] = useState(false);
+
+  const handleSaveName = async () => {
+    if (!nameInput.trim()) return;
+    setSavingName(true);
+    setError(null);
+
+    // Rebuild goal with child name
+    const newGoal = `Joueuse: ${nameInput.trim()} · Poste: ${parsed.position || "Non spécifié"} · Club: ${parsed.club || "Aucun"}`;
+
+    try {
+      const res = await fetch(`/api/admin/leads/${lead.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goal: newGoal }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        throw new Error(data.error ?? "Erreur de sauvegarde");
+      }
+      // Update the lead in parent state
+      const updatedLead = { ...lead, goal: newGoal };
+      onUpdated(updatedLead);
+      setEditingName(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -134,6 +181,48 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted }: DrawerProps) {
           {/* Joueuse */}
           <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Joueuse</p>
+            <div className="admin-drawer-field">
+              <p className="admin-drawer-label">Nom de la joueuse</p>
+              {parsed.childName && !editingName ? (
+                <p className="admin-drawer-value" style={{ fontWeight: 600 }}>
+                  {parsed.childName}
+                  <button
+                    onClick={() => { setNameInput(parsed.childName); setEditingName(true); }}
+                    style={{ marginLeft: "0.5rem", fontSize: "0.68rem", color: "rgba(196,164,228,0.6)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                  >
+                    modifier
+                  </button>
+                </p>
+              ) : editingName ? (
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <input
+                    type="text"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    className="admin-essais-input"
+                    placeholder="Prénom Nom de la joueuse"
+                    style={{ flex: 1, padding: "0.4rem 0.6rem", fontSize: "0.82rem" }}
+                    autoFocus
+                  />
+                  <button onClick={handleSaveName} disabled={savingName} className="admin-btn-primary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem" }}>
+                    {savingName ? "..." : "✓"}
+                  </button>
+                  <button onClick={() => setEditingName(false)} className="admin-btn-ghost" style={{ padding: "0.4rem 0.6rem", fontSize: "0.75rem" }}>
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <span style={{ color: "rgba(255,255,255,0.25)", fontStyle: "italic", fontSize: "0.8rem" }}>Non renseigné</span>
+                  <button
+                    onClick={() => setEditingName(true)}
+                    style={{ fontSize: "0.7rem", color: "rgba(196,164,228,0.7)", background: "none", border: "1px solid rgba(196,164,228,0.3)", borderRadius: "4px", padding: "0.2rem 0.5rem", cursor: "pointer" }}
+                  >
+                    + Ajouter
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="admin-drawer-row">
               <div className="admin-drawer-field">
                 <p className="admin-drawer-label">Groupe d&apos;âge</p>
@@ -164,22 +253,19 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted }: DrawerProps) {
                 <p className="admin-drawer-value">{lead.player_level}</p>
               </div>
             </div>
-            <div className="admin-drawer-field">
-              <p className="admin-drawer-label">Ville</p>
-              <p className="admin-drawer-value">{lead.city}</p>
-            </div>
-          </div>
-
-          {/* Disponibilités & Objectif */}
-          <div className="admin-drawer-section">
-            <p className="admin-drawer-section-title">Préférences</p>
-            <div className="admin-drawer-field">
-              <p className="admin-drawer-label">Disponibilités</p>
-              <p className="admin-drawer-value">{lead.availability}</p>
-            </div>
-            <div className="admin-drawer-field">
-              <p className="admin-drawer-label">Objectif</p>
-              <p className="admin-drawer-value admin-drawer-value-long">{lead.goal}</p>
+            <div className="admin-drawer-row">
+              {parsed.position && (
+                <div className="admin-drawer-field">
+                  <p className="admin-drawer-label">Poste</p>
+                  <p className="admin-drawer-value">{parsed.position}</p>
+                </div>
+              )}
+              {parsed.club && (
+                <div className="admin-drawer-field">
+                  <p className="admin-drawer-label">Club actuel</p>
+                  <p className="admin-drawer-value">{parsed.club}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -340,11 +426,13 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
     if (categoryFilter !== "all" && lead.player_age !== categoryFilter) return false;
     if (search) {
       const q = search.toLowerCase();
+      const goalParsed = parseGoal(lead.goal);
       if (
         !lead.parent_name.toLowerCase().includes(q) &&
         !lead.email.toLowerCase().includes(q) &&
         !lead.city?.toLowerCase().includes(q) &&
-        !lead.phone?.includes(q)
+        !lead.phone?.includes(q) &&
+        !goalParsed.childName.toLowerCase().includes(q)
       ) {
         return false;
       }
@@ -357,29 +445,32 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
     const headers = [
       "Date",
       "Nom parent",
+      "Nom joueuse",
       "Courriel",
       "Téléphone",
-      "Ville",
       "Groupe",
       "Niveau",
-      "Disponibilités",
-      "Objectif",
+      "Poste",
+      "Club",
       "Statut",
       "Liste attente",
     ];
-    const rows = filteredLeads.map((l) => [
-      new Date(l.created_at).toLocaleDateString("fr-CA"),
-      l.parent_name,
-      l.email,
-      l.phone,
-      l.city,
-      l.player_age,
-      l.player_level,
-      l.availability,
-      `"${l.goal.replace(/"/g, '""')}"`,
-      l.status,
-      l.is_waitlist ? "Oui" : "Non",
-    ]);
+    const rows = filteredLeads.map((l) => {
+      const g = parseGoal(l.goal);
+      return [
+        new Date(l.created_at).toLocaleDateString("fr-CA"),
+        l.parent_name,
+        g.childName,
+        l.email,
+        l.phone,
+        l.player_age,
+        l.player_level,
+        g.position,
+        g.club,
+        l.status,
+        l.is_waitlist ? "Oui" : "Non",
+      ];
+    });
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -472,7 +563,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
             <div className="admin-search-wrap">
               <input
                 type="search"
-                placeholder="Rechercher nom, courriel, ville…"
+                placeholder="Rechercher parent, joueuse, courriel…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="admin-search-input"
@@ -499,9 +590,9 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
                 <tr>
                   <th>Date</th>
                   <th>Nom parent</th>
+                  <th>Joueuse</th>
                   <th>Courriel</th>
                   <th>Téléphone</th>
-                  <th>Ville</th>
                   <th>Groupe</th>
                   <th>Niveau</th>
                   <th>Statut</th>
@@ -511,12 +602,14 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
                 {filteredLeads.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="admin-empty">
+
                       Aucune inscription dans cette catégorie
                     </td>
                   </tr>
                 ) : (
                   filteredLeads.map((lead) => {
                     const _isNew = isNewLead(lead.created_at, seenSince);
+                    const _parsed = parseGoal(lead.goal);
                     return (
                       <tr
                         key={lead.id}
@@ -525,9 +618,9 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
                       >
                         <td className="admin-td-date" suppressHydrationWarning>{formatDate(lead.created_at)}</td>
                         <td className="admin-td-name">{lead.parent_name}</td>
+                        <td className="admin-td-name">{_parsed.childName || "—"}</td>
                         <td className="admin-td-email">{lead.email}</td>
                         <td className="admin-td-phone">{lead.phone}</td>
-                        <td>{lead.city}</td>
                         <td className="admin-td-cat">
                           {CATEGORY_LABELS[
                             lead.player_age as keyof typeof CATEGORY_LABELS
@@ -568,6 +661,10 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
           isNew={isNewLead(selectedLead.created_at, seenSince)}
           onClose={() => setSelectedLead(null)}
           onDeleted={handleDeleted}
+          onUpdated={(updatedLead) => {
+            setLeads((prev) => prev.map((l) => l.id === updatedLead.id ? updatedLead : l));
+            setSelectedLead(updatedLead);
+          }}
         />
       )}
     </>

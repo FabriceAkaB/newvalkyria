@@ -219,7 +219,7 @@ export function QualificationForm() {
       player_age: category ?? form.category_year,
       player_level: form.level as LeadFormInput["player_level"],
       city: "Non spécifié",
-      goal: `Poste: ${form.position} · Club: ${form.club_level || "Aucun"}`,
+      goal: `Joueuse: ${form.child_name.trim()} · Poste: ${form.position} · Club: ${form.club_level || "Aucun"}`,
       availability: "Flexible",
       consent: true,
       player_name: form.child_name,
