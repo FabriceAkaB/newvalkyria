@@ -90,6 +90,7 @@ type FormData = {
   position: string;
   category_year: string;
   level: string;
+  referred_by: string;
 };
 
 type QualificationState = {
@@ -111,7 +112,8 @@ export function QualificationForm() {
     club_level: "",
     position: "",
     category_year: "",
-    level: ""
+    level: "",
+    referred_by: ""
   });
   const [leadId, setLeadId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -219,7 +221,7 @@ export function QualificationForm() {
       player_age: category ?? form.category_year,
       player_level: form.level as LeadFormInput["player_level"],
       city: "Non spécifié",
-      goal: `Joueuse: ${form.child_name.trim()} · Poste: ${form.position} · Club: ${form.club_level || "Aucun"}`,
+      goal: `Joueuse: ${form.child_name.trim()} · Poste: ${form.position} · Club: ${form.club_level || "Aucun"} · Recommandé par: ${form.referred_by.trim() || "Non spécifié"}`,
       availability: "Flexible",
       consent: true,
       player_name: form.child_name,
@@ -546,6 +548,20 @@ export function QualificationForm() {
                 <input required value="" onChange={() => {}} className="insc-hidden-required" tabIndex={-1} aria-hidden />
               )}
             </div>
+          </div>
+
+          {/* Referred by */}
+          <div className="tunnel-section">
+            <label className="tunnel-field">
+              <span>Qui vous a recommandé New Valkyria ? <span style={{ opacity: 0.5, fontWeight: 400 }}>(optionnel)</span></span>
+              <input
+                type="text"
+                placeholder="Ex: Marie Tremblay, Coach Olivier, Instagram, ami(e)..."
+                value={form.referred_by}
+                onChange={(e) => setForm((p) => ({ ...p, referred_by: e.target.value }))}
+                className="qual-input"
+              />
+            </label>
           </div>
 
           {formError && <p className="tunnel-error" role="alert">{formError}</p>}

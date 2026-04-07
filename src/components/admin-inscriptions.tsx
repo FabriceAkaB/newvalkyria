@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { AGE_CATEGORIES, CATEGORY_LABELS, CATEGORY_SUBLABELS } from "@/lib/categories";
+import type { ClubGroup } from "@/lib/club-aliases-store";
 import type { AdminLead } from "@/lib/repositories";
 
 type FilterType = "all" | "paid" | "confirmed" | "pending" | "waitlist" | "new";
@@ -35,15 +36,17 @@ function formatDate(iso: string) {
   });
 }
 
-/** Parse the `goal` field to extract child name, position, and club */
-function parseGoal(goal: string): { childName: string; position: string; club: string } {
+/** Parse the `goal` field to extract child name, position, club, and referredBy */
+function parseGoal(goal: string): { childName: string; position: string; club: string; referredBy: string } {
   const childMatch = goal.match(/Joueuse:\s*([^·]+)/);
   const posMatch = goal.match(/Poste:\s*([^·]+)/);
-  const clubMatch = goal.match(/Club:\s*(.+)/);
+  const clubMatch = goal.match(/Club:\s*([^·]+)/);
+  const refMatch = goal.match(/Recommandé par:\s*(.+)/);
   return {
     childName: childMatch?.[1]?.trim() ?? "",
     position: posMatch?.[1]?.trim() ?? "",
     club: clubMatch?.[1]?.trim() ?? "",
+    referredBy: refMatch?.[1]?.trim() ?? "",
   };
 }
 
@@ -328,6 +331,12 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                 </div>
               )}
             </div>
+            {parsed.referredBy && parsed.referredBy !== "Non spécifié" && (
+              <div className="admin-drawer-field">
+                <p className="admin-drawer-label">Recommandé par</p>
+                <p className="admin-drawer-value" style={{ color: "#c4a4e4" }}>👋 {parsed.referredBy}</p>
+              </div>
+            )}
           </div>
 
           {/* Stripe */}
@@ -447,14 +456,36 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
   const [seenSince, setSeenSince] = useState(0);
   const [resetDone, setResetDone] = useState(false);
 
+  // Club aliases (loaded from API)
+  const [clubGroups, setClubGroups] = useState<ClubGroup[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/clubs")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { groups: ClubGroup[] } | null) => {
+        if (data?.groups) setClubGroups(data.groups);
+      })
+      .catch(() => { /* silent */ });
+  }, []);
+
+  const normalizeClub = (raw: string): string => {
+    if (!raw) return raw;
+    const key = raw.trim().toLowerCase().replace(/\s+/g, " ");
+    for (const g of clubGroups) {
+      if (g.canonical.trim().toLowerCase() === key) return g.canonical;
+      if (g.aliases.some((a) => a.trim().toLowerCase() === key)) return g.canonical;
+    }
+    return raw;
+  };
+
   // Advanced filters
   const [clubFilter, setClubFilter] = useState<string>("all");
   const [positionFilter, setPositionFilter] = useState<string>("all");
   const [levelFilter, setLevelFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "parent_asc" | "child_asc" | "club_asc">("date_desc");
 
-  // Build unique lists for dropdowns
-  const allClubs = Array.from(new Set(leads.map((l) => parseGoal(l.goal).club).filter(Boolean))).sort();
+  // Build unique lists for dropdowns (clubs are normalized via aliases)
+  const allClubs = Array.from(new Set(leads.map((l) => normalizeClub(parseGoal(l.goal).club)).filter(Boolean))).sort();
   const allPositions = Array.from(new Set(leads.map((l) => parseGoal(l.goal).position).filter(Boolean))).sort();
   const allLevels = Array.from(new Set(leads.map((l) => l.player_level).filter(Boolean))).sort();
 
@@ -501,7 +532,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
       if (categoryFilter !== "all" && lead.player_age !== categoryFilter) return false;
 
       const goalParsed = parseGoal(lead.goal);
-      if (clubFilter !== "all" && goalParsed.club !== clubFilter) return false;
+      if (clubFilter !== "all" && normalizeClub(goalParsed.club) !== clubFilter) return false;
       if (positionFilter !== "all" && goalParsed.position !== positionFilter) return false;
       if (levelFilter !== "all" && lead.player_level !== levelFilter) return false;
 
@@ -513,7 +544,9 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
           !lead.city?.toLowerCase().includes(q) &&
           !lead.phone?.includes(q) &&
           !goalParsed.childName.toLowerCase().includes(q) &&
-          !goalParsed.club.toLowerCase().includes(q)
+          !goalParsed.club.toLowerCase().includes(q) &&
+          !normalizeClub(goalParsed.club).toLowerCase().includes(q) &&
+          !goalParsed.referredBy.toLowerCase().includes(q)
         ) {
           return false;
         }
@@ -558,11 +591,13 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
       "Niveau",
       "Poste",
       "Club",
+      "Recommandé par",
       "Statut",
       "Liste attente",
     ];
     const rows = filteredLeads.map((l) => {
       const g = parseGoal(l.goal);
+      const refBy = g.referredBy && g.referredBy !== "Non spécifié" ? g.referredBy : "";
       return [
         new Date(l.created_at).toLocaleDateString("fr-CA"),
         l.parent_name,
@@ -572,7 +607,8 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
         l.player_age,
         l.player_level,
         g.position,
-        g.club,
+        normalizeClub(g.club),
+        refBy,
         l.status,
         l.is_waitlist ? "Oui" : "Non",
       ];
