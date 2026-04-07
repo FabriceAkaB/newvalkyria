@@ -447,6 +447,17 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
   const [seenSince, setSeenSince] = useState(0);
   const [resetDone, setResetDone] = useState(false);
 
+  // Advanced filters
+  const [clubFilter, setClubFilter] = useState<string>("all");
+  const [positionFilter, setPositionFilter] = useState<string>("all");
+  const [levelFilter, setLevelFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "parent_asc" | "child_asc" | "club_asc">("date_desc");
+
+  // Build unique lists for dropdowns
+  const allClubs = Array.from(new Set(leads.map((l) => parseGoal(l.goal).club).filter(Boolean))).sort();
+  const allPositions = Array.from(new Set(leads.map((l) => parseGoal(l.goal).position).filter(Boolean))).sort();
+  const allLevels = Array.from(new Set(leads.map((l) => l.player_level).filter(Boolean))).sort();
+
   useEffect(() => {
     setSeenSince(getSeenSince());
   }, []);
@@ -479,29 +490,61 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
   const countPending = leads.filter((l) => l.status === "pending" && !l.is_waitlist).length;
   const countWaitlist = leads.filter((l) => l.is_waitlist).length;
 
-  /* ── Filtered ── */
-  const filteredLeads = leads.filter((lead) => {
-    if (filter === "paid" && (lead.status !== "paid" || lead.is_waitlist)) return false;
-    if (filter === "confirmed" && (lead.status !== "confirmed" || lead.is_waitlist)) return false;
-    if (filter === "pending" && (lead.status !== "pending" || lead.is_waitlist)) return false;
-    if (filter === "waitlist" && !lead.is_waitlist) return false;
-    if (filter === "new" && !isNewLead(lead.created_at, seenSince)) return false;
-    if (categoryFilter !== "all" && lead.player_age !== categoryFilter) return false;
-    if (search) {
-      const q = search.toLowerCase();
+  /* ── Filtered + sorted ── */
+  const filteredLeads = leads
+    .filter((lead) => {
+      if (filter === "paid" && (lead.status !== "paid" || lead.is_waitlist)) return false;
+      if (filter === "confirmed" && (lead.status !== "confirmed" || lead.is_waitlist)) return false;
+      if (filter === "pending" && (lead.status !== "pending" || lead.is_waitlist)) return false;
+      if (filter === "waitlist" && !lead.is_waitlist) return false;
+      if (filter === "new" && !isNewLead(lead.created_at, seenSince)) return false;
+      if (categoryFilter !== "all" && lead.player_age !== categoryFilter) return false;
+
       const goalParsed = parseGoal(lead.goal);
-      if (
-        !lead.parent_name.toLowerCase().includes(q) &&
-        !lead.email.toLowerCase().includes(q) &&
-        !lead.city?.toLowerCase().includes(q) &&
-        !lead.phone?.includes(q) &&
-        !goalParsed.childName.toLowerCase().includes(q)
-      ) {
-        return false;
+      if (clubFilter !== "all" && goalParsed.club !== clubFilter) return false;
+      if (positionFilter !== "all" && goalParsed.position !== positionFilter) return false;
+      if (levelFilter !== "all" && lead.player_level !== levelFilter) return false;
+
+      if (search) {
+        const q = search.toLowerCase();
+        if (
+          !lead.parent_name.toLowerCase().includes(q) &&
+          !lead.email.toLowerCase().includes(q) &&
+          !lead.city?.toLowerCase().includes(q) &&
+          !lead.phone?.includes(q) &&
+          !goalParsed.childName.toLowerCase().includes(q) &&
+          !goalParsed.club.toLowerCase().includes(q)
+        ) {
+          return false;
+        }
       }
-    }
-    return true;
-  });
+      return true;
+    })
+    .sort((a, b) => {
+      const aGoal = parseGoal(a.goal);
+      const bGoal = parseGoal(b.goal);
+      switch (sortBy) {
+        case "date_asc":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "parent_asc":
+          return a.parent_name.localeCompare(b.parent_name, "fr");
+        case "child_asc":
+          return aGoal.childName.localeCompare(bGoal.childName, "fr");
+        case "club_asc":
+          return aGoal.club.localeCompare(bGoal.club, "fr");
+        case "date_desc":
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+
+  const hasActiveAdvancedFilter = clubFilter !== "all" || positionFilter !== "all" || levelFilter !== "all";
+
+  const resetAdvancedFilters = () => {
+    setClubFilter("all");
+    setPositionFilter("all");
+    setLevelFilter("all");
+  };
 
   /* ── Export CSV ── */
   const handleExportCSV = () => {
@@ -645,6 +688,79 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
             >
               {filteredLeads.length} résultat{filteredLeads.length !== 1 ? "s" : ""}
             </span>
+          </div>
+
+          {/* Advanced filters row */}
+          <div
+            className="admin-filters-row"
+            style={{ marginBottom: "1rem", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}
+          >
+            <select
+              value={clubFilter}
+              onChange={(e) => setClubFilter(e.target.value)}
+              className="admin-group-select"
+              title="Filtrer par club"
+            >
+              <option value="all">Tous les clubs</option>
+              {allClubs.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            <select
+              value={positionFilter}
+              onChange={(e) => setPositionFilter(e.target.value)}
+              className="admin-group-select"
+              title="Filtrer par poste"
+            >
+              <option value="all">Tous les postes</option>
+              {allPositions.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+
+            <select
+              value={levelFilter}
+              onChange={(e) => setLevelFilter(e.target.value)}
+              className="admin-group-select"
+              title="Filtrer par niveau"
+            >
+              <option value="all">Tous les niveaux</option>
+              {allLevels.map((lv) => (
+                <option key={lv} value={lv}>{lv}</option>
+              ))}
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="admin-group-select"
+              title="Trier par"
+              style={{ borderColor: "rgba(196,164,228,0.4)" }}
+            >
+              <option value="date_desc">↓ Plus récentes</option>
+              <option value="date_asc">↑ Plus anciennes</option>
+              <option value="parent_asc">A→Z Nom parent</option>
+              <option value="child_asc">A→Z Nom joueuse</option>
+              <option value="club_asc">A→Z Club</option>
+            </select>
+
+            {hasActiveAdvancedFilter && (
+              <button
+                onClick={resetAdvancedFilters}
+                style={{
+                  padding: "0.4rem 0.7rem",
+                  fontSize: "0.7rem",
+                  background: "transparent",
+                  border: "1px solid rgba(255,100,100,0.3)",
+                  color: "rgba(255,150,150,0.8)",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                }}
+              >
+                ✕ Réinitialiser filtres
+              </button>
+            )}
           </div>
 
           {/* Table */}
