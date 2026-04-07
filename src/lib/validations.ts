@@ -26,7 +26,9 @@ export const checkoutSchema = z.object({
   trialYear: z.enum(["2016", "2015", "2014-2013"]).optional(),
   cancelPath: z.string().refine((value) => value.startsWith("/") && !value.startsWith("//"), {
     message: "Chemin d'annulation invalide"
-  }).optional()
+  }).optional(),
+  parentName: z.string().optional(),
+  childName: z.string().optional()
 }).superRefine((payload, ctx) => {
   if (payload.checkoutType === "trial" && !payload.trialYear) {
     ctx.addIssue({

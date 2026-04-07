@@ -1,10 +1,18 @@
 import { env } from "@/lib/env";
 import { getResendClient } from "@/lib/resend";
+import { getTrialConfig } from "@/lib/trial-dates-store";
 import type { LeadFormPayload } from "@/lib/validations";
 
 interface ConfirmationEmailInput {
   to: string;
   parentName: string;
+}
+
+interface TrialEmailInput {
+  to: string;
+  parentName: string;
+  childName?: string;
+  trialYear: string;
 }
 
 export async function sendLeadNotificationEmail(lead: LeadFormPayload) {
@@ -57,6 +65,74 @@ export async function sendLeadNotificationEmail(lead: LeadFormPayload) {
         </table>
 
         <p style="margin-top:24px;font-size:13px;color:#888">Ce message a été envoyé automatiquement par le site New Valkyria.</p>
+      </div>
+    `
+  });
+}
+
+export async function sendTrialConfirmationEmail(input: TrialEmailInput) {
+  if (!env.resendApiKey) return;
+
+  const resend = getResendClient();
+  const config = getTrialConfig();
+  const groups = config.groups[input.trialYear] ?? [];
+
+  const groupsHtml = groups.map((g) => `
+    <div style="margin-top:18px;padding:14px 16px;background:#f6f1fb;border-radius:8px;border-left:3px solid #8b5cf6">
+      <p style="margin:0 0 8px 0;font-weight:bold;font-size:14px;color:#3b1d6e">${g.label}</p>
+      <p style="margin:0 0 6px 0;font-size:13px"><strong>Dates :</strong> ${g.dates.join(" · ")}</p>
+      ${g.horaires.map((h) => `<p style="margin:2px 0;font-size:13px;color:#4a4a6a">${h}</p>`).join("")}
+      ${g.exception ? `<p style="margin:6px 0 0 0;font-size:12px;color:#b45309;font-style:italic">⚠ ${g.exception}</p>` : ""}
+    </div>
+  `).join("");
+
+  const childLine = input.childName
+    ? `<p style="font-size:15px">Votre fille <strong>${input.childName}</strong> est inscrite à l'essai gratuit ! 🎉</p>`
+    : `<p style="font-size:15px">Votre inscription à l'essai gratuit est confirmée ! 🎉</p>`;
+
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    subject: "✓ Votre essai gratuit est confirmé — New Valkyria",
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#1a1a2e;max-width:600px;padding:24px">
+        <div style="text-align:center;margin-bottom:20px">
+          <h1 style="font-size:24px;color:#3b1d6e;margin:0">NEW VALKYRIA</h1>
+          <p style="color:#888;font-size:13px;margin:4px 0 0 0;letter-spacing:1px">ESSAI GRATUIT CONFIRMÉ</p>
+        </div>
+
+        <p style="font-size:16px">Bonjour ${input.parentName},</p>
+        ${childLine}
+        <p>Voici toutes les informations pour les <strong>3 séances d'essai gratuites</strong> :</p>
+
+        ${groupsHtml}
+
+        <div style="margin-top:24px;padding:16px;background:#fff8e1;border-radius:8px;border-left:3px solid #f59e0b">
+          <p style="margin:0 0 6px 0;font-weight:bold;font-size:14px">📍 Lieu</p>
+          <p style="margin:0;font-size:13px">${config.lieu}</p>
+          <p style="margin:8px 0 0 0;font-size:12px;color:#92400e;font-style:italic">* ${config.lieuNote}</p>
+        </div>
+
+        <div style="margin-top:24px;padding:16px;background:#f0f9ff;border-radius:8px">
+          <p style="margin:0 0 8px 0;font-weight:bold;font-size:14px">Ce que vous devez prévoir</p>
+          <ul style="margin:0;padding-left:20px;font-size:13px;color:#4a4a6a">
+            <li>Souliers de soccer (crampons multi-surfaces ou turf)</li>
+            <li>Vêtements de sport confortables</li>
+            <li>Bouteille d'eau</li>
+            <li>Bonne énergie ! ⚡</li>
+          </ul>
+        </div>
+
+        <p style="margin-top:24px;font-size:14px">Une question ? Répondez à ce courriel ou contactez-nous :</p>
+        <p style="font-size:14px">
+          📧 <a href="mailto:info@newvalkyria.com">info@newvalkyria.com</a><br/>
+          📞 <a href="tel:+15146883600">514 688-3600</a>
+        </p>
+
+        <p style="margin-top:32px;font-size:13px;color:#888;border-top:1px solid #eee;padding-top:16px">
+          À très bientôt sur le terrain !<br/>
+          <strong>L'équipe New Valkyria</strong>
+        </p>
       </div>
     `
   });

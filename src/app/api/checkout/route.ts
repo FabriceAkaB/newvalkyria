@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { sendTrialConfirmationEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
 import { getRequestOrigin } from "@/lib/request-origin";
@@ -76,6 +77,14 @@ export async function POST(request: Request) {
       if (!session.url) {
         throw new Error("Stripe n'a pas retourné d'URL de validation.");
       }
+
+      // Fire-and-forget — envoie l'email de confirmation d'essai gratuit
+      void sendTrialConfirmationEmail({
+        to: payload.email,
+        parentName: payload.parentName ?? "",
+        childName: payload.childName,
+        trialYear: payload.trialYear!
+      }).catch((err) => console.error("Trial email error:", err));
 
       return NextResponse.json({ sessionId: session.id, checkoutUrl: session.url });
     }

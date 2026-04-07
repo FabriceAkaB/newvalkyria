@@ -173,7 +173,7 @@ export interface AdminLead {
   city: string;
   goal: string;
   availability: string;
-  status: "pending" | "paid" | "cancelled";
+  status: "pending" | "confirmed" | "paid" | "cancelled";
   is_waitlist: boolean;
   stripe_checkout_session_id?: string;
   stripe_payment_intent_id?: string;
@@ -254,6 +254,18 @@ export async function updateLeadGoal(id: string, goal: string): Promise<void> {
 
   const supabase = getSupabaseAdminClient() as any;
   const { error } = await supabase.from("leads").update({ goal }).eq("id", id);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function updateLeadStatus(
+  id: string,
+  status: "pending" | "confirmed" | "paid" | "cancelled"
+): Promise<void> {
+  if (!isSupabaseAvailable()) return;
+
+  const supabase = getSupabaseAdminClient() as any;
+  const { error } = await supabase.from("leads").update({ status }).eq("id", id);
 
   if (error) throw new Error(error.message);
 }

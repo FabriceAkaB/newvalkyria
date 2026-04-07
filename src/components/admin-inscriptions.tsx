@@ -7,7 +7,7 @@ import { AdminTopbar } from "@/components/admin-topbar";
 import { AGE_CATEGORIES, CATEGORY_LABELS, CATEGORY_SUBLABELS } from "@/lib/categories";
 import type { AdminLead } from "@/lib/repositories";
 
-type FilterType = "all" | "paid" | "pending" | "waitlist" | "new";
+type FilterType = "all" | "paid" | "confirmed" | "pending" | "waitlist" | "new";
 type CategoryFilter = "all" | "2016" | "2015" | "2014-2013";
 
 const SEEN_KEY = "nv_admin_seen_since";
@@ -55,6 +55,10 @@ function StatusBadge({ lead, isNew }: { lead: AdminLead; isNew: boolean }) {
         <span className="admin-badge admin-badge-waitlist">Liste d&apos;attente</span>
       ) : lead.status === "paid" ? (
         <span className="admin-badge admin-badge-paid">✓ Payée</span>
+      ) : lead.status === "confirmed" ? (
+        <span className="admin-badge admin-badge-paid" style={{ background: "rgba(120, 200, 255, 0.18)", color: "#9ec9ff", borderColor: "rgba(158, 201, 255, 0.4)" }}>✓ Confirmée</span>
+      ) : lead.status === "cancelled" ? (
+        <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255, 100, 100, 0.18)", color: "#ff9999" }}>Annulée</span>
       ) : (
         <span className="admin-badge admin-badge-pending">En attente</span>
       )}
@@ -81,6 +85,30 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(parsed.childName);
   const [savingName, setSavingName] = useState(false);
+
+  const [savingStatus, setSavingStatus] = useState(false);
+
+  const handleStatusChange = async (newStatus: AdminLead["status"]) => {
+    if (newStatus === lead.status) return;
+    setSavingStatus(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/leads/${lead.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        throw new Error(data.error ?? "Erreur de sauvegarde");
+      }
+      onUpdated({ ...lead, status: newStatus });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setSavingStatus(false);
+    }
+  };
 
   const handleSaveName = async () => {
     if (!nameInput.trim()) return;
@@ -157,6 +185,39 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
           <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Statut</p>
             <StatusBadge lead={lead} isNew={isNew} />
+            <div style={{ marginTop: "0.6rem" }}>
+              <p className="admin-drawer-label">Changer le statut</p>
+              <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.3rem" }}>
+                {(["pending", "confirmed", "paid", "cancelled"] as const).map((s) => {
+                  const labels: Record<typeof s, string> = {
+                    pending: "En attente",
+                    confirmed: "Confirmée",
+                    paid: "Payée",
+                    cancelled: "Annulée",
+                  };
+                  const isActive = lead.status === s;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => handleStatusChange(s)}
+                      disabled={savingStatus || isActive}
+                      style={{
+                        padding: "0.35rem 0.7rem",
+                        fontSize: "0.72rem",
+                        borderRadius: "6px",
+                        border: isActive ? "1px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.15)",
+                        background: isActive ? "rgba(196,164,228,0.2)" : "transparent",
+                        color: isActive ? "#fff" : "rgba(255,255,255,0.6)",
+                        cursor: isActive ? "default" : "pointer",
+                        fontWeight: isActive ? 600 : 400,
+                      }}
+                    >
+                      {labels[s]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Contact */}
@@ -414,12 +475,14 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
   /* ── Counts ── */
   const countNew = leads.filter((l) => isNewLead(l.created_at, seenSince)).length;
   const countPaid = leads.filter((l) => l.status === "paid" && !l.is_waitlist).length;
+  const countConfirmed = leads.filter((l) => l.status === "confirmed" && !l.is_waitlist).length;
   const countPending = leads.filter((l) => l.status === "pending" && !l.is_waitlist).length;
   const countWaitlist = leads.filter((l) => l.is_waitlist).length;
 
   /* ── Filtered ── */
   const filteredLeads = leads.filter((lead) => {
     if (filter === "paid" && (lead.status !== "paid" || lead.is_waitlist)) return false;
+    if (filter === "confirmed" && (lead.status !== "confirmed" || lead.is_waitlist)) return false;
     if (filter === "pending" && (lead.status !== "pending" || lead.is_waitlist)) return false;
     if (filter === "waitlist" && !lead.is_waitlist) return false;
     if (filter === "new" && !isNewLead(lead.created_at, seenSince)) return false;
@@ -525,7 +588,8 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
                 [
                   ["all", "Toutes", leads.length],
                   ["new", "Nouvelles", countNew],
-                  ["paid", "Confirmées", countPaid],
+                  ["confirmed", "Confirmées", countConfirmed],
+                  ["paid", "Payées", countPaid],
                   ["pending", "En attente", countPending],
                   ["waitlist", "Liste d'attente", countWaitlist],
                 ] as [FilterType, string, number][]

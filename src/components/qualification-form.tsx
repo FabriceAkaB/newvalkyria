@@ -331,7 +331,9 @@ export function QualificationForm() {
           email: form.email,
           checkoutType: "trial",
           trialYear: form.category_year,
-          cancelPath: "/qualification?cancelled=1"
+          cancelPath: "/qualification?cancelled=1",
+          parentName: form.parent_name,
+          childName: form.child_name
         })
       });
 
