@@ -59,13 +59,15 @@ export async function POST(request: Request) {
         metadata: {
           leadId: payload.leadId,
           checkoutType,
-          trialYear: payload.trialYear!
+          trialYear: payload.trialYear!,
+          ...(payload.timeSlot ? { timeSlot: payload.timeSlot } : {})
         },
         setup_intent_data: {
           metadata: {
             leadId: payload.leadId,
             checkoutType,
-            trialYear: payload.trialYear!
+            trialYear: payload.trialYear!,
+            ...(payload.timeSlot ? { timeSlot: payload.timeSlot } : {})
           }
         },
         success_url: `${baseUrl}/confirmation?trial=true&year=${payload.trialYear}&session_id={CHECKOUT_SESSION_ID}`,
@@ -123,7 +125,8 @@ export async function POST(request: Request) {
         leadId: payload.leadId,
         checkoutType,
         addons: (payload.addons ?? []).join(","),
-        ...(payload.category ? { category: payload.category } : {})
+        ...(payload.category ? { category: payload.category } : {}),
+        ...(payload.timeSlot ? { timeSlot: payload.timeSlot } : {})
       },
       success_url: `${baseUrl}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}${cancelPath}`

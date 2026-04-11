@@ -331,6 +331,12 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                 </div>
               )}
             </div>
+            {lead.time_slot && (
+              <div className="admin-drawer-field">
+                <p className="admin-drawer-label">Créneau horaire</p>
+                <p className="admin-drawer-value" style={{ fontWeight: 600, color: "#9ec9ff" }}>{lead.time_slot}</p>
+              </div>
+            )}
             {parsed.referredBy && parsed.referredBy !== "Non spécifié" && (
               <div className="admin-drawer-field">
                 <p className="admin-drawer-label">Recommandé par</p>
@@ -588,6 +594,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
       "Courriel",
       "Téléphone",
       "Groupe",
+      "Créneau",
       "Niveau",
       "Poste",
       "Club",
@@ -605,6 +612,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
         l.email,
         l.phone,
         l.player_age,
+        l.time_slot ?? "",
         l.player_level,
         g.position,
         normalizeClub(g.club),
@@ -810,6 +818,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
                   <th>Courriel</th>
                   <th>Téléphone</th>
                   <th>Groupe</th>
+                  <th>Créneau</th>
                   <th>Niveau</th>
                   <th>Statut</th>
                 </tr>
@@ -842,6 +851,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
                             lead.player_age as keyof typeof CATEGORY_LABELS
                           ] ?? lead.player_age}
                         </td>
+                        <td style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{lead.time_slot || "—"}</td>
                         <td>{lead.player_level}</td>
                         <td>
                           <StatusBadge lead={lead} isNew={_isNew} />

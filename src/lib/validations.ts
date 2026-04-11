@@ -14,7 +14,8 @@ export const leadFormSchema = z.object({
   }),
   player_name: z.string().optional(),
   player_position: z.string().optional(),
-  player_club: z.string().optional()
+  player_club: z.string().optional(),
+  time_slot: z.string().optional()
 });
 
 export const checkoutSchema = z.object({
@@ -28,7 +29,8 @@ export const checkoutSchema = z.object({
     message: "Chemin d'annulation invalide"
   }).optional(),
   parentName: z.string().optional(),
-  childName: z.string().optional()
+  childName: z.string().optional(),
+  timeSlot: z.string().optional()
 }).superRefine((payload, ctx) => {
   if (payload.checkoutType === "trial" && !payload.trialYear) {
     ctx.addIssue({

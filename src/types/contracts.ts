@@ -14,12 +14,13 @@ export interface LeadFormInput {
   player_name?: string;
   player_position?: string;
   player_club?: string;
+  time_slot?: string;
 }
 
 export interface LeadRecord extends LeadFormInput {
   id: string;
   created_at: string;
-  status: "pending" | "paid" | "cancelled";
+  status: "pending" | "confirmed" | "paid" | "cancelled";
   stripe_checkout_session_id?: string;
   stripe_payment_intent_id?: string;
 }

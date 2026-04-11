@@ -61,16 +61,37 @@ const ESSAI_DATES: Record<string, { label: string; dates: string[]; horaires: st
 
 const ESSAI_LIEU = "Terrain synthétique — Parc à Rosemère, Rue Charbonneau, Rosemère, QC J7A 1G1";
 
+/* ── Time slots per category ── */
+interface TimeSlot {
+  id: string;
+  label: string;
+  day: string;
+  horaire: string;
+  practices: number;
+}
+
+const TIME_SLOTS: Record<string, TimeSlot[]> = {
+  "2016": [
+    { id: "mar-2016", label: "Mardi", day: "Mardi", horaire: "18h00 à 19h15", practices: 17 }
+  ],
+  "2015": [
+    { id: "lun-2015", label: "Lundi", day: "Lundi", horaire: "18h00 à 19h30", practices: 15 },
+    { id: "mer-2015", label: "Mercredi", day: "Mercredi", horaire: "19h25 à 20h55", practices: 15 },
+    { id: "jeu-2015", label: "Jeudi", day: "Jeudi", horaire: "18h00 à 19h15", practices: 17 }
+  ],
+  "2014-2013": [
+    { id: "lun-2014", label: "Lundi", day: "Lundi", horaire: "19h25 à 20h55", practices: 15 }
+  ]
+};
+
 const ELITE_BENEFITS = [
-  "15 pratiques spécialisées — 1x/semaine",
-  "Durée : 85 minutes par pratique",
-  "Choix : lundi, mercredi ou vendredi",
-  "Travail technique avancé",
-  "Préparation mentale et confiance",
-  "Intelligence de jeu et tactique",
-  "Travail sur l\u2019intensité",
-  "BONUS : 3 pratiques d\u2019essai gratuites",
-  "BONUS : Rencontre téléphonique bilan"
+  "Développement technique, mental, tactique et intensité",
+  "Durée : 75 à 85 minutes par pratique",
+  "Suivi téléphonique individuel",
+  "Évaluation à la semaine 7",
+  "Garantie : progression validée ou remboursée",
+  "BONUS : 3 pratiques d\u2019essai gratuites incluses",
+  "BONUS : Cours tir et dribble le dimanche (16h00-17h00)"
 ];
 
 const POLL_INTERVAL = 10_000;
@@ -91,6 +112,7 @@ type FormData = {
   category_year: string;
   level: string;
   referred_by: string;
+  time_slot: string;
 };
 
 type QualificationState = {
@@ -113,7 +135,8 @@ export function QualificationForm() {
     position: "",
     category_year: "",
     level: "",
-    referred_by: ""
+    referred_by: "",
+    time_slot: ""
   });
   const [leadId, setLeadId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -159,8 +182,14 @@ export function QualificationForm() {
 
   const category = YEAR_TO_CATEGORY[form.category_year] ?? null;
   const catCap = category && liveCapacity ? (liveCapacity as Record<string, CategoryCapacity>)[category] : null;
-  const remaining = catCap?.remaining ?? 20;
-  const maxCap = catCap ? catCap.remaining + catCap.taken : 20;
+  const remaining = catCap?.remaining ?? 10;
+  const maxCap = catCap ? catCap.remaining + catCap.taken : 10;
+
+  // Time slots for selected category
+  const availableSlots = TIME_SLOTS[form.category_year] ?? [];
+  const hasSlotChoice = availableSlots.length > 1;
+  const selectedSlot = availableSlots.find((s) => s.id === form.time_slot) ?? (availableSlots.length === 1 ? availableSlots[0] : null);
+  const practiceCount = selectedSlot?.practices ?? 15;
   const essai = (dynamicTrialConfig?.groups?.[form.category_year] ?? ESSAI_DATES[form.category_year]) ?? null;
   const horaire = essai?.[0]?.horaires?.join(" / ") ?? "";
   const essaiLieu = dynamicTrialConfig?.lieu ?? ESSAI_LIEU;
@@ -222,6 +251,7 @@ export function QualificationForm() {
       player_level: form.level as LeadFormInput["player_level"],
       city: "Non spécifié",
       goal: `Joueuse: ${form.child_name.trim()} · Poste: ${form.position} · Club: ${form.club_level || "Aucun"} · Recommandé par: ${form.referred_by.trim() || "Non spécifié"}`,
+      time_slot: form.time_slot || (availableSlots.length === 1 ? availableSlots[0].id : undefined),
       availability: "Flexible",
       consent: true,
       player_name: form.child_name,
@@ -262,14 +292,17 @@ export function QualificationForm() {
   /* ── Save recap data to localStorage for confirmation page ── */
   const saveRecapData = (programme: string, montant: string) => {
     const yearLabel = BIRTH_YEARS.find((b) => b.year === form.category_year)?.label ?? "";
+    const slotLabel = selectedSlot ? `${selectedSlot.day} — ${selectedSlot.horaire}` : "";
     const recap = {
       child_name: form.child_name,
       parent_email: form.email,
       programme,
       category_label: yearLabel,
       year: form.category_year,
-      horaire,
-      montant
+      horaire: slotLabel || horaire,
+      montant,
+      time_slot: slotLabel,
+      practices: practiceCount
     };
     localStorage.setItem("nv_recap", JSON.stringify(recap));
   };
@@ -290,7 +323,8 @@ export function QualificationForm() {
           leadId,
           email: form.email,
           category,
-          cancelPath: "/qualification?cancelled=1"
+          cancelPath: "/qualification?cancelled=1",
+          timeSlot: selectedSlot ? `${selectedSlot.day} — ${selectedSlot.horaire}` : undefined
         })
       });
 
@@ -335,7 +369,8 @@ export function QualificationForm() {
           trialYear: form.category_year,
           cancelPath: "/qualification?cancelled=1",
           parentName: form.parent_name,
-          childName: form.child_name
+          childName: form.child_name,
+          timeSlot: selectedSlot ? `${selectedSlot.day} — ${selectedSlot.horaire}` : undefined
         })
       });
 
@@ -583,6 +618,50 @@ export function QualificationForm() {
         <span className="qual-logo-text">NEW VALKYRIA</span>
       </div>
 
+      {/* Time slot picker for categories with multiple slots (2015) */}
+      {hasSlotChoice && (
+        <div style={{ maxWidth: 600, margin: "0 auto 1.5rem", padding: "1.2rem", background: "rgba(196,164,228,0.08)", border: "1px solid rgba(196,164,228,0.25)", borderRadius: "12px" }}>
+          <p style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "0.6rem", color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Choisissez votre créneau horaire
+          </p>
+          <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginBottom: "1rem" }}>
+            Les pratiques débutent le 23 mai. 10 places par créneau.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {availableSlots.map((slot) => (
+              <button
+                key={slot.id}
+                type="button"
+                onClick={() => setForm((p) => ({ ...p, time_slot: slot.id }))}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "0.85rem 1.1rem",
+                  background: form.time_slot === slot.id ? "rgba(196,164,228,0.2)" : "rgba(255,255,255,0.03)",
+                  border: form.time_slot === slot.id ? "2px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  color: "#fff",
+                  textAlign: "left",
+                }}
+              >
+                <div>
+                  <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{slot.day}</span>
+                  <span style={{ marginLeft: "0.6rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>{slot.horaire}</span>
+                </div>
+                <span style={{ fontSize: "0.75rem", color: "rgba(196,164,228,0.8)" }}>{slot.practices} pratiques</span>
+              </button>
+            ))}
+          </div>
+          {!form.time_slot && (
+            <p style={{ fontSize: "0.72rem", color: "#f0c878", marginTop: "0.6rem" }}>
+              ⚠ Veuillez choisir un créneau avant de continuer
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="tunnel-offer-grid">
         {/* ── Programme Élite ── */}
         <div className="tunnel-offer-card tunnel-offer-elite">
@@ -601,13 +680,19 @@ export function QualificationForm() {
                 {b}
               </li>
             ))}
+            <li>
+              <span className="tunnel-check" aria-hidden>✓</span>
+              {practiceCount} pratiques — 1x/semaine
+            </li>
           </ul>
 
-          {/* Horaires */}
-          <div className="tunnel-horaires">
-            <p>2016 : 18h00-19h25 / 2015 : 19h30-20h55</p>
-            <p>2013-2014 : 19h30 à 20h55</p>
-          </div>
+          {/* Horaire sélectionné */}
+          {selectedSlot && (
+            <div className="tunnel-horaires">
+              <p>{selectedSlot.day} — {selectedSlot.horaire}</p>
+              <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>Début le 23 mai 2026</p>
+            </div>
+          )}
 
           {/* Garantie */}
           <div className="tunnel-garantie">
@@ -626,7 +711,7 @@ export function QualificationForm() {
 
           <button
             type="button"
-            disabled={checkoutLoading}
+            disabled={checkoutLoading || (hasSlotChoice && !form.time_slot)}
             onClick={handleEliteClick}
             className="tunnel-cta-elite"
           >
@@ -670,7 +755,7 @@ export function QualificationForm() {
 
           <button
             type="button"
-            disabled={checkoutLoading}
+            disabled={checkoutLoading || (hasSlotChoice && !form.time_slot)}
             onClick={handleEssaiClick}
             className="tunnel-cta-essai"
           >

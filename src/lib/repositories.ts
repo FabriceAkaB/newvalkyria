@@ -38,6 +38,7 @@ export async function saveLead(payload: LeadFormPayload, isWaitlist = false) {
     status: "pending"
   };
 
+  if (payload.time_slot) row.time_slot = payload.time_slot;
   if (isWaitlist) row.is_waitlist = true;
 
   const { data, error } = await supabase
@@ -175,6 +176,7 @@ export interface AdminLead {
   availability: string;
   status: "pending" | "confirmed" | "paid" | "cancelled";
   is_waitlist: boolean;
+  time_slot?: string;
   stripe_checkout_session_id?: string;
   stripe_payment_intent_id?: string;
 }
