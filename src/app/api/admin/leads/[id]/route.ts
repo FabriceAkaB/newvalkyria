@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
-import { deleteLead, updateLeadGoal, updateLeadStatus } from "@/lib/repositories";
+import { deleteLead, updateLeadGoal, updateLeadStatus, updateLeadTimeSlot } from "@/lib/repositories";
 
 export async function DELETE(
   _request: Request,
@@ -34,10 +34,13 @@ export async function PATCH(
     return jsonError("ID manquant", 400);
   }
 
-  const body = (await request.json()) as { goal?: string; status?: string };
+  const body = (await request.json()) as { goal?: string; status?: string; time_slot?: string };
+
+  let updated = false;
 
   if (body.goal !== undefined) {
     await updateLeadGoal(id, body.goal);
+    updated = true;
   }
 
   if (body.status !== undefined) {
@@ -46,9 +49,15 @@ export async function PATCH(
       return jsonError("Statut invalide", 400);
     }
     await updateLeadStatus(id, body.status as typeof allowed[number]);
+    updated = true;
   }
 
-  if (body.goal === undefined && body.status === undefined) {
+  if (body.time_slot !== undefined) {
+    await updateLeadTimeSlot(id, body.time_slot);
+    updated = true;
+  }
+
+  if (!updated) {
     return jsonError("Aucun champ à mettre à jour", 400);
   }
 

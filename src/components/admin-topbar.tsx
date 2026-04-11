@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/admin/inscriptions", label: "Inscriptions" },
   { href: "/admin/joueuses", label: "Joueuses" },
   { href: "/admin/capacite", label: "Capacité" },
+  { href: "/admin/plages", label: "Plages" },
   { href: "/admin/essais", label: "Essais" },
   { href: "/admin/clubs", label: "Clubs" },
 ];
