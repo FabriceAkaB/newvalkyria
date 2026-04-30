@@ -295,9 +295,9 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                             key={lead.id}
                             style={{
                               display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "0.45rem 0.6rem",
+                              flexDirection: "column",
+                              gap: "0.4rem",
+                              padding: "0.5rem 0.6rem",
                               marginBottom: "0.3rem",
                               background: "rgba(255,255,255,0.03)",
                               borderRadius: "6px",
@@ -305,31 +305,12 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                               opacity: isMoving ? 0.5 : 1,
                             }}
                           >
-                            <div>
-                              <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff" }}>{childName}</span>
-                              <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", marginLeft: "0.5rem" }}>{lead.parent_name}</span>
-                            </div>
-                            <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
-                              <select
-                                value={slot.id}
-                                onChange={(e) => handleMoveLead(lead.id, e.target.value)}
-                                disabled={isMoving}
-                                style={{
-                                  padding: "0.2rem 0.4rem",
-                                  fontSize: "0.68rem",
-                                  background: "rgba(255,255,255,0.05)",
-                                  border: "1px solid rgba(255,255,255,0.15)",
-                                  borderRadius: "4px",
-                                  color: "rgba(255,255,255,0.7)",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                {slots.map((s) => (
-                                  <option key={s.id} value={s.id}>
-                                    {s.day} {s.horaire}
-                                  </option>
-                                ))}
-                              </select>
+                            {/* Nom */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div>
+                                <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff" }}>{childName}</span>
+                                <span style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.3)", marginLeft: "0.4rem" }}>{lead.parent_name}</span>
+                              </div>
                               <button
                                 onClick={() => handleRemoveFromSlot(lead.id)}
                                 disabled={isMoving}
@@ -337,15 +318,39 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                                 style={{
                                   background: "none",
                                   border: "none",
-                                  color: "rgba(255,100,100,0.6)",
+                                  color: "rgba(255,100,100,0.5)",
                                   cursor: "pointer",
-                                  fontSize: "0.9rem",
-                                  padding: "0 0.2rem",
+                                  fontSize: "1rem",
+                                  lineHeight: 1,
+                                  padding: "0 0.1rem",
+                                  flexShrink: 0,
                                 }}
                               >
                                 ×
                               </button>
                             </div>
+                            {/* Déplacer */}
+                            <select
+                              value={slot.id}
+                              onChange={(e) => handleMoveLead(lead.id, e.target.value)}
+                              disabled={isMoving}
+                              style={{
+                                width: "100%",
+                                padding: "0.3rem 0.5rem",
+                                fontSize: "0.7rem",
+                                background: "rgba(255,255,255,0.04)",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                                borderRadius: "4px",
+                                color: "rgba(255,255,255,0.6)",
+                                cursor: "pointer",
+                              }}
+                            >
+                              {slots.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.day} · {s.horaire}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         );
                       })
@@ -362,7 +367,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
               <p style={{ fontSize: "0.85rem", color: "#f0c878", marginBottom: "0.6rem", fontWeight: 700 }}>
                 ⚠ Joueuses non assignées ({unassigned.length})
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 {unassigned.map((lead) => {
                   const childName = getChildName(lead.goal) || "Sans nom";
                   const isMoving = movingLead === lead.id;
@@ -371,20 +376,29 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                       key={lead.id}
                       style={{
                         display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "0.5rem 0.7rem",
+                        flexDirection: "column",
+                        gap: "0.5rem",
+                        padding: "0.65rem 0.8rem",
                         background: "rgba(255,255,255,0.03)",
-                        borderRadius: "6px",
-                        border: "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(255,255,255,0.07)",
                         opacity: isMoving ? 0.5 : 1,
                       }}
                     >
-                      <div>
-                        <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff" }}>{childName}</span>
-                        <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", marginLeft: "0.5rem" }}>{lead.parent_name}</span>
-                        <span style={{ fontSize: "0.65rem", color: "rgba(196,164,228,0.5)", marginLeft: "0.5rem" }}>{lead.player_age}</span>
+                      {/* Infos joueuse */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff" }}>{childName}</span>
+                        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>— {lead.parent_name}</span>
+                        <span style={{
+                          fontSize: "0.62rem",
+                          color: "rgba(196,164,228,0.8)",
+                          background: "rgba(196,164,228,0.1)",
+                          border: "1px solid rgba(196,164,228,0.2)",
+                          borderRadius: "4px",
+                          padding: "0.1rem 0.4rem",
+                        }}>{lead.player_age}</span>
                       </div>
+                      {/* Select plein-largeur */}
                       <select
                         value=""
                         onChange={(e) => {
@@ -392,19 +406,21 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                         }}
                         disabled={isMoving}
                         style={{
-                          padding: "0.3rem 0.5rem",
-                          fontSize: "0.72rem",
-                          background: "rgba(255,255,255,0.05)",
+                          width: "100%",
+                          padding: "0.55rem 0.7rem",
+                          fontSize: "0.78rem",
+                          background: "rgba(196,164,228,0.08)",
                           border: "1px solid rgba(196,164,228,0.3)",
-                          borderRadius: "5px",
-                          color: "rgba(196,164,228,0.8)",
-                          cursor: "pointer",
+                          borderRadius: "6px",
+                          color: "rgba(196,164,228,0.9)",
+                          cursor: isMoving ? "not-allowed" : "pointer",
+                          appearance: "auto",
                         }}
                       >
-                        <option value="">Assigner →</option>
+                        <option value="">↳ Assigner à un créneau...</option>
                         {slots.map((s) => (
                           <option key={s.id} value={s.id}>
-                            {s.day} {s.horaire} ({s.category})
+                            {s.day} · {s.horaire} · {s.category}
                           </option>
                         ))}
                       </select>
