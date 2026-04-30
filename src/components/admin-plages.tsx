@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { AdminLead } from "@/lib/repositories";
@@ -10,6 +11,11 @@ interface Props {
   leads: AdminLead[];
 }
 
+/** Backward-compat alias: old slot id → new slot id */
+const SLOT_ALIASES: Record<string, string> = {
+  "lun-2014": "ven-2014"
+};
+
 /** Parse the goal field to get child name */
 function getChildName(goal: string): string {
   const m = goal.match(/Joueuse:\s*([^·]+)/);
@@ -17,6 +23,7 @@ function getChildName(goal: string): string {
 }
 
 export function AdminPlages({ leads: initialLeads }: Props) {
+  const router = useRouter();
   const [leads, setLeads] = useState(initialLeads);
   const [slots, setSlots] = useState<SlotConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +31,21 @@ export function AdminPlages({ leads: initialLeads }: Props) {
   const [saveOk, setSaveOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [movingLead, setMovingLead] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Refresh: re-run server component to get latest DB leads
+  const refreshLeads = useCallback((silent = false) => {
+    if (!silent) setRefreshing(true);
+    router.refresh();
+    // router.refresh() triggers a re-render with new server props
+    // We reset the refreshing state after a short delay
+    if (!silent) setTimeout(() => setRefreshing(false), 1200);
+  }, [router]);
+
+  // Keep local leads in sync when server sends new props
+  useEffect(() => {
+    setLeads(initialLeads);
+  }, [initialLeads]);
 
   // Load slot configs
   useEffect(() => {
@@ -32,14 +54,29 @@ export function AdminPlages({ leads: initialLeads }: Props) {
       .then((data: { slots: SlotConfig[] }) => setSlots(data.slots ?? []))
       .catch(() => setError("Impossible de charger les plages"))
       .finally(() => setLoading(false));
-  }, []);
+
+    // Refresh leads when tab gets focus
+    const onFocus = () => refreshLeads(true);
+    window.addEventListener("focus", onFocus);
+
+    // Auto-poll every 30s
+    const interval = setInterval(() => refreshLeads(true), 30_000);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
+    };
+  }, [refreshLeads]);
 
   // Group leads by time_slot
   const leadsBySlot: Record<string, AdminLead[]> = {};
   const unassigned: AdminLead[] = [];
 
   for (const lead of leads) {
-    const slotId = lead.time_slot;
+    let slotId = lead.time_slot;
+    // Resolve legacy aliases (e.g. lun-2014 → ven-2014)
+    if (slotId && SLOT_ALIASES[slotId]) slotId = SLOT_ALIASES[slotId];
+
     if (slotId && slots.some((s) => s.id === slotId)) {
       if (!leadsBySlot[slotId]) leadsBySlot[slotId] = [];
       leadsBySlot[slotId].push(lead);
@@ -156,6 +193,15 @@ export function AdminPlages({ leads: initialLeads }: Props) {
             </p>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
               {saveOk && <span style={{ color: "#9ec99e", fontSize: "0.75rem" }}>✓ Sauvegardé</span>}
+              <button
+                onClick={() => { void refreshLeads(); }}
+                disabled={refreshing}
+                className="admin-btn-secondary"
+                style={{ padding: "0.45rem 0.8rem", fontSize: "0.78rem" }}
+                title="Recharger la liste des joueuses"
+              >
+                {refreshing ? "↻..." : "↻ Actualiser"}
+              </button>
               <button onClick={handleSaveSlots} disabled={saving} className="admin-btn-primary" style={{ padding: "0.45rem 1rem", fontSize: "0.78rem" }}>
                 {saving ? "Sauvegarde..." : "Sauvegarder capacités"}
               </button>
