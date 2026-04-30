@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { AdminLead } from "@/lib/repositories";
@@ -23,7 +22,6 @@ function getChildName(goal: string): string {
 }
 
 export function AdminPlages({ leads: initialLeads }: Props) {
-  const router = useRouter();
   const [leads, setLeads] = useState(initialLeads);
   const [slots, setSlots] = useState<SlotConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,22 +30,26 @@ export function AdminPlages({ leads: initialLeads }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [movingLead, setMovingLead] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
-  // Refresh: re-run server component to get latest DB leads
-  const refreshLeads = useCallback((silent = false) => {
+  // Fetch fresh leads directly from the API
+  const refreshLeads = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
-    router.refresh();
-    // router.refresh() triggers a re-render with new server props
-    // We reset the refreshing state after a short delay
-    if (!silent) setTimeout(() => setRefreshing(false), 1200);
-  }, [router]);
+    try {
+      const res = await fetch("/api/admin/leads", { cache: "no-store" });
+      if (res.ok) {
+        const data = (await res.json()) as { leads: AdminLead[] };
+        if (Array.isArray(data.leads)) {
+          setLeads(data.leads);
+          setLastRefreshed(new Date());
+        }
+      }
+    } catch { /* silencieux */ } finally {
+      if (!silent) setRefreshing(false);
+    }
+  }, []);
 
-  // Keep local leads in sync when server sends new props
-  useEffect(() => {
-    setLeads(initialLeads);
-  }, [initialLeads]);
-
-  // Load slot configs
+  // Load slot configs + setup auto-refresh
   useEffect(() => {
     fetch("/api/admin/plages")
       .then((r) => r.json())
@@ -55,12 +57,15 @@ export function AdminPlages({ leads: initialLeads }: Props) {
       .catch(() => setError("Impossible de charger les plages"))
       .finally(() => setLoading(false));
 
-    // Refresh leads when tab gets focus
-    const onFocus = () => refreshLeads(true);
+    // Refresh leads immediately on mount (to get latest data)
+    void refreshLeads(true);
+
+    // Refresh when tab gets focus
+    const onFocus = () => { void refreshLeads(true); };
     window.addEventListener("focus", onFocus);
 
-    // Auto-poll every 30s
-    const interval = setInterval(() => refreshLeads(true), 30_000);
+    // Auto-poll every 20s
+    const interval = setInterval(() => { void refreshLeads(true); }, 20_000);
 
     return () => {
       window.removeEventListener("focus", onFocus);
@@ -191,12 +196,17 @@ export function AdminPlages({ leads: initialLeads }: Props) {
             <p className="admin-section-title" style={{ margin: 0 }}>
               Plages horaires ({leads.length} joueuses)
             </p>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+              {lastRefreshed && (
+                <span style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.3)" }}>
+                  Mis à jour {lastRefreshed.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                </span>
+              )}
               {saveOk && <span style={{ color: "#9ec99e", fontSize: "0.75rem" }}>✓ Sauvegardé</span>}
               <button
-                onClick={() => { void refreshLeads(); }}
+                onClick={() => { void refreshLeads(false); }}
                 disabled={refreshing}
-                className="admin-btn-secondary"
+                className="admin-btn-ghost"
                 style={{ padding: "0.45rem 0.8rem", fontSize: "0.78rem" }}
                 title="Recharger la liste des joueuses"
               >
