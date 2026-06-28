@@ -39,7 +39,7 @@ export function ParallaxMedia({ src, alt, badge, caption }: ParallaxMediaProps) 
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-[1.8rem] border border-white/15 bg-[#161124] shadow-halo">
+    <div className="relative overflow-hidden rounded-[1.8rem] bg-surface shadow-halo">
       <div className="parallax-frame">
         <Image
           src={src}
@@ -52,13 +52,12 @@ export function ParallaxMedia({ src, alt, badge, caption }: ParallaxMediaProps) 
         />
       </div>
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d0a14] via-transparent to-transparent" />
 
-      <div className="absolute left-5 top-5 rounded-full border border-accent/60 bg-ink/70 px-4 py-1 text-[11px] uppercase tracking-[0.18em] text-accent-soft">
+      <div className="absolute left-5 top-5 rounded-full bg-ink px-4 py-1 text-[11px] uppercase tracking-[0.18em] text-accent-soft">
         {badge}
       </div>
 
-      <div className="absolute bottom-5 left-5 right-5 rounded-xl border border-white/15 bg-[#120f1d]/85 p-4 text-sm text-white/85 backdrop-blur">
+      <div className="absolute bottom-5 left-5 right-5 rounded-xl bg-surface p-4 text-sm text-white/85">
         {caption}
       </div>
     </div>

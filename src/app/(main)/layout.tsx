@@ -6,7 +6,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <>
       <div className="page-background" aria-hidden />
       <SiteHeader />
-      <main className="pt-20">{children}</main>
+      <main>{children}</main>
       <SiteFooter />
     </>
   );

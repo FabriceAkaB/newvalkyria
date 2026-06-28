@@ -7,7 +7,6 @@ import { SectionTitle } from "@/components/section-title";
 import { getCapacityData } from "@/lib/capacity";
 import { faqItems, hero, seasonalOffer } from "@/lib/site-content";
 import joueuseA from "@/content/image/joueuseImage/joueuseA.jpg";
-import joueuseB from "@/content/image/joueuseImage/joueuseB.jpg";
 import joueuseC from "@/content/image/joueuseImage/joueuseC.jpg";
 import joueuseE from "@/content/image/joueuseImage/joueuseE.jpg";
 import joueuseG from "@/content/image/joueuseImage/joueuseG.jpg";
@@ -112,65 +111,16 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ── Ruban promo — compteur dynamique ── */}
-      <section className="promo-ribbon">
-        <Container className="flex flex-wrap items-center justify-between gap-3 py-3">
-          {isFull ? (
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-amber-300/90">
-              ⚠ Session complète — liste d&apos;attente ouverte
-            </p>
-          ) : (
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/80">
-              Académie locale forte · Inscriptions ouvertes 2026
-            </p>
-          )}
-          <Link href="/inscription" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-soft hover:text-white">
-            {isFull ? "Liste d\u2019attente" : "Démarrer l\u2019inscription"}
+      {/* Hero — pleine largeur, colle au top */}
+      <section className="relative bg-surface flex items-end min-h-[580px] md:min-h-[700px]">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-white/25">Image à venir</p>
+        </div>
+        <div className="relative z-10 p-8 pb-12">
+          <Link href="/inscription" className="hero-btn-primary">
+            {isFull ? "Liste d’attente" : hero.cta}
           </Link>
-        </Container>
-      </section>
-
-      <section className="hero-shell">
-        <Container>
-          <div className="hero-inner">
-
-            {/* ── Colonne texte (épurée) ── */}
-            <div className="hero-text reveal">
-              <p className="hero-overline">Académie · Laurentides</p>
-
-              <h1 className="hero-title">
-                Former des<br />joueuses plus<br />confiantes.
-              </h1>
-
-              <div className="hero-cta-group">
-                <Link href="/inscription" className="hero-btn-primary">
-                  {isFull ? "Liste d\u2019attente" : hero.cta}
-                </Link>
-              </div>
-            </div>
-
-            {/* ── Colonne image (plus grande) ── */}
-            <div className="hero-media-wrap">
-              <Image
-                src={joueuseB}
-                alt="Joueuse New Valkyria en entraînement"
-                className="hero-media"
-                priority
-              />
-              <div className="hero-floating-card hero-floating-top">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-accent-soft">Progression</p>
-                <p className="mt-1 font-display text-2xl uppercase text-white">6 séances</p>
-                <p className="text-xs text-white/70">Premiers résultats visibles</p>
-              </div>
-              <div className="hero-floating-card hero-floating-bottom">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-accent-soft">Qualité</p>
-                <p className="mt-1 font-display text-2xl uppercase text-white">1:5</p>
-                <p className="text-xs text-white/70">Ratio coach renforcé</p>
-              </div>
-            </div>
-
-          </div>
-        </Container>
+        </div>
       </section>
 
       <section className="section-band band-muted">
@@ -195,7 +145,7 @@ export default async function HomePage() {
                 description="Ce que les parents nous remontent le plus souvent avant d'arriver chez New Valkyria."
               />
 
-              <div className="rounded-soft border border-accent/35 bg-accent/10 p-5">
+              <div className="rounded-soft bg-surface p-5">
                 <p className="text-xs uppercase tracking-[0.13em] text-accent-soft">Conséquence terrain</p>
                 <p className="mt-2 text-sm text-white/80">
                   Les filles motivées stagnent souvent par manque de cadre constant, de feedback individuel et de plan

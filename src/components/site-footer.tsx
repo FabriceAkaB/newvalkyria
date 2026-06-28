@@ -4,7 +4,7 @@ import { Container } from "@/components/container";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-20 border-t border-white/10 bg-[#0d0a14] py-10 pb-[calc(2.5rem+68px)] text-sm text-white/75 md:pb-10">
+    <footer className="mt-20 bg-ink py-10 pb-[calc(2.5rem+68px)] text-sm text-white/75 md:pb-10">
       <Container className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div className="space-y-1">
           <p className="font-display text-lg uppercase tracking-[0.16em] text-white">New Valkyria</p>
