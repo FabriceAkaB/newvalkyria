@@ -71,7 +71,7 @@ export function MainNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`text-sm uppercase tracking-[0.16em] transition ${
+              className={`text-sm font-bold uppercase tracking-[0.16em] transition ${
                 active ? "text-accent" : "text-white/80 hover:text-white"
               }`}
             >

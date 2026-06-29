@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Container } from "@/components/container";
+import visionHeroImg from "@/content/image/photos/DSC02229.jpg";
 
 export const metadata: Metadata = {
   title: "Vision | New Valkyria",
@@ -30,26 +32,10 @@ const visionPhases = [
 ];
 
 const roadmapItems = [
-  {
-    icon: "▤",
-    title: "Espace membre",
-    desc: "Suivi personnalisé en ligne avec historique des séances, objectifs et progression documentée pour chaque joueuse."
-  },
-  {
-    icon: "⬡",
-    title: "Programmes PDF",
-    desc: "Bibliothèque de routines techniques à la maison organisées par niveau, position et objectif de progression."
-  },
-  {
-    icon: "◈",
-    title: "Blog parental",
-    desc: "Ressources pour aider les parents à mieux comprendre le développement technique de leur joueuse."
-  },
-  {
-    icon: "▷",
-    title: "Vidéothèque",
-    desc: "Exercices filmés et indexés par niveau et thème pour compléter le travail hors terrain de façon autonome."
-  }
+  { icon: "▤", title: "Espace membre", desc: "Suivi personnalisé en ligne avec historique des séances, objectifs et progression documentée pour chaque joueuse." },
+  { icon: "⬡", title: "Programmes PDF", desc: "Bibliothèque de routines techniques à la maison organisées par niveau, position et objectif de progression." },
+  { icon: "◈", title: "Blog parental", desc: "Ressources pour aider les parents à mieux comprendre le développement technique de leur joueuse." },
+  { icon: "▷", title: "Vidéothèque", desc: "Exercices filmés et indexés par niveau et thème pour compléter le travail hors terrain de façon autonome." }
 ];
 
 const northStarValues = [
@@ -62,69 +48,55 @@ const northStarValues = [
 export default function VisionPage() {
   return (
     <>
-      {/* ── Hero ────────────────────────────────────────────── */}
-      <section className="vp-hero">
-        <Container>
-          <div className="vp-hero-inner">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Vision</p>
-            <h1 className="vp-hero-title">
-              Construire une référence<br className="hidden md:block" /> régionale du foot féminin
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section className="page-hero">
+        <Image src={visionHeroImg} alt="" fill priority className="object-cover object-center" aria-hidden />
+        <div className="page-hero-overlay" />
+        <div className="page-hero-content w-full">
+          <Container>
+            <span className="nv-label">Vision</span>
+            <h1 className="page-hero-title">
+              Construire<br />la référence
             </h1>
-            <p className="vp-hero-desc">
+            <p className="page-hero-sub">
               New Valkyria démarre localement avec une promesse claire — qualité, progression, exigence. Cette base prépare une montée en puissance structurée et durable.
             </p>
-            <div className="vp-hero-pill">
-              <span className="vp-hero-dot" aria-hidden />
-              En développement actif · Laurentides
-            </div>
-          </div>
-        </Container>
+          </Container>
+        </div>
       </section>
 
-      {/* ── 3 phases ────────────────────────────────────────── */}
-      <section className="section-band band-dark">
+      {/* ── 3 Phases ─────────────────────────────────────────── */}
+      <section className="nv-section-band-dark">
         <Container>
-          <div className="mb-14">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Évolution</p>
-            <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white md:text-5xl">
-              Où on va
-            </h2>
-          </div>
-
-          <div className="vp-phases">
+          <span className="nv-label">Évolution</span>
+          <h2 className="nv-heading">Où on va</h2>
+          <div className="nv-phase-grid">
             {visionPhases.map((phase) => (
-              <div key={phase.phase} className={`vp-phase ${phase.status === "active" ? "vp-phase-active" : ""}`}>
-                <div className="vp-phase-tag-row">
-                  <span className={`vp-phase-tag vp-phase-tag-${phase.status}`}>{phase.phase}</span>
-                  {phase.status === "active" && (
-                    <span className="vp-phase-live" aria-label="En cours">
-                      <span className="vp-phase-dot" aria-hidden />
-                      En cours
-                    </span>
-                  )}
+              <div key={phase.phase} className={`nv-phase-card ${phase.status === "active" ? "nv-phase-card-active" : ""}`}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <span className={`nv-phase-tag nv-phase-tag-${phase.status}`}>{phase.phase}</span>
+                  {phase.status === "active" && <span className="nv-phase-status">En cours</span>}
                 </div>
-                <h3 className="mt-4 font-display text-2xl uppercase tracking-[0.06em] text-white">{phase.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-white/65">{phase.desc}</p>
+                <h3 className="nv-phase-title">{phase.title}</h3>
+                <p className="nv-phase-desc">{phase.desc}</p>
               </div>
             ))}
           </div>
         </Container>
       </section>
 
-      {/* ── North star ──────────────────────────────────────── */}
-      <section className="section-band band-muted">
+      {/* ── North star ───────────────────────────────────────── */}
+      <section className="nv-section-band-mid">
         <Container>
-          <div className="vp-northstar">
-            <div className="vp-northstar-left">
-              <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Nos principes directeurs</p>
-              <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white leading-[1.04] md:text-5xl">
-                Ce qui ne<br /> changera pas
-              </h2>
+          <div className="nv-northstar-layout">
+            <div>
+              <span className="nv-label">Nos principes directeurs</span>
+              <h2 className="nv-heading">Ce qui ne<br />changera pas</h2>
             </div>
-            <ul className="vp-northstar-list">
+            <ul className="nv-northstar-list">
               {northStarValues.map((val, i) => (
-                <li key={val} className="vp-northstar-item">
-                  <span className="vp-northstar-num" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
+                <li key={val} className="nv-northstar-item">
+                  <span className="nv-northstar-num">{String(i + 1).padStart(2, "0")}</span>
                   <span>{val}</span>
                 </li>
               ))}
@@ -133,47 +105,39 @@ export default function VisionPage() {
         </Container>
       </section>
 
-      {/* ── Roadmap fonctionnalités ──────────────────────────── */}
-      <section className="section-band band-dark">
+      {/* ── Roadmap ──────────────────────────────────────────── */}
+      <section className="nv-section-band-dark">
         <Container>
-          <div className="mb-12">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">En préparation</p>
-            <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white md:text-5xl">
-              Ce qui arrive bientôt
-            </h2>
-            <p className="mt-4 max-w-lg text-sm text-white/60">
-              Des outils conçus pour prolonger la progression au-delà du terrain et impliquer les familles dans le développement de leur joueuse.
-            </p>
-          </div>
-
-          <div className="vp-roadmap">
+          <span className="nv-label">En préparation</span>
+          <h2 className="nv-heading">Ce qui arrive bientôt</h2>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.95rem", lineHeight: 1.7, maxWidth: "50ch", marginBottom: 0 }}>
+            Des outils conçus pour prolonger la progression au-delà du terrain et impliquer les familles dans le développement de leur joueuse.
+          </p>
+          <div className="nv-roadmap-grid">
             {roadmapItems.map((item) => (
-              <div key={item.title} className="vp-roadmap-card">
-                <span className="vp-roadmap-icon" aria-hidden>{item.icon}</span>
-                <h3 className="mt-4 font-display text-xl uppercase tracking-[0.06em] text-white">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/62">{item.desc}</p>
+              <div key={item.title} className="nv-roadmap-card">
+                <span className="nv-roadmap-icon" aria-hidden>{item.icon}</span>
+                <h3 className="nv-roadmap-title">{item.title}</h3>
+                <p className="nv-roadmap-desc">{item.desc}</p>
               </div>
             ))}
           </div>
         </Container>
       </section>
 
-      {/* ── CTA ─────────────────────────────────────────────── */}
-      <section className="section-band band-soft">
+      {/* ── CTA ──────────────────────────────────────────────── */}
+      <section className="nv-section-band-mid">
         <Container className="max-w-3xl">
           <div className="text-center">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Faire partie de l&apos;aventure</p>
-            <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white md:text-5xl">
+            <span className="nv-label">Faire partie de l&apos;aventure</span>
+            <h2 className="nv-heading">
               Rejoindre New Valkyria<br className="hidden sm:block" /> maintenant
             </h2>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/58">
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.95rem", lineHeight: 1.7, marginBottom: "2rem", maxWidth: "42ch", marginLeft: "auto", marginRight: "auto" }}>
               Les premières familles qui rejoignent l&apos;académie construisent quelque chose avec nous. Places limitées.
             </p>
-            <Link
-              href="/inscription"
-              className="mt-8 inline-flex items-center gap-2 rounded-full bg-accent px-8 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-ink transition hover:bg-accent-soft"
-            >
-              Réserver une place <span aria-hidden>→</span>
+            <Link href="/inscription" className="nv-cta-solid">
+              Réserver une place →
             </Link>
           </div>
         </Container>

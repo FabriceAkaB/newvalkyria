@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Sora, Archivo_Black } from "next/font/google";
+import { Barlow_Semi_Condensed, Oswald } from "next/font/google";
 
 import { AnalyticsScripts } from "@/components/analytics-scripts";
 
 import "./globals.css";
 
-const sora = Sora({
+const barlowSemiCondensed = Barlow_Semi_Condensed({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"]
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
 });
 
-const archivoBlack = Archivo_Black({
+const oswald = Oswald({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: "400"
+  weight: ["400", "500", "600", "700"],
 });
 
 export const viewport = {
@@ -53,7 +54,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr-CA">
-      <body className={`${sora.variable} ${archivoBlack.variable} bg-ink text-white antialiased`}>
+      <body className={`${barlowSemiCondensed.variable} ${oswald.variable} bg-ink text-white antialiased`}>
         <AnalyticsScripts />
         {children}
       </body>

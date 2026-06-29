@@ -4,11 +4,12 @@ import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { keyResults, methodSections, timeline } from "@/lib/site-content";
-import joueuseD from "@/content/image/joueuseImage/joueuseD.jpg";
-import joueuseF from "@/content/image/joueuseImage/joueuseF.jpg";
-import joueuseG from "@/content/image/joueuseImage/joueuseG.jpg";
+import dsc02086 from "@/content/image/photos/DSC02086.jpg";
+import dsc02155 from "@/content/image/photos/DSC02155.jpg";
+import dsc02229 from "@/content/image/photos/DSC02229.jpg";
+import methodeHeroImg from "@/content/image/photos/DSC02406.jpg";
 
-const pillarImages = [joueuseD, joueuseF, joueuseG];
+const pillarImages = [dsc02086, dsc02155, dsc02229];
 const pillarAlts = [
   "Technique — joueuse en frappe",
   "Mental — concentration et focus",
@@ -22,8 +23,8 @@ export const metadata: Metadata = {
 
 const heroStats = [
   { val: "90 min", label: "Par séance" },
-  { val: "1 : 5", label: "Ratio renforcé" },
-  { val: "S7 + S15", label: "Bilans formels" }
+  { val: "1 : 5",  label: "Ratio renforcé" },
+  { val: "S7+S15", label: "Bilans formels" }
 ];
 
 const philosophyItems = [
@@ -44,62 +45,63 @@ const philosophyItems = [
 export default function MethodePage() {
   return (
     <>
-      {/* ── Hero ────────────────────────────────────────────── */}
-      <section className="mp-hero">
-        <Container>
-          <div className="mp-hero-inner">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Méthode New Valkyria</p>
-            <h1 className="mp-hero-title">
-              Entraîner<br className="hidden sm:block" /> différemment.<br className="hidden sm:block" /> Progresser vraiment.
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section className="page-hero" style={{ minHeight: "600px" }}>
+        <Image src={methodeHeroImg} alt="" fill priority className="object-cover object-center" aria-hidden />
+        <div className="page-hero-overlay" />
+        <div className="page-hero-content w-full">
+          <Container>
+            <span className="nv-label">Méthode New Valkyria</span>
+            <h1 className="page-hero-title">
+              Entraîner<br />différemment
             </h1>
-            <p className="mp-hero-desc">
-              Chaque séance est construite avec une logique précise : intensité haute, feedback immédiat, progression documentée. Pas d&apos;improvisation. Pas de remplissage.
+            <p className="page-hero-sub">
+              Chaque séance est construite avec une logique précise : intensité haute, feedback immédiat, progression documentée.
             </p>
-            <div className="mp-hero-pills">
+            {/* Stat pills */}
+            <div style={{ display: "flex", gap: "1px", background: "rgba(255,255,255,0.06)", borderRadius: "1rem", overflow: "hidden", marginTop: "2.5rem", width: "fit-content" }}>
               {heroStats.map((s) => (
-                <div key={s.val} className="mp-hero-pill">
-                  <span className="font-display text-2xl uppercase tracking-[0.04em] text-accent">{s.val}</span>
-                  <span className="text-[10px] uppercase tracking-[0.16em] text-white/45">{s.label}</span>
+                <div key={s.val} style={{ display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1.25rem 2.25rem", background: "rgba(9,7,14,0.7)" }}>
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--color-accent-soft)", lineHeight: 1 }}>{s.val}</span>
+                  <span style={{ fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.38)" }}>{s.label}</span>
                 </div>
               ))}
             </div>
-          </div>
-        </Container>
+          </Container>
+        </div>
       </section>
 
       {/* ── 3 Piliers (alternating) ──────────────────────────── */}
-      <section className="section-band band-dark">
+      <section className="nv-section-band-dark">
         <Container>
-          <div className="mb-16">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Les 3 piliers</p>
-            <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white md:text-5xl">
-              Ce sur quoi on travaille
-            </h2>
-          </div>
-
-          <div className="mp-pillars">
+          <span className="nv-label">Les 3 piliers</span>
+          <h2 className="nv-heading">Ce sur quoi on travaille</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6rem", marginTop: "4rem" }}>
             {methodSections.map((section, i) => (
-              <div key={section.title} className={`mp-pillar ${i % 2 !== 0 ? "mp-pillar-flip" : ""}`}>
-                <div className="mp-pillar-media">
-                  <div className="mp-real-img">
-                    <Image
-                      src={pillarImages[i]}
-                      alt={pillarAlts[i]}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 900px) 100vw, 50vw"
-                    />
-                  </div>
+              <div key={section.title} style={{
+                display: "grid",
+                gap: "4rem",
+                alignItems: "center",
+                gridTemplateColumns: "1fr 1fr",
+              }} className={i % 2 !== 0 ? "mp-pillar-flip" : ""}>
+                <div className="nv-pillar-img">
+                  <Image
+                    src={pillarImages[i]}
+                    alt={pillarAlts[i]}
+                    fill
+                    className="object-cover object-top"
+                    sizes="(max-width: 900px) 100vw, 50vw"
+                  />
                 </div>
-                <div className="mp-pillar-body">
-                  <span className="mp-pillar-num" aria-hidden>0{i + 1}</span>
-                  <h3 className="mp-pillar-title">{section.title}</h3>
-                  <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/68">{section.description}</p>
-                  <ul className="mp-pillar-points">
+                <div>
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: "3rem", color: "rgba(176,144,200,0.15)", lineHeight: 1, display: "block", marginBottom: "0.5rem" }}>0{i + 1}</span>
+                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 4vw, 3.5rem)", textTransform: "uppercase", letterSpacing: "0.04em", color: "#fff", margin: "0 0 1rem", lineHeight: "0.96" }}>{section.title}</h3>
+                  <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.62)", lineHeight: 1.7, margin: "0 0 1.5rem", maxWidth: "40ch" }}>{section.description}</p>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                     {section.points.map((point) => (
-                      <li key={point}>
-                        <span className="mp-pillar-dot" aria-hidden />
-                        <span>{point}</span>
+                      <li key={point} style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "0.875rem", color: "rgba(255,255,255,0.65)" }}>
+                        <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "var(--color-accent)", flexShrink: 0 }} />
+                        {point}
                       </li>
                     ))}
                   </ul>
@@ -110,18 +112,18 @@ export default function MethodePage() {
         </Container>
       </section>
 
-      {/* ── Philosophie ─────────────────────────────────────── */}
-      <section className="section-band band-muted">
+      {/* ── Philosophie ──────────────────────────────────────── */}
+      <section className="nv-section-band-mid">
         <Container>
-          <div className="mp-philosophy">
-            <div className="mp-philosophy-label">
-              <p className="font-display text-2xl uppercase tracking-[0.08em] text-white/25">Notre<br />philosophie</p>
+          <div style={{ display: "grid", gap: "4rem", alignItems: "start" }} className="mp-philosophy">
+            <div>
+              <p style={{ fontFamily: "var(--font-display)", fontSize: "2rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.18)", lineHeight: 1.1 }}>Notre<br />philosophie</p>
             </div>
-            <div className="mp-philosophy-items">
+            <div style={{ display: "flex", flexDirection: "column" }}>
               {philosophyItems.map((item) => (
-                <div key={item.label} className="mp-philosophy-item">
-                  <h3 className="font-display text-xl uppercase tracking-[0.06em] text-white">{item.label}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/62">{item.desc}</p>
+                <div key={item.label} style={{ padding: "1.75rem 0", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#fff", margin: "0 0 0.5rem" }}>{item.label}</h3>
+                  <p style={{ fontSize: "0.88rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.68, margin: 0 }}>{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -129,65 +131,52 @@ export default function MethodePage() {
         </Container>
       </section>
 
-      {/* ── Suivi évaluation ────────────────────────────────── */}
-      <section className="section-band band-dark">
+      {/* ── Suivi évaluation ─────────────────────────────────── */}
+      <section className="nv-section-band-dark">
         <Container>
-          <div className="mp-eval">
-            <div className="mp-eval-text">
-              <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Suivi structuré</p>
-              <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white md:text-5xl">
-                Bilans à la 7e<br className="hidden sm:block" /> et 15e séance
-              </h2>
-              <p className="mt-4 max-w-md text-sm leading-relaxed text-white/65">
+          <div style={{ display: "grid", gap: "4rem", alignItems: "center" }} className="mp-eval">
+            <div>
+              <span className="nv-label">Suivi structuré</span>
+              <h2 className="nv-heading">Bilans à la 7e<br className="hidden sm:block" /> et 15e séance</h2>
+              <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.7, maxWidth: "44ch" }}>
                 Les parents reçoivent un rapport structuré à chaque étape clé. Forces, faiblesses, priorités — tout est documenté et communiqué clairement.
               </p>
             </div>
-
-            <div className="mp-eval-cards">
-              <div className="mp-eval-card">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-accent-soft">Séance 7</p>
-                <h3 className="mt-2 font-display text-2xl uppercase tracking-[0.06em] text-white">Bilan intermédiaire</h3>
-                <p className="mt-3 text-sm leading-relaxed text-white/65">
-                  Rapport technique remis aux parents. Ajustements ciblés pour accélérer la seconde moitié de saison.
-                </p>
-              </div>
-              <div className="mp-eval-card">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-accent-soft">Séance 15</p>
-                <h3 className="mt-2 font-display text-2xl uppercase tracking-[0.06em] text-white">Synthèse finale</h3>
-                <p className="mt-3 text-sm leading-relaxed text-white/65">
-                  Bilan complet des acquis et recommandations concrètes pour le prochain cycle de développement.
-                </p>
-              </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              {[
+                { tag: "Séance 7", title: "Bilan intermédiaire", desc: "Rapport technique remis aux parents. Ajustements ciblés pour accélérer la seconde moitié de saison." },
+                { tag: "Séance 15", title: "Synthèse finale", desc: "Bilan complet des acquis et recommandations concrètes pour le prochain cycle de développement." }
+              ].map((card) => (
+                <div key={card.title} className="nv-eval-card">
+                  <p style={{ fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--color-accent-soft)", margin: "0 0 0.5rem" }}>{card.tag}</p>
+                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#fff", margin: "0 0 0.75rem", lineHeight: 1 }}>{card.title}</h3>
+                  <p style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.62)", lineHeight: 1.65, margin: 0 }}>{card.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </Container>
       </section>
 
-      {/* ── Parcours 15 séances ──────────────────────────────── */}
-      <section className="section-band band-soft">
+      {/* ── 15 séances ───────────────────────────────────────── */}
+      <section className="nv-section-band-mid">
         <Container>
-          <div className="mp-timeline-header">
+          <div style={{ display: "grid", gap: "4rem", alignItems: "start" }} className="mp-timeline-header">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Parcours d&apos;entraînement</p>
-              <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white md:text-5xl">
-                15 séances,<br className="hidden sm:block" /> 4 phases
-              </h2>
+              <span className="nv-label">Parcours d&apos;entraînement</span>
+              <h2 className="nv-heading">15 séances,<br className="hidden sm:block" /> 4 phases</h2>
             </div>
-            <p className="mp-timeline-intro">
+            <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.7 }}>
               Chaque bloc a un objectif précis. La progression est documentée et partagée avec les parents à mi-parcours.
             </p>
           </div>
-
-          <div className="mp-timeline">
-            {timeline.map((item, i) => (
-              <div key={item.step} className="mp-timeline-item">
-                <div className="mp-timeline-step-col">
-                  <span className="mp-timeline-step">{item.step}</span>
-                  {i < timeline.length - 1 && <span className="mp-timeline-connector" aria-hidden />}
-                </div>
-                <div className="mp-timeline-content">
-                  <p className="font-display text-2xl uppercase tracking-[0.06em] text-white">{item.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-white/68">{item.text}</p>
+          <div className="nv-timeline" style={{ marginTop: "3rem" }}>
+            {timeline.map((item) => (
+              <div key={item.step} className="nv-timeline-item">
+                <div className="nv-timeline-period">{item.step}</div>
+                <div>
+                  <h3 className="nv-timeline-title">{item.title}</h3>
+                  <p className="nv-timeline-desc">{item.text}</p>
                 </div>
               </div>
             ))}
@@ -195,25 +184,15 @@ export default function MethodePage() {
         </Container>
       </section>
 
-      {/* ── Résultats mesurables ─────────────────────────────── */}
-      <section className="section-band band-dark">
+      {/* ── Résultats ────────────────────────────────────────── */}
+      <section className="nv-section-band-dark">
         <Container>
-          <div className="mp-results-header">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Ce que vous verrez</p>
-              <h2 className="mt-3 font-display text-3xl uppercase tracking-[0.06em] text-white md:text-4xl">
-                Résultats mesurables
-              </h2>
-            </div>
-            <p className="mp-results-intro">
-              Des données concrètes, pas des promesses vagues. Ce que notre cadre produit séance après séance.
-            </p>
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <span className="nv-label">Ce que vous verrez</span>
+          <h2 className="nv-heading">Résultats mesurables</h2>
+          <div style={{ display: "grid", gap: "1rem", marginTop: "3rem" }} className="sm:grid-cols-2">
             {keyResults.map((result) => (
-              <div key={result} className="methode-result-card">
-                <span className="methode-result-check" aria-hidden>✓</span>
+              <div key={result} className="nv-result-card">
+                <span className="nv-result-check" aria-hidden>✓</span>
                 <span>{result}</span>
               </div>
             ))}
@@ -221,25 +200,18 @@ export default function MethodePage() {
         </Container>
       </section>
 
-      {/* ── CTA final ───────────────────────────────────────── */}
-      <section className="section-band band-muted">
+      {/* ── CTA ──────────────────────────────────────────────── */}
+      <section className="nv-section-band-mid">
         <Container className="max-w-3xl">
-          <div className="mp-cta">
-            <div className="mp-cta-body">
-              <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Prêt à commencer</p>
-              <h2 className="mt-3 font-display text-3xl uppercase tracking-[0.06em] text-white md:text-4xl">
-                Une place pour votre joueuse
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-white/65">
-                Groupe limité à 10 pour maintenir la qualité d&apos;encadrement. Inscription simple, résultats mesurables.
-              </p>
-              <Link
-                href="/inscription"
-                className="mt-7 inline-flex items-center gap-2 rounded-full bg-accent px-8 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-ink transition hover:bg-accent-soft"
-              >
-                Réserver une place <span aria-hidden>→</span>
-              </Link>
-            </div>
+          <div className="text-center">
+            <span className="nv-label">Prêt à commencer</span>
+            <h2 className="nv-heading">Une place pour votre joueuse</h2>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.95rem", lineHeight: 1.7, marginBottom: "2rem", maxWidth: "42ch", marginLeft: "auto", marginRight: "auto" }}>
+              Groupe limité à 10 pour maintenir la qualité d&apos;encadrement. Inscription simple, résultats mesurables.
+            </p>
+            <Link href="/inscription" className="nv-cta-solid">
+              Réserver une place →
+            </Link>
           </div>
         </Container>
       </section>

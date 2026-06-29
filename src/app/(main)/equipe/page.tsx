@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { coachProfile } from "@/lib/site-content";
+import equipeHeroImg from "@/content/image/photos/DSC02086.jpg";
 
 export const metadata: Metadata = {
   title: "L'équipe | New Valkyria",
@@ -42,51 +44,71 @@ const coachApproach = [
 export default function EquipePage() {
   return (
     <>
-      {/* ── Hero équipe ─────────────────────────────────────── */}
-      <section className="ep-hero">
-        <Container>
-          <div className="ep-team-intro">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">L&apos;équipe</p>
-            <h1 className="mt-3 font-display text-4xl uppercase tracking-[0.05em] text-white md:text-5xl">
-              Derrière l&apos;académie
+      {/* ── Hero — photo full-screen ─────────────────────────── */}
+      <section className="page-hero">
+        <Image src={equipeHeroImg} alt="" fill priority className="object-cover object-center" aria-hidden />
+        <div className="page-hero-overlay" />
+        <div className="page-hero-content w-full">
+          <Container>
+            <span className="nv-label">L&apos;équipe</span>
+            <h1 className="page-hero-title">
+              Derrière<br />l&apos;académie
             </h1>
-          </div>
+          </Container>
+        </div>
+      </section>
 
-          {/* ── Michel Aka — Owner & CEO ── */}
-          <div className="ep-member-block ep-member-first">
-            <span className="ep-role-badge">Owner &amp; CEO</span>
-            <h2 className="ep-member-name">Michel Aka</h2>
-            <p className="ep-member-bio">
+      {/* ── Coach ────────────────────────────────────────────── */}
+      <section className="nv-section-band-dark">
+        <Container>
+          <div style={{ maxWidth: "680px" }}>
+            <div style={{
+              display: "inline-flex",
+              alignItems: "center",
+              background: "rgba(176,144,200,0.1)",
+              borderRadius: "0.5rem",
+              padding: "0.3rem 0.9rem",
+              fontSize: "0.6rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.2em",
+              color: "var(--color-accent-soft)",
+              marginBottom: "1.25rem"
+            }}>
+              Owner &amp; CEO
+            </div>
+            <h2 style={{
+              fontFamily: "var(--font-display), sans-serif",
+              fontSize: "clamp(2.75rem, 6vw, 5.5rem)",
+              textTransform: "uppercase",
+              letterSpacing: "0.03em",
+              color: "#fff",
+              margin: "0 0 1.5rem",
+              lineHeight: "0.93"
+            }}>
+              Michel Aka
+            </h2>
+            <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.65)", lineHeight: "1.76", maxWidth: "58ch" }}>
               Fondateur et directeur de New Valkyria, Michel Aka a bâti l&apos;académie avec une conviction claire :
               les joueuses des Laurentides méritent un encadrement technique structuré, exigeant et centré sur
               leur progression réelle. Il pilote la vision stratégique, les partenariats et l&apos;organisation
               globale de l&apos;académie.
             </p>
           </div>
-
         </Container>
       </section>
 
-      {/* ── Parcours ────────────────────────────────────────── */}
-      <section className="section-band band-dark">
+      {/* ── Parcours ─────────────────────────────────────────── */}
+      <section className="nv-section-band-mid">
         <Container>
-          <div className="ep-section-header">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Parcours</p>
-            <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white md:text-5xl">
-              Comment on en est<br className="hidden sm:block" /> arrivé là
-            </h2>
-          </div>
-
-          <div className="ep-timeline">
-            {careerMilestones.map((item, i) => (
-              <div key={item.period} className="ep-timeline-item">
-                <div className="ep-timeline-left">
-                  <span className="ep-timeline-period">{item.period}</span>
-                  {i < careerMilestones.length - 1 && <span className="ep-timeline-line" aria-hidden />}
-                </div>
-                <div className="ep-timeline-body">
-                  <h3 className="font-display text-2xl uppercase tracking-[0.06em] text-white">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/68">{item.desc}</p>
+          <span className="nv-label">Parcours</span>
+          <h2 className="nv-heading">Comment on en est<br className="hidden sm:block" /> arrivé là</h2>
+          <div className="nv-timeline">
+            {careerMilestones.map((item) => (
+              <div key={item.period} className="nv-timeline-item">
+                <div className="nv-timeline-period">{item.period}</div>
+                <div>
+                  <h3 className="nv-timeline-title">{item.title}</h3>
+                  <p className="nv-timeline-desc">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -94,70 +116,60 @@ export default function EquipePage() {
         </Container>
       </section>
 
-      {/* ── Approche ────────────────────────────────────────── */}
-      <section className="section-band band-muted">
+      {/* ── Approche ─────────────────────────────────────────── */}
+      <section className="nv-section-band-dark">
         <Container>
-          <div className="ep-approach">
-            <div className="ep-approach-quote">
-              <span className="ep-big-quote" aria-hidden>&ldquo;</span>
-              <p className="ep-quote-text">
+          <div className="nv-approach-grid">
+            <div>
+              <p className="nv-approach-quote">
                 Le cadre exigeant n&apos;est pas une contrainte — c&apos;est ce qui permet aux joueuses de se faire vraiment confiance.
               </p>
-              <p className="ep-quote-author">— L&apos;équipe New Valkyria</p>
+              <p className="nv-approach-author">— L&apos;équipe New Valkyria</p>
             </div>
-
-            <div className="ep-approach-list">
-              <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Mon approche terrain</p>
-              <ul className="mt-5 space-y-0">
+            <div>
+              <span className="nv-label">Mon approche terrain</span>
+              <div className="nv-approach-list">
                 {coachApproach.map((item, i) => (
-                  <li key={item} className="ep-approach-item">
-                    <span className="ep-approach-num" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
+                  <div key={item} className="nv-approach-item">
+                    <span className="nv-approach-num">{String(i + 1).padStart(2, "0")}</span>
                     <span>{item}</span>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         </Container>
       </section>
 
-      {/* ── Valeurs ─────────────────────────────────────────── */}
-      <section className="section-band band-dark">
+      {/* ── Valeurs ──────────────────────────────────────────── */}
+      <section className="nv-section-band-mid">
         <Container>
-          <div className="mb-12">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Valeurs d&apos;encadrement</p>
-            <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white md:text-5xl">
-              Ce qui guide chaque séance
-            </h2>
-          </div>
-
-          <div className="ep-values-grid">
+          <span className="nv-label">Valeurs d&apos;encadrement</span>
+          <h2 className="nv-heading">Ce qui guide chaque séance</h2>
+          <div className="nv-values-grid">
             {coachProfile.values.map((value, i) => (
-              <div key={value} className="ep-value-card">
-                <span className="ep-value-num" aria-hidden>0{i + 1}</span>
-                <p className="ep-value-label">{value}</p>
+              <div key={value} className="nv-value-card">
+                <span className="nv-value-num">0{i + 1}</span>
+                <p className="nv-value-label">{value}</p>
               </div>
             ))}
           </div>
         </Container>
       </section>
 
-      {/* ── CTA ─────────────────────────────────────────────── */}
-      <section className="section-band band-soft">
+      {/* ── CTA ──────────────────────────────────────────────── */}
+      <section className="nv-section-band-dark">
         <Container className="max-w-3xl">
           <div className="text-center">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Travailler ensemble</p>
-            <h2 className="mt-3 font-display text-4xl uppercase tracking-[0.06em] text-white md:text-5xl">
+            <span className="nv-label">Travailler ensemble</span>
+            <h2 className="nv-heading">
               Votre joueuse mérite<br className="hidden sm:block" /> ce niveau d&apos;encadrement
             </h2>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/60">
+            <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.95rem", lineHeight: 1.7, marginBottom: "2rem", maxWidth: "44ch", marginLeft: "auto", marginRight: "auto" }}>
               Places limitées à 10 joueuses par groupe. Contactez-nous pour vérifier la disponibilité.
             </p>
-            <Link
-              href="/inscription"
-              className="mt-8 inline-flex items-center gap-2 rounded-full bg-accent px-8 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-ink transition hover:bg-accent-soft"
-            >
-              Réserver une place <span aria-hidden>→</span>
+            <Link href="/inscription" className="nv-cta-solid">
+              Réserver une place →
             </Link>
           </div>
         </Container>
