@@ -4,9 +4,14 @@ import type { LeadFormPayload } from "@/lib/validations";
 import {
   addMockStripeEvent,
   createMockLead,
+  deleteMockLead,
+  getMockLeads,
   hasMockStripeEvent,
   markMockLeadPaid,
-  updateMockLeadCheckout
+  updateMockLeadCheckout,
+  updateMockLeadGoal,
+  updateMockLeadStatus,
+  updateMockLeadTimeSlot,
 } from "@/lib/mock-store";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -182,7 +187,7 @@ export interface AdminLead {
 }
 
 export async function getAllLeads(): Promise<AdminLead[]> {
-  if (!isSupabaseAvailable()) return [];
+  if (!isSupabaseAvailable()) return getMockLeads();
 
   const supabase = getSupabaseAdminClient() as any;
   const { data, error } = await supabase
@@ -252,7 +257,7 @@ export async function setCapacityConfig(category: string, maxSpots: number): Pro
 }
 
 export async function updateLeadGoal(id: string, goal: string): Promise<void> {
-  if (!isSupabaseAvailable()) return;
+  if (!isSupabaseAvailable()) { updateMockLeadGoal(id, goal); return; }
 
   const supabase = getSupabaseAdminClient() as any;
   const { error } = await supabase.from("leads").update({ goal }).eq("id", id);
@@ -264,7 +269,7 @@ export async function updateLeadStatus(
   id: string,
   status: "pending" | "confirmed" | "paid" | "cancelled"
 ): Promise<void> {
-  if (!isSupabaseAvailable()) return;
+  if (!isSupabaseAvailable()) { updateMockLeadStatus(id, status); return; }
 
   const supabase = getSupabaseAdminClient() as any;
   const { error } = await supabase.from("leads").update({ status }).eq("id", id);
@@ -273,7 +278,7 @@ export async function updateLeadStatus(
 }
 
 export async function updateLeadTimeSlot(id: string, timeSlot: string): Promise<void> {
-  if (!isSupabaseAvailable()) return;
+  if (!isSupabaseAvailable()) { updateMockLeadTimeSlot(id, timeSlot); return; }
 
   const supabase = getSupabaseAdminClient() as any;
   const { error } = await supabase.from("leads").update({ time_slot: timeSlot || null }).eq("id", id);
@@ -282,10 +287,7 @@ export async function updateLeadTimeSlot(id: string, timeSlot: string): Promise<
 }
 
 export async function deleteLead(id: string): Promise<void> {
-  if (!isSupabaseAvailable()) {
-    // In mock mode there's no persistent store to delete from
-    return;
-  }
+  if (!isSupabaseAvailable()) { deleteMockLead(id); return; }
 
   const supabase = getSupabaseAdminClient() as any;
   const { error } = await supabase.from("leads").delete().eq("id", id);

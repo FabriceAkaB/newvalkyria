@@ -8,7 +8,7 @@ import { AGE_CATEGORIES, CATEGORY_LABELS, CATEGORY_SUBLABELS } from "@/lib/categ
 import type { ClubGroup } from "@/lib/club-aliases-store";
 import type { AdminLead } from "@/lib/repositories";
 
-type FilterType = "all" | "paid" | "confirmed" | "pending" | "waitlist" | "new";
+type FilterType = "all" | "paid" | "confirmed" | "pending" | "waitlist" | "new" | "cancelled";
 type CategoryFilter = "all" | "2016" | "2015" | "2014-2013";
 
 const SEEN_KEY = "nv_admin_seen_since";
@@ -59,7 +59,7 @@ function StatusBadge({ lead, isNew }: { lead: AdminLead; isNew: boolean }) {
       ) : lead.status === "paid" ? (
         <span className="admin-badge admin-badge-paid">✓ Payée</span>
       ) : lead.status === "confirmed" ? (
-        <span className="admin-badge admin-badge-paid" style={{ background: "rgba(120, 200, 255, 0.18)", color: "#9ec9ff", borderColor: "rgba(158, 201, 255, 0.4)" }}>✓ Confirmée</span>
+        <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "#9ec9ff", borderColor: "#465671" }}>✓ Confirmée</span>
       ) : lead.status === "cancelled" ? (
         <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255, 100, 100, 0.18)", color: "#ff9999" }}>Annulée</span>
       ) : (
@@ -208,9 +208,9 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                         padding: "0.35rem 0.7rem",
                         fontSize: "0.72rem",
                         borderRadius: "6px",
-                        border: isActive ? "1px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.15)",
-                        background: isActive ? "rgba(196,164,228,0.2)" : "transparent",
-                        color: isActive ? "#fff" : "rgba(255,255,255,0.6)",
+                        border: isActive ? "1px solid #8d76a5" : "1px solid #302e36",
+                        background: isActive ? "#30283c" : "transparent",
+                        color: isActive ? "#fff" : "#9d9da0",
                         cursor: isActive ? "default" : "pointer",
                         fontWeight: isActive ? 600 : 400,
                       }}
@@ -252,7 +252,7 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                   {parsed.childName}
                   <button
                     onClick={() => { setNameInput(parsed.childName); setEditingName(true); }}
-                    style={{ marginLeft: "0.5rem", fontSize: "0.68rem", color: "rgba(196,164,228,0.6)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                    style={{ marginLeft: "0.5rem", fontSize: "0.68rem", color: "#7a6690", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
                   >
                     modifier
                   </button>
@@ -277,10 +277,10 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                  <span style={{ color: "rgba(255,255,255,0.25)", fontStyle: "italic", fontSize: "0.8rem" }}>Non renseigné</span>
+                  <span style={{ color: "#48474d", fontStyle: "italic", fontSize: "0.8rem" }}>Non renseigné</span>
                   <button
                     onClick={() => setEditingName(true)}
-                    style={{ fontSize: "0.7rem", color: "rgba(196,164,228,0.7)", background: "none", border: "1px solid rgba(196,164,228,0.3)", borderRadius: "4px", padding: "0.2rem 0.5rem", cursor: "pointer" }}
+                    style={{ fontSize: "0.7rem", color: "#8d76a5", background: "none", border: "1px solid #433751", borderRadius: "4px", padding: "0.2rem 0.5rem", cursor: "pointer" }}
                   >
                     + Ajouter
                   </button>
@@ -296,7 +296,7 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                   {CATEGORY_SUBLABELS[lead.player_age as keyof typeof CATEGORY_SUBLABELS] && (
                     <span
                       style={{
-                        color: "rgba(255,255,255,0.3)",
+                        color: "#545359",
                         fontSize: "0.75rem",
                         marginLeft: "0.4rem",
                       }}
@@ -340,7 +340,7 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
             {parsed.referredBy && parsed.referredBy !== "Non spécifié" && (
               <div className="admin-drawer-field">
                 <p className="admin-drawer-label">Recommandé par</p>
-                <p className="admin-drawer-value" style={{ color: "#c4a4e4" }}>👋 {parsed.referredBy}</p>
+                <p className="admin-drawer-value" style={{ color: "#b090c8" }}>👋 {parsed.referredBy}</p>
               </div>
             )}
           </div>
@@ -357,7 +357,7 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                     style={{
                       fontSize: "0.72rem",
                       wordBreak: "break-all",
-                      color: "rgba(255,255,255,0.4)",
+                      color: "#6d6b71",
                     }}
                   >
                     {lead.stripe_checkout_session_id}
@@ -372,7 +372,7 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                     style={{
                       fontSize: "0.72rem",
                       wordBreak: "break-all",
-                      color: "rgba(255,255,255,0.4)",
+                      color: "#6d6b71",
                     }}
                   >
                     {lead.stripe_payment_intent_id}
@@ -392,7 +392,7 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                 style={{
                   fontSize: "0.68rem",
                   wordBreak: "break-all",
-                  color: "rgba(255,255,255,0.25)",
+                  color: "#48474d",
                 }}
               >
                 {lead.id}
@@ -526,15 +526,18 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
   const countConfirmed = leads.filter((l) => l.status === "confirmed" && !l.is_waitlist).length;
   const countPending = leads.filter((l) => l.status === "pending" && !l.is_waitlist).length;
   const countWaitlist = leads.filter((l) => l.is_waitlist).length;
+  const countCancelled = leads.filter((l) => l.status === "cancelled").length;
 
   /* ── Filtered + sorted ── */
   const filteredLeads = leads
     .filter((lead) => {
+      if (filter === "all" && lead.status === "cancelled") return false;
       if (filter === "paid" && (lead.status !== "paid" || lead.is_waitlist)) return false;
       if (filter === "confirmed" && (lead.status !== "confirmed" || lead.is_waitlist)) return false;
       if (filter === "pending" && (lead.status !== "pending" || lead.is_waitlist)) return false;
       if (filter === "waitlist" && !lead.is_waitlist) return false;
       if (filter === "new" && !isNewLead(lead.created_at, seenSince)) return false;
+      if (filter === "cancelled" && lead.status !== "cancelled") return false;
       if (categoryFilter !== "all" && lead.player_age !== categoryFilter) return false;
 
       const goalParsed = parseGoal(lead.goal);
@@ -673,12 +676,13 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
             <div className="admin-filters">
               {(
                 [
-                  ["all", "Toutes", leads.length],
+                  ["all", "Toutes", leads.length - countCancelled],
                   ["new", "Nouvelles", countNew],
                   ["confirmed", "Confirmées", countConfirmed],
                   ["paid", "Payées", countPaid],
                   ["pending", "En attente", countPending],
                   ["waitlist", "Liste d'attente", countWaitlist],
+                  ["cancelled", "Annulées", countCancelled],
                 ] as [FilterType, string, number][]
               ).map(([f, label, count]) => (
                 <button
@@ -723,7 +727,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
             <span
               style={{
                 fontSize: "0.62rem",
-                color: "rgba(255,255,255,0.2)",
+                color: "#3c3a41",
                 marginLeft: "auto",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
@@ -780,7 +784,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
               onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
               className="admin-group-select"
               title="Trier par"
-              style={{ borderColor: "rgba(196,164,228,0.4)" }}
+              style={{ borderColor: "#554766" }}
             >
               <option value="date_desc">↓ Plus récentes</option>
               <option value="date_asc">↑ Plus anciennes</option>
@@ -851,7 +855,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
                             lead.player_age as keyof typeof CATEGORY_LABELS
                           ] ?? lead.player_age}
                         </td>
-                        <td style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{lead.time_slot || "—"}</td>
+                        <td style={{ fontSize: "0.75rem", color: "#858489" }}>{lead.time_slot || "—"}</td>
                         <td>{lead.player_level}</td>
                         <td>
                           <StatusBadge lead={lead} isNew={_isNew} />
@@ -868,7 +872,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
             <p
               style={{
                 fontSize: "0.72rem",
-                color: "rgba(255,255,255,0.25)",
+                color: "#48474d",
                 marginTop: "0.75rem",
                 textAlign: "center",
               }}
@@ -890,6 +894,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
           onUpdated={(updatedLead) => {
             setLeads((prev) => prev.map((l) => l.id === updatedLead.id ? updatedLead : l));
             setSelectedLead(updatedLead);
+            router.refresh();
           }}
         />
       )}

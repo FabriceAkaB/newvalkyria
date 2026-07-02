@@ -17,6 +17,9 @@ export function AdminCapacite({ capacity }: Props) {
   const [maxValues, setMaxValues] = useState<Record<string, number>>(
     Object.fromEntries(AGE_CATEGORIES.map((cat) => [cat, capacity.byCategory[cat].max]))
   );
+  const [committedValues, setCommittedValues] = useState<Record<string, number>>(
+    Object.fromEntries(AGE_CATEGORIES.map((cat) => [cat, capacity.byCategory[cat].max]))
+  );
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -40,6 +43,7 @@ export function AdminCapacite({ capacity }: Props) {
         body: JSON.stringify({ category: cat, maxSpots: maxValues[cat] }),
       });
       if (!res.ok) throw new Error("Erreur de sauvegarde");
+      setCommittedValues((prev) => ({ ...prev, [cat]: maxValues[cat] }));
       setSaved((prev) => ({ ...prev, [cat]: true }));
       setTimeout(() => setSaved((prev) => ({ ...prev, [cat]: false })), 2500);
       router.refresh();
@@ -55,13 +59,13 @@ export function AdminCapacite({ capacity }: Props) {
 
   const handleSaveAll = async () => {
     const changed = AGE_CATEGORIES.filter(
-      (cat) => maxValues[cat] !== capacity.byCategory[cat].max
+      (cat) => maxValues[cat] !== committedValues[cat]
     );
     await Promise.all(changed.map((cat) => handleSave(cat)));
   };
 
   const hasAnyChanged = AGE_CATEGORIES.some(
-    (cat) => maxValues[cat] !== capacity.byCategory[cat].max
+    (cat) => maxValues[cat] !== committedValues[cat]
   );
 
   return (
@@ -87,7 +91,7 @@ export function AdminCapacite({ capacity }: Props) {
             <p
               style={{
                 fontSize: "0.75rem",
-                color: "rgba(255,255,255,0.3)",
+                color: "#545359",
                 margin: "0.3rem 0 0",
               }}
             >
@@ -105,8 +109,8 @@ export function AdminCapacite({ capacity }: Props) {
         <div className="admin-cap-v2-grid">
           {AGE_CATEGORIES.map((cat) => {
             const cap = capacity.byCategory[cat];
-            const localMax = maxValues[cat] ?? cap.max;
-            const changed = localMax !== cap.max;
+            const localMax = maxValues[cat] ?? committedValues[cat];
+            const changed = localMax !== committedValues[cat];
             const pct = Math.min(
               Math.round((cap.taken / Math.max(localMax, 1)) * 100),
               100
@@ -142,7 +146,7 @@ export function AdminCapacite({ capacity }: Props) {
                           ? "rgba(248,113,113,0.7)"
                           : pct > 70
                             ? "rgba(251,191,36,0.7)"
-                            : "rgba(196,164,228,0.7)",
+                            : "#8d76a5",
                       }}
                     />
                   </div>
@@ -233,8 +237,8 @@ export function AdminCapacite({ capacity }: Props) {
         {/* Info note */}
         <div
           style={{
-            background: "rgba(196,164,228,0.04)",
-            border: "1px solid rgba(196,164,228,0.1)",
+            background: "#120f1a",
+            border: "1px solid #1e1927",
             borderRadius: "0.875rem",
             padding: "1.25rem 1.5rem",
             marginTop: "1rem",
@@ -246,7 +250,7 @@ export function AdminCapacite({ capacity }: Props) {
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.2em",
-              color: "rgba(196,164,228,0.5)",
+              color: "#68577b",
               margin: "0 0 0.5rem",
             }}
           >
@@ -255,7 +259,7 @@ export function AdminCapacite({ capacity }: Props) {
           <p
             style={{
               fontSize: "0.8rem",
-              color: "rgba(255,255,255,0.35)",
+              color: "#605f65",
               margin: 0,
               lineHeight: 1.6,
             }}

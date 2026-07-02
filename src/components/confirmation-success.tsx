@@ -97,8 +97,8 @@ export function ConfirmationSuccess({ sessionId, isWaitlist = false, isTrial = f
         {isWaitlist ? (
           <svg className="conf-svg" viewBox="0 0 72 72" fill="none" aria-label="Sur la liste d'attente">
             <circle cx="36" cy="36" r="34" className="conf-circle" />
-            <circle cx="36" cy="36" r="20" stroke="rgba(196,164,228,0.6)" strokeWidth="1.5" fill="none" />
-            <path d="M36 22v14l8 5" stroke="#c4a4e4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="36" cy="36" r="20" stroke="#6e5a7f" strokeWidth="1.5" fill="none" />
+            <path d="M36 22v14l8 5" stroke="#b090c8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         ) : isTrial ? (
           <svg className="conf-svg" viewBox="0 0 72 72" fill="none" aria-label="Essai gratuit confirmé">

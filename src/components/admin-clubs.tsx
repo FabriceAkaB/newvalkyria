@@ -97,7 +97,7 @@ export function AdminClubs({ allRawClubs }: Props) {
         <AdminTopbar />
         <div className="admin-content">
           <div className="admin-section">
-            <p style={{ color: "rgba(255,255,255,0.4)" }}>Chargement...</p>
+            <p style={{ color: "#6d6b71" }}>Chargement...</p>
           </div>
         </div>
       </>
@@ -124,7 +124,7 @@ export function AdminClubs({ allRawClubs }: Props) {
             </div>
           </div>
 
-          <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)", marginBottom: "1.5rem", lineHeight: 1.55 }}>
+          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem", lineHeight: 1.55 }}>
             Regroupez les différentes orthographes d'un même club. Par exemple : « FC Laval », « fc laval », « f.c. laval » → un seul groupe canonique « FC Laval ».
             Les filtres et l'export utiliseront automatiquement le nom canonique.
           </p>
@@ -133,7 +133,7 @@ export function AdminClubs({ allRawClubs }: Props) {
 
           {/* Groups list */}
           {groups.length === 0 && (
-            <div style={{ padding: "1.5rem", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: "8px", textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: "0.85rem" }}>
+            <div style={{ padding: "1.5rem", border: "1px dashed #23222a", borderRadius: "8px", textAlign: "center", color: "#605f65", fontSize: "0.85rem" }}>
               Aucun groupe créé. Cliquez sur « + Nouveau groupe » pour commencer.
             </div>
           )}
@@ -142,8 +142,8 @@ export function AdminClubs({ allRawClubs }: Props) {
             <div
               key={idx}
               style={{
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "#100e17",
+                border: "1px solid #1f1d25",
                 borderRadius: "10px",
                 padding: "1rem 1.2rem",
                 marginBottom: "0.85rem",
@@ -177,12 +177,12 @@ export function AdminClubs({ allRawClubs }: Props) {
 
               {/* Existing aliases */}
               <div style={{ marginBottom: "0.6rem" }}>
-                <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>
+                <p style={{ fontSize: "0.68rem", color: "#6d6b71", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>
                   Variantes ({group.aliases.length})
                 </p>
                 <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
                   {group.aliases.length === 0 && (
-                    <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>
+                    <span style={{ fontSize: "0.75rem", color: "#48474d", fontStyle: "italic" }}>
                       Aucune variante
                     </span>
                   )}
@@ -194,8 +194,8 @@ export function AdminClubs({ allRawClubs }: Props) {
                         alignItems: "center",
                         gap: "0.4rem",
                         padding: "0.3rem 0.6rem",
-                        background: "rgba(196,164,228,0.12)",
-                        border: "1px solid rgba(196,164,228,0.25)",
+                        background: "#211c2b",
+                        border: "1px solid #393047",
                         borderRadius: "20px",
                         fontSize: "0.75rem",
                         color: "#e0d4f0",
@@ -204,7 +204,7 @@ export function AdminClubs({ allRawClubs }: Props) {
                       {alias}
                       <button
                         onClick={() => handleRemoveAlias(idx, ai)}
-                        style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: "0.85rem", padding: 0 }}
+                        style={{ background: "none", border: "none", color: "#858489", cursor: "pointer", fontSize: "0.85rem", padding: 0 }}
                         title="Retirer cette variante"
                       >
                         ×
@@ -217,7 +217,7 @@ export function AdminClubs({ allRawClubs }: Props) {
               {/* Quick add from ungrouped clubs */}
               {ungroupedClubs.length > 0 && (
                 <details style={{ marginTop: "0.6rem" }}>
-                  <summary style={{ fontSize: "0.7rem", color: "rgba(196,164,228,0.7)", cursor: "pointer", padding: "0.3rem 0" }}>
+                  <summary style={{ fontSize: "0.7rem", color: "#8d76a5", cursor: "pointer", padding: "0.3rem 0" }}>
                     + Ajouter depuis les clubs non assignés ({ungroupedClubs.length})
                   </summary>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.5rem", maxHeight: "180px", overflowY: "auto" }}>
@@ -227,11 +227,11 @@ export function AdminClubs({ allRawClubs }: Props) {
                         onClick={() => handleQuickAssign(idx, c)}
                         style={{
                           padding: "0.25rem 0.55rem",
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.1)",
+                          background: "#15131b",
+                          border: "1px solid #23222a",
                           borderRadius: "12px",
                           fontSize: "0.7rem",
-                          color: "rgba(255,255,255,0.6)",
+                          color: "#9d9da0",
                           cursor: "pointer",
                         }}
                       >
@@ -246,11 +246,11 @@ export function AdminClubs({ allRawClubs }: Props) {
 
           {/* Ungrouped clubs section */}
           {ungroupedClubs.length > 0 && (
-            <div style={{ marginTop: "2rem", padding: "1rem 1.2rem", background: "rgba(255,200,100,0.04)", border: "1px solid rgba(255,200,100,0.15)", borderRadius: "8px" }}>
+            <div style={{ marginTop: "2rem", padding: "1rem 1.2rem", background: "#151115", border: "1px solid #30261e", borderRadius: "8px" }}>
               <p style={{ fontSize: "0.78rem", color: "#f0c878", marginBottom: "0.5rem", fontWeight: 600 }}>
                 ⚠ Clubs non assignés ({ungroupedClubs.length})
               </p>
-              <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginBottom: "0.6rem" }}>
+              <p style={{ fontSize: "0.7rem", color: "#6d6b71", marginBottom: "0.6rem" }}>
                 Ces clubs apparaissent dans les inscriptions mais ne sont assignés à aucun groupe.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
@@ -259,11 +259,11 @@ export function AdminClubs({ allRawClubs }: Props) {
                     key={c}
                     style={{
                       padding: "0.25rem 0.55rem",
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: "#15131b",
+                      border: "1px solid #23222a",
                       borderRadius: "12px",
                       fontSize: "0.72rem",
-                      color: "rgba(255,255,255,0.55)",
+                      color: "#919094",
                     }}
                   >
                     {c}

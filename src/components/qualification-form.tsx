@@ -620,11 +620,11 @@ export function QualificationForm() {
 
       {/* Time slot picker for categories with multiple slots (2015) */}
       {hasSlotChoice && (
-        <div style={{ maxWidth: 600, margin: "0 auto 1.5rem", padding: "1.2rem", background: "rgba(196,164,228,0.08)", border: "1px solid rgba(196,164,228,0.25)", borderRadius: "12px" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto 1.5rem", padding: "1.2rem", background: "#1a1523", border: "1px solid #393047", borderRadius: "12px" }}>
           <p style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "0.6rem", color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Choisissez votre créneau horaire
           </p>
-          <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginBottom: "1rem" }}>
+          <p style={{ fontSize: "0.8rem", color: "#858489", marginBottom: "1rem" }}>
             Les pratiques débutent le 23 mai. 10 places par créneau.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -638,8 +638,8 @@ export function QualificationForm() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   padding: "0.85rem 1.1rem",
-                  background: form.time_slot === slot.id ? "rgba(196,164,228,0.2)" : "rgba(255,255,255,0.03)",
-                  border: form.time_slot === slot.id ? "2px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.1)",
+                  background: form.time_slot === slot.id ? "#30283c" : "#121019",
+                  border: form.time_slot === slot.id ? "2px solid #8d76a5" : "1px solid #23222a",
                   borderRadius: "10px",
                   cursor: "pointer",
                   color: "#fff",
@@ -648,9 +648,9 @@ export function QualificationForm() {
               >
                 <div>
                   <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{slot.day}</span>
-                  <span style={{ marginLeft: "0.6rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>{slot.horaire}</span>
+                  <span style={{ marginLeft: "0.6rem", fontSize: "0.85rem", color: "#9d9da0" }}>{slot.horaire}</span>
                 </div>
-                <span style={{ fontSize: "0.75rem", color: "rgba(196,164,228,0.8)" }}>{slot.practices} pratiques</span>
+                <span style={{ fontSize: "0.75rem", color: "#9f85ba" }}>{slot.practices} pratiques</span>
               </button>
             ))}
           </div>
@@ -690,7 +690,7 @@ export function QualificationForm() {
           {selectedSlot && (
             <div className="tunnel-horaires">
               <p>{selectedSlot.day} — {selectedSlot.horaire}</p>
-              <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>Début le 23 mai 2026</p>
+              <p style={{ fontSize: "0.72rem", color: "#605f65" }}>Début le 23 mai 2026</p>
             </div>
           )}
 

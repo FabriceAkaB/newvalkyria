@@ -16,7 +16,7 @@ const config: Config = {
         mist: "var(--color-mist)"
       },
       boxShadow: {
-        halo: "0 0 0 1px rgba(196, 164, 228, 0.25), 0 18px 40px rgba(16, 13, 25, 0.35)"
+        halo: "0 0 0 1px rgba(176, 144, 200, 0.25), 0 18px 40px rgba(10, 8, 18, 0.45)"
       },
       borderRadius: {
         soft: "1.25rem"

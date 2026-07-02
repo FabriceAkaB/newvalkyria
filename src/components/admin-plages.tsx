@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { AdminLead } from "@/lib/repositories";
 import type { SlotConfig } from "@/lib/timeslot-config-store";
+
+const POLL_INTERVAL = 10_000;
 
 interface Props {
   leads: AdminLead[];
@@ -20,6 +22,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
   const [leads, setLeads] = useState(initialLeads);
   const [slots, setSlots] = useState<SlotConfig[]>([]);
   const [loading, setLoading] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveOk, setSaveOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +37,30 @@ export function AdminPlages({ leads: initialLeads }: Props) {
       .finally(() => setLoading(false));
   }, []);
 
-  // Group leads by time_slot
+  // Poll leads for real-time updates (cancellations, status changes)
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/admin/leads", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { leads: AdminLead[] };
+        setLeads(data.leads);
+      } catch {
+        // silencieux — on garde les données précédentes
+      }
+    };
+
+    intervalRef.current = setInterval(() => { void poll(); }, POLL_INTERVAL);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  // Group leads by time_slot (exclude cancelled)
   const leadsBySlot: Record<string, AdminLead[]> = {};
   const unassigned: AdminLead[] = [];
 
-  for (const lead of leads) {
+  for (const lead of leads.filter((l) => l.status !== "cancelled")) {
     const slotId = lead.time_slot;
     if (slotId && slots.some((s) => s.id === slotId)) {
       if (!leadsBySlot[slotId]) leadsBySlot[slotId] = [];
@@ -137,7 +159,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
         <AdminTopbar />
         <div className="admin-content">
           <div className="admin-section">
-            <p style={{ color: "rgba(255,255,255,0.4)" }}>Chargement...</p>
+            <p style={{ color: "#6d6b71" }}>Chargement...</p>
           </div>
         </div>
       </>
@@ -162,7 +184,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
             </div>
           </div>
 
-          <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
             Gérez les joueuses par plage horaire. Déplacez-les entre créneaux et ajustez la capacité de chaque groupe.
           </p>
 
@@ -177,10 +199,10 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                 <div
                   key={slot.id}
                   style={{
-                    background: "rgba(255,255,255,0.02)",
+                    background: "#100e17",
                     border: isFull
                       ? "1px solid rgba(255,100,100,0.3)"
-                      : "1px solid rgba(255,255,255,0.08)",
+                      : "1px solid #1f1d25",
                     borderRadius: "12px",
                     padding: "1rem 1.2rem",
                   }}
@@ -189,8 +211,8 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "#fff", margin: 0 }}>{slot.day}</p>
-                      <p style={{ fontSize: "0.8rem", color: "rgba(196,164,228,0.8)", margin: "2px 0 0 0" }}>{slot.horaire}</p>
-                      <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", margin: "2px 0 0 0" }}>{slot.category} · {slot.practices} pratiques</p>
+                      <p style={{ fontSize: "0.8rem", color: "#9f85ba", margin: "2px 0 0 0" }}>{slot.horaire}</p>
+                      <p style={{ fontSize: "0.7rem", color: "#605f65", margin: "2px 0 0 0" }}>{slot.category} · {slot.practices} pratiques</p>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <p style={{
@@ -202,7 +224,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                         {slotLeads.length}/{slot.maxPlaces}
                       </p>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", marginTop: "0.3rem" }}>
-                        <label style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>Max</label>
+                        <label style={{ fontSize: "0.6rem", color: "#605f65", textTransform: "uppercase" }}>Max</label>
                         <input
                           type="number"
                           min={1}
@@ -213,8 +235,8 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                             width: "3rem",
                             padding: "0.2rem 0.4rem",
                             fontSize: "0.8rem",
-                            background: "rgba(255,255,255,0.05)",
-                            border: "1px solid rgba(255,255,255,0.15)",
+                            background: "#17151e",
+                            border: "1px solid #302e36",
                             borderRadius: "4px",
                             color: "#fff",
                             textAlign: "center",
@@ -227,7 +249,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                   {/* Players list */}
                   <div style={{ minHeight: "2rem" }}>
                     {slotLeads.length === 0 ? (
-                      <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.2)", fontStyle: "italic", padding: "0.5rem 0" }}>
+                      <p style={{ fontSize: "0.75rem", color: "#3c3a41", fontStyle: "italic", padding: "0.5rem 0" }}>
                         Aucune joueuse assignée
                       </p>
                     ) : (
@@ -243,15 +265,15 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                               alignItems: "center",
                               padding: "0.45rem 0.6rem",
                               marginBottom: "0.3rem",
-                              background: "rgba(255,255,255,0.03)",
+                              background: "#121019",
                               borderRadius: "6px",
-                              border: "1px solid rgba(255,255,255,0.06)",
+                              border: "1px solid #1a1820",
                               opacity: isMoving ? 0.5 : 1,
                             }}
                           >
                             <div>
                               <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff" }}>{childName}</span>
-                              <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", marginLeft: "0.5rem" }}>{lead.parent_name}</span>
+                              <span style={{ fontSize: "0.7rem", color: "#605f65", marginLeft: "0.5rem" }}>{lead.parent_name}</span>
                             </div>
                             <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
                               <select
@@ -261,10 +283,10 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                                 style={{
                                   padding: "0.2rem 0.4rem",
                                   fontSize: "0.68rem",
-                                  background: "rgba(255,255,255,0.05)",
-                                  border: "1px solid rgba(255,255,255,0.15)",
+                                  background: "#17151e",
+                                  border: "1px solid #302e36",
                                   borderRadius: "4px",
-                                  color: "rgba(255,255,255,0.7)",
+                                  color: "#b6b5b8",
                                   cursor: "pointer",
                                 }}
                               >
@@ -302,7 +324,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
 
           {/* Unassigned players */}
           {unassigned.length > 0 && (
-            <div style={{ padding: "1rem 1.2rem", background: "rgba(255,200,100,0.04)", border: "1px solid rgba(255,200,100,0.15)", borderRadius: "10px" }}>
+            <div style={{ padding: "1rem 1.2rem", background: "#151115", border: "1px solid #30261e", borderRadius: "10px" }}>
               <p style={{ fontSize: "0.85rem", color: "#f0c878", marginBottom: "0.6rem", fontWeight: 700 }}>
                 ⚠ Joueuses non assignées ({unassigned.length})
               </p>
@@ -318,16 +340,16 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                         justifyContent: "space-between",
                         alignItems: "center",
                         padding: "0.5rem 0.7rem",
-                        background: "rgba(255,255,255,0.03)",
+                        background: "#121019",
                         borderRadius: "6px",
-                        border: "1px solid rgba(255,255,255,0.06)",
+                        border: "1px solid #1a1820",
                         opacity: isMoving ? 0.5 : 1,
                       }}
                     >
                       <div>
                         <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff" }}>{childName}</span>
-                        <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", marginLeft: "0.5rem" }}>{lead.parent_name}</span>
-                        <span style={{ fontSize: "0.65rem", color: "rgba(196,164,228,0.5)", marginLeft: "0.5rem" }}>{lead.player_age}</span>
+                        <span style={{ fontSize: "0.7rem", color: "#605f65", marginLeft: "0.5rem" }}>{lead.parent_name}</span>
+                        <span style={{ fontSize: "0.65rem", color: "#68577b", marginLeft: "0.5rem" }}>{lead.player_age}</span>
                       </div>
                       <select
                         value=""
@@ -338,10 +360,10 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                         style={{
                           padding: "0.3rem 0.5rem",
                           fontSize: "0.72rem",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(196,164,228,0.3)",
+                          background: "#17151e",
+                          border: "1px solid #433751",
                           borderRadius: "5px",
-                          color: "rgba(196,164,228,0.8)",
+                          color: "#9f85ba",
                           cursor: "pointer",
                         }}
                       >

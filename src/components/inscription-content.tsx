@@ -204,10 +204,10 @@ export function InscriptionContent({ capacityByCategory: initialCapacity, maxPer
                       </p>
                       <p className="insc-cap-desc">
                         {catCap.isFull
-                          ? `Les ${maxPerCategory} places pour ce groupe sont réservées. Rejoignez la liste d'attente ci-dessous.`
+                          ? `Les ${catCap.max} places pour ce groupe sont réservées. Rejoignez la liste d'attente ci-dessous.`
                           : catCap.remaining <= 3
                           ? `Il reste seulement ${catCap.remaining} place${catCap.remaining > 1 ? "s" : ""} pour ce groupe — réservez maintenant.`
-                          : `${catCap.taken} place${catCap.taken > 1 ? "s" : ""} déjà confirmée${catCap.taken > 1 ? "s" : ""} sur ${maxPerCategory}. Groupe semi-privé, fermeture dès complet.`}
+                          : `${catCap.taken} place${catCap.taken > 1 ? "s" : ""} déjà confirmée${catCap.taken > 1 ? "s" : ""} sur ${catCap.max}. Groupe semi-privé, fermeture dès complet.`}
                       </p>
                     </div>
                   </div>
@@ -227,7 +227,7 @@ export function InscriptionContent({ capacityByCategory: initialCapacity, maxPer
                         style={{ width: `${catCap.percentage}%` }}
                       />
                     </div>
-                    <p className="insc-cap-bar-legend">{catCap.taken}/{maxPerCategory} confirmées</p>
+                    <p className="insc-cap-bar-legend">{catCap.taken}/{catCap.max} confirmées</p>
                   </div>
                 </div>
               )}

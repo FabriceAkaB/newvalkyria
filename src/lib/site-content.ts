@@ -38,7 +38,7 @@ export const keyResults = [
 ];
 
 export const seasonalOffer: ProgramOffer = {
-  title: "Programme saison New Valkyria",
+  title: "Forfait pour la saison",
   priceLabel: "550 $",
   duration: "15 séances semi-privées (1x/semaine)",
   capacity: "10 joueuses maximum",
