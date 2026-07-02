@@ -69,7 +69,7 @@ export default function VisionPage() {
       <section className="nv-section-band-dark">
         <Container>
           <span className="nv-label">Évolution</span>
-          <h2 className="nv-heading">Où on va</h2>
+          <h2 className="nv-heading">Nos buts</h2>
           <div className="nv-phase-grid">
             {visionPhases.map((phase) => (
               <div key={phase.phase} className={`nv-phase-card ${phase.status === "active" ? "nv-phase-card-active" : ""}`}>

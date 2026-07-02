@@ -4,12 +4,12 @@ import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { keyResults, methodSections, timeline } from "@/lib/site-content";
-import dsc02086 from "@/content/image/photos/DSC02086.jpg";
+import dsc05480 from "@/content/image/photos/DSC05480.jpg";
 import dsc02155 from "@/content/image/photos/DSC02155.jpg";
-import dsc02229 from "@/content/image/photos/DSC02229.jpg";
+import dsc03078 from "@/content/image/photos/DSC03078.jpg";
 import methodeHeroImg from "@/content/image/photos/DSC02406.jpg";
 
-const pillarImages = [dsc02086, dsc02155, dsc02229];
+const pillarImages = [dsc05480, dsc02155, dsc03078];
 const pillarAlts = [
   "Technique — joueuse en frappe",
   "Mental — concentration et focus",
@@ -81,15 +81,15 @@ export default function MethodePage() {
               <div key={section.title} style={{
                 display: "grid",
                 gap: "4rem",
-                alignItems: "center",
+                alignItems: "start",
                 gridTemplateColumns: "1fr 1fr",
-              }} className={i % 2 !== 0 ? "mp-pillar-flip" : ""}>
-                <div className="nv-pillar-img">
+              }} className={`nv-pillar-row${i % 2 !== 0 ? " mp-pillar-flip" : ""}`}>
+                <div className={`nv-pillar-img${i === 1 ? " nv-pillar-img--landscape" : ""}`}>
                   <Image
                     src={pillarImages[i]}
                     alt={pillarAlts[i]}
                     fill
-                    className="object-cover object-top"
+                    className="object-contain"
                     sizes="(max-width: 900px) 100vw, 50vw"
                   />
                 </div>

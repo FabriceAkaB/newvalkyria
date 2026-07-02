@@ -4061,7 +4061,7 @@ body {
   gap: 0.8rem;
   padding: 1.25rem;
   border-radius: 1rem;
-  background: #100d1a;
+  background: #221d36;
   cursor: pointer;
   width: 100%;
   transition:
@@ -4071,8 +4071,8 @@ body {
 }
 
 .insc-addon-card:hover {
-  border-color: #2c2436;
-  background: #151222;
+  border-color: #3a2f52;
+  background: #271f3d;
 }
 
 .insc-addon-selected {
@@ -4117,7 +4117,7 @@ body {
 
 .insc-addon-info {
   font-size: 0.74rem;
-  color: #68666c;
+  color: rgba(255,255,255,0.52);
   line-height: 1.5;
   margin-top: 0.3rem;
 }
@@ -4133,8 +4133,8 @@ body {
   font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #545359;
-  background: #100e21;
+  color: rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.07);
   padding: 0.18rem 0.55rem;
   border-radius: 999px;
 }
@@ -9201,4 +9201,38 @@ body {
   font-size: 0.88rem;
   line-height: 1.72;
   margin: 0;
+}
+
+
+/* ── Pillar image fix — full photo visibility ────────────────── */
+.nv-pillar-img {
+  position: relative !important;
+  height: 580px !important;
+  border-radius: 1.5rem !important;
+  overflow: hidden !important;
+  background: #1a1535 !important;
+  isolation: isolate !important;
+}
+
+
+/* ── Pillar image: aspect-ratio sizing so full photo is visible ─ */
+.nv-pillar-img {
+  position: relative !important;
+  height: auto !important;
+  width: 100% !important;
+  aspect-ratio: 2 / 3 !important;
+  border-radius: 1.5rem !important;
+  overflow: hidden !important;
+  background: #1a1535 !important;
+  isolation: isolate !important;
+}
+/* Grid row must stretch to the image, not squeeze it */
+.nv-pillar-row {
+  align-items: start !important;
+}
+
+
+/* ── Pillar image landscape variant (Mental pillar) ─────────── */
+.nv-pillar-img--landscape {
+  aspect-ratio: 3 / 2 !important;
 }

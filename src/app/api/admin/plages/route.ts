@@ -8,7 +8,7 @@ export async function GET() {
   if (!(await isAdminRequest())) {
     return jsonError("Non autorisé", 401);
   }
-  return NextResponse.json({ slots: getSlotConfigs() });
+  return NextResponse.json({ slots: await getSlotConfigs() });
 }
 
 export async function PUT(request: Request) {
@@ -21,6 +21,6 @@ export async function PUT(request: Request) {
     return jsonError("Format invalide", 400);
   }
 
-  setSlotConfigs(body.slots);
-  return NextResponse.json({ ok: true, slots: getSlotConfigs() });
+  await setSlotConfigs(body.slots);
+  return NextResponse.json({ ok: true, slots: await getSlotConfigs() });
 }
