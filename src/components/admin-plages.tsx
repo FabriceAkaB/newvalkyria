@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { AdminLead } from "@/lib/repositories";
@@ -12,6 +12,11 @@ interface Props {
   leads: AdminLead[];
 }
 
+/** Backward-compat alias: old slot id → new slot id */
+const SLOT_ALIASES: Record<string, string> = {
+  "lun-2014": "ven-2014"
+};
+
 /** Parse the goal field to get child name */
 function getChildName(goal: string): string {
   const m = goal.match(/Joueuse:\s*([^·]+)/);
@@ -22,46 +27,61 @@ export function AdminPlages({ leads: initialLeads }: Props) {
   const [leads, setLeads] = useState(initialLeads);
   const [slots, setSlots] = useState<SlotConfig[]>([]);
   const [loading, setLoading] = useState(true);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveOk, setSaveOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [movingLead, setMovingLead] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
-  // Load slot configs
+  // Fetch fresh leads directly from the API
+  const refreshLeads = useCallback(async (silent = false) => {
+    if (!silent) setRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/leads", { cache: "no-store" });
+      if (res.ok) {
+        const data = (await res.json()) as { leads: AdminLead[] };
+        if (Array.isArray(data.leads)) {
+          setLeads(data.leads);
+          setLastRefreshed(new Date());
+        }
+      }
+    } catch { /* silencieux */ } finally {
+      if (!silent) setRefreshing(false);
+    }
+  }, []);
+
+  // Load slot configs + setup auto-refresh
   useEffect(() => {
     fetch("/api/admin/plages")
       .then((r) => r.json())
       .then((data: { slots: SlotConfig[] }) => setSlots(data.slots ?? []))
       .catch(() => setError("Impossible de charger les plages"))
       .finally(() => setLoading(false));
-  }, []);
 
-  // Poll leads for real-time updates (cancellations, status changes)
-  useEffect(() => {
-    const poll = async () => {
-      try {
-        const res = await fetch("/api/admin/leads", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as { leads: AdminLead[] };
-        setLeads(data.leads);
-      } catch {
-        // silencieux — on garde les données précédentes
-      }
-    };
+    // Refresh leads immediately on mount (to get latest data)
+    void refreshLeads(true);
 
-    intervalRef.current = setInterval(() => { void poll(); }, POLL_INTERVAL);
+    // Refresh when tab gets focus
+    const onFocus = () => { void refreshLeads(true); };
+    window.addEventListener("focus", onFocus);
+
+    // Auto-poll every 20s
+    const interval = setInterval(() => { void refreshLeads(true); }, 20_000);
+
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
     };
-  }, []);
+  }, [refreshLeads]);
 
   // Group leads by time_slot (exclude cancelled)
   const leadsBySlot: Record<string, AdminLead[]> = {};
   const unassigned: AdminLead[] = [];
 
   for (const lead of leads.filter((l) => l.status !== "cancelled")) {
-    const slotId = lead.time_slot;
+    let slotId = lead.time_slot;
+    if (slotId && SLOT_ALIASES[slotId]) slotId = SLOT_ALIASES[slotId];
     if (slotId && slots.some((s) => s.id === slotId)) {
       if (!leadsBySlot[slotId]) leadsBySlot[slotId] = [];
       leadsBySlot[slotId].push(lead);
@@ -176,8 +196,22 @@ export function AdminPlages({ leads: initialLeads }: Props) {
             <p className="admin-section-title" style={{ margin: 0 }}>
               Plages horaires ({leads.length} joueuses)
             </p>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+              {lastRefreshed && (
+                <span style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.3)" }}>
+                  Mis à jour {lastRefreshed.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                </span>
+              )}
               {saveOk && <span style={{ color: "#9ec99e", fontSize: "0.75rem" }}>✓ Sauvegardé</span>}
+              <button
+                onClick={() => { void refreshLeads(false); }}
+                disabled={refreshing}
+                className="admin-btn-ghost"
+                style={{ padding: "0.45rem 0.8rem", fontSize: "0.78rem" }}
+                title="Recharger la liste des joueuses"
+              >
+                {refreshing ? "↻..." : "↻ Actualiser"}
+              </button>
               <button onClick={handleSaveSlots} disabled={saving} className="admin-btn-primary" style={{ padding: "0.45rem 1rem", fontSize: "0.78rem" }}>
                 {saving ? "Sauvegarde..." : "Sauvegarder capacités"}
               </button>
@@ -261,9 +295,9 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                             key={lead.id}
                             style={{
                               display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "0.45rem 0.6rem",
+                              flexDirection: "column",
+                              gap: "0.4rem",
+                              padding: "0.5rem 0.6rem",
                               marginBottom: "0.3rem",
                               background: "#121019",
                               borderRadius: "6px",
@@ -271,31 +305,12 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                               opacity: isMoving ? 0.5 : 1,
                             }}
                           >
-                            <div>
-                              <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff" }}>{childName}</span>
-                              <span style={{ fontSize: "0.7rem", color: "#605f65", marginLeft: "0.5rem" }}>{lead.parent_name}</span>
-                            </div>
-                            <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
-                              <select
-                                value={slot.id}
-                                onChange={(e) => handleMoveLead(lead.id, e.target.value)}
-                                disabled={isMoving}
-                                style={{
-                                  padding: "0.2rem 0.4rem",
-                                  fontSize: "0.68rem",
-                                  background: "#17151e",
-                                  border: "1px solid #302e36",
-                                  borderRadius: "4px",
-                                  color: "#b6b5b8",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                {slots.map((s) => (
-                                  <option key={s.id} value={s.id}>
-                                    {s.day} {s.horaire}
-                                  </option>
-                                ))}
-                              </select>
+                            {/* Nom */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div>
+                                <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff" }}>{childName}</span>
+                                <span style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.3)", marginLeft: "0.4rem" }}>{lead.parent_name}</span>
+                              </div>
                               <button
                                 onClick={() => handleRemoveFromSlot(lead.id)}
                                 disabled={isMoving}
@@ -303,15 +318,39 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                                 style={{
                                   background: "none",
                                   border: "none",
-                                  color: "rgba(255,100,100,0.6)",
+                                  color: "rgba(255,100,100,0.5)",
                                   cursor: "pointer",
-                                  fontSize: "0.9rem",
-                                  padding: "0 0.2rem",
+                                  fontSize: "1rem",
+                                  lineHeight: 1,
+                                  padding: "0 0.1rem",
+                                  flexShrink: 0,
                                 }}
                               >
                                 ×
                               </button>
                             </div>
+                            {/* Déplacer */}
+                            <select
+                              value={slot.id}
+                              onChange={(e) => handleMoveLead(lead.id, e.target.value)}
+                              disabled={isMoving}
+                              style={{
+                                width: "100%",
+                                padding: "0.3rem 0.5rem",
+                                fontSize: "0.7rem",
+                                background: "rgba(255,255,255,0.04)",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                                borderRadius: "4px",
+                                color: "rgba(255,255,255,0.6)",
+                                cursor: "pointer",
+                              }}
+                            >
+                              {slots.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.day} · {s.horaire}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         );
                       })
@@ -328,7 +367,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
               <p style={{ fontSize: "0.85rem", color: "#f0c878", marginBottom: "0.6rem", fontWeight: 700 }}>
                 ⚠ Joueuses non assignées ({unassigned.length})
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 {unassigned.map((lead) => {
                   const childName = getChildName(lead.goal) || "Sans nom";
                   const isMoving = movingLead === lead.id;
@@ -337,20 +376,29 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                       key={lead.id}
                       style={{
                         display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "0.5rem 0.7rem",
-                        background: "#121019",
-                        borderRadius: "6px",
-                        border: "1px solid #1a1820",
+                        flexDirection: "column",
+                        gap: "0.5rem",
+                        padding: "0.65rem 0.8rem",
+                        background: "rgba(255,255,255,0.03)",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(255,255,255,0.07)",
                         opacity: isMoving ? 0.5 : 1,
                       }}
                     >
-                      <div>
-                        <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff" }}>{childName}</span>
-                        <span style={{ fontSize: "0.7rem", color: "#605f65", marginLeft: "0.5rem" }}>{lead.parent_name}</span>
-                        <span style={{ fontSize: "0.65rem", color: "#68577b", marginLeft: "0.5rem" }}>{lead.player_age}</span>
+                      {/* Infos joueuse */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff" }}>{childName}</span>
+                        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>— {lead.parent_name}</span>
+                        <span style={{
+                          fontSize: "0.62rem",
+                          color: "rgba(196,164,228,0.8)",
+                          background: "rgba(196,164,228,0.1)",
+                          border: "1px solid rgba(196,164,228,0.2)",
+                          borderRadius: "4px",
+                          padding: "0.1rem 0.4rem",
+                        }}>{lead.player_age}</span>
                       </div>
+                      {/* Select plein-largeur */}
                       <select
                         value=""
                         onChange={(e) => {
@@ -358,19 +406,21 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                         }}
                         disabled={isMoving}
                         style={{
-                          padding: "0.3rem 0.5rem",
-                          fontSize: "0.72rem",
-                          background: "#17151e",
-                          border: "1px solid #433751",
-                          borderRadius: "5px",
-                          color: "#9f85ba",
-                          cursor: "pointer",
+                          width: "100%",
+                          padding: "0.55rem 0.7rem",
+                          fontSize: "0.78rem",
+                          background: "rgba(196,164,228,0.08)",
+                          border: "1px solid rgba(196,164,228,0.3)",
+                          borderRadius: "6px",
+                          color: "rgba(196,164,228,0.9)",
+                          cursor: isMoving ? "not-allowed" : "pointer",
+                          appearance: "auto",
                         }}
                       >
-                        <option value="">Assigner →</option>
+                        <option value="">↳ Assigner à un créneau...</option>
                         {slots.map((s) => (
                           <option key={s.id} value={s.id}>
-                            {s.day} {s.horaire} ({s.category})
+                            {s.day} · {s.horaire} · {s.category}
                           </option>
                         ))}
                       </select>

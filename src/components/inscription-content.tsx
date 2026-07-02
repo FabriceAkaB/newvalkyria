@@ -7,34 +7,32 @@ import { LeadCaptureForm } from "@/components/lead-capture-form";
 import type { AgeCategory } from "@/lib/categories";
 import { AGE_CATEGORIES, CATEGORY_LABELS, CATEGORY_SUBLABELS, getCategoryFromYear } from "@/lib/categories";
 import type { CapacityData, CategoryCapacity } from "@/lib/capacity";
-import type { AddonId } from "@/types/contracts";
 
-const ADDONS = [
-  {
-    id: "tir",
-    name: "Programme Tir",
-    info: "7 séances · Groupe de 6 · Vendredi · Fin avril",
-    tags: ["Finition", "Tir au but"],
-    price: 170
-  },
-  {
-    id: "dribble",
-    name: "Programme Dribble",
-    info: "7 séances · Groupe de 6 · Vendredi · Fin juin",
-    tags: ["Feintes", "Dribbles"],
-    price: 170
-  },
-  {
-    id: "analyse",
-    name: "Analyse de match",
-    info: "2 matchs filmés · 45 min d'analyse · Caméra prêtée",
-    tags: ["Vidéo", "Retours perso"],
-    price: 75
-  }
-];
+type OfferType = "elite" | "half-season" | "trial";
 
-const BASE_PRICE = 550;
 const POLL_INTERVAL = 10_000; // 10 secondes
+
+/* ── Time slots per category (mirrors qualification-form) ── */
+interface TimeSlot {
+  id: string;
+  day: string;
+  horaire: string;
+  practices: number;
+}
+
+const TIME_SLOTS: Record<AgeCategory, TimeSlot[]> = {
+  "2016": [
+    { id: "mar-2016", day: "Mardi", horaire: "18h00 à 19h15", practices: 17 }
+  ],
+  "2015": [
+    { id: "lun-2015", day: "Lundi", horaire: "18h00 à 19h30", practices: 15 },
+    { id: "mer-2015", day: "Mercredi", horaire: "19h25 à 20h55", practices: 15 },
+    { id: "jeu-2015", day: "Jeudi", horaire: "18h00 à 19h15", practices: 17 }
+  ],
+  "2014-2013": [
+    { id: "ven-2014", day: "Vendredi", horaire: "18h00 à 19h15", practices: 17 }
+  ]
+};
 
 type Props = {
   capacityByCategory: Record<AgeCategory, CategoryCapacity>;
@@ -42,13 +40,14 @@ type Props = {
 };
 
 export function InscriptionContent({ capacityByCategory: initialCapacity, maxPerCategory }: Props) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [category, setCategory] = useState<AgeCategory | null>(null);
   const [fromQual, setFromQual] = useState(false);
+  const [offer, setOffer] = useState<OfferType | null>(null);
+  const [slotId, setSlotId] = useState<string>("");
 
   // Live capacity — initialisé avec les données serveur, mis à jour par polling
   const [liveCapacity, setLiveCapacity] = useState<Record<AgeCategory, CategoryCapacity>>(initialCapacity);
-  const [isLive, setIsLive] = useState(false); // true après le premier poll réussi
+  const [isLive, setIsLive] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Lecture localStorage (catégorie pré-remplie depuis qualification)
@@ -80,10 +79,7 @@ export function InscriptionContent({ capacityByCategory: initialCapacity, maxPer
       }
     };
 
-    // Premier poll immédiat
     void poll();
-
-    // Puis toutes les 10 secondes
     intervalRef.current = setInterval(() => { void poll(); }, POLL_INTERVAL);
 
     return () => {
@@ -91,18 +87,24 @@ export function InscriptionContent({ capacityByCategory: initialCapacity, maxPer
     };
   }, []);
 
-  const toggle = (id: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-
-  const selectedAddons = ADDONS.filter((a) => selected.has(a.id));
-  const total = BASE_PRICE + selectedAddons.reduce((s, a) => s + a.price, 0);
+  // Auto-select default slot when category changes
+  useEffect(() => {
+    if (!category) { setSlotId(""); return; }
+    const slots = TIME_SLOTS[category];
+    if (slots.length === 1) setSlotId(slots[0].id);
+    else setSlotId("");
+  }, [category]);
 
   const catCap = category ? liveCapacity[category] : null;
   const isFull = catCap?.isFull ?? false;
+
+  const slots = category ? TIME_SLOTS[category] : [];
+  const hasSlotChoice = slots.length > 1;
+  const selectedSlot = slots.find((s) => s.id === slotId) ?? (slots.length === 1 ? slots[0] : null);
+  const timeSlotLabel = selectedSlot ? `${selectedSlot.day} — ${selectedSlot.horaire}` : "";
+  const practiceCount = selectedSlot?.practices ?? 15;
+
+  const offerReady = offer !== null && (!hasSlotChoice || slotId !== "");
 
   return (
     <>
@@ -141,7 +143,7 @@ export function InscriptionContent({ capacityByCategory: initialCapacity, maxPer
                 <button
                   type="button"
                   className="insc-cat-change"
-                  onClick={() => { setCategory(null); setFromQual(false); }}
+                  onClick={() => { setCategory(null); setFromQual(false); setOffer(null); }}
                 >
                   Changer
                 </button>
@@ -159,7 +161,7 @@ export function InscriptionContent({ capacityByCategory: initialCapacity, maxPer
                     key={cat}
                     type="button"
                     disabled={locked}
-                    onClick={() => { setCategory(cat); setFromQual(false); }}
+                    onClick={() => { setCategory(cat); setFromQual(false); setOffer(null); }}
                     className={[
                       "insc-cat-chip",
                       isSelected ? "insc-cat-chip-active" : "",
@@ -244,7 +246,7 @@ export function InscriptionContent({ capacityByCategory: initialCapacity, maxPer
                       <div>
                         <span className="insc-included-badge insc-waitlist-badge">⏳ Liste d&apos;attente</span>
                         <h2 className="insc-base-name">Programme Académique</h2>
-                        <p className="insc-base-info">15 séances semi-privées · Groupe de 10 · Lundi ou Mercredi</p>
+                        <p className="insc-base-info">15 séances semi-privées · Groupe de 10</p>
                         <div className="insc-base-tags">
                           <span>Priorité garantie si désistement</span>
                           <span>Remboursé si aucune place</span>
@@ -272,92 +274,184 @@ export function InscriptionContent({ capacityByCategory: initialCapacity, maxPer
                 </>
               ) : (
                 <>
-                  {/* ── Étape 1 — Programme de base ── */}
-                  <div className="insc-funnel-block">
-                    <p className="insc-step-label">
-                      <span className="insc-step-num">1</span>
-                      Programme de base — toujours inclus
-                    </p>
-                    <div className="insc-base-card">
-                      <div>
-                        <span className="insc-included-badge">✓ Inclus</span>
-                        <h2 className="insc-base-name">Programme Académique</h2>
-                        <p className="insc-base-info">15 séances semi-privées · Groupe de 10 · Lundi ou Mercredi</p>
-                        <div className="insc-base-tags">
-                          <span>18h – 19h25 ou 19h30 – 20h55</span>
-                          <span>Coach C CONCACAF</span>
-                          <span>Suivi individualisé</span>
-                          <span>Garantie séance 7</span>
-                        </div>
-                      </div>
-                      <div className="insc-base-price">
-                        <p className="insc-price-big">550 $</p>
-                        <p className="insc-price-sub">/ saison</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ── Étape 2 — Ajouts optionnels ── */}
-                  <div className="insc-funnel-block">
-                    <p className="insc-step-label">
-                      <span className="insc-step-num">2</span>
-                      Ajoutez des spécialisations — optionnel
-                    </p>
-                    <div className="insc-addons-grid">
-                      {ADDONS.map((addon) => {
-                        const isOn = selected.has(addon.id);
-                        return (
+                  {/* ── Étape 1 — Créneau horaire (uniquement si plusieurs) ── */}
+                  {hasSlotChoice && (
+                    <div className="insc-funnel-block">
+                      <p className="insc-step-label">
+                        <span className="insc-step-num">1</span>
+                        Choisissez votre créneau horaire
+                      </p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        {slots.map((s) => (
                           <button
-                            key={addon.id}
+                            key={s.id}
                             type="button"
-                            onClick={() => toggle(addon.id)}
-                            className={`insc-addon-card${isOn ? " insc-addon-selected" : ""}`}
-                            aria-pressed={isOn}
+                            onClick={() => setSlotId(s.id)}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "0.85rem 1.1rem",
+                              background: slotId === s.id ? "rgba(196,164,228,0.2)" : "rgba(255,255,255,0.03)",
+                              border: slotId === s.id ? "2px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "10px",
+                              cursor: "pointer",
+                              color: "#fff",
+                              textAlign: "left",
+                            }}
                           >
-                            <div className="insc-addon-check" aria-hidden>{isOn ? "✓" : "+"}</div>
-                            <div className="insc-addon-body">
-                              <p className="insc-addon-name">{addon.name}</p>
-                              <p className="insc-addon-info">{addon.info}</p>
-                              <div className="insc-addon-tags">
-                                {addon.tags.map((t) => <span key={t}>{t}</span>)}
-                              </div>
+                            <div>
+                              <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{s.day}</span>
+                              <span style={{ marginLeft: "0.6rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>{s.horaire}</span>
                             </div>
-                            <p className="insc-addon-price">+ {addon.price} $</p>
+                            <span style={{ fontSize: "0.75rem", color: "rgba(196,164,228,0.8)" }}>{s.practices} pratiques</span>
                           </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* ── Étape 3 — Récap + Formulaire ── */}
-                  <div className="insc-funnel-block">
-                    <p className="insc-step-label">
-                      <span className="insc-step-num">3</span>
-                      Vos informations et paiement
-                    </p>
-                    <div className="insc-summary">
-                      <div className="insc-summary-lines">
-                        <div className="insc-summary-line">
-                          <span>Programme Académique</span>
-                          <span>550 $</span>
-                        </div>
-                        {selectedAddons.map((a) => (
-                          <div key={a.id} className="insc-summary-line insc-summary-addon">
-                            <span>+ {a.name}</span>
-                            <span>{a.price} $</span>
-                          </div>
                         ))}
                       </div>
-                      <div className="insc-summary-total">
-                        <span>Total</span>
-                        <span>{total} $</span>
-                      </div>
                     </div>
-                    <LeadCaptureForm
-                      addons={Array.from(selected) as AddonId[]}
-                      category={category}
-                    />
+                  )}
+
+                  {/* ── Étape — Choisir l'offre ── */}
+                  <div className="insc-funnel-block">
+                    <p className="insc-step-label">
+                      <span className="insc-step-num">{hasSlotChoice ? 2 : 1}</span>
+                      Choisissez votre offre
+                    </p>
+
+                    <div style={{ display: "grid", gap: "0.85rem" }}>
+                      {/* Élite */}
+                      <button
+                        type="button"
+                        onClick={() => setOffer("elite")}
+                        className={`insc-base-card${offer === "elite" ? " insc-cat-chip-active" : ""}`}
+                        style={{
+                          textAlign: "left",
+                          cursor: "pointer",
+                          width: "100%",
+                          border: offer === "elite" ? "2px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.08)",
+                          background: offer === "elite" ? "rgba(196,164,228,0.08)" : "rgba(255,255,255,0.02)",
+                        }}
+                      >
+                        <div>
+                          <span className="insc-included-badge">Saison complète</span>
+                          <h2 className="insc-base-name">Programme Élite</h2>
+                          <p className="insc-base-info">{practiceCount} séances · Groupe de 10 · Suivi individualisé</p>
+                          <div className="insc-base-tags">
+                            <span>Coach C CONCACAF</span>
+                            <span>Garantie séance 7</span>
+                            <span>Bonus tir &amp; dribble dimanche</span>
+                          </div>
+                        </div>
+                        <div className="insc-base-price">
+                          <p className="insc-price-big">550 $</p>
+                          <p className="insc-price-sub">/ saison</p>
+                        </div>
+                      </button>
+
+                      {/* Demi-saison */}
+                      <button
+                        type="button"
+                        onClick={() => setOffer("half-season")}
+                        className={`insc-base-card${offer === "half-season" ? " insc-cat-chip-active" : ""}`}
+                        style={{
+                          textAlign: "left",
+                          cursor: "pointer",
+                          width: "100%",
+                          border: offer === "half-season" ? "2px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.08)",
+                          background: offer === "half-season" ? "rgba(196,164,228,0.08)" : "rgba(255,255,255,0.02)",
+                        }}
+                      >
+                        <div>
+                          <span className="insc-included-badge">Demi-saison</span>
+                          <h2 className="insc-base-name">Demi-saison</h2>
+                          <p className="insc-base-info">7 séances · Groupe semi-privé · Sans engagement long</p>
+                          <div className="insc-base-tags">
+                            <span>Idéal pour découvrir</span>
+                            <span>Coach C CONCACAF</span>
+                          </div>
+                        </div>
+                        <div className="insc-base-price">
+                          <p className="insc-price-big">275 $</p>
+                          <p className="insc-price-sub">/ 7 séances</p>
+                        </div>
+                      </button>
+
+                      {/* Essai gratuit */}
+                      <button
+                        type="button"
+                        onClick={() => setOffer("trial")}
+                        className={`insc-base-card${offer === "trial" ? " insc-cat-chip-active" : ""}`}
+                        style={{
+                          textAlign: "left",
+                          cursor: "pointer",
+                          width: "100%",
+                          border: offer === "trial" ? "2px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.08)",
+                          background: offer === "trial" ? "rgba(196,164,228,0.08)" : "rgba(255,255,255,0.02)",
+                        }}
+                      >
+                        <div>
+                          <span className="insc-included-badge insc-waitlist-badge">Gratuit</span>
+                          <h2 className="insc-base-name">Essai gratuit — 3 séances</h2>
+                          <p className="insc-base-info">Découvrez le programme sans engagement.</p>
+                          <div className="insc-base-tags">
+                            <span>0 $ aujourd&apos;hui</span>
+                            <span>Carte requise pour valider</span>
+                            <span>Aucun prélèvement</span>
+                          </div>
+                        </div>
+                        <div className="insc-base-price">
+                          <p className="insc-price-big">0 $</p>
+                          <p className="insc-price-sub">Essai gratuit</p>
+                        </div>
+                      </button>
+                    </div>
                   </div>
+
+                  {/* ── Étape — Récap + Formulaire ── */}
+                  {offerReady && (
+                    <div className="insc-funnel-block">
+                      <p className="insc-step-label">
+                        <span className="insc-step-num">{hasSlotChoice ? 3 : 2}</span>
+                        Vos informations {offer === "trial" ? "" : "et paiement"}
+                      </p>
+                      <div className="insc-summary">
+                        <div className="insc-summary-lines">
+                          <div className="insc-summary-line">
+                            <span>
+                              {offer === "elite" && "Programme Élite"}
+                              {offer === "half-season" && "Demi-saison (7 séances)"}
+                              {offer === "trial" && "Essai gratuit — 3 séances"}
+                            </span>
+                            <span>
+                              {offer === "elite" && "550 $"}
+                              {offer === "half-season" && "275 $"}
+                              {offer === "trial" && "0 $"}
+                            </span>
+                          </div>
+                          {selectedSlot && (
+                            <div className="insc-summary-line insc-summary-addon">
+                              <span>{selectedSlot.day} — {selectedSlot.horaire}</span>
+                              <span>{selectedSlot.practices} pratiques</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="insc-summary-total">
+                          <span>Total</span>
+                          <span>
+                            {offer === "elite" && "550 $"}
+                            {offer === "half-season" && "275 $"}
+                            {offer === "trial" && "0 $"}
+                          </span>
+                        </div>
+                      </div>
+                      <LeadCaptureForm
+                        addons={[]}
+                        category={category}
+                        checkoutType={offer}
+                        timeSlot={timeSlotLabel || undefined}
+                      />
+                    </div>
+                  )}
                 </>
               )}
             </>

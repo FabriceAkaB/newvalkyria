@@ -12,6 +12,9 @@ import type { AddonId } from "@/types/contracts";
 const BASE_LABEL = "New Valkyria - Programme Académique (15 séances)";
 const BASE_AMOUNT_CENTS = 55000;
 
+const HALF_SEASON_LABEL = "New Valkyria - Demi-saison (7 séances)";
+const HALF_SEASON_AMOUNT_CENTS = 27500;
+
 const ADDONS: Record<AddonId, { label: string; amount: number }> = {
   tir:     { label: "New Valkyria - Programme Tir (7 séances)", amount: 17000 },
   dribble: { label: "New Valkyria - Programme Dribble (7 séances)", amount: 17000 },
@@ -25,7 +28,7 @@ export async function POST(request: Request) {
     const cancelPath = payload.cancelPath ?? "/inscription?cancelled=1";
 
     // ── Garde de capacité — retourne waitlistUrl si complet (race condition) ──
-    if (checkoutType === "elite") {
+    if (checkoutType === "elite" || checkoutType === "half-season") {
       const { getCapacityData } = await import("@/lib/capacity");
       const capacity = await getCapacityData();
       const isCatFull = payload.category
@@ -91,8 +94,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ sessionId: session.id, checkoutUrl: session.url });
     }
 
-    // Build base line item
-    const baseItem = env.stripePriceId
+    // Build base line item — elite vs half-season
+    const isHalfSeason = checkoutType === "half-season";
+
+    const baseItem = isHalfSeason
+      ? {
+          quantity: 1 as const,
+          price_data: {
+            currency: "cad",
+            product_data: {
+              name: HALF_SEASON_LABEL,
+              description: "7 séances semi-privées · Demi-saison New Valkyria"
+            },
+            unit_amount: HALF_SEASON_AMOUNT_CENTS
+          }
+        }
+      : env.stripePriceId
       ? { price: env.stripePriceId, quantity: 1 as const }
       : {
           quantity: 1 as const,
@@ -106,15 +123,17 @@ export async function POST(request: Request) {
           }
         };
 
-    // Build add-on line items (always use price_data)
-    const addonItems = (payload.addons ?? []).map((id) => ({
-      quantity: 1 as const,
-      price_data: {
-        currency: "cad",
-        product_data: { name: ADDONS[id].label },
-        unit_amount: ADDONS[id].amount
-      }
-    }));
+    // Build add-on line items (always use price_data) — only for elite
+    const addonItems = isHalfSeason
+      ? []
+      : (payload.addons ?? []).map((id) => ({
+          quantity: 1 as const,
+          price_data: {
+            currency: "cad",
+            product_data: { name: ADDONS[id].label },
+            unit_amount: ADDONS[id].amount
+          }
+        }));
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -124,7 +143,7 @@ export async function POST(request: Request) {
       metadata: {
         leadId: payload.leadId,
         checkoutType,
-        addons: (payload.addons ?? []).join(","),
+        addons: isHalfSeason ? "" : (payload.addons ?? []).join(","),
         ...(payload.category ? { category: payload.category } : {}),
         ...(payload.timeSlot ? { timeSlot: payload.timeSlot } : {})
       },

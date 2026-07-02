@@ -80,7 +80,7 @@ const TIME_SLOTS: Record<string, TimeSlot[]> = {
     { id: "jeu-2015", label: "Jeudi", day: "Jeudi", horaire: "18h00 à 19h15", practices: 17 }
   ],
   "2014-2013": [
-    { id: "lun-2014", label: "Lundi", day: "Lundi", horaire: "19h25 à 20h55", practices: 15 }
+    { id: "ven-2014", label: "Vendredi", day: "Vendredi", horaire: "18h00 à 19h15", practices: 17 }
   ]
 };
 
@@ -143,7 +143,7 @@ export function QualificationForm() {
   const [formLoading, setFormLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [checkoutTarget, setCheckoutTarget] = useState<"elite" | "trial" | null>(null);
+  const [checkoutTarget, setCheckoutTarget] = useState<"elite" | "trial" | "half-season" | null>(null);
 
   // Live capacity
   const [liveCapacity, setLiveCapacity] = useState<Record<string, CategoryCapacity> | null>(null);
@@ -336,6 +336,49 @@ export function QualificationForm() {
       const checkout = (await res.json()) as CheckoutResponse;
       trackEvent("tunnel_elite_selected", { leadId });
       saveRecapData("Programme \u00c9lite New Valkyria", "550 $");
+
+      if (checkout.waitlistUrl) {
+        window.location.href = checkout.waitlistUrl;
+        return;
+      }
+      window.location.href = checkout.checkoutUrl!;
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Une erreur est survenue");
+      setCheckoutLoading(false);
+      setCheckoutTarget(null);
+    }
+  };
+
+  /* ── Demi-saison → Stripe checkout (275 $) ── */
+  const handleHalfSeasonClick = async () => {
+    if (!leadId) return;
+    saveQualificationState({ step: "offer" });
+    setCheckoutLoading(true);
+    setCheckoutTarget("half-season");
+    setCheckoutError(null);
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId,
+          email: form.email,
+          checkoutType: "half-season",
+          category,
+          cancelPath: "/qualification?cancelled=1",
+          timeSlot: selectedSlot ? `${selectedSlot.day} — ${selectedSlot.horaire}` : undefined
+        })
+      });
+
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error ?? "Impossible de démarrer le paiement.");
+      }
+
+      const checkout = (await res.json()) as CheckoutResponse;
+      trackEvent("tunnel_half_season_selected", { leadId });
+      saveRecapData("Demi-saison New Valkyria — 7 séances", "275 $");
 
       if (checkout.waitlistUrl) {
         window.location.href = checkout.waitlistUrl;
@@ -718,6 +761,44 @@ export function QualificationForm() {
             {checkoutLoading && checkoutTarget === "elite"
               ? "Redirection vers le paiement..."
               : "Choisir le programme Élite"}
+          </button>
+        </div>
+
+        {/* ── Demi-saison ── */}
+        <div className="tunnel-offer-card tunnel-offer-half">
+          <div className="tunnel-free-badge" style={{ background: "rgba(196,164,228,0.25)", color: "#e0c8f0" }}>Demi-saison</div>
+          <h2 className="tunnel-offer-title-sm">Demi-saison<br />7 séances</h2>
+          <p className="tunnel-offer-tagline">Idéal pour découvrir le programme<br />sans engagement complet.</p>
+
+          <ul className="tunnel-benefits" style={{ marginTop: "1rem" }}>
+            <li><span className="tunnel-check" aria-hidden>✓</span>7 pratiques semi-privées</li>
+            <li><span className="tunnel-check" aria-hidden>✓</span>Coach C CONCACAF</li>
+            <li><span className="tunnel-check" aria-hidden>✓</span>Suivi technique &amp; tactique</li>
+            <li><span className="tunnel-check" aria-hidden>✓</span>Groupe de 10 max</li>
+          </ul>
+
+          {selectedSlot && (
+            <div className="tunnel-horaires">
+              <p>{selectedSlot.day} — {selectedSlot.horaire}</p>
+              <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>Début le 23 mai 2026</p>
+            </div>
+          )}
+
+          <div className="tunnel-price-block">
+            <p className="tunnel-price-real">275 $</p>
+            <p className="tunnel-price-sub">Paiement unique — 7 séances</p>
+          </div>
+
+          <button
+            type="button"
+            disabled={checkoutLoading || (hasSlotChoice && !form.time_slot)}
+            onClick={handleHalfSeasonClick}
+            className="tunnel-cta-elite"
+            style={{ background: "linear-gradient(135deg, rgba(196,164,228,0.85), rgba(160,120,200,0.85))" }}
+          >
+            {checkoutLoading && checkoutTarget === "half-season"
+              ? "Redirection vers le paiement..."
+              : "Choisir la demi-saison"}
           </button>
         </div>
 

@@ -23,7 +23,7 @@ export const checkoutSchema = z.object({
   email: z.string().email("Courriel invalide"),
   addons: z.array(z.enum(["tir", "dribble", "analyse"])).optional(),
   category: z.enum(["2016", "2015", "2014-2013"]).optional(),
-  checkoutType: z.enum(["elite", "trial"]).optional(),
+  checkoutType: z.enum(["elite", "trial", "half-season"]).optional(),
   trialYear: z.enum(["2016", "2015", "2014-2013"]).optional(),
   cancelPath: z.string().refine((value) => value.startsWith("/") && !value.startsWith("//"), {
     message: "Chemin d'annulation invalide"

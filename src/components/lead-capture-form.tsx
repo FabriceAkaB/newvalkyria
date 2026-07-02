@@ -56,9 +56,17 @@ type Props = {
   addons?: AddonId[];
   category?: AgeCategory | null;
   isWaitlist?: boolean;
+  checkoutType?: "elite" | "trial" | "half-season";
+  timeSlot?: string;
 };
 
-export function LeadCaptureForm({ addons = [], category, isWaitlist = false }: Props) {
+export function LeadCaptureForm({
+  addons = [],
+  category,
+  isWaitlist = false,
+  checkoutType = "elite",
+  timeSlot
+}: Props) {
   const [form, setForm] = useState<LeadFormInput>({
     ...initialForm,
     player_age: category ?? ""
@@ -94,10 +102,25 @@ export function LeadCaptureForm({ addons = [], category, isWaitlist = false }: P
       }
 
       // ── Paiement normal ───────────────────────────────────────────
+      const checkoutBody: Record<string, unknown> = {
+        leadId: leadData.leadId,
+        email: form.email,
+        category: category ?? undefined,
+        checkoutType,
+        timeSlot
+      };
+
+      if (checkoutType === "elite") {
+        checkoutBody.addons = addons;
+      } else if (checkoutType === "trial") {
+        checkoutBody.trialYear = category ?? undefined;
+        checkoutBody.parentName = form.parent_name;
+      }
+
       const checkoutResponse = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId: leadData.leadId, email: form.email, addons, category: category ?? undefined })
+        body: JSON.stringify(checkoutBody)
       });
 
       if (!checkoutResponse.ok) {
