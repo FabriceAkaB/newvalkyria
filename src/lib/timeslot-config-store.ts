@@ -1,6 +1,3 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export interface SlotConfig {
@@ -21,14 +18,8 @@ const DEFAULT_SLOTS: SlotConfig[] = [
   { id: "ven-2014", label: "Vendredi — 2014-2013 F",   day: "Vendredi", horaire: "18h00 à 19h15", category: "2014-2013", practices: 17, maxPlaces: 10 },
 ];
 
-// ── Supabase helpers ────────────────────────────────────────────────
-
-function supabase() {
-  return getSupabaseAdminClient();
-}
-
 function isSupabaseAvailable(): boolean {
-  try { supabase(); return true; } catch { return false; }
+  try { getSupabaseAdminClient(); return true; } catch { return false; }
 }
 
 function rowToSlot(row: Record<string, unknown>): SlotConfig {
@@ -56,43 +47,19 @@ function slotToRow(s: SlotConfig) {
   };
 }
 
-// ── File fallback (local dev without Supabase) ──────────────────────
-
-const DATA_DIR   = join(process.cwd(), "data");
-const SLOTS_FILE = join(DATA_DIR, "slots.json");
-
-function readFromFile(): SlotConfig[] | null {
-  try {
-    if (!existsSync(SLOTS_FILE)) return null;
-    const parsed = JSON.parse(readFileSync(SLOTS_FILE, "utf-8")) as unknown;
-    if (!Array.isArray(parsed) || parsed.length === 0) return null;
-    return parsed as SlotConfig[];
-  } catch { return null; }
-}
-
-function writeToFile(slots: SlotConfig[]): void {
-  try {
-    if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
-    writeFileSync(SLOTS_FILE, JSON.stringify(slots, null, 2), "utf-8");
-  } catch { /* read-only filesystem — in-memory state still works */ }
-}
-
-// In-memory cache — always reflects the last known state
-let memCache: SlotConfig[] = readFromFile() ?? structuredClone(DEFAULT_SLOTS);
-
-// ── Public API ──────────────────────────────────────────────────────
+// In-memory fallback (lost on cold start, fine for serverless)
+let memCache: SlotConfig[] = structuredClone(DEFAULT_SLOTS);
 
 export async function getSlotConfigs(): Promise<SlotConfig[]> {
   if (isSupabaseAvailable()) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase() as any)
+    const { data, error } = await (getSupabaseAdminClient() as any)
       .from("slot_configs")
       .select("*")
       .order("id");
 
     if (!error && data) {
       if (data.length === 0) {
-        // Table exists but is empty — seed with defaults
         await setSlotConfigs(structuredClone(DEFAULT_SLOTS));
         return structuredClone(DEFAULT_SLOTS);
       }
@@ -100,7 +67,6 @@ export async function getSlotConfigs(): Promise<SlotConfig[]> {
       memCache = slots;
       return slots.map((s) => ({ ...s }));
     }
-    // Fall through to cache on error
   }
 
   return memCache.map((s) => ({ ...s }));
@@ -111,13 +77,10 @@ export async function setSlotConfigs(slots: SlotConfig[]): Promise<void> {
 
   if (isSupabaseAvailable()) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase() as any)
+    await (getSupabaseAdminClient() as any)
       .from("slot_configs")
       .upsert(slots.map(slotToRow), { onConflict: "id" });
-    return;
   }
-
-  writeToFile(memCache);
 }
 
 export async function updateSlotCapacity(slotId: string, maxPlaces: number): Promise<void> {
@@ -125,14 +88,11 @@ export async function updateSlotCapacity(slotId: string, maxPlaces: number): Pro
 
   if (isSupabaseAvailable()) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase() as any)
+    await (getSupabaseAdminClient() as any)
       .from("slot_configs")
       .update({ max_places: maxPlaces, updated_at: new Date().toISOString() })
       .eq("id", slotId);
-    return;
   }
-
-  writeToFile(memCache);
 }
 
 export function getDefaultSlots(): SlotConfig[] {
