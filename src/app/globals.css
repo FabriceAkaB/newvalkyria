@@ -9236,3 +9236,90 @@ body {
 .nv-pillar-img--landscape {
   aspect-ratio: 3 / 2 !important;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE — mobile & tablet overrides
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Global: prevent any image from overflowing its container ── */
+img { max-width: 100%; height: auto; }
+
+/* ── Hero — mobile: show full image without cropping ────────── */
+@media (max-width: 640px) {
+  .nv-hero {
+    height: 60svh !important;
+    min-height: 400px !important;
+  }
+  .nv-hero img[data-nimg="fill"] {
+    object-fit: contain !important;
+    object-position: center center !important;
+  }
+  .nv-hero-inner { padding-bottom: 2.5rem; }
+  .nv-hero-actions { flex-direction: column; align-items: flex-start; }
+  .nv-cta-solid,
+  .nv-cta-outline { width: 100%; justify-content: center; }
+}
+
+/* ── Stats band: 2-col on mobile ─────────────────────────────── */
+@media (max-width: 480px) {
+  .nv-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ── HLT image strip: single column on mobile ───────────────── */
+@media (max-width: 640px) {
+  .hlt-images { grid-template-columns: 1fr !important; }
+  .hlt-image-item { height: 260px !important; }
+  .hlt-section { padding-top: 56px !important; }
+  .hlt-desc { margin-bottom: 2.5rem; }
+}
+
+/* ── CTA bar: reduce padding on mobile ──────────────────────── */
+@media (max-width: 640px) {
+  .barca-cta-bar { padding: 56px 24px; }
+  .barca-cta-bar-inner { padding: 0 8px; }
+  .barca-cta-bar-btn { padding: 14px 28px; width: 100%; justify-content: center; }
+}
+
+/* ── Methode page pillar rows: stack on mobile ───────────────── */
+@media (max-width: 768px) {
+  .nv-pillar-row {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+  .mp-pillar-flip { direction: ltr !important; }
+  .mp-pillar-flip > * { direction: ltr !important; }
+  .nv-pillar-img {
+    aspect-ratio: 4/3 !important;
+    min-height: unset !important;
+  }
+  .nv-pillar-img--landscape { aspect-ratio: 16/9 !important; }
+}
+
+/* ── Section padding: reduce on mobile ──────────────────────── */
+@media (max-width: 640px) {
+  .nv-section-band-dark,
+  .nv-section-band-mid,
+  .nv-section-band-light {
+    padding-top: 56px !important;
+    padding-bottom: 56px !important;
+  }
+  .nv-heading { font-size: clamp(2rem, 10vw, 3rem) !important; }
+  .nv-method-body { padding: 40px 24px !important; }
+}
+
+/* ── Method split: stack on mobile ──────────────────────────── */
+@media (max-width: 640px) {
+  .nv-method-split {
+    grid-template-columns: 1fr !important;
+    min-height: unset !important;
+  }
+  .nv-method-photo { min-height: 300px !important; }
+}
+
+/* ── Footer: stack columns on mobile ────────────────────────── */
+@media (max-width: 640px) {
+  .nv-footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+  }
+}

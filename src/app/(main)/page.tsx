@@ -13,9 +13,9 @@ import p3img     from "@/content/image/photos/DSC01900.jpg";
 import p4img     from "@/content/image/photos/DSC01969.jpg";
 import methodImg from "@/content/image/photos/DSC02043.jpg";
 import ctaImg    from "@/content/image/photos/DSC02052.jpg";
-import featImg   from "@/content/image/photos/DSC02476.jpg";
+import featImg   from "@/content/image/photos/DSC03209.jpg";
 import hlt1      from "@/content/image/photos/DSC02155.jpg";
-import hlt2      from "@/content/image/photos/DSC02229.jpg";
+import hlt2      from "@/content/image/photos/DSC02729.jpg";
 import hlt3      from "@/content/image/photos/DSC02505.jpg";
 
 const academyStats = [
@@ -240,7 +240,7 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="hlt-image-item">
-            <Image src={hlt2} alt="Mental" fill className="object-cover object-center" sizes="34vw" />
+            <Image src={hlt2} alt="Mental" fill className="object-cover object-center" sizes="34vw" style={{ objectPosition: "center 20%" }} />
             <div className="hlt-image-overlay" />
             <div className="hlt-image-label">
               <span className="hlt-image-label-title">Mental</span>
