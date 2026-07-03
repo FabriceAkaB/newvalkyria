@@ -9244,15 +9244,43 @@ body {
 /* ── Global: prevent any image from overflowing its container ── */
 img { max-width: 100%; height: auto; }
 
-/* ── Hero — mobile: show full image without cropping ────────── */
+/* ── Hero image wrapper — covers full section on desktop ─────── */
+.nv-hero-image-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* ── Hero — mobile: image above, content below ───────────────── */
 @media (max-width: 640px) {
   .nv-hero {
-    height: 60svh !important;
-    min-height: 400px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #09070e !important;
   }
-  .nv-hero img[data-nimg="fill"] {
-    object-fit: contain !important;
+  .nv-hero-image-wrap {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1/1 !important;
+    flex-shrink: 0 !important;
+  }
+  .nv-hero-overlay {
+    background: rgba(9,7,14,0.15) !important;
+  }
+  .nv-hero-image-wrap img[data-nimg="fill"] {
+    object-fit: cover !important;
     object-position: center center !important;
+  }
+  .nv-hero-inner {
+    position: relative !important;
+    z-index: 2 !important;
+    background: #09070e !important;
+    padding-top: 2rem !important;
+    padding-bottom: 3rem !important;
   }
   .nv-hero-inner { padding-bottom: 2.5rem; }
   .nv-hero-actions { flex-direction: column; align-items: flex-start; }

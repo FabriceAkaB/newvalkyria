@@ -6,7 +6,7 @@ import { FaqAccordion } from "@/components/faq-accordion";
 import { getCapacityData } from "@/lib/capacity";
 import { faqItems, hero, seasonalOffer } from "@/lib/site-content";
 
-import heroImage from "@/content/image/REALHERO.png";
+import heroImage from "@/content/image/RESIZEDHERO.jpg";
 import p1img     from "@/content/image/photos/DSC01851.jpg";
 import p2img     from "@/content/image/photos/DSC01885.jpg";
 import p3img     from "@/content/image/photos/DSC01900.jpg";
@@ -81,15 +81,17 @@ export default async function HomePage() {
     <>
       {/* ═══ 1. HERO — full screen ════════════════════════════════ */}
       <section className="nv-hero">
-        <Image
-          src={heroImage}
-          alt=""
-          fill
-          priority
-          className="object-cover object-center"
-          aria-hidden
-        />
-        <div className="nv-hero-overlay" />
+        <div className="nv-hero-image-wrap">
+          <Image
+            src={heroImage}
+            alt=""
+            fill
+            priority
+            className="object-cover object-center"
+            aria-hidden
+          />
+          <div className="nv-hero-overlay" />
+        </div>
         <div className="nv-hero-inner w-full">
           <Container>
             <span className="nv-hero-tag">Académie féminine · Laurentides, Québec</span>
