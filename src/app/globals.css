@@ -7732,7 +7732,7 @@ body {
 }
 .nv-hero-title {
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(5.5rem, 14vw, 14rem);
+  font-size: clamp(3.5rem, 8vw, 8rem);
   text-transform: uppercase;
   line-height: 0.85;
   letter-spacing: -0.01em;

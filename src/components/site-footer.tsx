@@ -86,7 +86,7 @@ export function SiteFooter() {
             &nbsp;·&nbsp;
             Photos par{" "}
             <a
-              href="https://anoble.pro"
+              href="https://www.instagram.com/anoble.pro/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-white transition-colors underline underline-offset-2"

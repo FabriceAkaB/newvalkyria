@@ -6,7 +6,7 @@ import { FaqAccordion } from "@/components/faq-accordion";
 import { getCapacityData } from "@/lib/capacity";
 import { faqItems, hero, seasonalOffer } from "@/lib/site-content";
 
-import heroImage from "@/content/image/FINALHERO.png";
+import heroImage from "@/content/image/REALHERO.png";
 import p1img     from "@/content/image/photos/DSC01851.jpg";
 import p2img     from "@/content/image/photos/DSC01885.jpg";
 import p3img     from "@/content/image/photos/DSC01900.jpg";
