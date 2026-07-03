@@ -9289,10 +9289,19 @@ img { max-width: 100%; height: auto; }
   .mp-pillar-flip { direction: ltr !important; }
   .mp-pillar-flip > * { direction: ltr !important; }
   .nv-pillar-img {
-    aspect-ratio: 4/3 !important;
+    aspect-ratio: 3/4 !important;
     min-height: unset !important;
+    max-height: unset !important;
+    width: 100% !important;
   }
-  .nv-pillar-img--landscape { aspect-ratio: 16/9 !important; }
+  .nv-pillar-img--landscape {
+    aspect-ratio: 16/9 !important;
+  }
+  .nv-pillar-img img,
+  .nv-pillar-img--landscape img {
+    object-fit: cover !important;
+    object-position: center center !important;
+  }
 }
 
 /* ── Section padding: reduce on mobile ──────────────────────── */
