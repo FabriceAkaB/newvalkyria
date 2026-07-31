@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const pages = ["", "/methode", "/equipe", "/vision", "/inscription", "/confirmation", "/politique-confidentialite", "/mentions-legales"];
+const pages = ["", "/methode", "/equipe", "/inscription", "/confirmation", "/politique-confidentialite", "/mentions-legales"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://www.newvalkyria.ca";

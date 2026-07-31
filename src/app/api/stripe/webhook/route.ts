@@ -2,11 +2,13 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-import { sendConfirmationEmail } from "@/lib/email";
+import { sendConfirmationEmail, sendShopOrderConfirmationEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
 import { hasProcessedStripeEvent, markLeadAsPaid, recordStripeEvent } from "@/lib/repositories";
+import { markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
+import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
 import { getStripeClient } from "@/lib/stripe";
 
 export async function POST(request: Request) {
@@ -38,6 +40,50 @@ export async function POST(request: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const checkoutType = session.metadata?.checkoutType ?? (session.mode === "setup" ? "trial" : "elite");
+
+    // ── Saison Automne/Hiver 2026 — inscriptions en base de données ──
+    if (checkoutType === "season-registration") {
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
+      const registration = await markRegistrationPaidByCheckoutSession(session.id, paymentIntentId);
+      if (registration) {
+        try {
+          await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name });
+        } catch (error) {
+          console.error("Unable to send season confirmation email", error);
+        }
+      }
+      // Sac offert/ajouté en option (même session Stripe) — même appel que la boutique,
+      // décrémente l'inventaire automatiquement ; pas de courriel séparé pour éviter le doublon.
+      await markOrderPaidByCheckoutSession(session.id, paymentIntentId).catch((error) => {
+        console.error("Unable to mark signup-bonus bag order as paid", error);
+      });
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Boutique — commande en base de données ──
+    if (checkoutType === "shop-order") {
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
+      const order = await markOrderPaidByCheckoutSession(session.id, paymentIntentId);
+      if (order) {
+        try {
+          await sendShopOrderConfirmationEmail({
+            to: order.customer_email,
+            customerName: order.customer_name,
+            items: order.items.map((item) => ({
+              productName: item.product_name,
+              variantLabel: item.variant_label,
+              unitPriceCents: item.unit_price_cents,
+              quantity: item.quantity
+            })),
+            totalCents: order.total_cents
+          });
+        } catch (error) {
+          console.error("Unable to send shop order confirmation email", error);
+        }
+      }
+      return NextResponse.json({ received: true });
+    }
+
     const leadId = session.metadata?.leadId;
     const sessionEmail = session.customer_details?.email ?? session.customer_email ?? undefined;
     let emailToNotify = sessionEmail;

@@ -1,30 +1,30 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 
 import { Container } from "@/components/container";
-import { keyResults, methodSections, timeline } from "@/lib/site-content";
-import dsc05480 from "@/content/image/photos/DSC05480.jpg";
-import dsc02155 from "@/content/image/photos/DSC02155.jpg";
+import { methodSections } from "@/lib/site-content";
+import methodeTechnique from "@/content/image/photos/methode-technique.png";
+import dsc04964 from "@/content/image/photos/DSC04964.jpg";
 import dsc03078 from "@/content/image/photos/DSC03078.jpg";
-import methodeHeroImg from "@/content/image/photos/DSC02406.jpg";
+import methodeHeroImg from "@/content/image/photos/newval2_472.jpg";
 
-const pillarImages = [dsc05480, dsc02155, dsc03078];
+const pillarImages = [methodeTechnique, dsc04964, dsc03078];
 const pillarAlts = [
-  "Technique — joueuse en frappe",
-  "Mental — concentration et focus",
+  "Technique — joueuse en contrôle de balle",
+  "Mental — cohésion et confiance d'équipe",
   "Physique — intensité en mouvement"
 ];
 
 export const metadata: Metadata = {
   title: "Méthode | New Valkyria",
-  description: "Approche technique, mentale et physique pour la progression des jeunes joueuses."
+  description: "Approche technique, mentale et physique pour la progression des jeunes joueuses.",
+  alternates: { canonical: "/methode" }
 };
 
 const heroStats = [
   { val: "90 min", label: "Par séance" },
-  { val: "1 : 5",  label: "Ratio renforcé" },
-  { val: "S7+S15", label: "Bilans formels" }
+  { val: "1 : 6-8", label: "Ratio renforcé" },
+  { val: "2 bilans", label: "Mi-saison & fin de saison" }
 ];
 
 const philosophyItems = [
@@ -38,7 +38,7 @@ const philosophyItems = [
   },
   {
     label: "Progression documentée",
-    desc: "Rapports remis aux parents à la 7e et 15e séance. Pas juste ressentie — mesurée et communiquée clairement."
+    desc: "Rapports remis aux parents à la mi-saison et en fin de saison. Pas juste ressentie — mesurée et communiquée clairement."
   }
 ];
 
@@ -137,7 +137,7 @@ export default function MethodePage() {
           <div style={{ display: "grid", gap: "4rem", alignItems: "center" }} className="mp-eval">
             <div>
               <span className="nv-label">Suivi structuré</span>
-              <h2 className="nv-heading">Bilans à la 7e<br className="hidden sm:block" /> et 15e séance</h2>
+              <h2 className="nv-heading">Bilans à la mi-saison<br className="hidden sm:block" /> et en fin de saison</h2>
               <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.7, maxWidth: "44ch" }}>
                 Les parents reçoivent un rapport structuré à chaque étape clé. Forces, faiblesses, priorités — tout est documenté et communiqué clairement.
               </p>
@@ -158,63 +158,6 @@ export default function MethodePage() {
         </Container>
       </section>
 
-      {/* ── 15 séances ───────────────────────────────────────── */}
-      <section className="nv-section-band-mid">
-        <Container>
-          <div style={{ display: "grid", gap: "4rem", alignItems: "start" }} className="mp-timeline-header">
-            <div>
-              <span className="nv-label">Parcours d&apos;entraînement</span>
-              <h2 className="nv-heading">15 séances,<br className="hidden sm:block" /> 4 phases</h2>
-            </div>
-            <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.7 }}>
-              Chaque bloc a un objectif précis. La progression est documentée et partagée avec les parents à mi-parcours.
-            </p>
-          </div>
-          <div className="nv-timeline" style={{ marginTop: "3rem" }}>
-            {timeline.map((item) => (
-              <div key={item.step} className="nv-timeline-item">
-                <div className="nv-timeline-period">{item.step}</div>
-                <div>
-                  <h3 className="nv-timeline-title">{item.title}</h3>
-                  <p className="nv-timeline-desc">{item.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* ── Résultats ────────────────────────────────────────── */}
-      <section className="nv-section-band-dark">
-        <Container>
-          <span className="nv-label">Ce que vous verrez</span>
-          <h2 className="nv-heading">Résultats mesurables</h2>
-          <div style={{ display: "grid", gap: "1rem", marginTop: "3rem" }} className="sm:grid-cols-2">
-            {keyResults.map((result) => (
-              <div key={result} className="nv-result-card">
-                <span className="nv-result-check" aria-hidden>✓</span>
-                <span>{result}</span>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* ── CTA ──────────────────────────────────────────────── */}
-      <section className="nv-section-band-mid">
-        <Container className="max-w-3xl">
-          <div className="text-center">
-            <span className="nv-label">Prêt à commencer</span>
-            <h2 className="nv-heading">Une place pour votre joueuse</h2>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.95rem", lineHeight: 1.7, marginBottom: "2rem", maxWidth: "42ch", marginLeft: "auto", marginRight: "auto" }}>
-              Groupe limité à 10 pour maintenir la qualité d&apos;encadrement. Inscription simple, résultats mesurables.
-            </p>
-            <Link href="/inscription" className="nv-cta-solid">
-              Réserver une place →
-            </Link>
-          </div>
-        </Container>
-      </section>
     </>
   );
 }

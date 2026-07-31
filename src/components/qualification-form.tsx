@@ -45,16 +45,16 @@ const ESSAI_DATES: Record<string, { label: string; dates: string[]; horaires: st
       exception: "Exception — Sam 18 avril : 2015 de 15h00 à 16h30"
     },
     {
-      label: "Groupe 2 — 2015, 2014 & 2013",
+      label: "Groupe 2 — 2015 & 2014-2013",
       dates: ["Lun 13 avril", "Mer 15 avril", "Ven 17 avril"],
-      horaires: ["2015 : 18h00 à 19h25", "2013-2014 : 19h30 à 20h55"]
+      horaires: ["2015 : 18h00 à 19h25", "2014-2013 : 19h30 à 20h55"]
     }
   ],
   "2014-2013": [
     {
-      label: "Groupe 2 — 2015, 2014 & 2013",
+      label: "Groupe 2 — 2015 & 2014-2013",
       dates: ["Lun 13 avril", "Mer 15 avril", "Ven 17 avril"],
-      horaires: ["2015 : 18h00 à 19h25", "2013-2014 : 19h30 à 20h55"]
+      horaires: ["2015 : 18h00 à 19h25", "2014-2013 : 19h30 à 20h55"]
     }
   ]
 };
@@ -774,7 +774,7 @@ export function QualificationForm() {
             <li><span className="tunnel-check" aria-hidden>✓</span>7 pratiques semi-privées</li>
             <li><span className="tunnel-check" aria-hidden>✓</span>Coach C CONCACAF</li>
             <li><span className="tunnel-check" aria-hidden>✓</span>Suivi technique &amp; tactique</li>
-            <li><span className="tunnel-check" aria-hidden>✓</span>Groupe de 10 max</li>
+            <li><span className="tunnel-check" aria-hidden>✓</span>1 coach pour 6-8</li>
           </ul>
 
           {selectedSlot && (

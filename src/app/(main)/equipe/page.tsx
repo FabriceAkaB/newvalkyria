@@ -4,138 +4,46 @@ import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { coachProfile } from "@/lib/site-content";
-import equipeHeroImg from "@/content/image/photos/DSC02086.jpg";
+import teamPhoto from "@/content/image/photos/newval2_940.jpg";
 
 export const metadata: Metadata = {
-  title: "L'équipe | New Valkyria",
-  description: "Coach fondateur, certifications et engagement pour le football féminin."
+  title: "À propos | New Valkyria",
+  description: "La mission de New Valkyria, nos valeurs d'encadrement et ce qui s'en vient pour l'académie.",
+  alternates: { canonical: "/equipe" }
 };
 
-const careerMilestones = [
-  {
-    period: "Début de carrière",
-    title: "Premiers pas dans le coaching",
-    desc: "Travail avec des groupes féminins jeunes dans les Laurentides. Développement d'une approche centrée sur la technique individuelle et le feedback immédiat."
-  },
-  {
-    period: "Formation",
-    title: "Certification C CONCACAF",
-    desc: "Formation approfondie en développement du joueur, spécialisation dans les profils féminins jeunes et les méthodes d'apprentissage par opposition réelle."
-  },
-  {
-    period: "Spécialisation",
-    title: "Focus exclusif foot féminin",
-    desc: "Concentration sur les joueuses de 9 à 14 ans. Mise en place des premiers protocoles de suivi vidéo, d'évaluation structurée et de routines hors terrain."
-  },
-  {
-    period: "Aujourd'hui",
-    title: "Fondation de New Valkyria",
-    desc: "Lancement de l'académie avec une méthodologie formalisée, groupes limités à 10 joueuses, bilans formels et suivi individuel inédit dans la région."
-  }
-];
-
-const coachApproach = [
-  "Corrections techniques immédiates, pas de rétroaction différée",
-  "Suivi vidéo pour que les joueuses se voient progresser",
-  "Communication claire et régulière avec les familles",
-  "Cadre exigeant mais motivant — la discipline comme outil de confiance"
+const roadmapItems = [
+  { icon: "▤", title: "Espace membre", desc: "Suivi personnalisé en ligne avec historique des séances, objectifs et progression documentée pour chaque joueuse." },
+  { icon: "⬡", title: "Expérience internationale", desc: "Opportunités de tournois et de stages à l'international pour les joueuses prêtes à vivre le foot autrement." },
+  { icon: "◈", title: "Camps de perfectionnement", desc: "Camps intensifs pendant les congés scolaires pour accélérer la progression technique et physique." },
+  { icon: "▷", title: "Vidéothèque", desc: "Exercices filmés et indexés par niveau et thème pour compléter le travail hors terrain de façon autonome." }
 ];
 
 export default function EquipePage() {
   return (
     <>
-      {/* ── Hero — photo full-screen ─────────────────────────── */}
-      <section className="page-hero">
-        <Image src={equipeHeroImg} alt="" fill priority className="object-cover object-center" aria-hidden />
-        <div className="page-hero-overlay" />
-        <div className="page-hero-content w-full">
-          <Container>
-            <span className="nv-label">L&apos;équipe</span>
-            <h1 className="page-hero-title">
-              Derrière<br />l&apos;académie
-            </h1>
-          </Container>
-        </div>
-      </section>
-
-      {/* ── Coach ────────────────────────────────────────────── */}
-      <section className="nv-section-band-dark">
+      {/* ── Mot de l'équipe ──────────────────────────────────── */}
+      <section className="nv-section-band-dark" style={{ paddingTop: "9rem" }}>
         <Container>
-          <div style={{ maxWidth: "680px" }}>
-            <div style={{
-              display: "inline-flex",
-              alignItems: "center",
-              background: "rgba(176,144,200,0.1)",
-              borderRadius: "0.5rem",
-              padding: "0.3rem 0.9rem",
-              fontSize: "0.6rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.2em",
-              color: "var(--color-accent-soft)",
-              marginBottom: "1.25rem"
-            }}>
-              Owner &amp; CEO
+          <div className="nv-team-row">
+            <div className="nv-team-img">
+              <Image src={teamPhoto} alt="Joueuses New Valkyria célébrant sur le terrain" fill className="object-cover" sizes="(max-width: 768px) 100vw, 380px" />
             </div>
-            <h2 style={{
-              fontFamily: "var(--font-display), sans-serif",
-              fontSize: "clamp(2.75rem, 6vw, 5.5rem)",
-              textTransform: "uppercase",
-              letterSpacing: "0.03em",
-              color: "#fff",
-              margin: "0 0 1.5rem",
-              lineHeight: "0.93"
-            }}>
-              Michel Aka
-            </h2>
-            <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.65)", lineHeight: "1.76", maxWidth: "58ch" }}>
-              Fondateur et directeur de New Valkyria, Michel Aka a bâti l&apos;académie avec une conviction claire :
-              les joueuses des Laurentides méritent un encadrement technique structuré, exigeant et centré sur
-              leur progression réelle. Il pilote la vision stratégique, les partenariats et l&apos;organisation
-              globale de l&apos;académie.
-            </p>
-          </div>
-        </Container>
-      </section>
-
-      {/* ── Parcours ─────────────────────────────────────────── */}
-      <section className="nv-section-band-mid">
-        <Container>
-          <span className="nv-label">Parcours</span>
-          <h2 className="nv-heading">Comment on en est<br className="hidden sm:block" /> arrivé là</h2>
-          <div className="nv-timeline">
-            {careerMilestones.map((item) => (
-              <div key={item.period} className="nv-timeline-item">
-                <div className="nv-timeline-period">{item.period}</div>
-                <div>
-                  <h3 className="nv-timeline-title">{item.title}</h3>
-                  <p className="nv-timeline-desc">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* ── Approche ─────────────────────────────────────────── */}
-      <section className="nv-section-band-dark">
-        <Container>
-          <div className="nv-approach-grid">
-            <div>
-              <p className="nv-approach-quote">
-                Le cadre exigeant n&apos;est pas une contrainte — c&apos;est ce qui permet aux joueuses de se faire vraiment confiance.
+            <div className="nv-team-text">
+              <span className="nv-label">Mot de l&apos;équipe</span>
+              <h1 className="nv-heading">Pourquoi New Valkyria existe</h1>
+              <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.65)", lineHeight: "1.76", maxWidth: "58ch", marginBottom: "1.25rem" }}>
+                Chez New Valkyria, nous voulons faire grandir le foot féminin — et ça commence par leur offrir un
+                environnement pensé à 100 % pour elles. Pas un programme adapté d&apos;ailleurs : des séances conçues
+                dès le départ pour leurs besoins, dans un cadre où elles se sentent à l&apos;aise de progresser, de se
+                tromper et de recommencer.
               </p>
-              <p className="nv-approach-author">— L&apos;équipe New Valkyria</p>
-            </div>
-            <div>
-              <span className="nv-label">Mon approche terrain</span>
-              <div className="nv-approach-list">
-                {coachApproach.map((item, i) => (
-                  <div key={item} className="nv-approach-item">
-                    <span className="nv-approach-num">{String(i + 1).padStart(2, "0")}</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
+              <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.65)", lineHeight: "1.76", maxWidth: "58ch" }}>
+                Notre plus grande fierté, c&apos;est de voir l&apos;une de nos guerrières commencer à prendre confiance
+                en elle, séance après séance, en même temps que sa technique progresse. Cette confiance ne se construit
+                jamais seule : c&apos;est ensemble — coachs, parents et joueuses — que nous gardons les filles motivées
+                dans le sport.
+              </p>
             </div>
           </div>
         </Container>
@@ -157,8 +65,28 @@ export default function EquipePage() {
         </Container>
       </section>
 
-      {/* ── CTA ──────────────────────────────────────────────── */}
+      {/* ── Roadmap ──────────────────────────────────────────── */}
       <section className="nv-section-band-dark">
+        <Container>
+          <span className="nv-label">En préparation</span>
+          <h2 className="nv-heading">Ce qui arrive bientôt</h2>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.95rem", lineHeight: 1.7, maxWidth: "50ch", marginBottom: 0 }}>
+            Des outils conçus pour prolonger la progression au-delà du terrain et impliquer les familles dans le développement de leur joueuse.
+          </p>
+          <div className="nv-roadmap-grid">
+            {roadmapItems.map((item) => (
+              <div key={item.title} className="nv-roadmap-card">
+                <span className="nv-roadmap-icon" aria-hidden>{item.icon}</span>
+                <h3 className="nv-roadmap-title">{item.title}</h3>
+                <p className="nv-roadmap-desc">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* ── CTA ──────────────────────────────────────────────── */}
+      <section className="nv-section-band-mid">
         <Container className="max-w-3xl">
           <div className="text-center">
             <span className="nv-label">Travailler ensemble</span>
@@ -166,7 +94,7 @@ export default function EquipePage() {
               Votre joueuse mérite<br className="hidden sm:block" /> ce niveau d&apos;encadrement
             </h2>
             <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.95rem", lineHeight: 1.7, marginBottom: "2rem", maxWidth: "44ch", marginLeft: "auto", marginRight: "auto" }}>
-              Places limitées à 10 joueuses par groupe. Contactez-nous pour vérifier la disponibilité.
+              Encadrement de 1 coach pour 6 à 8 joueuses. Contactez-nous pour vérifier la disponibilité.
             </p>
             <Link href="/inscription" className="nv-cta-solid">
               Réserver une place →

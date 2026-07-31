@@ -1,14 +1,13 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AdminLoginForm } from "@/components/admin-login-form";
-import { ADMIN_COOKIE_NAME, ADMIN_COOKIE_VALUE } from "@/lib/admin-auth";
+import { isAdminRequest } from "@/lib/admin-auth";
 
 export const metadata = { title: "Administration — New Valkyria", robots: "noindex" };
+export const dynamic = "force-dynamic";
 
 export default async function AdminLoginPage() {
-  const cookieStore = await cookies();
-  if (cookieStore.get(ADMIN_COOKIE_NAME)?.value === ADMIN_COOKIE_VALUE) {
+  if (await isAdminRequest()) {
     redirect("/admin/dashboard");
   }
 

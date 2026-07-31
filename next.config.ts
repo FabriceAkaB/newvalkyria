@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "cdn.sanity.io"
+      },
+      {
+        protocol: "https",
+        hostname: "bavrkbyiofmaoryshmxu.supabase.co"
       }
     ]
   }

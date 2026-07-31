@@ -27,7 +27,7 @@ const sections = [
   },
   {
     title: "Services proposés",
-    content: `New Valkyria propose des programmes d'entraînement semi-privés de soccer féminin destinés aux joueuses de 9 à 14 ans dans la région des Laurentides, Québec.\n\nL'inscription implique l'acceptation des conditions de la saison, incluant :\n\n• L'engagement pour la durée complète de la saison (15 séances)\n• Le paiement intégral via Stripe au moment de l'inscription\n• Le respect du règlement intérieur communiqué avant le début de la saison`
+    content: `New Valkyria propose des programmes d'entraînement semi-privés de soccer féminin destinés aux joueuses de 8 à 14 ans dans la région des Laurentides, Québec.\n\nL'inscription implique l'acceptation des conditions de la saison, incluant :\n\n• L'engagement pour la durée complète de la saison (15 séances)\n• Le paiement intégral via Stripe au moment de l'inscription\n• Le respect du règlement intérieur communiqué avant le début de la saison`
   },
   {
     title: "Politique de remboursement",

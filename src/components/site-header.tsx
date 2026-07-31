@@ -63,17 +63,18 @@ export function SiteHeader() {
         <div className="flex h-[68px] items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-3 font-display text-base font-bold uppercase tracking-[0.2em] text-white"
+            className="order-1 flex shrink-0 items-center gap-2 md:gap-3 whitespace-nowrap font-display text-sm md:text-base font-bold uppercase tracking-[0.12em] md:tracking-[0.2em] text-white"
           >
-            <Image src={logo} alt="" width={30} height={30} className="logo-img" aria-hidden />
+            <Image src={logo} alt="" width={28} height={28} className="logo-img shrink-0" aria-hidden />
             New Valkyria
           </Link>
           <MainNav />
           <Link
             href="/inscription"
-            className="hidden md:inline-flex items-center rounded-lg bg-accent px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-ink transition hover:bg-accent-soft"
+            className="order-2 md:order-3 inline-flex shrink-0 items-center whitespace-nowrap rounded-full md:rounded-lg bg-accent px-3.5 py-2 md:px-5 md:py-2.5 text-[10px] md:text-xs font-bold uppercase tracking-[0.06em] md:tracking-[0.14em] text-ink transition hover:bg-accent-soft"
           >
-            Réserver une place
+            <span className="md:hidden">Réserver</span>
+            <span className="hidden md:inline">Réserver une place</span>
           </Link>
         </div>
       </div>

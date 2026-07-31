@@ -1,0 +1,28 @@
+import { NextResponse } from "next/server";
+
+import { jsonError } from "@/lib/http";
+import { getParentUserId } from "@/lib/parent-auth";
+import { uploadChildPhoto } from "@/lib/parent-repo";
+
+const MAX_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const userId = await getParentUserId();
+  if (!userId) return jsonError("Non autorisé", 401);
+  const { id } = await params;
+
+  const formData = await request.formData().catch(() => null);
+  const file = formData?.get("photo");
+  if (!file || !(file instanceof File)) return jsonError("Aucune photo fournie", 400);
+  if (!ALLOWED_TYPES.includes(file.type)) return jsonError("Format d'image non supporté (JPEG, PNG ou WebP)", 415);
+  if (file.size > MAX_SIZE) return jsonError("La photo dépasse 5 Mo", 413);
+
+  try {
+    const photoUrl = await uploadChildPhoto(id, userId, file);
+    return NextResponse.json({ ok: true, photoUrl });
+  } catch (error) {
+    if (error instanceof Error) return jsonError(error.message, 422);
+    return jsonError("Erreur serveur", 500);
+  }
+}

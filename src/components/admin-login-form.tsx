@@ -23,7 +23,8 @@ export function AdminLoginForm() {
     if (res.ok) {
       router.push("/admin/dashboard");
     } else {
-      setError("Mot de passe incorrect");
+      const data = await res.json().catch(() => null);
+      setError(data?.error ?? "Mot de passe incorrect");
       setLoading(false);
     }
   };

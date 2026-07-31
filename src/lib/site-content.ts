@@ -3,16 +3,17 @@ import type { CoachProfile, FAQItem, MethodSection, ProgramOffer, Testimonial } 
 export const navItems = [
   { href: "/", label: "Accueil" },
   { href: "/methode", label: "Méthode" },
-  { href: "/equipe", label: "L'équipe" },
-  { href: "/vision", label: "Vision" },
-  { href: "/inscription", label: "Inscription" }
+  { href: "/equipe", label: "À propos" },
+  { href: "/boutique", label: "Boutique" },
+  { href: "/inscription", label: "Inscription" },
+  { href: "/compte", label: "Connexion" }
 ];
 
 export const hero = {
   badge: "Académie locale forte - Laurentides",
   title: "Former des joueuses de soccer plus techniques, plus intelligentes, plus confiantes.",
   description:
-    "New Valkyria accompagne les filles de 9 à 14 ans avec une méthodologie intensive: groupes limités, suivi vidéo, cadre exigeant et progression visible dès 6 séances.",
+    "New Valkyria accompagne les filles de 8 à 14 ans avec une méthodologie intensive: groupes limités, suivi vidéo, cadre exigeant et progression visible dès 6 séances.",
   cta: "Réserver une place"
 };
 
@@ -30,18 +31,11 @@ export const methodHighlights = [
   "Routine maison structurée pour accélérer la progression"
 ];
 
-export const keyResults = [
-  "Amélioration technique visible dès les 6 premières séances",
-  "Ratio renforcé: 1 coach pour 5 joueuses sur certaines séances",
-  "Groupe limité à 10 joueuses pour protéger la qualité",
-  "Évaluations formelles à la 7e et à la 15e séance"
-];
-
 export const seasonalOffer: ProgramOffer = {
   title: "Forfait pour la saison",
   priceLabel: "550 $",
   duration: "15 séances semi-privées (1x/semaine)",
-  capacity: "10 joueuses maximum",
+  capacity: "1 coach pour 6-8 joueuses",
   includes: [
     "Routine technique à la maison",
     "Suivi force/faiblesse personnalisé",
@@ -62,13 +56,13 @@ export const coachProfile: CoachProfile = {
 export const methodSections: MethodSection[] = [
   {
     title: "Technique",
-    description: "Travail précis des fondamentaux avec répétitions sous pression.",
-    points: ["Contrôle orienté", "Passe et finition", "Dribble en espace réduit"]
+    description: "Connexion individuelle avec le ballon travaillée intensivement: dribble, contrôle et duels 1 contre 1 répétés sous pression.",
+    points: ["Dribble et conduite de balle", "Duels 1 contre 1", "Contrôle orienté sous pression"]
   },
   {
     title: "Mental",
-    description: "Renforcer confiance, concentration et prise d'information.",
-    points: ["Lecture du jeu", "Prise de décision rapide", "Gestion des erreurs"]
+    description: "La confiance et l'estime de soi au coeur de chaque séance — une joueuse qui croit en elle prend de meilleures décisions.",
+    points: ["Confiance en soi renforcée", "Estime de soi valorisée", "Lecture du jeu et prise de décision"]
   },
   {
     title: "Physique",
@@ -105,12 +99,12 @@ export const faqItems: FAQItem[] = [
   {
     id: "faq-1",
     question: "À qui s'adresse le programme?",
-    answer: "Aux joueuses de 9 à 14 ans, niveau intermédiaire à élite, motivées à progresser techniquement."
+    answer: "Aux joueuses de 8 à 14 ans, niveau intermédiaire à élite, motivées à progresser techniquement."
   },
   {
     id: "faq-2",
     question: "Comment fonctionne la garantie progression?",
-    answer: "Nous visons une amélioration notable visible en 6 séances grâce au suivi technique et aux routines maison."
+    answer: "Si vous n'êtes pas satisfait de la progression de votre joueuse cette saison, vous êtes remboursé à 100 % — sans justification à fournir."
   },
   {
     id: "faq-3",
@@ -120,31 +114,8 @@ export const faqItems: FAQItem[] = [
   {
     id: "faq-4",
     question: "Où se déroulent les entraînements?",
-    answer: "Principalement dans les Laurentides: Rosemère, Mirabel et Saint-Thérèse selon les blocs de saison."
+    answer: "Dans les Laurentides: Terrebonne, Sainte-Thérèse, Saint-Jérôme et Rosemère selon les blocs de saison."
   }
 ];
 
-export const timeline = [
-  {
-    step: "S1–S6",
-    title: "Changement visible",
-    text: "Amélioration du contrôle, de la prise d'information et de la confiance en match."
-  },
-  {
-    step: "S7",
-    title: "Évaluation intermédiaire",
-    text: "Rapport remis aux parents avec ajustements ciblés pour accélérer la seconde moitié."
-  },
-  {
-    step: "S8–S15",
-    title: "Consolidation",
-    text: "Intensité maintenue, progression mesurée séance par séance, préparation du prochain cycle."
-  },
-  {
-    step: "S15",
-    title: "Bilan final",
-    text: "Synthèse complète des acquis et recommandations concrètes pour la continuité sportive."
-  }
-];
-
-export const locations = ["Rosemère", "Mirabel", "Saint-Thérèse", "Laurentides"];
+export const locations = ["Terrebonne", "Sainte-Thérèse", "Saint-Jérôme", "Rosemère"];

@@ -64,7 +64,7 @@ export function MainNav() {
   return (
     <>
       {/* ── Desktop nav ── */}
-      <nav className="hidden gap-6 md:flex" aria-label="Navigation principale">
+      <nav className="hidden gap-6 md:order-2 md:flex" aria-label="Navigation principale">
         {navItems.map((item) => {
           const active = pathname === item.href;
           return (
@@ -83,7 +83,7 @@ export function MainNav() {
 
       {/* ── Hamburger (mobile) ── */}
       <button
-        className="mob-btn md:hidden"
+        className="mob-btn order-3 md:hidden"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
         aria-expanded={open}

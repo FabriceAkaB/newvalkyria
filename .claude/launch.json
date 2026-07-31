@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "newvalkyria",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": ["-c", "export PATH=\"$HOME/.local/node/bin:$PATH\"; exec node node_modules/next/dist/bin/next dev"],
       "port": 3000,
       "autoPort": true
     }

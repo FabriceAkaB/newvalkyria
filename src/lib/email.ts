@@ -159,3 +159,47 @@ export async function sendConfirmationEmail(input: ConfirmationEmailInput) {
     `
   });
 }
+
+interface ShopOrderEmailInput {
+  to: string;
+  customerName: string;
+  items: { productName: string; variantLabel: string | null; unitPriceCents: number; quantity: number }[];
+  totalCents: number;
+}
+
+export async function sendShopOrderConfirmationEmail(input: ShopOrderEmailInput) {
+  if (!env.resendApiKey) return;
+
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+
+  const rowsHtml = input.items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding:8px 12px">${item.productName}${item.variantLabel ? ` — ${item.variantLabel}` : ""} × ${item.quantity}</td>
+        <td style="padding:8px 12px;text-align:right">${fmt(item.unitPriceCents * item.quantity)}</td>
+      </tr>`
+    )
+    .join("");
+
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    subject: "New Valkyria - Confirmation de votre commande",
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.5;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">Merci ${input.customerName}, votre commande est confirmée.</h1>
+        <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:14px">
+          ${rowsHtml}
+          <tr style="font-weight:bold;border-top:1px solid #ddd">
+            <td style="padding:8px 12px">Total</td>
+            <td style="padding:8px 12px;text-align:right">${fmt(input.totalCents)}</td>
+          </tr>
+        </table>
+        <p style="margin-top:24px">Notre équipe prépare votre commande et vous contactera pour la remise.</p>
+        <p style="margin-top:24px">New Valkyria<br/>Académie féminine technique</p>
+      </div>
+    `
+  });
+}

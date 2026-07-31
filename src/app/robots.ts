@@ -5,7 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/"
+        allow: "/",
+        disallow: ["/admin", "/admin/", "/api/"]
       }
     ],
     sitemap: "https://www.newvalkyria.ca/sitemap.xml"
