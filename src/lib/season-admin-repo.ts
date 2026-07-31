@@ -520,6 +520,175 @@ export async function markRegistrationPaidByCheckoutSession(
   return data as Registration | null;
 }
 
+/* ── Paiements échelonnés (2-3 fois) ─────────────────────────────
+ *  Le 1er versement est payé via la session Stripe Checkout initiale ; les
+ *  suivants sont prélevés automatiquement par /api/cron/charge-installments
+ *  sur la carte enregistrée (setup_future_usage: "off_session"). Voir
+ *  src/lib/payment-plan.ts pour le calcul des dates/montants. */
+
+export interface CreatePaymentPlanInstallmentInput {
+  sequenceNo: number;
+  amountCents: number;
+  dueDate: string; // 'YYYY-MM-DD'
+}
+
+export interface CreatePaymentPlanInput {
+  registrationId: string;
+  totalAmountCents: number;
+  installments: CreatePaymentPlanInstallmentInput[];
+}
+
+export async function createPaymentPlan(input: CreatePaymentPlanInput): Promise<string> {
+  const supabase = db();
+  const { data, error } = await supabase
+    .from("registration_payment_plans")
+    .insert({
+      registration_id: input.registrationId,
+      total_amount_cents: input.totalAmountCents,
+      installment_count: input.installments.length
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  const planId = data.id as string;
+
+  const rows = input.installments.map((inst) => ({
+    plan_id: planId,
+    sequence_no: inst.sequenceNo,
+    amount_cents: inst.amountCents,
+    due_date: inst.dueDate
+  }));
+  const { error: instError } = await supabase.from("registration_payment_plan_installments").insert(rows);
+  if (instError) throw new Error(instError.message);
+
+  return planId;
+}
+
+/** Supprime un plan créé mais jamais activé (ex. la session Stripe échoue à
+ *  se créer) — miroir de cancelRegistration/cancelOrder pour ce cas. */
+export async function deletePaymentPlan(planId: string): Promise<void> {
+  const supabase = db();
+  await supabase.from("registration_payment_plan_installments").delete().eq("plan_id", planId);
+  await supabase.from("registration_payment_plans").delete().eq("id", planId);
+}
+
+/** Active le plan une fois le 1er versement confirmé par le webhook Stripe :
+ *  enregistre la carte (client + méthode de paiement) pour les prélèvements
+ *  automatiques futurs, et marque l'installment #1 comme payé. */
+export async function activatePaymentPlan(
+  planId: string,
+  input: { stripeCustomerId: string; stripePaymentMethodId: string; firstInstallmentPaymentIntentId: string | undefined }
+): Promise<void> {
+  const supabase = db();
+  const { error } = await supabase
+    .from("registration_payment_plans")
+    .update({ stripe_customer_id: input.stripeCustomerId, stripe_payment_method_id: input.stripePaymentMethodId })
+    .eq("id", planId);
+  if (error) throw new Error(error.message);
+
+  const { error: instError } = await supabase
+    .from("registration_payment_plan_installments")
+    .update({
+      status: "paid",
+      paid_at: new Date().toISOString(),
+      stripe_payment_intent_id: input.firstInstallmentPaymentIntentId ?? null,
+      updated_at: new Date().toISOString()
+    })
+    .eq("plan_id", planId)
+    .eq("sequence_no", 1);
+  if (instError) throw new Error(instError.message);
+}
+
+const MAX_INSTALLMENT_ATTEMPTS = 5;
+
+export interface DueInstallment {
+  id: string;
+  plan_id: string;
+  sequence_no: number;
+  amount_cents: number;
+  attempt_count: number;
+  stripe_customer_id: string | null;
+  stripe_payment_method_id: string | null;
+  installment_count: number;
+  parent_name: string;
+  parent_email: string;
+}
+
+/** Versements dus aujourd'hui (ou en retard), hors 1er versement (déjà payé
+ *  via Stripe Checkout à l'inscription) et hors ceux ayant atteint le nombre
+ *  maximal de tentatives — utilisé par /api/cron/charge-installments. */
+export async function getDueInstallments(): Promise<DueInstallment[]> {
+  const supabase = db();
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("registration_payment_plan_installments")
+    .select(`
+      id, plan_id, sequence_no, amount_cents, attempt_count,
+      registration_payment_plans!inner (
+        stripe_customer_id, stripe_payment_method_id, installment_count,
+        registrations!inner ( parent_name, parent_email )
+      )
+    `)
+    .in("status", ["pending", "failed"])
+    .gt("sequence_no", 1)
+    .lte("due_date", today)
+    .lt("attempt_count", MAX_INSTALLMENT_ATTEMPTS);
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    plan_id: row.plan_id,
+    sequence_no: row.sequence_no,
+    amount_cents: row.amount_cents,
+    attempt_count: row.attempt_count,
+    stripe_customer_id: row.registration_payment_plans.stripe_customer_id,
+    stripe_payment_method_id: row.registration_payment_plans.stripe_payment_method_id,
+    installment_count: row.registration_payment_plans.installment_count,
+    parent_name: row.registration_payment_plans.registrations.parent_name,
+    parent_email: row.registration_payment_plans.registrations.parent_email
+  }));
+}
+
+export async function markInstallmentPaid(id: string, stripePaymentIntentId: string): Promise<void> {
+  const supabase = db();
+  const { error } = await supabase
+    .from("registration_payment_plan_installments")
+    .update({
+      status: "paid",
+      paid_at: new Date().toISOString(),
+      stripe_payment_intent_id: stripePaymentIntentId,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/** Incrémente le compteur de tentatives et bascule en `failed_final` au-delà
+ *  du maximum. Retourne de quoi décider s'il faut aviser l'académie (premier
+ *  échec ou tentative finale seulement — pas à chaque réessai). */
+export async function markInstallmentFailed(
+  id: string,
+  currentAttemptCount: number
+): Promise<{ attemptCount: number; isFinal: boolean; wasFirstFailure: boolean }> {
+  const supabase = db();
+  const attemptCount = currentAttemptCount + 1;
+  const isFinal = attemptCount >= MAX_INSTALLMENT_ATTEMPTS;
+  const wasFirstFailure = currentAttemptCount === 0;
+
+  const { error } = await supabase
+    .from("registration_payment_plan_installments")
+    .update({
+      attempt_count: attemptCount,
+      status: isFinal ? "failed_final" : "failed",
+      failure_notified: true,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  return { attemptCount, isFinal, wasFirstFailure };
+}
+
 /** Compte les inscriptions actives (hors annulées) pour une combinaison
  *  programme × catégorie, utilisé pour vérifier la capacité avant paiement. */
 export async function countActiveRegistrations(

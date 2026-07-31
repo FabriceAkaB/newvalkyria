@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Container } from "@/components/container";
 import { InscriptionForm, type InscriptionFormData } from "@/components/inscription-form";
+import { getInstallmentPlan } from "@/lib/payment-plan";
 import type { BirthYear, LiveAvailability, ProgramCode, SessionPreview } from "@/lib/season-2027";
 import {
   BIRTH_YEAR_LABELS,
@@ -215,6 +216,7 @@ async function submitCheckout(input: {
   variant: "public" | "advanced";
   includeBag: boolean;
   uniformBundle: { jerseyVariantId: string; shortVariantId: string } | null;
+  paymentPlan: "full" | "installments";
 }): Promise<{ ok: boolean; checkoutUrl?: string; error?: string }> {
   try {
     const res = await fetch("/api/inscription/checkout", {
@@ -233,7 +235,8 @@ async function submitCheckout(input: {
         slotId: input.slotId ?? undefined,
         variant: input.variant,
         includeBag: input.includeBag,
-        uniformBundle: input.uniformBundle ?? undefined
+        uniformBundle: input.uniformBundle ?? undefined,
+        paymentPlan: input.paymentPlan
       })
     });
     const body = await res.json().catch(() => null);
@@ -334,6 +337,7 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
   const [wantsUniformBundle, setWantsUniformBundle] = useState(false);
   const [uniformJerseySize, setUniformJerseySize] = useState("");
   const [uniformShortSize, setUniformShortSize] = useState("");
+  const [paymentPlan, setPaymentPlan] = useState<"full" | "installments">("full");
 
   const programRef = useRef<HTMLDivElement>(null);
   const slotRef = useRef<HTMLDivElement>(null);
@@ -357,6 +361,8 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
 
   const wantsBag = Boolean(bagOffer?.active && (bagOffer.free || includeBag));
   const uniformBundleReady = Boolean(wantsUniformBundle && uniformJerseySize && uniformShortSize);
+  const eligiblePlan = program ? getInstallmentPlan(new Date(), Math.round(program.price * 100)) : null;
+  const canUseInstallments = Boolean(eligiblePlan && eligiblePlan.dueDates.length > 1);
 
   const handlePay = async () => {
     if (!formData || !program || !year) return;
@@ -373,7 +379,8 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
       slotId,
       variant,
       includeBag: wantsBag,
-      uniformBundle: uniformBundleReady ? { jerseyVariantId: uniformJerseySize, shortVariantId: uniformShortSize } : null
+      uniformBundle: uniformBundleReady ? { jerseyVariantId: uniformJerseySize, shortVariantId: uniformShortSize } : null,
+      paymentPlan: canUseInstallments && paymentPlan === "installments" ? "installments" : "full"
     });
     if (!result.ok || !result.checkoutUrl) {
       setPayError(result.error ?? "Une erreur est survenue.");
@@ -630,6 +637,29 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
                 </div>
               )}
 
+              {canUseInstallments && eligiblePlan && (
+                <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem 1.1rem", marginBottom: "1rem" }}>
+                  <label className="nv27-radio" style={{ marginBottom: "0.6rem" }}>
+                    <input type="radio" name="paymentPlan" checked={paymentPlan === "full"} onChange={() => setPaymentPlan("full")} />
+                    <span>Payer en totalité aujourd&apos;hui</span>
+                  </label>
+                  <label className="nv27-radio">
+                    <input type="radio" name="paymentPlan" checked={paymentPlan === "installments"} onChange={() => setPaymentPlan("installments")} />
+                    <span>Payer en {eligiblePlan.dueDates.length} fois</span>
+                  </label>
+                  {paymentPlan === "installments" && (
+                    <ul style={{ listStyle: "none", margin: "0.75rem 0 0", padding: 0, display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                      {eligiblePlan.dueDates.map((date, i) => (
+                        <li key={i} style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", display: "flex", justifyContent: "space-between" }}>
+                          <span>{i === 0 ? "Aujourd'hui" : date.toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}</span>
+                          <span>{formatCAD(eligiblePlan.amountsCents[i] / 100)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
               <div className="nv27-pay-summary">
                 <div className="nv27-pay-row"><span>Programme choisi</span><span>{program.name}</span></div>
                 {slot && <div className="nv27-pay-row"><span>Plage horaire</span><span>{slot.day} — {slot.time}</span></div>}
@@ -658,6 +688,11 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
                     )}
                   </span>
                 </div>
+                {canUseInstallments && paymentPlan === "installments" && eligiblePlan && (
+                  <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", margin: "0.5rem 0 0" }}>
+                    {formatCAD(eligiblePlan.amountsCents[0] / 100)} payé aujourd&apos;hui, le reste prélevé automatiquement aux dates indiquées.
+                  </p>
+                )}
               </div>
 
               {payError && <p className="nv27-pay-error">{payError}</p>}

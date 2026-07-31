@@ -67,6 +67,7 @@ export const seasonCheckoutSchema = z.object({
   slotId: z.string().optional(),
   variant: z.enum(["public", "advanced"]),
   includeBag: z.boolean().optional(),
+  paymentPlan: z.enum(["full", "installments"]).optional(),
   uniformBundle: z.object({
     jerseyVariantId: z.string(),
     shortVariantId: z.string()

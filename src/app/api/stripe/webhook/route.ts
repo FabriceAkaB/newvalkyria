@@ -7,7 +7,7 @@ import { env } from "@/lib/env";
 import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
 import { hasProcessedStripeEvent, markLeadAsPaid, recordStripeEvent } from "@/lib/repositories";
-import { markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
+import { activatePaymentPlan, markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
 import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
 import { getStripeClient } from "@/lib/stripe";
 
@@ -52,6 +52,30 @@ export async function POST(request: Request) {
           console.error("Unable to send season confirmation email", error);
         }
       }
+
+      // Paiement échelonné — enregistre la carte (client + méthode) sur le
+      // plan pour permettre les prélèvements automatiques des versements
+      // suivants, et marque le 1er versement comme payé.
+      const paymentPlanId = session.metadata?.paymentPlanId;
+      if (paymentPlanId && paymentIntentId) {
+        try {
+          const stripeCustomerId = typeof session.customer === "string" ? session.customer : undefined;
+          const paymentIntent = await getStripeClient().paymentIntents.retrieve(paymentIntentId);
+          const stripePaymentMethodId = typeof paymentIntent.payment_method === "string" ? paymentIntent.payment_method : undefined;
+          if (stripeCustomerId && stripePaymentMethodId) {
+            await activatePaymentPlan(paymentPlanId, {
+              stripeCustomerId,
+              stripePaymentMethodId,
+              firstInstallmentPaymentIntentId: paymentIntentId
+            });
+          } else {
+            console.error("Payment plan activation missing customer or payment method", { paymentPlanId, stripeCustomerId, stripePaymentMethodId });
+          }
+        } catch (error) {
+          console.error("Unable to activate payment plan", error);
+        }
+      }
+
       // Sac offert/ajouté en option (même session Stripe) — même appel que la boutique,
       // décrémente l'inventaire automatiquement ; pas de courriel séparé pour éviter le doublon.
       await markOrderPaidByCheckoutSession(session.id, paymentIntentId).catch((error) => {

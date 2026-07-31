@@ -22,7 +22,8 @@ export const env = {
   sanityToken: process.env.SANITY_API_READ_TOKEN,
   gaId: process.env.NEXT_PUBLIC_GA_ID,
   plausibleDomain: process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN,
-  googleSheetsWebhookUrl: process.env.GOOGLE_SHEETS_WEBHOOK_URL
+  googleSheetsWebhookUrl: process.env.GOOGLE_SHEETS_WEBHOOK_URL,
+  cronSecret: process.env.CRON_SECRET
 };
 
 export function missingServerDependencies() {

@@ -203,3 +203,67 @@ export async function sendShopOrderConfirmationEmail(input: ShopOrderEmailInput)
     `
   });
 }
+
+interface InstallmentReceiptEmailInput {
+  to: string;
+  parentName: string;
+  amountCents: number;
+  installmentNumber: number;
+  installmentCount: number;
+}
+
+export async function sendInstallmentReceiptEmail(input: InstallmentReceiptEmailInput) {
+  if (!env.resendApiKey) return;
+
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    subject: `New Valkyria - Versement ${input.installmentNumber}/${input.installmentCount} reçu`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.5;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">Merci ${input.parentName}, votre versement a été traité.</h1>
+        <p>Versement ${input.installmentNumber} sur ${input.installmentCount} : ${fmt(input.amountCents)}</p>
+        <p style="margin-top:24px">New Valkyria<br/>Académie féminine technique</p>
+      </div>
+    `
+  });
+}
+
+interface PaymentPlanFailedEmailInput {
+  parentName: string;
+  parentEmail: string;
+  amountCents: number;
+  installmentNumber: number;
+  installmentCount: number;
+  attemptNumber: number;
+  finalAttempt: boolean;
+}
+
+/** Notification interne envoyée à l'académie (pas au parent) dès le premier
+ *  échec de prélèvement d'un versement, et à nouveau si le suivi manuel
+ *  devient nécessaire après le nombre maximal de tentatives automatiques. */
+export async function sendPaymentPlanFailedEmail(input: PaymentPlanFailedEmailInput) {
+  if (!env.resendApiKey) return;
+
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: "info@newvalkyria.com",
+    subject: input.finalAttempt
+      ? `New Valkyria - Suivi manuel requis : échec de paiement (${input.parentName})`
+      : `New Valkyria - Échec d'un versement (${input.parentName})`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.5;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">${input.finalAttempt ? "Suivi manuel requis" : "Un versement a échoué"}</h1>
+        <p><strong>${input.parentName}</strong> (${input.parentEmail})</p>
+        <p>Versement ${input.installmentNumber} sur ${input.installmentCount} : ${fmt(input.amountCents)}</p>
+        <p>Tentative ${input.attemptNumber}${input.finalAttempt ? " — les réessais automatiques sont maintenant arrêtés." : " — un réessai automatique aura lieu demain."}</p>
+      </div>
+    `
+  });
+}

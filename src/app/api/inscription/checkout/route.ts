@@ -4,13 +4,16 @@ import { ZodError } from "zod";
 import { sendLeadNotificationEmail } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { getRequestOrigin } from "@/lib/request-origin";
+import { getInstallmentPlan } from "@/lib/payment-plan";
 import { isNvAvailable } from "@/lib/season-2027";
 import { SEASON_DB_ID, SLOT_DB_ID } from "@/lib/season-2027-db-map";
 import {
   cancelRegistration,
   countActiveRegistrations,
   countPaidRegistrations,
+  createPaymentPlan,
   createRegistration,
+  deletePaymentPlan,
   getSeasonPrograms,
   getSeasonProgramCategories,
   getSeasonSlots,
@@ -38,6 +41,15 @@ export async function POST(request: Request) {
 
     if (payload.programCode === "NV" && !isNvAvailable(payload.year)) {
       return jsonError("Le programme New Valkyria n'est pas encore disponible pour cette catégorie.", 409);
+    }
+
+    // ── Paiement en plusieurs fois — jamais confiance au choix du client,
+    // l'éligibilité est recalculée ici à partir de la date serveur. ──
+    const installmentPlan = payload.paymentPlan === "installments"
+      ? getInstallmentPlan(new Date(), program.price_cents)
+      : null;
+    if (payload.paymentPlan === "installments" && !installmentPlan) {
+      return jsonError("Le paiement en plusieurs fois n'est plus disponible pour ce mois.", 409);
     }
 
     const capacity = programCategories.find((pc) => pc.program_id === payload.programCode && pc.category_id === payload.year);
@@ -116,6 +128,19 @@ export async function POST(request: Request) {
       isTrial: false
     });
 
+    let paymentPlanId: string | null = null;
+    if (installmentPlan) {
+      paymentPlanId = await createPaymentPlan({
+        registrationId,
+        totalAmountCents: program.price_cents,
+        installments: installmentPlan.dueDates.map((date, i) => ({
+          sequenceNo: i + 1,
+          amountCents: installmentPlan.amountsCents[i],
+          dueDate: date.toISOString().slice(0, 10)
+        }))
+      });
+    }
+
     let boutiqueOrderId: string | null = null;
     if (boutiqueItems.length > 0) {
       const { orderId } = await createOrder({
@@ -143,6 +168,10 @@ export async function POST(request: Request) {
         }
       }));
 
+      const programLineItemName = installmentPlan
+        ? `${program.name} — Saison Automne/Hiver 2026 (1er versement sur ${installmentPlan.dueDates.length})`
+        : `${program.name} — Saison Automne/Hiver 2026`;
+
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         customer_email: payload.parentEmail,
@@ -152,17 +181,21 @@ export async function POST(request: Request) {
             quantity: 1,
             price_data: {
               currency: "cad",
-              product_data: { name: `${program.name} — Saison Automne/Hiver 2026` },
-              unit_amount: program.price_cents
+              product_data: { name: programLineItemName },
+              unit_amount: installmentPlan ? installmentPlan.amountsCents[0] : program.price_cents
             }
           },
           ...boutiqueLineItems
         ],
+        ...(installmentPlan
+          ? { customer_creation: "always" as const, payment_intent_data: { setup_future_usage: "off_session" as const } }
+          : {}),
         metadata: {
           checkoutType: "season-registration",
           seasonId: SEASON_DB_ID,
           registrationId,
-          ...(boutiqueOrderId ? { boutiqueOrderId } : {})
+          ...(boutiqueOrderId ? { boutiqueOrderId } : {}),
+          ...(paymentPlanId ? { paymentPlanId } : {})
         },
         success_url: `${baseUrl}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}${payload.cancelPath ?? "/inscription?cancelled=1"}`
@@ -190,6 +223,7 @@ export async function POST(request: Request) {
     } catch (stripeError) {
       await cancelRegistration(registrationId).catch(() => {});
       if (boutiqueOrderId) await cancelOrder(boutiqueOrderId).catch(() => {});
+      if (paymentPlanId) await deletePaymentPlan(paymentPlanId).catch(() => {});
       throw stripeError;
     }
   } catch (error) {
