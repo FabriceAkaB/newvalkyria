@@ -272,6 +272,16 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
         </div>
 
         <div className="admin-drawer-footer">
+          {r.status !== "cancelled" && (
+            <button
+              className="admin-btn-ghost"
+              style={{ borderColor: "rgba(255,180,100,0.4)", color: "#ffb464" }}
+              onClick={() => patch({ status: "cancelled" }, { status: "cancelled" })}
+              disabled={saving}
+            >
+              Annuler l&apos;inscription
+            </button>
+          )}
           <button className="admin-btn-danger" onClick={() => setConfirming(true)}>Supprimer l&apos;inscription</button>
           <button className="admin-btn-ghost" onClick={onClose}>Fermer</button>
         </div>
