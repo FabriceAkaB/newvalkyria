@@ -168,16 +168,22 @@ export async function updateProgramCategoryMax(
 
 /* ── Plages horaires ───────────────────────────────────────────── */
 
+/** Le jour est stocké en texte ("Lundi", "Mardi"...) — un tri SQL alphabétique
+ *  mettrait "Jeudi" avant "Lundi". On trie donc en JS dans l'ordre réel de la
+ *  semaine, du lundi au dimanche. */
+const DAY_ORDER = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+
 export async function getSeasonSlots(seasonId: string): Promise<TimeSlotTemplate[]> {
   const supabase = db();
   const { data: slots, error } = await supabase
     .from("time_slot_templates")
     .select("*")
     .eq("season_id", seasonId)
-    .order("day", { ascending: true })
     .order("start_time", { ascending: true });
   if (error) throw new Error(error.message);
   if (!slots || slots.length === 0) return [];
+
+  slots.sort((a: { day: string }, b: { day: string }) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day));
 
   const slotIds = slots.map((s: { id: string }) => s.id);
 
@@ -417,6 +423,14 @@ export async function updateRegistration(
   if (patch.halfSeasonEndsOn !== undefined) columnPatch.half_season_ends_on = patch.halfSeasonEndsOn;
 
   const { error } = await supabase.from("registrations").update(columnPatch).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/** Suppression définitive (pas un simple statut "cancelled") — utilisée par
+ *  l'admin quand une inscription doit être retirée pour de bon. */
+export async function deleteRegistration(id: string): Promise<void> {
+  const supabase = db();
+  const { error } = await supabase.from("registrations").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
 

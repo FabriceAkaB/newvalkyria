@@ -5,10 +5,10 @@ import { Container } from "@/components/container";
 import { methodSections } from "@/lib/site-content";
 import methodeTechnique from "@/content/image/photos/methode-technique.png";
 import dsc04964 from "@/content/image/photos/DSC04964.jpg";
-import dsc03078 from "@/content/image/photos/DSC03078.jpg";
+import methodePhysique from "@/content/image/photos/methode-physique.png";
 import methodeHeroImg from "@/content/image/photos/newval2_472.jpg";
 
-const pillarImages = [methodeTechnique, dsc04964, dsc03078];
+const pillarImages = [methodeTechnique, dsc04964, methodePhysique];
 const pillarAlts = [
   "Technique — joueuse en contrôle de balle",
   "Mental — cohésion et confiance d'équipe",

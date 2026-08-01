@@ -3,9 +3,22 @@ import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
 import type { RegistrationStatus } from "@/lib/season-admin-repo";
-import { convertTrialToOfficial, updateRegistration } from "@/lib/season-admin-repo";
+import { convertTrialToOfficial, deleteRegistration, updateRegistration } from "@/lib/season-admin-repo";
 
 const VALID_STATUSES: readonly string[] = ["pending", "confirmed", "paid", "waitlist", "cancelled"] satisfies readonly RegistrationStatus[];
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdminRequest())) {
+    return jsonError("Non autorisé", 401);
+  }
+  const { id } = await params;
+  try {
+    await deleteRegistration(id);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return jsonError(err instanceof Error ? err.message : "Erreur de suppression", 500);
+  }
+}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdminRequest())) {
