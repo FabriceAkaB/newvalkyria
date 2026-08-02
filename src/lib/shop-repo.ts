@@ -376,6 +376,13 @@ export async function cancelOrder(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/** Suppression définitive (pas un simple statut "cancelled") — les articles
+ *  liés (shop_order_items) sont supprimés en cascade côté base de données. */
+export async function deleteOrder(id: string): Promise<void> {
+  const { error } = await db().from("shop_orders").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 export async function getOrders(): Promise<ShopOrderWithItems[]> {
   const supabase = db();
   const { data: orders, error } = await supabase.from("shop_orders").select("*").order("created_at", { ascending: false });

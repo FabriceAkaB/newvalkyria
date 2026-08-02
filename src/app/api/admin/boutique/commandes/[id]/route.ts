@@ -3,9 +3,22 @@ import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
 import type { OrderStatus } from "@/lib/shop-repo";
-import { updateOrderStatus } from "@/lib/shop-repo";
+import { deleteOrder, updateOrderStatus } from "@/lib/shop-repo";
 
 const VALID_STATUSES: readonly string[] = ["pending", "paid", "fulfilled", "cancelled"] satisfies readonly OrderStatus[];
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  const { id } = await params;
+
+  try {
+    await deleteOrder(id);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    if (error instanceof Error) return jsonError(error.message, 422);
+    return jsonError("Erreur serveur", 500);
+  }
+}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);

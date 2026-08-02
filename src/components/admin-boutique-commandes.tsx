@@ -21,8 +21,26 @@ export function AdminBoutiqueCommandes({ initialOrders }: { initialOrders: ShopO
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ShopOrderWithItems | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
+
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/boutique/commandes/${confirmDelete.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Erreur de suppression");
+      setOrders((prev) => prev.filter((o) => o.id !== confirmDelete.id));
+      setConfirmDelete(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleStatusChange = async (id: string, status: OrderStatus) => {
     setSaving(id);
@@ -86,14 +104,22 @@ export function AdminBoutiqueCommandes({ initialOrders }: { initialOrders: ShopO
                       </p>
                     )}
                   </div>
-                  <select
-                    className="admin-input"
-                    value={order.status}
-                    onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
-                    style={{ width: "auto" }}
-                  >
-                    {(Object.keys(STATUS_LABELS) as OrderStatus[]).map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                  </select>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    <select
+                      className="admin-input"
+                      value={order.status}
+                      onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
+                      style={{ width: "auto" }}
+                    >
+                      {(Object.keys(STATUS_LABELS) as OrderStatus[]).map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+                    </select>
+                    <button
+                      onClick={() => setConfirmDelete(order)}
+                      style={{ fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.4rem 0.6rem", cursor: "pointer" }}
+                    >
+                      Supprimer
+                    </button>
+                  </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", marginBottom: "0.5rem" }}>
                   {order.items.map((item) => (
@@ -108,6 +134,21 @@ export function AdminBoutiqueCommandes({ initialOrders }: { initialOrders: ShopO
           </div>
         </div>
       </div>
+
+      {confirmDelete && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal-box">
+            <p className="admin-modal-title">Supprimer cette commande ?</p>
+            <p className="admin-modal-body">
+              La commande de <span className="admin-modal-name">{confirmDelete.customer_name}</span> sera définitivement supprimée. Cette action est irréversible.
+            </p>
+            <div className="admin-modal-actions">
+              <button className="admin-btn-ghost" onClick={() => setConfirmDelete(null)} disabled={deleting}>Annuler</button>
+              <button className="admin-btn-danger" onClick={handleDelete} disabled={deleting}>{deleting ? "Suppression..." : "Supprimer définitivement"}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
