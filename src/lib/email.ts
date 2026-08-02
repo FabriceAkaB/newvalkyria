@@ -6,6 +6,7 @@ import type { LeadFormPayload } from "@/lib/validations";
 interface ConfirmationEmailInput {
   to: string;
   parentName: string;
+  programName?: string;
 }
 
 interface TrialEmailInput {
@@ -152,7 +153,7 @@ export async function sendConfirmationEmail(input: ConfirmationEmailInput) {
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.5;color:#161419;max-width:600px">
         <h1 style="font-size:22px">Merci ${input.parentName}, votre inscription est confirmée.</h1>
-        <p>Nous avons bien reçu votre paiement pour le programme New Valkyria.</p>
+        <p>Nous avons bien reçu votre paiement pour le programme ${input.programName ?? "New Valkyria"}.</p>
         <p>Notre équipe vous contacte sous 24h pour finaliser la place de votre fille.</p>
         <p style="margin-top:24px">New Valkyria<br/>Académie féminine technique</p>
       </div>

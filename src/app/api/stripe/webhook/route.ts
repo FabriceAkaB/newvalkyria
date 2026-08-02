@@ -7,6 +7,7 @@ import { env } from "@/lib/env";
 import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
 import { hasProcessedStripeEvent, markLeadAsPaid, recordStripeEvent } from "@/lib/repositories";
+import { PROGRAMS, type ProgramCode } from "@/lib/season-2027";
 import { activatePaymentPlan, markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
 import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
 import { getStripeClient } from "@/lib/stripe";
@@ -47,7 +48,8 @@ export async function POST(request: Request) {
       const registration = await markRegistrationPaidByCheckoutSession(session.id, paymentIntentId);
       if (registration) {
         try {
-          await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name });
+          const programName = registration.program_id ? PROGRAMS[registration.program_id as ProgramCode]?.name : undefined;
+          await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name, programName });
         } catch (error) {
           console.error("Unable to send season confirmation email", error);
         }
