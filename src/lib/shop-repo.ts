@@ -196,6 +196,20 @@ export async function getSignupBonusProduct(): Promise<Product | null> {
   return data as Product | null;
 }
 
+/** Première photo d'un produit (par ordre d'affichage), pour les aperçus
+ *  hors de la boutique (ex. offre de lancement dans le tunnel d'inscription). */
+export async function getFirstProductPhoto(productId: string): Promise<string | null> {
+  const { data, error } = await db()
+    .from("product_photos")
+    .select("url")
+    .eq("product_id", productId)
+    .order("display_order", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data?.url as string | undefined) ?? null;
+}
+
 /** Un seul produit à la fois peut porter ce drapeau — on retire l'ancien avant de poser le nouveau. */
 export async function setSignupBonusProduct(productId: string | null): Promise<void> {
   const supabase = db();

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 import { Container } from "@/components/container";
@@ -39,6 +40,7 @@ interface BagOffer {
   active: boolean;
   productName?: string;
   priceCents?: number;
+  photoUrl?: string | null;
   free?: boolean;
 }
 
@@ -588,12 +590,23 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
               {bagOffer?.active && (
                 bagOffer.free ? (
                   <div className="nv27-pay-done" style={{ marginBottom: "1rem" }}>
-                    <span className="nv27-pay-done-icon">🎁</span>
+                    {bagOffer.photoUrl ? (
+                      <div style={{ position: "relative", width: "56px", height: "56px", flexShrink: 0, borderRadius: "0.6rem", overflow: "hidden", background: "rgba(255,255,255,0.06)" }}>
+                        <Image src={bagOffer.photoUrl} alt={bagOffer.productName ?? "Sac offert"} fill className="object-cover" sizes="56px" />
+                      </div>
+                    ) : (
+                      <span className="nv27-pay-done-icon">🎁</span>
+                    )}
                     <p>{bagOffer.productName} inclus gratuitement — vous faites partie des 30 premiers clients de la saison !</p>
                   </div>
                 ) : (
                   <label className="nv27-radio" style={{ marginBottom: "1rem" }}>
                     <input type="checkbox" checked={includeBag} onChange={(e) => setIncludeBag(e.target.checked)} />
+                    {bagOffer.photoUrl && (
+                      <div style={{ position: "relative", width: "44px", height: "44px", flexShrink: 0, borderRadius: "0.5rem", overflow: "hidden", background: "rgba(255,255,255,0.06)", marginRight: "0.6rem" }}>
+                        <Image src={bagOffer.photoUrl} alt={bagOffer.productName ?? "Sac"} fill className="object-cover" sizes="44px" />
+                      </div>
+                    )}
                     <span>Ajouter un {bagOffer.productName} ({formatCAD((bagOffer.priceCents ?? 0) / 100)}) à ma commande</span>
                   </label>
                 )

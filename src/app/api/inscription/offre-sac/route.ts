@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { countPaidRegistrations } from "@/lib/season-admin-repo";
-import { getSignupBonusProduct } from "@/lib/shop-repo";
+import { getFirstProductPhoto, getSignupBonusProduct } from "@/lib/shop-repo";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,10 @@ export async function GET() {
   const product = await getSignupBonusProduct();
   if (!product) return NextResponse.json({ active: false });
 
-  const paidCount = await countPaidRegistrations(SEASON_DB_ID);
+  const [paidCount, photoUrl] = await Promise.all([
+    countPaidRegistrations(SEASON_DB_ID),
+    getFirstProductPhoto(product.id)
+  ]);
   const free = paidCount < FREE_THRESHOLD;
   const inStock = product.inventory_count > 0;
 
@@ -23,6 +26,7 @@ export async function GET() {
     productId: product.id,
     productName: product.name,
     priceCents: product.price_cents,
+    photoUrl,
     free,
     remainingFree: Math.max(0, FREE_THRESHOLD - paidCount)
   });
