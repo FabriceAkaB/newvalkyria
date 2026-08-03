@@ -5,7 +5,6 @@ import { sendLeadNotificationEmail } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { getInstallmentPlan } from "@/lib/payment-plan";
-import { isNvAvailable } from "@/lib/season-2027";
 import { SEASON_DB_ID, SLOT_DB_ID } from "@/lib/season-2027-db-map";
 import {
   cancelRegistration,
@@ -38,10 +37,6 @@ export async function POST(request: Request) {
 
     const program = programs.find((p) => p.id === payload.programCode);
     if (!program) return jsonError("Programme introuvable", 404);
-
-    if (payload.programCode === "NV" && !isNvAvailable(payload.year)) {
-      return jsonError("Le programme New Valkyria n'est pas encore disponible pour cette catégorie.", 409);
-    }
 
     // ── Paiement en plusieurs fois — jamais confiance au choix du client,
     // l'éligibilité est recalculée ici à partir de la date serveur. ──

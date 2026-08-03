@@ -249,20 +249,11 @@ export function getProgramAvailability(code: ProgramCode, year: BirthYear, live?
   return { max: cap.max, taken: cap.taken, remaining, isFull: remaining <= 0 };
 }
 
-/** Le programme New Valkyria (653,45 $) est retenu pour les catégories 2015 et
- *  2016 jusqu'au 1er septembre — il redevient disponible à partir de cette
- *  date. Vérifié à la fois côté client (affichage) et côté serveur (checkout)
- *  pour ne jamais faire confiance à ce que le client affiche. */
-const NV_RESTRICTED_YEARS: BirthYear[] = ["2015", "2016"];
-
-export function isNvAvailable(year: BirthYear, now: Date = new Date()): boolean {
-  if (!NV_RESTRICTED_YEARS.includes(year)) return true;
-  const liftDate = new Date(now.getFullYear(), 8, 1); // 1er septembre (mois 0-indexé)
-  return now >= liftDate;
-}
-
 /** Programmes visibles pour une catégorie, dans l'ordre de priorité.
- *  variant "public" → TV, SV, NV. variant "advanced" → TVA, SVA. */
+ *  variant "public" → TV, SV, NV. variant "advanced" → TVA, SVA.
+ *  Le programme New Valkyria (653,45 $) est disponible pour toutes les
+ *  catégories ; sa capacité limitée pour 2015/2016 (3 places) est gérée par
+ *  le système de capacité standard (admin → Capacité), pas par ce filtre. */
 export function getProgramsForYear(
   year: BirthYear,
   variant: "public" | "advanced",
@@ -271,7 +262,6 @@ export function getProgramsForYear(
   return Object.values(PROGRAMS)
     .filter((p) => (variant === "advanced" ? p.invitation : !p.invitation))
     .filter((p) => p.eligibleYears.includes(year))
-    .filter((p) => p.code !== "NV" || isNvAvailable(year))
     .filter((p) => (live?.programCategory[`${p.code}:${year}`] ?? capacityByProgramYear[`${p.code}:${year}`]) !== undefined)
     .sort((a, b) => a.order - b.order);
 }
