@@ -102,7 +102,8 @@ export const PROGRAMS: Record<ProgramCode, ProgramDef> = {
     team: "10",
     solo: "—",
     order: 1,
-    eligibleYears: ALL_YEARS,
+    // 2014-2013 : seule l'offre New Valkyria (~653 $) est proposée pour cette catégorie.
+    eligibleYears: ALL_YEARS.filter((y) => y !== "2014-2013"),
     badge: "🔥 Le plus populaire",
     teamPractice: TEAM_PRACTICE
   },
@@ -124,7 +125,8 @@ export const PROGRAMS: Record<ProgramCode, ProgramDef> = {
     team: "10",
     solo: "5",
     order: 2,
-    eligibleYears: ALL_YEARS,
+    // 2014-2013 : seule l'offre New Valkyria (~653 $) est proposée pour cette catégorie.
+    eligibleYears: ALL_YEARS.filter((y) => y !== "2014-2013"),
     teamPractice: TEAM_PRACTICE,
     soloSession: SOLO_SESSION
   },

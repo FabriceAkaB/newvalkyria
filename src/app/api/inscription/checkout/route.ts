@@ -5,6 +5,7 @@ import { sendLeadNotificationEmail } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { getInstallmentPlan } from "@/lib/payment-plan";
+import { PROGRAMS, type ProgramCode } from "@/lib/season-2027";
 import { SEASON_DB_ID, SLOT_DB_ID } from "@/lib/season-2027-db-map";
 import {
   cancelRegistration,
@@ -37,6 +38,11 @@ export async function POST(request: Request) {
 
     const program = programs.find((p) => p.id === payload.programCode);
     if (!program) return jsonError("Programme introuvable", 404);
+
+    const eligibleYears = PROGRAMS[payload.programCode as ProgramCode]?.eligibleYears;
+    if (eligibleYears && !eligibleYears.includes(payload.year)) {
+      return jsonError("Ce programme n'est pas disponible pour cette catégorie.", 409);
+    }
 
     // ── Paiement en plusieurs fois — jamais confiance au choix du client,
     // l'éligibilité est recalculée ici à partir de la date serveur. ──
