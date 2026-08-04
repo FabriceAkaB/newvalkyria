@@ -77,8 +77,16 @@ export const seasonCheckoutSchema = z.object({
   }).optional()
 });
 
+export const seasonWaitlistSchema = z.object({
+  ...seasonPlayerFieldsSchema,
+  programCode: z.enum(["TV", "SV", "NV", "TVA", "SVA", "TVD"]),
+  year: z.enum(["2017", "2016", "2015", "2014-2013"]),
+  variant: z.enum(["public", "advanced"])
+});
+
 export type SeasonTrialPayload = z.infer<typeof seasonTrialSchema>;
 export type SeasonCheckoutPayload = z.infer<typeof seasonCheckoutSchema>;
+export type SeasonWaitlistPayload = z.infer<typeof seasonWaitlistSchema>;
 
 /* ── Espace parent (comptes clients) ───────────────────────────── */
 

@@ -210,6 +210,39 @@ async function submitTrial(data: InscriptionFormData): Promise<{ ok: boolean; er
   }
 }
 
+async function submitWaitlist(input: {
+  data: InscriptionFormData;
+  programCode: ProgramCode;
+  year: BirthYear;
+  variant: "public" | "advanced";
+}): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch("/api/inscription/liste-attente", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        parentName: `${input.data.accFirst} ${input.data.accLast}`.trim(),
+        parentEmail: input.data.accEmail,
+        parentPhone: input.data.accPhone,
+        city: input.data.accCity,
+        playerFirstName: input.data.plFirst,
+        playerLastName: input.data.plLast,
+        playerDob: input.data.plDob || undefined,
+        programCode: input.programCode,
+        year: input.year,
+        variant: input.variant
+      })
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      return { ok: false, error: body?.error ?? "Une erreur est survenue." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Une erreur réseau est survenue. Veuillez réessayer." };
+  }
+}
+
 async function submitCheckout(input: {
   data: InscriptionFormData;
   programCode: ProgramCode;
@@ -340,6 +373,7 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
   const [uniformJerseySize, setUniformJerseySize] = useState("");
   const [uniformShortSize, setUniformShortSize] = useState("");
   const [paymentPlan, setPaymentPlan] = useState<"full" | "installments">("full");
+  const [waitlistMode, setWaitlistMode] = useState(false);
 
   const programRef = useRef<HTMLDivElement>(null);
   const slotRef = useRef<HTMLDivElement>(null);
@@ -352,11 +386,11 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
   useEffect(() => { if (formData) payRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [formData]);
 
   const program = programCode ? PROGRAMS[programCode] : null;
-  const slot = slotId ? findSlot(slotId) : null;
+  const slot = slotId && slotId !== "WAITLIST" ? findSlot(slotId) : null;
 
   const resetFrom = (level: "year" | "program" | "slot") => {
-    if (level === "year") { setYear(null); setProgramCode(null); setSlotId(null); setFormData(null); }
-    if (level === "program") { setProgramCode(null); setSlotId(null); setFormData(null); }
+    if (level === "year") { setYear(null); setProgramCode(null); setSlotId(null); setFormData(null); setWaitlistMode(false); }
+    if (level === "program") { setProgramCode(null); setSlotId(null); setFormData(null); setWaitlistMode(false); }
     if (level === "slot") { setSlotId(null); setFormData(null); }
     setSubmit("idle");
   };
@@ -390,6 +424,19 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
       return;
     }
     window.location.href = result.checkoutUrl;
+  };
+
+  const handleWaitlist = async () => {
+    if (!formData || !program || !year) return;
+    setSubmit("loading");
+    setPayError(null);
+    const result = await submitWaitlist({ data: formData, programCode: program.code, year, variant });
+    if (!result.ok) {
+      setPayError(result.error ?? "Une erreur est survenue.");
+      setSubmit("idle");
+      return;
+    }
+    setSubmit("done");
   };
 
   const isAdvanced = variant === "advanced";
@@ -468,17 +515,19 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
                         <button
                           key={p.code}
                           type="button"
-                          disabled={av.isFull}
-                          onClick={() => !av.isFull && setProgramCode(p.code)}
+                          onClick={() => { setProgramCode(p.code); setWaitlistMode(av.isFull); setSlotId(av.isFull ? "WAITLIST" : null); }}
                           className={`nv27-prog-card${av.isFull ? " nv27-prog-full" : ""}${p.badge && !av.isFull ? " nv27-prog-featured" : ""}`}
                         >
-                          {p.badge && <span className="nv27-prog-badge">{p.badge}</span>}
+                          {av.isFull && (
+                            <div className="nv27-prog-full-banner">
+                              <span>COMPLET</span>
+                            </div>
+                          )}
+                          {p.badge && !av.isFull && <span className="nv27-prog-badge">{p.badge}</span>}
                           <div className="nv27-prog-main">
                             <div className="nv27-prog-toprow">
                               <h3 className="nv27-prog-name">{p.name}</h3>
-                              {av.isFull
-                                ? <span className="nv27-badge nv27-badge-full">Complet</span>
-                                : <span className="nv27-availchip">Il reste {av.remaining} place{av.remaining > 1 ? "s" : ""}</span>}
+                              {!av.isFull && <span className="nv27-availchip">Il reste {av.remaining} place{av.remaining > 1 ? "s" : ""}</span>}
                             </div>
                             <p className="nv27-prog-tagline">{p.tagline}</p>
                             <ul className="nv27-prog-list">
@@ -490,7 +539,7 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
                           <div className="nv27-prog-side">
                             <span className="nv27-prog-price">{p.priceLabel}</span>
                             <span className="nv27-prog-price-sub">/ saison</span>
-                            {!av.isFull && <span className="nv27-prog-choose">Choisir →</span>}
+                            <span className="nv27-prog-choose">{av.isFull ? "Liste d'attente →" : "Choisir →"}</span>
                           </div>
                         </button>
                       );
@@ -502,7 +551,7 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
                 </div>
               ) : program && (
                 <button type="button" className="nv27-recap" onClick={() => resetFrom("program")}>
-                  <span className="nv27-recap-label">Programme</span>
+                  <span className="nv27-recap-label">Programme{waitlistMode ? " (liste d'attente)" : ""}</span>
                   <span className="nv27-recap-value">{program.name} · {program.priceLabel}</span>
                   <span className="nv27-recap-edit">Modifier</span>
                 </button>
@@ -510,8 +559,8 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
             </div>
           )}
 
-          {/* ── Étape 3 — Plage horaire ── */}
-          {programCode !== null && program && (
+          {/* ── Étape 3 — Plage horaire (sautée pour la liste d'attente) ── */}
+          {!waitlistMode && programCode !== null && program && (
             <div ref={slotRef}>
               {slotId === null ? (
                 <div className="nv27-step">
@@ -581,8 +630,36 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
             </div>
           )}
 
+          {/* ── Étape 5 — Liste d'attente (programme complet) ── */}
+          {formData !== null && program && waitlistMode && (
+            <div ref={payRef} className="nv27-step">
+              {submit === "done" ? (
+                <div className="nv27-pay-done">
+                  <span className="nv27-pay-done-icon">✓</span>
+                  <p>Vous êtes sur la liste d&apos;attente pour {program.name}. Nous vous contactons dès qu&apos;une place se libère.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="nv27-step-kicker"><span className="nv27-step-n">5</span> Liste d&apos;attente</p>
+                  <h2 className="nv27-step-q">Rejoindre la liste d&apos;attente</h2>
+                  <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", marginBottom: "1.25rem", maxWidth: "50ch" }}>
+                    {program.name} est complet pour la catégorie {year ? BIRTH_YEAR_LABELS[year] : ""} en ce moment. Inscrivez-vous à la liste d&apos;attente
+                    — aucun paiement requis maintenant, nous vous contactons dès qu&apos;une place se libère.
+                  </p>
+                  <div className="nv27-pay-summary">
+                    <div className="nv27-pay-row"><span>Programme souhaité</span><span>{program.name}</span></div>
+                  </div>
+                  {payError && <p className="nv27-pay-error">{payError}</p>}
+                  <button type="button" className="nv27-btn-primary nv27-btn-pay" disabled={submit === "loading"} onClick={handleWaitlist}>
+                    {submit === "loading" ? "Envoi en cours…" : "Rejoindre la liste d'attente →"}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           {/* ── Étape 5 — Paiement (sans taxes) ── */}
-          {formData !== null && program && (
+          {formData !== null && program && !waitlistMode && (
             <div ref={payRef} className="nv27-step">
               <p className="nv27-step-kicker"><span className="nv27-step-n">5</span> Paiement</p>
               <h2 className="nv27-step-q">Résumé de l&apos;inscription</h2>

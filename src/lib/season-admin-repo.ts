@@ -497,6 +497,35 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
   return data.id as string;
 }
 
+/** Inscription à la liste d'attente — programme/catégorie complet, aucun
+ *  paiement demandé. Le parent est contacté manuellement dès qu'une place
+ *  se libère (changement de statut depuis l'admin). */
+export async function createWaitlistRegistration(input: CreateRegistrationInput): Promise<string> {
+  const supabase = db();
+  const { data, error } = await supabase
+    .from("registrations")
+    .insert({
+      season_id: input.seasonId,
+      program_id: input.programId,
+      category_id: input.categoryId,
+      time_slot_template_id: input.timeSlotTemplateId,
+      parent_name: input.parentName,
+      parent_email: input.parentEmail,
+      parent_phone: input.parentPhone,
+      city: input.city,
+      player_first_name: input.playerFirstName,
+      player_last_name: input.playerLastName,
+      player_dob: input.playerDob,
+      advanced_group: input.advancedGroup,
+      is_trial: false,
+      status: "waitlist"
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data.id as string;
+}
+
 export async function setRegistrationCheckoutSession(id: string, checkoutSessionId: string): Promise<void> {
   const supabase = db();
   const { error } = await supabase

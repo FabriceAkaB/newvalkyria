@@ -9348,9 +9348,32 @@ img { max-width: 100%; height: auto; }
 }
 
 .nv27-prog-full {
-  opacity: 0.5;
-  cursor: not-allowed;
-  filter: grayscale(0.7);
+  opacity: 0.65;
+  cursor: pointer;
+  filter: grayscale(0.85);
+  padding-top: 3.4rem;
+}
+
+.nv27-prog-card:hover.nv27-prog-full {
+  border-color: rgba(200, 90, 90, 0.55);
+  opacity: 0.85;
+}
+
+.nv27-prog-full-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(90deg, #c85a5a, #a83f3f);
+  color: #fff;
+  text-align: center;
+  padding: 0.6rem;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-radius: 1.1rem 1.1rem 0 0;
 }
 
 .nv27-prog-toprow {

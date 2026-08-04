@@ -189,6 +189,32 @@ export async function sendSeasonTrialConfirmationEmail(input: SeasonTrialEmailIn
   });
 }
 
+interface WaitlistEmailInput {
+  to: string;
+  parentName: string;
+  programName: string;
+}
+
+export async function sendWaitlistConfirmationEmail(input: WaitlistEmailInput) {
+  if (!env.resendApiKey) return;
+
+  const resend = getResendClient();
+
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    subject: "New Valkyria - Vous êtes sur la liste d'attente",
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.5;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">Merci ${input.parentName}, vous êtes sur la liste d'attente.</h1>
+        <p>Le programme ${input.programName} est complet pour le moment.</p>
+        <p>Nous vous contactons dès qu'une place se libère.</p>
+        <p style="margin-top:24px">New Valkyria<br/>Académie féminine technique</p>
+      </div>
+    `
+  });
+}
+
 interface ShopOrderEmailInput {
   to: string;
   customerName: string;
