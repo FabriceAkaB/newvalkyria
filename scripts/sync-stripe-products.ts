@@ -35,12 +35,14 @@ async function main() {
     ...programs.map((p) => ({
       key: `program:${p.id}`,
       name: `${p.name} — Saison Automne/Hiver 2026`,
-      amount: p.price_cents
+      amount: p.price_cents,
+      description: [p.tagline, ...(p.includes ?? [])].filter(Boolean).join(" · ")
     })),
     ...products.map((p) => ({
       key: `product:${p.id}`,
       name: p.name,
-      amount: p.price_cents
+      amount: p.price_cents,
+      description: p.description ?? ""
     }))
   ];
 
@@ -54,9 +56,9 @@ async function main() {
   for (const item of items) {
     let product = byKey.get(item.key);
     if (!product) {
-      product = await stripe.products.create({ name: item.name, metadata: { syncKey: item.key } });
-    } else if (product.name !== item.name) {
-      product = await stripe.products.update(product.id, { name: item.name });
+      product = await stripe.products.create({ name: item.name, description: item.description || undefined, metadata: { syncKey: item.key } });
+    } else if (product.name !== item.name || product.description !== (item.description || null)) {
+      product = await stripe.products.update(product.id, { name: item.name, description: item.description || "" });
     }
 
     const prices = await stripe.prices.list({ product: product.id, active: true, limit: 10 });
