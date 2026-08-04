@@ -179,7 +179,7 @@ export interface AdminLead {
   city: string;
   goal: string;
   availability: string;
-  status: "pending" | "confirmed" | "paid" | "cancelled";
+  status: "pending" | "confirmed" | "paid" | "cancelled" | "essai";
   is_waitlist: boolean;
   time_slot?: string;
   stripe_checkout_session_id?: string;
@@ -267,7 +267,7 @@ export async function updateLeadGoal(id: string, goal: string): Promise<void> {
 
 export async function updateLeadStatus(
   id: string,
-  status: "pending" | "confirmed" | "paid" | "cancelled"
+  status: "pending" | "confirmed" | "paid" | "cancelled" | "essai"
 ): Promise<void> {
   if (!isSupabaseAvailable()) { updateMockLeadStatus(id, status); return; }
 

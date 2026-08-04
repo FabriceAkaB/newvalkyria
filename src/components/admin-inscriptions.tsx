@@ -8,7 +8,7 @@ import { AGE_CATEGORIES, CATEGORY_LABELS, CATEGORY_SUBLABELS } from "@/lib/categ
 import type { ClubGroup } from "@/lib/club-aliases-store";
 import type { AdminLead } from "@/lib/repositories";
 
-type FilterType = "all" | "paid" | "confirmed" | "pending" | "waitlist" | "new" | "cancelled";
+type FilterType = "all" | "paid" | "confirmed" | "pending" | "essai" | "waitlist" | "new" | "cancelled";
 type CategoryFilter = "all" | "2016" | "2015" | "2014-2013";
 
 const SEEN_KEY = "nv_admin_seen_since";
@@ -60,6 +60,8 @@ function StatusBadge({ lead, isNew }: { lead: AdminLead; isNew: boolean }) {
         <span className="admin-badge admin-badge-paid">✓ Payée</span>
       ) : lead.status === "confirmed" ? (
         <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "#9ec9ff", borderColor: "#465671" }}>✓ Confirmée</span>
+      ) : lead.status === "essai" ? (
+        <span className="admin-badge admin-badge-pending" style={{ background: "rgba(150, 100, 255, 0.18)", color: "#c3a6ff", borderColor: "rgba(150, 100, 255, 0.4)" }}>À l&apos;essai</span>
       ) : lead.status === "cancelled" ? (
         <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255, 100, 100, 0.18)", color: "#ff9999" }}>Annulée</span>
       ) : (
@@ -191,9 +193,10 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
             <div style={{ marginTop: "0.6rem" }}>
               <p className="admin-drawer-label">Changer le statut</p>
               <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.3rem" }}>
-                {(["pending", "confirmed", "paid", "cancelled"] as const).map((s) => {
+                {(["pending", "essai", "confirmed", "paid", "cancelled"] as const).map((s) => {
                   const labels: Record<typeof s, string> = {
                     pending: "En attente",
+                    essai: "À l'essai",
                     confirmed: "Confirmée",
                     paid: "Payée",
                     cancelled: "Annulée",
@@ -525,6 +528,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
   const countPaid = leads.filter((l) => l.status === "paid" && !l.is_waitlist).length;
   const countConfirmed = leads.filter((l) => l.status === "confirmed" && !l.is_waitlist).length;
   const countPending = leads.filter((l) => l.status === "pending" && !l.is_waitlist).length;
+  const countEssai = leads.filter((l) => l.status === "essai" && !l.is_waitlist).length;
   const countWaitlist = leads.filter((l) => l.is_waitlist).length;
   const countCancelled = leads.filter((l) => l.status === "cancelled").length;
 
@@ -535,6 +539,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
       if (filter === "paid" && (lead.status !== "paid" || lead.is_waitlist)) return false;
       if (filter === "confirmed" && (lead.status !== "confirmed" || lead.is_waitlist)) return false;
       if (filter === "pending" && (lead.status !== "pending" || lead.is_waitlist)) return false;
+      if (filter === "essai" && (lead.status !== "essai" || lead.is_waitlist)) return false;
       if (filter === "waitlist" && !lead.is_waitlist) return false;
       if (filter === "new" && !isNewLead(lead.created_at, seenSince)) return false;
       if (filter === "cancelled" && lead.status !== "cancelled") return false;
@@ -681,6 +686,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
                   ["confirmed", "Confirmées", countConfirmed],
                   ["paid", "Payées", countPaid],
                   ["pending", "En attente", countPending],
+                  ["essai", "À l'essai", countEssai],
                   ["waitlist", "Liste d'attente", countWaitlist],
                   ["cancelled", "Annulées", countCancelled],
                 ] as [FilterType, string, number][]

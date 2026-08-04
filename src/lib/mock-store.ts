@@ -6,7 +6,7 @@ import type { LeadFormPayload } from "@/lib/validations";
 type MockLead = LeadFormPayload & {
   id: string;
   created_at: string;
-  status: "pending" | "confirmed" | "paid" | "cancelled";
+  status: "pending" | "confirmed" | "paid" | "cancelled" | "essai";
   is_waitlist: boolean;
   time_slot?: string;
   stripe_checkout_session_id?: string;
