@@ -10020,6 +10020,57 @@ img { max-width: 100%; height: auto; }
   cursor: not-allowed;
 }
 
+/* ── Boutique — barre de panier flottante, toujours visible en magasinant ── */
+.shop-cart-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  background: rgba(16, 14, 23, 0.96);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem 0;
+}
+.shop-cart-bar-inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #fff;
+}
+.shop-cart-bar-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+.shop-cart-bar-total {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-accent-soft);
+  margin-right: auto;
+}
+.shop-cart-bar-cta {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--color-accent);
+  color: #0d0b13;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .shop-cart-bar-count { display: none; }
+}
+
 .shop-qty-stepper {
   height: 2.3rem;
   box-sizing: border-box;

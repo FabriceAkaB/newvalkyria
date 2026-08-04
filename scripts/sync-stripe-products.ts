@@ -7,7 +7,9 @@
  * Relançable en tout temps sans créer de doublons (chaque produit Stripe
  * porte un metadata.syncKey unique, retrouvé au prochain lancement).
  *
- * Usage : npx tsx scripts/sync-stripe-products.ts
+ * Usage :
+ *   npx tsx scripts/sync-stripe-products.ts          (mode test — STRIPE_SECRET_KEY)
+ *   npx tsx scripts/sync-stripe-products.ts --live    (mode live — STRIPE_LIVE_SYNC_KEY)
  */
 import Stripe from "stripe";
 
@@ -18,8 +20,11 @@ import { getProducts } from "../src/lib/shop-repo";
 const SEASON_DB_ID = "automne-hiver-2026";
 
 async function main() {
-  if (!env.stripeSecretKey) throw new Error("STRIPE_SECRET_KEY manquant");
-  const stripe = new Stripe(env.stripeSecretKey);
+  const isLive = process.argv.includes("--live");
+  const key = isLive ? process.env.STRIPE_LIVE_SYNC_KEY : env.stripeSecretKey;
+  if (!key) throw new Error(isLive ? "STRIPE_LIVE_SYNC_KEY manquant" : "STRIPE_SECRET_KEY manquant");
+  console.log(`Mode : ${isLive ? "LIVE (argent réel)" : "TEST"}`);
+  const stripe = new Stripe(key);
 
   const [programs, products] = await Promise.all([
     getSeasonPrograms(SEASON_DB_ID),

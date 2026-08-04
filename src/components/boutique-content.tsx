@@ -360,6 +360,24 @@ export function BoutiqueContent({ initialProducts }: { initialProducts: ProductW
           )}
         </Container>
       </section>
+
+      {cart.length > 0 && (
+        <div className="shop-cart-bar">
+          <Container>
+            <button
+              type="button"
+              className="shop-cart-bar-inner"
+              onClick={() => document.getElementById("panier")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            >
+              <span className="shop-cart-bar-count">
+                🛒 {cart.reduce((sum, i) => sum + i.quantity, 0)} article{cart.reduce((sum, i) => sum + i.quantity, 0) > 1 ? "s" : ""}
+              </span>
+              <span className="shop-cart-bar-total">{formatPrice(totalCents)}</span>
+              <span className="shop-cart-bar-cta">Voir mon panier →</span>
+            </button>
+          </Container>
+        </div>
+      )}
     </>
   );
 }
