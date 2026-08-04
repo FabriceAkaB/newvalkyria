@@ -139,6 +139,7 @@ export async function POST(request: Request) {
       mode: "payment",
       customer_email: payload.email,
       payment_method_types: ["card"],
+      allow_promotion_codes: true,
       line_items: [baseItem, ...addonItems],
       metadata: {
         leadId: payload.leadId,

@@ -95,6 +95,7 @@ export const PROGRAMS: Record<ProgramCode, ProgramDef> = {
       "20 pratiques techniques semi-privé",
       "10 pratiques d'équipe (une aux deux semaines)",
       "Environ 30 activités durant la saison",
+      "Invitation à des matchs",
       "Accès au programme vidéo maison",
       "Bulletin de suivi des apprentissages"
     ],

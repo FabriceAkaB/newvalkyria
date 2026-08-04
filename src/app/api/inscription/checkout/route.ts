@@ -177,6 +177,10 @@ export async function POST(request: Request) {
         mode: "payment",
         customer_email: payload.parentEmail,
         payment_method_types: ["card"],
+        // Pas de code promo avec un paiement échelonné : le rabais ne
+        // s'appliquerait qu'au 1er versement, pas aux prélèvements
+        // automatiques suivants (calculés indépendamment de Stripe).
+        ...(installmentPlan ? {} : { allow_promotion_codes: true }),
         line_items: [
           {
             quantity: 1,
