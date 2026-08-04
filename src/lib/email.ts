@@ -161,6 +161,34 @@ export async function sendConfirmationEmail(input: ConfirmationEmailInput) {
   });
 }
 
+interface SeasonTrialEmailInput {
+  to: string;
+  parentName: string;
+}
+
+/** Confirmation envoyée au parent pour un essai gratuit (saison en base de
+ *  données) — distincte de sendTrialConfirmationEmail qui sert l'ancien
+ *  système d'essai (leads + horaires configurés dans trial-dates-store). */
+export async function sendSeasonTrialConfirmationEmail(input: SeasonTrialEmailInput) {
+  if (!env.resendApiKey) return;
+
+  const resend = getResendClient();
+
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    subject: "New Valkyria - Confirmation de votre essai gratuit",
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.5;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">Merci ${input.parentName}, votre essai gratuit est confirmé.</h1>
+        <p>Nous avons bien reçu votre demande d'essai gratuit.</p>
+        <p>Notre équipe vous contacte sous 24h pour planifier la séance de votre fille.</p>
+        <p style="margin-top:24px">New Valkyria<br/>Académie féminine technique</p>
+      </div>
+    `
+  });
+}
+
 interface ShopOrderEmailInput {
   to: string;
   customerName: string;

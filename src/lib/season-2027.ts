@@ -39,7 +39,7 @@ export function birthYearFromDob(dob: string): BirthYear | null {
 
 /* ── Programmes ─────────────────────────────────────────────── */
 
-export type ProgramCode = "TV" | "SV" | "NV" | "TVA" | "SVA";
+export type ProgramCode = "TV" | "SV" | "NV" | "TVA" | "SVA" | "TVD";
 
 export interface ProgramDef {
   code: ProgramCode;
@@ -73,6 +73,11 @@ export interface SessionPreview {
 
 const TEAM_PRACTICE: SessionPreview = {
   count: "10 pratiques d'équipe",
+  schedule: ["Le dimanche", "De 17 h à 18 h", "Une semaine sur deux"]
+};
+
+const TEAM_PRACTICE_HALF: SessionPreview = {
+  count: "5 pratiques d'équipe",
   schedule: ["Le dimanche", "De 17 h à 18 h", "Une semaine sur deux"]
 };
 
@@ -171,6 +176,27 @@ export const PROGRAMS: Record<ProgramCode, ProgramDef> = {
     badge: "🔥 Le plus populaire",
     teamPractice: TEAM_PRACTICE
   },
+  TVD: {
+    code: "TVD",
+    name: "Demi-saison",
+    price: 437.98,
+    priceLabel: "437,98 $",
+    invitation: true,
+    tagline: "Sur invitation — groupe avancé, demi-saison (moitié du programme).",
+    includes: [
+      "10 pratiques techniques semi-privé",
+      "5 pratiques d'équipe (une aux deux semaines)",
+      "Environ 15 activités durant la saison",
+      "Accès au programme vidéo maison",
+      "Bulletin de suivi des apprentissages"
+    ],
+    tech: "10",
+    team: "5",
+    solo: "—",
+    order: 4,
+    eligibleYears: ALL_YEARS,
+    teamPractice: TEAM_PRACTICE_HALF
+  },
   SVA: {
     code: "SVA",
     name: "Solo Valkyria Avancé",
@@ -226,7 +252,9 @@ const capacityByProgramYear: Record<string, Capacity> = {
   "TVA:2016": { max: 12, taken: 8 },
   "TVA:2015": { max: 12, taken: 9 },
   "SVA:2016": { max: 4, taken: 2 },
-  "SVA:2015": { max: 4, taken: 3 }
+  "SVA:2015": { max: 4, taken: 3 },
+  "TVD:2016": { max: 12, taken: 0 },
+  "TVD:2015": { max: 12, taken: 0 }
 };
 
 export interface Availability {

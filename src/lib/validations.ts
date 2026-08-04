@@ -62,7 +62,7 @@ export const seasonTrialSchema = z.object(seasonPlayerFieldsSchema);
 
 export const seasonCheckoutSchema = z.object({
   ...seasonPlayerFieldsSchema,
-  programCode: z.enum(["TV", "SV", "NV", "TVA", "SVA"]),
+  programCode: z.enum(["TV", "SV", "NV", "TVA", "SVA", "TVD"]),
   year: z.enum(["2017", "2016", "2015", "2014-2013"]),
   slotId: z.string().optional(),
   variant: z.enum(["public", "advanced"]),

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { sendLeadNotificationEmail } from "@/lib/email";
+import { sendLeadNotificationEmail, sendSeasonTrialConfirmationEmail } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { createRegistration } from "@/lib/season-admin-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
@@ -39,6 +39,11 @@ export async function POST(request: Request) {
       consent: true,
       player_name: `${payload.playerFirstName} ${payload.playerLastName}`.trim()
     }).catch((err) => console.error("Trial admin notification email error:", err));
+
+    void sendSeasonTrialConfirmationEmail({
+      to: payload.parentEmail,
+      parentName: payload.parentName
+    }).catch((err) => console.error("Trial client confirmation email error:", err));
 
     return NextResponse.json({ ok: true, id }, { status: 201 });
   } catch (error) {
