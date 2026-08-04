@@ -194,7 +194,10 @@ export const PROGRAMS: Record<ProgramCode, ProgramDef> = {
     team: "5",
     solo: "—",
     order: 4,
-    eligibleYears: ALL_YEARS,
+    // Pas proposé sur le site (ni tunnel public, ni invitation) — offre
+    // distribuée uniquement via lien de paiement Stripe envoyé directement.
+    // Le tableau vide bloque aussi le choix côté serveur (voir checkout/route.ts).
+    eligibleYears: [],
     teamPractice: TEAM_PRACTICE_HALF
   },
   SVA: {
