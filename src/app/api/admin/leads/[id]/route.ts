@@ -44,7 +44,7 @@ export async function PATCH(
   }
 
   if (body.status !== undefined) {
-    const allowed = ["pending", "confirmed", "paid", "cancelled"] as const;
+    const allowed = ["pending", "confirmed", "paid", "cancelled", "essai"] as const;
     if (!allowed.includes(body.status as typeof allowed[number])) {
       return jsonError("Statut invalide", 400);
     }
