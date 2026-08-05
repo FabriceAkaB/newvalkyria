@@ -131,7 +131,7 @@ export function ConfirmationSuccess({ sessionId, isWaitlist = false, isTrial = f
           ? "Votre fille est inscrite pour 3 séances d'essai gratuites. Aucun frais ne sera prélevé."
           : isWaitlist
           ? "Votre demande est enregistrée. Dès qu'une place se libère dans ce groupe, vous serez la première contactée."
-          : "Votre fille fait maintenant partie de New Valkyria. On a hâte de la voir progresser. Vous bénéficiez de 3 pratiques d'essai gratuites incluses dans votre programme."}
+          : "Votre fille fait maintenant partie de New Valkyria. On a hâte de la voir progresser."}
       </p>
 
       {/* — Recap summary — */}
