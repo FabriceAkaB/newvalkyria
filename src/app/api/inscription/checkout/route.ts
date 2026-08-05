@@ -133,7 +133,7 @@ export async function POST(request: Request) {
     if (installmentPlan) {
       paymentPlanId = await createPaymentPlan({
         registrationId,
-        totalAmountCents: program.price_cents,
+        totalAmountCents: installmentPlan.amountsCents.reduce((sum, c) => sum + c, 0),
         installments: installmentPlan.dueDates.map((date, i) => ({
           sequenceNo: i + 1,
           amountCents: installmentPlan.amountsCents[i],
