@@ -25,15 +25,15 @@ export async function POST(request: Request) {
   }
 
   const { password } = (await request.json()) as { password?: string };
-  const success = Boolean(password && checkAdminPassword(password));
+  const role = password ? checkAdminPassword(password) : null;
 
-  await recordLoginAttempt(ip, success);
+  await recordLoginAttempt(ip, role !== null);
 
-  if (!success) {
+  if (!role) {
     return NextResponse.json({ error: "Mot de passe incorrect" }, { status: 401 });
   }
 
-  const token = await createAdminSession();
+  const token = await createAdminSession(role);
 
   const response = NextResponse.json({ ok: true });
   response.cookies.set(ADMIN_COOKIE_NAME, token, {

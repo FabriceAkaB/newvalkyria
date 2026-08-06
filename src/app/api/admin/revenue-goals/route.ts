@@ -5,7 +5,7 @@ import { jsonError } from "@/lib/http";
 import { setRevenueGoal } from "@/lib/revenue-repo";
 
 export async function PUT(request: Request) {
-  if (!(await isAdminRequest())) {
+  if (!(await isAdminRequest({ roles: ["admin"] }))) {
     return jsonError("Non autorisé", 401);
   }
 

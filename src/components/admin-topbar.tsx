@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type IconName = "home" | "list" | "users" | "gauge" | "grid" | "flask" | "shield" | "tag" | "bag" | "calendar" | "chart" | "user";
 
@@ -78,6 +79,9 @@ interface Group {
   label: string;
   dotColor: string;
   links: { href: string; label: string; icon: IconName }[];
+  /** Masqué pour les rôles autres qu'"admin" (ex. Gérante) — sections
+   *  financières et sensibles. */
+  adminOnly?: boolean;
 }
 
 const GROUPS: Group[] = [
@@ -85,13 +89,23 @@ const GROUPS: Group[] = [
   { label: "Automne / Hiver 2026", dotColor: "#f0c878", links: SEASON_AUTOMNE_HIVER_LINKS },
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
   { label: "Essais", dotColor: "#88c0d0", links: ESSAIS_LINKS },
-  { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS },
-  { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS },
+  { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS, adminOnly: true },
+  { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS, adminOnly: true },
 ];
 
 export function AdminTopbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [role, setRole] = useState<"admin" | "gerante" | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/session")
+      .then((res) => res.json())
+      .then((data: { role: "admin" | "gerante" | null }) => setRole(data.role))
+      .catch(() => setRole(null));
+  }, []);
+
+  const visibleGroups = GROUPS.filter((g) => !g.adminOnly || role === "admin");
 
   const handleLogout = async () => {
     await fetch("/api/admin/auth", { method: "DELETE" });
@@ -103,12 +117,12 @@ export function AdminTopbar() {
       <div className="admin-sidebar-brand">
         <div>
           <p className="admin-sidebar-brand-title">New Valkyria</p>
-          <p className="admin-sidebar-brand-sub">Administration</p>
+          <p className="admin-sidebar-brand-sub">Administration{role === "gerante" ? " — Gérante" : ""}</p>
         </div>
       </div>
 
       <nav className="admin-sidebar-nav">
-        {GROUPS.map((group) => (
+        {visibleGroups.map((group) => (
           <div className="admin-sidebar-group" key={group.label}>
             <div className="admin-sidebar-group-head">
               <span className="admin-sidebar-dot" style={{ background: group.dotColor }} />

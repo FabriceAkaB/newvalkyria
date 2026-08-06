@@ -107,7 +107,7 @@ function buildPdf(rows: CoachPayrollTotal[]): Promise<Buffer> {
 }
 
 export async function GET(request: Request) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
 
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") ?? "csv";

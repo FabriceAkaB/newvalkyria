@@ -6,7 +6,7 @@ export const metadata = { title: "Revenus — Admin New Valkyria", robots: "noin
 export const dynamic = "force-dynamic";
 
 export default async function AdminRevenusPage() {
-  await requireAdmin();
+  await requireAdmin({ roles: ["admin"] });
   const summary = await computeRevenueSummary();
   return <AdminRevenus summary={summary} />;
 }

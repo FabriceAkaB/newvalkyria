@@ -5,13 +5,13 @@ import { createCoach, getCoaches } from "@/lib/coaches-repo";
 import { jsonError } from "@/lib/http";
 
 export async function GET() {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
   const coaches = await getCoaches();
   return NextResponse.json({ coaches });
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
 
   const body = (await request.json().catch(() => null)) as {
     firstName?: string;

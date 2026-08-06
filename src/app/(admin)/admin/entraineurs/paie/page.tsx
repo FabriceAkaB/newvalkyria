@@ -7,7 +7,7 @@ export const metadata = { title: "Paie — Admin New Valkyria", robots: "noindex
 export const dynamic = "force-dynamic";
 
 export default async function AdminEntraineursPaiePage() {
-  await requireAdmin();
+  await requireAdmin({ roles: ["admin"] });
   const [rows, coaches] = await Promise.all([getPayrollRows(), getCoaches()]);
   return <AdminEntraineursPaie rows={rows} coaches={coaches} />;
 }

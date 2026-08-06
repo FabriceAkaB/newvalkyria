@@ -5,14 +5,14 @@ import { assignCoach, getActivity, getActivityAssignments } from "@/lib/coaches-
 import { jsonError } from "@/lib/http";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
   const { id } = await params;
   const assignments = await getActivityAssignments(id);
   return NextResponse.json({ assignments });
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
   const { id } = await params;
 
   const body = (await request.json().catch(() => null)) as { coachId?: string } | null;

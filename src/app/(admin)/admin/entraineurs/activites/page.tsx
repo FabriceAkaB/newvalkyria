@@ -6,7 +6,7 @@ export const metadata = { title: "Activités entraîneurs — Admin New Valkyria
 export const dynamic = "force-dynamic";
 
 export default async function AdminCoachActivitesPage() {
-  await requireAdmin();
+  await requireAdmin({ roles: ["admin"] });
   const activities = await getActivities();
   return <AdminCoachActivites activities={activities} />;
 }

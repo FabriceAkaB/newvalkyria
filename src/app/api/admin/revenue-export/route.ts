@@ -8,7 +8,7 @@ function csvEscape(value: string): string {
 }
 
 export async function GET() {
-  if (!(await isAdminRequest())) {
+  if (!(await isAdminRequest({ roles: ["admin"] }))) {
     return jsonError("Non autorisé", 401);
   }
 

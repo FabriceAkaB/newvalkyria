@@ -5,7 +5,7 @@ import { setCoachTypeRate } from "@/lib/coaches-repo";
 import { jsonError } from "@/lib/http";
 
 export async function POST(request: Request) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
 
   const body = (await request.json().catch(() => null)) as { coachId?: string; activityType?: string; hourlyRateCents?: number } | null;
   if (!body?.coachId || !body.activityType || typeof body.hourlyRateCents !== "number" || body.hourlyRateCents < 0) {
