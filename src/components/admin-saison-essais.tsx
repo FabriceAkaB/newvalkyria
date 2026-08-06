@@ -130,12 +130,17 @@ export function AdminSaisonEssais({ season, categories, programs, slots, initial
 
         <button
           onClick={() => handleConvert(r)}
-          disabled={isSaving || !c.programId || !c.categoryId}
+          disabled={isSaving}
           className="admin-btn-primary"
           style={{ padding: "0.45rem 0.9rem", fontSize: "0.75rem" }}
         >
           Convertir en inscription officielle →
         </button>
+        {(!c.programId || !c.categoryId) && (
+          <p style={{ fontSize: "0.68rem", color: "#ffb464", margin: "0.4rem 0 0" }}>
+            Choisissez une catégorie et un programme ci-dessus pour activer la conversion.
+          </p>
+        )}
       </div>
     );
   };
