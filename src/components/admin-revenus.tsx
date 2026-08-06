@@ -352,7 +352,7 @@ export function AdminRevenus({ summary }: Props) {
 
           {hasUnknown && (
             <p style={{ fontSize: "0.75rem", color: "#ffb464", background: "rgba(255,180,100,0.1)", border: "1px solid rgba(255,180,100,0.3)", borderRadius: "8px", padding: "0.6rem 0.9rem", marginBottom: "1.25rem" }}>
-              Certaines inscriptions Été marquées &quot;payé&quot; n&apos;ont pas de paiement Stripe associé (marquées payées manuellement) — leur montant n&apos;est pas inclus dans le total, qui est donc légèrement sous-estimé.
+              Certaines inscriptions payées n&apos;ont pas de prix de programme associé — leur montant n&apos;est pas inclus dans le total, qui est donc légèrement sous-estimé.
             </p>
           )}
 

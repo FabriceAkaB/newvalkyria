@@ -2,10 +2,15 @@ import { getAllLeads } from "@/lib/repositories";
 import { getRevenueExpenses, getRevenueGoals, type RevenueExpense } from "@/lib/revenue-repo";
 import { getSeasonPaidInstallments, getSeasonPrograms, getSeasonRegistrations, getSeasons } from "@/lib/season-admin-repo";
 import { getOrders } from "@/lib/shop-repo";
-import { getStripeClient } from "@/lib/stripe";
 
 export const ETE_SEASON_KEY = "ete-2026";
 export const ETE_SEASON_LABEL = "Été 2026";
+/** Prix réel payé par toutes les inscriptions Été 2026 — aucun montant n'est
+ *  stocké en base pour ce système (voir plus bas), donc on utilise ce prix
+ *  fixe confirmé par le client plutôt que d'aller chercher un montant
+ *  Stripe (peu fiable : indisponible pour les paiements marqués payés
+ *  manuellement, et inutilisable en local avec une clé de test). */
+export const ETE_FIXED_PRICE_CENTS = 55000;
 export const BOUTIQUE_KEY = "boutique";
 export const BOUTIQUE_LABEL = "Boutique";
 export const GENERAL_KEY = "general";
@@ -77,33 +82,6 @@ function childNameFromGoal(goal: string): string {
   return match?.[1]?.trim() || "";
 }
 
-/** Montant réellement reçu (amount_received) et date de création pour une
- *  liste de PaymentIntent Stripe — utilisé UNIQUEMENT pour l'Été, où aucun
- *  montant n'est stocké en base. Échecs individuels ignorés (montant
- *  "inconnu"), plutôt que de faire échouer tout le calcul. */
-async function fetchPaymentIntents(ids: string[]): Promise<Map<string, { amount: number; createdAt: string }>> {
-  const uniqueIds = Array.from(new Set(ids));
-  if (uniqueIds.length === 0) return new Map();
-
-  const stripe = getStripeClient();
-  const results = await Promise.all(
-    uniqueIds.map(async (id) => {
-      try {
-        const pi = await stripe.paymentIntents.retrieve(id);
-        return [id, { amount: pi.amount_received, createdAt: new Date(pi.created * 1000).toISOString().slice(0, 10) }] as const;
-      } catch {
-        return [id, null] as const;
-      }
-    })
-  );
-
-  const map = new Map<string, { amount: number; createdAt: string }>();
-  for (const [id, value] of results) {
-    if (value) map.set(id, value);
-  }
-  return map;
-}
-
 /** Étale une charge récurrente en une occurrence par mois, de sa date de
  *  départ jusqu'au mois courant (ou jusqu'à sa date de fin si définie). Une
  *  charge non récurrente ne produit qu'une seule occurrence. */
@@ -161,30 +139,22 @@ async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueE
   const paidCountBySeasonKey = new Map<string, number>();
   const unknownBySeasonKey = new Map<string, number>();
 
-  // ── Été 2026 — aucun prix stocké en base, seul le PaymentIntent Stripe
-  // donne le montant et la date réels. Les leads marqués "payé" manuellement
-  // (sans PaymentIntent) sont comptés à part, montant inconnu. ──
+  // ── Été 2026 — aucun prix stocké en base ; toutes les inscriptions payées
+  // sont au même prix fixe (550 $, confirmé par le client). La date de
+  // création du lead sert de date de paiement (approximation raisonnable :
+  // le paiement Stripe suit la création du lead de quelques minutes). ──
   const paidLeads = leads.filter((l) => l.status === "paid" && !l.is_waitlist);
-  const eteIntents = await fetchPaymentIntents(
-    paidLeads.filter((l) => l.stripe_payment_intent_id).map((l) => l.stripe_payment_intent_id!)
-  );
   paidCountBySeasonKey.set(ETE_SEASON_KEY, paidLeads.length);
-  let eteUnknown = 0;
+  unknownBySeasonKey.set(ETE_SEASON_KEY, 0);
   for (const lead of paidLeads) {
-    const info = lead.stripe_payment_intent_id ? eteIntents.get(lead.stripe_payment_intent_id) : undefined;
-    if (info) {
-      const childName = childNameFromGoal(lead.goal);
-      revenueEvents.push({
-        date: info.createdAt,
-        amountCents: info.amount,
-        seasonKey: ETE_SEASON_KEY,
-        description: `Été 2026 — ${lead.parent_name}${childName ? ` (${childName})` : ""}`
-      });
-    } else {
-      eteUnknown += 1;
-    }
+    const childName = childNameFromGoal(lead.goal);
+    revenueEvents.push({
+      date: lead.created_at.slice(0, 10),
+      amountCents: ETE_FIXED_PRICE_CENTS,
+      seasonKey: ETE_SEASON_KEY,
+      description: `Été 2026 — ${lead.parent_name}${childName ? ` (${childName})` : ""}`
+    });
   }
-  unknownBySeasonKey.set(ETE_SEASON_KEY, eteUnknown);
 
   // ── Saisons du système multi-saisons (Automne/Hiver 2026 et futures). Le
   // prix de référence est programs.price_cents ; pour un plan de paiement
