@@ -26,12 +26,26 @@ export async function setRevenueGoal(seasonKey: string, seasonLabel: string, goa
   if (error) throw new Error(error.message);
 }
 
+export const EXPENSE_CATEGORIES = [
+  "Location / Terrain",
+  "Équipement",
+  "Salaires / Contractants",
+  "Marketing / Pub",
+  "Assurance",
+  "Frais Stripe / Bancaires",
+  "Autre"
+] as const;
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
 export interface RevenueExpense {
   id: string;
   season_key: string;
+  category: string;
   label: string;
   amount_cents: number;
   expense_date: string;
+  is_recurring: boolean;
+  recurrence_end_date: string | null;
   created_at: string;
 }
 
@@ -44,14 +58,25 @@ export async function getRevenueExpenses(): Promise<RevenueExpense[]> {
 
 export async function addRevenueExpense(input: {
   seasonKey: string;
+  category: string;
   label: string;
   amountCents: number;
   expenseDate: string;
+  isRecurring: boolean;
+  recurrenceEndDate: string | null;
 }): Promise<RevenueExpense> {
   const supabase = db();
   const { data, error } = await supabase
     .from("revenue_expenses")
-    .insert({ season_key: input.seasonKey, label: input.label, amount_cents: input.amountCents, expense_date: input.expenseDate })
+    .insert({
+      season_key: input.seasonKey,
+      category: input.category,
+      label: input.label,
+      amount_cents: input.amountCents,
+      expense_date: input.expenseDate,
+      is_recurring: input.isRecurring,
+      recurrence_end_date: input.recurrenceEndDate
+    })
     .select("*")
     .single();
   if (error) throw new Error(error.message);

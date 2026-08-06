@@ -642,32 +642,35 @@ export async function activatePaymentPlan(
   if (instError) throw new Error(instError.message);
 }
 
-export interface SeasonPaymentPlanSummary {
+export interface SeasonPaidInstallment {
   registration_id: string;
-  paid_cents: number;
+  amount_cents: number;
+  paid_at: string;
 }
 
-/** Pour chaque inscription de la saison ayant un plan de paiement échelonné,
- *  la somme des versements réellement encaissés (status = 'paid') à ce jour
- *  — utilisé par le calculateur de revenus, qui compte l'argent en banque
- *  plutôt que le prix de vente théorique du plan. */
-export async function getSeasonPaymentPlanSummaries(seasonId: string): Promise<SeasonPaymentPlanSummary[]> {
+/** Chaque versement réellement encaissé (status = 'paid') d'un plan de
+ *  paiement échelonné de la saison, avec sa date exacte de prélèvement —
+ *  utilisé par le calculateur de revenus, qui compte l'argent en banque
+ *  (pas le prix de vente théorique du plan) et le répartit par mois. */
+export async function getSeasonPaidInstallments(seasonId: string): Promise<SeasonPaidInstallment[]> {
   const supabase = db();
   const { data, error } = await supabase
-    .from("registration_payment_plans")
+    .from("registration_payment_plan_installments")
     .select(`
-      registration_id,
-      registrations!inner ( season_id ),
-      registration_payment_plan_installments ( amount_cents, status )
+      amount_cents, paid_at, status,
+      registration_payment_plans!inner (
+        registration_id,
+        registrations!inner ( season_id )
+      )
     `)
-    .eq("registrations.season_id", seasonId);
+    .eq("status", "paid")
+    .eq("registration_payment_plans.registrations.season_id", seasonId);
   if (error) throw new Error(error.message);
 
   return (data ?? []).map((row: any) => ({
-    registration_id: row.registration_id,
-    paid_cents: (row.registration_payment_plan_installments ?? [])
-      .filter((inst: { status: string }) => inst.status === "paid")
-      .reduce((sum: number, inst: { amount_cents: number }) => sum + inst.amount_cents, 0)
+    registration_id: row.registration_payment_plans.registration_id,
+    amount_cents: row.amount_cents,
+    paid_at: row.paid_at
   }));
 }
 

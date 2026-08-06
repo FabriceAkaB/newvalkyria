@@ -4,8 +4,8 @@ import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { formatCAD } from "@/lib/season-2027";
-import type { RevenueSummary, SeasonRevenue } from "@/lib/revenue-calc";
-import type { RevenueExpense } from "@/lib/revenue-repo";
+import type { MonthlyBucket, RevenueSummary, SeasonRevenue } from "@/lib/revenue-calc";
+import { EXPENSE_CATEGORIES, type RevenueExpense } from "@/lib/revenue-repo";
 
 interface Props {
   summary: RevenueSummary;
@@ -80,6 +80,9 @@ function ExpensesPanel({
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(todayISO());
+  const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[EXPENSE_CATEGORIES.length - 1]);
+  const [recurring, setRecurring] = useState(false);
+  const [endDate, setEndDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -91,13 +94,23 @@ function ExpensesPanel({
       const res = await fetch("/api/admin/revenue-expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seasonKey: card.key, label: label.trim(), amountCents: Math.round(dollars * 100), expenseDate: date })
+        body: JSON.stringify({
+          seasonKey: card.key,
+          category,
+          label: label.trim(),
+          amountCents: Math.round(dollars * 100),
+          expenseDate: date,
+          isRecurring: recurring,
+          recurrenceEndDate: recurring && endDate ? endDate : null
+        })
       });
       if (res.ok) {
         const data = (await res.json()) as { expense: RevenueExpense };
         onExpensesChanged(card.key, [data.expense, ...card.expenses]);
         setLabel("");
         setAmount("");
+        setRecurring(false);
+        setEndDate("");
       }
     } finally {
       setSaving(false);
@@ -125,9 +138,23 @@ function ExpensesPanel({
 
       {open && (
         <div style={{ marginTop: "0.6rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {card.expensesByCategory.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginBottom: "0.3rem" }}>
+              {card.expensesByCategory.map((c) => (
+                <div key={c.category} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "#9d9da0" }}>
+                  <span>{c.category}</span>
+                  <span>{formatCAD(c.amountCents / 100)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {card.expenses.map((e) => (
             <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "#c3c2c8" }}>
-              <span>{e.label} · {e.expense_date}</span>
+              <span>
+                {e.label} · {e.category} · {e.expense_date}
+                {e.is_recurring && <span title="Charge récurrente"> 🔁</span>}
+              </span>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                 <span style={{ color: "#ff9999" }}>-{formatCAD(e.amount_cents / 100)}</span>
                 <button
@@ -148,17 +175,25 @@ function ExpensesPanel({
               type="text"
               placeholder="Description"
               className="admin-input"
-              style={{ flex: "1 1 120px", fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
+              style={{ flex: "1 1 110px", fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
               value={label}
               onChange={(e) => setLabel(e.target.value)}
             />
+            <select
+              className="admin-input"
+              style={{ fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
             <input
               type="number"
               min={0}
               step="0.01"
               placeholder="Montant"
               className="admin-input"
-              style={{ width: "80px", fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
+              style={{ width: "75px", fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
@@ -173,6 +208,23 @@ function ExpensesPanel({
               {saving ? "..." : "Ajouter"}
             </button>
           </div>
+
+          <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.68rem", color: "#9d9da0", cursor: "pointer" }}>
+            <input type="checkbox" checked={recurring} onChange={(e) => setRecurring(e.target.checked)} />
+            Charge récurrente (chaque mois)
+          </label>
+          {recurring && (
+            <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.68rem", color: "#9d9da0" }}>
+              Jusqu&apos;au (optionnel)
+              <input
+                type="date"
+                className="admin-input"
+                style={{ fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </label>
+          )}
         </div>
       )}
     </div>
@@ -224,13 +276,47 @@ function RevenueCard({
   );
 }
 
+function MonthlyTable({ months }: { months: MonthlyBucket[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? months : months.slice(0, 6);
+
+  if (months.length === 0) return null;
+
+  return (
+    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem" }}>
+      <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.75rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>Vue par mois</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "0.5rem", fontSize: "0.65rem", color: "#6d6b71", textTransform: "uppercase" }}>
+          <span>Mois</span><span>Revenus</span><span>Charges</span><span>Net</span>
+        </div>
+        {visible.map((m) => (
+          <div key={m.month} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "0.5rem", fontSize: "0.78rem", color: "#c3c2c8" }}>
+            <span>{m.month}</span>
+            <span>{formatCAD(m.revenueCents / 100)}</span>
+            <span style={{ color: m.expenseCents > 0 ? "#ff9999" : "#6d6b71" }}>{m.expenseCents > 0 ? `-${formatCAD(m.expenseCents / 100)}` : "—"}</span>
+            <span style={{ color: m.netCents < 0 ? "#ff9999" : "#7fd88f", fontWeight: 600 }}>{formatCAD(m.netCents / 100)}</span>
+          </div>
+        ))}
+      </div>
+      {months.length > 6 && (
+        <button
+          onClick={() => setExpanded((e) => !e)}
+          style={{ marginTop: "0.75rem", fontSize: "0.68rem", color: "#8d76a5", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+        >
+          {expanded ? "Réduire" : `Voir tous les mois (${months.length})`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function AdminRevenus({ summary }: Props) {
   const [cards, setCards] = useState<SeasonRevenue[]>(summary.seasons);
   const [boutique, setBoutique] = useState<SeasonRevenue>(summary.boutique);
   const [general, setGeneral] = useState<SeasonRevenue>(summary.general);
 
   const updateCard = (key: string, patch: Partial<SeasonRevenue>) => {
-    const apply = (c: SeasonRevenue) => (c.key === key ? { ...c, ...patch, netCents: c.totalCents - ((patch.expenseCents ?? c.expenseCents)) } : c);
+    const apply = (c: SeasonRevenue) => (c.key === key ? { ...c, ...patch, netCents: c.totalCents - (patch.expenseCents ?? c.expenseCents) } : c);
     if (key === boutique.key) { setBoutique((b) => apply(b)); return; }
     if (key === general.key) { setGeneral((g) => apply(g)); return; }
     setCards((prev) => prev.map(apply));
@@ -254,7 +340,12 @@ export function AdminRevenus({ summary }: Props) {
       <AdminTopbar />
       <div className="admin-content">
         <div className="admin-section">
-          <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Revenus</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
+            <p className="admin-section-title" style={{ margin: 0 }}>Revenus</p>
+            <a href="/api/admin/revenue-export" className="admin-btn-ghost" style={{ padding: "0.4rem 0.8rem", fontSize: "0.72rem", textDecoration: "none" }}>
+              ↓ Exporter en CSV
+            </a>
+          </div>
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
             Revenu réellement encaissé par saison (versements comptés seulement une fois prélevés), avec vos objectifs financiers et vos charges.
           </p>
@@ -272,6 +363,8 @@ export function AdminRevenus({ summary }: Props) {
             <RevenueCard card={boutique} onGoalSaved={handleGoalSaved} onExpensesChanged={handleExpensesChanged} />
             <RevenueCard card={general} onGoalSaved={handleGoalSaved} onExpensesChanged={handleExpensesChanged} />
           </div>
+
+          <MonthlyTable months={summary.months} />
 
           <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "12px", padding: "1.1rem 1.25rem" }}>
             <p style={{ fontSize: "0.72rem", color: "#9d9da0", margin: "0 0 0.3rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>Total — toutes saisons et boutique</p>
