@@ -5657,23 +5657,33 @@ body {
   gap: 1.25rem;
 }
 
-/* ── Topbar wrap (sticky) ─────────────────────────────────────── */
-.admin-topbar-wrap {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: #09070e;
+/* ── Sidebar ──────────────────────────────────────────────────── */
+.admin-sidebar {
+  --admin-sidebar-w: 252px;
+  background: #0d0b13;
+  border-bottom: 1px solid #1c1a22;
 }
 
-/* ── Topbar ───────────────────────────────────────────────────── */
-.admin-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
+@media (min-width: 900px) {
+  .admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: var(--admin-sidebar-w);
+    display: flex;
+    flex-direction: column;
+    border-bottom: none;
+    border-right: 1px solid #1c1a22;
+    overflow-y: auto;
+    z-index: 20;
+  }
 }
 
-.admin-topbar-brand {
+.admin-sidebar-brand {
+  padding: 1.5rem 1.25rem 1.1rem;
+  border-bottom: 1px solid #1c1a22;
+}
+
+.admin-sidebar-brand-title {
   font-family: var(--font-display, inherit);
   font-size: 1rem;
   font-weight: 400;
@@ -5683,12 +5693,77 @@ body {
   margin: 0;
 }
 
-.admin-topbar-sub {
+.admin-sidebar-brand-sub {
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: #545359;
-  margin: 0.15rem 0 0;
+  margin: 0.2rem 0 0;
+}
+
+.admin-sidebar-nav {
+  padding: 0.75rem 0;
+}
+
+@media (min-width: 900px) {
+  .admin-sidebar-nav { flex: 1; }
+}
+
+.admin-sidebar-group {
+  margin-bottom: 0.9rem;
+}
+
+.admin-sidebar-group-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 1.25rem;
+}
+
+.admin-sidebar-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.admin-sidebar-group-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #605f65;
+}
+
+.admin-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #8b8a90;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+
+.admin-sidebar-link svg { flex-shrink: 0; opacity: 0.85; }
+
+.admin-sidebar-link:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.03);
+}
+
+.admin-sidebar-link[data-active="true"] {
+  color: #fff;
+  background: rgba(178,149,207,0.1);
+  border-left-color: #b295cf;
+}
+
+.admin-sidebar-footer {
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid #1c1a22;
 }
 
 .admin-logout-btn {
@@ -5698,10 +5773,12 @@ body {
   letter-spacing: 0.14em;
   color: #6d6b71;
   background: transparent;
-  padding: 0.45rem 1.1rem;
+  border: 1px solid #302e36;
+  padding: 0.5rem 1.1rem;
   border-radius: 999px;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
+  width: 100%;
 }
 
 .admin-logout-btn:hover {
@@ -5714,6 +5791,14 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
+}
+
+@media (min-width: 900px) {
+  .admin-content {
+    margin-left: var(--admin-sidebar-w, 252px);
+    margin-right: 0;
+    padding: 2.5rem 2.5rem 4rem;
+  }
 }
 
 .admin-section {
@@ -6195,81 +6280,6 @@ body {
 /* ══════════════════════════════════════════════════════════════ */
 /* ── Admin v2 — Multi-page styles ─────────────────────────── */
 /* ══════════════════════════════════════════════════════════════ */
-
-/* ── Nav tabs ─────────────────────────────────────────────────── */
-.admin-nav {
-  display: flex;
-  gap: 0;
-  padding: 0 1.25rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.admin-nav::-webkit-scrollbar { display: none; }
-
-.admin-nav-link {
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: #4f4e54;
-  text-decoration: none;
-  padding: 0.65rem 0.9rem;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-}
-.admin-nav-link:hover { color: #9d9da0; }
-.admin-nav-link[data-active="true"] {
-  color: #b295cf;
-  border-bottom-color: #7a6690;
-}
-
-/* ── Season subnav (Été 2026 / Automne-Hiver 2026 sections) ──────── */
-.admin-season-subnav {
-  background: #0d0b13;
-  border-bottom: 1px solid #1c1a22;
-}
-.admin-season-subnav + .admin-season-subnav {
-  margin-top: 0;
-}
-.admin-season-subnav:last-of-type {
-  margin-bottom: 1.5rem;
-}
-.admin-season-subnav-head {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.85rem 1.25rem 0.6rem;
-}
-.admin-season-badge {
-  font-size: 0.56rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: #100e21;
-  background: var(--color-accent-soft, #c8aae0);
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-}
-.admin-season-badge-new {
-  background: #f0c878;
-}
-.admin-season-badge-shop {
-  background: #8fce9f;
-}
-.admin-season-subnav-label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #fff;
-}
-.admin-season-subnav-links {
-  display: flex;
-  gap: 0;
-  padding: 0 1.25rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.admin-season-subnav-links::-webkit-scrollbar { display: none; }
 
 /* ── Drawer overlay ───────────────────────────────────────────── */
 .admin-overlay {
