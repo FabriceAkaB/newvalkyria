@@ -1,3 +1,4 @@
+import { getPayrollRows } from "@/lib/coach-payroll-data";
 import { getAllLeads } from "@/lib/repositories";
 import {
   getMonthlyGoals,
@@ -168,14 +169,15 @@ function categoryBreakdown(events: ExpenseEvent[]): CategoryBreakdown[] {
 }
 
 async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueEvents: RevenueEvent[]; expenseEvents: ExpenseEvent[] }> {
-  const [leads, seasons, goals, orders, expenseRows, settings, monthlyGoals] = await Promise.all([
+  const [leads, seasons, goals, orders, expenseRows, settings, monthlyGoals, payrollRows] = await Promise.all([
     getAllLeads(),
     getSeasons(),
     getRevenueGoals(),
     getOrders(),
     getRevenueExpenses(),
     getRevenueSettings(),
-    getMonthlyGoals()
+    getMonthlyGoals(),
+    getPayrollRows()
   ]);
 
   const goalCents = (key: string) => goals.find((g) => g.season_key === key)?.goal_cents ?? 0;
@@ -270,6 +272,27 @@ async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueE
 
   const today = new Date();
   const expenseEvents = expenseRows.flatMap((e) => expandExpense(e, today));
+
+  // ── Salaires des entraîneurs réellement payés (section "Gestion des
+  // entraîneurs") — comptés automatiquement comme charge ici, pour que le
+  // profit net de l'académie reflète l'argent qui sort réellement, sans
+  // ressaisie manuelle. N'apparaissent pas dans la liste éditable des
+  // charges (ce ne sont pas des lignes de revenue_expenses), seulement
+  // dans les totaux, la vue par mois, la ventilation par catégorie et
+  // l'export. ──
+  for (const r of payrollRows) {
+    if (!r.paid || r.payCents <= 0) continue;
+    expenseEvents.push({
+      expenseId: `coach:${r.assignmentId}`,
+      date: r.activityDate,
+      amountCents: r.payCents,
+      seasonKey: GENERAL_KEY,
+      category: "Salaires / Contractants",
+      label: `${r.coachName} — ${r.activityType}`,
+      taxRate: 0,
+      paidWith: "Compte bancaire"
+    });
+  }
 
   const buildCard = (key: string, label: string): SeasonRevenue => {
     const revEvents = revenueEvents.filter((e) => e.seasonKey === key);

@@ -165,6 +165,11 @@ export function AdminEntraineurs({ summaries: initial, notifications }: Props) {
             </div>
           </div>
 
+          <p style={{ fontSize: "0.7rem", color: "#6d6b71", margin: "0 0 1.25rem" }}>
+            Les salaires marqués payés sont automatiquement inclus comme charge dans{" "}
+            <Link href="/admin/revenus" style={{ color: "#8d76a5", textDecoration: "underline" }}>Revenus</Link>.
+          </p>
+
           <NewCoachForm onCreated={(coach) => setSummaries((prev) => [...prev, { coach, hoursWeek: 0, hoursMonth: 0, hoursTotal: 0, payOwedCents: 0, payPaidCents: 0, balanceCents: 0 }])} />
 
           <div className="admin-table-wrap">

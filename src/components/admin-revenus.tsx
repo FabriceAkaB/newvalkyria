@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { formatCAD } from "@/lib/season-2027";
-import type { AccountBalance, MonthlyBucket, RevenueSummary, SeasonRevenue } from "@/lib/revenue-calc";
+import { GENERAL_KEY, type AccountBalance, type MonthlyBucket, type RevenueSummary, type SeasonRevenue } from "@/lib/revenue-calc";
 import { EXPENSE_CATEGORIES, PAYMENT_ACCOUNTS, type RevenueExpense } from "@/lib/revenue-repo";
 
 interface Props {
@@ -287,6 +288,14 @@ function RevenueCard({
         Profit : {formatCAD(card.profitCents / 100)}
         {card.expenseCents > 0 && <span style={{ color: "#6d6b71" }}> (-{formatCAD(card.expenseCents / 100)} de charges)</span>}
       </p>
+
+      {card.key === GENERAL_KEY && (
+        <p style={{ margin: "0 0 0.5rem" }}>
+          <Link href="/admin/entraineurs/paie" style={{ fontSize: "0.68rem", color: "#8d76a5", textDecoration: "underline" }}>
+            Inclut les salaires payés — voir le détail →
+          </Link>
+        </p>
+      )}
 
       {card.goalCents > 0 && (
         <div style={{ marginBottom: "0.5rem" }}>
