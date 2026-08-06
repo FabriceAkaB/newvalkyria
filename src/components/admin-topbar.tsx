@@ -31,6 +31,10 @@ const ESSAIS_LINKS = [
   { href: "/admin/essais-calendrier", label: "Calendrier" },
 ];
 
+const REVENUS_LINKS = [
+  { href: "/admin/revenus", label: "Vue d'ensemble" },
+];
+
 export function AdminTopbar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -117,6 +121,20 @@ export function AdminTopbar() {
         </div>
         <nav className="admin-season-subnav-links">
           {ESSAIS_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} data-active={String(pathname.startsWith(link.href))} className="admin-nav-link">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
+      {/* ── Revenus (toutes saisons et boutique confondues) ── */}
+      <div className="admin-season-subnav">
+        <div className="admin-season-subnav-head">
+          <span className="admin-season-badge admin-season-badge-shop">Revenus</span>
+        </div>
+        <nav className="admin-season-subnav-links">
+          {REVENUS_LINKS.map((link) => (
             <Link key={link.href} href={link.href} data-active={String(pathname.startsWith(link.href))} className="admin-nav-link">
               {link.label}
             </Link>

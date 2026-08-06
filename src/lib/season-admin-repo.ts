@@ -642,6 +642,35 @@ export async function activatePaymentPlan(
   if (instError) throw new Error(instError.message);
 }
 
+export interface SeasonPaymentPlanSummary {
+  registration_id: string;
+  paid_cents: number;
+}
+
+/** Pour chaque inscription de la saison ayant un plan de paiement échelonné,
+ *  la somme des versements réellement encaissés (status = 'paid') à ce jour
+ *  — utilisé par le calculateur de revenus, qui compte l'argent en banque
+ *  plutôt que le prix de vente théorique du plan. */
+export async function getSeasonPaymentPlanSummaries(seasonId: string): Promise<SeasonPaymentPlanSummary[]> {
+  const supabase = db();
+  const { data, error } = await supabase
+    .from("registration_payment_plans")
+    .select(`
+      registration_id,
+      registrations!inner ( season_id ),
+      registration_payment_plan_installments ( amount_cents, status )
+    `)
+    .eq("registrations.season_id", seasonId);
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((row: any) => ({
+    registration_id: row.registration_id,
+    paid_cents: (row.registration_payment_plan_installments ?? [])
+      .filter((inst: { status: string }) => inst.status === "paid")
+      .reduce((sum: number, inst: { amount_cents: number }) => sum + inst.amount_cents, 0)
+  }));
+}
+
 const MAX_INSTALLMENT_ATTEMPTS = 5;
 
 export interface DueInstallment {
