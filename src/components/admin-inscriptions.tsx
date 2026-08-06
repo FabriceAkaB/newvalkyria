@@ -36,6 +36,10 @@ function formatDate(iso: string) {
   });
 }
 
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 /** Parse the `goal` field to extract child name, position, club, and referredBy */
 function parseGoal(goal: string): { childName: string; position: string; club: string; referredBy: string } {
   const childMatch = goal.match(/Joueuse:\s*([^·]+)/);
@@ -252,6 +256,7 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                 <input
                   type="date"
                   className="admin-input"
+                  min={todayISO()}
                   value={lead.trial_date ?? ""}
                   onChange={(e) => handleTrialDateChange(e.target.value || null)}
                   disabled={savingTrialDate}

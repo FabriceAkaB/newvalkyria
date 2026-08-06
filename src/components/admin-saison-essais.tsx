@@ -18,6 +18,10 @@ function playerName(r: Registration): string {
   return name || "Sans nom";
 }
 
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function AdminSaisonEssais({ season, categories, programs, slots, initialTrials }: Props) {
   const [trials, setTrials] = useState(initialTrials);
   const [saving, setSaving] = useState<string | null>(null);
@@ -96,6 +100,7 @@ export function AdminSaisonEssais({ season, categories, programs, slots, initial
             <input
               type="date"
               className="admin-input"
+              min={todayISO()}
               value={r.trial_date ?? ""}
               onChange={(e) => handleFieldPatch(r.id, { trialDate: e.target.value || null }, (row) => ({ ...row, trial_date: e.target.value || null }))}
             />

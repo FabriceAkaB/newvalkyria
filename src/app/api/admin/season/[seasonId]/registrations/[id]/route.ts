@@ -42,6 +42,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.status !== undefined && !VALID_STATUSES.includes(body.status)) {
     return jsonError("Statut invalide", 400);
   }
+  if (body.trialDate && body.trialDate < new Date().toISOString().slice(0, 10)) {
+    return jsonError("La date d'essai ne peut pas être dans le passé", 400);
+  }
 
   try {
     if (body.convertToOfficial) {

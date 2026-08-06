@@ -58,6 +58,9 @@ export async function PATCH(
   }
 
   if (body.trial_date !== undefined) {
+    if (body.trial_date && body.trial_date < new Date().toISOString().slice(0, 10)) {
+      return jsonError("La date d'essai ne peut pas être dans le passé", 400);
+    }
     await updateLeadTrialDate(id, body.trial_date);
     updated = true;
   }
