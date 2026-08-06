@@ -65,7 +65,11 @@ function StatusBadge({ lead, isNew }: { lead: AdminLead; isNew: boolean }) {
       ) : lead.status === "confirmed" ? (
         <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "#9ec9ff", borderColor: "#465671" }}>✓ Confirmée</span>
       ) : lead.status === "essai" ? (
-        <span className="admin-badge admin-badge-pending" style={{ background: "rgba(150, 100, 255, 0.18)", color: "#c3a6ff", borderColor: "rgba(150, 100, 255, 0.4)" }}>À l&apos;essai</span>
+        lead.trial_date ? (
+          <span className="admin-badge admin-badge-pending" style={{ background: "rgba(150, 100, 255, 0.18)", color: "#c3a6ff", borderColor: "rgba(150, 100, 255, 0.4)" }}>À l&apos;essai</span>
+        ) : (
+          <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255, 150, 50, 0.2)", color: "#ffb464", borderColor: "rgba(255, 150, 50, 0.5)" }} title="Aucune date d'essai fixée">⚠ À l&apos;essai — sans date</span>
+        )
       ) : lead.status === "cancelled" ? (
         <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255, 100, 100, 0.18)", color: "#ff9999" }}>Annulée</span>
       ) : (

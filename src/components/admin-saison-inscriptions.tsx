@@ -39,11 +39,14 @@ function isHalfSeasonExpiringSoon(r: Registration): boolean {
   return diffDays <= 2;
 }
 
-function StatusBadge({ status }: { status: RegistrationStatus }) {
+function StatusBadge({ status, isTrial, trialDate }: { status: RegistrationStatus; isTrial?: boolean; trialDate?: string | null }) {
   if (status === "waitlist") return <span className="admin-badge admin-badge-waitlist">Liste d&apos;attente</span>;
   if (status === "paid") return <span className="admin-badge admin-badge-paid">✓ Payée</span>;
   if (status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "#9ec9ff", borderColor: "#465671" }}>✓ Confirmée</span>;
   if (status === "cancelled") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,100,100,0.18)", color: "#ff9999" }}>Annulée</span>;
+  if (isTrial && !trialDate) {
+    return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,150,50,0.2)", color: "#ffb464", borderColor: "rgba(255,150,50,0.5)" }} title="Aucune date d'essai fixée">⚠ Essai — sans date</span>;
+  }
   return <span className="admin-badge admin-badge-pending">En attente</span>;
 }
 
@@ -119,7 +122,7 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
         <div className="admin-drawer-body">
           <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Statut</p>
-            <StatusBadge status={r.status} />
+            <StatusBadge status={r.status} isTrial={r.is_trial} trialDate={r.trial_date} />
             <div style={{ marginTop: "0.6rem" }}>
               <p className="admin-drawer-label">Changer le statut</p>
               <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.3rem" }}>
@@ -460,7 +463,7 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
                       <td className="admin-td-cat">{categoryLabel(r.category_id)}</td>
                       <td style={{ fontSize: "0.75rem", color: "#858489" }}>{programName(r.program_id)}</td>
                       <td style={{ fontSize: "0.75rem", color: "#858489" }}>{slotLabel(r.time_slot_template_id)}</td>
-                      <td><StatusBadge status={r.status} /></td>
+                      <td><StatusBadge status={r.status} isTrial={r.is_trial} trialDate={r.trial_date} /></td>
                     </tr>
                   ))
                 )}
