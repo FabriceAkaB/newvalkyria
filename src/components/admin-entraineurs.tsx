@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { formatHours } from "@/lib/coach-payroll";
+import type { CoachNotification } from "@/lib/coach-payroll-data";
 import { COACH_ROLES, type Coach } from "@/lib/coaches-repo";
 import { formatCAD } from "@/lib/season-2027";
 
@@ -18,8 +19,38 @@ export interface CoachSummary {
   balanceCents: number;
 }
 
+const NOTIFICATION_ICON: Record<CoachNotification["type"], string> = {
+  unpaid: "💰",
+  overdue: "⏰",
+  unconfirmed: "❓",
+  unassigned: "⚠️"
+};
+
+function NotificationsPanel({ notifications }: { notifications: CoachNotification[] }) {
+  if (notifications.length === 0) return null;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1.5rem" }}>
+      {notifications.map((n) => (
+        <Link
+          key={n.type}
+          href={n.href}
+          style={{
+            display: "flex", alignItems: "center", gap: "0.6rem", textDecoration: "none",
+            background: "rgba(255,180,100,0.08)", border: "1px solid rgba(255,180,100,0.3)",
+            borderRadius: "8px", padding: "0.6rem 0.9rem", fontSize: "0.78rem", color: "#ffb464"
+          }}
+        >
+          <span>{NOTIFICATION_ICON[n.type]}</span>
+          <span>{n.message}</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 interface Props {
   summaries: CoachSummary[];
+  notifications: CoachNotification[];
 }
 
 function NewCoachForm({ onCreated }: { onCreated: (coach: Coach) => void }) {
@@ -88,7 +119,7 @@ function NewCoachForm({ onCreated }: { onCreated: (coach: Coach) => void }) {
   );
 }
 
-export function AdminEntraineurs({ summaries: initial }: Props) {
+export function AdminEntraineurs({ summaries: initial, notifications }: Props) {
   const [summaries, setSummaries] = useState(initial);
 
   const totalWeekHours = summaries.reduce((s, c) => s + c.hoursWeek, 0);
@@ -103,13 +134,17 @@ export function AdminEntraineurs({ summaries: initial }: Props) {
         <div className="admin-section">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Entraîneurs</p>
-            <Link href="/admin/entraineurs/activites" className="admin-btn-ghost" style={{ textDecoration: "none" }}>
-              Voir les activités →
-            </Link>
+            <div style={{ display: "flex", gap: "0.6rem" }}>
+              <Link href="/admin/entraineurs/statistiques" className="admin-btn-ghost" style={{ textDecoration: "none" }}>Statistiques</Link>
+              <Link href="/admin/entraineurs/paie" className="admin-btn-ghost" style={{ textDecoration: "none" }}>Paie</Link>
+              <Link href="/admin/entraineurs/activites" className="admin-btn-ghost" style={{ textDecoration: "none" }}>Activités →</Link>
+            </div>
           </div>
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
             Présences, heures travaillées et salaires calculés automatiquement pour chaque entraîneur.
           </p>
+
+          <NotificationsPanel notifications={notifications} />
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem", flex: "1 1 160px" }}>

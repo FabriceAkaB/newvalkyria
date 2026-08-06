@@ -167,7 +167,16 @@ function AssignmentRow({
         <p style={{ fontSize: "0.78rem", color: "#c3c2c8", margin: 0 }}>
           {formatHours(computed.hours)} × {formatCAD(computed.rateCents / 100)} = <strong style={{ color: "#fff" }}>{formatCAD(computed.payCents / 100)}</strong>
         </p>
-        <PaymentPanel assignment={assignment} onSaved={(p) => onUpdate(assignment.id, p)} />
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <button
+            onClick={() => patch({ confirmed: !assignment.confirmed }, { confirmed: !assignment.confirmed })}
+            className="admin-btn-ghost"
+            style={{ padding: "0.3rem 0.6rem", fontSize: "0.68rem", color: assignment.confirmed ? "#7fd88f" : undefined }}
+          >
+            {assignment.confirmed ? "✓ Présence confirmée" : "Confirmer la présence"}
+          </button>
+          <PaymentPanel assignment={assignment} onSaved={(p) => onUpdate(assignment.id, p)} />
+        </div>
       </div>
     </div>
   );

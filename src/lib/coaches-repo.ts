@@ -51,6 +51,7 @@ export interface CoachAssignment {
   arrival_time: string | null;
   departure_time: string | null;
   hourly_rate_cents: number | null;
+  confirmed: boolean;
   paid: boolean;
   paid_on: string | null;
   payment_method: string | null;
@@ -284,6 +285,7 @@ export async function updateAssignment(
     arrivalTime: string | null;
     departureTime: string | null;
     hourlyRateCents: number | null;
+    confirmed: boolean;
     paid: boolean;
     paidOn: string | null;
     paymentMethod: string | null;
@@ -296,6 +298,7 @@ export async function updateAssignment(
   if (patch.arrivalTime !== undefined) columnPatch.arrival_time = patch.arrivalTime;
   if (patch.departureTime !== undefined) columnPatch.departure_time = patch.departureTime;
   if (patch.hourlyRateCents !== undefined) columnPatch.hourly_rate_cents = patch.hourlyRateCents;
+  if (patch.confirmed !== undefined) columnPatch.confirmed = patch.confirmed;
   if (patch.paid !== undefined) columnPatch.paid = patch.paid;
   if (patch.paidOn !== undefined) columnPatch.paid_on = patch.paidOn;
   if (patch.paymentMethod !== undefined) columnPatch.payment_method = patch.paymentMethod;

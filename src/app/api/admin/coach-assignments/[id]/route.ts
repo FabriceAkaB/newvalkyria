@@ -13,6 +13,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     arrivalTime?: string | null;
     departureTime?: string | null;
     hourlyRateCents?: number | null;
+    confirmed?: boolean;
     paid?: boolean;
     paidOn?: string | null;
     paymentMethod?: string | null;
