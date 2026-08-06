@@ -67,6 +67,11 @@ const REVENUS_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/revenus", label: "Vue d'ensemble", icon: "chart" },
 ];
 
+const ENTRAINEURS_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/entraineurs", label: "Entraîneurs", icon: "users" },
+  { href: "/admin/entraineurs/activites", label: "Activités", icon: "calendar" },
+];
+
 interface Group {
   label: string;
   dotColor: string;
@@ -79,6 +84,7 @@ const GROUPS: Group[] = [
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
   { label: "Essais", dotColor: "#88c0d0", links: ESSAIS_LINKS },
   { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS },
+  { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS },
 ];
 
 export function AdminTopbar() {
