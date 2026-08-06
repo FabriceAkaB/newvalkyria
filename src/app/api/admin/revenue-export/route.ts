@@ -14,7 +14,7 @@ export async function GET() {
 
   const rows = await getRevenueExportRows();
 
-  const header = ["Date", "Type", "Saison", "Catégorie", "Description", "Montant ($)"];
+  const header = ["Date", "Type", "Saison", "Catégorie", "Description", "Montant total ($)", "Taxe (%)", "Montant net ($)", "Montant taxe ($)", "Compte"];
   const lines = [header.join(",")];
   for (const row of rows) {
     lines.push(
@@ -24,7 +24,11 @@ export async function GET() {
         row.season,
         row.category,
         csvEscape(row.description),
-        (row.amountCents / 100).toFixed(2)
+        (row.amountCents / 100).toFixed(2),
+        (row.taxRate * 100).toFixed(2),
+        (row.netAmountCents / 100).toFixed(2),
+        (row.taxAmountCents / 100).toFixed(2),
+        row.paidWith
       ].join(",")
     );
   }

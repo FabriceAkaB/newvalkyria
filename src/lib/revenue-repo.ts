@@ -37,6 +37,9 @@ export const EXPENSE_CATEGORIES = [
 ] as const;
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
+export const PAYMENT_ACCOUNTS = ["Compte bancaire", "Carte de crédit", "Comptant"] as const;
+export type PaymentAccount = (typeof PAYMENT_ACCOUNTS)[number];
+
 export interface RevenueExpense {
   id: string;
   season_key: string;
@@ -46,6 +49,8 @@ export interface RevenueExpense {
   expense_date: string;
   is_recurring: boolean;
   recurrence_end_date: string | null;
+  tax_rate: number;
+  paid_with: string;
   created_at: string;
 }
 
@@ -64,6 +69,8 @@ export async function addRevenueExpense(input: {
   expenseDate: string;
   isRecurring: boolean;
   recurrenceEndDate: string | null;
+  taxRate: number;
+  paidWith: string;
 }): Promise<RevenueExpense> {
   const supabase = db();
   const { data, error } = await supabase
@@ -75,7 +82,9 @@ export async function addRevenueExpense(input: {
       amount_cents: input.amountCents,
       expense_date: input.expenseDate,
       is_recurring: input.isRecurring,
-      recurrence_end_date: input.recurrenceEndDate
+      recurrence_end_date: input.recurrenceEndDate,
+      tax_rate: input.taxRate,
+      paid_with: input.paidWith
     })
     .select("*")
     .single();
@@ -86,5 +95,42 @@ export async function addRevenueExpense(input: {
 export async function deleteRevenueExpense(id: string): Promise<void> {
   const supabase = db();
   const { error } = await supabase.from("revenue_expenses").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export interface RevenueSettings {
+  revenue_tax_rate: number;
+}
+
+export async function getRevenueSettings(): Promise<RevenueSettings> {
+  const supabase = db();
+  const { data, error } = await supabase.from("revenue_settings").select("revenue_tax_rate").eq("id", true).maybeSingle();
+  if (error) throw new Error(error.message);
+  return { revenue_tax_rate: data?.revenue_tax_rate ?? 0 };
+}
+
+export async function setRevenueTaxRate(rate: number): Promise<void> {
+  const supabase = db();
+  const { error } = await supabase.from("revenue_settings").update({ revenue_tax_rate: rate }).eq("id", true);
+  if (error) throw new Error(error.message);
+}
+
+export interface MonthlyGoal {
+  month: string;
+  goal_cents: number;
+}
+
+export async function getMonthlyGoals(): Promise<MonthlyGoal[]> {
+  const supabase = db();
+  const { data, error } = await supabase.from("revenue_monthly_goals").select("month, goal_cents");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as MonthlyGoal[];
+}
+
+export async function setMonthlyGoal(month: string, goalCents: number): Promise<void> {
+  const supabase = db();
+  const { error } = await supabase
+    .from("revenue_monthly_goals")
+    .upsert({ month, goal_cents: goalCents, updated_at: new Date().toISOString() });
   if (error) throw new Error(error.message);
 }

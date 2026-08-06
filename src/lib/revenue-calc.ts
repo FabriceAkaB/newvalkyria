@@ -1,5 +1,12 @@
 import { getAllLeads } from "@/lib/repositories";
-import { getRevenueExpenses, getRevenueGoals, type RevenueExpense } from "@/lib/revenue-repo";
+import {
+  getMonthlyGoals,
+  getRevenueExpenses,
+  getRevenueGoals,
+  getRevenueSettings,
+  PAYMENT_ACCOUNTS,
+  type RevenueExpense
+} from "@/lib/revenue-repo";
 import { getSeasonPaidInstallments, getSeasonPrograms, getSeasonRegistrations, getSeasons } from "@/lib/season-admin-repo";
 import { getOrders } from "@/lib/shop-repo";
 
@@ -15,6 +22,10 @@ export const BOUTIQUE_KEY = "boutique";
 export const BOUTIQUE_LABEL = "Boutique";
 export const GENERAL_KEY = "general";
 export const GENERAL_LABEL = "Charges générales";
+/** Toute la trésorerie de l'académie transite par Stripe vers le compte
+ *  bancaire — les revenus sont donc toujours attribués à ce compte. Les
+ *  charges, elles, sont payées avec le compte choisi par l'admin. */
+const REVENUE_ACCOUNT = "Compte bancaire";
 
 interface RevenueEvent {
   date: string; // YYYY-MM-DD
@@ -30,6 +41,8 @@ interface ExpenseEvent {
   seasonKey: string;
   category: string;
   label: string;
+  taxRate: number;
+  paidWith: string;
 }
 
 export interface CategoryBreakdown {
@@ -41,11 +54,13 @@ export interface SeasonRevenue {
   key: string;
   label: string;
   totalCents: number;
+  netCents: number;
+  taxCents: number;
   paidCount: number;
   unknownCount: number;
   goalCents: number;
   expenseCents: number;
-  netCents: number;
+  profitCents: number;
   expenses: RevenueExpense[];
   expensesByCategory: CategoryBreakdown[];
 }
@@ -55,6 +70,14 @@ export interface MonthlyBucket {
   revenueCents: number;
   expenseCents: number;
   netCents: number;
+  goalCents: number;
+}
+
+export interface AccountBalance {
+  account: string;
+  revenueCents: number;
+  expenseCents: number;
+  balanceCents: number;
 }
 
 export interface RevenueSummary {
@@ -62,6 +85,8 @@ export interface RevenueSummary {
   boutique: SeasonRevenue;
   general: SeasonRevenue;
   months: MonthlyBucket[];
+  accounts: AccountBalance[];
+  revenueTaxRate: number;
   grandTotalCents: number;
   grandGoalCents: number;
   grandExpenseCents: number;
@@ -75,11 +100,25 @@ export interface ExportRow {
   category: string;
   description: string;
   amountCents: number;
+  taxRate: number;
+  netAmountCents: number;
+  taxAmountCents: number;
+  paidWith: string;
 }
 
 function childNameFromGoal(goal: string): string {
   const match = goal.match(/Joueuse:\s*([^·]+)/);
   return match?.[1]?.trim() || "";
+}
+
+/** Le montant saisi/encaissé est le TOTAL taxes incluses (comme sur une
+ *  facture Stripe) ; on en déduit le montant net et la taxe, exactement
+ *  comme "NET AMOUNT" = TOTAL / (1 + TAX %) dans le gabarit comptable de
+ *  référence. */
+function splitTax(totalCents: number, taxRate: number): { netCents: number; taxCents: number } {
+  if (taxRate <= 0) return { netCents: totalCents, taxCents: 0 };
+  const netCents = Math.round(totalCents / (1 + taxRate));
+  return { netCents, taxCents: totalCents - netCents };
 }
 
 /** Étale une charge récurrente en une occurrence par mois, de sa date de
@@ -93,7 +132,9 @@ function expandExpense(expense: RevenueExpense, today: Date): ExpenseEvent[] {
       amountCents: expense.amount_cents,
       seasonKey: expense.season_key,
       category: expense.category,
-      label: expense.label
+      label: expense.label,
+      taxRate: expense.tax_rate,
+      paidWith: expense.paid_with
     }];
   }
 
@@ -109,7 +150,9 @@ function expandExpense(expense: RevenueExpense, today: Date): ExpenseEvent[] {
       amountCents: expense.amount_cents,
       seasonKey: expense.season_key,
       category: expense.category,
-      label: `${expense.label} (récurrente)`
+      label: `${expense.label} (récurrente)`,
+      taxRate: expense.tax_rate,
+      paidWith: expense.paid_with
     });
     cursor.setMonth(cursor.getMonth() + 1);
   }
@@ -125,15 +168,19 @@ function categoryBreakdown(events: ExpenseEvent[]): CategoryBreakdown[] {
 }
 
 async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueEvents: RevenueEvent[]; expenseEvents: ExpenseEvent[] }> {
-  const [leads, seasons, goals, orders, expenseRows] = await Promise.all([
+  const [leads, seasons, goals, orders, expenseRows, settings, monthlyGoals] = await Promise.all([
     getAllLeads(),
     getSeasons(),
     getRevenueGoals(),
     getOrders(),
-    getRevenueExpenses()
+    getRevenueExpenses(),
+    getRevenueSettings(),
+    getMonthlyGoals()
   ]);
 
   const goalCents = (key: string) => goals.find((g) => g.season_key === key)?.goal_cents ?? 0;
+  const monthlyGoalCents = (month: string) => monthlyGoals.find((g) => g.month === month)?.goal_cents ?? 0;
+  const revenueTaxRate = settings.revenue_tax_rate;
 
   const revenueEvents: RevenueEvent[] = [];
   const paidCountBySeasonKey = new Map<string, number>();
@@ -229,15 +276,18 @@ async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueE
     const expEvents = expenseEvents.filter((e) => e.seasonKey === key);
     const totalCents = revEvents.reduce((sum, e) => sum + e.amountCents, 0);
     const expenseCents = expEvents.reduce((sum, e) => sum + e.amountCents, 0);
+    const { netCents, taxCents } = splitTax(totalCents, revenueTaxRate);
     return {
       key,
       label,
       totalCents,
+      netCents,
+      taxCents,
       paidCount: paidCountBySeasonKey.get(key) ?? 0,
       unknownCount: unknownBySeasonKey.get(key) ?? 0,
       goalCents: goalCents(key),
       expenseCents,
-      netCents: totalCents - expenseCents,
+      profitCents: totalCents - expenseCents,
       expenses: expenseRows.filter((e) => e.season_key === key),
       expensesByCategory: categoryBreakdown(expEvents)
     };
@@ -264,8 +314,23 @@ async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueE
     monthMap.set(month, bucket);
   }
   const months: MonthlyBucket[] = Array.from(monthMap.entries())
-    .map(([month, b]) => ({ month, revenueCents: b.revenueCents, expenseCents: b.expenseCents, netCents: b.revenueCents - b.expenseCents }))
+    .map(([month, b]) => ({
+      month,
+      revenueCents: b.revenueCents,
+      expenseCents: b.expenseCents,
+      netCents: b.revenueCents - b.expenseCents,
+      goalCents: monthlyGoalCents(month)
+    }))
     .sort((a, b) => b.month.localeCompare(a.month));
+
+  // ── Comptes — comme la feuille "Balance" du gabarit de référence. Tous
+  // les revenus transitent par Stripe vers le compte bancaire ; les charges
+  // sont réparties selon le compte choisi par l'admin à la saisie. ──
+  const accounts: AccountBalance[] = PAYMENT_ACCOUNTS.map((account) => {
+    const revenueCents = account === REVENUE_ACCOUNT ? revenueEvents.reduce((sum, e) => sum + e.amountCents, 0) : 0;
+    const expenseCents = expenseEvents.filter((e) => e.paidWith === account).reduce((sum, e) => sum + e.amountCents, 0);
+    return { account, revenueCents, expenseCents, balanceCents: revenueCents - expenseCents };
+  });
 
   const allCards = [...seasonCards, boutique, general];
   const grandTotalCents = allCards.reduce((sum, c) => sum + c.totalCents, 0);
@@ -274,7 +339,18 @@ async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueE
   const grandNetCents = grandTotalCents - grandExpenseCents;
 
   return {
-    summary: { seasons: seasonCards, boutique, general, months, grandTotalCents, grandGoalCents, grandExpenseCents, grandNetCents },
+    summary: {
+      seasons: seasonCards,
+      boutique,
+      general,
+      months,
+      accounts,
+      revenueTaxRate,
+      grandTotalCents,
+      grandGoalCents,
+      grandExpenseCents,
+      grandNetCents
+    },
     revenueEvents,
     expenseEvents
   };
@@ -288,12 +364,39 @@ export async function computeRevenueSummary(): Promise<RevenueSummary> {
 /** Lignes brutes (revenus + charges, y compris les occurrences mensuelles
  *  des charges récurrentes) triées par date — pour l'export CSV comptable. */
 export async function getRevenueExportRows(): Promise<ExportRow[]> {
-  const { revenueEvents, expenseEvents } = await computeRevenueData();
+  const { summary, revenueEvents, expenseEvents } = await computeRevenueData();
 
-  const rows: ExportRow[] = [
-    ...revenueEvents.map((e) => ({ date: e.date, type: "Revenu" as const, season: e.seasonKey, category: "", description: e.description, amountCents: e.amountCents })),
-    ...expenseEvents.map((e) => ({ date: e.date, type: "Charge" as const, season: e.seasonKey, category: e.category, description: e.label, amountCents: e.amountCents }))
-  ];
+  const revenueRows: ExportRow[] = revenueEvents.map((e) => {
+    const { netCents, taxCents } = splitTax(e.amountCents, summary.revenueTaxRate);
+    return {
+      date: e.date,
+      type: "Revenu" as const,
+      season: e.seasonKey,
+      category: "",
+      description: e.description,
+      amountCents: e.amountCents,
+      taxRate: summary.revenueTaxRate,
+      netAmountCents: netCents,
+      taxAmountCents: taxCents,
+      paidWith: REVENUE_ACCOUNT
+    };
+  });
 
-  return rows.sort((a, b) => a.date.localeCompare(b.date));
+  const expenseRowsOut: ExportRow[] = expenseEvents.map((e) => {
+    const { netCents, taxCents } = splitTax(e.amountCents, e.taxRate);
+    return {
+      date: e.date,
+      type: "Charge" as const,
+      season: e.seasonKey,
+      category: e.category,
+      description: e.label,
+      amountCents: e.amountCents,
+      taxRate: e.taxRate,
+      netAmountCents: netCents,
+      taxAmountCents: taxCents,
+      paidWith: e.paidWith
+    };
+  });
+
+  return [...revenueRows, ...expenseRowsOut].sort((a, b) => a.date.localeCompare(b.date));
 }

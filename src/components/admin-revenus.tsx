@@ -4,8 +4,8 @@ import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { formatCAD } from "@/lib/season-2027";
-import type { MonthlyBucket, RevenueSummary, SeasonRevenue } from "@/lib/revenue-calc";
-import { EXPENSE_CATEGORIES, type RevenueExpense } from "@/lib/revenue-repo";
+import type { AccountBalance, MonthlyBucket, RevenueSummary, SeasonRevenue } from "@/lib/revenue-calc";
+import { EXPENSE_CATEGORIES, PAYMENT_ACCOUNTS, type RevenueExpense } from "@/lib/revenue-repo";
 
 interface Props {
   summary: RevenueSummary;
@@ -81,6 +81,8 @@ function ExpensesPanel({
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(todayISO());
   const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[EXPENSE_CATEGORIES.length - 1]);
+  const [taxRate, setTaxRate] = useState("0");
+  const [paidWith, setPaidWith] = useState<string>(PAYMENT_ACCOUNTS[0]);
   const [recurring, setRecurring] = useState(false);
   const [endDate, setEndDate] = useState("");
   const [saving, setSaving] = useState(false);
@@ -88,6 +90,7 @@ function ExpensesPanel({
 
   const addExpense = async () => {
     const dollars = parseFloat(amount.replace(",", "."));
+    const taxPct = parseFloat(taxRate.replace(",", ".")) || 0;
     if (!label.trim() || Number.isNaN(dollars) || dollars <= 0) return;
     setSaving(true);
     try {
@@ -101,7 +104,9 @@ function ExpensesPanel({
           amountCents: Math.round(dollars * 100),
           expenseDate: date,
           isRecurring: recurring,
-          recurrenceEndDate: recurring && endDate ? endDate : null
+          recurrenceEndDate: recurring && endDate ? endDate : null,
+          taxRate: taxPct / 100,
+          paidWith
         })
       });
       if (res.ok) {
@@ -109,6 +114,7 @@ function ExpensesPanel({
         onExpensesChanged(card.key, [data.expense, ...card.expenses]);
         setLabel("");
         setAmount("");
+        setTaxRate("0");
         setRecurring(false);
         setEndDate("");
       }
@@ -152,7 +158,8 @@ function ExpensesPanel({
           {card.expenses.map((e) => (
             <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "#c3c2c8" }}>
               <span>
-                {e.label} · {e.category} · {e.expense_date}
+                {e.label} · {e.category} · {e.expense_date} · {e.paid_with}
+                {e.tax_rate > 0 && ` · tx ${(e.tax_rate * 100).toFixed(2)}%`}
                 {e.is_recurring && <span title="Charge récurrente"> 🔁</span>}
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
@@ -204,6 +211,30 @@ function ExpensesPanel({
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
+          </div>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.68rem", color: "#9d9da0" }}>
+              Taxe %
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step="0.01"
+                className="admin-input"
+                style={{ width: "60px", fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
+                value={taxRate}
+                onChange={(e) => setTaxRate(e.target.value)}
+              />
+            </label>
+            <select
+              className="admin-input"
+              style={{ fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
+              value={paidWith}
+              onChange={(e) => setPaidWith(e.target.value)}
+            >
+              {PAYMENT_ACCOUNTS.map((a) => <option key={a} value={a}>{a}</option>)}
+            </select>
             <button onClick={addExpense} disabled={saving} className="admin-btn-ghost" style={{ padding: "0.3rem 0.6rem", fontSize: "0.68rem" }}>
               {saving ? "..." : "Ajouter"}
             </button>
@@ -247,8 +278,13 @@ function RevenueCard({
     <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "12px", padding: "1.1rem 1.25rem", minWidth: "240px", flex: "1 1 240px" }}>
       <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.3rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>{card.label}</p>
       <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>{formatCAD(card.totalCents / 100)}</p>
-      <p style={{ fontSize: "0.75rem", color: card.netCents < 0 ? "#ff9999" : "#7fd88f", margin: "0 0 0.5rem" }}>
-        Net : {formatCAD(card.netCents / 100)}
+      {card.taxCents > 0 && (
+        <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: "0 0 0.2rem" }}>
+          Net avant taxe : {formatCAD(card.netCents / 100)} · Taxe : {formatCAD(card.taxCents / 100)}
+        </p>
+      )}
+      <p style={{ fontSize: "0.75rem", color: card.profitCents < 0 ? "#ff9999" : "#7fd88f", margin: "0 0 0.5rem" }}>
+        Profit : {formatCAD(card.profitCents / 100)}
         {card.expenseCents > 0 && <span style={{ color: "#6d6b71" }}> (-{formatCAD(card.expenseCents / 100)} de charges)</span>}
       </p>
 
@@ -276,27 +312,139 @@ function RevenueCard({
   );
 }
 
-function MonthlyTable({ months }: { months: MonthlyBucket[] }) {
+function RevenueTaxSetting({ initialRate }: { initialRate: number }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(String(initialRate * 100));
+  const [rate, setRate] = useState(initialRate);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const pct = parseFloat(value.replace(",", "."));
+    if (Number.isNaN(pct) || pct < 0 || pct > 100) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/revenue-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ revenueTaxRate: pct / 100 })
+      });
+      if (res.ok) { setRate(pct / 100); setEditing(false); }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.72rem", color: "#9d9da0", marginBottom: "1.25rem" }}>
+      <span>Taux de taxe appliqué aux revenus :</span>
+      {editing ? (
+        <>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step="0.01"
+            className="admin-input"
+            style={{ width: "70px", fontSize: "0.72rem", padding: "0.25rem 0.4rem" }}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            autoFocus
+          />
+          <span>%</span>
+          <button onClick={save} disabled={saving} className="admin-btn-primary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.66rem" }}>
+            {saving ? "..." : "OK"}
+          </button>
+          <button onClick={() => setEditing(false)} className="admin-btn-ghost" style={{ padding: "0.25rem 0.5rem", fontSize: "0.66rem" }}>
+            Annuler
+          </button>
+        </>
+      ) : (
+        <>
+          <strong style={{ color: "#c3c2c8" }}>{(rate * 100).toFixed(2)}%</strong>
+          <button
+            onClick={() => { setValue(String(rate * 100)); setEditing(true); }}
+            style={{ color: "#8d76a5", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+          >
+            Modifier
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MonthlyTable({ months: initialMonths }: { months: MonthlyBucket[] }) {
+  const [months, setMonths] = useState(initialMonths);
   const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? months : months.slice(0, 6);
+  const [editingMonth, setEditingMonth] = useState<string | null>(null);
+  const [goalValue, setGoalValue] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const saveGoal = async (month: string) => {
+    const dollars = parseFloat(goalValue.replace(",", "."));
+    if (Number.isNaN(dollars) || dollars < 0) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/revenue-monthly-goals", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month, goalCents: Math.round(dollars * 100) })
+      });
+      if (res.ok) {
+        setMonths((prev) => prev.map((m) => (m.month === month ? { ...m, goalCents: Math.round(dollars * 100) } : m)));
+        setEditingMonth(null);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (months.length === 0) return null;
+  const visible = expanded ? months : months.slice(0, 6);
 
   return (
     <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem" }}>
       <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.75rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>Vue par mois</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "0.5rem", fontSize: "0.65rem", color: "#6d6b71", textTransform: "uppercase" }}>
-          <span>Mois</span><span>Revenus</span><span>Charges</span><span>Net</span>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "0.8fr 1fr 1fr 1fr 1.3fr", gap: "0.5rem", fontSize: "0.65rem", color: "#6d6b71", textTransform: "uppercase" }}>
+          <span>Mois</span><span>Revenus</span><span>Charges</span><span>Net</span><span>Objectif</span>
         </div>
-        {visible.map((m) => (
-          <div key={m.month} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "0.5rem", fontSize: "0.78rem", color: "#c3c2c8" }}>
-            <span>{m.month}</span>
-            <span>{formatCAD(m.revenueCents / 100)}</span>
-            <span style={{ color: m.expenseCents > 0 ? "#ff9999" : "#6d6b71" }}>{m.expenseCents > 0 ? `-${formatCAD(m.expenseCents / 100)}` : "—"}</span>
-            <span style={{ color: m.netCents < 0 ? "#ff9999" : "#7fd88f", fontWeight: 600 }}>{formatCAD(m.netCents / 100)}</span>
-          </div>
-        ))}
+        {visible.map((m) => {
+          const pct = m.goalCents > 0 ? Math.min(100, Math.round((m.revenueCents / m.goalCents) * 100)) : null;
+          return (
+            <div key={m.month} style={{ display: "grid", gridTemplateColumns: "0.8fr 1fr 1fr 1fr 1.3fr", gap: "0.5rem", fontSize: "0.78rem", color: "#c3c2c8", alignItems: "center" }}>
+              <span>{m.month}</span>
+              <span>{formatCAD(m.revenueCents / 100)}</span>
+              <span style={{ color: m.expenseCents > 0 ? "#ff9999" : "#6d6b71" }}>{m.expenseCents > 0 ? `-${formatCAD(m.expenseCents / 100)}` : "—"}</span>
+              <span style={{ color: m.netCents < 0 ? "#ff9999" : "#7fd88f", fontWeight: 600 }}>{formatCAD(m.netCents / 100)}</span>
+              {editingMonth === m.month ? (
+                <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    className="admin-input"
+                    style={{ width: "70px", fontSize: "0.7rem", padding: "0.2rem 0.4rem" }}
+                    value={goalValue}
+                    onChange={(e) => setGoalValue(e.target.value)}
+                    autoFocus
+                  />
+                  <button onClick={() => saveGoal(m.month)} disabled={saving} className="admin-btn-primary" style={{ padding: "0.2rem 0.4rem", fontSize: "0.64rem" }}>OK</button>
+                </span>
+              ) : (
+                <span style={{ fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                  {m.goalCents > 0 ? `${pct}% de ${formatCAD(m.goalCents / 100)}` : "—"}
+                  <button
+                    onClick={() => { setGoalValue(String(m.goalCents / 100)); setEditingMonth(m.month); }}
+                    style={{ color: "#8d76a5", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+                  >
+                    {m.goalCents > 0 ? "modifier" : "fixer"}
+                  </button>
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
       {months.length > 6 && (
         <button
@@ -310,13 +458,32 @@ function MonthlyTable({ months }: { months: MonthlyBucket[] }) {
   );
 }
 
+function AccountsPanel({ accounts }: { accounts: AccountBalance[] }) {
+  return (
+    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem" }}>
+      <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.75rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>Comptes</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+        {accounts.map((a) => (
+          <div key={a.account} style={{ flex: "1 1 180px", minWidth: "180px" }}>
+            <p style={{ fontSize: "0.75rem", color: "#c3c2c8", margin: "0 0 0.2rem", fontWeight: 600 }}>{a.account}</p>
+            <p style={{ fontSize: "1.15rem", fontWeight: 700, color: a.balanceCents < 0 ? "#ff9999" : "#fff", margin: "0 0 0.2rem" }}>{formatCAD(a.balanceCents / 100)}</p>
+            <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: 0 }}>
+              Revenus {formatCAD(a.revenueCents / 100)} · Charges {formatCAD(a.expenseCents / 100)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function AdminRevenus({ summary }: Props) {
   const [cards, setCards] = useState<SeasonRevenue[]>(summary.seasons);
   const [boutique, setBoutique] = useState<SeasonRevenue>(summary.boutique);
   const [general, setGeneral] = useState<SeasonRevenue>(summary.general);
 
   const updateCard = (key: string, patch: Partial<SeasonRevenue>) => {
-    const apply = (c: SeasonRevenue) => (c.key === key ? { ...c, ...patch, netCents: c.totalCents - (patch.expenseCents ?? c.expenseCents) } : c);
+    const apply = (c: SeasonRevenue) => (c.key === key ? { ...c, ...patch, profitCents: c.totalCents - (patch.expenseCents ?? c.expenseCents) } : c);
     if (key === boutique.key) { setBoutique((b) => apply(b)); return; }
     if (key === general.key) { setGeneral((g) => apply(g)); return; }
     setCards((prev) => prev.map(apply));
@@ -346,9 +513,11 @@ export function AdminRevenus({ summary }: Props) {
               ↓ Exporter en CSV
             </a>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
-            Revenu réellement encaissé par saison (versements comptés seulement une fois prélevés), avec vos objectifs financiers et vos charges.
+          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "0.75rem" }}>
+            Revenu réellement encaissé par saison (versements comptés seulement une fois prélevés), avec vos objectifs financiers, vos charges et vos taxes.
           </p>
+
+          <RevenueTaxSetting initialRate={summary.revenueTaxRate} />
 
           {hasUnknown && (
             <p style={{ fontSize: "0.75rem", color: "#ffb464", background: "rgba(255,180,100,0.1)", border: "1px solid rgba(255,180,100,0.3)", borderRadius: "8px", padding: "0.6rem 0.9rem", marginBottom: "1.25rem" }}>
@@ -364,13 +533,15 @@ export function AdminRevenus({ summary }: Props) {
             <RevenueCard card={general} onGoalSaved={handleGoalSaved} onExpensesChanged={handleExpensesChanged} />
           </div>
 
+          <AccountsPanel accounts={summary.accounts} />
+
           <MonthlyTable months={summary.months} />
 
           <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "12px", padding: "1.1rem 1.25rem" }}>
             <p style={{ fontSize: "0.72rem", color: "#9d9da0", margin: "0 0 0.3rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>Total — toutes saisons et boutique</p>
             <p style={{ fontSize: "1.8rem", fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>{formatCAD(grandTotalCents / 100)}</p>
             <p style={{ fontSize: "0.85rem", color: grandNetCents < 0 ? "#ff9999" : "#7fd88f", margin: "0 0 0.4rem" }}>
-              Net : {formatCAD(grandNetCents / 100)}
+              Profit : {formatCAD(grandNetCents / 100)}
               {grandExpenseCents > 0 && <span style={{ color: "#9d9da0" }}> (-{formatCAD(grandExpenseCents / 100)} de charges)</span>}
             </p>
             {grandGoalCents > 0 && (
