@@ -18,9 +18,15 @@ export interface Coach {
   default_hourly_rate_cents: number;
   hired_on: string | null;
   notes: string | null;
+  username: string | null;
   created_at: string;
   updated_at: string;
 }
+
+/** Colonnes sûres à renvoyer côté client — ne JAMAIS inclure password_hash
+ *  ici (finirait dans les props envoyées au navigateur). */
+const COACH_SAFE_COLUMNS =
+  "id, first_name, last_name, phone, email, status, role, default_hourly_rate_cents, hired_on, notes, username, created_at, updated_at";
 
 export interface CoachTypeRate {
   id: string;
@@ -67,13 +73,13 @@ export const COACH_ROLES = ["Entraîneur principal", "Assistant", "Gardien", "Au
 /* ── Coaches ───────────────────────────────────────────────────── */
 
 export async function getCoaches(): Promise<Coach[]> {
-  const { data, error } = await db().from("coaches").select("*").order("first_name", { ascending: true });
+  const { data, error } = await db().from("coaches").select(COACH_SAFE_COLUMNS).order("first_name", { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as Coach[];
 }
 
 export async function getCoach(id: string): Promise<Coach | null> {
-  const { data, error } = await db().from("coaches").select("*").eq("id", id).maybeSingle();
+  const { data, error } = await db().from("coaches").select(COACH_SAFE_COLUMNS).eq("id", id).maybeSingle();
   if (error) throw new Error(error.message);
   return data as Coach | null;
 }
@@ -240,7 +246,7 @@ export async function deleteActivity(id: string): Promise<void> {
 export async function getActivityAssignments(activityId: string): Promise<(CoachAssignment & { coach: Coach })[]> {
   const { data, error } = await db()
     .from("coach_assignments")
-    .select("*, coach:coaches(*)")
+    .select(`*, coach:coaches(${COACH_SAFE_COLUMNS})`)
     .eq("activity_id", activityId);
   if (error) throw new Error(error.message);
   return (data ?? []) as (CoachAssignment & { coach: Coach })[];
@@ -263,7 +269,7 @@ export async function getCoachAssignments(coachId: string): Promise<(CoachAssign
 export async function getAllAssignments(): Promise<(CoachAssignment & { coach: Coach; activity: CoachActivity })[]> {
   const { data, error } = await db()
     .from("coach_assignments")
-    .select("*, coach:coaches(*), activity:coach_activities(*)");
+    .select(`*, coach:coaches(${COACH_SAFE_COLUMNS}), activity:coach_activities(*)`);
   if (error) throw new Error(error.message);
   return (data ?? []) as (CoachAssignment & { coach: Coach; activity: CoachActivity })[];
 }

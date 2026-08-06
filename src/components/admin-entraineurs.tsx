@@ -86,7 +86,7 @@ function NewCoachForm({ onCreated }: { onCreated: (coach: Coach) => void }) {
       onCreated({
         id: data.id, first_name: firstName.trim(), last_name: lastName.trim(), phone: phone.trim() || null,
         email: email.trim() || null, status: "active", role, default_hourly_rate_cents: Math.round((parseFloat(rate.replace(",", ".")) || 0) * 100),
-        hired_on: null, notes: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+        hired_on: null, notes: null, username: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString()
       });
       setFirstName(""); setLastName(""); setPhone(""); setEmail(""); setRate(""); setOpen(false);
     } catch (err) {

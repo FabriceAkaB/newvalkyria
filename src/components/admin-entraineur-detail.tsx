@@ -81,6 +81,63 @@ function TypeRatesSection({ coachId, rates: initial }: { coachId: string; rates:
   );
 }
 
+function CredentialsSection({ coachId, username: initialUsername }: { coachId: string; username: string | null }) {
+  const [username, setUsername] = useState(initialUsername ?? "");
+  const [password, setPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [msgError, setMsgError] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/admin/coaches/${coachId}/credentials`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsgError(true);
+        setMessage(data.error ?? "Erreur de sauvegarde");
+      } else {
+        setMsgError(false);
+        setMessage("Identifiants enregistrés.");
+        setPassword("");
+      }
+    } catch {
+      setMsgError(true);
+      setMessage("Erreur de sauvegarde");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="admin-drawer-section" style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+      <p className="admin-drawer-section-title">Accès Espace Entraîneur</p>
+      <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.6rem" }}>
+        {initialUsername ? "Cet entraîneur a déjà un accès. Vous pouvez changer son mot de passe ci-dessous." : "Aucun accès configuré — l'entraîneur ne peut pas encore se connecter à /entraineur."}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <label className="admin-field" style={{ gap: "0.3rem" }}>
+          <span className="admin-drawer-label">Nom d&apos;utilisateur</span>
+          <input className="admin-input" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="ex. jsmith" />
+        </label>
+        <label className="admin-field" style={{ gap: "0.3rem" }}>
+          <span className="admin-drawer-label">{initialUsername ? "Nouveau mot de passe" : "Mot de passe"}</span>
+          <input type="text" className="admin-input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="6 caractères minimum" />
+        </label>
+        <button className="admin-btn-ghost" onClick={save} disabled={saving || !username || !password} style={{ fontSize: "0.75rem", alignSelf: "flex-start" }}>
+          {saving ? "Enregistrement..." : "Enregistrer les identifiants"}
+        </button>
+        {message && <p style={{ fontSize: "0.72rem", color: msgError ? "#ff8a8a" : "#7fd88f", margin: 0 }}>{message}</p>}
+      </div>
+    </div>
+  );
+}
+
 export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments, initialTypeRates }: Props) {
   const [coach, setCoach] = useState(initialCoach);
   const [saving, setSaving] = useState(false);
@@ -212,6 +269,7 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
 
             <div style={{ flex: "1 1 260px", display: "flex", flexDirection: "column", gap: "1rem" }}>
               <TypeRatesSection coachId={coach.id} rates={initialTypeRates} />
+              <CredentialsSection coachId={coach.id} username={coach.username} />
 
               <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1.1rem" }}>
                 <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Solde</p>
