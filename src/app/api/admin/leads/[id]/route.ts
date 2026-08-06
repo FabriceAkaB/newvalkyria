@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
-import { deleteLead, updateLeadGoal, updateLeadStatus, updateLeadTimeSlot } from "@/lib/repositories";
+import { deleteLead, updateLeadGoal, updateLeadStatus, updateLeadTimeSlot, updateLeadTrialDate } from "@/lib/repositories";
 
 export async function DELETE(
   _request: Request,
@@ -34,7 +34,7 @@ export async function PATCH(
     return jsonError("ID manquant", 400);
   }
 
-  const body = (await request.json()) as { goal?: string; status?: string; time_slot?: string };
+  const body = (await request.json()) as { goal?: string; status?: string; time_slot?: string; trial_date?: string | null };
 
   let updated = false;
 
@@ -54,6 +54,11 @@ export async function PATCH(
 
   if (body.time_slot !== undefined) {
     await updateLeadTimeSlot(id, body.time_slot);
+    updated = true;
+  }
+
+  if (body.trial_date !== undefined) {
+    await updateLeadTrialDate(id, body.trial_date);
     updated = true;
   }
 

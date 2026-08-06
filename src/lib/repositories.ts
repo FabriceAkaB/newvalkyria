@@ -12,6 +12,7 @@ import {
   updateMockLeadGoal,
   updateMockLeadStatus,
   updateMockLeadTimeSlot,
+  updateMockLeadTrialDate,
 } from "@/lib/mock-store";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -182,6 +183,7 @@ export interface AdminLead {
   status: "pending" | "confirmed" | "paid" | "cancelled" | "essai";
   is_waitlist: boolean;
   time_slot?: string;
+  trial_date?: string | null;
   stripe_checkout_session_id?: string;
   stripe_payment_intent_id?: string;
 }
@@ -273,6 +275,15 @@ export async function updateLeadStatus(
 
   const supabase = getSupabaseAdminClient() as any;
   const { error } = await supabase.from("leads").update({ status }).eq("id", id);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function updateLeadTrialDate(id: string, trialDate: string | null): Promise<void> {
+  if (!isSupabaseAvailable()) { updateMockLeadTrialDate(id, trialDate); return; }
+
+  const supabase = getSupabaseAdminClient() as any;
+  const { error } = await supabase.from("leads").update({ trial_date: trialDate }).eq("id", id);
 
   if (error) throw new Error(error.message);
 }

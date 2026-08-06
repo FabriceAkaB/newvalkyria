@@ -9,6 +9,7 @@ type MockLead = LeadFormPayload & {
   status: "pending" | "confirmed" | "paid" | "cancelled" | "essai";
   is_waitlist: boolean;
   time_slot?: string;
+  trial_date?: string | null;
   stripe_checkout_session_id?: string;
   stripe_payment_intent_id?: string;
 };
@@ -175,6 +176,7 @@ export function getMockLeads(): AdminLead[] {
     status: l.status,
     is_waitlist: l.is_waitlist,
     time_slot: l.time_slot,
+    trial_date: l.trial_date ?? null,
     stripe_checkout_session_id: l.stripe_checkout_session_id,
     stripe_payment_intent_id: l.stripe_payment_intent_id,
   }));
@@ -191,6 +193,13 @@ export function updateMockLeadStatus(id: string, status: AdminLead["status"]): v
   if (seed) { state.leads.set(id, { ...seed, status }); return; }
   const form = state.formLeads.get(id);
   if (form) state.formLeads.set(id, { ...form, status });
+}
+
+export function updateMockLeadTrialDate(id: string, trialDate: string | null): void {
+  const seed = state.leads.get(id);
+  if (seed) { state.leads.set(id, { ...seed, trial_date: trialDate }); return; }
+  const form = state.formLeads.get(id);
+  if (form) state.formLeads.set(id, { ...form, trial_date: trialDate });
 }
 
 export function updateMockLeadTimeSlot(id: string, timeSlot: string): void {

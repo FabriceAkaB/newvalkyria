@@ -92,6 +92,28 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
   const [savingName, setSavingName] = useState(false);
 
   const [savingStatus, setSavingStatus] = useState(false);
+  const [savingTrialDate, setSavingTrialDate] = useState(false);
+
+  const handleTrialDateChange = async (newTrialDate: string | null) => {
+    setSavingTrialDate(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/leads/${lead.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trial_date: newTrialDate }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        throw new Error(data.error ?? "Erreur de sauvegarde");
+      }
+      onUpdated({ ...lead, trial_date: newTrialDate });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setSavingTrialDate(false);
+    }
+  };
 
   const handleStatusChange = async (newStatus: AdminLead["status"]) => {
     if (newStatus === lead.status) return;
@@ -223,6 +245,18 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
                   );
                 })}
               </div>
+            </div>
+            <div style={{ marginTop: "0.7rem" }}>
+              <label className="admin-field" style={{ gap: "0.3rem", maxWidth: "220px" }}>
+                <span className="admin-drawer-label">Date d&apos;essai</span>
+                <input
+                  type="date"
+                  className="admin-input"
+                  value={lead.trial_date ?? ""}
+                  onChange={(e) => handleTrialDateChange(e.target.value || null)}
+                  disabled={savingTrialDate}
+                />
+              </label>
             </div>
           </div>
 
