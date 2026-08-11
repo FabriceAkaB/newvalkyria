@@ -674,6 +674,77 @@ export async function getSeasonPaidInstallments(seasonId: string): Promise<Seaso
   }));
 }
 
+export interface PaymentPlanInstallmentOverview {
+  sequenceNo: number;
+  amountCents: number;
+  dueDate: string;
+  status: "pending" | "paid" | "failed" | "failed_final";
+  paidAt: string | null;
+}
+
+export interface PaymentPlanOverview {
+  planId: string;
+  registrationId: string;
+  seasonId: string;
+  programId: string | null;
+  parentName: string;
+  parentEmail: string;
+  playerFirstName: string | null;
+  playerLastName: string | null;
+  totalAmountCents: number;
+  installmentCount: number;
+  createdAt: string;
+  installments: PaymentPlanInstallmentOverview[];
+}
+
+/** Tous les plans de paiement échelonné (toutes saisons), avec le détail de
+ *  chaque versement — pour la vue admin "quel parent a choisi de payer en
+ *  plusieurs fois", absente jusqu'ici. Deux requêtes + fusion en mémoire
+ *  (plutôt qu'un select imbriqué) pour rester cohérent avec le style du
+ *  reste du fichier. */
+export async function getAllPaymentPlansOverview(): Promise<PaymentPlanOverview[]> {
+  const supabase = db();
+  const { data: plans, error } = await supabase
+    .from("registration_payment_plans")
+    .select(`
+      id, registration_id, total_amount_cents, installment_count, created_at,
+      registrations!inner ( season_id, program_id, parent_name, parent_email, player_first_name, player_last_name )
+    `)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  if (!plans || plans.length === 0) return [];
+
+  const planIds = (plans as any[]).map((p) => p.id);
+  const { data: installments, error: instError } = await supabase
+    .from("registration_payment_plan_installments")
+    .select("plan_id, sequence_no, amount_cents, due_date, status, paid_at")
+    .in("plan_id", planIds)
+    .order("sequence_no", { ascending: true });
+  if (instError) throw new Error(instError.message);
+
+  const installmentsByPlan = new Map<string, PaymentPlanInstallmentOverview[]>();
+  for (const inst of (installments ?? []) as any[]) {
+    const list = installmentsByPlan.get(inst.plan_id) ?? [];
+    list.push({ sequenceNo: inst.sequence_no, amountCents: inst.amount_cents, dueDate: inst.due_date, status: inst.status, paidAt: inst.paid_at });
+    installmentsByPlan.set(inst.plan_id, list);
+  }
+
+  return (plans as any[]).map((p) => ({
+    planId: p.id,
+    registrationId: p.registration_id,
+    seasonId: p.registrations.season_id,
+    programId: p.registrations.program_id,
+    parentName: p.registrations.parent_name,
+    parentEmail: p.registrations.parent_email,
+    playerFirstName: p.registrations.player_first_name,
+    playerLastName: p.registrations.player_last_name,
+    totalAmountCents: p.total_amount_cents,
+    installmentCount: p.installment_count,
+    createdAt: p.created_at,
+    installments: installmentsByPlan.get(p.id) ?? []
+  }));
+}
+
 const MAX_INSTALLMENT_ATTEMPTS = 5;
 
 export interface DueInstallment {

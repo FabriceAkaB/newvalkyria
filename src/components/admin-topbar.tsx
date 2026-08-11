@@ -66,6 +66,7 @@ const ESSAIS_LINKS: { href: string; label: string; icon: IconName }[] = [
 
 const REVENUS_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/revenus", label: "Vue d'ensemble", icon: "chart" },
+  { href: "/admin/revenus/paiements", label: "Paiements échelonnés", icon: "user" },
 ];
 
 const ENTRAINEURS_LINKS: { href: string; label: string; icon: IconName }[] = [
