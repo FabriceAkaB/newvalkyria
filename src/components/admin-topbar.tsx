@@ -66,6 +66,7 @@ const ESSAIS_LINKS: { href: string; label: string; icon: IconName }[] = [
 
 const UNIFORMES_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/uniformes", label: "Tableau de bord", icon: "gauge" },
+  { href: "/admin/uniformes/kit-inscription", label: "Kit d'inscription", icon: "list" },
   { href: "/admin/uniformes/a-remettre", label: "À remettre", icon: "bag" },
   { href: "/admin/uniformes/aujourdhui", label: "Aujourd'hui", icon: "calendar" },
   { href: "/admin/uniformes/problemes", label: "Problèmes", icon: "flask" },
