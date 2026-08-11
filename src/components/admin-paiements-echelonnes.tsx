@@ -30,12 +30,19 @@ const INSTALLMENT_STATUS_LABELS: Record<string, string> = {
 export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameById }: Props) {
   const [seasonFilter, setSeasonFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "en-cours" | "complete" | "probleme">("all");
+  const [countFilter, setCountFilter] = useState<"" | "2" | "3">("");
+  const [nextFilter, setNextFilter] = useState<"" | "1" | "2" | "3">("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const seasons = useMemo(() => Array.from(new Set(plans.map((p) => p.seasonId))), [plans]);
 
+  const nextDueSequence = (p: PaymentPlanOverview): number | null =>
+    p.installments.find((i) => i.status === "pending" || i.status === "failed")?.sequenceNo ?? null;
+
   const filtered = plans.filter((p) => {
     if (seasonFilter && p.seasonId !== seasonFilter) return false;
+    if (countFilter && String(p.installmentCount) !== countFilter) return false;
+    if (nextFilter && String(nextDueSequence(p)) !== nextFilter) return false;
     if (statusFilter === "all") return true;
     const status = planStatus(p);
     if (statusFilter === "probleme") return status.label.startsWith("Échec");
@@ -71,6 +78,17 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
               <option value="en-cours">En cours</option>
               <option value="complete">Complétés</option>
               <option value="probleme">Avec problème de prélèvement</option>
+            </select>
+            <select className="admin-input" value={countFilter} onChange={(e) => setCountFilter(e.target.value as typeof countFilter)}>
+              <option value="">2x et 3x versements</option>
+              <option value="2">Plans 2 versements</option>
+              <option value="3">Plans 3 versements</option>
+            </select>
+            <select className="admin-input" value={nextFilter} onChange={(e) => setNextFilter(e.target.value as typeof nextFilter)}>
+              <option value="">Tous les prochains versements</option>
+              <option value="1">Prochain versement : 1er</option>
+              <option value="2">Prochain versement : 2e</option>
+              <option value="3">Prochain versement : 3e</option>
             </select>
           </div>
 
