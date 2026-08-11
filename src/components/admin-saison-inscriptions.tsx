@@ -333,6 +333,7 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
 
   const filtered = registrations
     .filter((r) => {
+      if (filter === "all" && r.status === "cancelled") return false;
       if (filter !== "all" && r.status !== filter) return false;
       if (categoryFilter !== "all" && r.category_id !== categoryFilter) return false;
       if (search) {
