@@ -396,6 +396,24 @@ export async function getSeasonRegistrations(seasonId: string): Promise<Registra
   return (data ?? []) as Registration[];
 }
 
+/** Recherche une joueuse par nom (joueuse ou parent), toutes saisons du
+ *  système multi-saisons confondues — utilisé pour relier une commande
+ *  boutique à une joueuse (module Uniformes). */
+export async function searchRegistrations(query: string): Promise<Registration[]> {
+  const supabase = db();
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const { data, error } = await supabase
+    .from("registrations")
+    .select("*")
+    .neq("status", "cancelled")
+    .or(`player_first_name.ilike.%${q}%,player_last_name.ilike.%${q}%,parent_name.ilike.%${q}%`)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Registration[];
+}
+
 export async function updateRegistration(
   id: string,
   patch: Partial<{

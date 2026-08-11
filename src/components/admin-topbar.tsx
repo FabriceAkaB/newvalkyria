@@ -64,6 +64,13 @@ const ESSAIS_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/essais-calendrier", label: "Calendrier", icon: "calendar" },
 ];
 
+const UNIFORMES_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/uniformes", label: "Tableau de bord", icon: "gauge" },
+  { href: "/admin/uniformes/a-remettre", label: "À remettre", icon: "bag" },
+  { href: "/admin/uniformes/aujourdhui", label: "Aujourd'hui", icon: "calendar" },
+  { href: "/admin/uniformes/problemes", label: "Problèmes", icon: "flask" },
+];
+
 const REVENUS_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/revenus", label: "Vue d'ensemble", icon: "chart" },
   { href: "/admin/revenus/paiements", label: "Paiements échelonnés", icon: "user" },
@@ -91,6 +98,7 @@ const GROUPS: Group[] = [
   { label: "Été 2026", dotColor: "#c8aae0", links: SEASON_ETE_LINKS },
   { label: "Automne / Hiver 2026", dotColor: "#f0c878", links: SEASON_AUTOMNE_HIVER_LINKS },
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
+  { label: "Uniformes", dotColor: "#e0b0d8", links: UNIFORMES_LINKS },
   { label: "Essais", dotColor: "#88c0d0", links: ESSAIS_LINKS },
   { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS, adminOnly: true },
   { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS, adminOnly: true },

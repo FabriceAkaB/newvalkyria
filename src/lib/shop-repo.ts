@@ -52,6 +52,20 @@ export interface ProductWithVariants extends Product {
 
 export type OrderStatus = "pending" | "paid" | "fulfilled" | "cancelled";
 
+/** Cycle de vie de la distribution — distinct du statut de paiement. Une
+ *  commande payée démarre à "a_commander" (on ne sait pas encore où elle en
+ *  est réellement chez le fournisseur). */
+export type DistributionStatus = "a_commander" | "en_production" | "recu" | "pret_a_remettre" | "partiellement_remis" | "remis";
+
+export const DISTRIBUTION_STATUS_LABELS: Record<DistributionStatus, string> = {
+  a_commander: "À commander",
+  en_production: "En production",
+  recu: "Reçu par l'académie",
+  pret_a_remettre: "Prêt à remettre",
+  partiellement_remis: "Partiellement remis",
+  remis: "Remis"
+};
+
 export interface ShopOrder {
   id: string;
   customer_name: string;
@@ -64,6 +78,10 @@ export interface ShopOrder {
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
   total_cents: number;
+  registration_id: string | null;
+  season_key: string | null;
+  notes: string | null;
+  distribution_status: DistributionStatus;
   created_at: string;
   updated_at: string;
 }
@@ -77,6 +95,42 @@ export interface ShopOrderItem {
   variant_label: string | null;
   unit_price_cents: number;
   quantity: number;
+  delivered_quantity: number;
+}
+
+export interface ShopOrderEvent {
+  id: string;
+  order_id: string;
+  event: string;
+  detail: string | null;
+  performed_by: string | null;
+  created_at: string;
+}
+
+export type ProblemType =
+  | "mauvaise_taille" | "article_manquant" | "mauvais_article" | "quantite_incorrecte"
+  | "article_endommage" | "commande_incomplete" | "echange_demande" | "retour_fournisseur" | "autre";
+
+export const PROBLEM_TYPE_LABELS: Record<ProblemType, string> = {
+  mauvaise_taille: "Mauvaise taille",
+  article_manquant: "Article manquant",
+  mauvais_article: "Mauvais article",
+  quantite_incorrecte: "Quantité incorrecte",
+  article_endommage: "Article endommagé",
+  commande_incomplete: "Commande incomplète",
+  echange_demande: "Échange demandé",
+  retour_fournisseur: "Retour fournisseur",
+  autre: "Autre"
+};
+
+export interface ShopOrderProblem {
+  id: string;
+  order_id: string;
+  problem_type: ProblemType;
+  description: string | null;
+  status: "ouvert" | "resolu";
+  created_at: string;
+  resolved_at: string | null;
 }
 
 export interface ShopOrderWithItems extends ShopOrder {
@@ -464,4 +518,322 @@ export async function decrementProductInventory(productId: string, quantity: num
   if (error || !product) return;
   const newCount = Math.max(0, (product.inventory_count as number) - quantity);
   await supabase.from("products").update({ inventory_count: newCount, updated_at: new Date().toISOString() }).eq("id", productId);
+}
+
+/* ── Uniformes — distribution ──────────────────────────────────────
+ *  Construit par-dessus les commandes boutique existantes (une seule
+ *  source d'information — voir la fiche jointe). Ne touche jamais au
+ *  statut de paiement (`status`), seulement au cycle de distribution. */
+
+export interface RegistrationSummary {
+  id: string;
+  playerFirstName: string | null;
+  playerLastName: string | null;
+  categoryId: string | null;
+  advancedGroup: boolean;
+  parentName: string;
+  parentPhone: string;
+  seasonId: string;
+}
+
+export interface OrderWithDistribution extends ShopOrderWithItems {
+  registration: RegistrationSummary | null;
+  openProblemCount: number;
+}
+
+async function attachDistributionInfo(supabase: any, orders: ShopOrderWithItems[]): Promise<OrderWithDistribution[]> {
+  if (orders.length === 0) return [];
+  const orderIds = orders.map((o) => o.id);
+  const registrationIds = Array.from(new Set(orders.map((o) => o.registration_id).filter((id): id is string => Boolean(id))));
+
+  const [regResult, problemResult] = await Promise.all([
+    registrationIds.length > 0
+      ? supabase.from("registrations").select("id, player_first_name, player_last_name, category_id, advanced_group, parent_name, parent_phone, season_id").in("id", registrationIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabase.from("shop_order_problems").select("order_id").in("order_id", orderIds).eq("status", "ouvert")
+  ]);
+  if (regResult.error) throw new Error(regResult.error.message);
+  if (problemResult.error) throw new Error(problemResult.error.message);
+
+  const regById = new Map<string, RegistrationSummary>(
+    (regResult.data ?? []).map((r: any) => [
+      r.id,
+      {
+        id: r.id,
+        playerFirstName: r.player_first_name,
+        playerLastName: r.player_last_name,
+        categoryId: r.category_id,
+        advancedGroup: r.advanced_group,
+        parentName: r.parent_name,
+        parentPhone: r.parent_phone,
+        seasonId: r.season_id
+      }
+    ])
+  );
+
+  const openProblemCountByOrder = new Map<string, number>();
+  for (const p of problemResult.data ?? []) {
+    openProblemCountByOrder.set(p.order_id, (openProblemCountByOrder.get(p.order_id) ?? 0) + 1);
+  }
+
+  return orders.map((o) => ({
+    ...o,
+    registration: o.registration_id ? regById.get(o.registration_id) ?? null : null,
+    openProblemCount: openProblemCountByOrder.get(o.id) ?? 0
+  }));
+}
+
+/** Commandes payées à distribuer (tout ce qui n'est pas encore "remis"),
+ *  triées par priorité : problèmes ouverts d'abord, puis prêtes à remettre,
+ *  puis les plus anciennes en premier. */
+export async function getOrdersToDistribute(seasonKey?: string): Promise<OrderWithDistribution[]> {
+  const supabase = db();
+  let query = supabase.from("shop_orders").select("*").eq("status", "paid").neq("distribution_status", "remis").order("created_at", { ascending: true });
+  if (seasonKey) query = query.eq("season_key", seasonKey);
+  const { data: orders, error } = await query;
+  if (error) throw new Error(error.message);
+  if (!orders || orders.length === 0) return [];
+
+  const orderIds = orders.map((o: { id: string }) => o.id);
+  const { data: items, error: itemsErr } = await supabase.from("shop_order_items").select("*").in("order_id", orderIds);
+  if (itemsErr) throw new Error(itemsErr.message);
+  const itemsByOrder = new Map<string, ShopOrderItem[]>();
+  for (const item of items ?? []) {
+    const list = itemsByOrder.get(item.order_id as string) ?? [];
+    list.push(item as ShopOrderItem);
+    itemsByOrder.set(item.order_id as string, list);
+  }
+
+  const withItems = orders.map((o: ShopOrder) => ({ ...o, items: itemsByOrder.get(o.id) ?? [] }));
+  const withInfo = await attachDistributionInfo(supabase, withItems);
+
+  const priority = (o: OrderWithDistribution) => {
+    if (o.openProblemCount > 0) return 0;
+    if (o.distribution_status === "pret_a_remettre") return 1;
+    if (o.distribution_status === "partiellement_remis") return 2;
+    return 3;
+  };
+  return withInfo.sort((a, b) => priority(a) - priority(b) || a.created_at.localeCompare(b.created_at));
+}
+
+/** Toutes les commandes uniformes (payées) d'une saison, avec infos
+ *  joueuse/parent et problèmes — pour le tableau de bord et la recherche. */
+export async function getSeasonOrders(seasonKey: string): Promise<OrderWithDistribution[]> {
+  const supabase = db();
+  const { data: orders, error } = await supabase.from("shop_orders").select("*").eq("status", "paid").eq("season_key", seasonKey).order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  if (!orders || orders.length === 0) return [];
+
+  const orderIds = orders.map((o: { id: string }) => o.id);
+  const { data: items, error: itemsErr } = await supabase.from("shop_order_items").select("*").in("order_id", orderIds);
+  if (itemsErr) throw new Error(itemsErr.message);
+  const itemsByOrder = new Map<string, ShopOrderItem[]>();
+  for (const item of items ?? []) {
+    const list = itemsByOrder.get(item.order_id as string) ?? [];
+    list.push(item as ShopOrderItem);
+    itemsByOrder.set(item.order_id as string, list);
+  }
+
+  const withItems = orders.map((o: ShopOrder) => ({ ...o, items: itemsByOrder.get(o.id) ?? [] }));
+  return attachDistributionInfo(supabase, withItems);
+}
+
+/** Commandes payées jamais classées par saison — à trier avant qu'elles
+ *  n'apparaissent dans un tableau de bord de saison. */
+export async function getUnassignedOrders(): Promise<OrderWithDistribution[]> {
+  const supabase = db();
+  const { data: orders, error } = await supabase.from("shop_orders").select("*").eq("status", "paid").is("season_key", null).order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  if (!orders || orders.length === 0) return [];
+
+  const orderIds = orders.map((o: { id: string }) => o.id);
+  const { data: items, error: itemsErr } = await supabase.from("shop_order_items").select("*").in("order_id", orderIds);
+  if (itemsErr) throw new Error(itemsErr.message);
+  const itemsByOrder = new Map<string, ShopOrderItem[]>();
+  for (const item of items ?? []) {
+    const list = itemsByOrder.get(item.order_id as string) ?? [];
+    list.push(item as ShopOrderItem);
+    itemsByOrder.set(item.order_id as string, list);
+  }
+
+  const withItems = orders.map((o: ShopOrder) => ({ ...o, items: itemsByOrder.get(o.id) ?? [] }));
+  return attachDistributionInfo(supabase, withItems);
+}
+
+export async function getOrderDetail(id: string): Promise<OrderWithDistribution | null> {
+  const supabase = db();
+  const { data: order, error } = await supabase.from("shop_orders").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!order) return null;
+
+  const { data: items, error: itemsErr } = await supabase.from("shop_order_items").select("*").eq("order_id", id);
+  if (itemsErr) throw new Error(itemsErr.message);
+
+  const [withInfo] = await attachDistributionInfo(supabase, [{ ...order, items: (items ?? []) as ShopOrderItem[] }]);
+  return withInfo;
+}
+
+/** Distinctes des saisons de `registrations` — une commande boutique peut
+ *  avoir sa propre saison sans être reliée à une joueuse. */
+export async function getUsedSeasonKeys(): Promise<string[]> {
+  const { data, error } = await db().from("shop_orders").select("season_key").eq("status", "paid").not("season_key", "is", null);
+  if (error) throw new Error(error.message);
+  const keys = new Set<string>((data ?? []).map((r: any) => r.season_key as string));
+  return Array.from(keys).sort();
+}
+
+async function logOrderEvent(orderId: string, event: string, detail: string | null, performedBy: string | null): Promise<void> {
+  const { error } = await db().from("shop_order_events").insert({ order_id: orderId, event, detail, performed_by: performedBy });
+  if (error) throw new Error(error.message);
+}
+
+export async function getOrderEvents(orderId: string): Promise<ShopOrderEvent[]> {
+  const { data, error } = await db().from("shop_order_events").select("*").eq("order_id", orderId).order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ShopOrderEvent[];
+}
+
+export async function linkOrderToRegistration(orderId: string, registrationId: string): Promise<void> {
+  const supabase = db();
+  const { data: reg, error: regErr } = await supabase.from("registrations").select("season_id, player_first_name, player_last_name").eq("id", registrationId).maybeSingle();
+  if (regErr) throw new Error(regErr.message);
+  if (!reg) throw new Error("Joueuse introuvable");
+
+  const { error } = await supabase
+    .from("shop_orders")
+    .update({ registration_id: registrationId, season_key: reg.season_id, updated_at: new Date().toISOString() })
+    .eq("id", orderId);
+  if (error) throw new Error(error.message);
+
+  await logOrderEvent(orderId, "joueuse_liee", `${reg.player_first_name ?? ""} ${reg.player_last_name ?? ""}`.trim(), null);
+}
+
+export async function unlinkOrderFromRegistration(orderId: string): Promise<void> {
+  const { error } = await db().from("shop_orders").update({ registration_id: null, updated_at: new Date().toISOString() }).eq("id", orderId);
+  if (error) throw new Error(error.message);
+  await logOrderEvent(orderId, "joueuse_deliee", null, null);
+}
+
+export async function setOrderSeasonKey(orderId: string, seasonKey: string): Promise<void> {
+  const { error } = await db().from("shop_orders").update({ season_key: seasonKey, updated_at: new Date().toISOString() }).eq("id", orderId);
+  if (error) throw new Error(error.message);
+}
+
+export async function setOrderNotes(orderId: string, notes: string): Promise<void> {
+  const { error } = await db().from("shop_orders").update({ notes, updated_at: new Date().toISOString() }).eq("id", orderId);
+  if (error) throw new Error(error.message);
+}
+
+export async function updateDistributionStatus(orderId: string, status: DistributionStatus): Promise<void> {
+  const { error } = await db().from("shop_orders").update({ distribution_status: status, updated_at: new Date().toISOString() }).eq("id", orderId);
+  if (error) throw new Error(error.message);
+  await logOrderEvent(orderId, "statut_change", DISTRIBUTION_STATUS_LABELS[status], null);
+}
+
+/** Confirme la remise (totale ou partielle) d'une commande — enregistre la
+ *  quantité remise par article, recalcule automatiquement le statut de
+ *  distribution ("remis" si tout est remis, sinon "partiellement_remis"),
+ *  et laisse une trace dans l'historique (qui, quand, quoi). */
+export async function recordDelivery(
+  orderId: string,
+  deliveries: { itemId: string; deliveredQuantity: number }[],
+  deliveredBy: string,
+  parentConfirmed: boolean
+): Promise<void> {
+  const supabase = db();
+
+  for (const d of deliveries) {
+    const { error } = await supabase.from("shop_order_items").update({ delivered_quantity: d.deliveredQuantity }).eq("id", d.itemId);
+    if (error) throw new Error(error.message);
+  }
+
+  const { data: items, error: itemsErr } = await supabase.from("shop_order_items").select("quantity, delivered_quantity, product_name, variant_label").eq("order_id", orderId);
+  if (itemsErr) throw new Error(itemsErr.message);
+
+  const allDelivered = (items ?? []).every((i: any) => i.delivered_quantity >= i.quantity);
+  const anyDelivered = (items ?? []).some((i: any) => i.delivered_quantity > 0);
+  const newStatus: DistributionStatus = allDelivered ? "remis" : anyDelivered ? "partiellement_remis" : "recu";
+
+  const { error } = await supabase.from("shop_orders").update({ distribution_status: newStatus, updated_at: new Date().toISOString() }).eq("id", orderId);
+  if (error) throw new Error(error.message);
+
+  const summary = (items ?? [])
+    .map((i: any) => `${i.product_name}${i.variant_label ? ` (${i.variant_label})` : ""} : ${i.delivered_quantity}/${i.quantity}`)
+    .join(", ");
+  await logOrderEvent(
+    orderId,
+    allDelivered ? "remis" : "remis_partiel",
+    `${summary}${parentConfirmed ? " · Parent a confirmé la réception" : ""}`,
+    deliveredBy
+  );
+}
+
+export async function addOrderProblem(orderId: string, problemType: ProblemType, description: string | null): Promise<void> {
+  const { error } = await db().from("shop_order_problems").insert({ order_id: orderId, problem_type: problemType, description });
+  if (error) throw new Error(error.message);
+  await logOrderEvent(orderId, "probleme_signale", `${PROBLEM_TYPE_LABELS[problemType]}${description ? ` — ${description}` : ""}`, null);
+}
+
+export async function resolveOrderProblem(problemId: string): Promise<void> {
+  const supabase = db();
+  const { data: problem, error: fetchErr } = await supabase.from("shop_order_problems").select("order_id, problem_type").eq("id", problemId).maybeSingle();
+  if (fetchErr) throw new Error(fetchErr.message);
+
+  const { error } = await supabase.from("shop_order_problems").update({ status: "resolu", resolved_at: new Date().toISOString() }).eq("id", problemId);
+  if (error) throw new Error(error.message);
+
+  if (problem) await logOrderEvent(problem.order_id as string, "probleme_resolu", PROBLEM_TYPE_LABELS[problem.problem_type as ProblemType], null);
+}
+
+/** Tous les problèmes (ouverts et résolus) d'une commande — pour la fiche
+ *  de commande, qui doit garder l'historique complet. */
+export async function getOrderProblems(orderId: string): Promise<ShopOrderProblem[]> {
+  const { data, error } = await db().from("shop_order_problems").select("*").eq("order_id", orderId).order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ShopOrderProblem[];
+}
+
+export interface ProblemWithOrder extends ShopOrderProblem {
+  order: { id: string; customer_name: string; season_key: string | null };
+}
+
+export async function getOpenProblems(seasonKey?: string): Promise<ProblemWithOrder[]> {
+  const supabase = db();
+  const { data: problems, error } = await supabase.from("shop_order_problems").select("*").eq("status", "ouvert").order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  if (!problems || problems.length === 0) return [];
+
+  const orderIds = Array.from(new Set(problems.map((p: any) => p.order_id)));
+  const { data: orders, error: ordersErr } = await supabase.from("shop_orders").select("id, customer_name, season_key").in("id", orderIds);
+  if (ordersErr) throw new Error(ordersErr.message);
+  const orderById = new Map((orders ?? []).map((o: any) => [o.id, o]));
+
+  return (problems as ShopOrderProblem[])
+    .map((p) => ({ ...p, order: orderById.get(p.order_id) as { id: string; customer_name: string; season_key: string | null } }))
+    .filter((p) => p.order && (!seasonKey || p.order.season_key === seasonKey));
+}
+
+export interface UniformStats {
+  totalOrders: number;
+  distributed: number;
+  toDistribute: number;
+  incomplete: number;
+  problems: number;
+  totalItems: number;
+  distributedItems: number;
+}
+
+export async function getUniformStats(seasonKey: string): Promise<UniformStats> {
+  const orders = await getSeasonOrders(seasonKey);
+  const totalItems = orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0);
+  const distributedItems = orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.delivered_quantity, 0), 0);
+  return {
+    totalOrders: orders.length,
+    distributed: orders.filter((o) => o.distribution_status === "remis").length,
+    toDistribute: orders.filter((o) => o.distribution_status !== "remis").length,
+    incomplete: orders.filter((o) => o.distribution_status === "partiellement_remis").length,
+    problems: orders.reduce((sum, o) => sum + o.openProblemCount, 0),
+    totalItems,
+    distributedItems
+  };
 }
