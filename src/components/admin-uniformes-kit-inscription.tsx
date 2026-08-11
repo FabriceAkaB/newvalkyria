@@ -1,34 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { UniformKitRow } from "@/lib/uniform-kits-repo";
+
+/** Le nom "remis par" est déduit du compte connecté — jamais saisi à la
+ *  main, pour que ce soit toujours fiable. */
+const DELIVERED_BY_LABEL: Record<"admin" | "gerante", string> = {
+  admin: "JP",
+  gerante: "Gérante"
+};
 
 interface Props {
   initialRows: UniformKitRow[];
 }
 
-function RowActions({ row, onChanged }: { row: UniformKitRow; onChanged: (patch: Partial<UniformKitRow>) => void }) {
-  const [askingName, setAskingName] = useState(false);
-  const [deliveredBy, setDeliveredBy] = useState("");
+function RowActions({ row, deliveredByName, onChanged }: { row: UniformKitRow; deliveredByName: string | null; onChanged: (patch: Partial<UniformKitRow>) => void }) {
   const [saving, setSaving] = useState(false);
 
   const confirmDelivered = async () => {
-    if (!deliveredBy.trim()) return;
+    if (!deliveredByName) return;
     setSaving(true);
     try {
       const res = await fetch("/api/admin/uniform-kits", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seasonKey: row.seasonKey, sourceType: row.sourceType, sourceId: row.sourceId, delivered: true, deliveredBy: deliveredBy.trim() })
+        body: JSON.stringify({ seasonKey: row.seasonKey, sourceType: row.sourceType, sourceId: row.sourceId, delivered: true, deliveredBy: deliveredByName })
       });
-      if (res.ok) {
-        onChanged({ delivered: true, deliveredAt: new Date().toISOString(), deliveredBy: deliveredBy.trim() });
-        setAskingName(false);
-        setDeliveredBy("");
-      }
+      if (res.ok) onChanged({ delivered: true, deliveredAt: new Date().toISOString(), deliveredBy: deliveredByName });
     } finally {
       setSaving(false);
     }
@@ -56,24 +57,8 @@ function RowActions({ row, onChanged }: { row: UniformKitRow; onChanged: (patch:
     );
   }
 
-  if (askingName) {
-    return (
-      <span style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
-        <input
-          className="admin-input"
-          placeholder="Remis par"
-          value={deliveredBy}
-          onChange={(e) => setDeliveredBy(e.target.value)}
-          style={{ width: "110px", fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
-          autoFocus
-        />
-        <button onClick={confirmDelivered} disabled={saving || !deliveredBy.trim()} className="admin-btn-primary" style={{ padding: "0.3rem 0.5rem", fontSize: "0.68rem" }}>OK</button>
-      </span>
-    );
-  }
-
   return (
-    <button onClick={() => setAskingName(true)} className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.7rem" }}>
+    <button onClick={confirmDelivered} disabled={saving || !deliveredByName} className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.7rem" }}>
       Remis
     </button>
   );
@@ -84,6 +69,12 @@ export function AdminUniformesKitInscription({ initialRows }: Props) {
   const [seasonFilter, setSeasonFilter] = useState("");
   const [ageFilter, setAgeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "remis" | "a-remettre">("all");
+  const [role, setRole] = useState<"admin" | "gerante" | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/session").then((r) => r.json()).then((d: { role: "admin" | "gerante" | null }) => setRole(d.role)).catch(() => setRole(null));
+  }, []);
+  const deliveredByName = role ? DELIVERED_BY_LABEL[role] : null;
 
   const seasons = useMemo(() => Array.from(new Map(rows.map((r) => [r.seasonKey, r.seasonLabel] as const))), [rows]);
   const ages = useMemo(() => Array.from(new Set(rows.filter((r) => !seasonFilter || r.seasonKey === seasonFilter).map((r) => r.ageLabel))).sort(), [rows, seasonFilter]);
@@ -159,7 +150,7 @@ export function AdminUniformesKitInscription({ initialRows }: Props) {
                     <td style={{ color: r.delivered ? "#7fd88f" : "#ffb464" }}>
                       {r.delivered ? `✓ Remis${r.deliveredBy ? ` (${r.deliveredBy})` : ""}` : "À remettre"}
                     </td>
-                    <td><RowActions row={r} onChanged={(patch) => handleChanged(r, patch)} /></td>
+                    <td><RowActions row={r} deliveredByName={deliveredByName} onChanged={(patch) => handleChanged(r, patch)} /></td>
                   </tr>
                 ))}
                 {filtered.length === 0 && <tr><td colSpan={8} className="admin-empty-text">Aucune inscription pour cette sélection.</td></tr>}

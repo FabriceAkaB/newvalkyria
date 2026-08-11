@@ -35,6 +35,13 @@ function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
 }
 
+/** Le nom "remis par" est déduit du compte connecté — jamais saisi à la
+ *  main, pour que ce soit toujours fiable. */
+const DELIVERED_BY_LABEL: Record<"admin" | "gerante", string> = {
+  admin: "JP",
+  gerante: "Gérante"
+};
+
 function RegistrationLinker({ order, onLinked }: { order: OrderWithDistribution; onLinked: () => void }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<RegistrationSearchResult[]>([]);
@@ -106,7 +113,6 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
   const [deliverQuantities, setDeliverQuantities] = useState<Record<string, number>>(
     () => Object.fromEntries(initialOrder.items.map((i) => [i.id, i.quantity - i.delivered_quantity]))
   );
-  const [deliveredBy, setDeliveredBy] = useState("");
   const [parentConfirmed, setParentConfirmed] = useState(false);
   const [delivering, setDelivering] = useState(false);
   const [notes, setNotes] = useState(order.notes ?? "");
@@ -119,6 +125,7 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
     fetch("/api/admin/session").then((r) => r.json()).then((d: { role: "admin" | "gerante" | null }) => setRole(d.role)).catch(() => setRole(null));
   }, []);
   const showPrices = role === "admin";
+  const deliveredByName = role ? DELIVERED_BY_LABEL[role] : null;
 
   const changeStatus = async (status: DistributionStatus) => {
     setStatusSaving(true);
@@ -135,14 +142,14 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
   };
 
   const confirmDelivery = async () => {
-    if (!deliveredBy.trim()) return;
+    if (!deliveredByName) return;
     setDelivering(true);
     try {
       const deliveries = order.items.map((i) => ({ itemId: i.id, deliveredQuantity: Math.max(i.delivered_quantity, deliverQuantities[i.id] ?? i.delivered_quantity) }));
       const res = await fetch(`/api/admin/boutique/commandes/${order.id}/deliver`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deliveries, deliveredBy: deliveredBy.trim(), parentConfirmed })
+        body: JSON.stringify({ deliveries, deliveredBy: deliveredByName, parentConfirmed })
       });
       if (res.ok) window.location.reload();
     } finally {
@@ -304,13 +311,12 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
                 ))}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-                <input className="admin-input" placeholder="Remis par (votre nom)" value={deliveredBy} onChange={(e) => setDeliveredBy(e.target.value)} style={{ flex: "1 1 180px" }} />
                 <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.75rem", color: "#9d9da0", cursor: "pointer" }}>
                   <input type="checkbox" checked={parentConfirmed} onChange={(e) => setParentConfirmed(e.target.checked)} />
                   Parent a confirmé la réception
                 </label>
-                <button onClick={confirmDelivery} disabled={delivering || !deliveredBy.trim()} className="admin-btn-primary" style={{ fontSize: "0.78rem" }}>
-                  {delivering ? "..." : "Uniforme remis"}
+                <button onClick={confirmDelivery} disabled={delivering || !deliveredByName} className="admin-btn-primary" style={{ fontSize: "0.78rem" }}>
+                  {delivering ? "..." : deliveredByName ? `Uniforme remis (${deliveredByName})` : "Uniforme remis"}
                 </button>
               </div>
             </div>
