@@ -50,10 +50,11 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
     return status.label === "En cours";
   });
 
-  const totalToCollect = filtered.reduce((sum, p) => {
-    const collected = p.installments.filter((i) => i.status === "paid").reduce((s, i) => s + i.amountCents, 0);
-    return sum + (p.totalAmountCents - collected);
-  }, 0);
+  const collectedOf = (p: PaymentPlanOverview) => p.installments.filter((i) => i.status === "paid").reduce((s, i) => s + i.amountCents, 0);
+  const totalPlanned = filtered.reduce((sum, p) => sum + p.totalAmountCents, 0);
+  const totalCollected = filtered.reduce((sum, p) => sum + collectedOf(p), 0);
+  const totalToCollect = totalPlanned - totalCollected;
+  const totalInstallmentsDue = filtered.reduce((sum, p) => sum + p.installments.filter((i) => i.status === "pending" || i.status === "failed").length, 0);
 
   return (
     <>
@@ -65,7 +66,7 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
             <Link href="/admin/revenus" className="admin-btn-ghost" style={{ textDecoration: "none" }}>← Revenus</Link>
           </div>
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
-            Familles ayant choisi de payer en plusieurs versements — {plans.length} plan(s) au total, {formatCAD(totalToCollect / 100)} encore à recevoir sur la sélection actuelle.
+            Familles ayant choisi de payer en plusieurs versements — {plans.length} plan(s) au total.
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.25rem" }}>
@@ -153,6 +154,29 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1.25rem" }}>
+            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Plans (sélection)</p>
+              <p style={{ fontSize: "1.1rem", color: "#fff", margin: 0, fontWeight: 700 }}>{filtered.length}</p>
+            </div>
+            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Total des plans</p>
+              <p style={{ fontSize: "1.1rem", color: "#fff", margin: 0, fontWeight: 700 }}>{formatCAD(totalPlanned / 100)}</p>
+            </div>
+            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Déjà encaissé</p>
+              <p style={{ fontSize: "1.1rem", color: "#7fd88f", margin: 0, fontWeight: 700 }}>{formatCAD(totalCollected / 100)}</p>
+            </div>
+            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Encore à recevoir</p>
+              <p style={{ fontSize: "1.1rem", color: "#ffb464", margin: 0, fontWeight: 700 }}>{formatCAD(totalToCollect / 100)}</p>
+            </div>
+            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Versements en attente</p>
+              <p style={{ fontSize: "1.1rem", color: "#fff", margin: 0, fontWeight: 700 }}>{totalInstallmentsDue}</p>
+            </div>
           </div>
         </div>
       </div>
