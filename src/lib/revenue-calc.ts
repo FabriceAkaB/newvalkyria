@@ -1,14 +1,24 @@
-import { getPayrollRows } from "@/lib/coach-payroll-data";
+import { startOfWeek } from "@/lib/coach-payroll";
+import { getPayrollRows, type PayrollRow } from "@/lib/coach-payroll-data";
 import { getAllLeads } from "@/lib/repositories";
 import {
+  getBudgets,
   getMonthlyGoals,
   getRevenueExpenses,
   getRevenueGoals,
   getRevenueSettings,
   PAYMENT_ACCOUNTS,
+  type ExpenseStatus,
   type RevenueExpense
 } from "@/lib/revenue-repo";
-import { getSeasonPaidInstallments, getSeasonPrograms, getSeasonRegistrations, getSeasons } from "@/lib/season-admin-repo";
+import {
+  getAllPaymentPlansOverview,
+  getSeasonPaidInstallments,
+  getSeasonPrograms,
+  getSeasonRegistrations,
+  getSeasons,
+  type Season
+} from "@/lib/season-admin-repo";
 import { getOrders } from "@/lib/shop-repo";
 
 export const ETE_SEASON_KEY = "ete-2026";
@@ -44,6 +54,8 @@ interface ExpenseEvent {
   label: string;
   taxRate: number;
   paidWith: string;
+  status: ExpenseStatus;
+  dueDate: string | null;
 }
 
 export interface CategoryBreakdown {
@@ -135,7 +147,9 @@ function expandExpense(expense: RevenueExpense, today: Date): ExpenseEvent[] {
       category: expense.category,
       label: expense.label,
       taxRate: expense.tax_rate,
-      paidWith: expense.paid_with
+      paidWith: expense.paid_with,
+      status: expense.status,
+      dueDate: expense.due_date
     }];
   }
 
@@ -153,7 +167,9 @@ function expandExpense(expense: RevenueExpense, today: Date): ExpenseEvent[] {
       category: expense.category,
       label: `${expense.label} (récurrente)`,
       taxRate: expense.tax_rate,
-      paidWith: expense.paid_with
+      paidWith: expense.paid_with,
+      status: expense.status,
+      dueDate: expense.due_date
     });
     cursor.setMonth(cursor.getMonth() + 1);
   }
@@ -168,7 +184,13 @@ function categoryBreakdown(events: ExpenseEvent[]): CategoryBreakdown[] {
     .sort((a, b) => b.amountCents - a.amountCents);
 }
 
-async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueEvents: RevenueEvent[]; expenseEvents: ExpenseEvent[] }> {
+async function computeRevenueData(): Promise<{
+  summary: RevenueSummary;
+  revenueEvents: RevenueEvent[];
+  expenseEvents: ExpenseEvent[];
+  payrollRows: PayrollRow[];
+  seasons: Season[];
+}> {
   const [leads, seasons, goals, orders, expenseRows, settings, monthlyGoals, payrollRows] = await Promise.all([
     getAllLeads(),
     getSeasons(),
@@ -290,7 +312,9 @@ async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueE
       category: "Salaires / Contractants",
       label: `${r.coachName} — ${r.activityType}`,
       taxRate: 0,
-      paidWith: "Compte bancaire"
+      paidWith: "Compte bancaire",
+      status: "paid",
+      dueDate: null
     });
   }
 
@@ -348,10 +372,13 @@ async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueE
 
   // ── Comptes — comme la feuille "Balance" du gabarit de référence. Tous
   // les revenus transitent par Stripe vers le compte bancaire ; les charges
-  // sont réparties selon le compte choisi par l'admin à la saisie. ──
+  // sont réparties selon le compte choisi par l'admin à la saisie. Seules
+  // les charges "payées" sortent réellement de l'encaisse — une facture "à
+  // payer" est un engagement, pas encore un mouvement d'argent (voir
+  // billsDueCents dans le tableau de bord financier). ──
   const accounts: AccountBalance[] = PAYMENT_ACCOUNTS.map((account) => {
     const revenueCents = account === REVENUE_ACCOUNT ? revenueEvents.reduce((sum, e) => sum + e.amountCents, 0) : 0;
-    const expenseCents = expenseEvents.filter((e) => e.paidWith === account).reduce((sum, e) => sum + e.amountCents, 0);
+    const expenseCents = expenseEvents.filter((e) => e.paidWith === account && e.status === "paid").reduce((sum, e) => sum + e.amountCents, 0);
     return { account, revenueCents, expenseCents, balanceCents: revenueCents - expenseCents };
   });
 
@@ -375,13 +402,237 @@ async function computeRevenueData(): Promise<{ summary: RevenueSummary; revenueE
       grandNetCents
     },
     revenueEvents,
-    expenseEvents
+    expenseEvents,
+    payrollRows,
+    seasons
   };
 }
 
 export async function computeRevenueSummary(): Promise<RevenueSummary> {
   const { summary } = await computeRevenueData();
   return summary;
+}
+
+/* ── Tableau de bord financier temps réel ─────────────────────────── */
+
+export interface FinancialAlert {
+  level: "warning" | "critical";
+  message: string;
+}
+
+export type FinancialHealth = "excellente" | "a-surveiller" | "critique";
+
+export interface CashFlowProjection {
+  horizonDays: number;
+  incomingCents: number;
+  outgoingCents: number;
+  projectedBalanceCents: number;
+}
+
+export interface FinancialDashboard {
+  cashAvailableCents: number;
+  revenueTodayCents: number;
+  revenueWeekCents: number;
+  revenueMonthCents: number;
+  revenueSeasonCents: number;
+  expenseTodayCents: number;
+  expenseMonthCents: number;
+  expenseSeasonCents: number;
+  netProfitMonthCents: number;
+  netProfitSeasonCents: number;
+  payrollDueCents: number;
+  billsDueCents: number;
+  parentPaymentsDueCents: number;
+  projectedRemainingCents: number;
+  activeSeasonLabel: string | null;
+  health: FinancialHealth;
+  alerts: FinancialAlert[];
+  cashFlow: CashFlowProjection[];
+}
+
+/** Seuil sous lequel l'encaisse est jugée "faible" par rapport aux
+ *  obligations connues (masse salariale due + factures en attente) — un
+ *  ratio plutôt qu'un montant fixe, pour rester pertinent peu importe la
+ *  taille de l'académie. */
+const LOW_CASH_RATIO = 1.2;
+
+export async function computeFinancialDashboard(): Promise<FinancialDashboard> {
+  const { summary, revenueEvents, expenseEvents, payrollRows, seasons } = await computeRevenueData();
+  const plans = await getAllPaymentPlansOverview();
+
+  const now = new Date();
+  const todayISO = now.toISOString().slice(0, 10);
+  const monthKey = todayISO.slice(0, 7);
+  const weekStartISO = startOfWeek(now).toISOString().slice(0, 10);
+
+  const sumWhere = (events: { date: string; amountCents: number; status?: ExpenseStatus }[], pred: (date: string) => boolean, onlyPaid = false) =>
+    events.filter((e) => pred(e.date) && (!onlyPaid || e.status !== "due")).reduce((sum, e) => sum + e.amountCents, 0);
+
+  // La ligne "ete-2026" dans `seasons` est un vestige de la migration
+  // fondatrice, jamais utilisé pour les vraies saisons (Été n'écrit jamais
+  // dans `registrations`, voir plus haut) — à exclure ici comme ailleurs
+  // dans ce fichier, sans quoi son `is_active` (jamais mis à jour) fausse
+  // la détection de la saison en cours.
+  const realSeasons = seasons.filter((s) => s.id !== ETE_SEASON_KEY);
+  const activeSeason = realSeasons.find((s) => s.is_active) ?? realSeasons[0] ?? null;
+  const activeSeasonCard = activeSeason ? summary.seasons.find((c) => c.key === activeSeason.id) : undefined;
+
+  const cashAvailableCents = summary.accounts.reduce((sum, a) => sum + a.balanceCents, 0);
+
+  const revenueTodayCents = sumWhere(revenueEvents, (d) => d === todayISO);
+  const revenueWeekCents = sumWhere(revenueEvents, (d) => d >= weekStartISO);
+  const revenueMonthCents = sumWhere(revenueEvents, (d) => d.slice(0, 7) === monthKey);
+  const revenueSeasonCents = activeSeasonCard?.totalCents ?? 0;
+
+  const expenseTodayCents = sumWhere(expenseEvents, (d) => d === todayISO, true);
+  const expenseMonthCents = sumWhere(expenseEvents, (d) => d.slice(0, 7) === monthKey, true);
+  const expenseSeasonCents = activeSeasonCard?.expenseCents ?? 0;
+
+  const payrollDueCents = payrollRows.filter((r) => !r.paid).reduce((sum, r) => sum + r.payCents, 0);
+  const billsDueCents = expenseEvents.filter((e) => e.status === "due").reduce((sum, e) => sum + e.amountCents, 0);
+  const parentPaymentsDueCents = plans.reduce((sum, p) => {
+    return sum + p.installments.filter((i) => i.status === "pending" || i.status === "failed").reduce((s, i) => s + i.amountCents, 0);
+  }, 0);
+
+  const projectedRemainingCents = cashAvailableCents - payrollDueCents - billsDueCents;
+
+  // ── Trésorerie prévisionnelle : encaisse actuelle + versements de parents
+  // attendus dans la fenêtre - factures/salaires dus dans la fenêtre. Les
+  // salaires n'ont pas de date d'échéance propre (payés sur confirmation
+  // manuelle), donc on les compte entièrement dans les 3 horizons — c'est
+  // une obligation déjà due, pas une prévision. ──
+  const cashFlow: CashFlowProjection[] = [7, 30, 90].map((horizonDays) => {
+    const horizon = new Date(now);
+    horizon.setDate(horizon.getDate() + horizonDays);
+    const horizonISO = horizon.toISOString().slice(0, 10);
+
+    const incomingCents = plans.reduce((sum, p) => {
+      return sum + p.installments
+        .filter((i) => (i.status === "pending" || i.status === "failed") && i.dueDate <= horizonISO)
+        .reduce((s, i) => s + i.amountCents, 0);
+    }, 0);
+
+    const billsInWindowCents = expenseEvents
+      .filter((e) => e.status === "due" && (!e.dueDate || e.dueDate <= horizonISO))
+      .reduce((sum, e) => sum + e.amountCents, 0);
+
+    const outgoingCents = billsInWindowCents + payrollDueCents;
+    return { horizonDays, incomingCents, outgoingCents, projectedBalanceCents: cashAvailableCents + incomingCents - outgoingCents };
+  });
+
+  // ── Alertes ─────────────────────────────────────────────────────────
+  const alerts: FinancialAlert[] = [];
+  const overdueInstallments = plans.flatMap((p) => p.installments.filter((i) => i.status === "failed" || i.status === "failed_final"));
+  if (overdueInstallments.length > 0) {
+    alerts.push({ level: "critical", message: `${overdueInstallments.length} versement(s) de parent(s) en échec de prélèvement.` });
+  }
+  if (payrollDueCents > 0) {
+    alerts.push({ level: "warning", message: `${formatCentsFr(payrollDueCents)} de salaires d'entraîneurs non payés.` });
+  }
+  const overdueBills = expenseEvents.filter((e) => e.status === "due" && e.dueDate && e.dueDate < todayISO);
+  if (overdueBills.length > 0) {
+    alerts.push({ level: "critical", message: `${overdueBills.length} facture(s) en retard de paiement.` });
+  }
+  const budgets = await getBudgetVsActual();
+  const overBudget = budgets.filter((b) => b.budgetCents > 0 && b.actualCents > b.budgetCents);
+  if (overBudget.length > 0) {
+    alerts.push({ level: "warning", message: `Budget dépassé pour ${overBudget.length} catégorie(s) : ${overBudget.map((b) => b.category).join(", ")}.` });
+  }
+  if (cashAvailableCents < (payrollDueCents + billsDueCents) * LOW_CASH_RATIO && payrollDueCents + billsDueCents > 0) {
+    alerts.push({ level: "warning", message: "Solde bancaire faible par rapport aux obligations connues (salaires + factures)." });
+  }
+
+  const health: FinancialHealth = alerts.some((a) => a.level === "critical")
+    ? "critique"
+    : alerts.length > 0
+      ? "a-surveiller"
+      : "excellente";
+
+  return {
+    cashAvailableCents,
+    revenueTodayCents,
+    revenueWeekCents,
+    revenueMonthCents,
+    revenueSeasonCents,
+    expenseTodayCents,
+    expenseMonthCents,
+    expenseSeasonCents,
+    netProfitMonthCents: revenueMonthCents - expenseMonthCents,
+    netProfitSeasonCents: revenueSeasonCents - expenseSeasonCents,
+    payrollDueCents,
+    billsDueCents,
+    parentPaymentsDueCents,
+    projectedRemainingCents,
+    activeSeasonLabel: activeSeason?.label ?? null,
+    health,
+    alerts,
+    cashFlow
+  };
+}
+
+function formatCentsFr(cents: number): string {
+  return `${(cents / 100).toLocaleString("fr-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+}
+
+/* ── Budget annuel vs dépenses réelles ─────────────────────────────── */
+
+export interface BudgetVsActual {
+  category: string;
+  budgetCents: number;
+  actualCents: number;
+}
+
+/** Compare le budget annuel par catégorie aux dépenses réelles (payées ET
+ *  à payer — un engagement compte comme une dépense réelle en comptabilité,
+ *  même si l'argent n'est pas encore sorti). Couvre toutes les charges,
+ *  toutes saisons confondues (le budget est annuel, pas par saison). */
+export async function getBudgetVsActual(): Promise<BudgetVsActual[]> {
+  const [budgets, { expenseEvents }] = await Promise.all([getBudgets(), computeRevenueData()]);
+
+  const actualByCategory = new Map<string, number>();
+  for (const e of expenseEvents) actualByCategory.set(e.category, (actualByCategory.get(e.category) ?? 0) + e.amountCents);
+
+  const categories = new Set<string>([...budgets.map((b) => b.category), ...actualByCategory.keys()]);
+  return Array.from(categories)
+    .map((category) => ({
+      category,
+      budgetCents: budgets.find((b) => b.category === category)?.amount_cents ?? 0,
+      actualCents: actualByCategory.get(category) ?? 0
+    }))
+    .sort((a, b) => b.actualCents - a.actualCents);
+}
+
+export interface CashMovement {
+  date: string;
+  amountCents: number;
+  description: string;
+}
+
+export interface UpcomingMovements {
+  incoming: CashMovement[];
+  outgoing: CashMovement[];
+}
+
+/** Détail des mouvements d'argent connus mais pas encore encaissés/payés —
+ *  versements de parents en attente et factures à payer — triés par date,
+ *  pour la page Trésorerie. */
+export async function getUpcomingMovements(): Promise<UpcomingMovements> {
+  const [expenseRows, plans] = await Promise.all([getRevenueExpenses(), getAllPaymentPlansOverview()]);
+
+  const outgoing: CashMovement[] = expenseRows
+    .filter((e) => e.status === "due")
+    .map((e) => ({ date: e.due_date ?? e.expense_date, amountCents: e.amount_cents, description: `${e.label} (${e.category})` }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const incoming: CashMovement[] = plans
+    .flatMap((p) =>
+      p.installments
+        .filter((i) => i.status === "pending" || i.status === "failed")
+        .map((i) => ({ date: i.dueDate, amountCents: i.amountCents, description: `${p.parentName} — versement ${i.sequenceNo}/${p.installmentCount}${i.status === "failed" ? " (échec, réessai)" : ""}` }))
+    )
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return { incoming, outgoing };
 }
 
 /** Lignes brutes (revenus + charges, y compris les occurrences mensuelles

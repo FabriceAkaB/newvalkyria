@@ -5,11 +5,88 @@ import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { formatCAD } from "@/lib/season-2027";
-import { GENERAL_KEY, type AccountBalance, type MonthlyBucket, type RevenueSummary, type SeasonRevenue } from "@/lib/revenue-calc";
+import { GENERAL_KEY, type AccountBalance, type FinancialAlert, type FinancialDashboard, type FinancialHealth, type MonthlyBucket, type RevenueSummary, type SeasonRevenue } from "@/lib/revenue-calc";
 import { EXPENSE_CATEGORIES, PAYMENT_ACCOUNTS, type RevenueExpense } from "@/lib/revenue-repo";
 
 interface Props {
   summary: RevenueSummary;
+  dashboard: FinancialDashboard;
+}
+
+const HEALTH_LABELS: Record<FinancialHealth, { label: string; emoji: string; color: string }> = {
+  excellente: { label: "Situation excellente", emoji: "🟢", color: "#7fd88f" },
+  "a-surveiller": { label: "Situation à surveiller", emoji: "🟡", color: "#f0c878" },
+  critique: { label: "Situation critique", emoji: "🔴", color: "#ff9999" }
+};
+
+function KpiTile({ label, value, valueColor, sub }: { label: string; value: string; valueColor?: string; sub?: string }) {
+  return (
+    <div style={{ flex: "1 1 150px", minWidth: "150px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.85rem 1rem" }}>
+      <p style={{ fontSize: "0.65rem", color: "#9d9da0", textTransform: "uppercase", letterSpacing: "0.03em", margin: "0 0 0.35rem" }}>{label}</p>
+      <p style={{ fontSize: "1.15rem", fontWeight: 700, color: valueColor ?? "#fff", margin: 0 }}>{value}</p>
+      {sub && <p style={{ fontSize: "0.65rem", color: "#6d6b71", margin: "0.2rem 0 0" }}>{sub}</p>}
+    </div>
+  );
+}
+
+function AlertsList({ alerts }: { alerts: FinancialAlert[] }) {
+  if (alerts.length === 0) {
+    return <p style={{ fontSize: "0.78rem", color: "#7fd88f", margin: 0 }}>✓ Aucune alerte — tout est sous contrôle.</p>;
+  }
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+      {alerts.map((a, i) => (
+        <p key={i} style={{ fontSize: "0.78rem", margin: 0, color: a.level === "critical" ? "#ff9999" : "#f0c878" }}>
+          {a.level === "critical" ? "🔴" : "🟡"} {a.message}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function FinancialDashboardPanel({ dashboard }: { dashboard: FinancialDashboard }) {
+  const health = HEALTH_LABELS[dashboard.health];
+  const cash7 = dashboard.cashFlow.find((c) => c.horizonDays === 7);
+
+  return (
+    <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "12px", padding: "1.25rem", marginBottom: "1.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1rem" }}>
+        <p className="admin-section-title" style={{ margin: 0, fontSize: "0.95rem" }}>Tableau de bord financier</p>
+        <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem", fontWeight: 700, color: health.color }}>
+          {health.emoji} {health.label}
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1rem" }}>
+        <KpiTile label="Argent disponible" value={formatCAD(dashboard.cashAvailableCents / 100)} sub="Toutes les charges payées déduites" />
+        <KpiTile label="Restant après obligations" value={formatCAD(dashboard.projectedRemainingCents / 100)} valueColor={dashboard.projectedRemainingCents < 0 ? "#ff9999" : undefined} sub="Salaires + factures dus déduits" />
+        <KpiTile label="Solde bancaire synchronisé" value="Non synchronisé" sub="Aucune connexion bancaire configurée" />
+        <KpiTile label="Solde projeté dans 7 jours" value={cash7 ? formatCAD(cash7.projectedBalanceCents / 100) : "—"} valueColor={cash7 && cash7.projectedBalanceCents < 0 ? "#ff9999" : undefined} />
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1rem" }}>
+        <KpiTile label="Revenus — jour" value={formatCAD(dashboard.revenueTodayCents / 100)} />
+        <KpiTile label="Revenus — semaine" value={formatCAD(dashboard.revenueWeekCents / 100)} />
+        <KpiTile label="Revenus — mois" value={formatCAD(dashboard.revenueMonthCents / 100)} />
+        <KpiTile label={dashboard.activeSeasonLabel ? `Revenus — ${dashboard.activeSeasonLabel}` : "Revenus — saison"} value={formatCAD(dashboard.revenueSeasonCents / 100)} />
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1rem" }}>
+        <KpiTile label="Dépenses — jour" value={formatCAD(dashboard.expenseTodayCents / 100)} valueColor={dashboard.expenseTodayCents > 0 ? "#ff9999" : undefined} />
+        <KpiTile label="Dépenses — mois" value={formatCAD(dashboard.expenseMonthCents / 100)} valueColor={dashboard.expenseMonthCents > 0 ? "#ff9999" : undefined} />
+        <KpiTile label={dashboard.activeSeasonLabel ? `Dépenses — ${dashboard.activeSeasonLabel}` : "Dépenses — saison"} value={formatCAD(dashboard.expenseSeasonCents / 100)} valueColor={dashboard.expenseSeasonCents > 0 ? "#ff9999" : undefined} />
+        <KpiTile label="Profit net — mois" value={formatCAD(dashboard.netProfitMonthCents / 100)} valueColor={dashboard.netProfitMonthCents < 0 ? "#ff9999" : "#7fd88f"} />
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.25rem" }}>
+        <KpiTile label="Masse salariale à payer" value={formatCAD(dashboard.payrollDueCents / 100)} valueColor={dashboard.payrollDueCents > 0 ? "#ffb464" : undefined} />
+        <KpiTile label="Factures en attente" value={formatCAD(dashboard.billsDueCents / 100)} valueColor={dashboard.billsDueCents > 0 ? "#ffb464" : undefined} />
+        <KpiTile label="Paiements de parents en attente" value={formatCAD(dashboard.parentPaymentsDueCents / 100)} valueColor={dashboard.parentPaymentsDueCents > 0 ? "#ffb464" : undefined} />
+      </div>
+
+      <AlertsList alerts={dashboard.alerts} />
+    </div>
+  );
 }
 
 function GoalEditor({ card, onSaved }: { card: SeasonRevenue; onSaved: (goalCents: number) => void }) {
@@ -86,8 +163,11 @@ function ExpensesPanel({
   const [paidWith, setPaidWith] = useState<string>(PAYMENT_ACCOUNTS[0]);
   const [recurring, setRecurring] = useState(false);
   const [endDate, setEndDate] = useState("");
+  const [status, setStatus] = useState<"paid" | "due">("paid");
+  const [dueDate, setDueDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
 
   const addExpense = async () => {
     const dollars = parseFloat(amount.replace(",", "."));
@@ -107,7 +187,9 @@ function ExpensesPanel({
           isRecurring: recurring,
           recurrenceEndDate: recurring && endDate ? endDate : null,
           taxRate: taxPct / 100,
-          paidWith
+          paidWith,
+          status,
+          dueDate: status === "due" ? (dueDate || null) : null
         })
       });
       if (res.ok) {
@@ -118,6 +200,8 @@ function ExpensesPanel({
         setTaxRate("0");
         setRecurring(false);
         setEndDate("");
+        setStatus("paid");
+        setDueDate("");
       }
     } finally {
       setSaving(false);
@@ -131,6 +215,20 @@ function ExpensesPanel({
       if (res.ok) onExpensesChanged(card.key, card.expenses.filter((e) => e.id !== id));
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const markPaid = async (id: string) => {
+    setMarkingPaidId(id);
+    try {
+      const res = await fetch(`/api/admin/revenue-expenses/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "paid" })
+      });
+      if (res.ok) onExpensesChanged(card.key, card.expenses.map((e) => (e.id === id ? { ...e, status: "paid" as const } : e)));
+    } finally {
+      setMarkingPaidId(null);
     }
   };
 
@@ -162,9 +260,21 @@ function ExpensesPanel({
                 {e.label} · {e.category} · {e.expense_date} · {e.paid_with}
                 {e.tax_rate > 0 && ` · tx ${(e.tax_rate * 100).toFixed(2)}%`}
                 {e.is_recurring && <span title="Charge récurrente"> 🔁</span>}
+                {e.status === "due" && (
+                  <span style={{ color: "#ffb464" }}> · À payer{e.due_date ? ` (échéance ${e.due_date})` : ""}</span>
+                )}
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                 <span style={{ color: "#ff9999" }}>-{formatCAD(e.amount_cents / 100)}</span>
+                {e.status === "due" && (
+                  <button
+                    onClick={() => markPaid(e.id)}
+                    disabled={markingPaidId === e.id}
+                    style={{ background: "none", border: "none", color: "#7fd88f", cursor: "pointer", fontSize: "0.68rem", padding: 0, textDecoration: "underline" }}
+                  >
+                    {markingPaidId === e.id ? "..." : "Marquer payée"}
+                  </button>
+                )}
                 <button
                   onClick={() => deleteExpense(e.id)}
                   disabled={deletingId === e.id}
@@ -257,6 +367,27 @@ function ExpensesPanel({
               />
             </label>
           )}
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.68rem", color: "#9d9da0", cursor: "pointer" }}>
+              <input type="radio" name={`status-${card.key}`} checked={status === "paid"} onChange={() => setStatus("paid")} />
+              Payée maintenant
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.68rem", color: "#9d9da0", cursor: "pointer" }}>
+              <input type="radio" name={`status-${card.key}`} checked={status === "due"} onChange={() => setStatus("due")} />
+              À payer plus tard (facture)
+            </label>
+            {status === "due" && (
+              <input
+                type="date"
+                className="admin-input"
+                style={{ fontSize: "0.72rem", padding: "0.3rem 0.5rem" }}
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                placeholder="Échéance"
+              />
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -486,7 +617,7 @@ function AccountsPanel({ accounts }: { accounts: AccountBalance[] }) {
   );
 }
 
-export function AdminRevenus({ summary }: Props) {
+export function AdminRevenus({ summary, dashboard }: Props) {
   const [cards, setCards] = useState<SeasonRevenue[]>(summary.seasons);
   const [boutique, setBoutique] = useState<SeasonRevenue>(summary.boutique);
   const [general, setGeneral] = useState<SeasonRevenue>(summary.general);
@@ -525,6 +656,8 @@ export function AdminRevenus({ summary }: Props) {
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "0.75rem" }}>
             Revenu réellement encaissé par saison (versements comptés seulement une fois prélevés), avec vos objectifs financiers, vos charges et vos taxes.
           </p>
+
+          <FinancialDashboardPanel dashboard={dashboard} />
 
           <RevenueTaxSetting initialRate={summary.revenueTaxRate} />
 

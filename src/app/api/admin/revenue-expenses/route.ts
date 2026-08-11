@@ -19,6 +19,8 @@ export async function POST(request: Request) {
     recurrenceEndDate?: string | null;
     taxRate?: number;
     paidWith?: string;
+    status?: "paid" | "due";
+    dueDate?: string | null;
   };
 
   if (!body.seasonKey || !body.label?.trim() || typeof body.amountCents !== "number" || body.amountCents <= 0 || !body.expenseDate) {
@@ -29,6 +31,8 @@ export async function POST(request: Request) {
   const paidWith = body.paidWith && (PAYMENT_ACCOUNTS as readonly string[]).includes(body.paidWith) ? body.paidWith : "Compte bancaire";
   const taxRate = typeof body.taxRate === "number" && body.taxRate >= 0 && body.taxRate <= 1 ? body.taxRate : 0;
 
+  const status = body.status === "due" ? "due" : "paid";
+
   const expense = await addRevenueExpense({
     seasonKey: body.seasonKey,
     category,
@@ -38,7 +42,9 @@ export async function POST(request: Request) {
     isRecurring: Boolean(body.isRecurring),
     recurrenceEndDate: body.recurrenceEndDate || null,
     taxRate,
-    paidWith
+    paidWith,
+    status,
+    dueDate: status === "due" ? (body.dueDate || null) : null
   });
 
   return NextResponse.json({ ok: true, expense }, { status: 201 });
