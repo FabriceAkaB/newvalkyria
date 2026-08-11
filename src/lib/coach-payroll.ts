@@ -40,6 +40,16 @@ export function formatHours(hours: number): string {
   return `${hours.toFixed(2).replace(/\.00$/, "")} h`;
 }
 
+/** Format lisible "1 h 25 min" pour la durée d'une seule activité — évite
+ *  les décimales d'heures (1.42 h) peu parlantes à l'écran. */
+export function formatHoursMinutes(hours: number): string {
+  const totalMinutes = Math.round(hours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (m === 0) return `${h} h`;
+  return `${h} h ${m} min`;
+}
+
 export interface AssignmentComputed {
   hours: number;
   rateCents: number;

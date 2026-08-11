@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { CoachTopbar } from "@/components/coach-topbar";
-import { computeHours, formatHours } from "@/lib/coach-payroll";
+import { computeHours, formatHoursMinutes } from "@/lib/coach-payroll";
 import { EVALUATION_CRITERIA, type PlayerAttendance, type PlayerAttendanceStatus, type PlayerEvaluation, type RosterPlayer } from "@/lib/coach-portal-repo";
 import type { CoachActivity } from "@/lib/coaches-repo";
 
@@ -194,7 +194,7 @@ export function CoachActiviteDetail({ coachName, activity, otherCoaches, roster,
           <p style={{ fontSize: "0.85rem", color: "#c3c2c8", margin: "0 0 1.5rem" }}>
             {new Date(activity.activity_date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             {" · "}{activity.start_time.slice(0, 5)}–{activity.end_time.slice(0, 5)}
-            {" · "}{formatHours(computeHours(activity.start_time, activity.end_time))}
+            {" · "}{formatHoursMinutes(computeHours(activity.start_time, activity.end_time))}
             {activity.location && ` · ${activity.location}`}
             {otherCoaches.length > 0 && ` · avec ${otherCoaches.map((c) => `${c.first_name} ${c.last_name}`).join(", ")}`}
           </p>

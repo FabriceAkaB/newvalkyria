@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { CoachTopbar } from "@/components/coach-topbar";
-import { computeHours, formatHours } from "@/lib/coach-payroll";
+import { computeHours, formatHoursMinutes } from "@/lib/coach-payroll";
 
 export interface DashboardActivity {
   id: string;
@@ -42,7 +42,7 @@ function ActivityCard({ activity }: { activity: DashboardActivity }) {
           <p style={{ fontSize: "0.75rem", color: "#9d9da0", margin: "0.2rem 0 0" }}>
             {new Date(activity.date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })}
             {" · "}{activity.startTime.slice(0, 5)}–{activity.endTime.slice(0, 5)}
-            {" · "}{formatHours(computeHours(activity.startTime, activity.endTime))}
+            {" · "}{formatHoursMinutes(computeHours(activity.startTime, activity.endTime))}
           </p>
         </div>
         {activity.category && <span style={{ fontSize: "0.65rem", color: "#88c0d0", background: "rgba(136,192,208,0.1)", padding: "0.2rem 0.5rem", borderRadius: "4px", whiteSpace: "nowrap" }}>{activity.category}</span>}
