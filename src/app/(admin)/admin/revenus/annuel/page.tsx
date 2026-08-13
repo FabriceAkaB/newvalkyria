@@ -1,6 +1,6 @@
 import { AdminRevenusAnnuel } from "@/components/admin-revenus-annuel";
 import { requireAdmin } from "@/lib/admin-auth";
-import { BOUTIQUE_KEY, BOUTIQUE_LABEL, ETE_SEASON_KEY, ETE_SEASON_LABEL, getAnnualBreakdown, getExpensesForYear } from "@/lib/revenue-calc";
+import { BOUTIQUE_KEY, BOUTIQUE_LABEL, ETE_SEASON_KEY, ETE_SEASON_LABEL, getAnnualBreakdown, getExpensesForYear, getIncomeForYear } from "@/lib/revenue-calc";
 import { getActiveSeasonId, getSeasons } from "@/lib/season-admin-repo";
 
 export const metadata = { title: "Vue annuelle — Admin New Valkyria", robots: "noindex" };
@@ -20,7 +20,19 @@ export default async function AdminRevenusAnnuelPage({ searchParams }: { searchP
     { key: BOUTIQUE_KEY, label: BOUTIQUE_LABEL }
   ];
 
-  const [breakdown, expenses] = await Promise.all([getAnnualBreakdown(year, seasonKey), getExpensesForYear(year, seasonKey)]);
+  const [breakdown, expenses, income] = await Promise.all([
+    getAnnualBreakdown(year, seasonKey),
+    getExpensesForYear(year, seasonKey),
+    getIncomeForYear(year, seasonKey)
+  ]);
 
-  return <AdminRevenusAnnuel breakdown={breakdown} expenses={expenses} seasonOptions={seasonOptions} currentSeason={seasonKey ?? ""} />;
+  return (
+    <AdminRevenusAnnuel
+      breakdown={breakdown}
+      expenses={expenses}
+      income={income}
+      seasonOptions={seasonOptions}
+      currentSeason={seasonKey ?? ""}
+    />
+  );
 }

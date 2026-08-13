@@ -40,6 +40,13 @@ export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 export const PAYMENT_ACCOUNTS = ["Compte bancaire", "Carte de crédit", "Comptant"] as const;
 export type PaymentAccount = (typeof PAYMENT_ACCOUNTS)[number];
 
+/** Les inscriptions, la boutique et les paiements échelonnés restent
+ *  automatiques — ces catégories couvrent seulement l'argent qui entre
+ *  autrement (jamais saisies pour un revenu déjà suivi ailleurs, pour
+ *  éviter le double-comptage). */
+export const INCOME_CATEGORIES = ["Commandites", "Subventions", "Dons", "Camps", "Séances privées", "Autre"] as const;
+export type IncomeCategory = (typeof INCOME_CATEGORIES)[number];
+
 export type ExpenseStatus = "paid" | "due";
 
 export interface RevenueExpense {
@@ -103,6 +110,65 @@ export async function addRevenueExpense(input: {
 export async function deleteRevenueExpense(id: string): Promise<void> {
   const supabase = db();
   const { error } = await supabase.from("revenue_expenses").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/* ── Revenus saisis manuellement (commandites, subventions, dons...) ──
+ *  Symétrique aux charges — jamais utilisé pour les inscriptions/boutique,
+ *  qui restent automatiques. */
+
+export interface RevenueIncome {
+  id: string;
+  season_key: string;
+  category: string;
+  label: string;
+  amount_cents: number;
+  income_date: string;
+  paid_with: string;
+  tax_rate: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export async function getIncomeEntries(): Promise<RevenueIncome[]> {
+  const supabase = db();
+  const { data, error } = await supabase.from("revenue_income").select("*").order("income_date", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as RevenueIncome[];
+}
+
+export async function addIncomeEntry(input: {
+  seasonKey: string;
+  category: string;
+  label: string;
+  amountCents: number;
+  incomeDate: string;
+  paidWith: string;
+  taxRate: number;
+  notes: string | null;
+}): Promise<RevenueIncome> {
+  const supabase = db();
+  const { data, error } = await supabase
+    .from("revenue_income")
+    .insert({
+      season_key: input.seasonKey,
+      category: input.category,
+      label: input.label,
+      amount_cents: input.amountCents,
+      income_date: input.incomeDate,
+      paid_with: input.paidWith,
+      tax_rate: input.taxRate,
+      notes: input.notes
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return data as RevenueIncome;
+}
+
+export async function deleteIncomeEntry(id: string): Promise<void> {
+  const supabase = db();
+  const { error } = await supabase.from("revenue_income").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
 

@@ -4,13 +4,15 @@ import { getAllLeads } from "@/lib/repositories";
 import {
   EXPENSE_CATEGORIES,
   getBudgets,
+  getIncomeEntries,
   getMonthlyGoals,
   getRevenueExpenses,
   getRevenueGoals,
   getRevenueSettings,
   PAYMENT_ACCOUNTS,
   type ExpenseStatus,
-  type RevenueExpense
+  type RevenueExpense,
+  type RevenueIncome
 } from "@/lib/revenue-repo";
 import {
   getAllPaymentPlansOverview,
@@ -192,12 +194,13 @@ async function computeRevenueData(): Promise<{
   payrollRows: PayrollRow[];
   seasons: Season[];
 }> {
-  const [leads, seasons, goals, orders, expenseRows, settings, monthlyGoals, payrollRows] = await Promise.all([
+  const [leads, seasons, goals, orders, expenseRows, incomeRows, settings, monthlyGoals, payrollRows] = await Promise.all([
     getAllLeads(),
     getSeasons(),
     getRevenueGoals(),
     getOrders(),
     getRevenueExpenses(),
+    getIncomeEntries(),
     getRevenueSettings(),
     getMonthlyGoals(),
     getPayrollRows()
@@ -290,6 +293,17 @@ async function computeRevenueData(): Promise<{
       amountCents: o.total_cents,
       seasonKey: BOUTIQUE_KEY,
       description: `Boutique — ${o.customer_name}`
+    });
+  }
+
+  // ── Revenus saisis manuellement (commandites, subventions, dons...) —
+  // jamais d'inscription/boutique ici, déjà couvertes ci-dessus. ──
+  for (const income of incomeRows) {
+    revenueEvents.push({
+      date: income.income_date,
+      amountCents: income.amount_cents,
+      seasonKey: income.season_key,
+      description: `${income.category} — ${income.label}`
     });
   }
 
@@ -724,6 +738,17 @@ export async function getExpensesForYear(year: number, seasonKey?: string): Prom
     .filter((e) => e.expense_date.startsWith(String(year)))
     .filter((e) => !seasonKey || e.season_key === seasonKey)
     .sort((a, b) => b.expense_date.localeCompare(a.expense_date));
+}
+
+/** Revenus saisis manuellement (commandites, subventions, dons...) d'une
+ *  année — les inscriptions/boutique n'ont pas de ligne individuelle à
+ *  lister ici, elles restent dans la grille par catégorie. */
+export async function getIncomeForYear(year: number, seasonKey?: string): Promise<RevenueIncome[]> {
+  const income = await getIncomeEntries();
+  return income
+    .filter((i) => i.income_date.startsWith(String(year)))
+    .filter((i) => !seasonKey || i.season_key === seasonKey)
+    .sort((a, b) => b.income_date.localeCompare(a.income_date));
 }
 
 export async function getAnnualBreakdown(year: number, seasonKey?: string): Promise<AnnualBreakdown> {
