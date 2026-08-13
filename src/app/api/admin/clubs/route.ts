@@ -8,7 +8,7 @@ export async function GET() {
   if (!(await isAdminRequest())) {
     return jsonError("Non autorisé", 401);
   }
-  return NextResponse.json({ groups: getClubGroups() });
+  return NextResponse.json({ groups: await getClubGroups() });
 }
 
 export async function PUT(request: Request) {
@@ -21,6 +21,6 @@ export async function PUT(request: Request) {
     return jsonError("Format invalide", 400);
   }
 
-  setClubGroups(body.groups);
-  return NextResponse.json({ ok: true, groups: getClubGroups() });
+  await setClubGroups(body.groups);
+  return NextResponse.json({ ok: true, groups: await getClubGroups() });
 }

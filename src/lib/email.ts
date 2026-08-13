@@ -75,7 +75,7 @@ export async function sendTrialConfirmationEmail(input: TrialEmailInput) {
   if (!env.resendApiKey) return;
 
   const resend = getResendClient();
-  const config = getTrialConfig();
+  const config = await getTrialConfig();
   const groups = config.groups[input.trialYear] ?? [];
 
   const groupsHtml = groups.map((g) => `

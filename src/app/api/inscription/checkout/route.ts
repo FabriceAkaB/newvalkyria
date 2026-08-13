@@ -151,7 +151,9 @@ export async function POST(request: Request) {
         shippingAddress: null,
         shippingCity: payload.city,
         shippingPostalCode: null,
-        items: boutiqueItems
+        items: boutiqueItems,
+        registrationId,
+        seasonKey: SEASON_DB_ID
       });
       boutiqueOrderId = orderId;
     }

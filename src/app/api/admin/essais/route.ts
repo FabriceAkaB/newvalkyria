@@ -9,7 +9,7 @@ export async function GET() {
   if (!(await isAdminRequest())) {
     return jsonError("Non autorisé", 401);
   }
-  return NextResponse.json(getTrialConfig());
+  return NextResponse.json(await getTrialConfig());
 }
 
 export async function PUT(request: Request) {
@@ -27,7 +27,7 @@ export async function PUT(request: Request) {
       return jsonError("Format invalide: lieu manquant", 400);
     }
 
-    setTrialConfig(config);
+    await setTrialConfig(config);
     return NextResponse.json({ ok: true });
   } catch {
     return jsonError("Données invalides", 400);

@@ -16,7 +16,7 @@ function formatPrice(cents: number): string {
   return (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
 }
 
-export function AdminBoutiqueCommandes({ initialOrders }: { initialOrders: ShopOrderWithItems[] }) {
+export function AdminBoutiqueCommandes({ initialOrders, showPrices }: { initialOrders: ShopOrderWithItems[]; showPrices: boolean }) {
   const [orders, setOrders] = useState(initialOrders);
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [saving, setSaving] = useState<string | null>(null);
@@ -124,11 +124,11 @@ export function AdminBoutiqueCommandes({ initialOrders }: { initialOrders: ShopO
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", marginBottom: "0.5rem" }}>
                   {order.items.map((item) => (
                     <p key={item.id} style={{ fontSize: "0.78rem", color: "#c3c2c8", margin: 0 }}>
-                      {item.product_name}{item.variant_label ? ` — ${item.variant_label}` : ""} × {item.quantity} — {formatPrice(item.unit_price_cents * item.quantity)}
+                      {item.product_name}{item.variant_label ? ` — ${item.variant_label}` : ""} × {item.quantity}{showPrices ? ` — ${formatPrice(item.unit_price_cents * item.quantity)}` : ""}
                     </p>
                   ))}
                 </div>
-                <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#9ec99e", margin: 0 }}>Total : {formatPrice(order.total_cents)}</p>
+                {showPrices && <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#9ec99e", margin: 0 }}>Total : {formatPrice(order.total_cents)}</p>}
               </div>
             ))}
           </div>

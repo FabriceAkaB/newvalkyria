@@ -1,9 +1,14 @@
 /**
- * In-memory store for trial/essai dates configuration.
- * Persists across requests in the same server process.
- * Admin can update via /api/admin/essais.
- * Qualification form reads via /api/essais.
+ * Trial/essai dates configuration — persisted in Supabase (singleton table
+ * `trial_config`). Admin updates via /api/admin/essais. Qualification form
+ * reads via /api/essais.
  */
+
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+
+function db() {
+  return getSupabaseAdminClient() as any;
+}
 
 export interface TrialGroup {
   label: string;
@@ -55,16 +60,42 @@ const DEFAULT_CONFIG: TrialConfig = {
   lieuNote: "Le terrain peut changer — vous serez avertis par courriel."
 };
 
-/* ── In-memory store ── */
-
-let currentConfig: TrialConfig = structuredClone(DEFAULT_CONFIG);
-
-export function getTrialConfig(): TrialConfig {
-  return currentConfig;
+function isSupabaseAvailable(): boolean {
+  try { getSupabaseAdminClient(); return true; } catch { return false; }
 }
 
-export function setTrialConfig(config: TrialConfig): void {
-  currentConfig = config;
+// Repli en mémoire uniquement si Supabase est indisponible (perdu au redémarrage).
+let memCache: TrialConfig = structuredClone(DEFAULT_CONFIG);
+
+export async function getTrialConfig(): Promise<TrialConfig> {
+  if (isSupabaseAvailable()) {
+    const { data, error } = await db()
+      .from("trial_config")
+      .select("config")
+      .eq("id", true)
+      .maybeSingle();
+    if (!error) {
+      if (data) {
+        memCache = data.config as TrialConfig;
+        return structuredClone(memCache);
+      }
+      // Rien en base encore — on amorce avec la config par défaut.
+      await setTrialConfig(structuredClone(DEFAULT_CONFIG));
+      return structuredClone(DEFAULT_CONFIG);
+    }
+  }
+  return structuredClone(memCache);
+}
+
+export async function setTrialConfig(config: TrialConfig): Promise<void> {
+  memCache = structuredClone(config);
+
+  if (isSupabaseAvailable()) {
+    const { error } = await db()
+      .from("trial_config")
+      .upsert({ id: true, config, updated_at: new Date().toISOString() }, { onConflict: "id" });
+    if (error) throw new Error(error.message);
+  }
 }
 
 export function getDefaultTrialConfig(): TrialConfig {

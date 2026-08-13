@@ -137,6 +137,17 @@ export interface ShopOrderWithItems extends ShopOrder {
   items: ShopOrderItem[];
 }
 
+/** La gérante voit les commandes (nécessaire pour confirmer une remise
+ *  d'uniforme) mais jamais les montants — on les masque à la source plutôt
+ *  que de simplement les cacher dans l'UI, pour ne rien exposer sur le réseau. */
+export function maskOrderAmountsForGerante<T extends ShopOrderWithItems>(orders: T[]): T[] {
+  return orders.map((order) => ({
+    ...order,
+    total_cents: 0,
+    items: order.items.map((item) => ({ ...item, unit_price_cents: 0 }))
+  }));
+}
+
 /* ── Produits ──────────────────────────────────────────────────── */
 
 async function attachPhotosAndVariants(
@@ -394,6 +405,11 @@ export async function createOrder(input: {
   shippingCity: string | null;
   shippingPostalCode: string | null;
   items: CreateOrderItemInput[];
+  /** Inscription déjà connue au moment de la commande (ex. sac/2e uniforme
+   *  achetés dans le même tunnel qu'une inscription saison) — évite le
+   *  rapprochement manuel par nom fait après coup dans le module Uniformes. */
+  registrationId?: string | null;
+  seasonKey?: string | null;
 }): Promise<{ orderId: string; totalCents: number }> {
   const supabase = db();
   const totalCents = input.items.reduce((sum, item) => sum + item.unitPriceCents * item.quantity, 0);
@@ -408,7 +424,9 @@ export async function createOrder(input: {
       shipping_city: input.shippingCity,
       shipping_postal_code: input.shippingPostalCode,
       status: "pending",
-      total_cents: totalCents
+      total_cents: totalCents,
+      registration_id: input.registrationId ?? null,
+      season_key: input.seasonKey ?? null
     })
     .select("id")
     .single();
