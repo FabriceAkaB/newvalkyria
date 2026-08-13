@@ -2,6 +2,7 @@ import { startOfWeek } from "@/lib/coach-payroll";
 import { getPayrollRows, type PayrollRow } from "@/lib/coach-payroll-data";
 import { getAllLeads } from "@/lib/repositories";
 import {
+  EXPENSE_CATEGORIES,
   getBudgets,
   getMonthlyGoals,
   getRevenueExpenses,
@@ -673,4 +674,126 @@ export async function getRevenueExportRows(): Promise<ExportRow[]> {
   });
 
   return [...revenueRows, ...expenseRowsOut].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/* ── Vue annuelle (revenus/dépenses par catégorie × mois) ──────────
+ *  Reproduit l'onglet "Annual" du gabarit comptable de référence du
+ *  client : une ligne par catégorie, une colonne par mois de l'année
+ *  choisie, plus le cash-flow mois par mois avec objectifs et cumul
+ *  depuis le début de l'année. */
+
+export interface AnnualCategoryRow {
+  category: string;
+  monthlyCents: number[];
+  totalCents: number;
+}
+
+export interface AnnualCashFlowMonth {
+  month: string;
+  label: string;
+  incomeCents: number;
+  expenseCents: number;
+  profitCents: number;
+  goalCents: number;
+  goalProgressPct: number | null;
+  ytdProfitCents: number;
+  yearGoalProgressPct: number | null;
+}
+
+export interface AnnualBreakdown {
+  year: number;
+  months: string[];
+  monthLabels: string[];
+  income: AnnualCategoryRow[];
+  incomeTotalByMonth: number[];
+  expense: AnnualCategoryRow[];
+  expenseTotalByMonth: number[];
+  cashFlow: AnnualCashFlowMonth[];
+  annualIncomeCents: number;
+  annualExpenseCents: number;
+  annualProfitCents: number;
+  annualGoalCents: number;
+}
+
+export async function getAnnualBreakdown(year: number): Promise<AnnualBreakdown> {
+  const [{ revenueEvents, expenseEvents, seasons }, monthlyGoals] = await Promise.all([computeRevenueData(), getMonthlyGoals()]);
+
+  const months = Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`);
+  const monthLabels = months.map((m) => new Date(`${m}-01T00:00:00`).toLocaleDateString("fr-CA", { month: "short" }));
+
+  const seasonLabelByKey = new Map<string, string>();
+  seasonLabelByKey.set(ETE_SEASON_KEY, ETE_SEASON_LABEL);
+  for (const s of seasons.filter((s) => s.id !== ETE_SEASON_KEY)) seasonLabelByKey.set(s.id, s.label);
+  seasonLabelByKey.set(BOUTIQUE_KEY, BOUTIQUE_LABEL);
+
+  const incomeMap = new Map<string, number[]>();
+  for (const label of seasonLabelByKey.values()) incomeMap.set(label, new Array(12).fill(0));
+  for (const e of revenueEvents) {
+    const label = seasonLabelByKey.get(e.seasonKey);
+    const idx = months.indexOf(e.date.slice(0, 7));
+    if (!label || idx === -1) continue;
+    incomeMap.get(label)![idx] += e.amountCents;
+  }
+  const income: AnnualCategoryRow[] = Array.from(incomeMap.entries()).map(([category, monthlyCents]) => ({
+    category,
+    monthlyCents,
+    totalCents: monthlyCents.reduce((a, b) => a + b, 0)
+  }));
+  const incomeTotalByMonth = months.map((_, i) => income.reduce((sum, r) => sum + r.monthlyCents[i], 0));
+
+  const expenseMap = new Map<string, number[]>();
+  for (const cat of EXPENSE_CATEGORIES) expenseMap.set(cat, new Array(12).fill(0));
+  for (const e of expenseEvents) {
+    const idx = months.indexOf(e.date.slice(0, 7));
+    if (idx === -1) continue;
+    if (!expenseMap.has(e.category)) expenseMap.set(e.category, new Array(12).fill(0));
+    expenseMap.get(e.category)![idx] += e.amountCents;
+  }
+  const expense: AnnualCategoryRow[] = Array.from(expenseMap.entries()).map(([category, monthlyCents]) => ({
+    category,
+    monthlyCents,
+    totalCents: monthlyCents.reduce((a, b) => a + b, 0)
+  }));
+  const expenseTotalByMonth = months.map((_, i) => expense.reduce((sum, r) => sum + r.monthlyCents[i], 0));
+
+  let ytdProfit = 0;
+  let ytdGoal = 0;
+  const cashFlow: AnnualCashFlowMonth[] = months.map((m, i) => {
+    const incomeCents = incomeTotalByMonth[i];
+    const expenseCents = expenseTotalByMonth[i];
+    const profitCents = incomeCents - expenseCents;
+    const goalCents = monthlyGoals.find((g) => g.month === m)?.goal_cents ?? 0;
+    ytdProfit += profitCents;
+    ytdGoal += goalCents;
+    return {
+      month: m,
+      label: monthLabels[i],
+      incomeCents,
+      expenseCents,
+      profitCents,
+      goalCents,
+      goalProgressPct: goalCents > 0 ? Math.round((profitCents / goalCents) * 100) : null,
+      ytdProfitCents: ytdProfit,
+      yearGoalProgressPct: ytdGoal > 0 ? Math.round((ytdProfit / ytdGoal) * 100) : null
+    };
+  });
+
+  const annualIncomeCents = incomeTotalByMonth.reduce((a, b) => a + b, 0);
+  const annualExpenseCents = expenseTotalByMonth.reduce((a, b) => a + b, 0);
+  const annualGoalCents = cashFlow.reduce((sum, c) => sum + c.goalCents, 0);
+
+  return {
+    year,
+    months,
+    monthLabels,
+    income,
+    incomeTotalByMonth,
+    expense,
+    expenseTotalByMonth,
+    cashFlow,
+    annualIncomeCents,
+    annualExpenseCents,
+    annualProfitCents: annualIncomeCents - annualExpenseCents,
+    annualGoalCents
+  };
 }

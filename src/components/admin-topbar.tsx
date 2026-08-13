@@ -74,6 +74,7 @@ const UNIFORMES_LINKS: { href: string; label: string; icon: IconName }[] = [
 
 const REVENUS_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/revenus", label: "Vue d'ensemble", icon: "chart" },
+  { href: "/admin/revenus/annuel", label: "Vue annuelle", icon: "grid" },
   { href: "/admin/revenus/paiements", label: "Paiements échelonnés", icon: "user" },
   { href: "/admin/revenus/tresorerie", label: "Trésorerie", icon: "gauge" },
   { href: "/admin/revenus/budget", label: "Budget annuel", icon: "chart" },
