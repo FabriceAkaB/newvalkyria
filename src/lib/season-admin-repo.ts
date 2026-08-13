@@ -741,14 +741,21 @@ export interface PaymentPlanOverview {
  *  plusieurs fois", absente jusqu'ici. Deux requêtes + fusion en mémoire
  *  (plutôt qu'un select imbriqué) pour rester cohérent avec le style du
  *  reste du fichier. */
+/** Ne renvoie que les plans réellement activés par un vrai paiement Stripe
+ *  (stripe_customer_id posé uniquement par le webhook, jamais à la main) —
+ *  exclut les paniers abandonnés avant paiement (inscription annulée,
+ *  premier versement jamais prélevé, qui restaient affichés "0/N" pour
+ *  toujours). Un plan sans transaction Stripe confirmée n'est pas un
+ *  paiement. */
 export async function getAllPaymentPlansOverview(): Promise<PaymentPlanOverview[]> {
   const supabase = db();
   const { data: plans, error } = await supabase
     .from("registration_payment_plans")
     .select(`
-      id, registration_id, total_amount_cents, installment_count, created_at,
+      id, registration_id, total_amount_cents, installment_count, created_at, stripe_customer_id,
       registrations!inner ( season_id, program_id, parent_name, parent_email, player_first_name, player_last_name )
     `)
+    .not("stripe_customer_id", "is", null)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   if (!plans || plans.length === 0) return [];
