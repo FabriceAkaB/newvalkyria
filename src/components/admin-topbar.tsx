@@ -107,6 +107,81 @@ interface Group {
   adminOnly?: boolean;
 }
 
+interface SearchPlayer {
+  playerId: string;
+  firstName: string;
+  lastName: string;
+  registrations: { id: string; seasonId: string; status: string }[];
+  leadCount: number;
+}
+interface SearchCoach { id: string; firstName: string; lastName: string; status: string }
+
+function GlobalSearchBox() {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState<{ players: SearchPlayer[]; coaches: SearchCoach[] } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const hasQuery = query.trim().length >= 2;
+
+  useEffect(() => {
+    if (!hasQuery) return;
+    const handle = setTimeout(() => {
+      setLoading(true);
+      fetch(`/api/admin/search?q=${encodeURIComponent(query.trim())}`)
+        .then((r) => r.json())
+        .then((data) => setResults(data))
+        .catch(() => setResults(null))
+        .finally(() => setLoading(false));
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [query, hasQuery]);
+
+  const hasResults = hasQuery && results && (results.players.length > 0 || results.coaches.length > 0);
+
+  return (
+    <div style={{ position: "relative", margin: "0 0 1rem" }}>
+      <input
+        className="admin-input"
+        placeholder="🔍 Rechercher une joueuse, un entraîneur..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        style={{ fontSize: "0.75rem", width: "100%" }}
+      />
+      {open && hasQuery && (
+        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "#17151e", border: "1px solid #302e36", borderRadius: "8px", marginTop: "0.3rem", maxHeight: "320px", overflowY: "auto", padding: "0.4rem" }}>
+          {loading && <p style={{ fontSize: "0.72rem", color: "#6d6b71", padding: "0.4rem" }}>Recherche...</p>}
+          {!loading && !hasResults && <p style={{ fontSize: "0.72rem", color: "#6d6b71", padding: "0.4rem" }}>Aucun résultat.</p>}
+          {!loading && results?.players.map((p) => (
+            <div key={p.playerId} style={{ padding: "0.4rem", borderBottom: "1px solid #1f1d25" }}>
+              <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 600, margin: "0 0 0.2rem" }}>{p.firstName} {p.lastName}</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+                {p.registrations.map((r) => (
+                  <Link key={r.id} href={`/admin/saison/${r.seasonId}/inscriptions`} className="admin-btn-ghost" style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", textDecoration: "none" }}>
+                    {r.seasonId} · {r.status}
+                  </Link>
+                ))}
+                {p.leadCount > 0 && (
+                  <Link href="/admin/inscriptions" className="admin-btn-ghost" style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", textDecoration: "none" }}>
+                    Été 2026 ({p.leadCount})
+                  </Link>
+                )}
+              </div>
+            </div>
+          ))}
+          {!loading && results?.coaches.map((c) => (
+            <Link key={c.id} href={`/admin/entraineurs/${c.id}`} style={{ display: "block", padding: "0.4rem", textDecoration: "none", borderBottom: "1px solid #1f1d25" }}>
+              <p style={{ fontSize: "0.75rem", color: "#a0c8ff", margin: 0 }}>🧑‍🏫 {c.firstName} {c.lastName}</p>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const GROUPS: Group[] = [
   { label: "Été 2026", dotColor: "#c8aae0", links: SEASON_ETE_LINKS },
   { label: "Automne / Hiver 2026", dotColor: "#f0c878", links: SEASON_AUTOMNE_HIVER_LINKS },
@@ -146,6 +221,8 @@ export function AdminTopbar() {
           <p className="admin-sidebar-brand-sub">Administration{role === "gerante" ? " — Gérante" : ""}</p>
         </div>
       </div>
+
+      <GlobalSearchBox />
 
       <nav className="admin-sidebar-nav">
         {visibleGroups.map((group) => (
