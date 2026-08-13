@@ -164,6 +164,88 @@ export async function setChildPhoto(id: string, userId: string, photoUrl: string
   if (error) throw new Error(error.message);
 }
 
+/* ── Rattachement à une inscription réelle (entité joueuse) ───────
+ *  Jamais automatique — le parent doit confirmer lui-même quelle joueuse
+ *  (retrouvée parmi les vraies inscriptions de son compte) correspond à
+ *  ce profil enfant. Voir l'audit du 12 août 2026 : fusionner ça en
+ *  silence serait risqué (fratrie, orthographe différente...). ── */
+
+export interface PlayerCandidate {
+  playerId: string;
+  firstName: string;
+  lastName: string;
+  dob: string | null;
+  registrationCount: number;
+}
+
+export async function getPlayerCandidatesForEmail(parentEmail: string): Promise<PlayerCandidate[]> {
+  const { data, error } = await db()
+    .from("registrations")
+    .select("player_id, player_first_name, player_last_name, player_dob")
+    .eq("parent_email", parentEmail)
+    .not("player_id", "is", null);
+  if (error) throw new Error(error.message);
+
+  const byPlayer = new Map<string, PlayerCandidate>();
+  for (const r of (data ?? []) as any[]) {
+    const existing = byPlayer.get(r.player_id);
+    if (existing) existing.registrationCount += 1;
+    else byPlayer.set(r.player_id, { playerId: r.player_id, firstName: r.player_first_name, lastName: r.player_last_name, dob: r.player_dob, registrationCount: 1 });
+  }
+  return Array.from(byPlayer.values());
+}
+
+/** Confirme qu'un profil enfant correspond à cette joueuse — scopé au
+ *  compte du parent connecté, jamais modifiable pour un autre parent. */
+export async function linkChildToPlayer(childId: string, userId: string, playerId: string): Promise<void> {
+  const { error } = await db()
+    .from("children")
+    .update({ player_id: playerId, updated_at: new Date().toISOString() })
+    .eq("id", childId)
+    .eq("parent_user_id", userId);
+  if (error) throw new Error(error.message);
+}
+
+export async function unlinkChildFromPlayer(childId: string, userId: string): Promise<void> {
+  const { error } = await db()
+    .from("children")
+    .update({ player_id: null, updated_at: new Date().toISOString() })
+    .eq("id", childId)
+    .eq("parent_user_id", userId);
+  if (error) throw new Error(error.message);
+}
+
+export interface PlayerRegistrationSummary {
+  id: string;
+  seasonId: string;
+  programId: string | null;
+  categoryId: string | null;
+  status: string;
+  isTrial: boolean;
+}
+
+/** Toutes les inscriptions (toutes saisons) d'une joueuse déjà reliée à un
+ *  profil enfant — c'est ce qui permet d'afficher calendrier/présences/
+ *  évaluations/paiements sans jamais exposer les inscriptions d'une autre
+ *  famille : l'appelant doit avoir vérifié au préalable que ce player_id
+ *  appartient bien à un enfant du parent connecté. */
+export async function getRegistrationsForPlayer(playerId: string): Promise<PlayerRegistrationSummary[]> {
+  const { data, error } = await db()
+    .from("registrations")
+    .select("id, season_id, program_id, category_id, status, is_trial")
+    .eq("player_id", playerId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    seasonId: r.season_id,
+    programId: r.program_id,
+    categoryId: r.category_id,
+    status: r.status,
+    isTrial: r.is_trial
+  }));
+}
+
 const CHILD_PHOTO_BUCKET = "child-photos";
 
 export async function uploadChildPhoto(id: string, userId: string, file: File): Promise<string> {

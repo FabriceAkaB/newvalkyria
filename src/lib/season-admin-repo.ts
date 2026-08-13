@@ -800,6 +800,29 @@ export async function getAllPaymentPlansOverview(): Promise<PaymentPlanOverview[
     .not("stripe_customer_id", "is", null)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
+  return mapPaymentPlanRows(supabase, plans);
+}
+
+/** Le plan de paiement d'une inscription précise, pour l'espace parent — ne
+ *  renvoie jamais les plans des autres familles. */
+export async function getPaymentPlanForRegistration(registrationId: string): Promise<PaymentPlanOverview | null> {
+  const supabase = db();
+  const { data: plans, error } = await supabase
+    .from("registration_payment_plans")
+    .select(`
+      id, registration_id, total_amount_cents, installment_count, created_at, stripe_customer_id,
+      registrations!inner ( season_id, program_id, parent_name, parent_email, player_first_name, player_last_name )
+    `)
+    .eq("registration_id", registrationId)
+    .not("stripe_customer_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (error) throw new Error(error.message);
+  const rows = await mapPaymentPlanRows(supabase, plans);
+  return rows[0] ?? null;
+}
+
+async function mapPaymentPlanRows(supabase: ReturnType<typeof db>, plans: any[] | null): Promise<PaymentPlanOverview[]> {
   if (!plans || plans.length === 0) return [];
 
   const planIds = (plans as any[]).map((p) => p.id);

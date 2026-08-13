@@ -9,6 +9,217 @@ import type { Child } from "@/lib/parent-repo";
 
 const LEVELS = ["Débutante", "D3", "D2", "D1"];
 
+interface PlayerCandidate {
+  playerId: string;
+  firstName: string;
+  lastName: string;
+  dob: string | null;
+  registrationCount: number;
+}
+
+interface SeasonActivity {
+  registrationId: string;
+  seasonLabel: string;
+  programName: string | null;
+  status: string;
+  isTrial: boolean;
+  attendance: { id: string; status: string; activity: { activity_date: string; title: string | null; activity_type: string } }[];
+  evaluations: { id: string; ratings: Record<string, number>; comment: string | null; created_at: string; activity: { activity_date: string; title: string | null } }[];
+  objectives: { id: string; objective: string; active: boolean }[];
+  paymentPlan: {
+    totalAmountCents: number;
+    installments: { sequenceNo: number; amountCents: number; dueDate: string; status: string; paidAt: string | null }[];
+  } | null;
+}
+
+const ATTENDANCE_LABELS: Record<string, string> = {
+  present: "Présente", absent: "Absente", injured: "Blessée", late: "En retard", left_early: "Partie tôt"
+};
+
+function formatCAD(cents: number): string {
+  return (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+}
+
+function LinkPlayerBlock({ childId, onLinked }: { childId: string; onLinked: (playerId: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [candidates, setCandidates] = useState<PlayerCandidate[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [linkingId, setLinkingId] = useState<string | null>(null);
+
+  const load = async () => {
+    setOpen(true);
+    if (candidates) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/compte/enfants/${childId}/candidats`);
+      const data = await res.json().catch(() => ({ candidates: [] }));
+      setCandidates(data.candidates ?? []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmLink = async (playerId: string) => {
+    setLinkingId(playerId);
+    try {
+      const res = await fetch(`/api/compte/enfants/${childId}/lier`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId })
+      });
+      if (res.ok) onLinked(playerId);
+    } finally {
+      setLinkingId(null);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={load}
+        style={{ marginTop: "0.85rem", padding: "0.6rem 0.85rem", background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: "8px", color: "#9f85ba", fontSize: "0.72rem", cursor: "pointer", width: "100%", textAlign: "left" }}
+      >
+        🔗 Relier à une inscription pour voir le calendrier, les évaluations et les paiements
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: "0.85rem", padding: "0.75rem 0.85rem", background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: "8px" }}>
+      <p style={{ fontSize: "0.72rem", color: "#9f85ba", margin: "0 0 0.5rem" }}>
+        Laquelle de ces inscriptions correspond à ce profil ?
+      </p>
+      {loading && <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Recherche...</p>}
+      {!loading && candidates?.length === 0 && (
+        <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Aucune inscription trouvée avec le courriel de ce compte pour l&apos;instant.</p>
+      )}
+      {!loading && candidates && candidates.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          {candidates.map((c) => (
+            <button
+              key={c.playerId}
+              type="button"
+              onClick={() => confirmLink(c.playerId)}
+              disabled={linkingId !== null}
+              style={{ textAlign: "left", padding: "0.5rem 0.7rem", background: "#17151e", border: "1px solid #251f30", borderRadius: "6px", color: "#fff", fontSize: "0.78rem", cursor: "pointer" }}
+            >
+              {linkingId === c.playerId ? "Association..." : `${c.firstName} ${c.lastName}${c.dob ? ` · née le ${new Date(c.dob).toLocaleDateString("fr-CA")}` : ""}`}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChildActivity({ childId, onUnlink }: { childId: string; onUnlink: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [seasons, setSeasons] = useState<SeasonActivity[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
+
+  const load = async () => {
+    const next = !open;
+    setOpen(next);
+    if (!next || seasons) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/compte/enfants/${childId}/activite`);
+      const data = await res.json().catch(() => ({ seasons: [] }));
+      setSeasons(data.seasons ?? []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnlink = async () => {
+    if (!confirm("Retirer le lien avec cette inscription ?")) return;
+    setUnlinking(true);
+    try {
+      const res = await fetch(`/api/compte/enfants/${childId}/lier`, { method: "DELETE" });
+      if (res.ok) onUnlink();
+    } finally {
+      setUnlinking(false);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: "0.85rem" }}>
+      <button
+        type="button"
+        onClick={load}
+        style={{ padding: "0.5rem 0.7rem", background: "rgba(159,133,186,0.08)", border: "1px solid rgba(159,133,186,0.25)", borderRadius: "8px", color: "#9f85ba", fontSize: "0.72rem", cursor: "pointer", width: "100%", textAlign: "left" }}
+      >
+        {open ? "▾" : "▸"} Calendrier, évaluations et paiements
+      </button>
+      {open && (
+        <div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+          {loading && <p style={{ fontSize: "0.72rem", color: "#605f65" }}>Chargement...</p>}
+          {!loading && seasons?.length === 0 && <p style={{ fontSize: "0.72rem", color: "#605f65" }}>Aucune inscription trouvée.</p>}
+          {!loading && seasons?.map((s) => (
+            <div key={s.registrationId} style={{ background: "#17151e", border: "1px solid #251f30", borderRadius: "8px", padding: "0.7rem 0.85rem" }}>
+              <p style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff", margin: "0 0 0.3rem" }}>
+                {s.seasonLabel}{s.programName ? ` — ${s.programName}` : ""}{s.isTrial ? " (essai)" : ""}
+              </p>
+
+              {s.attendance.length > 0 && (
+                <div style={{ marginBottom: "0.5rem" }}>
+                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Présences</p>
+                  {s.attendance.map((a) => (
+                    <p key={a.id} style={{ fontSize: "0.75rem", color: "#c3c2c8", margin: "0.1rem 0" }}>
+                      {new Date(a.activity.activity_date).toLocaleDateString("fr-CA")} — {a.activity.title ?? a.activity.activity_type} · {ATTENDANCE_LABELS[a.status] ?? a.status}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {s.evaluations.length > 0 && (
+                <div style={{ marginBottom: "0.5rem" }}>
+                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Évaluations</p>
+                  {s.evaluations.map((e) => (
+                    <div key={e.id} style={{ fontSize: "0.75rem", color: "#c3c2c8", margin: "0.2rem 0" }}>
+                      <span>{new Date(e.activity.activity_date).toLocaleDateString("fr-CA")} — {e.activity.title ?? "Pratique"}</span>
+                      {e.comment && <p style={{ margin: "0.15rem 0 0", color: "#9d9da0", fontStyle: "italic" }}>« {e.comment} »</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {s.objectives.filter((o) => o.active).length > 0 && (
+                <div style={{ marginBottom: "0.5rem" }}>
+                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Objectifs</p>
+                  {s.objectives.filter((o) => o.active).map((o) => (
+                    <p key={o.id} style={{ fontSize: "0.75rem", color: "#c3c2c8", margin: "0.1rem 0" }}>• {o.objective}</p>
+                  ))}
+                </div>
+              )}
+
+              {s.paymentPlan && (
+                <div>
+                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Paiement en plusieurs fois</p>
+                  {s.paymentPlan.installments.map((i) => (
+                    <p key={i.sequenceNo} style={{ fontSize: "0.75rem", color: "#c3c2c8", margin: "0.1rem 0" }}>
+                      Versement {i.sequenceNo} — {formatCAD(i.amountCents)} — {i.status === "paid" ? `payé le ${i.paidAt ? new Date(i.paidAt).toLocaleDateString("fr-CA") : ""}` : `dû le ${new Date(i.dueDate).toLocaleDateString("fr-CA")}`}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {s.attendance.length === 0 && s.evaluations.length === 0 && s.objectives.length === 0 && !s.paymentPlan && (
+                <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Rien à afficher pour l&apos;instant.</p>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={handleUnlink} disabled={unlinking} style={{ alignSelf: "flex-start", fontSize: "0.68rem", color: "#605f65", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+            {unlinking ? "..." : "Ce n'est pas la bonne inscription ?"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface ChildFormState {
   firstName: string;
   lastName: string;
@@ -245,7 +456,12 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
                     style={{ display: "none" }}
                     onChange={(e) => handlePhotoChange(child.id, e.target.files?.[0])}
                   />
-                  <div style={{ marginTop: "0.85rem", padding: "0.6rem 0.85rem", background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: "8px" }}>
+                  {child.player_id ? (
+                    <ChildActivity childId={child.id} onUnlink={() => setChildren((prev) => prev.map((c) => (c.id === child.id ? { ...c, player_id: null } : c)))} />
+                  ) : (
+                    <LinkPlayerBlock childId={child.id} onLinked={(playerId) => setChildren((prev) => prev.map((c) => (c.id === child.id ? { ...c, player_id: playerId } : c)))} />
+                  )}
+                  <div style={{ marginTop: "0.6rem", padding: "0.6rem 0.85rem", background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: "8px" }}>
                     <p style={{ fontSize: "0.7rem", color: "#605f65", margin: 0 }}>📋 Bulletin de progression — disponible bientôt</p>
                   </div>
                 </>
