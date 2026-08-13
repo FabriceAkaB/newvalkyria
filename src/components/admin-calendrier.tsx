@@ -1,11 +1,59 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { CalendarEvent } from "@/lib/calendar-repo";
 import type { Terrain } from "@/lib/terrains-repo";
+
+function CalendarSubscription() {
+  const [token, setToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/calendar-feed").then((r) => r.json()).then((d) => setToken(d.token)).catch(() => setToken(null));
+  }, []);
+
+  const url = token && typeof window !== "undefined" ? `${window.location.origin}/api/calendar/${token}.ics` : null;
+
+  const copy = () => {
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const regenerate = async () => {
+    if (!confirm("Régénérer le lien invalidera l'abonnement actuel — il faudra le remplacer partout où il est utilisé. Continuer ?")) return;
+    setRegenerating(true);
+    try {
+      const res = await fetch("/api/admin/calendar-feed", { method: "POST" });
+      const data = await res.json();
+      setToken(data.token);
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  return (
+    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem", marginBottom: "1.5rem" }}>
+      <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Abonnement calendrier (Google Calendar, Apple Calendar, Outlook)</p>
+      <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.6rem" }}>
+        Ajoutez ce lien comme calendrier &laquo; par URL &raquo; dans votre application préférée — les activités et essais se mettent à jour automatiquement.
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+        <input className="admin-input" readOnly value={url ?? "Chargement..."} style={{ flex: "1 1 320px", fontSize: "0.72rem", color: "#9d9da0" }} onFocus={(e) => e.target.select()} />
+        <button onClick={copy} disabled={!url} className="admin-btn-ghost" style={{ fontSize: "0.72rem" }}>{copied ? "Copié !" : "Copier"}</button>
+        <button onClick={regenerate} disabled={regenerating || !token} className="admin-btn-ghost" style={{ fontSize: "0.72rem", color: "#ff9999" }}>
+          {regenerating ? "..." : "Régénérer"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const ACTIVITY_COLORS: Record<string, string> = {
   Pratique: "#7fd88f",
@@ -56,6 +104,8 @@ export function AdminCalendrier({ events, terrains, from, to }: { events: Calend
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
             Toutes les activités (pratiques, matchs, tournois...) et tous les essais, saisons confondues, en un seul endroit.
           </p>
+
+          <CalendarSubscription />
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.5rem", alignItems: "center" }}>
             <input type="date" className="admin-input" value={fromInput} onChange={(e) => setFromInput(e.target.value)} style={{ width: "auto" }} />

@@ -1,8 +1,41 @@
+import { randomBytes } from "crypto";
+
 import { getActivities } from "@/lib/coaches-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 function db() {
   return getSupabaseAdminClient() as any;
+}
+
+/* ── Jeton d'abonnement calendrier (iCal) ──────────────────────────
+ *  Ni Rétroaction ni TeamLinkt n'exposent d'API publique documentée
+ *  (vérifié le 13 août 2026 — voir l'audit) ; l'export iCal est le seul
+ *  mécanisme de synchronisation calendrier qu'on peut construire et tester
+ *  sans dépendre d'un service tiers non vérifiable. ── */
+
+export async function getOrCreateCalendarFeedToken(): Promise<string> {
+  const supabase = db();
+  const { data, error } = await supabase.from("calendar_feed_token").select("token").eq("id", true).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (data?.token) return data.token as string;
+
+  const token = randomBytes(24).toString("hex");
+  const { error: insertErr } = await supabase.from("calendar_feed_token").upsert({ id: true, token, updated_at: new Date().toISOString() }, { onConflict: "id" });
+  if (insertErr) throw new Error(insertErr.message);
+  return token;
+}
+
+export async function regenerateCalendarFeedToken(): Promise<string> {
+  const token = randomBytes(24).toString("hex");
+  const { error } = await db().from("calendar_feed_token").upsert({ id: true, token, updated_at: new Date().toISOString() }, { onConflict: "id" });
+  if (error) throw new Error(error.message);
+  return token;
+}
+
+export async function verifyCalendarFeedToken(token: string): Promise<boolean> {
+  const { data, error } = await db().from("calendar_feed_token").select("token").eq("id", true).maybeSingle();
+  if (error) throw new Error(error.message);
+  return Boolean(data?.token) && data.token === token;
 }
 
 export interface CalendarEvent {
