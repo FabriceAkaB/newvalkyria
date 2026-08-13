@@ -176,3 +176,74 @@ export async function setMonthlyGoal(month: string, goalCents: number): Promise<
     .upsert({ month, goal_cents: goalCents, updated_at: new Date().toISOString() });
   if (error) throw new Error(error.message);
 }
+
+/* ── Pièces jointes sur une dépense (facture, reçu, photo) ────────
+ *  Bucket privé — jamais d'URL publique, seulement des URLs signées à
+ *  courte durée de vie générées à la demande. Plusieurs fichiers possibles
+ *  par dépense. */
+
+const EXPENSE_DOCUMENT_BUCKET = "expense-documents";
+
+export interface ExpenseDocument {
+  id: string;
+  expense_id: string;
+  file_name: string;
+  storage_path: string;
+  uploaded_at: string;
+}
+
+export async function addExpenseDocument(expenseId: string, file: File): Promise<ExpenseDocument> {
+  const supabase = db();
+  const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
+  const path = `${expenseId}/${Date.now()}-${Math.round(Math.random() * 1e6)}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(EXPENSE_DOCUMENT_BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: true });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data, error } = await supabase
+    .from("revenue_expense_documents")
+    .insert({ expense_id: expenseId, file_name: file.name, storage_path: path })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return data as ExpenseDocument;
+}
+
+export async function getExpenseDocuments(expenseId: string): Promise<ExpenseDocument[]> {
+  const { data, error } = await db().from("revenue_expense_documents").select("*").eq("expense_id", expenseId).order("uploaded_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ExpenseDocument[];
+}
+
+/** Nombre de pièces jointes par dépense — pour afficher un petit badge
+ *  (📎 N) dans les listes sans devoir interroger chaque dépense une à une. */
+export async function getExpenseDocumentCounts(): Promise<Record<string, number>> {
+  const { data, error } = await db().from("revenue_expense_documents").select("expense_id");
+  if (error) throw new Error(error.message);
+  const counts: Record<string, number> = {};
+  for (const row of (data ?? []) as { expense_id: string }[]) counts[row.expense_id] = (counts[row.expense_id] ?? 0) + 1;
+  return counts;
+}
+
+export async function deleteExpenseDocument(id: string): Promise<void> {
+  const supabase = db();
+  const { data: doc, error: fetchErr } = await supabase.from("revenue_expense_documents").select("storage_path").eq("id", id).maybeSingle();
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (doc) await supabase.storage.from(EXPENSE_DOCUMENT_BUCKET).remove([doc.storage_path]);
+  const { error } = await supabase.from("revenue_expense_documents").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/** URL signée valide 5 minutes — assez pour un téléchargement immédiat,
+ *  jamais stockée ni réutilisable plus tard. */
+export async function getExpenseDocumentSignedUrl(id: string): Promise<{ url: string; fileName: string } | null> {
+  const supabase = db();
+  const { data: doc, error } = await supabase.from("revenue_expense_documents").select("storage_path, file_name").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!doc) return null;
+  const { data: signed, error: signErr } = await supabase.storage.from(EXPENSE_DOCUMENT_BUCKET).createSignedUrl(doc.storage_path, 300);
+  if (signErr) throw new Error(signErr.message);
+  return { url: signed.signedUrl as string, fileName: doc.file_name as string };
+}

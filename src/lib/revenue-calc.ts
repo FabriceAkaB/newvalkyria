@@ -715,8 +715,21 @@ export interface AnnualBreakdown {
   annualGoalCents: number;
 }
 
-export async function getAnnualBreakdown(year: number): Promise<AnnualBreakdown> {
-  const [{ revenueEvents, expenseEvents, seasons }, monthlyGoals] = await Promise.all([computeRevenueData(), getMonthlyGoals()]);
+/** Dépenses individuelles (lignes réellement saisies, pas les occurrences
+ *  étalées des charges récurrentes) d'une année — pour la liste détaillée
+ *  cliquable de la Vue annuelle, avec pièces jointes. */
+export async function getExpensesForYear(year: number, seasonKey?: string): Promise<RevenueExpense[]> {
+  const expenses = await getRevenueExpenses();
+  return expenses
+    .filter((e) => e.expense_date.startsWith(String(year)))
+    .filter((e) => !seasonKey || e.season_key === seasonKey)
+    .sort((a, b) => b.expense_date.localeCompare(a.expense_date));
+}
+
+export async function getAnnualBreakdown(year: number, seasonKey?: string): Promise<AnnualBreakdown> {
+  const [{ revenueEvents: allRevenueEvents, expenseEvents: allExpenseEvents, seasons }, monthlyGoals] = await Promise.all([computeRevenueData(), getMonthlyGoals()]);
+  const revenueEvents = seasonKey ? allRevenueEvents.filter((e) => e.seasonKey === seasonKey) : allRevenueEvents;
+  const expenseEvents = seasonKey ? allExpenseEvents.filter((e) => e.seasonKey === seasonKey) : allExpenseEvents;
 
   const months = Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`);
   const monthLabels = months.map((m) => new Date(`${m}-01T00:00:00`).toLocaleDateString("fr-CA", { month: "short" }));

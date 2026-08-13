@@ -2,13 +2,67 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
+import { ExpenseAttachments } from "@/components/admin-expense-attachments";
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { AnnualBreakdown } from "@/lib/revenue-calc";
+import type { RevenueExpense } from "@/lib/revenue-repo";
 import { formatCAD } from "@/lib/season-2027";
+
+interface SeasonOption {
+  key: string;
+  label: string;
+}
 
 interface Props {
   breakdown: AnnualBreakdown;
+  expenses: RevenueExpense[];
+  seasonOptions: SeasonOption[];
+  currentSeason: string;
+}
+
+function ExpenseDetailList({ expenses }: { expenses: RevenueExpense[] }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  if (expenses.length === 0) {
+    return <p className="admin-empty-text">Aucune dépense pour cette sélection.</p>;
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+      {expenses.map((e) => {
+        const expanded = expandedId === e.id;
+        return (
+          <div key={e.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
+            <button
+              onClick={() => setExpandedId(expanded ? null : e.id)}
+              style={{ background: "none", border: "none", color: "#c3c2c8", cursor: "pointer", padding: 0, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}
+            >
+              <span>
+                {expanded ? "▾ " : "▸ "}{e.label} <span style={{ color: "#6d6b71" }}>· {e.category} · {e.expense_date}</span>
+                {e.status === "due" && <span style={{ color: "#ffb464" }}> · À payer</span>}
+              </span>
+              <span style={{ color: "#ff9999", fontWeight: 600 }}>-{formatCAD(e.amount_cents / 100)}</span>
+            </button>
+            {expanded && (
+              <div style={{ marginTop: "0.6rem", paddingTop: "0.6rem", borderTop: "1px solid #1a1820", display: "flex", flexWrap: "wrap", gap: "1.5rem" }}>
+                <div style={{ fontSize: "0.75rem", color: "#9d9da0", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                  <span>Payé avec : {e.paid_with}</span>
+                  {e.tax_rate > 0 && <span>Taxe : {(e.tax_rate * 100).toFixed(2)}%</span>}
+                  {e.is_recurring && <span>🔁 Charge récurrente{e.recurrence_end_date ? ` jusqu'au ${e.recurrence_end_date}` : ""}</span>}
+                  {e.due_date && <span>Échéance : {e.due_date}</span>}
+                </div>
+                <div style={{ flex: "1 1 220px" }}>
+                  <ExpenseAttachments expenseId={e.id} />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function CategoryGrid({ title, rows, totalByMonth, monthLabels, color }: {
@@ -53,10 +107,17 @@ function CategoryGrid({ title, rows, totalByMonth, monthLabels, color }: {
   );
 }
 
-export function AdminRevenusAnnuel({ breakdown }: Props) {
+export function AdminRevenusAnnuel({ breakdown, expenses, seasonOptions, currentSeason }: Props) {
   const router = useRouter();
   const currentYear = new Date().getFullYear();
   const years = [currentYear - 1, currentYear, currentYear + 1];
+
+  const navigate = (year: number, season: string) => {
+    const params = new URLSearchParams();
+    params.set("annee", String(year));
+    if (season) params.set("saison", season);
+    router.push(`/admin/revenus/annuel?${params.toString()}`);
+  };
 
   return (
     <>
@@ -71,14 +132,25 @@ export function AdminRevenusAnnuel({ breakdown }: Props) {
             Revenus et dépenses par catégorie, mois par mois — pour voir d&apos;un coup d&apos;œil que tout fonctionne bien.
           </p>
 
-          <select
-            className="admin-input"
-            value={breakdown.year}
-            onChange={(e) => router.push(`/admin/revenus/annuel?annee=${e.target.value}`)}
-            style={{ marginBottom: "1.25rem", width: "auto" }}
-          >
-            {years.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.25rem" }}>
+            <select
+              className="admin-input"
+              value={breakdown.year}
+              onChange={(e) => navigate(parseInt(e.target.value, 10), currentSeason)}
+              style={{ width: "auto" }}
+            >
+              {years.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <select
+              className="admin-input"
+              value={currentSeason}
+              onChange={(e) => navigate(breakdown.year, e.target.value)}
+              style={{ width: "auto" }}
+            >
+              <option value="">Toutes les saisons</option>
+              {seasonOptions.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+            </select>
+          </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.75rem" }}>
             <div style={{ flex: "1 1 200px", background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
@@ -106,6 +178,14 @@ export function AdminRevenusAnnuel({ breakdown }: Props) {
 
           <CategoryGrid title="Revenus par catégorie" rows={breakdown.income} totalByMonth={breakdown.incomeTotalByMonth} monthLabels={breakdown.monthLabels} color="#7fd88f" />
           <CategoryGrid title="Dépenses par catégorie" rows={breakdown.expense} totalByMonth={breakdown.expenseTotalByMonth} monthLabels={breakdown.monthLabels} color="#ff9999" />
+
+          <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.4rem" }}>Détail des dépenses ({expenses.length})</p>
+          <p style={{ fontSize: "0.72rem", color: "#6d6b71", marginBottom: "0.75rem" }}>
+            Cliquez sur une dépense pour voir ses détails et ses pièces jointes (factures, reçus, photos).
+          </p>
+          <div style={{ marginBottom: "1.75rem" }}>
+            <ExpenseDetailList expenses={expenses} />
+          </div>
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Cash-flow mois par mois</p>
           <div className="admin-table-wrap">

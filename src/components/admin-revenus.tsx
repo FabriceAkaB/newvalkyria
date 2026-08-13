@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { ExpenseAttachments } from "@/components/admin-expense-attachments";
 import { formatCAD } from "@/lib/season-2027";
 import { GENERAL_KEY, type AccountBalance, type FinancialAlert, type FinancialDashboard, type FinancialHealth, type MonthlyBucket, type RevenueSummary, type SeasonRevenue } from "@/lib/revenue-calc";
 import { EXPENSE_CATEGORIES, PAYMENT_ACCOUNTS, type RevenueExpense } from "@/lib/revenue-repo";
@@ -168,6 +169,7 @@ function ExpensesPanel({
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const addExpense = async () => {
     const dollars = parseFloat(amount.replace(",", "."));
@@ -254,38 +256,51 @@ function ExpensesPanel({
             </div>
           )}
 
-          {card.expenses.map((e) => (
-            <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "#c3c2c8" }}>
-              <span>
-                {e.label} · {e.category} · {e.expense_date} · {e.paid_with}
-                {e.tax_rate > 0 && ` · tx ${(e.tax_rate * 100).toFixed(2)}%`}
-                {e.is_recurring && <span title="Charge récurrente"> 🔁</span>}
-                {e.status === "due" && (
-                  <span style={{ color: "#ffb464" }}> · À payer{e.due_date ? ` (échéance ${e.due_date})` : ""}</span>
-                )}
-              </span>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                <span style={{ color: "#ff9999" }}>-{formatCAD(e.amount_cents / 100)}</span>
-                {e.status === "due" && (
+          {card.expenses.map((e) => {
+            const expanded = expandedId === e.id;
+            return (
+              <div key={e.id} style={{ background: expanded ? "#100e17" : undefined, borderRadius: expanded ? "8px" : undefined, padding: expanded ? "0.5rem" : undefined }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "#c3c2c8" }}>
                   <button
-                    onClick={() => markPaid(e.id)}
-                    disabled={markingPaidId === e.id}
-                    style={{ background: "none", border: "none", color: "#7fd88f", cursor: "pointer", fontSize: "0.68rem", padding: 0, textDecoration: "underline" }}
+                    onClick={() => setExpandedId(expanded ? null : e.id)}
+                    style={{ background: "none", border: "none", color: "#c3c2c8", cursor: "pointer", padding: 0, textAlign: "left" }}
                   >
-                    {markingPaidId === e.id ? "..." : "Marquer payée"}
+                    {expanded ? "▾ " : "▸ "}{e.label} · {e.category} · {e.expense_date} · {e.paid_with}
+                    {e.tax_rate > 0 && ` · tx ${(e.tax_rate * 100).toFixed(2)}%`}
+                    {e.is_recurring && <span title="Charge récurrente"> 🔁</span>}
+                    {e.status === "due" && (
+                      <span style={{ color: "#ffb464" }}> · À payer{e.due_date ? ` (échéance ${e.due_date})` : ""}</span>
+                    )}
                   </button>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <span style={{ color: "#ff9999" }}>-{formatCAD(e.amount_cents / 100)}</span>
+                    {e.status === "due" && (
+                      <button
+                        onClick={() => markPaid(e.id)}
+                        disabled={markingPaidId === e.id}
+                        style={{ background: "none", border: "none", color: "#7fd88f", cursor: "pointer", fontSize: "0.68rem", padding: 0, textDecoration: "underline" }}
+                      >
+                        {markingPaidId === e.id ? "..." : "Marquer payée"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => deleteExpense(e.id)}
+                      disabled={deletingId === e.id}
+                      style={{ background: "none", border: "none", color: "#6d6b71", cursor: "pointer", fontSize: "0.9rem", lineHeight: 1, padding: 0 }}
+                      aria-label="Supprimer la charge"
+                    >
+                      ×
+                    </button>
+                  </span>
+                </div>
+                {expanded && (
+                  <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid #1a1820" }}>
+                    <ExpenseAttachments expenseId={e.id} />
+                  </div>
                 )}
-                <button
-                  onClick={() => deleteExpense(e.id)}
-                  disabled={deletingId === e.id}
-                  style={{ background: "none", border: "none", color: "#6d6b71", cursor: "pointer", fontSize: "0.9rem", lineHeight: 1, padding: 0 }}
-                  aria-label="Supprimer la charge"
-                >
-                  ×
-                </button>
-              </span>
-            </div>
-          ))}
+              </div>
+            );
+          })}
           {card.expenses.length === 0 && <p style={{ fontSize: "0.7rem", color: "#6d6b71", margin: 0 }}>Aucune charge.</p>}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.3rem" }}>
