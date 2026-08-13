@@ -7,6 +7,8 @@ import { CoachTopbar } from "@/components/coach-topbar";
 import { computeHours, formatHoursMinutes } from "@/lib/coach-payroll";
 import { EVALUATION_CRITERIA, type PlayerAttendance, type PlayerAttendanceStatus, type PlayerEvaluation, type RosterPlayer } from "@/lib/coach-portal-repo";
 import type { CoachActivity } from "@/lib/coaches-repo";
+import type { Exercise } from "@/lib/exercises-repo";
+import type { SessionBlock } from "@/lib/session-plan-repo";
 
 interface Props {
   coachName: string;
@@ -15,6 +17,52 @@ interface Props {
   roster: RosterPlayer[];
   initialAttendance: PlayerAttendance[];
   initialEvaluations: PlayerEvaluation[];
+  sessionBlocks: (SessionBlock & { exercise: Exercise | null })[];
+}
+
+function SessionPlan({ blocks }: { blocks: (SessionBlock & { exercise: Exercise | null })[] }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  if (blocks.length === 0) return null;
+
+  const totalMinutes = blocks.reduce((sum, b) => sum + b.duration_minutes, 0);
+
+  return (
+    <div style={{ marginBottom: "1.75rem" }}>
+      <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.4rem" }}>
+        Plan de séance <span style={{ color: "#6d6b71", fontWeight: 400 }}>· {totalMinutes} min au total</span>
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+        {blocks.map((b, i) => {
+          const expanded = expandedId === b.id;
+          const title = b.custom_title || b.exercise?.title || b.block_type;
+          return (
+            <div key={b.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
+              <button
+                onClick={() => setExpandedId(expanded ? null : b.id)}
+                style={{ background: "none", border: "none", color: "#c3c2c8", cursor: b.exercise ? "pointer" : "default", padding: 0, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}
+              >
+                <span>{i + 1}. <span style={{ color: "#9f85ba" }}>{b.block_type}</span> — {title}</span>
+                <span style={{ color: "#6d6b71" }}>{b.duration_minutes} min</span>
+              </button>
+              {expanded && b.exercise && (
+                <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid #1a1820", fontSize: "0.75rem", color: "#9d9da0", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                  {b.exercise.objective && <span><strong style={{ color: "#c3c2c8" }}>Objectif :</strong> {b.exercise.objective}</span>}
+                  {b.exercise.material && <span><strong style={{ color: "#c3c2c8" }}>Matériel :</strong> {b.exercise.material}</span>}
+                  {b.exercise.instructions && <span><strong style={{ color: "#c3c2c8" }}>Consignes :</strong> {b.exercise.instructions}</span>}
+                  {b.exercise.coaching_points && <span><strong style={{ color: "#c3c2c8" }}>Points de coaching :</strong> {b.exercise.coaching_points}</span>}
+                  {b.exercise.image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={b.exercise.image_url} alt={b.exercise.title} style={{ maxWidth: "100%", borderRadius: "6px", marginTop: "0.3rem" }} />
+                  )}
+                </div>
+              )}
+              {b.notes && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.3rem 0 0", fontStyle: "italic" }}>{b.notes}</p>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 const ATTENDANCE_LABELS: Record<PlayerAttendanceStatus, string> = {
@@ -171,7 +219,7 @@ function PlayerRow({
   );
 }
 
-export function CoachActiviteDetail({ coachName, activity, otherCoaches, roster, initialAttendance, initialEvaluations }: Props) {
+export function CoachActiviteDetail({ coachName, activity, otherCoaches, roster, initialAttendance, initialEvaluations, sessionBlocks }: Props) {
   const [attendanceMap, setAttendanceMap] = useState<Record<string, PlayerAttendanceStatus>>(
     Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status]))
   );
@@ -198,6 +246,8 @@ export function CoachActiviteDetail({ coachName, activity, otherCoaches, roster,
             {activity.location && ` · ${activity.location}`}
             {otherCoaches.length > 0 && ` · avec ${otherCoaches.map((c) => `${c.first_name} ${c.last_name}`).join(", ")}`}
           </p>
+
+          <SessionPlan blocks={sessionBlocks} />
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Joueuses attendues ({roster.length})</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>

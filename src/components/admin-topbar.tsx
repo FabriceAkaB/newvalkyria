@@ -88,6 +88,8 @@ const REVENUS_LINKS: { href: string; label: string; icon: IconName }[] = [
 const ENTRAINEURS_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/entraineurs", label: "Entraîneurs", icon: "users" },
   { href: "/admin/entraineurs/activites", label: "Activités", icon: "calendar" },
+  { href: "/admin/exercices", label: "Exercices", icon: "flask" },
+  { href: "/admin/themes", label: "Thèmes", icon: "tag" },
   { href: "/admin/entraineurs/paie", label: "Paie", icon: "chart" },
   { href: "/admin/entraineurs/statistiques", label: "Statistiques", icon: "gauge" },
 ];

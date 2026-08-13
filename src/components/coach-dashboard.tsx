@@ -23,6 +23,7 @@ interface Props {
   coachName: string;
   today: DashboardActivity[];
   upcoming: DashboardActivity[];
+  weekTheme: string | null;
 }
 
 function ActivityCard({ activity }: { activity: DashboardActivity }) {
@@ -57,7 +58,7 @@ function ActivityCard({ activity }: { activity: DashboardActivity }) {
   );
 }
 
-export function CoachDashboard({ coachName, today, upcoming }: Props) {
+export function CoachDashboard({ coachName, today, upcoming, weekTheme }: Props) {
   return (
     <>
       <CoachTopbar coachName={coachName} />
@@ -67,6 +68,13 @@ export function CoachDashboard({ coachName, today, upcoming }: Props) {
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
             Vos activités, groupes et joueuses attendues.
           </p>
+
+          {weekTheme && (
+            <div style={{ background: "rgba(195,166,255,0.08)", border: "1px solid rgba(195,166,255,0.25)", borderRadius: "8px", padding: "0.65rem 0.9rem", marginBottom: "1.5rem" }}>
+              <p style={{ fontSize: "0.72rem", color: "#c3a6ff", margin: 0, textTransform: "uppercase" }}>Thème de la semaine</p>
+              <p style={{ fontSize: "0.9rem", color: "#fff", margin: "0.15rem 0 0", fontWeight: 600 }}>{weekTheme}</p>
+            </div>
+          )}
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Aujourd&apos;hui ({today.length})</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "2rem" }}>

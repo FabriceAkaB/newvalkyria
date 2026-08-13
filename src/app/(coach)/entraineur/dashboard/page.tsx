@@ -3,6 +3,7 @@ import { requireCoach } from "@/lib/coach-auth";
 import { getExpectedRoster, getCoachActivities } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
+import { getThemeForDate } from "@/lib/season-themes-repo";
 
 export const metadata = { title: "Tableau de bord — Espace Entraîneur" };
 export const dynamic = "force-dynamic";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function CoachDashboardPage() {
   const coachId = await requireCoach();
 
-  const [coach, allActivities] = await Promise.all([getCoach(coachId), getCoachActivities(coachId)]);
+  const [coach, allActivities, weekTheme] = await Promise.all([getCoach(coachId), getCoachActivities(coachId), getThemeForDate(SEASON_DB_ID, new Date())]);
   const activities = allActivities.filter((a) => a.assignment.status !== "cancelled");
 
   const todayISO = new Date().toISOString().slice(0, 10);
@@ -37,5 +38,12 @@ export default async function CoachDashboardPage() {
   const today = withRoster.filter((a) => a.date === todayISO);
   const upcoming = withRoster.filter((a) => a.date > todayISO).sort((a, b) => a.date.localeCompare(b.date));
 
-  return <CoachDashboard coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"} today={today} upcoming={upcoming} />;
+  return (
+    <CoachDashboard
+      coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"}
+      today={today}
+      upcoming={upcoming}
+      weekTheme={weekTheme?.theme ?? null}
+    />
+  );
 }

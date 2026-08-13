@@ -6,15 +6,111 @@ import { useState } from "react";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { computeAssignment, computeHours, formatHours } from "@/lib/coach-payroll";
 import type { AssignmentStatus, Coach, CoachActivity, CoachAssignment, CoachTypeRate } from "@/lib/coaches-repo";
+import type { Exercise } from "@/lib/exercises-repo";
 import { formatCAD } from "@/lib/season-2027";
+import { SESSION_BLOCK_TYPES, type SessionBlock } from "@/lib/session-plan-repo";
 
 type AssignmentWithCoach = CoachAssignment & { coach: Coach };
+
+function SessionPlanEditor({ activityId, initialBlocks, exercises }: { activityId: string; initialBlocks: SessionBlock[]; exercises: Exercise[] }) {
+  const [blocks, setBlocks] = useState(initialBlocks);
+  const [blockType, setBlockType] = useState<string>(SESSION_BLOCK_TYPES[0]);
+  const [exerciseId, setExerciseId] = useState("");
+  const [customTitle, setCustomTitle] = useState("");
+  const [duration, setDuration] = useState("10");
+  const [saving, setSaving] = useState(false);
+
+  const totalMinutes = blocks.reduce((sum, b) => sum + b.duration_minutes, 0);
+
+  const addBlock = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/coach-activities/${activityId}/blocks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          blockType,
+          exerciseId: exerciseId || null,
+          customTitle: customTitle.trim() || null,
+          durationMinutes: parseInt(duration, 10) || 10
+        })
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setBlocks((prev) => [
+        ...prev,
+        { id: data.id, activity_id: activityId, block_order: prev.length, block_type: blockType, exercise_id: exerciseId || null, custom_title: customTitle.trim() || null, duration_minutes: parseInt(duration, 10) || 10, notes: null }
+      ]);
+      setCustomTitle("");
+      setDuration("10");
+      setExerciseId("");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const move = async (id: string, direction: "up" | "down") => {
+    const index = blocks.findIndex((b) => b.id === id);
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= blocks.length) return;
+    const next = [...blocks];
+    [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+    setBlocks(next);
+    await fetch(`/api/admin/coach-activities/${activityId}/blocks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ move: direction })
+    });
+  };
+
+  const remove = async (id: string) => {
+    setBlocks((prev) => prev.filter((b) => b.id !== id));
+    await fetch(`/api/admin/coach-activities/${activityId}/blocks/${id}`, { method: "DELETE" });
+  };
+
+  return (
+    <div style={{ marginBottom: "1.5rem" }}>
+      <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>
+        Plan de séance {blocks.length > 0 && <span style={{ color: "#6d6b71", fontWeight: 400 }}>· {totalMinutes} min au total</span>}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.75rem" }}>
+        {blocks.map((b, i) => (
+          <div key={b.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.5rem 0.8rem" }}>
+            <span style={{ fontSize: "0.78rem", color: "#c3c2c8", flex: 1 }}>
+              {i + 1}. <span style={{ color: "#9f85ba" }}>{b.block_type}</span>
+              {(b.custom_title || exercises.find((e) => e.id === b.exercise_id)?.title) && ` — ${b.custom_title || exercises.find((e) => e.id === b.exercise_id)?.title}`}
+              {" "}<span style={{ color: "#6d6b71" }}>({b.duration_minutes} min)</span>
+            </span>
+            <button onClick={() => move(b.id, "up")} disabled={i === 0} className="admin-btn-ghost" style={{ padding: "0.2rem 0.5rem", fontSize: "0.7rem" }}>↑</button>
+            <button onClick={() => move(b.id, "down")} disabled={i === blocks.length - 1} className="admin-btn-ghost" style={{ padding: "0.2rem 0.5rem", fontSize: "0.7rem" }}>↓</button>
+            <button onClick={() => remove(b.id)} style={{ fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.2rem 0.5rem", cursor: "pointer" }}>×</button>
+          </div>
+        ))}
+        {blocks.length === 0 && <p className="admin-empty-text">Aucun bloc de séance planifié.</p>}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+        <select className="admin-input" value={blockType} onChange={(e) => setBlockType(e.target.value)} style={{ width: "auto" }}>
+          {SESSION_BLOCK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select className="admin-input" value={exerciseId} onChange={(e) => setExerciseId(e.target.value)} style={{ flex: "1 1 160px" }}>
+          <option value="">Exercice de la bibliothèque (optionnel)</option>
+          {exercises.map((ex) => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+        </select>
+        <input className="admin-input" placeholder="Titre libre (si pas d'exercice)" value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} style={{ flex: "1 1 160px" }} />
+        <input className="admin-input" type="number" min={1} value={duration} onChange={(e) => setDuration(e.target.value)} style={{ width: "5rem" }} />
+        <button onClick={addBlock} disabled={saving} className="admin-btn-primary" style={{ fontSize: "0.78rem" }}>+ Ajouter</button>
+      </div>
+    </div>
+  );
+}
 
 interface Props {
   activity: CoachActivity;
   initialAssignments: AssignmentWithCoach[];
   coaches: Coach[];
   typeRates: CoachTypeRate[];
+  initialBlocks: SessionBlock[];
+  exercises: Exercise[];
 }
 
 const STATUS_LABELS: Record<AssignmentStatus, string> = {
@@ -182,7 +278,7 @@ function AssignmentRow({
   );
 }
 
-export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches, typeRates }: Props) {
+export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches, typeRates, initialBlocks, exercises }: Props) {
   const [assignments, setAssignments] = useState(initialAssignments);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -284,6 +380,8 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
               <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatCAD(totals.payCents / 100)}</p>
             </div>
           </div>
+
+          <SessionPlanEditor activityId={activity.id} initialBlocks={initialBlocks} exercises={exercises} />
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Entraîneurs assignés ({assignments.length})</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1.5rem" }}>
