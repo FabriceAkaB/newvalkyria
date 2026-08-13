@@ -186,6 +186,11 @@ export interface AdminLead {
   trial_date?: string | null;
   stripe_checkout_session_id?: string;
   stripe_payment_intent_id?: string;
+  /** Entité joueuse canonique — peuplée par le backfill du 14 août 2026 pour
+   *  les leads existants (nom extrait de `goal`, non vérifié) ; pas encore
+   *  posée automatiquement pour les nouveaux leads (texte libre trop fragile
+   *  à faire correspondre de façon fiable à la création). */
+  player_id?: string | null;
 }
 
 export async function getAllLeads(): Promise<AdminLead[]> {

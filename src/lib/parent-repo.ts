@@ -98,6 +98,10 @@ export interface Child {
   photo_url: string | null;
   created_at: string;
   updated_at: string;
+  /** Entité joueuse canonique — jamais reliée automatiquement (rapprochement
+   *  nom/DOB saisi par un parent trop risqué sans confirmation humaine).
+   *  Reste null tant qu'un futur écran de confirmation ne l'a pas posé. */
+  player_id: string | null;
 }
 
 export async function getChildrenForParent(userId: string): Promise<Child[]> {

@@ -73,7 +73,8 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
           club: addForm.club || null,
           photo_url: null,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          player_id: null
         }
       ]);
       setAddForm(EMPTY_FORM);

@@ -1,3 +1,4 @@
+import { findOrCreatePlayer } from "@/lib/players-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 /** Le client Supabase n'a pas de schéma Database généré (même contournement
@@ -95,6 +96,10 @@ export interface Registration {
   advanced_group: boolean;
   converted_from_id: string | null;
   transferred_from_lead_id: string | null;
+  /** Entité joueuse canonique — relie cette inscription aux autres saisons
+   *  de la même joueuse. Nullable : peuplé par le backfill du 14 août 2026,
+   *  pas encore posé automatiquement à la création d'une inscription. */
+  player_id: string | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
   created_at: string;
@@ -532,6 +537,13 @@ export interface CreateRegistrationInput {
 
 export async function createRegistration(input: CreateRegistrationInput): Promise<string> {
   const supabase = db();
+  const playerId = await findOrCreatePlayer({
+    firstName: input.playerFirstName,
+    lastName: input.playerLastName,
+    dob: input.playerDob,
+    parentEmail: input.parentEmail,
+    parentPhone: input.parentPhone
+  });
   const { data, error } = await supabase
     .from("registrations")
     .insert({
@@ -549,7 +561,8 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
       advanced_group: input.advancedGroup,
       is_trial: input.isTrial,
       status: input.status ?? "pending",
-      transferred_from_lead_id: input.transferredFromLeadId ?? null
+      transferred_from_lead_id: input.transferredFromLeadId ?? null,
+      player_id: playerId
     })
     .select("id")
     .single();
@@ -562,6 +575,13 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
  *  se libère (changement de statut depuis l'admin). */
 export async function createWaitlistRegistration(input: CreateRegistrationInput): Promise<string> {
   const supabase = db();
+  const playerId = await findOrCreatePlayer({
+    firstName: input.playerFirstName,
+    lastName: input.playerLastName,
+    dob: input.playerDob,
+    parentEmail: input.parentEmail,
+    parentPhone: input.parentPhone
+  });
   const { data, error } = await supabase
     .from("registrations")
     .insert({
@@ -578,7 +598,8 @@ export async function createWaitlistRegistration(input: CreateRegistrationInput)
       player_dob: input.playerDob,
       advanced_group: input.advancedGroup,
       is_trial: false,
-      status: "waitlist"
+      status: "waitlist",
+      player_id: playerId
     })
     .select("id")
     .single();
