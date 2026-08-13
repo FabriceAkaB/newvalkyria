@@ -47,6 +47,10 @@ export interface CoachActivity {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  /** Référence structurée vers un terrain configuré (voir terrains-repo.ts) —
+   *  `location` reste le texte libre affiché, `terrain_id` permet la
+   *  détection de conflit. Nullable : facultatif pour une activité "hors terrain". */
+  terrain_id: string | null;
 }
 
 export interface CoachAssignment {
@@ -200,6 +204,7 @@ export interface CreateActivityInput {
   activityType: string;
   title: string | null;
   notes: string | null;
+  terrainId?: string | null;
 }
 
 export async function createActivity(input: CreateActivityInput): Promise<string> {
@@ -213,7 +218,8 @@ export async function createActivity(input: CreateActivityInput): Promise<string
       category: input.category,
       activity_type: input.activityType,
       title: input.title,
-      notes: input.notes
+      notes: input.notes,
+      terrain_id: input.terrainId ?? null
     })
     .select("id")
     .single();
@@ -231,6 +237,7 @@ export async function updateActivity(id: string, patch: Partial<CreateActivityIn
   if (patch.activityType !== undefined) columnPatch.activity_type = patch.activityType;
   if (patch.title !== undefined) columnPatch.title = patch.title;
   if (patch.notes !== undefined) columnPatch.notes = patch.notes;
+  if (patch.terrainId !== undefined) columnPatch.terrain_id = patch.terrainId;
 
   const { error } = await db().from("coach_activities").update(columnPatch).eq("id", id);
   if (error) throw new Error(error.message);

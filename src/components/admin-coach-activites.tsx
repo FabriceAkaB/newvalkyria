@@ -6,22 +6,25 @@ import { useState } from "react";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { computeHours, formatHours } from "@/lib/coach-payroll";
 import { ACTIVITY_TYPES, type CoachActivity } from "@/lib/coaches-repo";
+import type { Terrain } from "@/lib/terrains-repo";
 
 interface Props {
   activities: CoachActivity[];
+  terrains: Terrain[];
 }
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function NewActivityForm({ onCreated }: { onCreated: (activity: CoachActivity) => void }) {
+function NewActivityForm({ terrains, onCreated }: { terrains: Terrain[]; onCreated: (activity: CoachActivity) => void }) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(todayISO());
   const [start, setStart] = useState("18:00");
   const [end, setEnd] = useState("19:25");
   const [type, setType] = useState<string>(ACTIVITY_TYPES[0]);
   const [location, setLocation] = useState("");
+  const [terrainId, setTerrainId] = useState("");
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
@@ -40,6 +43,7 @@ function NewActivityForm({ onCreated }: { onCreated: (activity: CoachActivity) =
           endTime: end,
           activityType: type,
           location: location.trim() || null,
+          terrainId: terrainId || null,
           category: category.trim() || null,
           title: title.trim() || null
         })
@@ -48,7 +52,7 @@ function NewActivityForm({ onCreated }: { onCreated: (activity: CoachActivity) =
       const data = await res.json();
       onCreated({
         id: data.id, activity_date: date, start_time: start, end_time: end, activity_type: type,
-        location: location.trim() || null, category: category.trim() || null, title: title.trim() || null,
+        location: location.trim() || null, terrain_id: terrainId || null, category: category.trim() || null, title: title.trim() || null,
         notes: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString()
       });
       window.location.href = `/admin/entraineurs/activites/${data.id}`;
@@ -71,7 +75,11 @@ function NewActivityForm({ onCreated }: { onCreated: (activity: CoachActivity) =
         </select>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-        <input className="admin-input" placeholder="Lieu / terrain" value={location} onChange={(e) => setLocation(e.target.value)} style={{ flex: "1 1 140px" }} />
+        <input className="admin-input" placeholder="Lieu (texte libre)" value={location} onChange={(e) => setLocation(e.target.value)} style={{ flex: "1 1 140px" }} />
+        <select className="admin-input" value={terrainId} onChange={(e) => setTerrainId(e.target.value)} style={{ flex: "1 1 160px" }}>
+          <option value="">Terrain (pour vérifier les conflits)</option>
+          {terrains.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
         <input className="admin-input" placeholder="Catégorie (ex. 2016)" value={category} onChange={(e) => setCategory(e.target.value)} style={{ flex: "1 1 140px" }} />
         <input className="admin-input" placeholder="Titre (optionnel)" value={title} onChange={(e) => setTitle(e.target.value)} style={{ flex: "1 1 180px" }} />
       </div>
@@ -84,7 +92,7 @@ function NewActivityForm({ onCreated }: { onCreated: (activity: CoachActivity) =
   );
 }
 
-export function AdminCoachActivites({ activities: initial }: Props) {
+export function AdminCoachActivites({ activities: initial, terrains }: Props) {
   const [activities, setActivities] = useState(initial);
 
   return (
@@ -102,7 +110,7 @@ export function AdminCoachActivites({ activities: initial }: Props) {
             Pratiques, matchs, tournois, camps et toute autre activité — assignez les entraîneurs présents sur chacune.
           </p>
 
-          <NewActivityForm onCreated={(a) => setActivities((prev) => [a, ...prev])} />
+          <NewActivityForm terrains={terrains} onCreated={(a) => setActivities((prev) => [a, ...prev])} />
 
           <div className="admin-table-wrap">
             <table className="admin-table">

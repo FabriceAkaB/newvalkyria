@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { createActivity, getActivities } from "@/lib/coaches-repo";
 import { jsonError } from "@/lib/http";
+import { findTerrainConflicts } from "@/lib/terrains-repo";
 
 export async function GET(request: Request) {
   if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     activityType?: string;
     title?: string | null;
     notes?: string | null;
+    terrainId?: string | null;
   } | null;
 
   if (!body?.activityDate || !body.startTime || !body.endTime || !body.activityType) {
@@ -32,6 +34,18 @@ export async function POST(request: Request) {
   }
   if (body.endTime <= body.startTime) {
     return jsonError("L'heure de fin doit être après l'heure de début", 400);
+  }
+
+  if (body.terrainId) {
+    const conflicts = await findTerrainConflicts({
+      terrainId: body.terrainId,
+      activityDate: body.activityDate,
+      startTime: body.startTime,
+      endTime: body.endTime
+    });
+    if (conflicts.length > 0) {
+      return jsonError(`Terrain déjà réservé de ${conflicts[0].startTime} à ${conflicts[0].endTime} (${conflicts[0].title ?? conflicts[0].activityType})`, 409);
+    }
   }
 
   const id = await createActivity({
@@ -42,7 +56,8 @@ export async function POST(request: Request) {
     category: body.category || null,
     activityType: body.activityType,
     title: body.title || null,
-    notes: body.notes || null
+    notes: body.notes || null,
+    terrainId: body.terrainId || null
   });
 
   return NextResponse.json({ ok: true, id }, { status: 201 });

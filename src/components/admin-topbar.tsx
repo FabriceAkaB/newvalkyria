@@ -61,7 +61,12 @@ const BOUTIQUE_LINKS: { href: string; label: string; icon: IconName }[] = [
 ];
 
 const ESSAIS_LINKS: { href: string; label: string; icon: IconName }[] = [
-  { href: "/admin/essais-calendrier", label: "Calendrier", icon: "calendar" },
+  { href: "/admin/essais-calendrier", label: "Calendrier essais", icon: "calendar" },
+];
+
+const CALENDRIER_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/calendrier", label: "Vue globale", icon: "calendar" },
+  { href: "/admin/terrains", label: "Terrains", icon: "grid" },
 ];
 
 const UNIFORMES_LINKS: { href: string; label: string; icon: IconName }[] = [
@@ -102,6 +107,7 @@ const GROUPS: Group[] = [
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
   { label: "Uniformes", dotColor: "#e0b0d8", links: UNIFORMES_LINKS },
   { label: "Essais", dotColor: "#88c0d0", links: ESSAIS_LINKS },
+  { label: "Calendrier", dotColor: "#c3a6ff", links: CALENDRIER_LINKS },
   { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS, adminOnly: true },
   { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS, adminOnly: true },
 ];
