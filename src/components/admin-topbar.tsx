@@ -73,6 +73,10 @@ const COMMUNICATIONS_LINKS: { href: string; label: string; icon: IconName }[] = 
   { href: "/admin/communications", label: "Envoyer un message", icon: "list" },
 ];
 
+const SYSTEME_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/audit", label: "Journal d'audit", icon: "shield" },
+];
+
 const UNIFORMES_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/uniformes", label: "Tableau de bord", icon: "gauge" },
   { href: "/admin/uniformes/kit-inscription", label: "Kit d'inscription", icon: "list" },
@@ -192,6 +196,7 @@ const GROUPS: Group[] = [
   { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS, adminOnly: true },
   { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS, adminOnly: true },
   { label: "Communications", dotColor: "#f0c878", links: COMMUNICATIONS_LINKS, adminOnly: true },
+  { label: "Système", dotColor: "#9d9da0", links: SYSTEME_LINKS, adminOnly: true },
 ];
 
 export function AdminTopbar() {

@@ -1,19 +1,32 @@
 import { NextResponse } from "next/server";
 
-import { isAdminRequest } from "@/lib/admin-auth";
+import { getCurrentAdminRole } from "@/lib/admin-auth";
+import { logAudit } from "@/lib/audit-repo";
 import { jsonError } from "@/lib/http";
 import type { RegistrationStatus } from "@/lib/season-admin-repo";
-import { convertTrialToOfficial, deleteRegistration, updateRegistration } from "@/lib/season-admin-repo";
+import { convertTrialToOfficial, deleteRegistration, getRegistrationById, updateRegistration } from "@/lib/season-admin-repo";
 
 const VALID_STATUSES: readonly string[] = ["pending", "confirmed", "paid", "waitlist", "cancelled"] satisfies readonly RegistrationStatus[];
+const ACTOR_LABEL: Record<"admin" | "gerante", string> = { admin: "JP", gerante: "Gérante" };
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminRequest())) {
-    return jsonError("Non autorisé", 401);
-  }
+  const role = await getCurrentAdminRole();
+  if (!role) return jsonError("Non autorisé", 401);
   const { id } = await params;
   try {
+    const before = await getRegistrationById(id);
     await deleteRegistration(id);
+    if (before) {
+      await logAudit({
+        actorRole: role,
+        actorLabel: ACTOR_LABEL[role],
+        action: "delete",
+        entityType: "registration",
+        entityId: id,
+        entityLabel: `${before.player_first_name ?? ""} ${before.player_last_name ?? ""}`.trim() || before.parent_name,
+        before
+      });
+    }
     return NextResponse.json({ ok: true });
   } catch (err) {
     return jsonError(err instanceof Error ? err.message : "Erreur de suppression", 500);
@@ -21,9 +34,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminRequest())) {
-    return jsonError("Non autorisé", 401);
-  }
+  const role = await getCurrentAdminRole();
+  if (!role) return jsonError("Non autorisé", 401);
   const { id } = await params;
   const body = (await request.json().catch(() => null)) as {
     programId?: string | null;
@@ -54,6 +66,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   try {
+    const before = body.status !== undefined ? await getRegistrationById(id) : null;
+
     if (body.convertToOfficial) {
       await convertTrialToOfficial(id, body.convertToOfficial);
     } else {
@@ -76,6 +90,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         playerDob: body.playerDob
       });
     }
+
+    if (before && body.status !== undefined && before.status !== body.status) {
+      await logAudit({
+        actorRole: role,
+        actorLabel: ACTOR_LABEL[role],
+        action: "status_change",
+        entityType: "registration",
+        entityId: id,
+        entityLabel: `${before.player_first_name ?? ""} ${before.player_last_name ?? ""}`.trim() || before.parent_name,
+        before: { status: before.status },
+        after: { status: body.status }
+      });
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     return jsonError(err instanceof Error ? err.message : "Erreur de sauvegarde", 500);

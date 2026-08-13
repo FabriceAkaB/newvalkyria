@@ -1,23 +1,37 @@
 import { NextResponse } from "next/server";
 
-import { isAdminRequest } from "@/lib/admin-auth";
+import { getCurrentAdminRole, isAdminRequest } from "@/lib/admin-auth";
+import { logAudit } from "@/lib/audit-repo";
 import { jsonError } from "@/lib/http";
-import { deleteLead, updateLeadGoal, updateLeadStatus, updateLeadTimeSlot, updateLeadTrialDate } from "@/lib/repositories";
+import { deleteLead, getAllLeads, updateLeadGoal, updateLeadStatus, updateLeadTimeSlot, updateLeadTrialDate } from "@/lib/repositories";
+
+const ACTOR_LABEL: Record<"admin" | "gerante", string> = { admin: "JP", gerante: "Gérante" };
 
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isAdminRequest())) {
-    return jsonError("Non autorisé", 401);
-  }
+  const role = await getCurrentAdminRole();
+  if (!role) return jsonError("Non autorisé", 401);
 
   const { id } = await params;
   if (!id) {
     return jsonError("ID manquant", 400);
   }
 
+  const before = (await getAllLeads()).find((l) => l.id === id);
   await deleteLead(id);
+  if (before) {
+    await logAudit({
+      actorRole: role,
+      actorLabel: ACTOR_LABEL[role],
+      action: "delete",
+      entityType: "lead",
+      entityId: id,
+      entityLabel: before.parent_name,
+      before
+    });
+  }
   return NextResponse.json({ ok: true });
 }
 
