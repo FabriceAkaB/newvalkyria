@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { EntityDocuments } from "@/components/admin-entity-documents";
 import type { BirthCategory, Program, Registration, RegistrationStatus, Season, TimeSlotTemplate } from "@/lib/season-admin-repo";
 
 interface Props {
@@ -299,6 +300,10 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
               )}
             </div>
           )}
+
+          <div className="admin-drawer-section">
+            <EntityDocuments entityType="registration" entityId={r.id} />
+          </div>
 
           <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Référence</p>

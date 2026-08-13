@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { EntityDocuments } from "@/components/admin-entity-documents";
 import { AGE_CATEGORIES, CATEGORY_LABELS, CATEGORY_SUBLABELS } from "@/lib/categories";
 import type { ClubGroup } from "@/lib/club-aliases-store";
 import type { AdminLead } from "@/lib/repositories";
@@ -597,6 +598,10 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
               )}
             </div>
           )}
+
+          <div className="admin-drawer-section">
+            <EntityDocuments entityType="lead" entityId={lead.id} />
+          </div>
 
           {/* ID */}
           <div className="admin-drawer-section">

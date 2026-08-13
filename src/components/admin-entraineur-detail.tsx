@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { EntityDocuments } from "@/components/admin-entity-documents";
 import type { CoachCertification } from "@/lib/certifications-repo";
 import { computeAssignment, formatHours } from "@/lib/coach-payroll";
 import { ACTIVITY_TYPES, COACH_ROLES, type Coach, type CoachActivity, type CoachAssignment, type CoachTypeRate } from "@/lib/coaches-repo";
@@ -359,6 +360,9 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
               <TypeRatesSection coachId={coach.id} rates={initialTypeRates} />
               <CredentialsSection coachId={coach.id} username={coach.username} />
               <CertificationsSection coachId={coach.id} certifications={initialCertifications} />
+              <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1.1rem" }}>
+                <EntityDocuments entityType="coach" entityId={coach.id} />
+              </div>
 
               <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1.1rem" }}>
                 <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Solde</p>
