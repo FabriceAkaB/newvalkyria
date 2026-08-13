@@ -107,7 +107,7 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
 }
 
 export interface CoachNotification {
-  type: "unpaid" | "overdue" | "unconfirmed" | "unassigned";
+  type: "unpaid" | "overdue" | "unconfirmed" | "unassigned" | "certification_expired" | "certification_expiring";
   message: string;
   href: string;
 }

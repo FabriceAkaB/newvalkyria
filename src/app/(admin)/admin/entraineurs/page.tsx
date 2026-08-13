@@ -1,7 +1,8 @@
 import { AdminEntraineurs, type CoachSummary } from "@/components/admin-entraineurs";
 import { requireAdmin } from "@/lib/admin-auth";
+import { computeCertificationAlerts, getAllCertificationsWithCoach } from "@/lib/certifications-repo";
 import { startOfMonth, startOfWeek } from "@/lib/coach-payroll";
-import { computeCoachNotifications, getPayrollRows } from "@/lib/coach-payroll-data";
+import { computeCoachNotifications, type CoachNotification, getPayrollRows } from "@/lib/coach-payroll-data";
 import { getActivities, getCoaches } from "@/lib/coaches-repo";
 
 export const metadata = { title: "Entraîneurs — Admin New Valkyria", robots: "noindex" };
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminEntraineursPage() {
   await requireAdmin({ roles: ["admin"] });
 
-  const [coaches, rows, activities] = await Promise.all([getCoaches(), getPayrollRows(), getActivities()]);
+  const [coaches, rows, activities, certifications] = await Promise.all([getCoaches(), getPayrollRows(), getActivities(), getAllCertificationsWithCoach()]);
 
   const today = new Date();
   const weekStartISO = startOfWeek(today).toISOString().slice(0, 10);
@@ -37,5 +38,13 @@ export default async function AdminEntraineursPage() {
 
   const notifications = computeCoachNotifications(rows, activities, today);
 
-  return <AdminEntraineurs summaries={summaries} notifications={notifications} />;
+  const certAlerts = computeCertificationAlerts(certifications, today);
+  const expired = certAlerts.filter((a) => a.status === "expired");
+  const expiringSoon = certAlerts.filter((a) => a.status === "expiring_soon");
+  const certNotifications: CoachNotification[] = [
+    ...(expired.length > 0 ? [{ type: "certification_expired" as const, message: `${expired.length} certification(s) expirée(s)`, href: "/admin/entraineurs" }] : []),
+    ...(expiringSoon.length > 0 ? [{ type: "certification_expiring" as const, message: `${expiringSoon.length} certification(s) expirant bientôt (moins de 60 jours)`, href: "/admin/entraineurs" }] : [])
+  ];
+
+  return <AdminEntraineurs summaries={summaries} notifications={[...notifications, ...certNotifications]} />;
 }

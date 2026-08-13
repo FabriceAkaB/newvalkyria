@@ -23,7 +23,9 @@ const NOTIFICATION_ICON: Record<CoachNotification["type"], string> = {
   unpaid: "💰",
   overdue: "⏰",
   unconfirmed: "❓",
-  unassigned: "⚠️"
+  unassigned: "⚠️",
+  certification_expired: "🪪",
+  certification_expiring: "🪪"
 };
 
 function NotificationsPanel({ notifications }: { notifications: CoachNotification[] }) {

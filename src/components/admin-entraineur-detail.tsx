@@ -1,12 +1,99 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import type { CoachCertification } from "@/lib/certifications-repo";
 import { computeAssignment, formatHours } from "@/lib/coach-payroll";
 import { ACTIVITY_TYPES, COACH_ROLES, type Coach, type CoachActivity, type CoachAssignment, type CoachTypeRate } from "@/lib/coaches-repo";
 import { formatCAD } from "@/lib/season-2027";
+
+function CertificationsSection({ coachId, certifications: initial }: { coachId: string; certifications: CoachCertification[] }) {
+  const [certifications, setCertifications] = useState(initial);
+  const [name, setName] = useState("");
+  const [issuedDate, setIssuedDate] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [saving, setSaving] = useState(false);
+  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const todayISO = new Date().toISOString().slice(0, 10);
+
+  const add = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/coaches/${coachId}/certifications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), issuedDate: issuedDate || null, expiryDate: expiryDate || null })
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) return;
+      setCertifications((prev) => [...prev, { id: data.id, coach_id: coachId, name: name.trim(), issued_date: issuedDate || null, expiry_date: expiryDate || null, document_url: null, notes: null, created_at: new Date().toISOString() }]);
+      setName("");
+      setIssuedDate("");
+      setExpiryDate("");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    setCertifications((prev) => prev.filter((c) => c.id !== id));
+    await fetch(`/api/admin/certifications/${id}`, { method: "DELETE" });
+  };
+
+  const uploadDocument = async (id: string, file: File | undefined) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("document", file);
+    const res = await fetch(`/api/admin/certifications/${id}/document`, { method: "POST", body: formData });
+    if (res.ok) setCertifications((prev) => prev.map((c) => (c.id === id ? { ...c, document_url: "uploaded" } : c)));
+  };
+
+  const viewDocument = async (id: string) => {
+    const res = await fetch(`/api/admin/certifications/${id}/document`);
+    const data = await res.json().catch(() => null);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  };
+
+  return (
+    <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1.1rem" }}>
+      <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.6rem" }}>Certifications</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.6rem" }}>
+        {certifications.length === 0 && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Aucune certification enregistrée.</p>}
+        {certifications.map((c) => {
+          const expired = c.expiry_date && c.expiry_date < todayISO;
+          return (
+            <div key={c.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: expired ? "#ff9999" : "#c3c2c8" }}>
+              <span style={{ flex: 1 }}>
+                {c.name}{c.expiry_date ? ` · expire le ${new Date(c.expiry_date + "T00:00:00").toLocaleDateString("fr-CA")}${expired ? " (expirée)" : ""}` : ""}
+              </span>
+              {c.document_url ? (
+                <button onClick={() => viewDocument(c.id)} className="admin-btn-ghost" style={{ padding: "0.15rem 0.4rem", fontSize: "0.68rem" }}>Document</button>
+              ) : (
+                <>
+                  <button onClick={() => fileInputs.current[c.id]?.click()} className="admin-btn-ghost" style={{ padding: "0.15rem 0.4rem", fontSize: "0.68rem" }}>+ Document</button>
+                  <input ref={(el) => { fileInputs.current[c.id] = el; }} type="file" accept="application/pdf,image/jpeg,image/png" style={{ display: "none" }} onChange={(e) => uploadDocument(c.id, e.target.files?.[0])} />
+                </>
+              )}
+              <button onClick={() => remove(c.id)} style={{ fontSize: "0.68rem", color: "#ff9999", background: "none", border: "none", cursor: "pointer" }}>×</button>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+        <input className="admin-input" placeholder="Nom (ex. PNCE Compétition-Introduction)" value={name} onChange={(e) => setName(e.target.value)} style={{ fontSize: "0.75rem" }} />
+        <div style={{ display: "flex", gap: "0.35rem" }}>
+          <input className="admin-input" type="date" placeholder="Obtenue le" value={issuedDate} onChange={(e) => setIssuedDate(e.target.value)} style={{ fontSize: "0.72rem", flex: 1 }} />
+          <input className="admin-input" type="date" placeholder="Expire le" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={{ fontSize: "0.72rem", flex: 1 }} />
+        </div>
+        <button onClick={add} disabled={saving || !name.trim()} className="admin-btn-ghost" style={{ fontSize: "0.72rem" }}>+ Ajouter</button>
+      </div>
+    </div>
+  );
+}
 
 type AssignmentWithActivity = CoachAssignment & { activity: CoachActivity };
 
@@ -14,6 +101,7 @@ interface Props {
   coach: Coach;
   initialAssignments: AssignmentWithActivity[];
   initialTypeRates: CoachTypeRate[];
+  initialCertifications: CoachCertification[];
 }
 
 function ProfileField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -138,7 +226,7 @@ function CredentialsSection({ coachId, username: initialUsername }: { coachId: s
   );
 }
 
-export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments, initialTypeRates }: Props) {
+export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments, initialTypeRates, initialCertifications }: Props) {
   const [coach, setCoach] = useState(initialCoach);
   const [saving, setSaving] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -270,6 +358,7 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
             <div style={{ flex: "1 1 260px", display: "flex", flexDirection: "column", gap: "1rem" }}>
               <TypeRatesSection coachId={coach.id} rates={initialTypeRates} />
               <CredentialsSection coachId={coach.id} username={coach.username} />
+              <CertificationsSection coachId={coach.id} certifications={initialCertifications} />
 
               <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1.1rem" }}>
                 <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Solde</p>
