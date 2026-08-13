@@ -69,6 +69,10 @@ const CALENDRIER_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/terrains", label: "Terrains", icon: "grid" },
 ];
 
+const COMMUNICATIONS_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/communications", label: "Envoyer un message", icon: "list" },
+];
+
 const UNIFORMES_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/uniformes", label: "Tableau de bord", icon: "gauge" },
   { href: "/admin/uniformes/kit-inscription", label: "Kit d'inscription", icon: "list" },
@@ -112,6 +116,7 @@ const GROUPS: Group[] = [
   { label: "Calendrier", dotColor: "#c3a6ff", links: CALENDRIER_LINKS },
   { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS, adminOnly: true },
   { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS, adminOnly: true },
+  { label: "Communications", dotColor: "#f0c878", links: COMMUNICATIONS_LINKS, adminOnly: true },
 ];
 
 export function AdminTopbar() {

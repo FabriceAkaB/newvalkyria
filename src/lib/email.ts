@@ -322,3 +322,40 @@ export async function sendPaymentPlanFailedEmail(input: PaymentPlanFailedEmailIn
     `
   });
 }
+
+/** Diffusion ciblée depuis le centre de communication admin — même client
+ *  Resend que les autres courriels transactionnels, un envoi par
+ *  destinataire (cohérent avec le reste de ce fichier, aucune API "batch"
+ *  utilisée ailleurs dans le projet). Le corps est du texte brut composé
+ *  par l'admin ; on ne rend jamais de HTML arbitraire, seulement les sauts
+ *  de ligne convertis en paragraphes. */
+export async function sendBroadcastEmail(input: { to: string; subject: string; body: string }): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!env.resendApiKey) return { ok: false, error: "Resend non configuré" };
+
+  const resend = getResendClient();
+  const paragraphs = input.body
+    .split(/\n{2,}/)
+    .map((p) => `<p style="margin:0 0 14px">${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+
+  try {
+    await resend.emails.send({
+      from: env.resendFrom,
+      to: input.to,
+      subject: input.subject,
+      html: `
+        <div style="font-family:Arial,sans-serif;line-height:1.5;color:#161419;max-width:600px">
+          ${paragraphs}
+          <p style="margin-top:24px;font-size:13px;color:#888">New Valkyria</p>
+        </div>
+      `
+    });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Erreur d'envoi" };
+  }
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
