@@ -412,6 +412,13 @@ export async function toggleSlotDateCancelled(dateId: string, cancelled: boolean
 
 /* ── Inscriptions ──────────────────────────────────────────────── */
 
+export async function getRegistrationById(id: string): Promise<Registration | null> {
+  const supabase = db();
+  const { data, error } = await supabase.from("registrations").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as Registration | null;
+}
+
 export async function getSeasonRegistrations(seasonId: string): Promise<Registration[]> {
   const supabase = db();
   const { data, error } = await supabase

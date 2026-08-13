@@ -280,3 +280,61 @@ export async function getPlayerAttendanceHistory(registrationId: string): Promis
   if (error) throw new Error(error.message);
   return (data ?? []) as any;
 }
+
+
+/* ── Bulletin de progression — agrégat en lecture seule des données déjà
+ *  enregistrées ci-dessus (présences, évaluations, objectifs). N'invente
+ *  jamais rien : une moyenne n'est calculée que sur les critères réellement
+ *  notés au moins une fois, aucun texte n'est généré automatiquement. ── */
+
+export interface BulletinCriterionAverage {
+  criterion: string;
+  average: number;
+  count: number;
+}
+
+export interface BulletinData {
+  player: PlayerProfile;
+  attendanceCounts: Record<PlayerAttendanceStatus, number>;
+  totalActivities: number;
+  criteriaAverages: BulletinCriterionAverage[];
+  evaluations: (PlayerEvaluation & { activity: CoachActivity; coach: { first_name: string; last_name: string } })[];
+  objectives: PlayerObjective[];
+}
+
+export async function getBulletinData(registrationId: string): Promise<BulletinData | null> {
+  const player = await getPlayerProfile(registrationId);
+  if (!player) return null;
+
+  const [attendance, evaluations, objectives] = await Promise.all([
+    getPlayerAttendanceHistory(registrationId),
+    getPlayerEvaluations(registrationId),
+    getPlayerObjectives(registrationId)
+  ]);
+
+  const attendanceCounts: Record<PlayerAttendanceStatus, number> = { present: 0, absent: 0, injured: 0, late: 0, left_early: 0 };
+  for (const a of attendance) attendanceCounts[a.status] += 1;
+
+  const sums = new Map<string, { sum: number; count: number }>();
+  for (const ev of evaluations) {
+    for (const [criterion, value] of Object.entries(ev.ratings)) {
+      const s = sums.get(criterion) ?? { sum: 0, count: 0 };
+      s.sum += value;
+      s.count += 1;
+      sums.set(criterion, s);
+    }
+  }
+  const criteriaAverages: BulletinCriterionAverage[] = EVALUATION_CRITERIA.filter((c) => sums.has(c)).map((c) => {
+    const s = sums.get(c)!;
+    return { criterion: c, average: Math.round((s.sum / s.count) * 10) / 10, count: s.count };
+  });
+
+  return {
+    player,
+    attendanceCounts,
+    totalActivities: attendance.length,
+    criteriaAverages,
+    evaluations,
+    objectives
+  };
+}

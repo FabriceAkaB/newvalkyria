@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { CoachTopbar } from "@/components/coach-topbar";
@@ -81,9 +82,12 @@ export function CoachJoueurDetail({ coachName, player, evaluations, objectives, 
           <p className="admin-section-title" style={{ margin: "0 0 0.3rem", fontSize: "1.1rem", textTransform: "none", letterSpacing: 0, color: "#fff" }}>
             {player.firstName} {player.lastName}
           </p>
-          <p style={{ fontSize: "0.8rem", color: "#9d9da0", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.8rem", color: "#9d9da0", marginBottom: "0.5rem" }}>
             Née {player.birthYear ?? "—"}{player.advancedGroup ? " · Groupe avancé" : ""} · {presentCount}/{attendanceHistory.length} présence(s)
           </p>
+          <Link href={`/entraineur/joueuses/${player.registrationId}/bulletin`} className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1.5rem", fontSize: "0.75rem" }}>
+            📋 Voir le bulletin de progression
+          </Link>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
             <ObjectivesPanel registrationId={player.registrationId} objectives={objectives} />

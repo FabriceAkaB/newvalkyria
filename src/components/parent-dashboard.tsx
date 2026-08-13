@@ -159,9 +159,14 @@ function ChildActivity({ childId, onUnlink }: { childId: string; onUnlink: () =>
           {!loading && seasons?.length === 0 && <p style={{ fontSize: "0.72rem", color: "#605f65" }}>Aucune inscription trouvée.</p>}
           {!loading && seasons?.map((s) => (
             <div key={s.registrationId} style={{ background: "#17151e", border: "1px solid #251f30", borderRadius: "8px", padding: "0.7rem 0.85rem" }}>
-              <p style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff", margin: "0 0 0.3rem" }}>
-                {s.seasonLabel}{s.programName ? ` — ${s.programName}` : ""}{s.isTrial ? " (essai)" : ""}
-              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", marginBottom: "0.3rem" }}>
+                <p style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff", margin: 0 }}>
+                  {s.seasonLabel}{s.programName ? ` — ${s.programName}` : ""}{s.isTrial ? " (essai)" : ""}
+                </p>
+                <a href={`/compte/bulletin/${s.registrationId}`} style={{ fontSize: "0.68rem", color: "#9f85ba", textDecoration: "none", whiteSpace: "nowrap" }}>
+                  📋 Bulletin
+                </a>
+              </div>
 
               {s.attendance.length > 0 && (
                 <div style={{ marginBottom: "0.5rem" }}>
@@ -461,9 +466,6 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
                   ) : (
                     <LinkPlayerBlock childId={child.id} onLinked={(playerId) => setChildren((prev) => prev.map((c) => (c.id === child.id ? { ...c, player_id: playerId } : c)))} />
                   )}
-                  <div style={{ marginTop: "0.6rem", padding: "0.6rem 0.85rem", background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: "8px" }}>
-                    <p style={{ fontSize: "0.7rem", color: "#605f65", margin: 0 }}>📋 Bulletin de progression — disponible bientôt</p>
-                  </div>
                 </>
               )}
             </div>
