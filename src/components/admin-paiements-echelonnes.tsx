@@ -11,6 +11,7 @@ interface Props {
   plans: PaymentPlanOverview[];
   seasonLabelById: Record<string, string>;
   programNameById: Record<string, string>;
+  initialSeasonFilter?: string;
 }
 
 function planStatus(plan: PaymentPlanOverview): { label: string; className: string } {
@@ -27,8 +28,8 @@ const INSTALLMENT_STATUS_LABELS: Record<string, string> = {
   failed_final: "Échec définitif"
 };
 
-export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameById }: Props) {
-  const [seasonFilter, setSeasonFilter] = useState("");
+export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameById, initialSeasonFilter }: Props) {
+  const [seasonFilter, setSeasonFilter] = useState(initialSeasonFilter ?? "");
   const [statusFilter, setStatusFilter] = useState<"all" | "en-cours" | "complete" | "probleme">("all");
   const [countFilter, setCountFilter] = useState<"" | "2" | "3">("");
   const [nextFilter, setNextFilter] = useState<"" | "1" | "2" | "3">("");

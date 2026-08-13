@@ -46,7 +46,7 @@ export function AdminUniformesAujourdhui({ orders, seasonKeys, seasonLabelByKey,
           <select
             className="admin-input"
             value={currentSeason}
-            onChange={(e) => router.push(e.target.value ? `/admin/uniformes/aujourdhui?saison=${e.target.value}` : "/admin/uniformes/aujourdhui")}
+            onChange={(e) => router.push(`/admin/uniformes/aujourdhui?saison=${e.target.value || "all"}`)}
             style={{ marginBottom: "1.25rem" }}
           >
             <option value="">Toutes les saisons</option>

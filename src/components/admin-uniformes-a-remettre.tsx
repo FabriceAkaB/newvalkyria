@@ -84,7 +84,7 @@ export function AdminUniformesARemettre({ orders, unassignedOrders, seasonKeys, 
           <select
             className="admin-input"
             value={currentSeason}
-            onChange={(e) => router.push(e.target.value ? `/admin/uniformes/a-remettre?saison=${e.target.value}` : "/admin/uniformes/a-remettre")}
+            onChange={(e) => router.push(`/admin/uniformes/a-remettre?saison=${e.target.value || "all"}`)}
             style={{ marginBottom: "1.25rem" }}
           >
             <option value="">Toutes les saisons</option>

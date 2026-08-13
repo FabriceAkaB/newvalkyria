@@ -110,6 +110,27 @@ export async function getSeasons(): Promise<Season[]> {
   return (data ?? []) as Season[];
 }
 
+/** Fixe la saison "par défaut" utilisée partout où un filtre de saison
+ *  s'affiche sans sélection explicite (Vue annuelle, Paiements échelonnés,
+ *  Uniformes...) — une seule saison active à la fois. */
+export async function setActiveSeason(seasonId: string): Promise<void> {
+  const supabase = db();
+  const { error: clearErr } = await supabase.from("seasons").update({ is_active: false }).eq("is_active", true);
+  if (clearErr) throw new Error(clearErr.message);
+  const { error } = await supabase.from("seasons").update({ is_active: true }).eq("id", seasonId);
+  if (error) throw new Error(error.message);
+}
+
+/** La saison "par défaut" (voir setActiveSeason) — utilisée partout où un
+ *  filtre de saison doit présélectionner quelque chose de sensé plutôt que
+ *  "Toutes les saisons". Retombe sur la saison la plus récente si aucune
+ *  n'est marquée active. */
+export async function getActiveSeasonId(): Promise<string | null> {
+  const seasons = await getSeasons();
+  const real = seasons.filter((s) => s.id !== "ete-2026");
+  return real.find((s) => s.is_active)?.id ?? real[real.length - 1]?.id ?? null;
+}
+
 export async function getSeason(seasonId: string): Promise<Season | null> {
   const supabase = db();
   const { data, error } = await supabase.from("seasons").select("*").eq("id", seasonId).maybeSingle();

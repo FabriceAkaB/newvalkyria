@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { ExpenseAttachments } from "@/components/admin-expense-attachments";
+import type { Season } from "@/lib/season-admin-repo";
 import { formatCAD } from "@/lib/season-2027";
 import { GENERAL_KEY, type AccountBalance, type FinancialAlert, type FinancialDashboard, type FinancialHealth, type MonthlyBucket, type RevenueSummary, type SeasonRevenue } from "@/lib/revenue-calc";
 import { EXPENSE_CATEGORIES, PAYMENT_ACCOUNTS, type RevenueExpense } from "@/lib/revenue-repo";
@@ -12,6 +13,52 @@ import { EXPENSE_CATEGORIES, PAYMENT_ACCOUNTS, type RevenueExpense } from "@/lib
 interface Props {
   summary: RevenueSummary;
   dashboard: FinancialDashboard;
+  seasons: Season[];
+}
+
+function DefaultSeasonSetting({ seasons }: { seasons: Season[] }) {
+  const active = seasons.find((s) => s.is_active);
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(active?.id ?? "");
+  const [current, setCurrent] = useState(active);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (!value) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/season-default", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seasonId: value })
+      });
+      if (res.ok) { setCurrent(seasons.find((s) => s.id === value)); setEditing(false); }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.72rem", color: "#9d9da0", marginBottom: "0.75rem" }}>
+      <span>Saison par défaut (utilisée partout où aucune saison n&apos;est choisie) :</span>
+      {editing ? (
+        <>
+          <select className="admin-input" style={{ fontSize: "0.72rem", padding: "0.25rem 0.4rem", width: "auto" }} value={value} onChange={(e) => setValue(e.target.value)} autoFocus>
+            {seasons.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+          <button onClick={save} disabled={saving} className="admin-btn-primary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.66rem" }}>{saving ? "..." : "OK"}</button>
+          <button onClick={() => setEditing(false)} className="admin-btn-ghost" style={{ padding: "0.25rem 0.5rem", fontSize: "0.66rem" }}>Annuler</button>
+        </>
+      ) : (
+        <>
+          <strong style={{ color: "#c3c2c8" }}>{current?.label ?? "Aucune"}</strong>
+          <button onClick={() => { setValue(current?.id ?? ""); setEditing(true); }} style={{ color: "#8d76a5", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>
+            Modifier
+          </button>
+        </>
+      )}
+    </div>
+  );
 }
 
 const HEALTH_LABELS: Record<FinancialHealth, { label: string; emoji: string; color: string }> = {
@@ -632,7 +679,7 @@ function AccountsPanel({ accounts }: { accounts: AccountBalance[] }) {
   );
 }
 
-export function AdminRevenus({ summary, dashboard }: Props) {
+export function AdminRevenus({ summary, dashboard, seasons }: Props) {
   const [cards, setCards] = useState<SeasonRevenue[]>(summary.seasons);
   const [boutique, setBoutique] = useState<SeasonRevenue>(summary.boutique);
   const [general, setGeneral] = useState<SeasonRevenue>(summary.general);
@@ -674,6 +721,7 @@ export function AdminRevenus({ summary, dashboard }: Props) {
 
           <FinancialDashboardPanel dashboard={dashboard} />
 
+          <DefaultSeasonSetting seasons={seasons} />
           <RevenueTaxSetting initialRate={summary.revenueTaxRate} />
 
           {hasUnknown && (

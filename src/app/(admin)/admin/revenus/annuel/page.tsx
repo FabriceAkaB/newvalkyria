@@ -1,7 +1,7 @@
 import { AdminRevenusAnnuel } from "@/components/admin-revenus-annuel";
 import { requireAdmin } from "@/lib/admin-auth";
 import { BOUTIQUE_KEY, BOUTIQUE_LABEL, ETE_SEASON_KEY, ETE_SEASON_LABEL, getAnnualBreakdown, getExpensesForYear } from "@/lib/revenue-calc";
-import { getSeasons } from "@/lib/season-admin-repo";
+import { getActiveSeasonId, getSeasons } from "@/lib/season-admin-repo";
 
 export const metadata = { title: "Vue annuelle — Admin New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -10,7 +10,8 @@ export default async function AdminRevenusAnnuelPage({ searchParams }: { searchP
   await requireAdmin({ roles: ["admin"] });
   const { annee, saison } = await searchParams;
   const year = annee ? parseInt(annee, 10) : new Date().getFullYear();
-  const seasonKey = saison || undefined;
+  // Pas de paramètre = saison par défaut ; "all" = choix explicite "Toutes les saisons".
+  const seasonKey = saison === undefined ? (await getActiveSeasonId()) ?? undefined : saison === "all" ? undefined : saison;
 
   const seasons = await getSeasons();
   const seasonOptions = [

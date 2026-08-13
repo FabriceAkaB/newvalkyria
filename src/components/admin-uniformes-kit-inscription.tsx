@@ -15,6 +15,7 @@ const DELIVERED_BY_LABEL: Record<"admin" | "gerante", string> = {
 
 interface Props {
   initialRows: UniformKitRow[];
+  initialSeasonFilter?: string;
 }
 
 function RowActions({ row, deliveredByName, onChanged }: { row: UniformKitRow; deliveredByName: string | null; onChanged: (patch: Partial<UniformKitRow>) => void }) {
@@ -64,9 +65,9 @@ function RowActions({ row, deliveredByName, onChanged }: { row: UniformKitRow; d
   );
 }
 
-export function AdminUniformesKitInscription({ initialRows }: Props) {
+export function AdminUniformesKitInscription({ initialRows, initialSeasonFilter }: Props) {
   const [rows, setRows] = useState(initialRows);
-  const [seasonFilter, setSeasonFilter] = useState("");
+  const [seasonFilter, setSeasonFilter] = useState(initialSeasonFilter ?? "");
   const [ageFilter, setAgeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "remis" | "a-remettre">("all");
   const [role, setRole] = useState<"admin" | "gerante" | null>(null);

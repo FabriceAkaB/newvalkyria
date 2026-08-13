@@ -115,7 +115,9 @@ export function AdminRevenusAnnuel({ breakdown, expenses, seasonOptions, current
   const navigate = (year: number, season: string) => {
     const params = new URLSearchParams();
     params.set("annee", String(year));
-    if (season) params.set("saison", season);
+    // "" (Toutes les saisons) doit être un choix explicite, sinon l'absence
+    // de paramètre serait réinterprétée comme "utiliser la saison par défaut".
+    params.set("saison", season || "all");
     router.push(`/admin/revenus/annuel?${params.toString()}`);
   };
 
