@@ -35,6 +35,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     trialDate?: string | null;
     isHalfSeason?: boolean;
     halfSeasonEndsOn?: string | null;
+    parentName?: string;
+    parentEmail?: string;
+    parentPhone?: string;
+    city?: string | null;
+    playerFirstName?: string | null;
+    playerLastName?: string | null;
+    playerDob?: string | null;
     convertToOfficial?: { programId: string; categoryId: string; timeSlotTemplateId: string | null };
   } | null;
 
@@ -59,7 +66,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         isTrial: body.isTrial,
         trialDate: body.trialDate,
         isHalfSeason: body.isHalfSeason,
-        halfSeasonEndsOn: body.halfSeasonEndsOn
+        halfSeasonEndsOn: body.halfSeasonEndsOn,
+        parentName: body.parentName,
+        parentEmail: body.parentEmail,
+        parentPhone: body.parentPhone,
+        city: body.city,
+        playerFirstName: body.playerFirstName,
+        playerLastName: body.playerLastName,
+        playerDob: body.playerDob
       });
     }
     return NextResponse.json({ ok: true });

@@ -155,35 +155,72 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
           <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Contact</p>
             <div className="admin-drawer-row">
-              <div className="admin-drawer-field">
-                <p className="admin-drawer-label">Courriel</p>
-                <p className="admin-drawer-value"><a href={`mailto:${r.parent_email}`}>{r.parent_email}</a></p>
-              </div>
-              <div className="admin-drawer-field">
-                <p className="admin-drawer-label">Téléphone</p>
-                <p className="admin-drawer-value"><a href={`tel:${r.parent_phone}`}>{r.parent_phone}</a></p>
-              </div>
+              <label className="admin-field" style={{ gap: "0.3rem" }}>
+                <span className="admin-drawer-label">Nom du parent</span>
+                <input
+                  className="admin-input"
+                  defaultValue={r.parent_name}
+                  onBlur={(e) => e.target.value.trim() && e.target.value !== r.parent_name && patch({ parentName: e.target.value.trim() }, { parent_name: e.target.value.trim() })}
+                />
+              </label>
+              <label className="admin-field" style={{ gap: "0.3rem" }}>
+                <span className="admin-drawer-label">Courriel</span>
+                <input
+                  className="admin-input"
+                  defaultValue={r.parent_email}
+                  onBlur={(e) => e.target.value.trim() && e.target.value !== r.parent_email && patch({ parentEmail: e.target.value.trim() }, { parent_email: e.target.value.trim() })}
+                />
+              </label>
             </div>
-            {r.city && (
-              <div className="admin-drawer-field">
-                <p className="admin-drawer-label">Ville</p>
-                <p className="admin-drawer-value">{r.city}</p>
-              </div>
-            )}
+            <div className="admin-drawer-row">
+              <label className="admin-field" style={{ gap: "0.3rem" }}>
+                <span className="admin-drawer-label">Téléphone</span>
+                <input
+                  className="admin-input"
+                  defaultValue={r.parent_phone}
+                  onBlur={(e) => e.target.value.trim() && e.target.value !== r.parent_phone && patch({ parentPhone: e.target.value.trim() }, { parent_phone: e.target.value.trim() })}
+                />
+              </label>
+              <label className="admin-field" style={{ gap: "0.3rem" }}>
+                <span className="admin-drawer-label">Ville</span>
+                <input
+                  className="admin-input"
+                  defaultValue={r.city ?? ""}
+                  onBlur={(e) => e.target.value !== (r.city ?? "") && patch({ city: e.target.value || null }, { city: e.target.value || null })}
+                />
+              </label>
+            </div>
           </div>
 
           <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Joueuse</p>
-            <div className="admin-drawer-field">
-              <p className="admin-drawer-label">Nom</p>
-              <p className="admin-drawer-value" style={{ fontWeight: 600 }}>{playerName(r)}</p>
+            <div className="admin-drawer-row">
+              <label className="admin-field" style={{ gap: "0.3rem" }}>
+                <span className="admin-drawer-label">Prénom</span>
+                <input
+                  className="admin-input"
+                  defaultValue={r.player_first_name ?? ""}
+                  onBlur={(e) => e.target.value !== (r.player_first_name ?? "") && patch({ playerFirstName: e.target.value || null }, { player_first_name: e.target.value || null })}
+                />
+              </label>
+              <label className="admin-field" style={{ gap: "0.3rem" }}>
+                <span className="admin-drawer-label">Nom</span>
+                <input
+                  className="admin-input"
+                  defaultValue={r.player_last_name ?? ""}
+                  onBlur={(e) => e.target.value !== (r.player_last_name ?? "") && patch({ playerLastName: e.target.value || null }, { player_last_name: e.target.value || null })}
+                />
+              </label>
             </div>
-            {r.player_dob && (
-              <div className="admin-drawer-field">
-                <p className="admin-drawer-label">Date de naissance</p>
-                <p className="admin-drawer-value">{r.player_dob}</p>
-              </div>
-            )}
+            <label className="admin-field" style={{ gap: "0.3rem" }}>
+              <span className="admin-drawer-label">Date de naissance</span>
+              <input
+                type="date"
+                className="admin-input"
+                defaultValue={r.player_dob ?? ""}
+                onBlur={(e) => e.target.value !== (r.player_dob ?? "") && patch({ playerDob: e.target.value || null }, { player_dob: e.target.value || null })}
+              />
+            </label>
           </div>
 
           <div className="admin-drawer-section">

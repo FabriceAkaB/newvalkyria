@@ -11,6 +11,13 @@ import type { AdminLead } from "@/lib/repositories";
 type FilterType = "all" | "paid" | "confirmed" | "pending" | "essai" | "waitlist" | "new" | "cancelled";
 type CategoryFilter = "all" | "2016" | "2015" | "2014-2013";
 
+export interface TransferSeasonOption {
+  id: string;
+  label: string;
+  categories: { id: string; label: string }[];
+  programs: { id: string; name: string }[];
+}
+
 const SEEN_KEY = "nv_admin_seen_since";
 
 function getSeenSince(): number {
@@ -79,19 +86,182 @@ function StatusBadge({ lead, isNew }: { lead: AdminLead; isNew: boolean }) {
   );
 }
 
+function splitName(fullName: string): [string, string] {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length <= 1) return [fullName.trim(), ""];
+  return [parts[0], parts.slice(1).join(" ")];
+}
+
+/* ── Transfert vers une autre saison ─────────────────────────────
+ *  Crée une NOUVELLE inscription dans la saison choisie — le lead Été
+ *  2026 d'origine n'est jamais modifié ni supprimé. */
+
+function TransferModal({
+  lead,
+  seasons,
+  onClose,
+  onTransferred
+}: {
+  lead: AdminLead;
+  seasons: TransferSeasonOption[];
+  onClose: () => void;
+  onTransferred: () => void;
+}) {
+  const parsed = parseGoal(lead.goal);
+  const [initialFirst, initialLast] = splitName(parsed.childName);
+
+  const [seasonId, setSeasonId] = useState(seasons[0]?.id ?? "");
+  const [programId, setProgramId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [status, setStatus] = useState<"pending" | "confirmed" | "paid" | "waitlist">("pending");
+  const [parentName, setParentName] = useState(lead.parent_name);
+  const [parentEmail, setParentEmail] = useState(lead.email);
+  const [parentPhone, setParentPhone] = useState(lead.phone);
+  const [city, setCity] = useState(lead.city ?? "");
+  const [playerFirstName, setPlayerFirstName] = useState(initialFirst);
+  const [playerLastName, setPlayerLastName] = useState(initialLast);
+  const [playerDob, setPlayerDob] = useState("");
+  const [advancedGroup, setAdvancedGroup] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const currentSeason = seasons.find((s) => s.id === seasonId);
+
+  const changeSeason = (id: string) => {
+    setSeasonId(id);
+    setProgramId("");
+    setCategoryId("");
+  };
+
+  const submit = async () => {
+    if (!parentName.trim() || !parentEmail.trim() || !parentPhone.trim() || !seasonId) {
+      setError("Saison, nom, courriel et téléphone du parent sont requis.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/leads/${lead.id}/transfer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seasonId,
+          programId: programId || null,
+          categoryId: categoryId || null,
+          timeSlotTemplateId: null,
+          parentName: parentName.trim(),
+          parentEmail: parentEmail.trim(),
+          parentPhone: parentPhone.trim(),
+          city: city.trim() || null,
+          playerFirstName: playerFirstName.trim() || null,
+          playerLastName: playerLastName.trim() || null,
+          playerDob: playerDob || null,
+          advancedGroup,
+          status
+        })
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "Erreur de transfert");
+      }
+      onTransferred();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="admin-modal-overlay">
+      <div className="admin-modal-box" style={{ maxWidth: "560px", textAlign: "left" }}>
+        <p className="admin-modal-title">Transférer vers une autre saison</p>
+        <p style={{ fontSize: "0.78rem", color: "#9d9da0", marginBottom: "1rem" }}>
+          Crée une nouvelle inscription dans la saison choisie, pour le programme de votre choix. L&apos;inscription Été 2026 d&apos;origine reste inchangée.
+        </p>
+        {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
+
+        {seasons.length === 0 ? (
+          <p style={{ fontSize: "0.8rem", color: "#ffb464" }}>Aucune autre saison disponible.</p>
+        ) : (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "0.6rem" }}>
+              <label className="admin-field">
+                <span>Saison</span>
+                <select className="admin-input" value={seasonId} onChange={(e) => changeSeason(e.target.value)}>
+                  {seasons.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+              </label>
+              <label className="admin-field">
+                <span>Programme</span>
+                <select className="admin-input" value={programId} onChange={(e) => setProgramId(e.target.value)}>
+                  <option value="">—</option>
+                  {currentSeason?.programs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </label>
+              <label className="admin-field">
+                <span>Catégorie</span>
+                <select className="admin-input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+                  <option value="">—</option>
+                  {currentSeason?.categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                </select>
+              </label>
+              <label className="admin-field">
+                <span>Statut initial</span>
+                <select className="admin-input" value={status} onChange={(e) => setStatus(e.target.value as typeof status)}>
+                  <option value="pending">En attente</option>
+                  <option value="confirmed">Confirmée</option>
+                  <option value="paid">Payée</option>
+                  <option value="waitlist">Liste d&apos;attente</option>
+                </select>
+              </label>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "0.6rem" }}>
+              <label className="admin-field"><span>Prénom joueuse</span><input className="admin-input" value={playerFirstName} onChange={(e) => setPlayerFirstName(e.target.value)} /></label>
+              <label className="admin-field"><span>Nom joueuse</span><input className="admin-input" value={playerLastName} onChange={(e) => setPlayerLastName(e.target.value)} /></label>
+              <label className="admin-field"><span>Date de naissance</span><input type="date" className="admin-input" value={playerDob} onChange={(e) => setPlayerDob(e.target.value)} /></label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", color: "#c3c2c8", marginTop: "1.4rem" }}>
+                <input type="checkbox" checked={advancedGroup} onChange={(e) => setAdvancedGroup(e.target.checked)} /> Groupe avancé
+              </label>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "1rem" }}>
+              <label className="admin-field"><span>Nom du parent</span><input className="admin-input" value={parentName} onChange={(e) => setParentName(e.target.value)} /></label>
+              <label className="admin-field"><span>Courriel</span><input className="admin-input" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} /></label>
+              <label className="admin-field"><span>Téléphone</span><input className="admin-input" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} /></label>
+              <label className="admin-field"><span>Ville</span><input className="admin-input" value={city} onChange={(e) => setCity(e.target.value)} /></label>
+            </div>
+          </>
+        )}
+
+        <div className="admin-modal-actions">
+          <button className="admin-btn-ghost" onClick={onClose} disabled={saving}>Annuler</button>
+          <button className="admin-btn-primary" onClick={submit} disabled={saving || seasons.length === 0}>
+            {saving ? "Transfert..." : "Transférer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Lead Drawer ───────────────────────────────────────────────── */
 
 interface DrawerProps {
   lead: AdminLead;
   isNew: boolean;
+  transferSeasons: TransferSeasonOption[];
   onClose: () => void;
   onDeleted: () => void;
   onUpdated: (lead: AdminLead) => void;
 }
 
-function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps) {
+function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdated }: DrawerProps) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [transferring, setTransferring] = useState(false);
+  const [transferDone, setTransferDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const parsed = parseGoal(lead.goal);
 
@@ -450,6 +620,9 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
         </div>
 
         <div className="admin-drawer-footer">
+          <button className="admin-btn-ghost" onClick={() => setTransferring(true)} disabled={transferSeasons.length === 0}>
+            Transférer vers une saison
+          </button>
           <button className="admin-btn-danger" onClick={() => setConfirming(true)}>
             Supprimer l&apos;inscription
           </button>
@@ -458,6 +631,33 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
           </button>
         </div>
       </div>
+
+      {transferring && (
+        <TransferModal
+          lead={lead}
+          seasons={transferSeasons}
+          onClose={() => setTransferring(false)}
+          onTransferred={() => {
+            setTransferring(false);
+            setTransferDone(true);
+            setTimeout(() => setTransferDone(false), 3000);
+          }}
+        />
+      )}
+      {transferDone && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal-box">
+            <p className="admin-modal-title">Transfert réussi</p>
+            <p className="admin-modal-body">
+              Une nouvelle inscription a été créée dans la saison choisie. L&apos;inscription Été 2026 de{" "}
+              <span className="admin-modal-name">{lead.parent_name}</span> reste inchangée.
+            </p>
+            <div className="admin-modal-actions">
+              <button className="admin-btn-primary" onClick={() => setTransferDone(false)}>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation modal */}
       {confirming && (
@@ -496,9 +696,10 @@ function LeadDrawer({ lead, isNew, onClose, onDeleted, onUpdated }: DrawerProps)
 
 interface Props {
   leads: AdminLead[];
+  transferSeasons: TransferSeasonOption[];
 }
 
-export function AdminInscriptions({ leads: initialLeads }: Props) {
+export function AdminInscriptions({ leads: initialLeads, transferSeasons }: Props) {
   const router = useRouter();
   const [leads, setLeads] = useState(initialLeads);
   const [filter, setFilter] = useState<FilterType>("all");
@@ -938,6 +1139,7 @@ export function AdminInscriptions({ leads: initialLeads }: Props) {
         <LeadDrawer
           lead={selectedLead}
           isNew={isNewLead(selectedLead.created_at, seenSince)}
+          transferSeasons={transferSeasons}
           onClose={() => setSelectedLead(null)}
           onDeleted={handleDeleted}
           onUpdated={(updatedLead) => {

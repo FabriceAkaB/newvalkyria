@@ -94,6 +94,7 @@ export interface Registration {
   half_season_ends_on: string | null;
   advanced_group: boolean;
   converted_from_id: string | null;
+  transferred_from_lead_id: string | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
   created_at: string;
@@ -426,6 +427,13 @@ export async function updateRegistration(
     trialDate: string | null;
     isHalfSeason: boolean;
     halfSeasonEndsOn: string | null;
+    parentName: string;
+    parentEmail: string;
+    parentPhone: string;
+    city: string | null;
+    playerFirstName: string | null;
+    playerLastName: string | null;
+    playerDob: string | null;
   }>
 ): Promise<void> {
   const supabase = db();
@@ -439,6 +447,13 @@ export async function updateRegistration(
   if (patch.trialDate !== undefined) columnPatch.trial_date = patch.trialDate;
   if (patch.isHalfSeason !== undefined) columnPatch.is_half_season = patch.isHalfSeason;
   if (patch.halfSeasonEndsOn !== undefined) columnPatch.half_season_ends_on = patch.halfSeasonEndsOn;
+  if (patch.parentName !== undefined) columnPatch.parent_name = patch.parentName;
+  if (patch.parentEmail !== undefined) columnPatch.parent_email = patch.parentEmail;
+  if (patch.parentPhone !== undefined) columnPatch.parent_phone = patch.parentPhone;
+  if (patch.city !== undefined) columnPatch.city = patch.city;
+  if (patch.playerFirstName !== undefined) columnPatch.player_first_name = patch.playerFirstName;
+  if (patch.playerLastName !== undefined) columnPatch.player_last_name = patch.playerLastName;
+  if (patch.playerDob !== undefined) columnPatch.player_dob = patch.playerDob;
 
   const { error } = await supabase.from("registrations").update(columnPatch).eq("id", id);
   if (error) throw new Error(error.message);
@@ -487,6 +502,11 @@ export interface CreateRegistrationInput {
   playerDob: string | null;
   advancedGroup: boolean;
   isTrial: boolean;
+  /** Statut initial — "pending" par défaut (voir createRegistration). */
+  status?: RegistrationStatus;
+  /** Trace la provenance quand cette inscription a été créée en transférant
+   *  un lead Été 2026 vers cette saison (voir transferLeadToSeason). */
+  transferredFromLeadId?: string | null;
 }
 
 export async function createRegistration(input: CreateRegistrationInput): Promise<string> {
@@ -507,7 +527,8 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
       player_dob: input.playerDob,
       advanced_group: input.advancedGroup,
       is_trial: input.isTrial,
-      status: "pending"
+      status: input.status ?? "pending",
+      transferred_from_lead_id: input.transferredFromLeadId ?? null
     })
     .select("id")
     .single();
