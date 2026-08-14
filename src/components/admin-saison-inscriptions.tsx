@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { EntityDocuments } from "@/components/admin-entity-documents";
+import { AGE_CATEGORIES, CATEGORY_LABELS } from "@/lib/categories";
 import type { BirthCategory, Program, Registration, RegistrationStatus, Season, TimeSlotTemplate } from "@/lib/season-admin-repo";
 
 interface Props {
@@ -64,11 +65,97 @@ interface DrawerProps {
   seasonId: string;
 }
 
+function TransferToEteModal({ registration: r, seasonId, onClose, onTransferred }: { registration: Registration; seasonId: string; onClose: () => void; onTransferred: () => void }) {
+  const guessedAge = AGE_CATEGORIES.includes(r.category_id as any) ? (r.category_id as (typeof AGE_CATEGORIES)[number]) : AGE_CATEGORIES[0];
+
+  const [parentName, setParentName] = useState(r.parent_name);
+  const [parentEmail, setParentEmail] = useState(r.parent_email);
+  const [parentPhone, setParentPhone] = useState(r.parent_phone);
+  const [city, setCity] = useState(r.city ?? "");
+  const [playerFirstName, setPlayerFirstName] = useState(r.player_first_name ?? "");
+  const [playerLastName, setPlayerLastName] = useState(r.player_last_name ?? "");
+  const [playerAge, setPlayerAge] = useState<string>(guessedAge);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!parentName.trim() || !parentEmail.trim() || !parentPhone.trim()) {
+      setError("Nom, courriel et téléphone du parent sont requis.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/season/${seasonId}/registrations/${r.id}/transfer-to-ete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentName: parentName.trim(),
+          parentEmail: parentEmail.trim(),
+          parentPhone: parentPhone.trim(),
+          city: city.trim() || null,
+          playerFirstName: playerFirstName.trim() || null,
+          playerLastName: playerLastName.trim() || null,
+          playerAge
+        })
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "Erreur de transfert");
+      }
+      onTransferred();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="admin-modal-overlay">
+      <div className="admin-modal-box" style={{ maxWidth: "560px", textAlign: "left" }}>
+        <p className="admin-modal-title">Transférer vers Été 2026</p>
+        <p style={{ fontSize: "0.78rem", color: "#9d9da0", marginBottom: "1rem" }}>
+          Crée une nouvelle inscription (lead) dans Été 2026. Cette inscription reste inchangée dans sa saison d&apos;origine.
+        </p>
+        {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "0.6rem" }}>
+          <label className="admin-field"><span>Prénom joueuse</span><input className="admin-input" value={playerFirstName} onChange={(e) => setPlayerFirstName(e.target.value)} /></label>
+          <label className="admin-field"><span>Nom joueuse</span><input className="admin-input" value={playerLastName} onChange={(e) => setPlayerLastName(e.target.value)} /></label>
+          <label className="admin-field">
+            <span>Catégorie (Été)</span>
+            <select className="admin-input" value={playerAge} onChange={(e) => setPlayerAge(e.target.value)}>
+              {AGE_CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "1rem" }}>
+          <label className="admin-field"><span>Nom du parent</span><input className="admin-input" value={parentName} onChange={(e) => setParentName(e.target.value)} /></label>
+          <label className="admin-field"><span>Courriel</span><input className="admin-input" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} /></label>
+          <label className="admin-field"><span>Téléphone</span><input className="admin-input" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} /></label>
+          <label className="admin-field"><span>Ville</span><input className="admin-input" value={city} onChange={(e) => setCity(e.target.value)} /></label>
+        </div>
+
+        <div className="admin-modal-actions">
+          <button className="admin-btn-ghost" onClick={onClose} disabled={saving}>Annuler</button>
+          <button className="admin-btn-primary" onClick={submit} disabled={saving}>
+            {saving ? "Transfert..." : "Transférer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RegistrationDrawer({ registration: r, categories, programs, slots, onClose, onDeleted, onUpdated, seasonId }: DrawerProps) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showTransferToEte, setShowTransferToEte] = useState(false);
+  const [transferredToEte, setTransferredToEte] = useState(false);
   const expiringSoon = isHalfSeasonExpiringSoon(r);
 
   const slotsForCategory = r.category_id ? slots.filter((s) => s.category_ids.includes(r.category_id!)) : slots;
@@ -306,6 +393,17 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
           </div>
 
           <div className="admin-drawer-section">
+            <p className="admin-drawer-section-title">Transfert</p>
+            {transferredToEte ? (
+              <p style={{ fontSize: "0.78rem", color: "#7fd88f", margin: 0 }}>✓ Transférée vers Été 2026.</p>
+            ) : (
+              <button className="admin-btn-ghost" onClick={() => setShowTransferToEte(true)} style={{ fontSize: "0.78rem" }}>
+                Transférer vers Été 2026
+              </button>
+            )}
+          </div>
+
+          <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Référence</p>
             <div className="admin-drawer-field">
               <p className="admin-drawer-label">ID inscription</p>
@@ -341,6 +439,15 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
             </div>
           </div>
         </div>
+      )}
+
+      {showTransferToEte && (
+        <TransferToEteModal
+          registration={r}
+          seasonId={seasonId}
+          onClose={() => setShowTransferToEte(false)}
+          onTransferred={() => { setShowTransferToEte(false); setTransferredToEte(true); }}
+        />
       )}
     </>
   );

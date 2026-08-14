@@ -60,6 +60,44 @@ export async function saveLead(payload: LeadFormPayload, isWaitlist = false) {
   return { leadId: data.id as string, mode: "supabase" as const };
 }
 
+/** Crée un lead Été 2026 depuis l'admin — utilisé pour transférer une
+ *  inscription d'une autre saison vers Été 2026 sans jamais toucher à
+ *  l'inscription d'origine (voir /api/admin/season/[seasonId]/registrations/[id]/transfer-to-ete). */
+export async function createLeadAdmin(input: {
+  parentName: string;
+  email: string;
+  phone: string;
+  city: string | null;
+  playerAge: string;
+  playerLevel: string;
+  goal: string;
+  availability: string;
+  playerId: string | null;
+  transferredFromRegistrationId: string;
+}): Promise<string> {
+  const supabase = getSupabaseAdminClient() as any;
+  const { data, error } = await supabase
+    .from("leads")
+    .insert({
+      parent_name: input.parentName,
+      email: input.email,
+      phone: input.phone,
+      city: input.city,
+      player_age: input.playerAge,
+      player_level: input.playerLevel,
+      goal: input.goal,
+      availability: input.availability,
+      consent: true,
+      status: "pending",
+      player_id: input.playerId,
+      transferred_from_registration_id: input.transferredFromRegistrationId
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data.id as string;
+}
+
 export async function setLeadCheckoutSession(leadId: string, checkoutSessionId: string) {
   if (!isSupabaseAvailable()) {
     updateMockLeadCheckout(leadId, checkoutSessionId);
@@ -191,6 +229,10 @@ export interface AdminLead {
    *  posée automatiquement pour les nouveaux leads (texte libre trop fragile
    *  à faire correspondre de façon fiable à la création). */
   player_id?: string | null;
+  /** Traçabilité quand ce lead a été créé en transférant une inscription
+   *  d'une autre saison vers Été 2026 — sans FK (tables différentes), même
+   *  logique que registrations.transferred_from_lead_id. */
+  transferred_from_registration_id?: string | null;
 }
 
 export async function getAllLeads(): Promise<AdminLead[]> {
