@@ -5,7 +5,7 @@ import { useState } from "react";
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { AuditLogEntry } from "@/lib/audit-repo";
 
-const ENTITY_LABELS: Record<string, string> = { registration: "Inscription", lead: "Lead (Été)", coach: "Entraîneur" };
+const ENTITY_LABELS: Record<string, string> = { registration: "Inscription", lead: "Lead (Été)", coach: "Entraîneur", sport_etudes_registration: "Sport-Études" };
 const ACTION_LABELS: Record<string, string> = { delete: "Suppression", status_change: "Changement de statut" };
 
 function formatValue(v: unknown): string {
@@ -46,6 +46,7 @@ export function AdminAudit({ initialEntries }: { initialEntries: AuditLogEntry[]
               { value: "", label: "Tout" },
               { value: "registration", label: "Inscriptions" },
               { value: "lead", label: "Leads Été" },
+              { value: "sport_etudes_registration", label: "Sport-Études" },
               { value: "coach", label: "Entraîneurs" }
             ].map((f) => (
               <button key={f.value} onClick={() => applyFilter(f.value)} className={filter === f.value ? "admin-btn-primary" : "admin-btn-ghost"} style={{ fontSize: "0.75rem" }}>
