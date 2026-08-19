@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SportEtudesPage() {
   const [sessions, settings, takenCount] = await Promise.all([getActiveSessions(), getSettings(), countFullProgramRegistrations()]);
-  const remaining = Math.max(0, settings.max_capacity - takenCount);
+  const remaining = Math.max(0, settings.max_capacity - takenCount - settings.manual_reserved_spots);
 
   return <SportEtudesContent sessions={sessions} remaining={remaining} isFull={remaining <= 0} />;
 }

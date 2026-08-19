@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     if (payload.optionChosen === "full_program") {
       const [settings, count] = await Promise.all([getSettings(), countFullProgramRegistrations()]);
-      if (count >= settings.max_capacity) {
+      if (count + settings.manual_reserved_spots >= settings.max_capacity) {
         return jsonError("Le programme Sport-Études est complet pour le moment.", 409);
       }
     }

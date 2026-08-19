@@ -69,18 +69,33 @@ export async function updateSession(
 
 export interface SportEtudesSettings {
   max_capacity: number;
+  /** Places comblées manuellement par l'admin (ex. réservation par
+   *  téléphone) sans inscription réelle en base — comptées dans la
+   *  capacité affichée publiquement sans créer de fausse inscription. */
+  manual_reserved_spots: number;
 }
 
 export async function getSettings(): Promise<SportEtudesSettings> {
-  const { data, error } = await db().from("sport_etudes_settings").select("max_capacity").eq("id", true).maybeSingle();
+  const { data, error } = await db().from("sport_etudes_settings").select("max_capacity, manual_reserved_spots").eq("id", true).maybeSingle();
   if (error) throw new Error(error.message);
-  return { max_capacity: (data?.max_capacity as number) ?? 30 };
+  return {
+    max_capacity: (data?.max_capacity as number) ?? 30,
+    manual_reserved_spots: (data?.manual_reserved_spots as number) ?? 0
+  };
 }
 
 export async function updateMaxCapacity(maxCapacity: number): Promise<void> {
   const { error } = await db()
     .from("sport_etudes_settings")
     .update({ max_capacity: maxCapacity, updated_at: new Date().toISOString() })
+    .eq("id", true);
+  if (error) throw new Error(error.message);
+}
+
+export async function updateManualReservedSpots(manualReservedSpots: number): Promise<void> {
+  const { error } = await db()
+    .from("sport_etudes_settings")
+    .update({ manual_reserved_spots: manualReservedSpots, updated_at: new Date().toISOString() })
     .eq("id", true);
   if (error) throw new Error(error.message);
 }

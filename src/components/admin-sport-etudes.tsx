@@ -355,7 +355,9 @@ export function AdminSportEtudes({
 }) {
   const [sessions, setSessions] = useState(initialSessions);
   const [maxCapacity, setMaxCapacity] = useState(initialSettings.max_capacity);
+  const [manualReservedSpots, setManualReservedSpots] = useState(initialSettings.manual_reserved_spots);
   const [savingCapacity, setSavingCapacity] = useState(false);
+  const [savingManualSpots, setSavingManualSpots] = useState(false);
   const [registrations, setRegistrations] = useState(initialRegistrations);
 
   const refreshSessions = async () => {
@@ -377,7 +379,20 @@ export function AdminSportEtudes({
     }
   };
 
-  const fullCount = registrations.filter((r) => r.option_chosen === "full_program" && (r.status === "confirmed" || r.status === "paid")).length;
+  const saveManualSpots = async () => {
+    setSavingManualSpots(true);
+    try {
+      await fetch("/api/admin/sport-etudes/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ manualReservedSpots })
+      });
+    } finally {
+      setSavingManualSpots(false);
+    }
+  };
+
+  const fullCount = registrations.filter((r) => r.option_chosen === "full_program" && (r.status === "confirmed" || r.status === "paid")).length + manualReservedSpots;
   const activeRegistrations = registrations.filter((r) => r.status !== "cancelled");
   const diagnosticOnlyCount = activeRegistrations.filter((r) => r.option_chosen === "diagnostic_only").length;
   const fullProgramCount = activeRegistrations.filter((r) => r.option_chosen === "full_program").length;
@@ -428,6 +443,21 @@ export function AdminSportEtudes({
               {savingCapacity ? "..." : "Enregistrer"}
             </button>
             <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>{fullCount} / {maxCapacity} places prises</span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
+            <span style={{ fontSize: "0.78rem", color: "#9d9da0" }}>Places comblées manuellement (sans inscription réelle) :</span>
+            <input
+              type="number"
+              min={0}
+              className="admin-input"
+              value={manualReservedSpots}
+              onChange={(e) => setManualReservedSpots(Number(e.target.value))}
+              style={{ width: "5rem" }}
+            />
+            <button onClick={saveManualSpots} disabled={savingManualSpots} className="admin-btn-primary" style={{ fontSize: "0.72rem", padding: "0.35rem 0.7rem" }}>
+              {savingManualSpots ? "..." : "Enregistrer"}
+            </button>
           </div>
 
           <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: "0.6rem" }}>Séances</p>
