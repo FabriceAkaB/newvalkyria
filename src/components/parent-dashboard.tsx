@@ -225,6 +225,123 @@ function ChildActivity({ childId, onUnlink }: { childId: string; onUnlink: () =>
   );
 }
 
+interface OpenSlot {
+  id: string;
+  slot_date: string;
+  public_start_time: string;
+  public_end_time: string;
+  location: string | null;
+}
+
+function PrivateSessionBooking({ childId, hasPlayer }: { childId: string; hasPlayer: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [slots, setSlots] = useState<OpenSlot[] | null>(null);
+  const [eligible, setEligible] = useState<boolean | null>(null);
+  const [reason, setReason] = useState<string | null>(null);
+  const [reserving, setReserving] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmedSlotId, setConfirmedSlotId] = useState<string | null>(null);
+
+  const load = async () => {
+    const next = !open;
+    setOpen(next);
+    if (!next || slots) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/compte/enfants/${childId}/seances-privees`);
+      const data = await res.json().catch(() => ({ eligible: false, slots: [] }));
+      setEligible(Boolean(data.eligible));
+      setReason(data.reason ?? null);
+      setSlots(data.slots ?? []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reserve = async (slotId: string) => {
+    if (!confirm("Confirmer la réservation de cette séance privée ?")) return;
+    setReserving(slotId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/compte/enfants/${childId}/seances-privees`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slotId })
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? "Erreur de réservation");
+      setConfirmedSlotId(slotId);
+      setSlots((prev) => prev?.filter((s) => s.id !== slotId) ?? null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setReserving(null);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: "0.6rem" }}>
+      <button
+        type="button"
+        onClick={load}
+        style={{ padding: "0.5rem 0.7rem", background: "rgba(159,133,186,0.08)", border: "1px solid rgba(159,133,186,0.25)", borderRadius: "8px", color: "#9f85ba", fontSize: "0.72rem", cursor: "pointer", width: "100%", textAlign: "left" }}
+      >
+        {open ? "▾" : "▸"} Réserver une séance privée individuelle
+      </button>
+      {open && (
+        <div style={{ marginTop: "0.5rem", padding: "0.75rem 0.85rem", background: "#17151e", border: "1px solid #251f30", borderRadius: "8px" }}>
+          <p style={{ fontSize: "0.72rem", color: "#c3c2c8", margin: "0 0 0.6rem" }}>
+            Important : les séances privées sont réservées exclusivement aux jeunes inscrits à l&apos;Académie New Valkyria.
+            Si votre jeune n&apos;est pas actuellement inscrit à l&apos;Académie, il ne sera pas possible de réserver une séance privée
+            et l&apos;accès à la réservation pourra être refusé.
+          </p>
+
+          {loading && <p style={{ fontSize: "0.72rem", color: "#605f65" }}>Chargement...</p>}
+          {error && <p style={{ fontSize: "0.72rem", color: "#f87171", margin: "0 0 0.5rem" }}>{error}</p>}
+          {confirmedSlotId && <p style={{ fontSize: "0.75rem", color: "#7fd88f", margin: "0 0 0.5rem" }}>✓ Séance réservée !</p>}
+
+          {!loading && eligible === false && (
+            <p style={{ fontSize: "0.75rem", color: "#f0c878", margin: 0 }}>
+              {!hasPlayer || reason === "not_linked"
+                ? "Ce profil doit d'abord être relié à une inscription (voir « 🔗 Relier » ci-dessous) pour réserver une séance privée."
+                : "Ce profil n'a pas d'inscription confirmée ou payée à l'Académie en ce moment — la réservation n'est pas possible."}
+            </p>
+          )}
+
+          {!loading && eligible && slots && slots.length === 0 && (
+            <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Aucun créneau disponible pour l&apos;instant.</p>
+          )}
+
+          {!loading && eligible && slots && slots.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+              {slots.map((s) => (
+                <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "6px", padding: "0.5rem 0.7rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: "#fff" }}>
+                    {new Date(s.slot_date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })}
+                    {" · "}
+                    {s.public_start_time.slice(0, 5)}–{s.public_end_time.slice(0, 5)}
+                    {s.location ? ` · ${s.location}` : ""}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => reserve(s.id)}
+                    disabled={reserving !== null}
+                    className="nv27-btn-primary"
+                    style={{ padding: "0.3rem 0.7rem", fontSize: "0.7rem", flexShrink: 0 }}
+                  >
+                    {reserving === s.id ? "..." : "Réserver"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface ChildFormState {
   firstName: string;
   lastName: string;
@@ -466,6 +583,7 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
                   ) : (
                     <LinkPlayerBlock childId={child.id} onLinked={(playerId) => setChildren((prev) => prev.map((c) => (c.id === child.id ? { ...c, player_id: playerId } : c)))} />
                   )}
+                  <PrivateSessionBooking childId={child.id} hasPlayer={Boolean(child.player_id)} />
                 </>
               )}
             </div>
