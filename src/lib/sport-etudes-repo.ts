@@ -161,6 +161,7 @@ export interface SportEtudesRegistration {
   stripe_payment_intent_id: string | null;
   whatsapp_info: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 export async function createRegistration(input: CreateRegistrationInput): Promise<string> {

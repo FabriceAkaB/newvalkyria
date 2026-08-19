@@ -23,6 +23,7 @@ import {
   type Season
 } from "@/lib/season-admin-repo";
 import { getOrders } from "@/lib/shop-repo";
+import { getAllRegistrations as getAllSportEtudesRegistrations } from "@/lib/sport-etudes-repo";
 
 export const ETE_SEASON_KEY = "ete-2026";
 export const ETE_SEASON_LABEL = "Été 2026";
@@ -34,6 +35,8 @@ export const ETE_SEASON_LABEL = "Été 2026";
 export const ETE_FIXED_PRICE_CENTS = 55000;
 export const BOUTIQUE_KEY = "boutique";
 export const BOUTIQUE_LABEL = "Boutique";
+export const SPORT_ETUDES_KEY = "sport-etudes";
+export const SPORT_ETUDES_LABEL = "Sport-Études";
 export const GENERAL_KEY = "general";
 export const GENERAL_LABEL = "Charges générales";
 /** Toute la trésorerie de l'académie transite par Stripe vers le compte
@@ -194,7 +197,7 @@ async function computeRevenueData(): Promise<{
   payrollRows: PayrollRow[];
   seasons: Season[];
 }> {
-  const [leads, seasons, goals, orders, expenseRows, incomeRows, settings, monthlyGoals, payrollRows] = await Promise.all([
+  const [leads, seasons, goals, orders, expenseRows, incomeRows, settings, monthlyGoals, payrollRows, sportEtudesRegistrations] = await Promise.all([
     getAllLeads(),
     getSeasons(),
     getRevenueGoals(),
@@ -203,7 +206,8 @@ async function computeRevenueData(): Promise<{
     getIncomeEntries(),
     getRevenueSettings(),
     getMonthlyGoals(),
-    getPayrollRows()
+    getPayrollRows(),
+    getAllSportEtudesRegistrations()
   ]);
 
   const goalCents = (key: string) => goals.find((g) => g.season_key === key)?.goal_cents ?? 0;
@@ -296,6 +300,23 @@ async function computeRevenueData(): Promise<{
     });
   }
 
+  // ── Sport-Études (garçons) — paiement unique, prix stocké directement sur
+  // la ligne (price_cents), pas de plan de versement pour ce programme.
+  // updated_at reflète le moment exact du passage à "paid" (markRegistrationPaid
+  // dans le webhook), donc utilisé tel quel comme date de paiement — plus
+  // précis que l'approximation faite pour Été 2026 ci-dessus. ──
+  const paidSportEtudes = sportEtudesRegistrations.filter((r) => r.status === "paid");
+  paidCountBySeasonKey.set(SPORT_ETUDES_KEY, paidSportEtudes.length);
+  unknownBySeasonKey.set(SPORT_ETUDES_KEY, 0);
+  for (const r of paidSportEtudes) {
+    revenueEvents.push({
+      date: r.updated_at.slice(0, 10),
+      amountCents: r.price_cents ?? 0,
+      seasonKey: SPORT_ETUDES_KEY,
+      description: `Sport-Études — ${r.parent_first_name} ${r.parent_last_name} (${r.player_first_name} ${r.player_last_name})`
+    });
+  }
+
   // ── Revenus saisis manuellement (commandites, subventions, dons...) —
   // jamais d'inscription/boutique ici, déjà couvertes ci-dessus. ──
   for (const income of incomeRows) {
@@ -357,7 +378,8 @@ async function computeRevenueData(): Promise<{
 
   const seasonCards = [
     buildCard(ETE_SEASON_KEY, ETE_SEASON_LABEL),
-    ...seasons.filter((s) => s.id !== ETE_SEASON_KEY).map((s) => buildCard(s.id, s.label))
+    ...seasons.filter((s) => s.id !== ETE_SEASON_KEY).map((s) => buildCard(s.id, s.label)),
+    buildCard(SPORT_ETUDES_KEY, SPORT_ETUDES_LABEL)
   ];
   const boutique = buildCard(BOUTIQUE_KEY, BOUTIQUE_LABEL);
   const general = buildCard(GENERAL_KEY, GENERAL_LABEL);
@@ -763,6 +785,7 @@ export async function getAnnualBreakdown(year: number, seasonKey?: string): Prom
   seasonLabelByKey.set(ETE_SEASON_KEY, ETE_SEASON_LABEL);
   for (const s of seasons.filter((s) => s.id !== ETE_SEASON_KEY)) seasonLabelByKey.set(s.id, s.label);
   seasonLabelByKey.set(BOUTIQUE_KEY, BOUTIQUE_LABEL);
+  seasonLabelByKey.set(SPORT_ETUDES_KEY, SPORT_ETUDES_LABEL);
 
   const incomeMap = new Map<string, number[]>();
   for (const label of seasonLabelByKey.values()) incomeMap.set(label, new Array(12).fill(0));

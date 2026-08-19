@@ -378,6 +378,11 @@ export function AdminSportEtudes({
   };
 
   const fullCount = registrations.filter((r) => r.option_chosen === "full_program" && (r.status === "confirmed" || r.status === "paid")).length;
+  const activeRegistrations = registrations.filter((r) => r.status !== "cancelled");
+  const diagnosticOnlyCount = activeRegistrations.filter((r) => r.option_chosen === "diagnostic_only").length;
+  const fullProgramCount = activeRegistrations.filter((r) => r.option_chosen === "full_program").length;
+  const paidCount = activeRegistrations.filter((r) => r.status === "paid").length;
+  const pendingCount = activeRegistrations.filter((r) => r.status === "pending" || r.status === "confirmed").length;
 
   return (
     <>
@@ -388,6 +393,33 @@ export function AdminSportEtudes({
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
             Programme technique de préparation aux évaluations du Sport-Études — indépendant des programmes féminins réguliers.
           </p>
+
+          <div className="admin-stats" style={{ marginBottom: "1.5rem" }}>
+            <div className="admin-stat-card">
+              <p className="admin-stat-value">{activeRegistrations.length}</p>
+              <p className="admin-stat-label">Total inscrits</p>
+            </div>
+            <div className="admin-stat-card">
+              <p className="admin-stat-value">{diagnosticOnlyCount}</p>
+              <p className="admin-stat-label">Diagnostic gratuit seulement</p>
+            </div>
+            <div className="admin-stat-card admin-stat-card-accent">
+              <p className="admin-stat-value">{fullProgramCount}</p>
+              <p className="admin-stat-label">Programme complet</p>
+            </div>
+            <div className="admin-stat-card admin-stat-card-accent">
+              <p className="admin-stat-value">{paidCount}</p>
+              <p className="admin-stat-label">Payées</p>
+            </div>
+            <div className="admin-stat-card admin-stat-card-warn">
+              <p className="admin-stat-value">{pendingCount}</p>
+              <p className="admin-stat-label">En attente</p>
+            </div>
+            <div className="admin-stat-card">
+              <p className="admin-stat-value">{Math.max(0, maxCapacity - fullCount)}</p>
+              <p className="admin-stat-label">Places restantes</p>
+            </div>
+          </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
             <span style={{ fontSize: "0.78rem", color: "#9d9da0" }}>Capacité maximale (programme complet) :</span>
