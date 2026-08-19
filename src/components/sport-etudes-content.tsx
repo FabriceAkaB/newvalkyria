@@ -74,7 +74,7 @@ const EMPTY_FORM: FormState = {
 
 export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: SessionRow[]; remaining: number; isFull: boolean }) {
   const router = useRouter();
-  const [option, setOption] = useState<"diagnostic_only" | "full_program">("diagnostic_only");
+  const [option, setOption] = useState<"diagnostic_only" | "full_program">(isFull ? "diagnostic_only" : "full_program");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,20 +178,20 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
           <div style={{ display: "flex", gap: "0.6rem", marginBottom: "1.5rem" }}>
             <button
               type="button"
-              onClick={() => setOption("diagnostic_only")}
-              className={option === "diagnostic_only" ? "nv27-btn-primary" : "nv27-btn-ghost"}
-              style={{ flex: 1, padding: "0.6rem", fontSize: "0.8rem" }}
-            >
-              Séance diagnostique gratuite seulement
-            </button>
-            <button
-              type="button"
               onClick={() => setOption("full_program")}
               disabled={isFull}
               className={option === "full_program" ? "nv27-btn-primary" : "nv27-btn-ghost"}
               style={{ flex: 1, padding: "0.6rem", fontSize: "0.8rem", opacity: isFull ? 0.5 : 1 }}
             >
               Programme complet — 315,95 $
+            </button>
+            <button
+              type="button"
+              onClick={() => setOption("diagnostic_only")}
+              className={option === "diagnostic_only" ? "nv27-btn-primary" : "nv27-btn-ghost"}
+              style={{ flex: 1, padding: "0.6rem", fontSize: "0.8rem" }}
+            >
+              Séance diagnostique gratuite seulement
             </button>
           </div>
 
