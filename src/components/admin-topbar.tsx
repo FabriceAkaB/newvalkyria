@@ -194,11 +194,11 @@ function GlobalSearchBox() {
 const GROUPS: Group[] = [
   { label: "Été 2026", dotColor: "#c8aae0", links: SEASON_ETE_LINKS },
   { label: "Automne / Hiver 2026", dotColor: "#f0c878", links: SEASON_AUTOMNE_HIVER_LINKS },
+  { label: "Sport-Études (Garçons)", dotColor: "#78a8f0", links: SPORT_ETUDES_LINKS },
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
   { label: "Uniformes", dotColor: "#e0b0d8", links: UNIFORMES_LINKS },
   { label: "Essais", dotColor: "#88c0d0", links: ESSAIS_LINKS },
   { label: "Calendrier", dotColor: "#c3a6ff", links: CALENDRIER_LINKS },
-  { label: "Sport-Études", dotColor: "#78a8f0", links: SPORT_ETUDES_LINKS },
   { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS, adminOnly: true },
   { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS, adminOnly: true },
   { label: "Communications", dotColor: "#f0c878", links: COMMUNICATIONS_LINKS, adminOnly: true },
