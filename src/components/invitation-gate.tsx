@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Container } from "@/components/container";
 import { InscriptionContent } from "@/components/inscription-content";
 
 export function InvitationGate() {
+  const router = useRouter();
   const [unlocked, setUnlocked] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,9 +23,13 @@ export function InvitationGate() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code })
       });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; redirectTo?: string };
       if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(data.error ?? "Code invalide.");
+      }
+      if (data.redirectTo) {
+        router.push(data.redirectTo);
+        return;
       }
       setUnlocked(true);
     } catch (err) {

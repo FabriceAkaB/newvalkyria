@@ -27,6 +27,13 @@ export async function POST(request: Request) {
   }
 
   const normalized = code.trim().toUpperCase();
+
+  // Code du programme Sport-Études (garçons) — route vers une page distincte
+  // plutôt que de déverrouiller les programmes avancés filles du même parcours.
+  if (normalized === "215") {
+    return NextResponse.json({ ok: true, redirectTo: "/sport-etudes" });
+  }
+
   if (!validCodes().includes(normalized)) {
     return jsonError("Code invalide.", 401);
   }

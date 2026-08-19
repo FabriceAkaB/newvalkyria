@@ -7,6 +7,7 @@ import type {
   AttendanceStatus,
   EnrollmentWithSession,
   NotePhase,
+  RegistrationStatus,
   SportEtudesRegistration,
   SportEtudesSession,
   SportEtudesSettings,
@@ -170,10 +171,37 @@ function TechnicalNotesEditor({ registrationId, existing }: { registrationId: st
   );
 }
 
-function RegistrationRow({ registration }: { registration: RegistrationWithEnrollments }) {
+const REGISTRATION_STATUSES: { value: RegistrationStatus; label: string }[] = [
+  { value: "pending", label: "En attente" },
+  { value: "confirmed", label: "Confirmée" },
+  { value: "paid", label: "Payée" },
+  { value: "cancelled", label: "Annulée" }
+];
+
+function FormField({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) return null;
+  return (
+    <div style={{ marginBottom: "0.35rem" }}>
+      <span style={{ fontSize: "0.65rem", color: "#9d9da0" }}>{label} : </span>
+      <span style={{ fontSize: "0.75rem", color: "#c3c2c8" }}>{value}</span>
+    </div>
+  );
+}
+
+function RegistrationRow({
+  registration,
+  onStatusChanged,
+  onDeleted
+}: {
+  registration: RegistrationWithEnrollments;
+  onStatusChanged: (status: RegistrationStatus) => void;
+  onDeleted: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState<TechnicalNotes[] | null>(null);
   const [attendance, setAttendanceLocal] = useState<Record<string, AttendanceStatus>>({});
+  const [changingStatus, setChangingStatus] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     const next = !open;
@@ -182,6 +210,31 @@ function RegistrationRow({ registration }: { registration: RegistrationWithEnrol
     const res = await fetch(`/api/admin/sport-etudes/technical-notes/${registration.id}`);
     const data = await res.json().catch(() => ({ notes: [] }));
     setNotes(data.notes ?? []);
+  };
+
+  const changeStatus = async (status: RegistrationStatus) => {
+    setChangingStatus(true);
+    try {
+      await fetch(`/api/admin/sport-etudes/registrations/${registration.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+      onStatusChanged(status);
+    } finally {
+      setChangingStatus(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!confirm(`Supprimer définitivement l'inscription de ${registration.player_first_name} ${registration.player_last_name} ? Cette action est irréversible.`)) return;
+    setDeleting(true);
+    try {
+      await fetch(`/api/admin/sport-etudes/registrations/${registration.id}`, { method: "DELETE" });
+      onDeleted();
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const setAttendance = async (enrollmentId: string, status: AttendanceStatus) => {
@@ -215,6 +268,47 @@ function RegistrationRow({ registration }: { registration: RegistrationWithEnrol
 
       {open && (
         <div style={{ marginTop: "0.6rem" }}>
+          <div style={{ marginBottom: "0.6rem" }}>
+            <p style={{ fontSize: "0.68rem", color: "#9f85ba", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Changer le statut</p>
+            <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+              {REGISTRATION_STATUSES.map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => changeStatus(s.value)}
+                  disabled={changingStatus || registration.status === s.value}
+                  className={registration.status === s.value ? "admin-btn-primary" : "admin-btn-ghost"}
+                  style={{ fontSize: "0.68rem", padding: "0.3rem 0.6rem" }}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: "0.6rem", background: "#17151e", border: "1px solid #251f30", borderRadius: "8px", padding: "0.7rem" }}>
+            <p style={{ fontSize: "0.68rem", color: "#9f85ba", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Formulaire</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(13rem, 1fr))", gap: "0 1rem" }}>
+              <FormField label="Date de naissance" value={registration.player_dob} />
+              <FormField label="Niveau de jeu" value={registration.player_level} />
+              <FormField label="Position principale" value={registration.primary_position} />
+              <FormField label="Position secondaire" value={registration.secondary_position} />
+              <FormField label="Équipe actuelle" value={registration.current_team} />
+              <FormField label="Club actuel" value={registration.current_club} />
+              <FormField label="Relation avec le joueur" value={registration.parent_relationship} />
+              <FormField label="Téléphone parent" value={registration.parent_phone} />
+              <FormField label="Prix" value={registration.price_cents != null ? `${(registration.price_cents / 100).toFixed(2)} $` : null} />
+            </div>
+            <FormField label="Expérience en soccer" value={registration.soccer_experience} />
+            <FormField label="Objectifs du joueur" value={registration.player_goals} />
+            <FormField label="Forces selon le parent" value={registration.parent_assessed_strengths} />
+            <FormField label="Éléments à améliorer selon le parent" value={registration.parent_assessed_areas_to_improve} />
+            <FormField label="Expérience en Sport-Études" value={registration.sport_etudes_experience} />
+            <FormField label="Évaluations déjà effectuées" value={registration.prior_evaluations_done} />
+            <FormField label="Programme Sport-Études visé" value={registration.target_sport_etudes_program} />
+            <FormField label="Commentaires" value={registration.comments} />
+            <FormField label="Informations importantes pour l'entraîneur" value={registration.important_coach_info} />
+          </div>
+
           {registration.enrollments.length > 0 && (
             <div style={{ marginBottom: "0.5rem" }}>
               <p style={{ fontSize: "0.68rem", color: "#9f85ba", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Présence</p>
@@ -236,6 +330,14 @@ function RegistrationRow({ registration }: { registration: RegistrationWithEnrol
             </div>
           )}
           {notes && <TechnicalNotesEditor registrationId={registration.id} existing={notes} />}
+
+          <button
+            onClick={remove}
+            disabled={deleting}
+            style={{ marginTop: "0.75rem", fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
+          >
+            {deleting ? "..." : "Supprimer définitivement"}
+          </button>
         </div>
       )}
     </div>
@@ -254,7 +356,7 @@ export function AdminSportEtudes({
   const [sessions, setSessions] = useState(initialSessions);
   const [maxCapacity, setMaxCapacity] = useState(initialSettings.max_capacity);
   const [savingCapacity, setSavingCapacity] = useState(false);
-  const [registrations] = useState(initialRegistrations);
+  const [registrations, setRegistrations] = useState(initialRegistrations);
 
   const refreshSessions = async () => {
     const res = await fetch("/api/admin/sport-etudes/sessions");
@@ -301,7 +403,14 @@ export function AdminSportEtudes({
 
           <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", margin: "1.5rem 0 0.6rem" }}>Inscrits ({registrations.length})</p>
           {registrations.length === 0 && <p className="admin-empty-text">Aucune inscription pour l&apos;instant.</p>}
-          {registrations.map((r) => <RegistrationRow key={r.id} registration={r} />)}
+          {registrations.map((r) => (
+            <RegistrationRow
+              key={r.id}
+              registration={r}
+              onStatusChanged={(status) => setRegistrations((prev) => prev.map((x) => (x.id === r.id ? { ...x, status } : x)))}
+              onDeleted={() => setRegistrations((prev) => prev.filter((x) => x.id !== r.id))}
+            />
+          ))}
         </div>
       </div>
     </>

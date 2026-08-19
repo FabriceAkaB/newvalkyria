@@ -133,10 +133,27 @@ export interface SportEtudesRegistration {
   player_first_name: string;
   player_last_name: string;
   player_dob: string | null;
+  player_birth_year: string | null;
+  player_level: string | null;
+  primary_position: string | null;
+  secondary_position: string | null;
+  current_team: string | null;
+  current_club: string | null;
+  soccer_experience: string | null;
+  player_goals: string | null;
+  parent_assessed_strengths: string | null;
+  parent_assessed_areas_to_improve: string | null;
   parent_first_name: string;
   parent_last_name: string;
   parent_email: string;
   parent_phone: string;
+  parent_relationship: string | null;
+  sport_etudes_experience: string | null;
+  prior_evaluations_done: string | null;
+  target_sport_etudes_program: string | null;
+  comments: string | null;
+  important_coach_info: string | null;
+  terms_accepted: boolean;
   option_chosen: RegistrationOption;
   status: RegistrationStatus;
   price_cents: number | null;
@@ -216,6 +233,25 @@ export async function getRegistrationById(id: string): Promise<SportEtudesRegist
   const { data, error } = await db().from("sport_etudes_registrations").select("*").eq("id", id).maybeSingle();
   if (error) throw new Error(error.message);
   return data as SportEtudesRegistration | null;
+}
+
+export async function updateRegistrationStatus(id: string, status: RegistrationStatus): Promise<void> {
+  const { error } = await db()
+    .from("sport_etudes_registrations")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteRegistration(id: string): Promise<void> {
+  await db().from("sport_etudes_attendance").delete().in(
+    "enrollment_id",
+    ((await db().from("sport_etudes_enrollments").select("id").eq("registration_id", id)).data ?? []).map((r: { id: string }) => r.id)
+  );
+  await db().from("sport_etudes_enrollments").delete().eq("registration_id", id);
+  await db().from("sport_etudes_technical_notes").delete().eq("registration_id", id);
+  const { error } = await db().from("sport_etudes_registrations").delete().eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function getAllRegistrations(): Promise<SportEtudesRegistration[]> {
