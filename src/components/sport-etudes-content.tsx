@@ -201,11 +201,11 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
               <label className="insc-field"><span>Équipe actuelle</span><input className="insc-input" value={form.currentTeam} onChange={(e) => set("currentTeam", e.target.value)} /></label>
               <label className="insc-field"><span>Club actuel</span><input className="insc-input" value={form.currentClub} onChange={(e) => set("currentClub", e.target.value)} /></label>
             </div>
-            <label className="insc-field"><span>Expérience en soccer</span><textarea className="insc-textarea" value={form.soccerExperience} onChange={(e) => set("soccerExperience", e.target.value)} /></label>
-            <label className="insc-field"><span>Objectifs du joueur</span><textarea className="insc-textarea" value={form.playerGoals} onChange={(e) => set("playerGoals", e.target.value)} /></label>
+            <label className="insc-field"><span>Expérience en soccer</span><textarea className="insc-input insc-textarea" value={form.soccerExperience} onChange={(e) => set("soccerExperience", e.target.value)} /></label>
+            <label className="insc-field"><span>Objectifs du joueur</span><textarea className="insc-input insc-textarea" value={form.playerGoals} onChange={(e) => set("playerGoals", e.target.value)} /></label>
             <div className="nv27-grid2">
-              <label className="insc-field"><span>Forces selon le parent</span><textarea className="insc-textarea" value={form.parentAssessedStrengths} onChange={(e) => set("parentAssessedStrengths", e.target.value)} /></label>
-              <label className="insc-field"><span>Éléments à améliorer selon le parent</span><textarea className="insc-textarea" value={form.parentAssessedAreasToImprove} onChange={(e) => set("parentAssessedAreasToImprove", e.target.value)} /></label>
+              <label className="insc-field"><span>Forces selon le parent</span><textarea className="insc-input insc-textarea" value={form.parentAssessedStrengths} onChange={(e) => set("parentAssessedStrengths", e.target.value)} /></label>
+              <label className="insc-field"><span>Éléments à améliorer selon le parent</span><textarea className="insc-input insc-textarea" value={form.parentAssessedAreasToImprove} onChange={(e) => set("parentAssessedAreasToImprove", e.target.value)} /></label>
             </div>
 
             <p style={{ fontSize: "0.72rem", color: "#9f85ba", textTransform: "uppercase", margin: "1rem 0 0" }}>Parent</p>
@@ -220,11 +220,11 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
             <label className="insc-field"><span>Relation avec le joueur</span><input className="insc-input" value={form.parentRelationship} onChange={(e) => set("parentRelationship", e.target.value)} /></label>
 
             <p style={{ fontSize: "0.72rem", color: "#9f85ba", textTransform: "uppercase", margin: "1rem 0 0" }}>Informations supplémentaires</p>
-            <label className="insc-field"><span>Expérience en Sport-Études</span><textarea className="insc-textarea" value={form.sportEtudesExperience} onChange={(e) => set("sportEtudesExperience", e.target.value)} /></label>
-            <label className="insc-field"><span>Évaluations déjà effectuées</span><textarea className="insc-textarea" value={form.priorEvaluationsDone} onChange={(e) => set("priorEvaluationsDone", e.target.value)} /></label>
+            <label className="insc-field"><span>Expérience en Sport-Études</span><textarea className="insc-input insc-textarea" value={form.sportEtudesExperience} onChange={(e) => set("sportEtudesExperience", e.target.value)} /></label>
+            <label className="insc-field"><span>Évaluations déjà effectuées</span><textarea className="insc-input insc-textarea" value={form.priorEvaluationsDone} onChange={(e) => set("priorEvaluationsDone", e.target.value)} /></label>
             <label className="insc-field"><span>Programme Sport-Études visé (si connu)</span><input className="insc-input" value={form.targetSportEtudesProgram} onChange={(e) => set("targetSportEtudesProgram", e.target.value)} /></label>
-            <label className="insc-field"><span>Commentaires</span><textarea className="insc-textarea" value={form.comments} onChange={(e) => set("comments", e.target.value)} /></label>
-            <label className="insc-field"><span>Informations importantes pour l&apos;entraîneur</span><textarea className="insc-textarea" value={form.importantCoachInfo} onChange={(e) => set("importantCoachInfo", e.target.value)} /></label>
+            <label className="insc-field"><span>Commentaires</span><textarea className="insc-input insc-textarea" value={form.comments} onChange={(e) => set("comments", e.target.value)} /></label>
+            <label className="insc-field"><span>Informations importantes pour l&apos;entraîneur</span><textarea className="insc-input insc-textarea" value={form.importantCoachInfo} onChange={(e) => set("importantCoachInfo", e.target.value)} /></label>
 
             <label className="insc-checkbox-wrap" style={{ marginTop: "0.75rem" }}>
               <input type="checkbox" className="insc-checkbox" checked={form.termsAccepted} onChange={(e) => set("termsAccepted", e.target.checked)} />
