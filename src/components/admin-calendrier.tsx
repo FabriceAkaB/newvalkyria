@@ -219,7 +219,7 @@ export function AdminCalendrier({
                       <div key={`${e.kind}-${e.id}`} style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.55rem 0.85rem" }}>
                         <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "50%", background: eventDotColor(e), flexShrink: 0 }} />
                         <span style={{ fontSize: "0.75rem", color: "#9d9da0", minWidth: "5.5rem" }}>
-                          {e.startTime ? `${e.startTime.slice(0, 5)}–${e.endTime?.slice(0, 5) ?? ""}` : "Essai"}
+                          {e.startTime ? `${e.startTime.slice(0, 5)}–${e.endTime?.slice(0, 5) ?? ""}` : e.kind === "essai" ? "Essai" : "Heure à confirmer"}
                         </span>
                         <span style={{ fontSize: "0.82rem", color: "#fff", flex: 1 }}>{e.title}</span>
                         {e.coachNames && <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>{e.coachNames}</span>}

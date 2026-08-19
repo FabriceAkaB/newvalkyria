@@ -58,7 +58,7 @@ export function CalendarWeekGrid({
                   <div>
                     <p style={{ fontSize: "0.68rem", color: "#fff", margin: 0, lineHeight: 1.3 }}>{e.title}</p>
                     <p style={{ fontSize: "0.62rem", color: "#6d6b71", margin: 0 }}>
-                      {e.startTime ? `${e.startTime.slice(0, 5)}–${e.endTime?.slice(0, 5) ?? ""}` : "Essai"}
+                      {e.startTime ? `${e.startTime.slice(0, 5)}–${e.endTime?.slice(0, 5) ?? ""}` : e.kind === "essai" ? "Essai" : "Heure à confirmer"}
                       {(terrainName(e.terrainId) || e.location) ? ` · ${terrainName(e.terrainId) ?? e.location}` : ""}
                     </p>
                   </div>

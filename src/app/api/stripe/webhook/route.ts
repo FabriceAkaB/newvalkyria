@@ -10,6 +10,7 @@ import { hasProcessedStripeEvent, markLeadAsPaid, recordStripeEvent } from "@/li
 import { PROGRAMS, type ProgramCode } from "@/lib/season-2027";
 import { activatePaymentPlan, markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
 import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
+import { enrollInAllActiveSessions, markRegistrationPaid as markSportEtudesRegistrationPaid } from "@/lib/sport-etudes-repo";
 import { getStripeClient } from "@/lib/stripe";
 
 export async function POST(request: Request) {
@@ -83,6 +84,21 @@ export async function POST(request: Request) {
       await markOrderPaidByCheckoutSession(session.id, paymentIntentId).catch((error) => {
         console.error("Unable to mark signup-bonus bag order as paid", error);
       });
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Programme Sport-Études — paiement unique, pas d'échelonnement ──
+    if (checkoutType === "sportetudes") {
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
+      const registration = await markSportEtudesRegistrationPaid(session.id, paymentIntentId);
+      if (registration) {
+        await enrollInAllActiveSessions(registration.id);
+        try {
+          await sendConfirmationEmail({ to: registration.parent_email, parentName: `${registration.parent_first_name} ${registration.parent_last_name}`.trim() });
+        } catch (error) {
+          console.error("Unable to send Sport-Études confirmation email", error);
+        }
+      }
       return NextResponse.json({ received: true });
     }
 

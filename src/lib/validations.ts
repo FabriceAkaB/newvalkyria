@@ -151,3 +151,36 @@ export const shopCheckoutSchema = z.object({
 export type ProductPayload = z.infer<typeof productSchema>;
 export type VariantPayload = z.infer<typeof variantSchema>;
 export type ShopCheckoutPayload = z.infer<typeof shopCheckoutSchema>;
+
+/** Programme Sport-Études — indépendant des schémas filles ci-dessus.
+ *  Pas de champ paymentPlan : ce programme est payable en un seul
+ *  versement uniquement (voir le plan §5). */
+export const sportEtudesRegistrationSchema = z.object({
+  playerFirstName: z.string().min(1, "Prénom du joueur requis"),
+  playerLastName: z.string().min(1, "Nom du joueur requis"),
+  playerDob: z.string().optional(),
+  playerBirthYear: z.string().optional(),
+  playerLevel: z.string().optional(),
+  primaryPosition: z.string().optional(),
+  secondaryPosition: z.string().optional(),
+  currentTeam: z.string().optional(),
+  currentClub: z.string().optional(),
+  soccerExperience: z.string().optional(),
+  playerGoals: z.string().optional(),
+  parentAssessedStrengths: z.string().optional(),
+  parentAssessedAreasToImprove: z.string().optional(),
+  parentFirstName: z.string().min(1, "Prénom du parent requis"),
+  parentLastName: z.string().min(1, "Nom du parent requis"),
+  parentEmail: z.string().email("Courriel invalide"),
+  parentPhone: z.string().refine(isValidPhone, "Numéro de téléphone invalide (10 chiffres)"),
+  parentRelationship: z.string().optional(),
+  sportEtudesExperience: z.string().optional(),
+  priorEvaluationsDone: z.string().optional(),
+  targetSportEtudesProgram: z.string().optional(),
+  comments: z.string().optional(),
+  importantCoachInfo: z.string().optional(),
+  termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" }),
+  optionChosen: z.enum(["diagnostic_only", "full_program"])
+});
+
+export type SportEtudesRegistrationPayload = z.infer<typeof sportEtudesRegistrationSchema>;

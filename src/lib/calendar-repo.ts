@@ -62,7 +62,7 @@ export interface CalendarEvent {
  *  pas encore les séances Solo (calendrier dédié déjà existant sous chaque saison),
  *  les séances privées (Phase 2) ni le programme Sport-Études (Phase 4). */
 export async function getUnifiedCalendarEvents(from: string, to: string): Promise<CalendarEvent[]> {
-  const [activities, regTrialsRes, leadTrialsRes, coaches, assignmentsRes, privateBookingsRes] = await Promise.all([
+  const [activities, regTrialsRes, leadTrialsRes, coaches, assignmentsRes, privateBookingsRes, sportEtudesSessionsRes] = await Promise.all([
     getActivities({ from, to }),
     db()
       .from("registrations")
@@ -85,7 +85,13 @@ export async function getUnifiedCalendarEvents(from: string, to: string): Promis
       .select("id, parent_name, notes, slot:private_session_slots!inner(slot_date, admin_start_time, admin_end_time, location, terrain_id)")
       .eq("status", "reserved")
       .gte("slot.slot_date", from)
-      .lte("slot.slot_date", to)
+      .lte("slot.slot_date", to),
+    db()
+      .from("sport_etudes_sessions")
+      .select("id, session_date, start_time, end_time, location, terrain_id, label")
+      .eq("active", true)
+      .gte("session_date", from)
+      .lte("session_date", to)
   ]);
 
   const coachNameById = new Map(coaches.map((c) => [c.id, `${c.first_name} ${c.last_name}`.trim()]));
@@ -162,7 +168,22 @@ export async function getUnifiedCalendarEvents(from: string, to: string): Promis
       coachNames: null
     }));
 
-  return [...activityEvents, ...regTrialEvents, ...leadTrialEvents, ...privateSessionEvents].sort((a, b) => {
+  const sportEtudesSessions = (sportEtudesSessionsRes.data ?? []) as any[];
+  const sportEtudesEvents: CalendarEvent[] = sportEtudesSessions.map((s) => ({
+    id: s.id,
+    date: s.session_date,
+    startTime: s.start_time,
+    endTime: s.end_time,
+    kind: "sport_etudes",
+    activityType: "Sport-Études",
+    title: `Sport-Études — ${s.label}`,
+    location: s.location,
+    terrainId: s.terrain_id,
+    category: null,
+    coachNames: null
+  }));
+
+  return [...activityEvents, ...regTrialEvents, ...leadTrialEvents, ...privateSessionEvents, ...sportEtudesEvents].sort((a, b) => {
     if (a.date !== b.date) return a.date.localeCompare(b.date);
     return (a.startTime ?? "").localeCompare(b.startTime ?? "");
   });

@@ -74,6 +74,10 @@ const COMMUNICATIONS_LINKS: { href: string; label: string; icon: IconName }[] = 
   { href: "/admin/communications", label: "Envoyer un message", icon: "list" },
 ];
 
+const SPORT_ETUDES_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/sport-etudes", label: "Vue d'ensemble", icon: "flask" },
+];
+
 const SYSTEME_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/audit", label: "Journal d'audit", icon: "shield" },
 ];
@@ -194,6 +198,7 @@ const GROUPS: Group[] = [
   { label: "Uniformes", dotColor: "#e0b0d8", links: UNIFORMES_LINKS },
   { label: "Essais", dotColor: "#88c0d0", links: ESSAIS_LINKS },
   { label: "Calendrier", dotColor: "#c3a6ff", links: CALENDRIER_LINKS },
+  { label: "Sport-Études", dotColor: "#78a8f0", links: SPORT_ETUDES_LINKS },
   { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS, adminOnly: true },
   { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS, adminOnly: true },
   { label: "Communications", dotColor: "#f0c878", links: COMMUNICATIONS_LINKS, adminOnly: true },
