@@ -226,10 +226,18 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
             <label className="insc-field"><span>Commentaires</span><textarea className="insc-input insc-textarea" value={form.comments} onChange={(e) => set("comments", e.target.value)} /></label>
             <label className="insc-field"><span>Informations importantes pour l&apos;entraîneur</span><textarea className="insc-input insc-textarea" value={form.importantCoachInfo} onChange={(e) => set("importantCoachInfo", e.target.value)} /></label>
 
-            <label className="insc-checkbox-wrap" style={{ marginTop: "0.75rem" }}>
-              <input type="checkbox" className="insc-checkbox" checked={form.termsAccepted} onChange={(e) => set("termsAccepted", e.target.checked)} />
-              <span className="insc-checkbox-custom" />
-              <span style={{ fontSize: "0.78rem" }}>J&apos;accepte les conditions du programme.</span>
+            <label className="insc-consent" style={{ marginTop: "0.75rem" }}>
+              <div className="insc-checkbox-wrap">
+                <input type="checkbox" className="insc-checkbox" checked={form.termsAccepted} onChange={(e) => set("termsAccepted", e.target.checked)} />
+                <span className="insc-checkbox-custom" aria-hidden>
+                  {form.termsAccepted && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+                      <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
+              </div>
+              <span>J&apos;accepte les conditions du programme.</span>
             </label>
 
             {error && <p className="nv27-pay-error">{error}</p>}
