@@ -1,6 +1,7 @@
 import { AdminCalendrier } from "@/components/admin-calendrier";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getUnifiedCalendarEvents } from "@/lib/calendar-repo";
+import { getCoaches } from "@/lib/coaches-repo";
 import { getTerrains } from "@/lib/terrains-repo";
 
 export const metadata = { title: "Calendrier — Admin New Valkyria", robots: "noindex" };
@@ -21,7 +22,8 @@ export default async function AdminCalendrierPage({ searchParams }: { searchPara
   const from = fromParam || defaultFrom;
   const to = toParam || defaultTo;
 
-  const [events, terrains] = await Promise.all([getUnifiedCalendarEvents(from, to), getTerrains()]);
+  const [events, terrains, coaches] = await Promise.all([getUnifiedCalendarEvents(from, to), getTerrains(), getCoaches()]);
+  const coachNames = coaches.map((c) => `${c.first_name} ${c.last_name}`.trim());
 
-  return <AdminCalendrier events={events} terrains={terrains} from={from} to={to} />;
+  return <AdminCalendrier events={events} terrains={terrains} from={from} to={to} coachNames={coachNames} />;
 }

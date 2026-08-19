@@ -67,6 +67,7 @@ const ESSAIS_LINKS: { href: string; label: string; icon: IconName }[] = [
 const CALENDRIER_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/calendrier", label: "Vue globale", icon: "calendar" },
   { href: "/admin/terrains", label: "Terrains", icon: "grid" },
+  { href: "/admin/seances-privees", label: "Séances privées", icon: "user" },
 ];
 
 const COMMUNICATIONS_LINKS: { href: string; label: string; icon: IconName }[] = [
