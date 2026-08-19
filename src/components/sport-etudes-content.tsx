@@ -170,9 +170,11 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
             </p>
           </div>
 
-          <p style={{ fontSize: "0.9rem", color: "#fff", fontWeight: 600, marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.9rem", color: "#fff", fontWeight: 600, marginBottom: "0.4rem" }}>
             Prix du programme complet : 315,95 $ — payable en un seul versement.
-            {isFull && <span style={{ color: "#f0c878" }}> Le programme complet est présentement complet.</span>}
+          </p>
+          <p style={{ fontSize: "0.8rem", marginBottom: "1.5rem", color: isFull ? "#f0c878" : "#9f85ba" }}>
+            {isFull ? "Le programme complet est présentement complet." : `${remaining} place${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""} pour le programme complet.`}
           </p>
 
           <div style={{ display: "flex", gap: "0.6rem", marginBottom: "1.5rem" }}>
