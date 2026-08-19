@@ -233,13 +233,6 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
             </div>
             <label className="insc-field"><span>Relation avec le joueur</span><input className="insc-input" value={form.parentRelationship} onChange={(e) => set("parentRelationship", e.target.value)} /></label>
 
-            <p style={{ fontSize: "0.72rem", color: "#9f85ba", textTransform: "uppercase", margin: "1rem 0 0" }}>Informations supplémentaires</p>
-            <label className="insc-field"><span>Expérience en Sport-Études</span><textarea className="insc-input insc-textarea" value={form.sportEtudesExperience} onChange={(e) => set("sportEtudesExperience", e.target.value)} /></label>
-            <label className="insc-field"><span>Évaluations déjà effectuées</span><textarea className="insc-input insc-textarea" value={form.priorEvaluationsDone} onChange={(e) => set("priorEvaluationsDone", e.target.value)} /></label>
-            <label className="insc-field"><span>Programme Sport-Études visé (si connu)</span><input className="insc-input" value={form.targetSportEtudesProgram} onChange={(e) => set("targetSportEtudesProgram", e.target.value)} /></label>
-            <label className="insc-field"><span>Commentaires</span><textarea className="insc-input insc-textarea" value={form.comments} onChange={(e) => set("comments", e.target.value)} /></label>
-            <label className="insc-field"><span>Informations importantes pour l&apos;entraîneur</span><textarea className="insc-input insc-textarea" value={form.importantCoachInfo} onChange={(e) => set("importantCoachInfo", e.target.value)} /></label>
-
             <label className="insc-consent" style={{ marginTop: "0.75rem" }}>
               <div className="insc-checkbox-wrap">
                 <input type="checkbox" className="insc-checkbox" checked={form.termsAccepted} onChange={(e) => set("termsAccepted", e.target.checked)} />
