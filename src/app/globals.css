@@ -2832,7 +2832,7 @@ body {
    n'est affectée. */
 @media (min-width: 768px) {
   .se-hero .insc-hero-inner {
-    max-width: 820px;
+    max-width: none;
   }
   .se-hero .insc-hero-sub {
     max-width: none;
