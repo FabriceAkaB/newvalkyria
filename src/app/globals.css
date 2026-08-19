@@ -2826,6 +2826,19 @@ body {
   max-width: 44ch;
 }
 
+/* Page Sport-Études — texte du bloc d'intro plus large sur ordinateur
+   (mobile déjà satisfaisant, laissé inchangé). Portée limitée à cette page
+   via .se-hero, aucune autre page utilisant .insc-hero-inner/.insc-hero-sub
+   n'est affectée. */
+@media (min-width: 768px) {
+  .se-hero .insc-hero-inner {
+    max-width: 820px;
+  }
+  .se-hero .insc-hero-sub {
+    max-width: none;
+  }
+}
+
 /* Layout */
 .insc-layout {
   display: grid;
