@@ -129,6 +129,10 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
               les éléments nécessaires à sa préparation. Le programme comprend 6 séances intensives ainsi qu&apos;une séance
               diagnostique gratuite permettant d&apos;évaluer le niveau actuel du joueur.
             </p>
+            <p className="insc-hero-sub">
+              Le programme est divisé en deux types de séances. Le vendredi, les séances sont axées sur la technique. La fin de
+              semaine (samedi/dimanche), ce sont des séances match, structurées en atelier technique, échauffement, puis match.
+            </p>
           </div>
         </Container>
       </section>
@@ -156,6 +160,14 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
                 {s.kind === "diagnostic_final" && <span style={{ color: "#9f85ba" }}> — {s.label}</span>}
               </p>
             ))}
+          </div>
+
+          <div style={{ background: "#17151e", border: "1px solid #251f30", borderRadius: "10px", padding: "0.9rem 1.1rem", marginBottom: "1.5rem" }}>
+            <p style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: 0, lineHeight: 1.6 }}>
+              Tous les entraîneurs qui encadreront et évalueront votre garçon détiennent une licence C. L&apos;évaluation de votre
+              garçon vous sera envoyée, et chaque évaluation sera filmée afin de mieux vous faire comprendre les éléments manquants
+              ou à travailler.
+            </p>
           </div>
 
           <p style={{ fontSize: "0.9rem", color: "#fff", fontWeight: 600, marginBottom: "1.5rem" }}>
