@@ -118,7 +118,7 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
     <>
       <section className="insc-hero">
         <Container>
-          <div className="insc-hero-inner">
+          <div className="insc-hero-inner" style={{ textAlign: "center" }}>
             <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Programme masculin</p>
             <h1 className="insc-hero-title">Programme technique de préparation aux évaluations du Sport-Études</h1>
             <p className="insc-hero-sub">
