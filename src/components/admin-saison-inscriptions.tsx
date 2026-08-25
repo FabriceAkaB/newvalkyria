@@ -149,6 +149,93 @@ function TransferToEteModal({ registration: r, seasonId, onClose, onTransferred 
   );
 }
 
+function TransferToSportEtudesModal({ registration: r, seasonId, onClose, onTransferred }: { registration: Registration; seasonId: string; onClose: () => void; onTransferred: () => void }) {
+  const [playerFirstName, setPlayerFirstName] = useState(r.player_first_name ?? "");
+  const [playerLastName, setPlayerLastName] = useState(r.player_last_name ?? "");
+  const [playerDob, setPlayerDob] = useState(r.player_dob ?? "");
+  const nameParts = r.parent_name.trim().split(/\s+/);
+  const [parentFirstName, setParentFirstName] = useState(nameParts[0] ?? "");
+  const [parentLastName, setParentLastName] = useState(nameParts.slice(1).join(" ") || nameParts[0] || "");
+  const [parentEmail, setParentEmail] = useState(r.parent_email);
+  const [parentPhone, setParentPhone] = useState(r.parent_phone);
+  const [optionChosen, setOptionChosen] = useState<"diagnostic_only" | "full_program">("diagnostic_only");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!playerFirstName.trim() || !playerLastName.trim() || !parentFirstName.trim() || !parentLastName.trim() || !parentEmail.trim() || !parentPhone.trim()) {
+      setError("Prénom/nom du joueur et coordonnées complètes du parent sont requis.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/season/${seasonId}/registrations/${r.id}/transfer-to-sport-etudes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerFirstName: playerFirstName.trim(),
+          playerLastName: playerLastName.trim(),
+          playerDob: playerDob.trim() || null,
+          parentFirstName: parentFirstName.trim(),
+          parentLastName: parentLastName.trim(),
+          parentEmail: parentEmail.trim(),
+          parentPhone: parentPhone.trim(),
+          optionChosen
+        })
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "Erreur de transfert");
+      }
+      onTransferred();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="admin-modal-overlay">
+      <div className="admin-modal-box" style={{ maxWidth: "560px", textAlign: "left" }}>
+        <p className="admin-modal-title">Transférer vers Sport-Études (Garçons)</p>
+        <p style={{ fontSize: "0.78rem", color: "#9d9da0", marginBottom: "1rem" }}>
+          Crée une nouvelle inscription dans le programme Sport-Études. Cette inscription reste inchangée dans sa saison d&apos;origine.
+        </p>
+        {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "0.6rem" }}>
+          <label className="admin-field"><span>Prénom joueur</span><input className="admin-input" value={playerFirstName} onChange={(e) => setPlayerFirstName(e.target.value)} /></label>
+          <label className="admin-field"><span>Nom joueur</span><input className="admin-input" value={playerLastName} onChange={(e) => setPlayerLastName(e.target.value)} /></label>
+          <label className="admin-field"><span>Date de naissance</span><input type="date" className="admin-input" value={playerDob} onChange={(e) => setPlayerDob(e.target.value)} /></label>
+          <label className="admin-field">
+            <span>Option</span>
+            <select className="admin-input" value={optionChosen} onChange={(e) => setOptionChosen(e.target.value as "diagnostic_only" | "full_program")}>
+              <option value="diagnostic_only">Diagnostic gratuit seulement</option>
+              <option value="full_program">Programme complet</option>
+            </select>
+          </label>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "1rem" }}>
+          <label className="admin-field"><span>Prénom parent</span><input className="admin-input" value={parentFirstName} onChange={(e) => setParentFirstName(e.target.value)} /></label>
+          <label className="admin-field"><span>Nom parent</span><input className="admin-input" value={parentLastName} onChange={(e) => setParentLastName(e.target.value)} /></label>
+          <label className="admin-field"><span>Courriel</span><input className="admin-input" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} /></label>
+          <label className="admin-field"><span>Téléphone</span><input className="admin-input" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} /></label>
+        </div>
+
+        <div className="admin-modal-actions">
+          <button className="admin-btn-ghost" onClick={onClose} disabled={saving}>Annuler</button>
+          <button className="admin-btn-primary" onClick={submit} disabled={saving}>
+            {saving ? "Transfert..." : "Transférer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RegistrationDrawer({ registration: r, categories, programs, slots, onClose, onDeleted, onUpdated, seasonId }: DrawerProps) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -156,6 +243,8 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
   const [error, setError] = useState<string | null>(null);
   const [showTransferToEte, setShowTransferToEte] = useState(false);
   const [transferredToEte, setTransferredToEte] = useState(false);
+  const [showTransferToSportEtudes, setShowTransferToSportEtudes] = useState(false);
+  const [transferredToSportEtudes, setTransferredToSportEtudes] = useState(false);
   const expiringSoon = isHalfSeasonExpiringSoon(r);
 
   const slotsForCategory = r.category_id ? slots.filter((s) => s.category_ids.includes(r.category_id!)) : slots;
@@ -394,13 +483,22 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
 
           <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Transfert</p>
-            {transferredToEte ? (
-              <p style={{ fontSize: "0.78rem", color: "#7fd88f", margin: 0 }}>✓ Transférée vers Été 2026.</p>
-            ) : (
-              <button className="admin-btn-ghost" onClick={() => setShowTransferToEte(true)} style={{ fontSize: "0.78rem" }}>
-                Transférer vers Été 2026
-              </button>
-            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", alignItems: "flex-start" }}>
+              {transferredToEte ? (
+                <p style={{ fontSize: "0.78rem", color: "#7fd88f", margin: 0 }}>✓ Transférée vers Été 2026.</p>
+              ) : (
+                <button className="admin-btn-ghost" onClick={() => setShowTransferToEte(true)} style={{ fontSize: "0.78rem" }}>
+                  Transférer vers Été 2026
+                </button>
+              )}
+              {transferredToSportEtudes ? (
+                <p style={{ fontSize: "0.78rem", color: "#7fd88f", margin: 0 }}>✓ Transférée vers Sport-Études.</p>
+              ) : (
+                <button className="admin-btn-ghost" onClick={() => setShowTransferToSportEtudes(true)} style={{ fontSize: "0.78rem" }}>
+                  Transférer vers Sport-Études (Garçons)
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="admin-drawer-section">
@@ -447,6 +545,15 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
           seasonId={seasonId}
           onClose={() => setShowTransferToEte(false)}
           onTransferred={() => { setShowTransferToEte(false); setTransferredToEte(true); }}
+        />
+      )}
+
+      {showTransferToSportEtudes && (
+        <TransferToSportEtudesModal
+          registration={r}
+          seasonId={seasonId}
+          onClose={() => setShowTransferToSportEtudes(false)}
+          onTransferred={() => { setShowTransferToSportEtudes(false); setTransferredToSportEtudes(true); }}
         />
       )}
     </>

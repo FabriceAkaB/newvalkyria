@@ -139,6 +139,11 @@ export interface CreateRegistrationInput {
   termsAccepted: boolean;
   optionChosen: RegistrationOption;
   priceCents: number | null;
+  /** Traçabilité quand cette inscription a été créée en transférant une
+   *  inscription/lead existant (fille) — sans FK (systèmes différents),
+   *  même logique que leads.transferred_from_registration_id. */
+  transferredFromRegistrationId?: string | null;
+  transferredFromLeadId?: string | null;
 }
 
 export interface SportEtudesRegistration {
@@ -211,7 +216,9 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
       terms_accepted: input.termsAccepted,
       option_chosen: input.optionChosen,
       status: "pending",
-      price_cents: input.priceCents
+      price_cents: input.priceCents,
+      transferred_from_registration_id: input.transferredFromRegistrationId ?? null,
+      transferred_from_lead_id: input.transferredFromLeadId ?? null
     })
     .select("id")
     .single();

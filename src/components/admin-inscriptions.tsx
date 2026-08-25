@@ -247,6 +247,101 @@ function TransferModal({
   );
 }
 
+/* ── Transfert vers Sport-Études (garçons) ────────────────────────
+ *  Crée une NOUVELLE inscription Sport-Études — le lead Été 2026
+ *  d'origine n'est jamais modifié ni supprimé. */
+
+function TransferToSportEtudesModal({ lead, onClose, onTransferred }: { lead: AdminLead; onClose: () => void; onTransferred: () => void }) {
+  const parsed = parseGoal(lead.goal);
+  const [initialFirst, initialLast] = splitName(parsed.childName);
+  const [nameFirst, nameLast] = splitName(lead.parent_name);
+
+  const [playerFirstName, setPlayerFirstName] = useState(initialFirst);
+  const [playerLastName, setPlayerLastName] = useState(initialLast);
+  const [playerDob, setPlayerDob] = useState("");
+  const [parentFirstName, setParentFirstName] = useState(nameFirst);
+  const [parentLastName, setParentLastName] = useState(nameLast);
+  const [parentEmail, setParentEmail] = useState(lead.email);
+  const [parentPhone, setParentPhone] = useState(lead.phone);
+  const [optionChosen, setOptionChosen] = useState<"diagnostic_only" | "full_program">("diagnostic_only");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!playerFirstName.trim() || !playerLastName.trim() || !parentFirstName.trim() || !parentLastName.trim() || !parentEmail.trim() || !parentPhone.trim()) {
+      setError("Prénom/nom du joueur et coordonnées complètes du parent sont requis.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/leads/${lead.id}/transfer-to-sport-etudes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerFirstName: playerFirstName.trim(),
+          playerLastName: playerLastName.trim(),
+          playerDob: playerDob || null,
+          playerId: lead.player_id ?? null,
+          parentFirstName: parentFirstName.trim(),
+          parentLastName: parentLastName.trim(),
+          parentEmail: parentEmail.trim(),
+          parentPhone: parentPhone.trim(),
+          optionChosen
+        })
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "Erreur de transfert");
+      }
+      onTransferred();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="admin-modal-overlay">
+      <div className="admin-modal-box" style={{ maxWidth: "560px", textAlign: "left" }}>
+        <p className="admin-modal-title">Transférer vers Sport-Études (Garçons)</p>
+        <p style={{ fontSize: "0.78rem", color: "#9d9da0", marginBottom: "1rem" }}>
+          Crée une nouvelle inscription dans le programme Sport-Études. L&apos;inscription Été 2026 d&apos;origine reste inchangée.
+        </p>
+        {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "0.6rem" }}>
+          <label className="admin-field"><span>Prénom joueur</span><input className="admin-input" value={playerFirstName} onChange={(e) => setPlayerFirstName(e.target.value)} /></label>
+          <label className="admin-field"><span>Nom joueur</span><input className="admin-input" value={playerLastName} onChange={(e) => setPlayerLastName(e.target.value)} /></label>
+          <label className="admin-field"><span>Date de naissance</span><input type="date" className="admin-input" value={playerDob} onChange={(e) => setPlayerDob(e.target.value)} /></label>
+          <label className="admin-field">
+            <span>Option</span>
+            <select className="admin-input" value={optionChosen} onChange={(e) => setOptionChosen(e.target.value as "diagnostic_only" | "full_program")}>
+              <option value="diagnostic_only">Diagnostic gratuit seulement</option>
+              <option value="full_program">Programme complet</option>
+            </select>
+          </label>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "1rem" }}>
+          <label className="admin-field"><span>Prénom parent</span><input className="admin-input" value={parentFirstName} onChange={(e) => setParentFirstName(e.target.value)} /></label>
+          <label className="admin-field"><span>Nom parent</span><input className="admin-input" value={parentLastName} onChange={(e) => setParentLastName(e.target.value)} /></label>
+          <label className="admin-field"><span>Courriel</span><input className="admin-input" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} /></label>
+          <label className="admin-field"><span>Téléphone</span><input className="admin-input" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} /></label>
+        </div>
+
+        <div className="admin-modal-actions">
+          <button className="admin-btn-ghost" onClick={onClose} disabled={saving}>Annuler</button>
+          <button className="admin-btn-primary" onClick={submit} disabled={saving}>
+            {saving ? "Transfert..." : "Transférer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Lead Drawer ───────────────────────────────────────────────── */
 
 interface DrawerProps {
@@ -263,6 +358,8 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
   const [deleting, setDeleting] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [transferDone, setTransferDone] = useState(false);
+  const [transferringToSportEtudes, setTransferringToSportEtudes] = useState(false);
+  const [transferToSportEtudesDone, setTransferToSportEtudesDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const parsed = parseGoal(lead.goal);
 
@@ -628,6 +725,9 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
           <button className="admin-btn-ghost" onClick={() => setTransferring(true)} disabled={transferSeasons.length === 0}>
             Transférer vers une saison
           </button>
+          <button className="admin-btn-ghost" onClick={() => setTransferringToSportEtudes(true)}>
+            Transférer vers Sport-Études (Garçons)
+          </button>
           <button className="admin-btn-danger" onClick={() => setConfirming(true)}>
             Supprimer l&apos;inscription
           </button>
@@ -648,6 +748,28 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
             setTimeout(() => setTransferDone(false), 3000);
           }}
         />
+      )}
+      {transferringToSportEtudes && (
+        <TransferToSportEtudesModal
+          lead={lead}
+          onClose={() => setTransferringToSportEtudes(false)}
+          onTransferred={() => {
+            setTransferringToSportEtudes(false);
+            setTransferToSportEtudesDone(true);
+            setTimeout(() => setTransferToSportEtudesDone(false), 3000);
+          }}
+        />
+      )}
+      {transferToSportEtudesDone && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal-box">
+            <p className="admin-modal-title">Transfert réussi</p>
+            <p className="admin-modal-body">L&apos;inscription a été créée dans le programme Sport-Études.</p>
+            <div className="admin-modal-actions">
+              <button className="admin-btn-primary" onClick={() => setTransferToSportEtudesDone(false)}>OK</button>
+            </div>
+          </div>
+        </div>
       )}
       {transferDone && (
         <div className="admin-modal-overlay">
