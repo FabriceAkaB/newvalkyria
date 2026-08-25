@@ -8,7 +8,7 @@ import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
 import { hasProcessedStripeEvent, markLeadAsPaid, recordStripeEvent } from "@/lib/repositories";
 import { PROGRAMS, type ProgramCode } from "@/lib/season-2027";
-import { activatePaymentPlan, markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
+import { activatePaymentPlan, completeDirectLinkRegistration, markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
 import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
 import { enrollInAllActiveSessions, markRegistrationPaid as markSportEtudesRegistrationPaid } from "@/lib/sport-etudes-repo";
 import { getStripeClient } from "@/lib/stripe";
@@ -45,6 +45,28 @@ export async function POST(request: Request) {
 
     // ── Saison Automne/Hiver 2026 — inscriptions en base de données ──
     if (checkoutType === "season-registration") {
+      // ── Lien direct admin (voir /api/admin/inscription/lien-direct) — le
+      // parent a saisi son identité directement sur la page Stripe plutôt
+      // que dans notre formulaire ; on la récupère ici avant de marquer payé. ──
+      if (session.metadata?.isDirectLink === "true" && session.metadata.registrationId) {
+        const customField = (key: string) => session.custom_fields?.find((f) => f.key === key)?.text?.value?.trim();
+        const parentName = customField("parent_name") || "Parent (Stripe)";
+        const rawPlayerName = customField("player_name") || "";
+        const [playerFirstName, ...playerLastParts] = rawPlayerName.split(/\s+/).filter(Boolean);
+        const playerLastName = playerLastParts.join(" ");
+        try {
+          await completeDirectLinkRegistration(session.metadata.registrationId, {
+            parentName,
+            parentEmail: session.customer_details?.email ?? "inconnu@newvalkyria.temp",
+            parentPhone: session.customer_details?.phone ?? null,
+            playerFirstName: playerFirstName || "Joueuse",
+            playerLastName: playerLastName || "(nom à confirmer)"
+          });
+        } catch (error) {
+          console.error("Unable to complete direct-link registration from Stripe data", error);
+        }
+      }
+
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
       const registration = await markRegistrationPaidByCheckoutSession(session.id, paymentIntentId);
       if (registration) {

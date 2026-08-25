@@ -651,6 +651,39 @@ export async function markRegistrationPaidByCheckoutSession(
   return data as Registration | null;
 }
 
+/** Complète une inscription "lien direct" (créée sans identité connue —
+ *  voir /api/admin/inscription/lien-direct) avec les vraies coordonnées
+ *  saisies par le parent directement sur la page Stripe. Recrée aussi le
+ *  lien player_id maintenant que le vrai nom de la joueuse est connu
+ *  (avant ça, playerFirstName/LastName étaient null, donc findOrCreatePlayer
+ *  n'avait rien à faire). Appelé depuis le webhook AVANT de marquer payé. */
+export async function completeDirectLinkRegistration(
+  registrationId: string,
+  input: { parentName: string; parentEmail: string; parentPhone: string | null; playerFirstName: string; playerLastName: string }
+): Promise<void> {
+  const supabase = db();
+  const playerId = await findOrCreatePlayer({
+    firstName: input.playerFirstName,
+    lastName: input.playerLastName,
+    dob: null,
+    parentEmail: input.parentEmail,
+    parentPhone: input.parentPhone ?? ""
+  });
+  const { error } = await supabase
+    .from("registrations")
+    .update({
+      parent_name: input.parentName,
+      parent_email: input.parentEmail,
+      parent_phone: input.parentPhone,
+      player_first_name: input.playerFirstName,
+      player_last_name: input.playerLastName,
+      player_id: playerId,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", registrationId);
+  if (error) throw new Error(error.message);
+}
+
 /* ── Paiements échelonnés (2-3 fois) ─────────────────────────────
  *  Le 1er versement est payé via la session Stripe Checkout initiale ; les
  *  suivants sont prélevés automatiquement par /api/cron/charge-installments
