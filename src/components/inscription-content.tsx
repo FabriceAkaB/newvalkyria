@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { Container } from "@/components/container";
 import { InscriptionForm, type InscriptionFormData } from "@/components/inscription-form";
@@ -288,7 +289,11 @@ export function InscriptionContent({ variant = "public" }: { variant?: Variant }
   /* ── Mode Essai gratuit : uniquement le formulaire ── */
   if (variant === "trial") return <TrialFlow />;
 
-  return <FunnelFlow variant={variant} />;
+  return (
+    <Suspense>
+      <FunnelFlow variant={variant} />
+    </Suspense>
+  );
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -356,9 +361,24 @@ function TrialFlow() {
 /* ════════════════════════════════════════════════════════════
    Tunnel complet — Automne/Hiver (public) et AV (avancé)
    ════════════════════════════════════════════════════════════ */
+const VALID_BIRTH_YEARS: readonly string[] = ["2017", "2016", "2015", "2014-2013"] satisfies readonly BirthYear[];
+const VALID_PROGRAM_CODES: readonly string[] = ["TV", "SV", "NV", "TVA", "SVA", "TVD"] satisfies readonly ProgramCode[];
+
 function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
-  const [year, setYear] = useState<BirthYear | null>(null);
-  const [programCode, setProgramCode] = useState<ProgramCode | null>(null);
+  const searchParams = useSearchParams();
+  /** Lien "prérempli" pour un client précis (ex. partagé par courriel/texto) —
+   *  saute directement au choix de plage + saisie des coordonnées, année/
+   *  programme/plan de paiement déjà choisis. Ignoré silencieusement si les
+   *  paramètres sont absents ou invalides (comportement normal inchangé). */
+  const prefilledYear = searchParams.get("year");
+  const prefilledProgram = searchParams.get("program");
+  const prefilledPayment = searchParams.get("payment");
+  const initialYear = prefilledYear && VALID_BIRTH_YEARS.includes(prefilledYear) ? (prefilledYear as BirthYear) : null;
+  const initialProgramCode = prefilledProgram && VALID_PROGRAM_CODES.includes(prefilledProgram) ? (prefilledProgram as ProgramCode) : null;
+  const initialPaymentPlan: "full" | "installments" = prefilledPayment === "installments" ? "installments" : "full";
+
+  const [year, setYear] = useState<BirthYear | null>(initialYear);
+  const [programCode, setProgramCode] = useState<ProgramCode | null>(initialYear ? initialProgramCode : null);
   const [slotId, setSlotId] = useState<string | null>(null);
   const [formData, setFormData] = useState<InscriptionFormData | null>(null);
   const [submit, setSubmit] = useState<SubmitState>("idle");
@@ -372,7 +392,7 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
   const [wantsUniformBundle, setWantsUniformBundle] = useState(false);
   const [uniformJerseySize, setUniformJerseySize] = useState("");
   const [uniformShortSize, setUniformShortSize] = useState("");
-  const [paymentPlan, setPaymentPlan] = useState<"full" | "installments">("full");
+  const [paymentPlan, setPaymentPlan] = useState<"full" | "installments">(initialPaymentPlan);
   const [waitlistMode, setWaitlistMode] = useState(false);
 
   const programRef = useRef<HTMLDivElement>(null);
