@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { jsonError } from "@/lib/http";
+import { getSportEtudesInstallmentPlan } from "@/lib/payment-plan";
 import { findOrCreatePlayer } from "@/lib/players-repo";
 import { getRequestOrigin } from "@/lib/request-origin";
 import {
   cancelRegistration,
   confirmRegistration,
   countFullProgramRegistrations,
+  createPaymentPlan,
   createRegistration,
+  deletePaymentPlan,
   enrollInDiagnosticOnly,
   getSettings,
   setRegistrationCheckoutSession
@@ -21,6 +24,10 @@ const FULL_PROGRAM_PRICE_CENTS = 31595;
 export async function POST(request: Request) {
   try {
     const payload = sportEtudesRegistrationSchema.parse(await request.json());
+    const installmentPlan =
+      payload.optionChosen === "full_program" && payload.paymentPlan === "installments"
+        ? getSportEtudesInstallmentPlan(new Date(), FULL_PROGRAM_PRICE_CENTS)
+        : null;
 
     if (payload.optionChosen === "full_program") {
       const [settings, count] = await Promise.all([getSettings(), countFullProgramRegistrations()]);
@@ -74,9 +81,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, registrationId, checkoutUrl: null });
     }
 
+    let paymentPlanId: string | null = null;
+    if (installmentPlan) {
+      paymentPlanId = await createPaymentPlan({
+        registrationId,
+        totalAmountCents: installmentPlan.amountsCents.reduce((sum, c) => sum + c, 0),
+        installments: installmentPlan.dueDates.map((date, i) => ({
+          sequenceNo: i + 1,
+          amountCents: installmentPlan.amountsCents[i],
+          dueDate: date.toISOString().slice(0, 10)
+        }))
+      });
+    }
+
     try {
       const stripe = getStripeClient();
       const baseUrl = getRequestOrigin(request);
+
+      const lineItemName = installmentPlan
+        ? "Programme technique de préparation aux évaluations du Sport-Études (1er versement sur 2)"
+        : "Programme technique de préparation aux évaluations du Sport-Études";
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
@@ -87,12 +111,19 @@ export async function POST(request: Request) {
             quantity: 1,
             price_data: {
               currency: "cad",
-              product_data: { name: "Programme technique de préparation aux évaluations du Sport-Études" },
-              unit_amount: FULL_PROGRAM_PRICE_CENTS
+              product_data: { name: lineItemName },
+              unit_amount: installmentPlan ? installmentPlan.amountsCents[0] : FULL_PROGRAM_PRICE_CENTS
             }
           }
         ],
-        metadata: { checkoutType: "sportetudes", registrationId },
+        ...(installmentPlan
+          ? { customer_creation: "always" as const, payment_intent_data: { setup_future_usage: "off_session" as const } }
+          : {}),
+        metadata: {
+          checkoutType: "sportetudes",
+          registrationId,
+          ...(paymentPlanId ? { paymentPlanId } : {})
+        },
         success_url: `${baseUrl}/sport-etudes/confirmation?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/sport-etudes?cancelled=1`
       });
@@ -103,6 +134,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, registrationId, checkoutUrl: session.url });
     } catch (stripeError) {
       await cancelRegistration(registrationId).catch(() => {});
+      if (paymentPlanId) await deletePaymentPlan(paymentPlanId).catch(() => {});
       throw stripeError;
     }
   } catch (error) {

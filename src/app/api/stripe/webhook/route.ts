@@ -10,7 +10,11 @@ import { hasProcessedStripeEvent, markLeadAsPaid, recordStripeEvent } from "@/li
 import { PROGRAMS, type ProgramCode } from "@/lib/season-2027";
 import { activatePaymentPlan, completeDirectLinkRegistration, markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
 import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
-import { enrollInAllActiveSessions, markRegistrationPaid as markSportEtudesRegistrationPaid } from "@/lib/sport-etudes-repo";
+import {
+  activatePaymentPlan as activateSportEtudesPaymentPlan,
+  enrollInAllActiveSessions,
+  markRegistrationPaid as markSportEtudesRegistrationPaid
+} from "@/lib/sport-etudes-repo";
 import { getStripeClient } from "@/lib/stripe";
 
 export async function POST(request: Request) {
@@ -109,7 +113,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
-    // ── Programme Sport-Études — paiement unique, pas d'échelonnement ──
+    // ── Programme Sport-Études — paiement unique ou en 2 versements ──
     if (checkoutType === "sportetudes") {
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
       const registration = await markSportEtudesRegistrationPaid(session.id, paymentIntentId);
@@ -121,6 +125,29 @@ export async function POST(request: Request) {
           console.error("Unable to send Sport-Études confirmation email", error);
         }
       }
+
+      // Paiement échelonné (2 versements) — enregistre la carte pour le
+      // prélèvement automatique du 2e versement, marque le 1er comme payé.
+      const paymentPlanId = session.metadata?.paymentPlanId;
+      if (paymentPlanId && paymentIntentId) {
+        try {
+          const stripeCustomerId = typeof session.customer === "string" ? session.customer : undefined;
+          const paymentIntent = await getStripeClient().paymentIntents.retrieve(paymentIntentId);
+          const stripePaymentMethodId = typeof paymentIntent.payment_method === "string" ? paymentIntent.payment_method : undefined;
+          if (stripeCustomerId && stripePaymentMethodId) {
+            await activateSportEtudesPaymentPlan(paymentPlanId, {
+              stripeCustomerId,
+              stripePaymentMethodId,
+              firstInstallmentPaymentIntentId: paymentIntentId
+            });
+          } else {
+            console.error("Sport-Études payment plan activation missing customer or payment method", { paymentPlanId, stripeCustomerId, stripePaymentMethodId });
+          }
+        } catch (error) {
+          console.error("Unable to activate Sport-Études payment plan", error);
+        }
+      }
+
       return NextResponse.json({ received: true });
     }
 

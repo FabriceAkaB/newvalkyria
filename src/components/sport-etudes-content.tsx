@@ -75,6 +75,7 @@ const EMPTY_FORM: FormState = {
 export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: SessionRow[]; remaining: number; isFull: boolean }) {
   const router = useRouter();
   const [option, setOption] = useState<"diagnostic_only" | "full_program">(isFull ? "diagnostic_only" : "full_program");
+  const [paymentPlan, setPaymentPlan] = useState<"full" | "installments">("full");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +100,7 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
       const res = await fetch("/api/sport-etudes/inscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, optionChosen: option })
+        body: JSON.stringify({ ...form, optionChosen: option, paymentPlan: option === "full_program" ? paymentPlan : undefined })
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error ?? "Erreur d'inscription");
@@ -171,7 +172,7 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
           </div>
 
           <p style={{ fontSize: "0.9rem", color: "#fff", fontWeight: 600, marginBottom: "0.4rem" }}>
-            Prix du programme complet : 315,95 $ — payable en un seul versement.
+            Prix du programme complet : 315,95 $ — payable en un seul versement ou en 2 versements (moitié aujourd&apos;hui, moitié 2 semaines plus tard).
           </p>
           <p style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "1.5rem", color: isFull ? "#f0c878" : "#c3a6ff" }}>
             {isFull ? "Le programme complet est présentement complet." : `${remaining} place${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""} pour le programme complet.`}
@@ -196,6 +197,19 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
               Séance diagnostique gratuite seulement
             </button>
           </div>
+
+          {option === "full_program" && !isFull && (
+            <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem 1.1rem", marginBottom: "1.5rem" }}>
+              <label className="nv27-radio" style={{ marginBottom: "0.6rem" }}>
+                <input type="radio" name="paymentPlan" checked={paymentPlan === "full"} onChange={() => setPaymentPlan("full")} />
+                <span>Payer en totalité aujourd&apos;hui — 315,95 $</span>
+              </label>
+              <label className="nv27-radio">
+                <input type="radio" name="paymentPlan" checked={paymentPlan === "installments"} onChange={() => setPaymentPlan("installments")} />
+                <span>Payer en 2 versements — 157,98 $ aujourd&apos;hui, 157,97 $ dans 2 semaines</span>
+              </label>
+            </div>
+          )}
 
           <div className="nv27-form-fields">
             <p style={{ fontSize: "0.72rem", color: "#9f85ba", textTransform: "uppercase", margin: "0.5rem 0 0" }}>Joueur</p>
@@ -250,7 +264,13 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
             {error && <p className="nv27-pay-error">{error}</p>}
 
             <button type="button" className="nv27-btn-primary" onClick={submit} disabled={submitting} style={{ padding: "0.7rem", fontSize: "0.9rem", marginTop: "1rem" }}>
-              {submitting ? "..." : option === "diagnostic_only" ? "Réserver la séance diagnostique gratuite" : "S'inscrire au programme complet — 315,95 $"}
+              {submitting
+                ? "..."
+                : option === "diagnostic_only"
+                  ? "Réserver la séance diagnostique gratuite"
+                  : paymentPlan === "installments"
+                    ? "S'inscrire au programme complet — 1er versement de 157,98 $"
+                    : "S'inscrire au programme complet — 315,95 $"}
             </button>
           </div>
         </Container>

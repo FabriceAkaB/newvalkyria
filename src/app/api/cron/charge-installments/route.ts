@@ -3,11 +3,16 @@ import { NextResponse } from "next/server";
 import { sendInstallmentReceiptEmail, sendPaymentPlanFailedEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
-import { getDueInstallments, markInstallmentFailed, markInstallmentPaid } from "@/lib/season-admin-repo";
+import { getDueInstallments as getDueSeasonInstallments, markInstallmentFailed as markSeasonInstallmentFailed, markInstallmentPaid as markSeasonInstallmentPaid } from "@/lib/season-admin-repo";
+import {
+  getDueInstallments as getDueSportEtudesInstallments,
+  markInstallmentFailed as markSportEtudesInstallmentFailed,
+  markInstallmentPaid as markSportEtudesInstallmentPaid
+} from "@/lib/sport-etudes-repo";
 import { getStripeClient } from "@/lib/stripe";
 
-/** Prélève automatiquement les versements échus (2e et 3e versement d'un
- *  paiement échelonné) sur la carte enregistrée à l'inscription. Déclenché
+/** Prélève automatiquement les versements échus (saison Automne/Hiver +
+ *  Sport-Études) sur la carte enregistrée à l'inscription. Déclenché
  *  quotidiennement par Vercel Cron (voir vercel.json) ; peut aussi être
  *  appelé manuellement pour vérification, avec le bon secret. */
 export async function GET(request: Request) {
@@ -16,7 +21,11 @@ export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
   if (auth !== `Bearer ${env.cronSecret}`) return jsonError("Non autorisé", 401);
 
-  const due = await getDueInstallments();
+  const [seasonDue, sportEtudesDue] = await Promise.all([getDueSeasonInstallments(), getDueSportEtudesInstallments()]);
+  const due = [
+    ...seasonDue.map((inst) => ({ ...inst, source: "season" as const })),
+    ...sportEtudesDue.map((inst) => ({ ...inst, source: "sportetudes" as const }))
+  ];
   const stripe = getStripeClient();
 
   let succeeded = 0;
@@ -45,7 +54,8 @@ export async function GET(request: Request) {
         throw new Error(`Statut PaymentIntent inattendu : ${paymentIntent.status}`);
       }
 
-      await markInstallmentPaid(inst.id, paymentIntent.id);
+      if (inst.source === "season") await markSeasonInstallmentPaid(inst.id, paymentIntent.id);
+      else await markSportEtudesInstallmentPaid(inst.id, paymentIntent.id);
       succeeded++;
 
       void sendInstallmentReceiptEmail({
@@ -59,7 +69,10 @@ export async function GET(request: Request) {
       failed++;
       console.error("Installment charge failed", inst.id, err);
 
-      const { attemptCount, isFinal, wasFirstFailure } = await markInstallmentFailed(inst.id, inst.attempt_count);
+      const { attemptCount, isFinal, wasFirstFailure } =
+        inst.source === "season"
+          ? await markSeasonInstallmentFailed(inst.id, inst.attempt_count)
+          : await markSportEtudesInstallmentFailed(inst.id, inst.attempt_count);
       if (wasFirstFailure || isFinal) {
         void sendPaymentPlanFailedEmail({
           parentName: inst.parent_name,

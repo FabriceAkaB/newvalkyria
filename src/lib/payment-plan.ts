@@ -37,3 +37,20 @@ export function getInstallmentPlan(now: Date, totalCents: number): InstallmentPl
 
   return { dueDates, amountsCents };
 }
+
+/** Plan de paiement en 2 versements pour le programme Sport-Études —
+ *  moitié aujourd'hui, moitié 2 semaines plus tard (date relative à
+ *  l'inscription, contrairement au plan de saison ci-dessus qui utilise
+ *  des dates calendaires fixes). Aucun frais de gestion ajouté. */
+export function getSportEtudesInstallmentPlan(now: Date, totalCents: number): InstallmentPlan {
+  const secondDueDate = new Date(now);
+  secondDueDate.setDate(secondDueDate.getDate() + 14);
+
+  const base = Math.floor(totalCents / 2);
+  const remainder = totalCents - base * 2;
+
+  return {
+    dueDates: [now, secondDueDate],
+    amountsCents: [base + remainder, base]
+  };
+}

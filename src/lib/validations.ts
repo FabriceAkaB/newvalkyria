@@ -180,7 +180,8 @@ export const sportEtudesRegistrationSchema = z.object({
   comments: z.string().optional(),
   importantCoachInfo: z.string().optional(),
   termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" }),
-  optionChosen: z.enum(["diagnostic_only", "full_program"])
+  optionChosen: z.enum(["diagnostic_only", "full_program"]),
+  paymentPlan: z.enum(["full", "installments"]).optional()
 });
 
 export type SportEtudesRegistrationPayload = z.infer<typeof sportEtudesRegistrationSchema>;
