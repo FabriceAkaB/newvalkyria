@@ -13,6 +13,31 @@ export interface Player {
   created_at: string;
 }
 
+const ATHLETE_PHOTO_BUCKET = "athlete-photos";
+
+/** Téléverse la photo permanente d'une athlète (profil canonique players,
+ *  pas seulement l'événement du jour) — remplace la photo existante si
+ *  elle en avait déjà une. Voir uploadChildPhoto (parent-repo.ts) pour le
+ *  même patron côté espace parent. */
+export async function uploadPlayerPhoto(playerId: string, file: File): Promise<string> {
+  const supabase = db();
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const path = `${playerId}-${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(ATHLETE_PHOTO_BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: true });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data } = supabase.storage.from(ATHLETE_PHOTO_BUCKET).getPublicUrl(path);
+  const publicUrl = data.publicUrl as string;
+
+  const { error: updateError } = await supabase.from("players").update({ photo_url: publicUrl }).eq("id", playerId);
+  if (updateError) throw new Error(updateError.message);
+
+  return publicUrl;
+}
+
 function normalizeName(s: string): string {
   return s.trim().toLowerCase().replace(/\s+/g, " ");
 }

@@ -4,7 +4,19 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { cropSquareAndCompress } from "@/lib/image-client";
 import type { AthleteSearchResult, TryoutAttendanceStatus, TryoutEvaluator, TryoutEvent, TryoutParticipantWithPlayer, TryoutTeam } from "@/lib/tryout-repo";
+
+const DEFAULT_TEAM_PALETTE: { name: string; colorHex: string }[] = [
+  { name: "Rouge", colorHex: "#e6394a" },
+  { name: "Bleu", colorHex: "#3a7de6" },
+  { name: "Jaune", colorHex: "#e6c93a" },
+  { name: "Vert", colorHex: "#3ae66b" },
+  { name: "Noir", colorHex: "#1a1a1a" },
+  { name: "Blanc", colorHex: "#f5f5f5" },
+  { name: "Orange", colorHex: "#e68a3a" },
+  { name: "Rose", colorHex: "#e63ac9" }
+];
 
 const ATTENDANCE_LABELS: Record<TryoutAttendanceStatus, string> = {
   attendu: "Attendu",
@@ -35,7 +47,7 @@ function birthYear(dob: string | null): string {
 export function AdminEvaluationEventDetail({
   event,
   initialParticipants,
-  teams,
+  teams: initialTeams,
   initialEvaluators,
   programs
 }: {
@@ -47,7 +59,11 @@ export function AdminEvaluationEventDetail({
 }) {
   const [participants, setParticipants] = useState(initialParticipants);
   const [evaluators, setEvaluators] = useState(initialEvaluators);
+  const [teams, setTeams] = useState(initialTeams);
   const [status, setStatus] = useState(event.status);
+
+  const [bulkTrialsSaving, setBulkTrialsSaving] = useState(false);
+  const [bulkTrialsMessage, setBulkTrialsMessage] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AthleteSearchResult[]>([]);
@@ -63,6 +79,7 @@ export function AdminEvaluationEventDetail({
   const [bulkMessage, setBulkMessage] = useState<string | null>(null);
 
   const [newEvaluatorName, setNewEvaluatorName] = useState("");
+  const [photoUploadingId, setPhotoUploadingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (query.trim().length < 2) {
@@ -93,6 +110,23 @@ export function AdminEvaluationEventDetail({
     });
     setResults((prev) => prev.map((r) => (r.playerId === playerId ? { ...r, alreadyAdded: true } : r)));
     await refreshParticipants();
+  };
+
+  const uploadPhoto = async (participant: TryoutParticipantWithPlayer, file: File | undefined) => {
+    if (!file) return;
+    setPhotoUploadingId(participant.id);
+    try {
+      const compressed = await cropSquareAndCompress(file);
+      const formData = new FormData();
+      formData.append("file", compressed);
+      const res = await fetch(`/api/admin/evaluations/players/${participant.player_id}/photo`, { method: "POST", body: formData });
+      const data = await res.json();
+      if (res.ok) {
+        setParticipants((prev) => prev.map((p) => (p.id === participant.id ? { ...p, player_photo_url: data.photoUrl } : p)));
+      }
+    } finally {
+      setPhotoUploadingId(null);
+    }
   };
 
   const removeParticipant = async (participantId: string) => {
@@ -151,6 +185,40 @@ export function AdminEvaluationEventDetail({
     } finally {
       setBulkSaving(false);
     }
+  };
+
+  const bulkAddTrials = async () => {
+    setBulkTrialsSaving(true);
+    setBulkTrialsMessage(null);
+    try {
+      const res = await fetch(`/api/admin/evaluations/events/${event.id}/participants/bulk-trials`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seasonId: "automne-hiver-2026" })
+      });
+      const data = await res.json();
+      setBulkTrialsMessage(`${data.added} essai(s) ajouté(s), ${data.skipped} déjà présent(e)s.`);
+      await refreshParticipants();
+    } finally {
+      setBulkTrialsSaving(false);
+    }
+  };
+
+  const addTeamFromPalette = async (name: string, colorHex: string) => {
+    const res = await fetch(`/api/admin/evaluations/events/${event.id}/teams`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, colorHex })
+    });
+    const data = await res.json();
+    setTeams((prev) => [...prev, { id: data.id, event_id: event.id, name, color_hex: colorHex, display_order: prev.length }]);
+  };
+
+  const removeTeam = async (teamId: string) => {
+    if (!window.confirm("Retirer cette couleur ? Les athlètes qui y étaient assignées perdront leur équipe.")) return;
+    await fetch(`/api/admin/evaluations/events/${event.id}/teams/${teamId}`, { method: "DELETE" });
+    setTeams((prev) => prev.filter((t) => t.id !== teamId));
+    setParticipants((prev) => prev.map((p) => (p.team_id === teamId ? { ...p, team_id: null } : p)));
   };
 
   const addEvaluator = async () => {
@@ -245,11 +313,15 @@ export function AdminEvaluationEventDetail({
                   </button>
                 </div>
               )}
+              <button className="admin-btn-ghost" onClick={bulkAddTrials} disabled={bulkTrialsSaving} style={{ fontSize: "0.72rem", padding: "0.35rem 0.7rem" }}>
+                {bulkTrialsSaving ? "..." : "Ajouter tous les essais (Automne/Hiver)"}
+              </button>
               <button className="admin-btn-ghost" onClick={() => setShowExternal((v) => !v)} style={{ fontSize: "0.72rem", padding: "0.35rem 0.7rem" }}>
                 {showExternal ? "Annuler" : "+ Athlète externe / essai"}
               </button>
             </div>
             {bulkMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", marginTop: "0.4rem" }}>{bulkMessage}</p>}
+            {bulkTrialsMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", marginTop: "0.4rem" }}>{bulkTrialsMessage}</p>}
 
             {showExternal && (
               <div style={{ marginTop: "0.8rem", padding: "0.8rem", background: "#17151e", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -273,6 +345,35 @@ export function AdminEvaluationEventDetail({
                 </button>
               </div>
             )}
+          </div>
+
+          {/* ── Équipes / couleurs de dossard ── */}
+          <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
+            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Équipes / couleurs de dossard</p>
+            <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: "0.6rem" }}>
+              {teams.map((t) => (
+                <span key={t.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "#fff", background: "#251f30", borderRadius: "999px", padding: "0.25rem 0.5rem 0.25rem 0.7rem" }}>
+                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: t.color_hex, display: "inline-block" }} />
+                  {t.name}
+                  <button onClick={() => removeTeam(t.id)} style={{ background: "none", border: "none", color: "#9d9da0", cursor: "pointer", fontSize: "0.75rem", padding: "0 0.2rem" }}>✕</button>
+                </span>
+              ))}
+              {teams.length === 0 && <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>Aucune couleur pour l&apos;instant.</span>}
+            </div>
+            <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: "0 0 0.4rem" }}>Ajouter depuis la palette :</p>
+            <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+              {DEFAULT_TEAM_PALETTE.filter((c) => !teams.some((t) => t.name === c.name)).map((c) => (
+                <button
+                  key={c.name}
+                  onClick={() => addTeamFromPalette(c.name, c.colorHex)}
+                  className="admin-btn-ghost"
+                  style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem", display: "flex", alignItems: "center", gap: "0.35rem" }}
+                >
+                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: c.colorHex, display: "inline-block", border: c.colorHex === "#f5f5f5" ? "1px solid #444" : "none" }} />
+                  + {c.name}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* ── Évaluateurs ── */}
@@ -300,7 +401,37 @@ export function AdminEvaluationEventDetail({
               const team = teams.find((t) => t.id === p.team_id);
               return (
                 <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "0.7rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.5rem 0.8rem", flexWrap: "wrap" }}>
-                  <Avatar firstName={p.player_first_name} lastName={p.player_last_name} photoUrl={p.player_photo_url} colorHex={team?.color_hex} />
+                  <div style={{ position: "relative", flexShrink: 0 }}>
+                    <Avatar firstName={p.player_first_name} lastName={p.player_last_name} photoUrl={p.player_photo_url} colorHex={team?.color_hex} />
+                    <label
+                      htmlFor={`photo-${p.id}`}
+                      title="Ajouter une photo (caméra ou galerie)"
+                      style={{
+                        position: "absolute",
+                        bottom: "-3px",
+                        right: "-3px",
+                        width: "18px",
+                        height: "18px",
+                        borderRadius: "50%",
+                        background: "#251f30",
+                        border: "1px solid #17151e",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        fontSize: "0.6rem"
+                      }}
+                    >
+                      {photoUploadingId === p.id ? "…" : "📷"}
+                      <input
+                        id={`photo-${p.id}`}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => uploadPhoto(p, e.target.files?.[0])}
+                      />
+                    </label>
+                  </div>
                   <div style={{ minWidth: "160px" }}>
                     <p style={{ fontSize: "0.8rem", color: "#fff", margin: 0 }}>{p.player_first_name} {p.player_last_name}</p>
                     <p style={{ fontSize: "0.68rem", color: "#9d9da0", margin: 0 }}>{birthYear(p.player_dob)}{p.is_trial ? " · Essai" : ""}</p>

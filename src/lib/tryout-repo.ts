@@ -153,6 +153,24 @@ export async function getTeamsForEvent(eventId: string): Promise<TryoutTeam[]> {
   return (data ?? []) as TryoutTeam[];
 }
 
+export async function createTeam(eventId: string, name: string, colorHex: string): Promise<string> {
+  const supabase = db();
+  const { count } = await supabase.from("tryout_teams").select("id", { count: "exact", head: true }).eq("event_id", eventId);
+  const { data, error } = await supabase
+    .from("tryout_teams")
+    .insert({ event_id: eventId, name, color_hex: colorHex, display_order: count ?? 0 })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data.id as string;
+}
+
+export async function deleteTeam(id: string): Promise<void> {
+  await db().from("tryout_participants").update({ team_id: null }).eq("team_id", id);
+  const { error } = await db().from("tryout_teams").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 export interface TryoutParticipant {
   id: string;
   event_id: string;
@@ -241,6 +259,31 @@ export async function bulkAddProgram(eventId: string, seasonId: string, programI
   let skipped = 0;
   for (const r of (regs ?? []) as { player_id: string }[]) {
     const { error: insertError } = await supabase.from("tryout_participants").insert({ event_id: eventId, player_id: r.player_id });
+    if (insertError && insertError.code === "23505") skipped++;
+    else if (insertError) throw new Error(insertError.message);
+    else added++;
+  }
+  return { added, skipped };
+}
+
+/** Toutes les inscrites en essai (is_trial=true) actives (non annulées)
+ *  d'une saison, ajoutées d'un coup — pour ne pas avoir à chercher les
+ *  essais une par une quand elles sont déjà inscrites au club. */
+export async function bulkAddTrials(eventId: string, seasonId: string): Promise<{ added: number; skipped: number }> {
+  const supabase = db();
+  const { data: regs, error } = await supabase
+    .from("registrations")
+    .select("player_id")
+    .eq("season_id", seasonId)
+    .eq("is_trial", true)
+    .neq("status", "cancelled")
+    .not("player_id", "is", null);
+  if (error) throw new Error(error.message);
+
+  let added = 0;
+  let skipped = 0;
+  for (const r of (regs ?? []) as { player_id: string }[]) {
+    const { error: insertError } = await supabase.from("tryout_participants").insert({ event_id: eventId, player_id: r.player_id, is_trial: true });
     if (insertError && insertError.code === "23505") skipped++;
     else if (insertError) throw new Error(insertError.message);
     else added++;
