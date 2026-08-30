@@ -195,14 +195,15 @@ values
   ('Évaluation test 1 — Garçons', current_date, 'brouillon', null),
   ('Évaluation test — Filles', current_date, 'brouillon', null);
 
--- Couleurs par défaut (section 5) sur les deux événements de départ.
+-- Couleurs de départ — seulement sur l'événement Garçons (4 équipes) ;
+-- l'événement Filles démarre sans équipe.
 insert into public.tryout_teams (event_id, name, color_hex, display_order)
 select e.id, c.name, c.hex, c.ord
 from public.tryout_events e
 cross join (values
-  ('Rouge', '#e6394a', 1), ('Bleu', '#3a7de6', 2), ('Jaune', '#e6c93a', 3), ('Vert', '#3ae66b', 4),
-  ('Noir', '#1a1a1a', 5), ('Blanc', '#f5f5f5', 6), ('Orange', '#e68a3a', 7), ('Rose', '#e63ac9', 8)
-) as c(name, hex, ord);
+  ('Rouge', '#e6394a', 1), ('Jaune', '#e6c93a', 2), ('Orange', '#e68a3a', 3), ('Noir', '#1a1a1a', 4)
+) as c(name, hex, ord)
+where e.name = 'Évaluation test 1 — Garçons';
 
 -- Configuration par défaut des critères/coefficients/seuils (section 7).
 insert into public.tryout_criteria_config (event_id, criteria, thresholds, double_scoring_enabled)
