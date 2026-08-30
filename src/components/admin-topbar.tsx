@@ -78,6 +78,10 @@ const SPORT_ETUDES_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/sport-etudes", label: "Vue d'ensemble", icon: "flask" },
 ];
 
+const EVALUATIONS_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/evaluations", label: "Événements", icon: "chart" },
+];
+
 const SYSTEME_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/audit", label: "Journal d'audit", icon: "shield" },
 ];
@@ -195,6 +199,7 @@ const GROUPS: Group[] = [
   { label: "Été 2026", dotColor: "#c8aae0", links: SEASON_ETE_LINKS },
   { label: "Automne / Hiver 2026", dotColor: "#f0c878", links: SEASON_AUTOMNE_HIVER_LINKS },
   { label: "Sport-Études (Garçons)", dotColor: "#78a8f0", links: SPORT_ETUDES_LINKS },
+  { label: "Évaluations", dotColor: "#8fce9f", links: EVALUATIONS_LINKS },
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
   { label: "Uniformes", dotColor: "#e0b0d8", links: UNIFORMES_LINKS },
   { label: "Essais", dotColor: "#88c0d0", links: ESSAIS_LINKS },

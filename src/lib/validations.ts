@@ -185,3 +185,35 @@ export const sportEtudesRegistrationSchema = z.object({
 });
 
 export type SportEtudesRegistrationPayload = z.infer<typeof sportEtudesRegistrationSchema>;
+
+export const tryoutEventCreateSchema = z.object({
+  name: z.string().min(1, "Nom requis"),
+  eventDate: z.string().min(1, "Date requise"),
+  startTime: z.string().optional(),
+  location: z.string().optional(),
+  terrainId: z.string().optional(),
+  ageCategory: z.string().optional(),
+  organizerNotes: z.string().optional()
+});
+
+export const tryoutExternalPlayerSchema = z.object({
+  firstName: z.string().min(1, "Prénom requis"),
+  lastName: z.string().min(1, "Nom requis"),
+  dob: z.string().min(1, "Date de naissance requise"),
+  primaryPosition: z.string().optional(),
+  currentClub: z.string().optional(),
+  parentName: z.string().optional(),
+  parentEmail: z.string().email("Courriel invalide").optional().or(z.literal("")),
+  parentPhone: z.string().optional()
+});
+
+export const tryoutEvaluationSaveSchema = z.object({
+  evaluatorId: z.string().min(1),
+  criteriaScores: z.record(z.string(), z.union([
+    z.object({ score: z.number().min(1).max(10) }),
+    z.object({ isole: z.number().min(1).max(10), match: z.number().min(1).max(10) })
+  ])),
+  comment: z.string().optional(),
+  commentInternal: z.boolean().optional(),
+  completed: z.boolean().optional()
+});
