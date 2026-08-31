@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
-import { bulkAddTrials } from "@/lib/tryout-repo";
+import { bulkAddBySource, type BulkAddSource } from "@/lib/tryout-repo";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
   const { id } = await params;
-  const body = (await request.json().catch(() => null)) as { seasonId?: string } | null;
-  if (!body?.seasonId) return jsonError("seasonId requis", 400);
+  const body = (await request.json().catch(() => null)) as { source?: BulkAddSource } | null;
+  if (!body?.source?.type) return jsonError("source requise", 400);
   try {
-    const result = await bulkAddTrials(id, body.seasonId);
+    const result = await bulkAddBySource(id, body.source);
     return NextResponse.json(result);
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Erreur serveur", 422);

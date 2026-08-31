@@ -62,8 +62,6 @@ export function AdminEvaluationEventDetail({
   const [teams, setTeams] = useState(initialTeams);
   const [status, setStatus] = useState(event.status);
 
-  const [bulkTrialsSaving, setBulkTrialsSaving] = useState(false);
-  const [bulkTrialsMessage, setBulkTrialsMessage] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AthleteSearchResult[]>([]);
@@ -74,7 +72,7 @@ export function AdminEvaluationEventDetail({
   const [extSaving, setExtSaving] = useState(false);
   const [extError, setExtError] = useState<string | null>(null);
 
-  const [bulkProgramId, setBulkProgramId] = useState(programs[0]?.id ?? "");
+  const [bulkSource, setBulkSource] = useState("ah_all");
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkMessage, setBulkMessage] = useState<string | null>(null);
 
@@ -169,38 +167,32 @@ export function AdminEvaluationEventDetail({
     }
   };
 
-  const bulkAdd = async () => {
-    if (!bulkProgramId) return;
+  const bulkTransfer = async () => {
+    if (!bulkSource) return;
     setBulkSaving(true);
     setBulkMessage(null);
     try {
-      const res = await fetch(`/api/admin/evaluations/events/${event.id}/participants/bulk-program`, {
+      const source =
+        bulkSource === "ete2026"
+          ? { type: "ete2026" as const }
+          : bulkSource === "ah_all"
+            ? { type: "automne_hiver" as const }
+            : bulkSource === "ah_trials"
+              ? { type: "automne_hiver_trials" as const }
+              : bulkSource === "sport_etudes"
+                ? { type: "sport_etudes" as const }
+                : { type: "automne_hiver" as const, programId: bulkSource.replace("ah_program:", "") };
+
+      const res = await fetch(`/api/admin/evaluations/events/${event.id}/participants/bulk-transfer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seasonId: "automne-hiver-2026", programId: bulkProgramId })
+        body: JSON.stringify({ source })
       });
       const data = await res.json();
       setBulkMessage(`${data.added} ajoutée(s), ${data.skipped} déjà présente(s).`);
       await refreshParticipants();
     } finally {
       setBulkSaving(false);
-    }
-  };
-
-  const bulkAddTrials = async () => {
-    setBulkTrialsSaving(true);
-    setBulkTrialsMessage(null);
-    try {
-      const res = await fetch(`/api/admin/evaluations/events/${event.id}/participants/bulk-trials`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seasonId: "automne-hiver-2026" })
-      });
-      const data = await res.json();
-      setBulkTrialsMessage(`${data.added} essai(s) ajouté(s), ${data.skipped} déjà présent(e)s.`);
-      await refreshParticipants();
-    } finally {
-      setBulkTrialsSaving(false);
     }
   };
 
@@ -302,26 +294,25 @@ export function AdminEvaluationEventDetail({
               </div>
             ))}
 
-            <div style={{ display: "flex", gap: "0.6rem", marginTop: "0.8rem", flexWrap: "wrap" }}>
-              {programs.length > 0 && (
-                <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-                  <select className="admin-input" value={bulkProgramId} onChange={(e) => setBulkProgramId(e.target.value)} style={{ width: "auto", fontSize: "0.72rem" }}>
-                    {programs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                  <button className="admin-btn-ghost" onClick={bulkAdd} disabled={bulkSaving} style={{ fontSize: "0.72rem", padding: "0.35rem 0.7rem" }}>
-                    {bulkSaving ? "..." : "Ajouter tout le programme"}
-                  </button>
-                </div>
-              )}
-              <button className="admin-btn-ghost" onClick={bulkAddTrials} disabled={bulkTrialsSaving} style={{ fontSize: "0.72rem", padding: "0.35rem 0.7rem" }}>
-                {bulkTrialsSaving ? "..." : "Ajouter tous les essais (Automne/Hiver)"}
+            <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: "0.9rem 0 0.4rem" }}>
+              Transférer des inscriptions existantes — peu importe la saison :
+            </p>
+            <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", alignItems: "center" }}>
+              <select className="admin-input" value={bulkSource} onChange={(e) => setBulkSource(e.target.value)} style={{ width: "auto", fontSize: "0.72rem" }}>
+                <option value="ete2026">Été 2026 — toutes les inscrites actives</option>
+                <option value="ah_all">Automne/Hiver 2026 — tous programmes</option>
+                {programs.map((p) => <option key={p.id} value={`ah_program:${p.id}`}>Automne/Hiver 2026 — {p.name}</option>)}
+                <option value="ah_trials">Automne/Hiver 2026 — essais seulement</option>
+                <option value="sport_etudes">Sport-Études — tous les inscrits actifs</option>
+              </select>
+              <button className="admin-btn-ghost" onClick={bulkTransfer} disabled={bulkSaving} style={{ fontSize: "0.72rem", padding: "0.35rem 0.7rem" }}>
+                {bulkSaving ? "..." : "Ajouter"}
               </button>
               <button className="admin-btn-ghost" onClick={() => setShowExternal((v) => !v)} style={{ fontSize: "0.72rem", padding: "0.35rem 0.7rem" }}>
                 {showExternal ? "Annuler" : "+ Athlète externe / essai"}
               </button>
             </div>
             {bulkMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", marginTop: "0.4rem" }}>{bulkMessage}</p>}
-            {bulkTrialsMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", marginTop: "0.4rem" }}>{bulkTrialsMessage}</p>}
 
             {showExternal && (
               <div style={{ marginTop: "0.8rem", padding: "0.8rem", background: "#17151e", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
