@@ -214,6 +214,42 @@ export async function getParticipantsForEvent(eventId: string): Promise<TryoutPa
   }));
 }
 
+/** Un courriel de parent par participante de l'événement, pour pouvoir
+ *  copier-coller d'un coup toute la liste (ex. envoyer un message à tout le
+ *  monde). Ordre de priorité pour retrouver le courriel : capté directement
+ *  sur la participation (athlète externe/essai/import CSV) → inscription
+ *  Automne/Hiver → lead Été 2026 → inscription Sport-Études. Dédoublonné
+ *  (un même parent avec deux enfants ne doit apparaître qu'une fois). */
+export async function getParticipantEmails(eventId: string): Promise<string[]> {
+  const supabase = db();
+
+  const { data: participants, error } = await supabase
+    .from("tryout_participants")
+    .select("player_id, parent_email")
+    .eq("event_id", eventId);
+  if (error) throw new Error(error.message);
+
+  const playerIds = (participants ?? []).map((p: any) => p.player_id);
+  if (playerIds.length === 0) return [];
+
+  const [{ data: regRows }, { data: leadRows }, { data: seRows }] = await Promise.all([
+    supabase.from("registrations").select("player_id, parent_email").in("player_id", playerIds).not("parent_email", "is", null),
+    supabase.from("leads").select("player_id, email").in("player_id", playerIds).not("email", "is", null),
+    supabase.from("sport_etudes_registrations").select("player_id, parent_email").in("player_id", playerIds).not("parent_email", "is", null)
+  ]);
+
+  const regByPlayer = new Map<string, string>((regRows ?? []).map((r: any) => [r.player_id, r.parent_email]));
+  const leadByPlayer = new Map<string, string>((leadRows ?? []).map((r: any) => [r.player_id, r.email]));
+  const seByPlayer = new Map<string, string>((seRows ?? []).map((r: any) => [r.player_id, r.parent_email]));
+
+  const emails = new Set<string>();
+  for (const p of (participants ?? []) as { player_id: string; parent_email: string | null }[]) {
+    const email = p.parent_email || regByPlayer.get(p.player_id) || leadByPlayer.get(p.player_id) || seByPlayer.get(p.player_id);
+    if (email) emails.add(email.trim().toLowerCase());
+  }
+  return Array.from(emails).sort();
+}
+
 /** Ajoute une athlète déjà connue (players existant) à l'événement. Si elle
  *  y est déjà (unique(event_id, player_id)), ne fait rien et renvoie la
  *  ligne existante — jamais de doublon (section 3). */

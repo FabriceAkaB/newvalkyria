@@ -78,6 +78,8 @@ export function AdminEvaluationEventDetail({
 
   const [newEvaluatorName, setNewEvaluatorName] = useState("");
   const [photoUploadingId, setPhotoUploadingId] = useState<string | null>(null);
+  const [copyingEmails, setCopyingEmails] = useState(false);
+  const [copyEmailsMessage, setCopyEmailsMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (query.trim().length < 2) {
@@ -124,6 +126,33 @@ export function AdminEvaluationEventDetail({
       }
     } finally {
       setPhotoUploadingId(null);
+    }
+  };
+
+  const copyEmails = async () => {
+    setCopyingEmails(true);
+    setCopyEmailsMessage(null);
+    try {
+      const res = await fetch(`/api/admin/evaluations/events/${event.id}/emails`);
+      const data = await res.json();
+      const emails = (data.emails ?? []) as string[];
+      if (emails.length === 0) {
+        setCopyEmailsMessage("Aucun courriel trouvé pour cet événement.");
+        return;
+      }
+      const joined = emails.join("; ");
+      try {
+        await navigator.clipboard.writeText(joined);
+        setCopyEmailsMessage(`${emails.length} courriel(s) copié(s) dans le presse-papier.`);
+      } catch {
+        // Presse-papier bloqué (permissions, vieux navigateur) — filet de
+        // sécurité : la liste reste sélectionnable/copiable manuellement.
+        window.prompt(`Copie manuelle (Ctrl+C / Cmd+C) — ${emails.length} courriel(s) :`, joined);
+      }
+    } catch {
+      setCopyEmailsMessage("Impossible de récupérer la liste — réessaie.");
+    } finally {
+      setCopyingEmails(false);
     }
   };
 
@@ -385,7 +414,13 @@ export function AdminEvaluationEventDetail({
           </div>
 
           {/* ── Liste des participantes ── */}
-          <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", margin: "1rem 0 0.6rem" }}>Participantes ({participants.length})</p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "1rem 0 0.6rem", flexWrap: "wrap", gap: "0.5rem" }}>
+            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", margin: 0 }}>Participantes ({participants.length})</p>
+            <button className="admin-btn-ghost" onClick={copyEmails} disabled={copyingEmails} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>
+              {copyingEmails ? "..." : "📋 Copier tous les courriels"}
+            </button>
+          </div>
+          {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
           {participants.length === 0 && <p className="admin-empty-text">Aucune athlète ajoutée pour l&apos;instant.</p>}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
             {participants.map((p) => {
