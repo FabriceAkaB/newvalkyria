@@ -8236,6 +8236,9 @@ body {
   text-align: center;
 }
 
+/* ── Photo d'équipe (entre CTA et avis) ──────────────────────── */
+.nv-cta-photo { position: relative; width: 100%; height: 60vw; max-height: 520px; min-height: 260px; }
+
 /* ── Reviews ──────────────────────────────────────────────────── */
 .nv-reviews { background: #100e21; padding: 7rem 0; }
 .nv-reviews-grid {
@@ -9325,6 +9328,7 @@ img { max-width: 100%; height: auto; }
 }
 
 .nv27-year-btn {
+  position: relative;
   font-family: var(--font-display), sans-serif;
   font-size: 1.8rem;
   letter-spacing: 0.04em;
@@ -9332,15 +9336,47 @@ img { max-width: 100%; height: auto; }
   background: #100e21;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
-  padding: 1.5rem 1rem;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  padding: 0;
   cursor: pointer;
+  overflow: hidden;
   transition: all 180ms ease;
 }
 
 .nv27-year-btn:hover {
   border-color: rgba(196, 164, 228, 0.7);
-  background: rgba(196, 164, 228, 0.08);
   transform: translateY(-3px);
+}
+
+.nv27-year-btn-img { z-index: 0; }
+
+.nv27-year-btn-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(16, 14, 33, 0.35) 0%, rgba(16, 14, 33, 0.75) 100%);
+  transition: background 180ms ease;
+}
+
+.nv27-year-btn:hover .nv27-year-btn-overlay {
+  background: linear-gradient(180deg, rgba(76, 46, 122, 0.35) 0%, rgba(76, 46, 122, 0.75) 100%);
+}
+
+.nv27-year-btn-label {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.nv27-year-photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  min-height: 200px;
+  border-radius: 1rem;
+  overflow: hidden;
+  margin-top: 0.85rem;
 }
 
 /* ── Étape 2 — Programmes ── */

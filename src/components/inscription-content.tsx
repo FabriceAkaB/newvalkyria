@@ -1,12 +1,17 @@
 "use client";
 
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import { Container } from "@/components/container";
 import { InscriptionForm, type InscriptionFormData } from "@/components/inscription-form";
 import { getInstallmentPlan } from "@/lib/payment-plan";
+import ctaTeamImg from "@/content/image/photos/inscription-cta-547.jpg";
+import yearImg2017 from "@/content/image/photos/inscription-year-2017.jpg";
+import yearImg2016 from "@/content/image/photos/inscription-year-2016.jpg";
+import yearImg2015 from "@/content/image/photos/inscription-year-2015.jpg";
+import yearImg20142013 from "@/content/image/photos/inscription-year-2014-2013.jpg";
 import type { BirthYear, LiveAvailability, ProgramCode, SessionPreview } from "@/lib/season-2027";
 import {
   BIRTH_YEAR_LABELS,
@@ -21,6 +26,13 @@ import {
 
 type Variant = "public" | "advanced" | "trial";
 type SubmitState = "idle" | "loading" | "done";
+
+const YEAR_IMAGES: Record<BirthYear, StaticImageData> = {
+  "2017": yearImg2017,
+  "2016": yearImg2016,
+  "2015": yearImg2015,
+  "2014-2013": yearImg20142013
+};
 
 /** Charge les vraies disponibilités (places prises) depuis la base pour que
  *  le tunnel n'affiche jamais un nombre de places qui ne correspond pas à
@@ -612,9 +624,14 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
               <div className="nv27-year-grid">
                 {years.map((y) => (
                   <button key={y} type="button" className={`nv27-year-btn${isAdvanced ? " nv27-year-btn-advanced" : ""}`} onClick={() => setYear(y)}>
-                    {BIRTH_YEAR_LABELS[y]}
+                    <Image src={YEAR_IMAGES[y]} alt="" fill className="object-cover object-center nv27-year-btn-img" sizes="(max-width:640px) 50vw, 25vw" />
+                    <span className="nv27-year-btn-overlay" aria-hidden />
+                    <span className="nv27-year-btn-label">{BIRTH_YEAR_LABELS[y]}</span>
                   </button>
                 ))}
+              </div>
+              <div className="nv27-year-photo">
+                <Image src={ctaTeamImg} alt="Équipe New Valkyria" fill className="object-cover object-center" sizes="(max-width:1024px) 100vw, 42rem" />
               </div>
             </div>
           ) : (

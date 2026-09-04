@@ -16,6 +16,7 @@ import featImg   from "@/content/image/photos/DSC02155.jpg";
 import hlt1      from "@/content/image/photos/HLT-technique.png";
 import hlt2      from "@/content/image/photos/HLT-mental.jpg";
 import hlt3      from "@/content/image/photos/HLT-physique.png";
+import ctaTeamImg from "@/content/image/photos/inscription-cta-547.jpg";
 
 const academyStats = [
   { metric: "150+",       label: "Joueuses formées"    },
@@ -371,6 +372,11 @@ export default function HomePage() {
             Réserver une place →
           </Link>
         </div>
+      </section>
+
+      {/* ═══ Photo d'équipe ══════════════════════════════════════ */}
+      <section className="nv-cta-photo">
+        <Image src={ctaTeamImg} alt="Équipe New Valkyria" fill className="object-cover object-center" sizes="100vw" />
       </section>
 
       {/* ═══ 8. AVIS PARENTS ════════════════════════════════════ */}
