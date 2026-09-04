@@ -62,6 +62,7 @@ const BOUTIQUE_LINKS: { href: string; label: string; icon: IconName }[] = [
 
 const ESSAIS_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/essais-calendrier", label: "Calendrier essais", icon: "calendar" },
+  { href: "/admin/essais-dates", label: "Dates d'essai (Aut./Hiver)", icon: "grid" },
 ];
 
 const CALENDRIER_LINKS: { href: string; label: string; icon: IconName }[] = [

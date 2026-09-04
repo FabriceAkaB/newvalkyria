@@ -1254,3 +1254,101 @@ export async function getTrialSlotById(id: string): Promise<TrialSlotWithAvailab
   const slots = await getActiveTrialSlots();
   return slots.find((s) => s.id === id) ?? null;
 }
+
+/** Toutes les dates d'essai — actives et inactives — pour la gestion admin
+ *  (getActiveTrialSlots ne renvoie que celles réellement offertes au public). */
+export async function getAllTrialSlots(): Promise<TrialSlotWithAvailability[]> {
+  const supabase = db();
+  const { data: slots, error } = await supabase.from("trial_slots").select("*").order("slot_date", { ascending: true });
+  if (error) throw new Error(error.message);
+
+  const slotIds = (slots ?? []).map((s: TrialSlot) => s.id);
+  const takenBySlot = new Map<string, number>();
+  if (slotIds.length > 0) {
+    const { data: regs, error: regError } = await supabase
+      .from("registrations")
+      .select("trial_slot_id")
+      .in("trial_slot_id", slotIds)
+      .neq("status", "cancelled");
+    if (regError) throw new Error(regError.message);
+    for (const r of (regs ?? []) as { trial_slot_id: string }[]) {
+      takenBySlot.set(r.trial_slot_id, (takenBySlot.get(r.trial_slot_id) ?? 0) + 1);
+    }
+  }
+
+  return ((slots ?? []) as TrialSlot[]).map((s) => {
+    const taken = takenBySlot.get(s.id) ?? 0;
+    return { ...s, taken, remaining: Math.max(0, s.max_places - taken), isFull: taken >= s.max_places };
+  });
+}
+
+export interface CreateTrialSlotInput {
+  slotDate: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  maxPlaces: number;
+  eligibleBirthYears: string[];
+  eligibleLevels: string[] | null;
+}
+
+export async function createTrialSlot(input: CreateTrialSlotInput): Promise<string> {
+  const { data, error } = await db()
+    .from("trial_slots")
+    .insert({
+      slot_date: input.slotDate,
+      start_time: input.startTime,
+      end_time: input.endTime,
+      location: input.location,
+      max_places: input.maxPlaces,
+      eligible_birth_years: input.eligibleBirthYears,
+      eligible_levels: input.eligibleLevels
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data.id as string;
+}
+
+export async function updateTrialSlot(
+  id: string,
+  patch: Partial<{
+    slotDate: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+    maxPlaces: number;
+    eligibleBirthYears: string[];
+    eligibleLevels: string[] | null;
+    active: boolean;
+  }>
+): Promise<void> {
+  const columnPatch: Record<string, unknown> = {};
+  if (patch.slotDate !== undefined) columnPatch.slot_date = patch.slotDate;
+  if (patch.startTime !== undefined) columnPatch.start_time = patch.startTime;
+  if (patch.endTime !== undefined) columnPatch.end_time = patch.endTime;
+  if (patch.location !== undefined) columnPatch.location = patch.location;
+  if (patch.maxPlaces !== undefined) columnPatch.max_places = patch.maxPlaces;
+  if (patch.eligibleBirthYears !== undefined) columnPatch.eligible_birth_years = patch.eligibleBirthYears;
+  if (patch.eligibleLevels !== undefined) columnPatch.eligible_levels = patch.eligibleLevels;
+  if (patch.active !== undefined) columnPatch.active = patch.active;
+  const { error } = await db().from("trial_slots").update(columnPatch).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/** Retire une date d'essai définitivement. Refuse si des inscriptions actives
+ *  y sont déjà rattachées (contrainte de clé étrangère) — désactiver
+ *  (active=false) est le bon geste dans ce cas, pas la suppression. */
+export async function deleteTrialSlot(id: string): Promise<void> {
+  const { count, error: countError } = await db()
+    .from("registrations")
+    .select("id", { count: "exact", head: true })
+    .eq("trial_slot_id", id)
+    .neq("status", "cancelled");
+  if (countError) throw new Error(countError.message);
+  if ((count ?? 0) > 0) {
+    throw new Error("Impossible de supprimer : des familles sont déjà inscrites à cette date. Désactivez-la plutôt.");
+  }
+  const { error } = await db().from("trial_slots").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
