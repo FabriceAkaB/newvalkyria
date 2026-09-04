@@ -644,10 +644,9 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
                   </button>
                 ))}
               </div>
+              <p className="nv27-year-tagline">Ici, on amène le foot féminin au prochain niveau.</p>
               <div className="nv27-year-photo">
                 <Image src={ctaTeamImg} alt="Équipe New Valkyria" fill className="object-cover object-center" sizes="(max-width:1024px) 100vw, 42rem" />
-                <span className="nv27-year-photo-overlay" aria-hidden />
-                <p className="nv27-year-photo-caption">Ici, on amène le foot féminin au prochain niveau.</p>
               </div>
             </div>
           ) : (
