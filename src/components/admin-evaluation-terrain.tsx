@@ -78,6 +78,7 @@ export function AdminEvaluationTerrain({
   const [evaluations, setEvaluations] = useState<TryoutEvaluation[]>(initialEvaluations);
   const [teamFilters, setTeamFilters] = useState<string[]>([]);
   const [remainingOnly, setRemainingOnly] = useState(false);
+  const [gkOnly, setGkOnly] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -129,6 +130,7 @@ export function AdminEvaluationTerrain({
     return visibleParticipants.filter((p) => {
       if (teamFilters.length > 0 && !teamFilters.includes(p.team_id ?? "")) return false;
       if (remainingOnly && myEvalByParticipant.get(p.id)?.completed_at) return false;
+      if (gkOnly && p.primary_position_observed !== "GK") return false;
       if (search.trim()) {
         const q = search.trim().toLowerCase();
         const matchesName = `${p.player_first_name} ${p.player_last_name}`.toLowerCase().includes(q);
@@ -137,7 +139,7 @@ export function AdminEvaluationTerrain({
       }
       return true;
     });
-  }, [visibleParticipants, teamFilters, remainingOnly, search, myEvalByParticipant]);
+  }, [visibleParticipants, teamFilters, remainingOnly, gkOnly, search, myEvalByParticipant]);
 
   const selected = participants.find((p) => p.id === selectedId) ?? null;
 
@@ -343,8 +345,15 @@ export function AdminEvaluationTerrain({
             >
               Il me reste seulement
             </button>
-            {(teamFilters.length > 0 || remainingOnly || search) && (
-              <button onClick={() => { setTeamFilters([]); setRemainingOnly(false); setSearch(""); }} className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.7rem", minHeight: "36px" }}>
+            <button
+              onClick={() => setGkOnly((v) => !v)}
+              className={gkOnly ? "admin-btn-primary" : "admin-btn-ghost"}
+              style={{ fontSize: "0.72rem", padding: "0.3rem 0.7rem", minHeight: "36px" }}
+            >
+              🧤 Gardiennes seulement
+            </button>
+            {(teamFilters.length > 0 || remainingOnly || gkOnly || search) && (
+              <button onClick={() => { setTeamFilters([]); setRemainingOnly(false); setGkOnly(false); setSearch(""); }} className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.7rem", minHeight: "36px" }}>
                 Réinitialiser ✕
               </button>
             )}
@@ -379,6 +388,9 @@ export function AdminEvaluationTerrain({
                   }}
                 >
                   {isNew && <span style={{ position: "absolute", top: "4px", right: "4px", fontSize: "0.6rem", background: "#78a8f0", color: "#0b0a10", borderRadius: "4px", padding: "0.1rem 0.3rem" }}>Nouveau</span>}
+                  {p.primary_position_observed === "GK" && (
+                    <span style={{ position: "absolute", top: "4px", left: "4px", fontSize: "0.6rem", background: "#f0c878", color: "#0b0a10", borderRadius: "4px", padding: "0.1rem 0.3rem", fontWeight: 700 }}>🧤 GK</span>
+                  )}
                   <Avatar firstName={p.player_first_name} lastName={p.player_last_name} photoUrl={p.player_photo_url} colorHex={team?.color_hex} size={48} />
                   <p style={{ fontSize: "0.78rem", color: "#fff", margin: 0, textAlign: "center" }}>{p.player_first_name} {p.player_last_name}</p>
                   <p style={{ fontSize: "0.7rem", color: "#9d9da0", margin: 0 }}>#{p.bib_number ?? "—"} {isDone ? "✓" : isStarted ? `${scoredCount}/${config.criteria.length}` : ""}</p>

@@ -479,6 +479,14 @@ export function AdminEvaluationEventDetail({
                     <option value="">Équipe...</option>
                     {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
+                  <button
+                    onClick={() => updateParticipant(p.id, { primaryPositionObserved: p.primary_position_observed === "GK" ? null : "GK" })}
+                    title="Marquer comme gardienne durant cette évaluation"
+                    className={p.primary_position_observed === "GK" ? "admin-btn-primary" : "admin-btn-ghost"}
+                    style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}
+                  >
+                    🧤 GK
+                  </button>
                   <select
                     className="admin-input"
                     value={p.attendance_status}
