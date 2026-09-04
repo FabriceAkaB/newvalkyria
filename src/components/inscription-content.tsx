@@ -34,6 +34,13 @@ const YEAR_IMAGES: Record<BirthYear, StaticImageData> = {
   "2014-2013": yearImg20142013
 };
 
+/** Repère vertical du recadrage (object-position) par tuile — "center" par
+ *  défaut ; certaines photos portrait ont besoin d'un ancrage plus haut
+ *  pour ne pas couper la tête de la joueuse. */
+const YEAR_IMAGE_POSITION: Partial<Record<BirthYear, string>> = {
+  "2014-2013": "center 12%"
+};
+
 /** Charge les vraies disponibilités (places prises) depuis la base pour que
  *  le tunnel n'affiche jamais un nombre de places qui ne correspond pas à
  *  la réalité gérée dans l'admin. Retombe brièvement sur les chiffres de
@@ -624,7 +631,14 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
               <div className="nv27-year-grid">
                 {years.map((y) => (
                   <button key={y} type="button" className={`nv27-year-btn${isAdvanced ? " nv27-year-btn-advanced" : ""}`} onClick={() => setYear(y)}>
-                    <Image src={YEAR_IMAGES[y]} alt="" fill className="object-cover object-center nv27-year-btn-img" sizes="(max-width:640px) 50vw, 25vw" />
+                    <Image
+                      src={YEAR_IMAGES[y]}
+                      alt=""
+                      fill
+                      className="object-cover nv27-year-btn-img"
+                      style={{ objectPosition: YEAR_IMAGE_POSITION[y] ?? "center" }}
+                      sizes="(max-width:640px) 50vw, 25vw"
+                    />
                     <span className="nv27-year-btn-overlay" aria-hidden />
                     <span className="nv27-year-btn-label">{BIRTH_YEAR_LABELS[y]}</span>
                   </button>
@@ -632,6 +646,8 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
               </div>
               <div className="nv27-year-photo">
                 <Image src={ctaTeamImg} alt="Équipe New Valkyria" fill className="object-cover object-center" sizes="(max-width:1024px) 100vw, 42rem" />
+                <span className="nv27-year-photo-overlay" aria-hidden />
+                <p className="nv27-year-photo-caption">Ici, on amène le foot féminin au prochain niveau.</p>
               </div>
             </div>
           ) : (
