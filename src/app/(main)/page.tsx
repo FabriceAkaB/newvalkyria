@@ -12,7 +12,7 @@ import p1img     from "@/content/image/photos/DSC04002.jpg";
 import p2img     from "@/content/image/photos/DSC01885.jpg";
 import whyLocationsImg from "@/content/image/photos/WHY-locations-map.png";
 import methodImg from "@/content/image/photos/DSC02043.jpg";
-import featImg   from "@/content/image/photos/DSC02155.jpg";
+import featImg   from "@/content/image/photos/homepage-team-huddle.jpg";
 import hlt1      from "@/content/image/photos/HLT-technique.png";
 import hlt2      from "@/content/image/photos/HLT-mental.jpg";
 import hlt3      from "@/content/image/photos/HLT-physique.png";
@@ -133,7 +133,7 @@ export default function HomePage() {
         <div className="barca-features-photo">
           <Image
             src={featImg}
-            alt="Joueuse New Valkyria à l'entraînement"
+            alt="Entraîneur et joueuses New Valkyria en concertation"
             fill
             className="object-cover"
             sizes="50vw"
