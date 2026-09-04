@@ -1,7 +1,9 @@
 /** Correspondance entre les identifiants statiques du tunnel public
  *  (`season-2027.ts`) et les lignes réelles en base de données, créées
  *  par la migration `20260730_season_foundation.sql`. Les programmes
- *  (TV/SV/NV/TVA/SVA) et catégories (2017/2016/2015/2014-2013) partagent
+ *  (TV/SV/NV/TVA/SVA) et catégories (2017/2016/2015/2014-2013 — la
+ *  catégorie "2017" regroupe les naissances 2017 et 2018, id inchangé)
+ *  partagent
  *  déjà le même identifiant des deux côtés — seules les plages horaires
  *  ont un UUID généré, d'où cette table de correspondance figée. */
 

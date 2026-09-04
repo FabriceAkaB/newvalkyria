@@ -12,7 +12,7 @@ export type BirthYear = "2017" | "2016" | "2015" | "2014-2013";
 export const BIRTH_YEARS: BirthYear[] = ["2017", "2016", "2015", "2014-2013"];
 
 export const BIRTH_YEAR_LABELS: Record<BirthYear, string> = {
-  "2017": "2017",
+  "2017": "2017–2018",
   "2016": "2016",
   "2015": "2015",
   "2014-2013": "2014–2013"
@@ -27,12 +27,15 @@ export function getBirthYearsFor(variant: "public" | "advanced"): BirthYear[] {
 
 /** Détecte automatiquement la catégorie (année de naissance) à partir d'une
  *  date de naissance — utilisé pour pré-remplir le tunnel depuis un profil
- *  enfant enregistré. Les naissances 2014 et avant tombent dans le groupe le
- *  plus âgé disponible (2014–2013), faute de catégorie plus ancienne. */
+ *  enfant enregistré. La catégorie "2017" regroupe les naissances 2017 ET
+ *  2018 (id technique inchangé, seul le libellé affiché est "2017–2018").
+ *  Les naissances 2014 et avant tombent dans le groupe le plus âgé
+ *  disponible (2014–2013), faute de catégorie plus ancienne. */
 export function birthYearFromDob(dob: string): BirthYear | null {
   const year = new Date(dob).getFullYear();
   if (Number.isNaN(year)) return null;
-  if (year >= 2015 && year <= 2017) return String(year) as BirthYear;
+  if (year === 2018 || year === 2017) return "2017";
+  if (year === 2016 || year === 2015) return String(year) as BirthYear;
   if (year <= 2014) return "2014-2013";
   return null;
 }
