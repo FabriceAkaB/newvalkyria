@@ -8237,7 +8237,9 @@ body {
 }
 
 /* ── Photo d'équipe (entre CTA et avis) ──────────────────────── */
-.nv-cta-photo { position: relative; width: 100%; height: 60vw; max-height: 520px; min-height: 260px; }
+/* aspect-ratio proche du format réel de la photo (2000×996) pour qu'object-cover
+   ne recadre presque rien — aucun visage ne doit être coupé. */
+.nv-cta-photo { position: relative; width: 100%; aspect-ratio: 2000 / 996; max-height: 900px; }
 
 /* ── Reviews ──────────────────────────────────────────────────── */
 .nv-reviews { background: #100e21; padding: 7rem 0; }
