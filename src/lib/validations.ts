@@ -60,7 +60,8 @@ const seasonPlayerFieldsSchema = {
 
 export const seasonTrialSchema = z.object({
   ...seasonPlayerFieldsSchema,
-  trialSlotId: z.string().optional()
+  trialSlotId: z.string().optional(),
+  playerLevel: z.string().optional()
 });
 
 export const seasonCheckoutSchema = z.object({

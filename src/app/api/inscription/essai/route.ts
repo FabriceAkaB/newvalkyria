@@ -12,11 +12,13 @@ export async function POST(request: Request) {
     const payload = seasonTrialSchema.parse(await request.json());
 
     let trialDate: string | null = null;
+    let slotSummary: string | null = null;
     if (payload.trialSlotId) {
       const slot = await getTrialSlotById(payload.trialSlotId);
       if (!slot) return jsonError("Cette date d'essai n'existe plus.", 404);
       if (slot.isFull) return jsonError("Cette date d'essai est déjà complète — merci d'en choisir une autre.", 409);
       trialDate = slot.slot_date;
+      slotSummary = `${new Date(slot.slot_date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })} · ${slot.start_time}–${slot.end_time} · ${slot.location}`;
     }
 
     const id = await createRegistration({
@@ -42,10 +44,12 @@ export async function POST(request: Request) {
       email: payload.parentEmail,
       phone: payload.parentPhone,
       player_age: payload.playerDob ? payload.playerDob.slice(0, 4) : "essai",
-      player_level: "Intermédiaire",
+      player_level: (["Débutante", "Intermédiaire", "Élite", "D1", "D2", "D3"] as const).includes(payload.playerLevel as any)
+        ? (payload.playerLevel as "Débutante" | "Intermédiaire" | "Élite" | "D1" | "D2" | "D3")
+        : "Intermédiaire",
       city: payload.city,
       goal: "Essai gratuit — Automne/Hiver 2026",
-      availability: "À planifier",
+      availability: slotSummary ?? "À planifier avec la famille",
       consent: true,
       player_name: `${payload.playerFirstName} ${payload.playerLastName}`.trim()
     }).catch((err) => console.error("Trial admin notification email error:", err));

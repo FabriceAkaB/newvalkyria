@@ -199,6 +199,7 @@ async function submitTrial(data: InscriptionFormData, trialSlotId?: string): Pro
         playerFirstName: data.plFirst,
         playerLastName: data.plLast,
         playerDob: data.plDob || undefined,
+        playerLevel: data.plLevel || undefined,
         trialSlotId
       })
     });
