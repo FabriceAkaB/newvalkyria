@@ -3,13 +3,21 @@ import { ZodError } from "zod";
 
 import { sendLeadNotificationEmail, sendSeasonTrialConfirmationEmail } from "@/lib/email";
 import { jsonError } from "@/lib/http";
-import { createRegistration } from "@/lib/season-admin-repo";
+import { createRegistration, getTrialSlotById } from "@/lib/season-admin-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { seasonTrialSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
   try {
     const payload = seasonTrialSchema.parse(await request.json());
+
+    let trialDate: string | null = null;
+    if (payload.trialSlotId) {
+      const slot = await getTrialSlotById(payload.trialSlotId);
+      if (!slot) return jsonError("Cette date d'essai n'existe plus.", 404);
+      if (slot.isFull) return jsonError("Cette date d'essai est déjà complète — merci d'en choisir une autre.", 409);
+      trialDate = slot.slot_date;
+    }
 
     const id = await createRegistration({
       seasonId: SEASON_DB_ID,
@@ -24,7 +32,9 @@ export async function POST(request: Request) {
       playerLastName: payload.playerLastName,
       playerDob: payload.playerDob ?? null,
       advancedGroup: false,
-      isTrial: true
+      isTrial: true,
+      trialSlotId: payload.trialSlotId ?? null,
+      trialDate
     });
 
     void sendLeadNotificationEmail({

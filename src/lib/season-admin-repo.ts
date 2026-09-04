@@ -540,6 +540,10 @@ export interface CreateRegistrationInput {
   /** Trace la provenance quand cette inscription a été créée en transférant
    *  un lead Été 2026 vers cette saison (voir transferLeadToSeason). */
   transferredFromLeadId?: string | null;
+  /** Date d'essai choisie publiquement (voir trial_slots) — distinct de
+   *  trialDate assigné manuellement par l'admin après coup. */
+  trialSlotId?: string | null;
+  trialDate?: string | null;
 }
 
 export async function createRegistration(input: CreateRegistrationInput): Promise<string> {
@@ -569,6 +573,8 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
       is_trial: input.isTrial,
       status: input.status ?? "pending",
       transferred_from_lead_id: input.transferredFromLeadId ?? null,
+      trial_slot_id: input.trialSlotId ?? null,
+      trial_date: input.trialDate ?? null,
       player_id: playerId
     })
     .select("id")
@@ -1191,4 +1197,60 @@ export async function getUnassignedSoloEligibleRegistrations(seasonId: string): 
 
   const assignedIds = new Set((members ?? []).map((m: { registration_id: string }) => m.registration_id));
   return ((registrations ?? []) as Registration[]).filter((r) => !assignedIds.has(r.id));
+}
+
+/* ── Dates d'essai sélectionnables publiquement (trial_slots) ────────
+ *  Capacité comptée en direct (jamais stockée) — même patron que
+ *  countActiveRegistrations pour les plages horaires régulières. */
+
+export interface TrialSlot {
+  id: string;
+  slot_date: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  max_places: number;
+  eligible_birth_years: string[];
+  eligible_levels: string[] | null;
+  active: boolean;
+}
+
+export interface TrialSlotWithAvailability extends TrialSlot {
+  taken: number;
+  remaining: number;
+  isFull: boolean;
+}
+
+export async function getActiveTrialSlots(): Promise<TrialSlotWithAvailability[]> {
+  const supabase = db();
+  const { data: slots, error } = await supabase
+    .from("trial_slots")
+    .select("*")
+    .eq("active", true)
+    .order("slot_date", { ascending: true });
+  if (error) throw new Error(error.message);
+
+  const slotIds = (slots ?? []).map((s: TrialSlot) => s.id);
+  const takenBySlot = new Map<string, number>();
+  if (slotIds.length > 0) {
+    const { data: regs, error: regError } = await supabase
+      .from("registrations")
+      .select("trial_slot_id")
+      .in("trial_slot_id", slotIds)
+      .neq("status", "cancelled");
+    if (regError) throw new Error(regError.message);
+    for (const r of (regs ?? []) as { trial_slot_id: string }[]) {
+      takenBySlot.set(r.trial_slot_id, (takenBySlot.get(r.trial_slot_id) ?? 0) + 1);
+    }
+  }
+
+  return ((slots ?? []) as TrialSlot[]).map((s) => {
+    const taken = takenBySlot.get(s.id) ?? 0;
+    return { ...s, taken, remaining: Math.max(0, s.max_places - taken), isFull: taken >= s.max_places };
+  });
+}
+
+export async function getTrialSlotById(id: string): Promise<TrialSlotWithAvailability | null> {
+  const slots = await getActiveTrialSlots();
+  return slots.find((s) => s.id === id) ?? null;
 }

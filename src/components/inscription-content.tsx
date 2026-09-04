@@ -186,7 +186,7 @@ function SessionCard({ title, session }: { title: string; session: SessionPrevie
   );
 }
 
-async function submitTrial(data: InscriptionFormData): Promise<{ ok: boolean; error?: string }> {
+async function submitTrial(data: InscriptionFormData, trialSlotId?: string): Promise<{ ok: boolean; error?: string }> {
   try {
     const res = await fetch("/api/inscription/essai", {
       method: "POST",
@@ -198,7 +198,8 @@ async function submitTrial(data: InscriptionFormData): Promise<{ ok: boolean; er
         city: data.accCity,
         playerFirstName: data.plFirst,
         playerLastName: data.plLast,
-        playerDob: data.plDob || undefined
+        playerDob: data.plDob || undefined,
+        trialSlotId
       })
     });
     if (!res.ok) {
@@ -299,22 +300,80 @@ export function InscriptionContent({ variant = "public" }: { variant?: Variant }
 /* ════════════════════════════════════════════════════════════
    Essai gratuit — formulaire seul, sans programme/plage/paiement
    ════════════════════════════════════════════════════════════ */
+interface TrialSlotOption {
+  id: string;
+  slot_date: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  eligible_birth_years: string[];
+  eligible_levels: string[] | null;
+  remaining: number;
+  isFull: boolean;
+}
+
+function formatTrialSlotDate(iso: string): string {
+  return new Date(iso + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" });
+}
+
 function TrialFlow() {
   const [submit, setSubmit] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
   const account = useParentAccount();
   const { showPicker, initialData, handlePick, handleSkip } = useChildQuickPick(account);
 
-  const handleComplete = async (data: InscriptionFormData) => {
+  const [step, setStep] = useState<"form" | "slot">("form");
+  const [pendingData, setPendingData] = useState<InscriptionFormData | null>(null);
+  const [eligibleSlots, setEligibleSlots] = useState<TrialSlotOption[]>([]);
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
+  const finalizeSubmit = async (data: InscriptionFormData, trialSlotId?: string) => {
     setSubmit("loading");
     setError(null);
-    const result = await submitTrial(data);
+    const result = await submitTrial(data, trialSlotId);
     if (!result.ok) {
       setError(result.error ?? "Une erreur est survenue.");
       setSubmit("idle");
       return;
     }
     setSubmit("done");
+  };
+
+  const handleComplete = async (data: InscriptionFormData) => {
+    if (!data.plDob || data.plDob.length < 4) {
+      await finalizeSubmit(data);
+      return;
+    }
+    setLoadingSlots(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/inscription/essai/creneaux");
+      const body = await res.json();
+      const birthYear = data.plDob.slice(0, 4);
+      const eligible: TrialSlotOption[] = (body.slots ?? []).filter(
+        (s: TrialSlotOption) =>
+          s.eligible_birth_years.includes(birthYear) &&
+          (s.eligible_levels === null || (data.plLevel && s.eligible_levels.includes(data.plLevel)))
+      );
+      if (eligible.length === 0) {
+        await finalizeSubmit(data);
+        return;
+      }
+      setPendingData(data);
+      setEligibleSlots(eligible);
+      setStep("slot");
+    } catch {
+      // Si la liste des dates échoue à charger, ne bloque pas la demande d'essai.
+      await finalizeSubmit(data);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  const handleConfirmSlot = async () => {
+    if (!pendingData) return;
+    await finalizeSubmit(pendingData, selectedSlotId ?? undefined);
   };
 
   return (
@@ -326,8 +385,8 @@ function TrialFlow() {
             <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Essai gratuit · Automne–Hiver 2027</p>
             <h1 className="insc-hero-title">Essai gratuit</h1>
             <p className="insc-hero-sub">
-              Aucun programme ni horaire à choisir. Remplissez le formulaire : nous vous contacterons pour
-              planifier une séance d&apos;essai gratuite adaptée à votre joueuse.
+              Remplissez le formulaire : selon l&apos;âge et le niveau de votre joueuse, vous pourrez peut-être
+              choisir directement la date de sa séance d&apos;essai gratuite.
             </p>
             <SectionSwitch variant="trial" />
           </div>
@@ -339,7 +398,51 @@ function TrialFlow() {
           {submit === "done" ? (
             <div className="nv27-pay-done">
               <span className="nv27-pay-done-icon">✓</span>
-              <p>Votre demande d&apos;essai gratuit a bien été reçue. Notre équipe vous contactera sous peu pour planifier la séance.</p>
+              <p>
+                {selectedSlotId
+                  ? "Votre demande d'essai gratuit a bien été reçue — la date choisie est confirmée."
+                  : "Votre demande d'essai gratuit a bien été reçue. Notre équipe vous contactera sous peu pour planifier la séance."}
+              </p>
+            </div>
+          ) : step === "slot" ? (
+            <div className="nv27-step">
+              <p className="nv27-step-kicker"><span className="nv27-step-n">2</span> Choisissez la date de l&apos;essai</p>
+              {error && <p className="nv27-pay-error">{error}</p>}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", margin: "1rem 0 1.5rem" }}>
+                {eligibleSlots.map((s) => {
+                  const active = selectedSlotId === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      disabled={s.isFull}
+                      onClick={() => setSelectedSlotId(s.id)}
+                      className={active ? "nv27-btn-primary" : "nv27-btn-ghost"}
+                      style={{ textAlign: "left", padding: "0.8rem 1rem", opacity: s.isFull ? 0.5 : 1 }}
+                    >
+                      <strong style={{ textTransform: "capitalize" }}>{formatTrialSlotDate(s.slot_date)}</strong>
+                      {" · "}{s.start_time}–{s.end_time} · {s.location}
+                      {s.isFull ? " — Complet" : ` — ${s.remaining} place${s.remaining > 1 ? "s" : ""} restante${s.remaining > 1 ? "s" : ""}`}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                className="nv27-btn-primary nv27-btn-pay"
+                disabled={!selectedSlotId || submit === "loading"}
+                onClick={handleConfirmSlot}
+              >
+                {submit === "loading" ? "..." : "Confirmer cette date →"}
+              </button>
+              <button
+                type="button"
+                onClick={() => pendingData && finalizeSubmit(pendingData)}
+                disabled={submit === "loading"}
+                style={{ display: "block", margin: "0.8rem auto 0", background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", cursor: "pointer", textDecoration: "underline" }}
+              >
+                Aucune de ces dates ne convient — nous contacter pour planifier autrement
+              </button>
             </div>
           ) : (
             <div className="nv27-step">
@@ -348,7 +451,7 @@ function TrialFlow() {
               {showPicker && account ? (
                 <ChildQuickPick account={account} onPick={handlePick} onSkip={handleSkip} />
               ) : (
-                <InscriptionForm onComplete={handleComplete} finalLabel="Envoyer ma demande →" initialData={initialData} />
+                <InscriptionForm onComplete={handleComplete} finalLabel={loadingSlots ? "..." : "Envoyer ma demande →"} initialData={initialData} />
               )}
             </div>
           )}
