@@ -27,7 +27,11 @@ export default async function AdminSaisonEssaisPage({ params }: { params: Promis
     getSeasonRegistrations(seasonId)
   ]);
 
-  const trials = registrations.filter((r) => r.is_trial);
+  // Une inscription annulée n'a plus besoin de gestion de date d'essai — la
+  // garder ici créait des doublons visuellement identiques à une inscription
+  // active du même nom (ex. une famille qui recommence après une première
+  // tentative annulée), au risque de modifier la date sur la mauvaise fiche.
+  const trials = registrations.filter((r) => r.is_trial && r.status !== "cancelled");
 
   return (
     <AdminSaisonEssais
