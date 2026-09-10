@@ -359,6 +359,35 @@ export function AdminSportEtudes({
   const [savingCapacity, setSavingCapacity] = useState(false);
   const [savingManualSpots, setSavingManualSpots] = useState(false);
   const [registrations, setRegistrations] = useState(initialRegistrations);
+  const [copyingEmails, setCopyingEmails] = useState(false);
+  const [copyEmailsMessage, setCopyEmailsMessage] = useState<string | null>(null);
+
+  const copyEmails = async () => {
+    setCopyingEmails(true);
+    setCopyEmailsMessage(null);
+    try {
+      const emails = Array.from(
+        new Set(
+          registrations
+            .filter((r) => r.status !== "cancelled")
+            .map((r) => r.parent_email.trim().toLowerCase())
+        )
+      ).sort();
+      if (emails.length === 0) {
+        setCopyEmailsMessage("Aucun courriel trouvé.");
+        return;
+      }
+      const joined = emails.join("; ");
+      try {
+        await navigator.clipboard.writeText(joined);
+        setCopyEmailsMessage(`${emails.length} courriel(s) copié(s) dans le presse-papier.`);
+      } catch {
+        window.prompt(`Copie manuelle (Ctrl+C / Cmd+C) — ${emails.length} courriel(s) :`, joined);
+      }
+    } finally {
+      setCopyingEmails(false);
+    }
+  };
 
   const refreshSessions = async () => {
     const res = await fetch("/api/admin/sport-etudes/sessions");
@@ -463,7 +492,13 @@ export function AdminSportEtudes({
           <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: "0.6rem" }}>Séances</p>
           {sessions.map((s) => <SessionRow key={s.id} session={s} onSaved={refreshSessions} />)}
 
-          <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", margin: "1.5rem 0 0.6rem" }}>Inscrits ({registrations.length})</p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "1.5rem 0 0.6rem", flexWrap: "wrap", gap: "0.5rem" }}>
+            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", margin: 0 }}>Inscrits ({registrations.length})</p>
+            <button className="admin-btn-ghost" onClick={copyEmails} disabled={copyingEmails} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>
+              {copyingEmails ? "..." : "📋 Copier tous les courriels"}
+            </button>
+          </div>
+          {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
           {registrations.length === 0 && <p className="admin-empty-text">Aucune inscription pour l&apos;instant.</p>}
           {registrations.map((r) => (
             <RegistrationRow
