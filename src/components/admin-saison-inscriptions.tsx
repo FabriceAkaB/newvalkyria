@@ -569,6 +569,8 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("date_desc");
   const [selected, setSelected] = useState<Registration | null>(null);
+  const [copyingEmails, setCopyingEmails] = useState(false);
+  const [copyEmailsMessage, setCopyEmailsMessage] = useState<string | null>(null);
 
   const categoryLabel = (id: string | null) => categories.find((c) => c.id === id)?.label ?? "—";
   const programName = (id: string | null) => (id ? (programs.find((p) => p.id === id)?.name ?? id) : "—");
@@ -651,6 +653,33 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
     URL.revokeObjectURL(url);
   };
 
+  const copyEmails = async () => {
+    setCopyingEmails(true);
+    setCopyEmailsMessage(null);
+    try {
+      const emails = Array.from(
+        new Set(
+          registrations
+            .filter((r) => r.status !== "cancelled")
+            .map((r) => r.parent_email.trim().toLowerCase())
+        )
+      ).sort();
+      if (emails.length === 0) {
+        setCopyEmailsMessage("Aucun courriel trouvé.");
+        return;
+      }
+      const joined = emails.join("; ");
+      try {
+        await navigator.clipboard.writeText(joined);
+        setCopyEmailsMessage(`${emails.length} courriel(s) copié(s) dans le presse-papier.`);
+      } catch {
+        window.prompt(`Copie manuelle (Ctrl+C / Cmd+C) — ${emails.length} courriel(s) :`, joined);
+      }
+    } finally {
+      setCopyingEmails(false);
+    }
+  };
+
   return (
     <>
       <AdminTopbar />
@@ -658,8 +687,14 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
         <div className="admin-section">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Inscriptions ({registrations.length})</p>
-            <button onClick={handleExportCSV} className="admin-export-btn" title="Exporter la sélection en CSV">↓ Exporter CSV</button>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <button onClick={copyEmails} disabled={copyingEmails} className="admin-export-btn" title="Copier tous les courriels des inscriptions actives">
+                {copyingEmails ? "..." : "📋 Copier tous les courriels"}
+              </button>
+              <button onClick={handleExportCSV} className="admin-export-btn" title="Exporter la sélection en CSV">↓ Exporter CSV</button>
+            </div>
           </div>
+          {copyEmailsMessage && <p style={{ fontSize: "0.72rem", color: "#8fce9f", margin: "-0.75rem 0 1rem" }}>{copyEmailsMessage}</p>}
 
           <div className="admin-filters-row">
             <div className="admin-filters">
