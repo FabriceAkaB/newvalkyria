@@ -175,6 +175,7 @@ const REGISTRATION_STATUSES: { value: RegistrationStatus; label: string }[] = [
   { value: "pending", label: "En attente" },
   { value: "confirmed", label: "Confirmée" },
   { value: "paid", label: "Payée" },
+  { value: "waitlist", label: "Liste d'attente" },
   { value: "cancelled", label: "Annulée" }
 ];
 
@@ -261,7 +262,7 @@ function RegistrationRow({
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span className="admin-badge">{registration.status}</span>
+          <span className="admin-badge">{REGISTRATION_STATUSES.find((s) => s.value === registration.status)?.label ?? registration.status}</span>
           <button onClick={load} className="admin-btn-ghost" style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>{open ? "▾" : "▸"} Détails</button>
         </div>
       </div>
@@ -427,6 +428,9 @@ export function AdminSportEtudes({
   const fullProgramCount = activeRegistrations.filter((r) => r.option_chosen === "full_program").length;
   const paidCount = activeRegistrations.filter((r) => r.status === "paid").length;
   const pendingCount = activeRegistrations.filter((r) => r.status === "pending" || r.status === "confirmed").length;
+  const waitlistCount = activeRegistrations.filter((r) => r.status === "waitlist").length;
+  const waitlisted = registrations.filter((r) => r.status === "waitlist");
+  const nonWaitlisted = registrations.filter((r) => r.status !== "waitlist");
 
   return (
     <>
@@ -458,6 +462,10 @@ export function AdminSportEtudes({
             <div className="admin-stat-card admin-stat-card-warn">
               <p className="admin-stat-value">{pendingCount}</p>
               <p className="admin-stat-label">En attente</p>
+            </div>
+            <div className="admin-stat-card admin-stat-card-warn">
+              <p className="admin-stat-value">{waitlistCount}</p>
+              <p className="admin-stat-label">Liste d&apos;attente</p>
             </div>
             <div className="admin-stat-card">
               <p className="admin-stat-value">{Math.max(0, maxCapacity - fullCount)}</p>
@@ -499,8 +507,23 @@ export function AdminSportEtudes({
             </button>
           </div>
           {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
+
+          {waitlisted.length > 0 && (
+            <div style={{ marginBottom: "1.25rem" }}>
+              <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#f0c878", marginBottom: "0.6rem" }}>Liste d&apos;attente ({waitlisted.length})</p>
+              {waitlisted.map((r) => (
+                <RegistrationRow
+                  key={r.id}
+                  registration={r}
+                  onStatusChanged={(status) => setRegistrations((prev) => prev.map((x) => (x.id === r.id ? { ...x, status } : x)))}
+                  onDeleted={() => setRegistrations((prev) => prev.filter((x) => x.id !== r.id))}
+                />
+              ))}
+            </div>
+          )}
+
           {registrations.length === 0 && <p className="admin-empty-text">Aucune inscription pour l&apos;instant.</p>}
-          {registrations.map((r) => (
+          {nonWaitlisted.map((r) => (
             <RegistrationRow
               key={r.id}
               registration={r}

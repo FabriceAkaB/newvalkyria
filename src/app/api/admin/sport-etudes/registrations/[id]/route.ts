@@ -5,7 +5,7 @@ import { logAudit } from "@/lib/audit-repo";
 import { jsonError } from "@/lib/http";
 import { deleteRegistration, getRegistrationById, updateRegistrationStatus, type RegistrationStatus } from "@/lib/sport-etudes-repo";
 
-const VALID_STATUSES: readonly string[] = ["pending", "confirmed", "paid", "cancelled"] satisfies readonly RegistrationStatus[];
+const VALID_STATUSES: readonly string[] = ["pending", "confirmed", "paid", "waitlist", "cancelled"] satisfies readonly RegistrationStatus[];
 const ACTOR_LABEL: Record<"admin" | "gerante", string> = { admin: "JP", gerante: "Gérante" };
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

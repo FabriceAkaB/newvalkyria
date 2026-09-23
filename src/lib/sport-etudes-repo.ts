@@ -6,7 +6,7 @@ function db() {
 
 export type SessionKind = "diagnostic_gratuit" | "seance_payante" | "diagnostic_final";
 export type RegistrationOption = "diagnostic_only" | "full_program";
-export type RegistrationStatus = "pending" | "confirmed" | "paid" | "cancelled";
+export type RegistrationStatus = "pending" | "confirmed" | "paid" | "waitlist" | "cancelled";
 export type AttendanceStatus = "present" | "absent" | "justified_absent" | "to_confirm";
 export type NotePhase = "initial" | "final";
 
