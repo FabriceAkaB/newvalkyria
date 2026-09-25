@@ -26,7 +26,7 @@ const academyStats = [
 ];
 
 const whyChooseUs = [
-  { id: "01", title: "Présents dans 3 villes",              text: "Saint-Jérôme, Terrebonne, Sainte-Thérèse — proche de chez vous dans les Laurentides.",                        image: whyLocationsImg },
+  { id: "01", title: "Présents dans 3 villes",              text: "Prévost, Terrebonne, Sainte-Thérèse — proche de chez vous dans les Laurentides.",                        image: whyLocationsImg },
   { id: "02", title: "Horaires flexibles",                  text: "Plus de 2 plages horaires et plus par catégorie d'âge, pour faciliter votre calendrier et vos autres activités.", image: p1img },
   { id: "03", title: "Pensé pour les grandes familles",     text: "Des plages horaires qui s'adaptent, même avec plusieurs enfants inscrits à l'académie.",                        image: p2img },
 ];

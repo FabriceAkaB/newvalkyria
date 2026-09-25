@@ -114,8 +114,8 @@ export const faqItems: FAQItem[] = [
   {
     id: "faq-4",
     question: "Où se déroulent les entraînements?",
-    answer: "Dans les Laurentides: Terrebonne, Sainte-Thérèse, Saint-Jérôme et Rosemère selon les blocs de saison."
+    answer: "Dans les Laurentides: Terrebonne, Sainte-Thérèse, Prévost et Rosemère selon les blocs de saison."
   }
 ];
 
-export const locations = ["Terrebonne", "Sainte-Thérèse", "Saint-Jérôme", "Rosemère"];
+export const locations = ["Terrebonne", "Sainte-Thérèse", "Prévost", "Rosemère"];

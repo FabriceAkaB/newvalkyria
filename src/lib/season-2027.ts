@@ -336,11 +336,11 @@ const SLOTS: SlotDef[] = [
   { id: "mer-3", day: "Mercredi", time: "18 h 00 – 19 h 25", location: "Sainte-Thérèse", max: 8, taken: 0, programs: ["TV", "SV", "NV"], years: ["2016"] },
   { id: "mer-4", day: "Mercredi", time: "18 h 00 – 19 h 25", location: "Sainte-Thérèse", max: 8, taken: 0, programs: ["TV", "SV", "NV"], years: ["2017"] },
 
-  // Jeudi — Saint-Jérôme
-  { id: "jeu-1", day: "Jeudi", time: "18 h 00 – 19 h 25", location: "Saint-Jérôme", max: 8, taken: 4, programs: ["TV", "SV", "NV", "TVA", "SVA"], years: ["2016"] },
-  { id: "jeu-2", day: "Jeudi", time: "18 h 00 – 19 h 25", location: "Saint-Jérôme", max: 8, taken: 3, programs: ["TV", "SV", "NV"], years: ["2017"] },
-  { id: "jeu-3", day: "Jeudi", time: "19 h 30 – 20 h 55", location: "Saint-Jérôme", max: 8, taken: 5, programs: ["TV", "SV", "NV", "TVA", "SVA"], years: ["2015"] },
-  { id: "jeu-4", day: "Jeudi", time: "19 h 30 – 20 h 55", location: "Saint-Jérôme", max: 8, taken: 4, programs: ["TV", "SV", "NV"], years: ["2014-2013"] }
+  // Jeudi — École des Falaises, Prévost
+  { id: "jeu-1", day: "Jeudi", time: "18 h 30 – 19 h 45", location: "École des Falaises, Prévost", max: 8, taken: 4, programs: ["TV", "SV", "NV", "TVA", "SVA"], years: ["2016"] },
+  { id: "jeu-2", day: "Jeudi", time: "18 h 30 – 19 h 45", location: "École des Falaises, Prévost", max: 8, taken: 3, programs: ["TV", "SV", "NV"], years: ["2017"] },
+  { id: "jeu-3", day: "Jeudi", time: "19 h 50 – 21 h 05", location: "École des Falaises, Prévost", max: 8, taken: 5, programs: ["TV", "SV", "NV", "TVA", "SVA"], years: ["2015"] },
+  { id: "jeu-4", day: "Jeudi", time: "19 h 50 – 21 h 05", location: "École des Falaises, Prévost", max: 8, taken: 4, programs: ["TV", "SV", "NV"], years: ["2014-2013"] }
 
   // Vendredi — plus de pratique technique de groupe : les plages sont dédiées
   // aux séances individuelles (solo) des programmes SV/SVA (voir solo_groups en base).

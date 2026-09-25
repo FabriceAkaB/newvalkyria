@@ -68,7 +68,7 @@ const organizationJsonLd = {
     addressRegion: "QC",
     addressCountry: "CA"
   },
-  areaServed: ["Terrebonne", "Sainte-Thérèse", "Saint-Jérôme", "Rosemère"].map((name) => ({
+  areaServed: ["Terrebonne", "Sainte-Thérèse", "Prévost", "Rosemère"].map((name) => ({
     "@type": "City",
     name
   })),

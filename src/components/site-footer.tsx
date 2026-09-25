@@ -60,7 +60,7 @@ export function SiteFooter() {
             <ul className="footer-link-list text-white/40">
               <li>Terrebonne</li>
               <li>Sainte-Thérèse</li>
-              <li>Saint-Jérôme</li>
+              <li>Prévost</li>
               <li>Rosemère</li>
             </ul>
           </div>
