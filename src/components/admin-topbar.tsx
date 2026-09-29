@@ -54,16 +54,18 @@ const SEASON_AUTOMNE_HIVER_LINKS: { href: string; label: string; icon: IconName 
   { href: "/admin/saison/automne-hiver-2026/horaire", label: "Horaire", icon: "grid" },
   { href: "/admin/saison/automne-hiver-2026/solo", label: "Solo", icon: "user" },
   { href: "/admin/privilege-valkyria", label: "Privilège Valkyria", icon: "flask" },
+  { href: "/admin/essais-dates", label: "Dates d'essai", icon: "grid" },
+];
+
+/** Vue combinée des essais des deux saisons — reste visible peu importe la
+ *  saison choisie dans le sélecteur ci-dessous. */
+const SEASON_SHARED_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/essais-calendrier", label: "Calendrier essais (les 2 saisons)", icon: "calendar" },
 ];
 
 const BOUTIQUE_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/boutique", label: "Produits", icon: "tag" },
   { href: "/admin/boutique/commandes", label: "Commandes", icon: "bag" },
-];
-
-const ESSAIS_LINKS: { href: string; label: string; icon: IconName }[] = [
-  { href: "/admin/essais-calendrier", label: "Calendrier essais", icon: "calendar" },
-  { href: "/admin/essais-dates", label: "Dates d'essai (Aut./Hiver)", icon: "grid" },
 ];
 
 const CALENDRIER_LINKS: { href: string; label: string; icon: IconName }[] = [
@@ -122,7 +124,15 @@ interface Group {
   /** Masqué pour les rôles autres qu'"admin" (ex. Gérante) — sections
    *  financières et sensibles. */
   adminOnly?: boolean;
+  /** Groupe "Saison" — bascule Été/Automne-Hiver en un clic plutôt que
+   *  d'occuper deux sections distinctes dans le menu. */
+  isSeasonSwitcher?: boolean;
 }
+
+const SEASON_LINKS_BY_KEY: Record<"ete" | "automne-hiver", { href: string; label: string; icon: IconName }[]> = {
+  ete: SEASON_ETE_LINKS,
+  "automne-hiver": SEASON_AUTOMNE_HIVER_LINKS
+};
 
 interface SearchPlayer {
   playerId: string;
@@ -200,13 +210,11 @@ function GlobalSearchBox() {
 }
 
 const GROUPS: Group[] = [
-  { label: "Été 2026", dotColor: "#c8aae0", links: SEASON_ETE_LINKS },
-  { label: "Automne / Hiver 2026", dotColor: "#f0c878", links: SEASON_AUTOMNE_HIVER_LINKS },
+  { label: "Saison", dotColor: "#f0c878", links: [], isSeasonSwitcher: true },
   { label: "Programmes (Garçons)", dotColor: "#78a8f0", links: SPORT_ETUDES_LINKS },
   { label: "Évaluations", dotColor: "#8fce9f", links: EVALUATIONS_LINKS },
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
   { label: "Uniformes", dotColor: "#e0b0d8", links: UNIFORMES_LINKS },
-  { label: "Essais", dotColor: "#88c0d0", links: ESSAIS_LINKS },
   { label: "Calendrier", dotColor: "#c3a6ff", links: CALENDRIER_LINKS },
   { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS, adminOnly: true },
   { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS, adminOnly: true },
@@ -218,6 +226,17 @@ export function AdminTopbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [role, setRole] = useState<"admin" | "gerante" | null>(null);
+  // Si la page affichée appartient clairement à une saison, on part de
+  // celle-là (déterministe, identique serveur/client) ; sinon "automne-hiver"
+  // par défaut. Le sélecteur bascule l'affichage pour la page courante — un
+  // choix volontairement par page plutôt qu'une préférence globale, pour
+  // éviter tout aller-retour avec le localStorage à l'hydratation.
+  const pinnedSeason: "ete" | "automne-hiver" | null = SEASON_ETE_LINKS.some((l) => pathname === l.href || pathname.startsWith(`${l.href}/`))
+    ? "ete"
+    : SEASON_AUTOMNE_HIVER_LINKS.some((l) => pathname === l.href || pathname.startsWith(`${l.href}/`))
+      ? "automne-hiver"
+      : null;
+  const [activeSeason, setActiveSeason] = useState<"ete" | "automne-hiver">(pinnedSeason ?? "automne-hiver");
 
   useEffect(() => {
     fetch("/api/admin/session")
@@ -225,6 +244,8 @@ export function AdminTopbar() {
       .then((data: { role: "admin" | "gerante" | null }) => setRole(data.role))
       .catch(() => setRole(null));
   }, []);
+
+  const switchSeason = (season: "ete" | "automne-hiver") => setActiveSeason(season);
 
   const visibleGroups = GROUPS.filter((g) => !g.adminOnly || role === "admin");
 
@@ -245,23 +266,54 @@ export function AdminTopbar() {
       <GlobalSearchBox />
 
       <nav className="admin-sidebar-nav">
-        {visibleGroups.map((group) => (
-          <div className="admin-sidebar-group" key={group.label}>
-            <div className="admin-sidebar-group-head">
-              <span className="admin-sidebar-dot" style={{ background: group.dotColor }} />
-              <span className="admin-sidebar-group-label">{group.label}</span>
+        {visibleGroups.map((group) => {
+          const links = group.isSeasonSwitcher ? [...SEASON_LINKS_BY_KEY[activeSeason], ...SEASON_SHARED_LINKS] : group.links;
+          return (
+            <div className="admin-sidebar-group" key={group.label}>
+              <div className="admin-sidebar-group-head">
+                <span className="admin-sidebar-dot" style={{ background: group.dotColor }} />
+                <span className="admin-sidebar-group-label">{group.label}</span>
+              </div>
+              {group.isSeasonSwitcher && (
+                <div style={{ display: "flex", gap: "0.3rem", padding: "0.2rem 0 0.5rem" }}>
+                  <button
+                    onClick={() => switchSeason("automne-hiver")}
+                    style={{
+                      flex: 1, fontSize: "0.68rem", padding: "0.3rem 0.4rem", borderRadius: "6px", cursor: "pointer",
+                      border: activeSeason === "automne-hiver" ? "1px solid #f0c878" : "1px solid #302e36",
+                      background: activeSeason === "automne-hiver" ? "#3a3020" : "transparent",
+                      color: activeSeason === "automne-hiver" ? "#f0c878" : "#9d9da0",
+                      fontWeight: activeSeason === "automne-hiver" ? 600 : 400
+                    }}
+                  >
+                    Automne / Hiver
+                  </button>
+                  <button
+                    onClick={() => switchSeason("ete")}
+                    style={{
+                      flex: 1, fontSize: "0.68rem", padding: "0.3rem 0.4rem", borderRadius: "6px", cursor: "pointer",
+                      border: activeSeason === "ete" ? "1px solid #c8aae0" : "1px solid #302e36",
+                      background: activeSeason === "ete" ? "#2e2438" : "transparent",
+                      color: activeSeason === "ete" ? "#c8aae0" : "#9d9da0",
+                      fontWeight: activeSeason === "ete" ? 600 : 400
+                    }}
+                  >
+                    Été
+                  </button>
+                </div>
+              )}
+              {links.map((link) => {
+                const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+                return (
+                  <Link key={link.href} href={link.href} data-active={String(isActive)} className="admin-sidebar-link">
+                    <Icon name={link.icon} />
+                    <span>{link.label}</span>
+                  </Link>
+                );
+              })}
             </div>
-            {group.links.map((link) => {
-              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
-              return (
-                <Link key={link.href} href={link.href} data-active={String(isActive)} className="admin-sidebar-link">
-                  <Icon name={link.icon} />
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       <div className="admin-sidebar-footer">
