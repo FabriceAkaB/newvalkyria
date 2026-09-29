@@ -241,6 +241,7 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [statusSavedLabel, setStatusSavedLabel] = useState<string | null>(null);
   const [showTransferToEte, setShowTransferToEte] = useState(false);
   const [transferredToEte, setTransferredToEte] = useState(false);
   const [showTransferToSportEtudes, setShowTransferToSportEtudes] = useState(false);
@@ -249,7 +250,7 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
 
   const slotsForCategory = r.category_id ? slots.filter((s) => s.category_ids.includes(r.category_id!)) : slots;
 
-  const patch = async (body: Record<string, unknown>, optimistic: Partial<Registration>) => {
+  const patch = async (body: Record<string, unknown>, optimistic: Partial<Registration>): Promise<boolean> => {
     setSaving(true);
     setError(null);
     try {
@@ -260,8 +261,10 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
       });
       if (!res.ok) throw new Error("Erreur de sauvegarde");
       onUpdated(optimistic);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -308,7 +311,11 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                   return (
                     <button
                       key={s}
-                      onClick={() => patch({ status: s }, { status: s })}
+                      onClick={async () => {
+                        setStatusSavedLabel(null);
+                        const ok = await patch({ status: s }, { status: s });
+                        if (ok) setStatusSavedLabel(STATUS_LABELS[s]);
+                      }}
                       disabled={saving || isActive}
                       style={{
                         padding: "0.35rem 0.7rem",
@@ -326,6 +333,7 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                   );
                 })}
               </div>
+              {statusSavedLabel && <p style={{ fontSize: "0.72rem", color: "#7fd88f", margin: "0.5rem 0 0" }}>✓ Statut changé pour « {statusSavedLabel} ».</p>}
             </div>
           </div>
 
