@@ -566,6 +566,7 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
   const [registrations, setRegistrations] = useState(initialRegistrations);
   const [filter, setFilter] = useState<FilterType>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [programFilter, setProgramFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("date_desc");
   const [selected, setSelected] = useState<Registration | null>(null);
@@ -594,6 +595,7 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
       if (filter === "all" && r.status === "cancelled") return false;
       if (filter !== "all" && r.status !== filter) return false;
       if (categoryFilter !== "all" && r.category_id !== categoryFilter) return false;
+      if (programFilter !== "all" && r.program_id !== programFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         if (
@@ -711,6 +713,10 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="admin-group-select">
               <option value="all">Tous les groupes</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+            </select>
+            <select value={programFilter} onChange={(e) => setProgramFilter(e.target.value)} className="admin-group-select">
+              <option value="all">Tous les programmes</option>
+              {programs.map((p) => <option key={p.id} value={p.id}>{p.id} — {p.name}</option>)}
             </select>
             <div className="admin-search-wrap">
               <input type="search" placeholder="Rechercher parent, joueuse, courriel…" value={search} onChange={(e) => setSearch(e.target.value)} className="admin-search-input" />
