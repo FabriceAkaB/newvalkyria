@@ -11,6 +11,11 @@ import { PROGRAMS, type ProgramCode } from "@/lib/season-2027";
 import { activatePaymentPlan, completeDirectLinkRegistration, markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
 import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
 import {
+  activatePaymentPlan as activateSessionProgramPaymentPlan,
+  enrollInAllDates,
+  markRegistrationPaidByCheckoutSession as markSessionProgramRegistrationPaid
+} from "@/lib/session-programs-repo";
+import {
   activatePaymentPlan as activateSportEtudesPaymentPlan,
   enrollInAllActiveSessions,
   markRegistrationPaid as markSportEtudesRegistrationPaid
@@ -145,6 +150,38 @@ export async function POST(request: Request) {
           }
         } catch (error) {
           console.error("Unable to activate Sport-Études payment plan", error);
+        }
+      }
+
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Programmes à dates fixes (Privilège Valkyria / Programme Intensif) — paiement unique ou en 2-3 versements ──
+    if (checkoutType === "sessionprogram") {
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
+      const registration = await markSessionProgramRegistrationPaid(session.id, paymentIntentId);
+      if (registration) {
+        await enrollInAllDates(registration.id, registration.program_slug as "privilege-valkyria" | "intensif-garcons");
+        try {
+          await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name });
+        } catch (error) {
+          console.error("Unable to send session-program confirmation email", error);
+        }
+      }
+
+      const paymentPlanId = session.metadata?.paymentPlanId;
+      if (paymentPlanId && paymentIntentId) {
+        try {
+          const stripeCustomerId = typeof session.customer === "string" ? session.customer : undefined;
+          const paymentIntent = await getStripeClient().paymentIntents.retrieve(paymentIntentId);
+          const stripePaymentMethodId = typeof paymentIntent.payment_method === "string" ? paymentIntent.payment_method : undefined;
+          if (stripeCustomerId && stripePaymentMethodId) {
+            await activateSessionProgramPaymentPlan(paymentPlanId, { stripeCustomerId, stripePaymentMethodId, firstInstallmentPaymentIntentId: paymentIntentId });
+          } else {
+            console.error("Session-program payment plan activation missing customer or payment method", { paymentPlanId, stripeCustomerId, stripePaymentMethodId });
+          }
+        } catch (error) {
+          console.error("Unable to activate session-program payment plan", error);
         }
       }
 

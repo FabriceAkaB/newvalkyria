@@ -34,6 +34,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, redirectTo: "/sport-etudes" });
   }
 
+  // Code du Programme Intensif (garçons 2015-2014) — même mécanisme.
+  if (normalized === "216") {
+    return NextResponse.json({ ok: true, redirectTo: "/programmes/intensif-garcons" });
+  }
+
   if (!validCodes().includes(normalized)) {
     return jsonError("Code invalide.", 401);
   }

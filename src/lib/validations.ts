@@ -190,6 +190,22 @@ export const sportEtudesRegistrationSchema = z.object({
 
 export type SportEtudesRegistrationPayload = z.infer<typeof sportEtudesRegistrationSchema>;
 
+export const sessionProgramRegistrationSchema = z.object({
+  programSlug: z.enum(["privilege-valkyria", "intensif-garcons"]),
+  playerFirstName: z.string().min(1, "Prénom du joueur requis"),
+  playerLastName: z.string().min(1, "Nom du joueur requis"),
+  playerDob: z.string().optional(),
+  parentName: z.string().min(1, "Nom du parent requis"),
+  parentEmail: z.string().email("Courriel invalide"),
+  parentPhone: z.string().refine(isValidPhone, "Numéro de téléphone invalide (10 chiffres)"),
+  city: z.string().optional(),
+  comments: z.string().optional(),
+  termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" }),
+  installments: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
+});
+
+export type SessionProgramRegistrationPayload = z.infer<typeof sessionProgramRegistrationSchema>;
+
 export const tryoutEventCreateSchema = z.object({
   name: z.string().min(1, "Nom requis"),
   eventDate: z.string().min(1, "Date requise"),

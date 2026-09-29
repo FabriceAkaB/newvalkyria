@@ -5,6 +5,11 @@ import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
 import { getDueInstallments as getDueSeasonInstallments, markInstallmentFailed as markSeasonInstallmentFailed, markInstallmentPaid as markSeasonInstallmentPaid } from "@/lib/season-admin-repo";
 import {
+  getDueInstallments as getDueSessionProgramInstallments,
+  markInstallmentFailed as markSessionProgramInstallmentFailed,
+  markInstallmentPaid as markSessionProgramInstallmentPaid
+} from "@/lib/session-programs-repo";
+import {
   getDueInstallments as getDueSportEtudesInstallments,
   markInstallmentFailed as markSportEtudesInstallmentFailed,
   markInstallmentPaid as markSportEtudesInstallmentPaid
@@ -21,10 +26,15 @@ export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
   if (auth !== `Bearer ${env.cronSecret}`) return jsonError("Non autorisé", 401);
 
-  const [seasonDue, sportEtudesDue] = await Promise.all([getDueSeasonInstallments(), getDueSportEtudesInstallments()]);
+  const [seasonDue, sportEtudesDue, sessionProgramDue] = await Promise.all([
+    getDueSeasonInstallments(),
+    getDueSportEtudesInstallments(),
+    getDueSessionProgramInstallments()
+  ]);
   const due = [
     ...seasonDue.map((inst) => ({ ...inst, source: "season" as const })),
-    ...sportEtudesDue.map((inst) => ({ ...inst, source: "sportetudes" as const }))
+    ...sportEtudesDue.map((inst) => ({ ...inst, source: "sportetudes" as const })),
+    ...sessionProgramDue.map((inst) => ({ ...inst, source: "sessionprogram" as const }))
   ];
   const stripe = getStripeClient();
 
@@ -55,7 +65,8 @@ export async function GET(request: Request) {
       }
 
       if (inst.source === "season") await markSeasonInstallmentPaid(inst.id, paymentIntent.id);
-      else await markSportEtudesInstallmentPaid(inst.id, paymentIntent.id);
+      else if (inst.source === "sportetudes") await markSportEtudesInstallmentPaid(inst.id, paymentIntent.id);
+      else await markSessionProgramInstallmentPaid(inst.id, paymentIntent.id);
       succeeded++;
 
       void sendInstallmentReceiptEmail({
@@ -72,7 +83,9 @@ export async function GET(request: Request) {
       const { attemptCount, isFinal, wasFirstFailure } =
         inst.source === "season"
           ? await markSeasonInstallmentFailed(inst.id, inst.attempt_count)
-          : await markSportEtudesInstallmentFailed(inst.id, inst.attempt_count);
+          : inst.source === "sportetudes"
+            ? await markSportEtudesInstallmentFailed(inst.id, inst.attempt_count)
+            : await markSessionProgramInstallmentFailed(inst.id, inst.attempt_count);
       if (wasFirstFailure || isFinal) {
         void sendPaymentPlanFailedEmail({
           parentName: inst.parent_name,

@@ -53,6 +53,7 @@ const SEASON_AUTOMNE_HIVER_LINKS: { href: string; label: string; icon: IconName 
   { href: "/admin/saison/automne-hiver-2026/capacite", label: "Capacité", icon: "gauge" },
   { href: "/admin/saison/automne-hiver-2026/horaire", label: "Horaire", icon: "grid" },
   { href: "/admin/saison/automne-hiver-2026/solo", label: "Solo", icon: "user" },
+  { href: "/admin/privilege-valkyria", label: "Privilège Valkyria", icon: "flask" },
 ];
 
 const BOUTIQUE_LINKS: { href: string; label: string; icon: IconName }[] = [
@@ -76,7 +77,8 @@ const COMMUNICATIONS_LINKS: { href: string; label: string; icon: IconName }[] = 
 ];
 
 const SPORT_ETUDES_LINKS: { href: string; label: string; icon: IconName }[] = [
-  { href: "/admin/sport-etudes", label: "Vue d'ensemble", icon: "flask" },
+  { href: "/admin/sport-etudes", label: "Sport-Études", icon: "flask" },
+  { href: "/admin/programme-intensif", label: "Programme Intensif", icon: "flask" },
 ];
 
 const EVALUATIONS_LINKS: { href: string; label: string; icon: IconName }[] = [
@@ -199,7 +201,7 @@ function GlobalSearchBox() {
 const GROUPS: Group[] = [
   { label: "Été 2026", dotColor: "#c8aae0", links: SEASON_ETE_LINKS },
   { label: "Automne / Hiver 2026", dotColor: "#f0c878", links: SEASON_AUTOMNE_HIVER_LINKS },
-  { label: "Sport-Études (Garçons)", dotColor: "#78a8f0", links: SPORT_ETUDES_LINKS },
+  { label: "Programmes (Garçons)", dotColor: "#78a8f0", links: SPORT_ETUDES_LINKS },
   { label: "Évaluations", dotColor: "#8fce9f", links: EVALUATIONS_LINKS },
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
   { label: "Uniformes", dotColor: "#e0b0d8", links: UNIFORMES_LINKS },
