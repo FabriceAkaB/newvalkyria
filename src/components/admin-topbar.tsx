@@ -87,6 +87,7 @@ const EVALUATIONS_LINKS: { href: string; label: string; icon: IconName }[] = [
 
 const SYSTEME_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/audit", label: "Journal d'audit", icon: "shield" },
+  { href: "/admin/exports", label: "Exports MonClubSportif", icon: "list" },
 ];
 
 const UNIFORMES_LINKS: { href: string; label: string; icon: IconName }[] = [
