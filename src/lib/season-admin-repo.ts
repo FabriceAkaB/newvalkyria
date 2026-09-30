@@ -104,6 +104,11 @@ export interface Registration {
   stripe_payment_intent_id: string | null;
   created_at: string;
   updated_at: string;
+  /** Photo permanente de la fiche joueuse (players.photo_url) — peuplée
+   *  seulement par les fonctions qui la joignent explicitement (ex.
+   *  getSeasonRegistrations) ; absente ailleurs, jamais fournie par le
+   *  parent au moment de l'inscription (l'admin la téléverse plus tard). */
+  player_photo_url?: string | null;
 }
 
 /* ── Saisons ───────────────────────────────────────────────────── */
@@ -423,11 +428,14 @@ export async function getSeasonRegistrations(seasonId: string): Promise<Registra
   const supabase = db();
   const { data, error } = await supabase
     .from("registrations")
-    .select("*")
+    .select("*, players(photo_url)")
     .eq("season_id", seasonId)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as Registration[];
+  return (data ?? []).map((row: any) => {
+    const { players, ...rest } = row;
+    return { ...rest, player_photo_url: players?.photo_url ?? null };
+  }) as Registration[];
 }
 
 /** Recherche une joueuse par nom (joueuse ou parent), toutes saisons du

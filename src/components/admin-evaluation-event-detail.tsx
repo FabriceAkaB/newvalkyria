@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { Avatar } from "@/components/admin-avatar";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { cropSquareAndCompress } from "@/lib/image-client";
 import type { AthleteSearchResult, TryoutAttendanceStatus, TryoutEvaluator, TryoutEvent, TryoutParticipantWithPlayer, TryoutTeam } from "@/lib/tryout-repo";
@@ -26,19 +27,6 @@ const ATTENDANCE_LABELS: Record<TryoutAttendanceStatus, string> = {
   parti_tot: "Parti tôt",
   blesse: "Blessé"
 };
-
-function Avatar({ firstName, lastName, photoUrl, colorHex }: { firstName: string; lastName: string; photoUrl: string | null; colorHex?: string }) {
-  const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase();
-  if (photoUrl) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={photoUrl} alt="" style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />;
-  }
-  return (
-    <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: colorHex ?? "#342b40", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-      {initials || "?"}
-    </div>
-  );
-}
 
 function birthYear(dob: string | null): string {
   return dob ? String(new Date(dob + "T00:00:00").getFullYear()) : "—";

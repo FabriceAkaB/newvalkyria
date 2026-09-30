@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 
+import { Avatar } from "@/components/admin-avatar";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { EntityDocuments } from "@/components/admin-entity-documents";
 import { RegistrationRow as SessionProgramRegistrationRow } from "@/components/admin-session-program";
 import { AGE_CATEGORIES, CATEGORY_LABELS } from "@/lib/categories";
+import { cropSquareAndCompress } from "@/lib/image-client";
 import type { BirthCategory, Program, Registration, RegistrationStatus, Season, TimeSlotTemplate } from "@/lib/season-admin-repo";
 import type { RegistrationStatus as SessionProgramRegistrationStatus, SessionProgramRegistration } from "@/lib/session-programs-repo";
 
@@ -328,9 +330,25 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
   const [transferredToSportEtudes, setTransferredToSportEtudes] = useState(false);
   const [showTransferToPrivilegeValkyria, setShowTransferToPrivilegeValkyria] = useState(false);
   const [transferredToPrivilegeValkyria, setTransferredToPrivilegeValkyria] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const expiringSoon = isHalfSeasonExpiringSoon(r);
 
   const slotsForCategory = r.category_id ? slots.filter((s) => s.category_ids.includes(r.category_id!)) : slots;
+
+  const uploadPhoto = async (file: File | undefined) => {
+    if (!file || !r.player_id) return;
+    setUploadingPhoto(true);
+    try {
+      const compressed = await cropSquareAndCompress(file);
+      const formData = new FormData();
+      formData.append("file", compressed);
+      const res = await fetch(`/api/admin/evaluations/players/${r.player_id}/photo`, { method: "POST", body: formData });
+      const data = await res.json().catch(() => null);
+      if (res.ok) onUpdated({ player_photo_url: data.photoUrl });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const patch = async (body: Record<string, unknown>, optimistic: Partial<Registration>): Promise<boolean> => {
     setSaving(true);
@@ -461,6 +479,26 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
 
           <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Joueuse</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.9rem", marginBottom: "0.9rem" }}>
+              <div style={{ position: "relative", flexShrink: 0 }}>
+                <Avatar firstName={r.player_first_name} lastName={r.player_last_name} photoUrl={r.player_photo_url} size={56} />
+                <label
+                  htmlFor="drawer-photo-upload"
+                  title="Ajouter une photo"
+                  style={{
+                    position: "absolute", bottom: "-2px", right: "-2px", width: "22px", height: "22px", borderRadius: "50%",
+                    background: "#251f30", border: "1px solid #17151e", display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", fontSize: "0.68rem"
+                  }}
+                >
+                  {uploadingPhoto ? "…" : "📷"}
+                  <input id="drawer-photo-upload" type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => uploadPhoto(e.target.files?.[0])} />
+                </label>
+              </div>
+              <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>
+                Photo liée à la fiche joueuse — changée ici, elle se met à jour partout (Évaluation, Inscriptions). Aucune photo n&apos;est jamais demandée au parent.
+              </p>
+            </div>
             <div className="admin-drawer-row">
               <label className="admin-field" style={{ gap: "0.3rem" }}>
                 <span className="admin-drawer-label">Prénom</span>
@@ -881,7 +919,12 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
                     <tr key={r.id} className="admin-tr-clickable" onClick={() => setSelected(r)}>
                       <td className="admin-td-date" suppressHydrationWarning>{formatDate(r.created_at)}</td>
                       <td className="admin-td-name">{r.parent_name}</td>
-                      <td className="admin-td-name">{playerName(r)}</td>
+                      <td className="admin-td-name">
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <Avatar firstName={r.player_first_name} lastName={r.player_last_name} photoUrl={r.player_photo_url} size={24} />
+                          {playerName(r)}
+                        </div>
+                      </td>
                       <td className="admin-td-email">{r.parent_email}</td>
                       <td className="admin-td-phone">{r.parent_phone}</td>
                       <td className="admin-td-cat">{categoryLabel(r.category_id)}</td>
