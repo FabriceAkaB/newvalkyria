@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { jsonError } from "@/lib/http";
-import { getIntensifInstallmentPlan, INTENSIF_3X_SURCHARGE_CENTS } from "@/lib/payment-plan";
+import { getIntensifInstallmentPlan } from "@/lib/payment-plan";
 import { findOrCreatePlayer } from "@/lib/players-repo";
 import { getRequestOrigin } from "@/lib/request-origin";
 import {
@@ -29,9 +29,9 @@ export async function POST(request: Request) {
     }
 
     // Le paiement en plusieurs fois n'est offert que sur le Programme Intensif.
-    const installments = payload.programSlug === "intensif-garcons" ? (payload.installments ?? 1) : 1;
-    const totalCents = program.price_cents + (installments === 3 ? INTENSIF_3X_SURCHARGE_CENTS : 0);
-    const installmentPlan = installments > 1 ? getIntensifInstallmentPlan(installments as 2 | 3, new Date(), totalCents) : null;
+    const installments: 1 | 2 = payload.programSlug === "intensif-garcons" && payload.installments === 2 ? 2 : 1;
+    const totalCents = program.price_cents;
+    const installmentPlan = installments === 2 ? getIntensifInstallmentPlan(2, new Date(), totalCents) : null;
 
     const playerId = await findOrCreatePlayer({
       firstName: payload.playerFirstName,

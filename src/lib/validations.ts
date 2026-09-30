@@ -201,7 +201,7 @@ export const sessionProgramRegistrationSchema = z.object({
   city: z.string().optional(),
   comments: z.string().optional(),
   termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" }),
-  installments: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional()
+  installments: z.union([z.literal(1), z.literal(2)]).optional()
 });
 
 export type SessionProgramRegistrationPayload = z.infer<typeof sessionProgramRegistrationSchema>;

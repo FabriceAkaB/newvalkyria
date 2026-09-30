@@ -52,7 +52,6 @@ export function SessionProgramContent({
   intro,
   priceCents,
   allowInstallments,
-  installmentSurchargeCents,
   dates,
   remaining,
   isFull
@@ -63,20 +62,19 @@ export function SessionProgramContent({
   intro: string;
   priceCents: number;
   allowInstallments: boolean;
-  installmentSurchargeCents: number;
   dates: DateRow[];
   remaining: number;
   isFull: boolean;
 }) {
   const router = useRouter();
-  const [installments, setInstallments] = useState<1 | 2 | 3>(1);
+  const [installments, setInstallments] = useState<1 | 2>(1);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const totalCents = priceCents + (installments === 3 ? installmentSurchargeCents : 0);
+  const totalCents = priceCents;
   const firstAmountCents = installments === 1 ? totalCents : Math.ceil(totalCents / installments);
 
   const submit = async () => {
@@ -144,13 +142,9 @@ export function SessionProgramContent({
                     <input type="radio" name="installments" checked={installments === 1} onChange={() => setInstallments(1)} />
                     <span>Payer en totalité aujourd&apos;hui — {fmt(priceCents)}</span>
                   </label>
-                  <label className="nv27-radio" style={{ marginBottom: "0.6rem" }}>
+                  <label className="nv27-radio">
                     <input type="radio" name="installments" checked={installments === 2} onChange={() => setInstallments(2)} />
                     <span>Payer en 2 versements — une moitié aujourd&apos;hui, l&apos;autre à la moitié du programme</span>
-                  </label>
-                  <label className="nv27-radio">
-                    <input type="radio" name="installments" checked={installments === 3} onChange={() => setInstallments(3)} />
-                    <span>Payer en 3 versements — {fmt(priceCents + installmentSurchargeCents)} au total (+{fmt(installmentSurchargeCents)})</span>
                   </label>
                 </div>
               )}

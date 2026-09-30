@@ -38,26 +38,15 @@ export function getInstallmentPlan(now: Date, totalCents: number): InstallmentPl
   return { dueDates, amountsCents };
 }
 
-/** Supplément appliqué au total du Programme Intensif (garçons) lorsque le
- *  parent choisit 3 versements plutôt qu'1 ou 2 — couvre les frais des
- *  prélèvements répétés. */
-export const INTENSIF_3X_SURCHARGE_CENTS = 6000;
-
-/** Plan de paiement pour le Programme Intensif (garçons) — 1, 2 ou 3
- *  versements, calés sur le calendrier réel des séances (pas relatifs à la
- *  date d'inscription) : le 2e versement tombe au milieu du programme, les
- *  versements du plan à 3 tombent au tiers et aux deux tiers. Le supplément
- *  de INTENSIF_3X_SURCHARGE_CENTS doit déjà être inclus dans `totalCents`
- *  par l'appelant lorsque `installments === 3`. */
-export function getIntensifInstallmentPlan(installments: 1 | 2 | 3, now: Date, totalCents: number): InstallmentPlan {
+/** Plan de paiement pour le Programme Intensif (garçons) — 1 ou 2
+ *  versements, calé sur le calendrier réel des séances (pas relatif à la
+ *  date d'inscription) : le 2e versement tombe au milieu du programme. */
+export function getIntensifInstallmentPlan(installments: 1 | 2, now: Date, totalCents: number): InstallmentPlan {
   if (installments === 1) {
     return { dueDates: [now], amountsCents: [totalCents] };
   }
 
-  const dueDates =
-    installments === 2
-      ? [now, new Date("2026-11-03T00:00:00-04:00")]
-      : [now, new Date("2026-10-24T00:00:00-04:00"), new Date("2026-11-07T00:00:00-04:00")];
+  const dueDates = [now, new Date("2026-11-03T00:00:00-04:00")];
 
   const n = dueDates.length;
   const base = Math.floor(totalCents / n);
