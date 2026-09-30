@@ -6173,6 +6173,48 @@ body {
 .admin-btn-primary:hover { background: #342b40; }
 .admin-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Écran de création d'exercice — charte visuelle fournie (Espace
+   Technique), appliquée uniquement ici, nulle part ailleurs dans l'app. ── */
+.exercise-create-panel {
+  font-family: var(--font-exercise-create), sans-serif;
+  background: linear-gradient(165deg, #3a3145 0%, #18141d 55%, #0e0b12 100%);
+  border: 1px solid #7a4fa6;
+  border-radius: 14px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 0 0 1px rgba(115, 74, 155, 0.15), 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.exercise-create-panel__title {
+  font-family: var(--font-display), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e6ddef;
+  margin: 0 0 0.9rem;
+}
+
+.exercise-create-panel .admin-input {
+  background: #17131f;
+  border: 1px solid #4a3e5c;
+  color: #f6f3f9;
+}
+
+.exercise-create-panel .admin-input::placeholder { color: #6b6178; }
+.exercise-create-panel .admin-input:focus { border-color: #c4a6dc; }
+
+.exercise-create-panel .admin-btn-primary {
+  background: #734a9b;
+  color: #f6f3f9;
+}
+
+.exercise-create-panel .admin-btn-primary:hover { background: #7a4fa6; }
+
+.exercise-create-panel .admin-btn-ghost {
+  border-color: #4a3e5c;
+  color: #c9a8e3;
+}
+
 .admin-error {
   font-size: 0.72rem;
   color: #f87171;

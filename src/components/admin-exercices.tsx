@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { EXERCISE_CATEGORIES, EXERCISE_LEVELS, type Exercise } from "@/lib/exercises-repo";
+import { publicSans } from "@/lib/fonts";
 
 interface ExerciseFormState {
   title: string;
@@ -66,12 +67,16 @@ function toExercisePatch(f: ExerciseFormState): Omit<Exercise, "id" | "image_url
   };
 }
 
-function ExerciseForm({ initial, onSubmit, onCancel, saving }: { initial: ExerciseFormState; onSubmit: (f: ExerciseFormState) => void; onCancel: () => void; saving: boolean }) {
+function ExerciseForm({ initial, onSubmit, onCancel, saving, isCreating }: { initial: ExerciseFormState; onSubmit: (f: ExerciseFormState) => void; onCancel: () => void; saving: boolean; isCreating?: boolean }) {
   const [f, setF] = useState(initial);
   const set = (k: keyof ExerciseFormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF((p) => ({ ...p, [k]: e.target.value }));
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+    <div
+      className={isCreating ? `exercise-create-panel ${publicSans.className}` : undefined}
+      style={isCreating ? { marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" } : { background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}
+    >
+      {isCreating && <p className="exercise-create-panel__title">Créer un exercice</p>}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
         <input className="admin-input" placeholder="Titre *" value={f.title} onChange={set("title")} style={{ flex: "1 1 200px" }} />
         <select className="admin-input" value={f.category} onChange={set("category")} style={{ width: "auto" }}>
@@ -244,7 +249,7 @@ export function AdminExercices({ initialExercises, canEdit }: { initialExercises
             )}
           </div>
 
-          {showAdd && <ExerciseForm initial={EMPTY_FORM} onSubmit={create} onCancel={() => setShowAdd(false)} saving={saving} />}
+          {showAdd && <ExerciseForm initial={EMPTY_FORM} onSubmit={create} onCancel={() => setShowAdd(false)} saving={saving} isCreating />}
 
           {filtered.length === 0 && <p className="admin-empty-text">Aucun exercice dans cette sélection.</p>}
 
