@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { EntityDocuments } from "@/components/admin-entity-documents";
 import { computeAssignment, computeHours, formatHours } from "@/lib/coach-payroll";
 import type { AssignmentStatus, Coach, CoachActivity, CoachAssignment, CoachTypeRate } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
@@ -283,6 +284,21 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resourceLink, setResourceLink] = useState(activity.notes ?? "");
+  const [savingLink, setSavingLink] = useState(false);
+
+  const saveResourceLink = async () => {
+    setSavingLink(true);
+    try {
+      await fetch(`/api/admin/coach-activities/${activity.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: resourceLink.trim() || null })
+      });
+    } finally {
+      setSavingLink(false);
+    }
+  };
 
   const typeRateFor = (coachId: string) => typeRates.find((r) => r.coach_id === coachId && r.activity_type === activity.activity_type)?.hourly_rate_cents ?? null;
 
@@ -349,7 +365,7 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
       <div className="admin-content">
         <div className="admin-section">
           <Link href="/admin/entraineurs/activites" className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1rem" }}>
-            ← Activités
+            ← Entraînement
           </Link>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
@@ -379,6 +395,31 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
               <p style={{ fontSize: "0.65rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.2rem" }}>Total à payer</p>
               <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatCAD(totals.payCents / 100)}</p>
             </div>
+          </div>
+
+          <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1rem 1.1rem", marginBottom: "1.5rem" }}>
+            <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.6rem" }}>Ressources</p>
+            <label className="admin-field" style={{ gap: "0.3rem", marginBottom: "0.8rem" }}>
+              <span style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase" }}>Lien Google Sheet / Drive</span>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <input
+                  className="admin-input"
+                  placeholder="https://docs.google.com/spreadsheets/…"
+                  value={resourceLink}
+                  onChange={(e) => setResourceLink(e.target.value)}
+                  onBlur={saveResourceLink}
+                  style={{ flex: 1 }}
+                />
+                {resourceLink && (
+                  <a href={resourceLink} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ textDecoration: "none", whiteSpace: "nowrap" }}>
+                    Ouvrir ↗
+                  </a>
+                )}
+              </div>
+              {savingLink && <span style={{ fontSize: "0.65rem", color: "#6d6b71" }}>Enregistrement...</span>}
+            </label>
+
+            <EntityDocuments entityType="coach_activity" entityId={activity.id} />
           </div>
 
           <SessionPlanEditor activityId={activity.id} initialBlocks={initialBlocks} exercises={exercises} />

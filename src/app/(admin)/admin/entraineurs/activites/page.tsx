@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { getActivities } from "@/lib/coaches-repo";
 import { getTerrains } from "@/lib/terrains-repo";
 
-export const metadata = { title: "Activités entraîneurs — Admin New Valkyria", robots: "noindex" };
+export const metadata = { title: "Entraînement — Admin New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminCoachActivitesPage() {

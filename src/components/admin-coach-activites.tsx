@@ -101,7 +101,7 @@ export function AdminCoachActivites({ activities: initial, terrains }: Props) {
       <div className="admin-content">
         <div className="admin-section">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
-            <p className="admin-section-title" style={{ margin: 0 }}>Activités</p>
+            <p className="admin-section-title" style={{ margin: 0 }}>Entraînement</p>
             <Link href="/admin/entraineurs" className="admin-btn-ghost" style={{ textDecoration: "none" }}>
               ← Entraîneurs
             </Link>

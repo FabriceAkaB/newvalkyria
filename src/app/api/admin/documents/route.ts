@@ -4,7 +4,7 @@ import { getCurrentAdminRole, isAdminRequest } from "@/lib/admin-auth";
 import { addDocument, DOCUMENT_CATEGORIES, getDocumentsForEntity, type DocumentEntityType } from "@/lib/documents-repo";
 import { jsonError } from "@/lib/http";
 
-const VALID_ENTITY_TYPES: readonly string[] = ["registration", "lead", "coach"] satisfies readonly DocumentEntityType[];
+const VALID_ENTITY_TYPES: readonly string[] = ["registration", "lead", "coach", "coach_activity"] satisfies readonly DocumentEntityType[];
 const DELIVERED_BY_LABEL: Record<"admin" | "gerante", string> = { admin: "JP", gerante: "Gérante" };
 
 export async function GET(request: Request) {
