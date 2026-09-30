@@ -53,7 +53,7 @@ function NewActivityForm({ terrains, onCreated }: { terrains: Terrain[]; onCreat
       onCreated({
         id: data.id, activity_date: date, start_time: start, end_time: end, activity_type: type,
         location: location.trim() || null, terrain_id: terrainId || null, category: category.trim() || null, title: title.trim() || null,
-        notes: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+        notes: null, video_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString()
       });
       window.location.href = `/admin/entraineurs/activites/${data.id}`;
     } catch (err) {

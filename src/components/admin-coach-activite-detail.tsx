@@ -294,6 +294,8 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
   const [error, setError] = useState<string | null>(null);
   const [resourceLink, setResourceLink] = useState(activity.notes ?? "");
   const [savingLink, setSavingLink] = useState(false);
+  const [videoLink, setVideoLink] = useState(activity.video_url ?? "");
+  const [savingVideoLink, setSavingVideoLink] = useState(false);
 
   const saveResourceLink = async () => {
     setSavingLink(true);
@@ -305,6 +307,19 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
       });
     } finally {
       setSavingLink(false);
+    }
+  };
+
+  const saveVideoLink = async () => {
+    setSavingVideoLink(true);
+    try {
+      await fetch(`/api/admin/coach-activities/${activity.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ videoUrl: videoLink.trim() || null })
+      });
+    } finally {
+      setSavingVideoLink(false);
     }
   };
 
@@ -425,6 +440,26 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
                 )}
               </div>
               {savingLink && <span style={{ fontSize: "0.65rem", color: "#6d6b71" }}>Enregistrement...</span>}
+            </label>
+
+            <label className="admin-field" style={{ gap: "0.3rem", marginBottom: "0.8rem" }}>
+              <span style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase" }}>Lien vidéo (film de séance/match)</span>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <input
+                  className="admin-input"
+                  placeholder="https://youtube.com/… ou https://hudl.com/…"
+                  value={videoLink}
+                  onChange={(e) => setVideoLink(e.target.value)}
+                  onBlur={saveVideoLink}
+                  style={{ flex: 1 }}
+                />
+                {videoLink && (
+                  <a href={videoLink} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ textDecoration: "none", whiteSpace: "nowrap" }}>
+                    Ouvrir ↗
+                  </a>
+                )}
+              </div>
+              {savingVideoLink && <span style={{ fontSize: "0.65rem", color: "#6d6b71" }}>Enregistrement...</span>}
             </label>
 
             <EntityDocuments entityType="coach_activity" entityId={activity.id} />

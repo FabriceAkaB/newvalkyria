@@ -19,6 +19,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     title?: string | null;
     notes?: string | null;
     terrainId?: string | null;
+    videoUrl?: string | null;
   } | null;
 
   if (!body) return jsonError("Paramètres invalides", 400);

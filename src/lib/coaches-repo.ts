@@ -51,6 +51,8 @@ export interface CoachActivity {
    *  `location` reste le texte libre affiché, `terrain_id` permet la
    *  détection de conflit. Nullable : facultatif pour une activité "hors terrain". */
   terrain_id: string | null;
+  /** Lien vers le film de la séance/du match (ex. YouTube, Hudl). */
+  video_url: string | null;
 }
 
 export interface CoachAssignment {
@@ -205,6 +207,7 @@ export interface CreateActivityInput {
   title: string | null;
   notes: string | null;
   terrainId?: string | null;
+  videoUrl?: string | null;
 }
 
 export async function createActivity(input: CreateActivityInput): Promise<string> {
@@ -219,7 +222,8 @@ export async function createActivity(input: CreateActivityInput): Promise<string
       activity_type: input.activityType,
       title: input.title,
       notes: input.notes,
-      terrain_id: input.terrainId ?? null
+      terrain_id: input.terrainId ?? null,
+      video_url: input.videoUrl ?? null
     })
     .select("id")
     .single();
@@ -238,6 +242,7 @@ export async function updateActivity(id: string, patch: Partial<CreateActivityIn
   if (patch.title !== undefined) columnPatch.title = patch.title;
   if (patch.notes !== undefined) columnPatch.notes = patch.notes;
   if (patch.terrainId !== undefined) columnPatch.terrain_id = patch.terrainId;
+  if (patch.videoUrl !== undefined) columnPatch.video_url = patch.videoUrl;
 
   const { error } = await db().from("coach_activities").update(columnPatch).eq("id", id);
   if (error) throw new Error(error.message);

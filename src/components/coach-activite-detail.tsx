@@ -387,8 +387,13 @@ export function CoachActiviteDetail({ coachName, coachId, activity, otherCoaches
           <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1rem", marginBottom: "1.5rem" }}>
             <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.6rem" }}>Ressources</p>
             {activity.notes && (
-              <a href={activity.notes} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "0.8rem" }}>
+              <a href={activity.notes} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "0.8rem", marginRight: "0.5rem" }}>
                 📎 Ouvrir le lien Google Sheet / Drive ↗
+              </a>
+            )}
+            {activity.video_url && (
+              <a href={activity.video_url} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "0.8rem" }}>
+                🎬 Ouvrir la vidéo ↗
               </a>
             )}
             <EntityDocuments entityType="coach_activity" entityId={activity.id} apiBase="/api/coach/documents" readOnly />
