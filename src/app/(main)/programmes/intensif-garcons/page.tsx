@@ -20,6 +20,10 @@ export default async function ProgrammeIntensifPage() {
   const [dates, taken] = await Promise.all([getProgramDates(slug), countActiveRegistrations(slug)]);
   const remaining = Math.max(0, program.max_capacity - taken);
 
+  // Programme complet — la page est fermée, personne ne peut plus y accéder
+  // ni s'inscrire (plutôt que d'afficher un simple message "complet").
+  if (remaining <= 0) notFound();
+
   return (
     <SessionProgramContent
       slug={slug}
