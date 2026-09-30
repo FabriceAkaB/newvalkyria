@@ -5,7 +5,7 @@ import { useState } from "react";
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { RegistrationStatus, SessionProgram, SessionProgramDate, SessionProgramRegistration } from "@/lib/session-programs-repo";
 
-const REGISTRATION_STATUSES: { value: RegistrationStatus; label: string }[] = [
+export const REGISTRATION_STATUSES: { value: RegistrationStatus; label: string }[] = [
   { value: "pending", label: "En attente" },
   { value: "confirmed", label: "Confirmée" },
   { value: "paid", label: "Payée" },
@@ -17,7 +17,7 @@ function formatDate(iso: string) {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("fr-CA", { weekday: "short", month: "short", day: "numeric" });
 }
 
-function RegistrationRow({
+export function RegistrationRow({
   registration,
   slug,
   onStatusChanged,
