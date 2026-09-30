@@ -66,8 +66,8 @@ export const seasonTrialSchema = z.object({
 
 export const seasonCheckoutSchema = z.object({
   ...seasonPlayerFieldsSchema,
-  programCode: z.enum(["TV", "SV", "NV", "TVA", "SVA", "TVD"]),
-  year: z.enum(["2017", "2016", "2015", "2014-2013"]),
+  programCode: z.enum(["TV", "SV", "NV", "TVA", "SVA", "TVD", "PV"]),
+  year: z.enum(["2017", "2016", "2015", "2014-2013", "2013-2012"]),
   slotId: z.string().optional(),
   variant: z.enum(["public", "advanced"]),
   includeBag: z.boolean().optional(),
@@ -191,7 +191,7 @@ export const sportEtudesRegistrationSchema = z.object({
 export type SportEtudesRegistrationPayload = z.infer<typeof sportEtudesRegistrationSchema>;
 
 export const sessionProgramRegistrationSchema = z.object({
-  programSlug: z.enum(["privilege-valkyria", "intensif-garcons"]),
+  programSlug: z.enum(["intensif-garcons"]),
   playerFirstName: z.string().min(1, "Prénom du joueur requis"),
   playerLastName: z.string().min(1, "Nom du joueur requis"),
   playerDob: z.string().optional(),

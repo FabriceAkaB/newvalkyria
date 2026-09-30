@@ -5,7 +5,7 @@ import { sendLeadNotificationEmail } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { getInstallmentPlan } from "@/lib/payment-plan";
-import { PROGRAMS, type ProgramCode } from "@/lib/season-2027";
+import { PROGRAMS, type BirthYear } from "@/lib/season-2027";
 import { SEASON_DB_ID, SLOT_DB_ID } from "@/lib/season-2027-db-map";
 import {
   cancelRegistration,
@@ -39,8 +39,11 @@ export async function POST(request: Request) {
     const program = programs.find((p) => p.id === payload.programCode);
     if (!program) return jsonError("Programme introuvable", 404);
 
-    const eligibleYears = PROGRAMS[payload.programCode as ProgramCode]?.eligibleYears;
-    if (eligibleYears && !eligibleYears.includes(payload.year)) {
+    // Privilège Valkyria (PV) n'existe pas dans le tunnel générique TV/SV/NV
+    // (PROGRAMS) — il est vendu depuis sa propre page, sans cette contrainte
+    // d'année admissible codée en dur.
+    const eligibleYears = payload.programCode === "PV" ? undefined : PROGRAMS[payload.programCode].eligibleYears;
+    if (eligibleYears && !eligibleYears.includes(payload.year as BirthYear)) {
       return jsonError("Ce programme n'est pas disponible pour cette catégorie.", 409);
     }
 

@@ -28,8 +28,7 @@ export async function POST(request: Request) {
       return jsonError(`${program.name} est complet pour le moment.`, 409);
     }
 
-    // Le paiement en plusieurs fois n'est offert que sur le Programme Intensif.
-    const installments: 1 | 2 = payload.programSlug === "intensif-garcons" && payload.installments === 2 ? 2 : 1;
+    const installments: 1 | 2 = payload.installments === 2 ? 2 : 1;
     const totalCents = program.price_cents;
     const installmentPlan = installments === 2 ? getIntensifInstallmentPlan(2, new Date(), totalCents) : null;
 

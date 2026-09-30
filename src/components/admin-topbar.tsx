@@ -53,7 +53,6 @@ const SEASON_AUTOMNE_HIVER_LINKS: { href: string; label: string; icon: IconName 
   { href: "/admin/saison/automne-hiver-2026/capacite", label: "Capacité", icon: "gauge" },
   { href: "/admin/saison/automne-hiver-2026/horaire", label: "Horaire", icon: "grid" },
   { href: "/admin/saison/automne-hiver-2026/solo", label: "Solo", icon: "user" },
-  { href: "/admin/privilege-valkyria", label: "Privilège Valkyria", icon: "flask" },
   { href: "/admin/essais-dates", label: "Dates d'essai", icon: "grid" },
 ];
 

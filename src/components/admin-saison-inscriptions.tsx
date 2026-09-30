@@ -5,11 +5,9 @@ import { useState } from "react";
 import { Avatar } from "@/components/admin-avatar";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { EntityDocuments } from "@/components/admin-entity-documents";
-import { RegistrationRow as SessionProgramRegistrationRow } from "@/components/admin-session-program";
 import { AGE_CATEGORIES, CATEGORY_LABELS } from "@/lib/categories";
 import { cropSquareAndCompress } from "@/lib/image-client";
 import type { BirthCategory, Program, Registration, RegistrationStatus, Season, TimeSlotTemplate } from "@/lib/season-admin-repo";
-import type { RegistrationStatus as SessionProgramRegistrationStatus, SessionProgramRegistration } from "@/lib/session-programs-repo";
 
 interface Props {
   season: Season;
@@ -17,7 +15,6 @@ interface Props {
   programs: Program[];
   slots: TimeSlotTemplate[];
   initialRegistrations: Registration[];
-  initialPrivilegeValkyria?: SessionProgramRegistration[];
 }
 
 type FilterType = "all" | RegistrationStatus;
@@ -241,83 +238,6 @@ function TransferToSportEtudesModal({ registration: r, seasonId, onClose, onTran
   );
 }
 
-function TransferToPrivilegeValkyriaModal({ registration: r, seasonId, onClose, onTransferred }: { registration: Registration; seasonId: string; onClose: () => void; onTransferred: () => void }) {
-  const [playerFirstName, setPlayerFirstName] = useState(r.player_first_name ?? "");
-  const [playerLastName, setPlayerLastName] = useState(r.player_last_name ?? "");
-  const [playerDob, setPlayerDob] = useState(r.player_dob ?? "");
-  const [parentName, setParentName] = useState(r.parent_name);
-  const [parentEmail, setParentEmail] = useState(r.parent_email);
-  const [parentPhone, setParentPhone] = useState(r.parent_phone);
-  const [city, setCity] = useState(r.city ?? "");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const submit = async () => {
-    if (!playerFirstName.trim() || !playerLastName.trim() || !parentName.trim() || !parentEmail.trim() || !parentPhone.trim()) {
-      setError("Prénom/nom de la joueuse et coordonnées complètes du parent sont requis.");
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/admin/season/${seasonId}/registrations/${r.id}/transfer-to-privilege-valkyria`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          playerFirstName: playerFirstName.trim(),
-          playerLastName: playerLastName.trim(),
-          playerDob: playerDob.trim() || null,
-          parentName: parentName.trim(),
-          parentEmail: parentEmail.trim(),
-          parentPhone: parentPhone.trim(),
-          city: city.trim() || null
-        })
-      });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? "Erreur de transfert");
-      }
-      onTransferred();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="admin-modal-overlay">
-      <div className="admin-modal-box" style={{ maxWidth: "560px", textAlign: "left" }}>
-        <p className="admin-modal-title">Transférer vers Privilège Valkyria (samedi)</p>
-        <p style={{ fontSize: "0.78rem", color: "#9d9da0", marginBottom: "1rem" }}>
-          Crée une nouvelle inscription dans Privilège Valkyria. Cette inscription reste inchangée dans sa saison d&apos;origine.
-        </p>
-        {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "0.6rem" }}>
-          <label className="admin-field"><span>Prénom joueuse</span><input className="admin-input" value={playerFirstName} onChange={(e) => setPlayerFirstName(e.target.value)} /></label>
-          <label className="admin-field"><span>Nom joueuse</span><input className="admin-input" value={playerLastName} onChange={(e) => setPlayerLastName(e.target.value)} /></label>
-          <label className="admin-field"><span>Date de naissance</span><input type="date" className="admin-input" value={playerDob} onChange={(e) => setPlayerDob(e.target.value)} /></label>
-          <label className="admin-field"><span>Ville</span><input className="admin-input" value={city} onChange={(e) => setCity(e.target.value)} /></label>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "1rem" }}>
-          <label className="admin-field"><span>Nom du parent</span><input className="admin-input" value={parentName} onChange={(e) => setParentName(e.target.value)} /></label>
-          <label className="admin-field"><span>Courriel</span><input className="admin-input" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} /></label>
-          <label className="admin-field"><span>Téléphone</span><input className="admin-input" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} /></label>
-        </div>
-
-        <div className="admin-modal-actions">
-          <button className="admin-btn-ghost" onClick={onClose} disabled={saving}>Annuler</button>
-          <button className="admin-btn-primary" onClick={submit} disabled={saving}>
-            {saving ? "Transfert..." : "Transférer"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function RegistrationDrawer({ registration: r, categories, programs, slots, onClose, onDeleted, onUpdated, seasonId }: DrawerProps) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -328,8 +248,6 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
   const [transferredToEte, setTransferredToEte] = useState(false);
   const [showTransferToSportEtudes, setShowTransferToSportEtudes] = useState(false);
   const [transferredToSportEtudes, setTransferredToSportEtudes] = useState(false);
-  const [showTransferToPrivilegeValkyria, setShowTransferToPrivilegeValkyria] = useState(false);
-  const [transferredToPrivilegeValkyria, setTransferredToPrivilegeValkyria] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const expiringSoon = isHalfSeasonExpiringSoon(r);
 
@@ -626,13 +544,6 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                   Transférer vers Sport-Études (Garçons)
                 </button>
               )}
-              {transferredToPrivilegeValkyria ? (
-                <p style={{ fontSize: "0.78rem", color: "#7fd88f", margin: 0 }}>✓ Transférée vers Privilège Valkyria.</p>
-              ) : (
-                <button className="admin-btn-ghost" onClick={() => setShowTransferToPrivilegeValkyria(true)} style={{ fontSize: "0.78rem" }}>
-                  Transférer vers Privilège Valkyria (samedi)
-                </button>
-              )}
             </div>
           </div>
 
@@ -692,23 +603,14 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
         />
       )}
 
-      {showTransferToPrivilegeValkyria && (
-        <TransferToPrivilegeValkyriaModal
-          registration={r}
-          seasonId={seasonId}
-          onClose={() => setShowTransferToPrivilegeValkyria(false)}
-          onTransferred={() => { setShowTransferToPrivilegeValkyria(false); setTransferredToPrivilegeValkyria(true); }}
-        />
-      )}
     </>
   );
 }
 
 /* ── Main component ───────────────────────────────────────────── */
 
-export function AdminSaisonInscriptions({ season, categories, programs, slots, initialRegistrations, initialPrivilegeValkyria }: Props) {
+export function AdminSaisonInscriptions({ season, categories, programs, slots, initialRegistrations }: Props) {
   const [registrations, setRegistrations] = useState(initialRegistrations);
-  const [privilegeValkyria, setPrivilegeValkyria] = useState(initialPrivilegeValkyria ?? []);
   const [filter, setFilter] = useState<FilterType>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [programFilter, setProgramFilter] = useState<string>("all");
@@ -831,25 +733,6 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
     <>
       <AdminTopbar />
       <div className="admin-content">
-        {initialPrivilegeValkyria !== undefined && (
-          <div className="admin-section" style={{ marginBottom: "1.5rem" }}>
-            <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Privilège Valkyria — samedi ({privilegeValkyria.length})</p>
-            <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1rem" }}>
-              Semi-privé du samedi, 2013-2012 — gérée ici comme les autres catégories de la saison.
-            </p>
-            {privilegeValkyria.length === 0 && <p className="admin-empty-text">Aucune inscription pour l&apos;instant.</p>}
-            {privilegeValkyria.map((r) => (
-              <SessionProgramRegistrationRow
-                key={r.id}
-                registration={r}
-                slug="privilege-valkyria"
-                onStatusChanged={(status: SessionProgramRegistrationStatus) => setPrivilegeValkyria((prev) => prev.map((x) => (x.id === r.id ? { ...x, status } : x)))}
-                onDeleted={() => setPrivilegeValkyria((prev) => prev.filter((x) => x.id !== r.id))}
-              />
-            ))}
-          </div>
-        )}
-
         <div className="admin-section">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Inscriptions ({registrations.length})</p>

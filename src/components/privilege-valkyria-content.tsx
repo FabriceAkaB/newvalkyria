@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Container } from "@/components/container";
@@ -39,7 +38,6 @@ export function PrivilegeValkyriaContent({
   remaining: number;
   isFull: boolean;
 }) {
-  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,11 +45,13 @@ export function PrivilegeValkyriaContent({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/programmes/inscription", {
+      const res = await fetch("/api/inscription/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          programSlug: "privilege-valkyria",
+          programCode: "PV",
+          year: "2013-2012",
+          variant: "public",
           playerFirstName: data.plFirst,
           playerLastName: data.plLast,
           playerDob: data.plDob || undefined,
@@ -59,16 +59,12 @@ export function PrivilegeValkyriaContent({
           parentEmail: data.accEmail,
           parentPhone: data.accPhone,
           city: data.accCity,
-          termsAccepted: true
+          cancelPath: "/programmes/privilege-valkyria?cancelled=1"
         })
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? "Erreur d'inscription");
-      if (body.checkoutUrl) {
-        window.location.href = body.checkoutUrl;
-      } else {
-        router.push(`/programmes/privilege-valkyria/confirmation?registrationId=${body.registrationId}`);
-      }
+      window.location.href = body.checkoutUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
       setSubmitting(false);
