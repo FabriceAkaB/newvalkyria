@@ -66,6 +66,15 @@ export async function deleteDocument(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/** Utilisé pour vérifier qu'un entraîneur a le droit de consulter un
+ *  document précis (l'activité correspondante lui est bien assignée) avant
+ *  de lui délivrer une URL signée — voir /api/coach/documents. */
+export async function getDocumentEntityRef(id: string): Promise<{ entity_type: DocumentEntityType; entity_id: string } | null> {
+  const { data, error } = await db().from("documents").select("entity_type, entity_id").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as { entity_type: DocumentEntityType; entity_id: string } | null;
+}
+
 export async function getDocumentSignedUrl(id: string): Promise<string | null> {
   const supabase = db();
   const { data: doc, error } = await supabase.from("documents").select("storage_path").eq("id", id).maybeSingle();

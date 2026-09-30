@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { EntityDocuments } from "@/components/admin-entity-documents";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
 import { MatchPanel } from "@/components/match-panel";
@@ -382,6 +383,16 @@ export function CoachActiviteDetail({ coachName, coachId, activity, otherCoaches
             {activity.location && ` · ${activity.location}`}
             {otherCoaches.length > 0 && ` · avec ${otherCoaches.map((c) => `${c.first_name} ${c.last_name}`).join(", ")}`}
           </p>
+
+          <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1rem", marginBottom: "1.5rem" }}>
+            <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.6rem" }}>Ressources</p>
+            {activity.notes && (
+              <a href={activity.notes} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "0.8rem" }}>
+                📎 Ouvrir le lien Google Sheet / Drive ↗
+              </a>
+            )}
+            <EntityDocuments entityType="coach_activity" entityId={activity.id} apiBase="/api/coach/documents" readOnly />
+          </div>
 
           {activity.activity_type === "Match" && (
             <MatchPanel
