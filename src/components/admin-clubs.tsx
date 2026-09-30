@@ -125,8 +125,8 @@ export function AdminClubs({ allRawClubs }: Props) {
           </div>
 
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem", lineHeight: 1.55 }}>
-            Regroupez les différentes orthographes d'un même club. Par exemple : « FC Laval », « fc laval », « f.c. laval » → un seul groupe canonique « FC Laval ».
-            Les filtres et l'export utiliseront automatiquement le nom canonique.
+            Regroupez les différentes orthographes d&apos;un même club. Par exemple : « FC Laval », « fc laval », « f.c. laval » → un seul groupe canonique « FC Laval ».
+            Les filtres et l&apos;export utiliseront automatiquement le nom canonique.
           </p>
 
           {error && <p className="admin-error" style={{ marginBottom: "1rem" }}>{error}</p>}
