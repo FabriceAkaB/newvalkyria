@@ -11,7 +11,6 @@ import { computeHours, formatHoursMinutes } from "@/lib/coach-payroll";
 import { EVALUATION_CRITERIA, type PlayerAttendance, type PlayerAttendanceStatus, type PlayerEvaluation, type RosterPlayer } from "@/lib/coach-portal-repo";
 import type { CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
-import { publicSans } from "@/lib/fonts";
 import type { MatchConvocation, MatchDetails, MatchLineupSlot, MatchPlayerEvaluation, MatchRosterPlayer, PlaytimeSegment } from "@/lib/match-repo";
 import { SESSION_BLOCK_TYPES, type SessionBlock } from "@/lib/session-plan-repo";
 
@@ -62,7 +61,7 @@ function NewExerciseForm({ onCreated, onCancel }: { onCreated: (exercise: Exerci
   };
 
   return (
-    <div className={`exercise-create-panel ${publicSans.className}`} style={{ marginBottom: "0.6rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+    <div className="exercise-create-panel" style={{ marginBottom: "0.6rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
       <p className="exercise-create-panel__title">Créer un exercice</p>
       <input className="admin-input" placeholder="Titre de l'exercice *" value={title} onChange={(e) => setTitle(e.target.value)} />
       <input className="admin-input" placeholder="Objectif (optionnel)" value={objective} onChange={(e) => setObjective(e.target.value)} />

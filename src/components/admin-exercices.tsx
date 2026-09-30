@@ -5,7 +5,6 @@ import { useRef, useState } from "react";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { ExerciseDiagramEditor, ExerciseDiagramView } from "@/components/exercise-diagram";
 import { EXERCISE_CATEGORIES, EXERCISE_LEVELS, type Exercise, type ExerciseDiagram } from "@/lib/exercises-repo";
-import { publicSans } from "@/lib/fonts";
 
 interface ExerciseFormState {
   title: string;
@@ -74,7 +73,7 @@ function ExerciseForm({ initial, onSubmit, onCancel, saving, isCreating }: { ini
 
   return (
     <div
-      className={isCreating ? `exercise-create-panel ${publicSans.className}` : undefined}
+      className={isCreating ? "exercise-create-panel" : undefined}
       style={isCreating ? { marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" } : { background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}
     >
       {isCreating && <p className="exercise-create-panel__title">Créer un exercice</p>}

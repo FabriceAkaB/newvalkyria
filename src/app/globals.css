@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6176,7 +6178,7 @@ body {
 /* ── Écran de création d'exercice — charte visuelle fournie (Espace
    Technique), appliquée uniquement ici, nulle part ailleurs dans l'app. ── */
 .exercise-create-panel {
-  font-family: var(--font-exercise-create), sans-serif;
+  font-family: "Public Sans", sans-serif;
   background: linear-gradient(165deg, #3a3145 0%, #18141d 55%, #0e0b12 100%);
   border: 1px solid #7a4fa6;
   border-radius: 14px;
