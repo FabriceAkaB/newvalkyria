@@ -269,6 +269,48 @@ export async function deactivatePlayerObjective(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/* ── Routines maison ──────────────────────────────────────────────
+ *  Liste d'exercices de la bibliothèque partagée assignée à une joueuse
+ *  pour pratiquer entre les séances — même convention que les objectifs
+ *  (désactivation, pas de suppression, pour garder l'historique). */
+
+export interface PlayerRoutine {
+  id: string;
+  registration_id: string;
+  title: string;
+  notes: string | null;
+  exercise_ids: string[];
+  active: boolean;
+  created_at: string;
+}
+
+export async function getPlayerRoutines(registrationId: string): Promise<PlayerRoutine[]> {
+  const { data, error } = await db()
+    .from("player_routines")
+    .select("*")
+    .eq("registration_id", registrationId)
+    .eq("active", true)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as PlayerRoutine[];
+}
+
+export async function addPlayerRoutine(registrationId: string, input: { title: string; notes: string | null; exerciseIds: string[] }, coachId: string): Promise<void> {
+  const { error } = await db().from("player_routines").insert({
+    registration_id: registrationId,
+    title: input.title,
+    notes: input.notes,
+    exercise_ids: input.exerciseIds,
+    created_by: coachId
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function deactivatePlayerRoutine(id: string): Promise<void> {
+  const { error } = await db().from("player_routines").update({ active: false }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 /* ── Historique de présence d'une joueuse ────────────────────────── */
 
 export async function getPlayerAttendanceHistory(registrationId: string): Promise<(PlayerAttendance & { activity: CoachActivity })[]> {

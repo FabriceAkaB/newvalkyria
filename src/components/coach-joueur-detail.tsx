@@ -5,7 +5,8 @@ import { useState } from "react";
 
 import { CoachTopbar } from "@/components/coach-topbar";
 import type { CoachActivity } from "@/lib/coaches-repo";
-import type { PlayerAttendance, PlayerEvaluation, PlayerObjective, PlayerProfile } from "@/lib/coach-portal-repo";
+import type { PlayerAttendance, PlayerEvaluation, PlayerObjective, PlayerProfile, PlayerRoutine } from "@/lib/coach-portal-repo";
+import type { Exercise } from "@/lib/exercises-repo";
 
 const ATTENDANCE_LABELS: Record<string, string> = {
   present: "Présente",
@@ -20,6 +21,8 @@ interface Props {
   player: PlayerProfile;
   evaluations: (PlayerEvaluation & { activity: CoachActivity; coach: { first_name: string; last_name: string } })[];
   objectives: PlayerObjective[];
+  routines: PlayerRoutine[];
+  exercises: Exercise[];
   attendanceHistory: (PlayerAttendance & { activity: CoachActivity })[];
 }
 
@@ -71,7 +74,95 @@ function ObjectivesPanel({ registrationId, objectives: initial }: { registration
   );
 }
 
-export function CoachJoueurDetail({ coachName, player, evaluations, objectives, attendanceHistory }: Props) {
+function RoutinesPanel({ registrationId, routines: initial, exercises }: { registrationId: string; routines: PlayerRoutine[]; exercises: Exercise[] }) {
+  const [routines, setRoutines] = useState(initial);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [notes, setNotes] = useState("");
+  const [exerciseIds, setExerciseIds] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const toggleExercise = (id: string) => {
+    setExerciseIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const add = async () => {
+    if (!title.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/coach/routines", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registrationId, title: title.trim(), notes: notes.trim() || null, exerciseIds })
+      });
+      if (res.ok) {
+        setRoutines((prev) => [{ id: crypto.randomUUID(), registration_id: registrationId, title: title.trim(), notes: notes.trim() || null, exercise_ids: exerciseIds, active: true, created_at: new Date().toISOString() }, ...prev]);
+        setTitle("");
+        setNotes("");
+        setExerciseIds([]);
+        setShowForm(false);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    const res = await fetch(`/api/coach/routines/${id}`, { method: "DELETE" });
+    if (res.ok) setRoutines((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  return (
+    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+      <p className="admin-drawer-section-title">Routine maison</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "0.6rem" }}>
+        {routines.map((r) => (
+          <div key={r.id} style={{ background: "#0d0b13", border: "1px solid #1a1820", borderRadius: "8px", padding: "0.6rem 0.8rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <strong style={{ fontSize: "0.78rem", color: "#fff" }}>{r.title}</strong>
+              <button onClick={() => remove(r.id)} style={{ background: "none", border: "none", color: "#6d6b71", cursor: "pointer" }}>×</button>
+            </div>
+            {r.exercise_ids.length > 0 && (
+              <p style={{ fontSize: "0.7rem", color: "#9d9da0", margin: "0.3rem 0 0" }}>
+                {r.exercise_ids.map((id) => exercises.find((e) => e.id === id)?.title ?? "Exercice").join(" · ")}
+              </p>
+            )}
+            {r.notes && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.3rem 0 0", fontStyle: "italic" }}>{r.notes}</p>}
+          </div>
+        ))}
+        {routines.length === 0 && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Aucune routine assignée.</p>}
+      </div>
+
+      {showForm ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          <input className="admin-input" placeholder="Titre (ex. Semaine du 6 octobre)" value={title} onChange={(e) => setTitle(e.target.value)} style={{ fontSize: "0.75rem" }} />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+            {exercises.map((ex) => (
+              <button
+                key={ex.id}
+                onClick={() => toggleExercise(ex.id)}
+                className={exerciseIds.includes(ex.id) ? "admin-btn-primary" : "admin-btn-ghost"}
+                style={{ fontSize: "0.68rem", padding: "0.25rem 0.55rem" }}
+              >
+                {ex.title}
+              </button>
+            ))}
+            {exercises.length === 0 && <p style={{ fontSize: "0.7rem", color: "#6d6b71", margin: 0 }}>Aucun exercice dans la bibliothèque pour l&apos;instant.</p>}
+          </div>
+          <textarea className="admin-input" placeholder="Notes (optionnel)" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} style={{ fontSize: "0.75rem" }} />
+          <div style={{ display: "flex", gap: "0.4rem" }}>
+            <button className="admin-btn-primary" onClick={add} disabled={saving || !title.trim()} style={{ fontSize: "0.7rem" }}>Assigner</button>
+            <button className="admin-btn-ghost" onClick={() => setShowForm(false)} style={{ fontSize: "0.7rem" }}>Annuler</button>
+          </div>
+        </div>
+      ) : (
+        <button className="admin-btn-ghost" onClick={() => setShowForm(true)} style={{ fontSize: "0.7rem" }}>+ Nouvelle routine</button>
+      )}
+    </div>
+  );
+}
+
+export function CoachJoueurDetail({ coachName, player, evaluations, objectives, routines, exercises, attendanceHistory }: Props) {
   const presentCount = attendanceHistory.filter((a) => a.status === "present").length;
 
   return (
@@ -91,6 +182,7 @@ export function CoachJoueurDetail({ coachName, player, evaluations, objectives, 
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
             <ObjectivesPanel registrationId={player.registrationId} objectives={objectives} />
+            <RoutinesPanel registrationId={player.registrationId} routines={routines} exercises={exercises} />
           </div>
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Historique de présence ({attendanceHistory.length})</p>
