@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-import { SessionProgramContent } from "@/components/session-program-content";
+import { PrivilegeValkyriaContent } from "@/components/privilege-valkyria-content";
 import { countActiveRegistrations, getProgram, getProgramDates } from "@/lib/session-programs-repo";
 
 export const metadata: Metadata = {
@@ -21,14 +21,11 @@ export default async function PrivilegeValkyriaPage() {
   const remaining = Math.max(0, program.max_capacity - taken);
 
   return (
-    <SessionProgramContent
-      slug={slug}
+    <PrivilegeValkyriaContent
       title={program.name}
       tagline="Filles nées 2013-2012"
       intro="Un encadrement technique personnalisé en très petit groupe (5 places), le samedi, pour progresser à un rythme individualisé."
       priceCents={program.price_cents}
-      allowInstallments={false}
-      installmentSurchargeCents={0}
       dates={dates}
       remaining={remaining}
       isFull={remaining <= 0}

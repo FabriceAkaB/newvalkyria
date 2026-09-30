@@ -13,6 +13,7 @@ import yearImg2017 from "@/content/image/photos/inscription-year-2017.jpg";
 import yearImg2016 from "@/content/image/photos/inscription-year-2016.jpg";
 import yearImg2015 from "@/content/image/photos/inscription-year-2015.jpg";
 import yearImg20142013 from "@/content/image/photos/inscription-year-2014-2013.jpg";
+import yearImg2012 from "@/content/image/photos/inscription-year-2012.webp";
 import type { BirthYear, LiveAvailability, ProgramCode, SessionPreview } from "@/lib/season-2027";
 import {
   BIRTH_YEAR_LABELS,
@@ -596,27 +597,16 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
   const programs = year ? getProgramsForYear(year, variant, live ?? undefined) : [];
   const slots = programCode && year ? getSlotsFor(programCode, year, variant, live ?? undefined) : [];
 
-  // Tuiles de la section publique : 2018 et 2017 sont deux tuiles distinctes
-  // mais mènent toutes deux à la même catégorie interne "2017" (déjà conçue
-  // pour couvrir les deux années de naissance — voir birthYearFromDob) ;
-  // la 6e tuile (2012) sort du tunnel TV/SV/NV vers Privilège Valkyria, un
-  // programme séparé à dates fixes. Le parcours avancé (AV) garde la liste
-  // d'années d'origine, inchangée.
+  // Tuiles de la section publique : 2017 et 2018 restent fusionnées en une
+  // seule tuile "2017–2018" (catégorie interne "2017", déjà conçue pour
+  // couvrir les deux années — voir birthYearFromDob). La 5e tuile (2012)
+  // sort du tunnel TV/SV/NV vers Privilège Valkyria, un programme séparé à
+  // dates fixes. Le parcours avancé (AV) garde la liste d'années d'origine.
   const yearTiles: { key: string; label: string; image: StaticImageData; imagePosition?: string; onSelect?: () => void; href?: string }[] =
     variant === "public"
       ? [
-          { key: "2018", label: "2018", image: YEAR_IMAGES["2017"], onSelect: () => setYear("2017") },
-          { key: "2017", label: "2017", image: YEAR_IMAGES["2017"], onSelect: () => setYear("2017") },
-          { key: "2016", label: BIRTH_YEAR_LABELS["2016"], image: YEAR_IMAGES["2016"], onSelect: () => setYear("2016") },
-          { key: "2015", label: BIRTH_YEAR_LABELS["2015"], image: YEAR_IMAGES["2015"], onSelect: () => setYear("2015") },
-          {
-            key: "2014-2013",
-            label: BIRTH_YEAR_LABELS["2014-2013"],
-            image: YEAR_IMAGES["2014-2013"],
-            imagePosition: YEAR_IMAGE_POSITION["2014-2013"],
-            onSelect: () => setYear("2014-2013")
-          },
-          { key: "privilege-valkyria", label: "2012", image: YEAR_IMAGES["2014-2013"], href: "/programmes/privilege-valkyria" }
+          ...years.map((y) => ({ key: y, label: BIRTH_YEAR_LABELS[y], image: YEAR_IMAGES[y], imagePosition: YEAR_IMAGE_POSITION[y], onSelect: () => setYear(y) })),
+          { key: "privilege-valkyria", label: "2012", image: yearImg2012, imagePosition: "center 15%", href: "/programmes/privilege-valkyria" }
         ]
       : years.map((y) => ({ key: y, label: BIRTH_YEAR_LABELS[y], image: YEAR_IMAGES[y], imagePosition: YEAR_IMAGE_POSITION[y], onSelect: () => setYear(y) }));
 

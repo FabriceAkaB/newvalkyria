@@ -9331,6 +9331,11 @@ img { max-width: 100%; height: auto; }
 
 .nv27-year-btn {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
   font-family: var(--font-display), sans-serif;
   font-size: 1.8rem;
   letter-spacing: 0.04em;
