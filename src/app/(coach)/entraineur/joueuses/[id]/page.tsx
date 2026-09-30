@@ -5,7 +5,7 @@ import { requireCoach } from "@/lib/coach-auth";
 import { getPlayerAttendanceHistory, getPlayerEvaluations, getPlayerObjectives, getPlayerProfile } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
 
-export const metadata = { title: "Joueuse — Espace Entraîneur" };
+export const metadata = { title: "Joueuse — Espace Technique" };
 export const dynamic = "force-dynamic";
 
 export default async function CoachJoueurDetailPage({ params }: { params: Promise<{ id: string }> }) {

@@ -25,7 +25,7 @@ export function CoachTopbar({ coachName }: Props) {
     <aside className="admin-sidebar">
       <div className="admin-sidebar-brand">
         <div>
-          <p className="admin-sidebar-brand-title">New Valkyria</p>
+          <p className="admin-sidebar-brand-title">Espace Technique</p>
           <p className="admin-sidebar-brand-sub">{coachName}</p>
         </div>
       </div>

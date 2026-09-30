@@ -7,7 +7,7 @@ import { requireCoach } from "@/lib/coach-auth";
 import { getBulletinData } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
 
-export const metadata = { title: "Bulletin — Espace Entraîneur" };
+export const metadata = { title: "Bulletin — Espace Technique" };
 export const dynamic = "force-dynamic";
 
 export default async function CoachBulletinPage({ params }: { params: Promise<{ id: string }> }) {

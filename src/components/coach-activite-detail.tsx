@@ -8,7 +8,7 @@ import { computeHours, formatHoursMinutes } from "@/lib/coach-payroll";
 import { EVALUATION_CRITERIA, type PlayerAttendance, type PlayerAttendanceStatus, type PlayerEvaluation, type RosterPlayer } from "@/lib/coach-portal-repo";
 import type { CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
-import type { SessionBlock } from "@/lib/session-plan-repo";
+import { SESSION_BLOCK_TYPES, type SessionBlock } from "@/lib/session-plan-repo";
 
 interface Props {
   coachName: string;
@@ -17,49 +17,172 @@ interface Props {
   roster: RosterPlayer[];
   initialAttendance: PlayerAttendance[];
   initialEvaluations: PlayerEvaluation[];
-  sessionBlocks: (SessionBlock & { exercise: Exercise | null })[];
+  sessionBlocks: SessionBlock[];
+  initialExercises: Exercise[];
 }
 
-function SessionPlan({ blocks }: { blocks: (SessionBlock & { exercise: Exercise | null })[] }) {
+function NewExerciseForm({ onCreated, onCancel }: { onCreated: (exercise: Exercise) => void; onCancel: () => void }) {
+  const [title, setTitle] = useState("");
+  const [objective, setObjective] = useState("");
+  const [instructions, setInstructions] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const create = async () => {
+    if (!title.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/coach/exercises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim(), objective: objective.trim() || null, instructions: instructions.trim() || null })
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      onCreated({
+        id: data.id, title: title.trim(), objective: objective.trim() || null, category: null, level: null, duration_minutes: null,
+        material: null, min_players: null, max_players: null, dimensions: null, instructions: instructions.trim() || null,
+        variants: null, coaching_points: null, common_mistakes: null, image_url: null, video_url: null,
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ background: "#0d0b13", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.6rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <input className="admin-input" placeholder="Titre de l'exercice *" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <input className="admin-input" placeholder="Objectif (optionnel)" value={objective} onChange={(e) => setObjective(e.target.value)} />
+      <textarea className="admin-input" placeholder="Consignes (optionnel)" rows={2} value={instructions} onChange={(e) => setInstructions(e.target.value)} />
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <button className="admin-btn-primary" onClick={create} disabled={saving || !title.trim()} style={{ fontSize: "0.75rem" }}>
+          {saving ? "..." : "Ajouter à la bibliothèque"}
+        </button>
+        <button className="admin-btn-ghost" onClick={onCancel} style={{ fontSize: "0.75rem" }}>Annuler</button>
+      </div>
+    </div>
+  );
+}
+
+function SessionPlanEditor({ activityId, initialBlocks, initialExercises }: { activityId: string; initialBlocks: SessionBlock[]; initialExercises: Exercise[] }) {
+  const [blocks, setBlocks] = useState(initialBlocks);
+  const [exercises, setExercises] = useState(initialExercises);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  if (blocks.length === 0) return null;
+  const [showNewExercise, setShowNewExercise] = useState(false);
+  const [blockType, setBlockType] = useState<string>(SESSION_BLOCK_TYPES[0]);
+  const [exerciseId, setExerciseId] = useState("");
+  const [customTitle, setCustomTitle] = useState("");
+  const [duration, setDuration] = useState("10");
+  const [saving, setSaving] = useState(false);
 
   const totalMinutes = blocks.reduce((sum, b) => sum + b.duration_minutes, 0);
 
+  const addBlock = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/coach/activities/${activityId}/blocks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          blockType,
+          exerciseId: exerciseId || null,
+          customTitle: customTitle.trim() || null,
+          durationMinutes: parseInt(duration, 10) || 10
+        })
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setBlocks((prev) => [
+        ...prev,
+        { id: data.id, activity_id: activityId, block_order: prev.length, block_type: blockType, exercise_id: exerciseId || null, custom_title: customTitle.trim() || null, duration_minutes: parseInt(duration, 10) || 10, notes: null }
+      ]);
+      setCustomTitle("");
+      setDuration("10");
+      setExerciseId("");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const move = async (id: string, direction: "up" | "down") => {
+    const index = blocks.findIndex((b) => b.id === id);
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= blocks.length) return;
+    const next = [...blocks];
+    [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+    setBlocks(next);
+    await fetch(`/api/coach/activities/${activityId}/blocks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ move: direction })
+    });
+  };
+
+  const remove = async (id: string) => {
+    setBlocks((prev) => prev.filter((b) => b.id !== id));
+    await fetch(`/api/coach/activities/${activityId}/blocks/${id}`, { method: "DELETE" });
+  };
+
   return (
     <div style={{ marginBottom: "1.75rem" }}>
-      <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.4rem" }}>
-        Plan de séance <span style={{ color: "#6d6b71", fontWeight: 400 }}>· {totalMinutes} min au total</span>
+      <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>
+        Plan de séance {blocks.length > 0 && <span style={{ color: "#6d6b71", fontWeight: 400 }}>· {totalMinutes} min au total</span>}
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.75rem" }}>
+        {blocks.length === 0 && <p className="admin-empty-text">Aucun bloc de séance planifié.</p>}
         {blocks.map((b, i) => {
           const expanded = expandedId === b.id;
-          const title = b.custom_title || b.exercise?.title || b.block_type;
+          const exercise = exercises.find((e) => e.id === b.exercise_id) ?? null;
+          const title = b.custom_title || exercise?.title || b.block_type;
           return (
-            <div key={b.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
-              <button
-                onClick={() => setExpandedId(expanded ? null : b.id)}
-                style={{ background: "none", border: "none", color: "#c3c2c8", cursor: b.exercise ? "pointer" : "default", padding: 0, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}
-              >
-                <span>{i + 1}. <span style={{ color: "#9f85ba" }}>{b.block_type}</span> — {title}</span>
-                <span style={{ color: "#6d6b71" }}>{b.duration_minutes} min</span>
-              </button>
-              {expanded && b.exercise && (
+            <div key={b.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.5rem 0.8rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <button
+                  onClick={() => setExpandedId(expanded ? null : b.id)}
+                  style={{ background: "none", border: "none", color: "#c3c2c8", cursor: exercise ? "pointer" : "default", padding: 0, flex: 1, textAlign: "left", fontSize: "0.78rem" }}
+                >
+                  {i + 1}. <span style={{ color: "#9f85ba" }}>{b.block_type}</span> — {title} <span style={{ color: "#6d6b71" }}>({b.duration_minutes} min)</span>
+                </button>
+                <button onClick={() => move(b.id, "up")} disabled={i === 0} className="admin-btn-ghost" style={{ padding: "0.2rem 0.5rem", fontSize: "0.7rem" }}>↑</button>
+                <button onClick={() => move(b.id, "down")} disabled={i === blocks.length - 1} className="admin-btn-ghost" style={{ padding: "0.2rem 0.5rem", fontSize: "0.7rem" }}>↓</button>
+                <button onClick={() => remove(b.id)} style={{ fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.2rem 0.5rem", cursor: "pointer" }}>×</button>
+              </div>
+              {expanded && exercise && (
                 <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid #1a1820", fontSize: "0.75rem", color: "#9d9da0", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                  {b.exercise.objective && <span><strong style={{ color: "#c3c2c8" }}>Objectif :</strong> {b.exercise.objective}</span>}
-                  {b.exercise.material && <span><strong style={{ color: "#c3c2c8" }}>Matériel :</strong> {b.exercise.material}</span>}
-                  {b.exercise.instructions && <span><strong style={{ color: "#c3c2c8" }}>Consignes :</strong> {b.exercise.instructions}</span>}
-                  {b.exercise.coaching_points && <span><strong style={{ color: "#c3c2c8" }}>Points de coaching :</strong> {b.exercise.coaching_points}</span>}
-                  {b.exercise.image_url && (
+                  {exercise.objective && <span><strong style={{ color: "#c3c2c8" }}>Objectif :</strong> {exercise.objective}</span>}
+                  {exercise.material && <span><strong style={{ color: "#c3c2c8" }}>Matériel :</strong> {exercise.material}</span>}
+                  {exercise.instructions && <span><strong style={{ color: "#c3c2c8" }}>Consignes :</strong> {exercise.instructions}</span>}
+                  {exercise.coaching_points && <span><strong style={{ color: "#c3c2c8" }}>Points de coaching :</strong> {exercise.coaching_points}</span>}
+                  {exercise.image_url && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={b.exercise.image_url} alt={b.exercise.title} style={{ maxWidth: "100%", borderRadius: "6px", marginTop: "0.3rem" }} />
+                    <img src={exercise.image_url} alt={exercise.title} style={{ maxWidth: "100%", borderRadius: "6px", marginTop: "0.3rem" }} />
                   )}
                 </div>
               )}
-              {b.notes && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.3rem 0 0", fontStyle: "italic" }}>{b.notes}</p>}
             </div>
           );
         })}
+      </div>
+
+      {showNewExercise && (
+        <NewExerciseForm
+          onCreated={(ex) => { setExercises((prev) => [...prev, ex]); setExerciseId(ex.id); setShowNewExercise(false); }}
+          onCancel={() => setShowNewExercise(false)}
+        />
+      )}
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+        <select className="admin-input" value={blockType} onChange={(e) => setBlockType(e.target.value)} style={{ width: "auto" }}>
+          {SESSION_BLOCK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select className="admin-input" value={exerciseId} onChange={(e) => setExerciseId(e.target.value)} style={{ flex: "1 1 160px" }}>
+          <option value="">Exercice de la bibliothèque (optionnel)</option>
+          {exercises.map((ex) => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+        </select>
+        <input className="admin-input" placeholder="Titre libre (si pas d'exercice)" value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} style={{ flex: "1 1 160px" }} />
+        <input className="admin-input" type="number" min={1} value={duration} onChange={(e) => setDuration(e.target.value)} style={{ width: "5rem" }} />
+        <button onClick={addBlock} disabled={saving} className="admin-btn-primary" style={{ fontSize: "0.78rem" }}>+ Ajouter</button>
+        <button onClick={() => setShowNewExercise(true)} className="admin-btn-ghost" style={{ fontSize: "0.78rem" }}>+ Nouvel exercice</button>
       </div>
     </div>
   );
@@ -219,7 +342,7 @@ function PlayerRow({
   );
 }
 
-export function CoachActiviteDetail({ coachName, activity, otherCoaches, roster, initialAttendance, initialEvaluations, sessionBlocks }: Props) {
+export function CoachActiviteDetail({ coachName, activity, otherCoaches, roster, initialAttendance, initialEvaluations, sessionBlocks, initialExercises }: Props) {
   const [attendanceMap, setAttendanceMap] = useState<Record<string, PlayerAttendanceStatus>>(
     Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status]))
   );
@@ -247,7 +370,7 @@ export function CoachActiviteDetail({ coachName, activity, otherCoaches, roster,
             {otherCoaches.length > 0 && ` · avec ${otherCoaches.map((c) => `${c.first_name} ${c.last_name}`).join(", ")}`}
           </p>
 
-          <SessionPlan blocks={sessionBlocks} />
+          <SessionPlanEditor activityId={activity.id} initialBlocks={sessionBlocks} initialExercises={initialExercises} />
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Joueuses attendues ({roster.length})</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>

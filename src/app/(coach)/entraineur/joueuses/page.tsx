@@ -4,7 +4,7 @@ import { getCoachPlayers } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 
-export const metadata = { title: "Joueuses — Espace Entraîneur" };
+export const metadata = { title: "Joueuses — Espace Technique" };
 export const dynamic = "force-dynamic";
 
 export default async function CoachJoueusesPage() {

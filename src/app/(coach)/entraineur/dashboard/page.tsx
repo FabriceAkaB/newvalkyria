@@ -5,7 +5,7 @@ import { getCoach } from "@/lib/coaches-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getThemeForDate } from "@/lib/season-themes-repo";
 
-export const metadata = { title: "Tableau de bord — Espace Entraîneur" };
+export const metadata = { title: "Tableau de bord — Espace Technique" };
 export const dynamic = "force-dynamic";
 
 export default async function CoachDashboardPage() {

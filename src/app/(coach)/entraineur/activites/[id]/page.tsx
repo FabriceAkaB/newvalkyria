@@ -8,7 +8,7 @@ import { getExercises } from "@/lib/exercises-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getBlocksForActivity } from "@/lib/session-plan-repo";
 
-export const metadata = { title: "Activité — Espace Entraîneur" };
+export const metadata = { title: "Activité — Espace Technique" };
 export const dynamic = "force-dynamic";
 
 export default async function CoachActiviteDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,7 +28,6 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
   ]);
 
   const myEvaluations = evaluations.filter((e) => e.coach_id === coachId);
-  const exerciseById = new Map(exercises.map((ex) => [ex.id, ex]));
 
   return (
     <CoachActiviteDetail
@@ -38,7 +37,8 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       roster={roster}
       initialAttendance={attendance}
       initialEvaluations={myEvaluations}
-      sessionBlocks={blocks.map((b) => ({ ...b, exercise: b.exercise_id ? exerciseById.get(b.exercise_id) ?? null : null }))}
+      sessionBlocks={blocks}
+      initialExercises={exercises}
     />
   );
 }
