@@ -5,15 +5,18 @@ import { useState } from "react";
 
 import { CoachTopbar } from "@/components/coach-topbar";
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
+import { MatchPanel } from "@/components/match-panel";
 import { computeHours, formatHoursMinutes } from "@/lib/coach-payroll";
 import { EVALUATION_CRITERIA, type PlayerAttendance, type PlayerAttendanceStatus, type PlayerEvaluation, type RosterPlayer } from "@/lib/coach-portal-repo";
 import type { CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
 import { publicSans } from "@/lib/fonts";
+import type { MatchConvocation, MatchDetails, MatchLineupSlot, MatchPlayerEvaluation, MatchRosterPlayer, PlaytimeSegment } from "@/lib/match-repo";
 import { SESSION_BLOCK_TYPES, type SessionBlock } from "@/lib/session-plan-repo";
 
 interface Props {
   coachName: string;
+  coachId: string;
   activity: CoachActivity;
   otherCoaches: { id: string; first_name: string; last_name: string }[];
   roster: RosterPlayer[];
@@ -21,6 +24,12 @@ interface Props {
   initialEvaluations: PlayerEvaluation[];
   sessionBlocks: SessionBlock[];
   initialExercises: Exercise[];
+  matchRoster: MatchRosterPlayer[];
+  initialMatchDetails: MatchDetails | null;
+  initialMatchConvocations: MatchConvocation[];
+  initialMatchLineup: MatchLineupSlot[];
+  initialMatchPlaytime: PlaytimeSegment[];
+  initialMatchEvaluations: MatchPlayerEvaluation[];
 }
 
 function NewExerciseForm({ onCreated, onCancel }: { onCreated: (exercise: Exercise) => void; onCancel: () => void }) {
@@ -346,7 +355,7 @@ function PlayerRow({
   );
 }
 
-export function CoachActiviteDetail({ coachName, activity, otherCoaches, roster, initialAttendance, initialEvaluations, sessionBlocks, initialExercises }: Props) {
+export function CoachActiviteDetail({ coachName, coachId, activity, otherCoaches, roster, initialAttendance, initialEvaluations, sessionBlocks, initialExercises, matchRoster, initialMatchDetails, initialMatchConvocations, initialMatchLineup, initialMatchPlaytime, initialMatchEvaluations }: Props) {
   const [attendanceMap, setAttendanceMap] = useState<Record<string, PlayerAttendanceStatus>>(
     Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status]))
   );
@@ -373,6 +382,20 @@ export function CoachActiviteDetail({ coachName, activity, otherCoaches, roster,
             {activity.location && ` · ${activity.location}`}
             {otherCoaches.length > 0 && ` · avec ${otherCoaches.map((c) => `${c.first_name} ${c.last_name}`).join(", ")}`}
           </p>
+
+          {activity.activity_type === "Match" && (
+            <MatchPanel
+              activityId={activity.id}
+              roster={matchRoster}
+              initialDetails={initialMatchDetails}
+              initialConvocations={initialMatchConvocations}
+              initialLineup={initialMatchLineup}
+              initialPlaytime={initialMatchPlaytime}
+              initialEvaluations={initialMatchEvaluations}
+              role="coach"
+              coachId={coachId}
+            />
+          )}
 
           <SessionPlanEditor activityId={activity.id} initialBlocks={sessionBlocks} initialExercises={initialExercises} />
 

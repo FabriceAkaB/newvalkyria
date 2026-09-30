@@ -5,9 +5,11 @@ import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { EntityDocuments } from "@/components/admin-entity-documents";
+import { MatchPanel } from "@/components/match-panel";
 import { computeAssignment, computeHours, formatHours } from "@/lib/coach-payroll";
 import type { AssignmentStatus, Coach, CoachActivity, CoachAssignment, CoachTypeRate } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
+import type { MatchConvocation, MatchDetails, MatchLineupSlot, MatchPlayerEvaluation, MatchRosterPlayer, PlaytimeSegment } from "@/lib/match-repo";
 import { formatCAD } from "@/lib/season-2027";
 import { SESSION_BLOCK_TYPES, type SessionBlock } from "@/lib/session-plan-repo";
 
@@ -112,6 +114,12 @@ interface Props {
   typeRates: CoachTypeRate[];
   initialBlocks: SessionBlock[];
   exercises: Exercise[];
+  matchRoster: MatchRosterPlayer[];
+  initialMatchDetails: MatchDetails | null;
+  initialMatchConvocations: MatchConvocation[];
+  initialMatchLineup: MatchLineupSlot[];
+  initialMatchPlaytime: PlaytimeSegment[];
+  initialMatchEvaluations: MatchPlayerEvaluation[];
 }
 
 const STATUS_LABELS: Record<AssignmentStatus, string> = {
@@ -279,7 +287,7 @@ function AssignmentRow({
   );
 }
 
-export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches, typeRates, initialBlocks, exercises }: Props) {
+export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches, typeRates, initialBlocks, exercises, matchRoster, initialMatchDetails, initialMatchConvocations, initialMatchLineup, initialMatchPlaytime, initialMatchEvaluations }: Props) {
   const [assignments, setAssignments] = useState(initialAssignments);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -421,6 +429,19 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
 
             <EntityDocuments entityType="coach_activity" entityId={activity.id} />
           </div>
+
+          {activity.activity_type === "Match" && (
+            <MatchPanel
+              activityId={activity.id}
+              roster={matchRoster}
+              initialDetails={initialMatchDetails}
+              initialConvocations={initialMatchConvocations}
+              initialLineup={initialMatchLineup}
+              initialPlaytime={initialMatchPlaytime}
+              initialEvaluations={initialMatchEvaluations}
+              role="admin"
+            />
+          )}
 
           <SessionPlanEditor activityId={activity.id} initialBlocks={initialBlocks} exercises={exercises} />
 
