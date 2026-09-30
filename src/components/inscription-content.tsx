@@ -1,6 +1,7 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
@@ -595,6 +596,30 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
   const programs = year ? getProgramsForYear(year, variant, live ?? undefined) : [];
   const slots = programCode && year ? getSlotsFor(programCode, year, variant, live ?? undefined) : [];
 
+  // Tuiles de la section publique : 2018 et 2017 sont deux tuiles distinctes
+  // mais mènent toutes deux à la même catégorie interne "2017" (déjà conçue
+  // pour couvrir les deux années de naissance — voir birthYearFromDob) ;
+  // la 6e tuile (2012) sort du tunnel TV/SV/NV vers Privilège Valkyria, un
+  // programme séparé à dates fixes. Le parcours avancé (AV) garde la liste
+  // d'années d'origine, inchangée.
+  const yearTiles: { key: string; label: string; image: StaticImageData; imagePosition?: string; onSelect?: () => void; href?: string }[] =
+    variant === "public"
+      ? [
+          { key: "2018", label: "2018", image: YEAR_IMAGES["2017"], onSelect: () => setYear("2017") },
+          { key: "2017", label: "2017", image: YEAR_IMAGES["2017"], onSelect: () => setYear("2017") },
+          { key: "2016", label: BIRTH_YEAR_LABELS["2016"], image: YEAR_IMAGES["2016"], onSelect: () => setYear("2016") },
+          { key: "2015", label: BIRTH_YEAR_LABELS["2015"], image: YEAR_IMAGES["2015"], onSelect: () => setYear("2015") },
+          {
+            key: "2014-2013",
+            label: BIRTH_YEAR_LABELS["2014-2013"],
+            image: YEAR_IMAGES["2014-2013"],
+            imagePosition: YEAR_IMAGE_POSITION["2014-2013"],
+            onSelect: () => setYear("2014-2013")
+          },
+          { key: "privilege-valkyria", label: "2012", image: YEAR_IMAGES["2014-2013"], href: "/programmes/privilege-valkyria" }
+        ]
+      : years.map((y) => ({ key: y, label: BIRTH_YEAR_LABELS[y], image: YEAR_IMAGES[y], imagePosition: YEAR_IMAGE_POSITION[y], onSelect: () => setYear(y) }));
+
   return (
     <>
       <section className={`insc-hero${isAdvanced ? " nv27-hero-advanced" : ""}`}>
@@ -629,20 +654,31 @@ function FunnelFlow({ variant }: { variant: "public" | "advanced" }) {
               <p className="nv27-step-kicker"><span className="nv27-step-n">1</span> Votre joueuse</p>
               <h2 className="nv27-step-q">Quelle est l&apos;année de naissance de votre joueuse ?</h2>
               <div className="nv27-year-grid">
-                {years.map((y) => (
-                  <button key={y} type="button" className={`nv27-year-btn${isAdvanced ? " nv27-year-btn-advanced" : ""}`} onClick={() => setYear(y)}>
-                    <Image
-                      src={YEAR_IMAGES[y]}
-                      alt=""
-                      fill
-                      className="object-cover nv27-year-btn-img"
-                      style={{ objectPosition: YEAR_IMAGE_POSITION[y] ?? "center" }}
-                      sizes="(max-width:640px) 50vw, 25vw"
-                    />
-                    <span className="nv27-year-btn-overlay" aria-hidden />
-                    <span className="nv27-year-btn-label">{BIRTH_YEAR_LABELS[y]}</span>
-                  </button>
-                ))}
+                {yearTiles.map((tile) => {
+                  const content = (
+                    <>
+                      <Image
+                        src={tile.image}
+                        alt=""
+                        fill
+                        className="object-cover nv27-year-btn-img"
+                        style={{ objectPosition: tile.imagePosition ?? "center" }}
+                        sizes="(max-width:640px) 50vw, 25vw"
+                      />
+                      <span className="nv27-year-btn-overlay" aria-hidden />
+                      <span className="nv27-year-btn-label">{tile.label}</span>
+                    </>
+                  );
+                  return tile.href ? (
+                    <Link key={tile.key} href={tile.href} className={`nv27-year-btn${isAdvanced ? " nv27-year-btn-advanced" : ""}`}>
+                      {content}
+                    </Link>
+                  ) : (
+                    <button key={tile.key} type="button" className={`nv27-year-btn${isAdvanced ? " nv27-year-btn-advanced" : ""}`} onClick={tile.onSelect}>
+                      {content}
+                    </button>
+                  );
+                })}
               </div>
               <p className="nv27-year-tagline">Ici, on amène le foot féminin au prochain niveau.</p>
               <div className="nv27-year-photo">

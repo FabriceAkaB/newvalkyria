@@ -231,12 +231,26 @@ export function AdminTopbar() {
   // par défaut. Le sélecteur bascule l'affichage pour la page courante — un
   // choix volontairement par page plutôt qu'une préférence globale, pour
   // éviter tout aller-retour avec le localStorage à l'hydratation.
-  const pinnedSeason: "ete" | "automne-hiver" | null = SEASON_ETE_LINKS.some((l) => pathname === l.href || pathname.startsWith(`${l.href}/`))
-    ? "ete"
-    : SEASON_AUTOMNE_HIVER_LINKS.some((l) => pathname === l.href || pathname.startsWith(`${l.href}/`))
-      ? "automne-hiver"
-      : null;
-  const [activeSeason, setActiveSeason] = useState<"ete" | "automne-hiver">(pinnedSeason ?? "automne-hiver");
+  const currentSeasonLink = (season: "ete" | "automne-hiver") => {
+    const links = SEASON_LINKS_BY_KEY[season];
+    const exact = links.find((l) => pathname === l.href);
+    if (exact) return exact;
+    // Repli sur préfixe le plus spécifique — "Vue d'ensemble" (souvent la
+    // racine de la saison) ne doit pas absorber les sous-pages qui
+    // commencent aussi par son href.
+    return links
+      .filter((l) => pathname.startsWith(`${l.href}/`))
+      .sort((a, b) => b.href.length - a.href.length)[0];
+  };
+  // Recalculé à chaque rendu directement depuis l'URL courante (usePathname
+  // est réactif aux transitions client) — jamais désynchronisé après une
+  // navigation, contrairement à un état qu'il faudrait resynchroniser.
+  const pinnedSeason: "ete" | "automne-hiver" | null = currentSeasonLink("ete") ? "ete" : currentSeasonLink("automne-hiver") ? "automne-hiver" : null;
+  // Mémoire du dernier choix manuel — utilisée seulement sur les pages
+  // neutres (ni Été ni Automne/Hiver), où basculer ne change que l'affichage
+  // du menu sans naviguer.
+  const [manualSeason, setManualSeason] = useState<"ete" | "automne-hiver">("automne-hiver");
+  const activeSeason = pinnedSeason ?? manualSeason;
 
   useEffect(() => {
     fetch("/api/admin/session")
@@ -245,7 +259,18 @@ export function AdminTopbar() {
       .catch(() => setRole(null));
   }, []);
 
-  const switchSeason = (season: "ete" | "automne-hiver") => setActiveSeason(season);
+  const switchSeason = (season: "ete" | "automne-hiver") => {
+    if (pinnedSeason && pinnedSeason !== season) {
+      // Sur une page propre à une saison, basculer navigue vers l'équivalent
+      // dans l'autre saison (même concept : Inscriptions → Inscriptions,
+      // etc.) plutôt que de simplement relabelliser le menu sans bouger.
+      const current = currentSeasonLink(pinnedSeason);
+      const match = current && SEASON_LINKS_BY_KEY[season].find((l) => l.label === current.label);
+      router.push(match?.href ?? SEASON_LINKS_BY_KEY[season][0].href);
+      return;
+    }
+    setManualSeason(season);
+  };
 
   const visibleGroups = GROUPS.filter((g) => !g.adminOnly || role === "admin");
 
