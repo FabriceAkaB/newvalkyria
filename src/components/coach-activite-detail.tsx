@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { CoachTopbar } from "@/components/coach-topbar";
+import { ExerciseDiagramView } from "@/components/exercise-diagram";
 import { computeHours, formatHoursMinutes } from "@/lib/coach-payroll";
 import { EVALUATION_CRITERIA, type PlayerAttendance, type PlayerAttendanceStatus, type PlayerEvaluation, type RosterPlayer } from "@/lib/coach-portal-repo";
 import type { CoachActivity } from "@/lib/coaches-repo";
@@ -42,7 +43,7 @@ function NewExerciseForm({ onCreated, onCancel }: { onCreated: (exercise: Exerci
       onCreated({
         id: data.id, title: title.trim(), objective: objective.trim() || null, category: null, level: null, duration_minutes: null,
         material: null, min_players: null, max_players: null, dimensions: null, instructions: instructions.trim() || null,
-        variants: null, coaching_points: null, common_mistakes: null, image_url: null, video_url: null,
+        variants: null, coaching_points: null, common_mistakes: null, image_url: null, video_url: null, diagram_data: null,
         created_at: new Date().toISOString(), updated_at: new Date().toISOString()
       });
     } finally {
@@ -159,6 +160,7 @@ function SessionPlanEditor({ activityId, initialBlocks, initialExercises }: { ac
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={exercise.image_url} alt={exercise.title} style={{ maxWidth: "100%", borderRadius: "6px", marginTop: "0.3rem" }} />
                   )}
+                  {exercise.diagram_data && <ExerciseDiagramView diagram={exercise.diagram_data} />}
                 </div>
               )}
             </div>

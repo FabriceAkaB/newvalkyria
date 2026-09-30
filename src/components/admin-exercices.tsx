@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
-import { EXERCISE_CATEGORIES, EXERCISE_LEVELS, type Exercise } from "@/lib/exercises-repo";
+import { ExerciseDiagramEditor, ExerciseDiagramView } from "@/components/exercise-diagram";
+import { EXERCISE_CATEGORIES, EXERCISE_LEVELS, type Exercise, type ExerciseDiagram } from "@/lib/exercises-repo";
 import { publicSans } from "@/lib/fonts";
 
 interface ExerciseFormState {
@@ -47,7 +48,7 @@ function toBody(f: ExerciseFormState) {
   };
 }
 
-function toExercisePatch(f: ExerciseFormState): Omit<Exercise, "id" | "image_url" | "created_at" | "updated_at"> {
+function toExercisePatch(f: ExerciseFormState): Omit<Exercise, "id" | "image_url" | "diagram_data" | "created_at" | "updated_at"> {
   const body = toBody(f);
   return {
     title: body.title,
@@ -112,8 +113,26 @@ function ExerciseForm({ initial, onSubmit, onCancel, saving, isCreating }: { ini
 function ExerciseCard({ exercise, canEdit, onUpdated, onDeleted }: { exercise: Exercise; canEdit: boolean; onUpdated: (e: Exercise) => void; onDeleted: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editingDiagram, setEditingDiagram] = useState(false);
+  const [savingDiagram, setSavingDiagram] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement | null>(null);
+
+  const saveDiagram = async (diagram: ExerciseDiagram) => {
+    setSavingDiagram(true);
+    try {
+      const res = await fetch(`/api/admin/exercises/${exercise.id}/diagram`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(diagram)
+      });
+      if (!res.ok) return;
+      onUpdated({ ...exercise, diagram_data: diagram });
+      setEditingDiagram(false);
+    } finally {
+      setSavingDiagram(false);
+    }
+  };
 
   const save = async (f: ExerciseFormState) => {
     setSaving(true);
@@ -189,10 +208,19 @@ function ExerciseCard({ exercise, canEdit, onUpdated, onDeleted }: { exercise: E
           {exercise.common_mistakes && <p style={{ margin: 0 }}><strong>Erreurs fréquentes :</strong> {exercise.common_mistakes}</p>}
           {exercise.video_url && <p style={{ margin: 0 }}><a href={exercise.video_url} target="_blank" rel="noreferrer" style={{ color: "#88c0d0" }}>Voir la vidéo →</a></p>}
 
+          {exercise.diagram_data && !editingDiagram && <ExerciseDiagramView diagram={exercise.diagram_data} />}
+
+          {editingDiagram && (
+            <ExerciseDiagramEditor initial={exercise.diagram_data} onSave={saveDiagram} saving={savingDiagram} />
+          )}
+
           {canEdit && (
-            <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.4rem" }}>
+            <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.4rem", flexWrap: "wrap" }}>
               <button className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.6rem" }} onClick={() => setEditing(true)}>Modifier</button>
-              <button className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.6rem" }} onClick={() => fileInput.current?.click()}>Photo/schéma</button>
+              <button className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.6rem" }} onClick={() => fileInput.current?.click()}>Photo</button>
+              <button className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.6rem" }} onClick={() => setEditingDiagram((v) => !v)}>
+                {editingDiagram ? "Fermer le schéma" : exercise.diagram_data ? "Modifier le schéma" : "+ Schéma visuel"}
+              </button>
               <button onClick={remove} style={{ fontSize: "0.72rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer" }}>Supprimer</button>
               <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={(e) => uploadImage(e.target.files?.[0])} />
             </div>
@@ -221,7 +249,7 @@ export function AdminExercices({ initialExercises, canEdit }: { initialExercises
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) return;
-      const newExercise: Exercise = { id: data.id, ...toExercisePatch(f), image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+      const newExercise: Exercise = { id: data.id, ...toExercisePatch(f), image_url: null, diagram_data: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
       setExercises((prev) => [...prev, newExercise].sort((a, b) => a.title.localeCompare(b.title)));
       setShowAdd(false);
     } finally {
