@@ -15,7 +15,7 @@ export const env = {
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   stripePriceId: process.env.STRIPE_PRICE_ID,
   resendApiKey: process.env.RESEND_API_KEY,
-  resendFrom: process.env.RESEND_FROM ?? "New Valkyria <no-reply@newvalkyria.ca>",
+  resendFrom: process.env.RESEND_FROM ?? "New Valkyria <no-reply@newvalkyria.com>",
   sanityProjectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   sanityDataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   sanityApiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION ?? "2025-01-01",

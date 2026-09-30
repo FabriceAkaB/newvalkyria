@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   title: "New Valkyria | Académie technique féminine",
   description:
     "Académie de coaching soccer féminin dans les Laurentides. Programme saison semi-privé, suivi technique, discipline et progression visible.",
-  metadataBase: new URL("https://www.newvalkyria.ca"),
+  metadataBase: new URL("https://www.newvalkyria.com"),
   alternates: { canonical: "/" },
   openGraph: {
     title: "New Valkyria",
@@ -59,9 +59,9 @@ const organizationJsonLd = {
   alternateName: "Académie New Valkyria",
   description:
     "Académie de soccer technique pour joueuses de 8 à 14 ans dans les Laurentides. Groupes semi-privés, suivi individuel, progression documentée.",
-  url: "https://www.newvalkyria.ca",
-  logo: "https://www.newvalkyria.ca/logo.png",
-  image: "https://www.newvalkyria.ca/og-image.jpg",
+  url: "https://www.newvalkyria.com",
+  logo: "https://www.newvalkyria.com/logo.png",
+  image: "https://www.newvalkyria.com/og-image.jpg",
   email: "info@newvalkyria.com",
   address: {
     "@type": "PostalAddress",

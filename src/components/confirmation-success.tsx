@@ -54,7 +54,7 @@ const STEPS_TRIAL = [
 
 export function ConfirmationSuccess({ sessionId, isWaitlist = false, isTrial = false, trialYear }: ConfirmationSuccessProps) {
   const [copied, setCopied] = useState(false);
-  const [shareUrl, setShareUrl] = useState("https://newvalkyria.ca/inscription");
+  const [shareUrl, setShareUrl] = useState("https://newvalkyria.com/inscription");
   const [recap, setRecap] = useState<RecapData | null>(null);
 
   useEffect(() => {

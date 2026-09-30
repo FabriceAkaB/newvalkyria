@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const sections = [
   {
     title: "Éditeur du site",
-    content: `New Valkyria\nAcadémie technique de soccer féminin\nLaurentides, Québec, Canada\nCourriel : info@newvalkyria.com\nSite web : www.newvalkyria.ca`
+    content: `New Valkyria\nAcadémie technique de soccer féminin\nLaurentides, Québec, Canada\nCourriel : info@newvalkyria.com\nSite web : www.newvalkyria.com`
   },
   {
     title: "Hébergement",

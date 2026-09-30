@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 const pages = ["", "/methode", "/equipe", "/inscription", "/confirmation", "/politique-confidentialite", "/mentions-legales"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://www.newvalkyria.ca";
+  const base = "https://www.newvalkyria.com";
 
   return pages.map((path) => ({
     url: `${base}${path}`,
