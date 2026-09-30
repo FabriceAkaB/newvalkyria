@@ -810,6 +810,7 @@ export async function getSeasonPaidInstallments(seasonId: string): Promise<Seaso
 }
 
 export interface PaymentPlanInstallmentOverview {
+  id: string;
   sequenceNo: number;
   amountCents: number;
   dueDate: string;
@@ -882,7 +883,7 @@ async function mapPaymentPlanRows(supabase: ReturnType<typeof db>, plans: any[] 
   const planIds = (plans as any[]).map((p) => p.id);
   const { data: installments, error: instError } = await supabase
     .from("registration_payment_plan_installments")
-    .select("plan_id, sequence_no, amount_cents, due_date, status, paid_at")
+    .select("id, plan_id, sequence_no, amount_cents, due_date, status, paid_at")
     .in("plan_id", planIds)
     .order("sequence_no", { ascending: true });
   if (instError) throw new Error(instError.message);
@@ -890,7 +891,7 @@ async function mapPaymentPlanRows(supabase: ReturnType<typeof db>, plans: any[] 
   const installmentsByPlan = new Map<string, PaymentPlanInstallmentOverview[]>();
   for (const inst of (installments ?? []) as any[]) {
     const list = installmentsByPlan.get(inst.plan_id) ?? [];
-    list.push({ sequenceNo: inst.sequence_no, amountCents: inst.amount_cents, dueDate: inst.due_date, status: inst.status, paidAt: inst.paid_at });
+    list.push({ id: inst.id, sequenceNo: inst.sequence_no, amountCents: inst.amount_cents, dueDate: inst.due_date, status: inst.status, paidAt: inst.paid_at });
     installmentsByPlan.set(inst.plan_id, list);
   }
 
@@ -998,6 +999,68 @@ export async function markInstallmentFailed(
   if (error) throw new Error(error.message);
 
   return { attemptCount, isFinal, wasFirstFailure };
+}
+
+/** Remplace la carte enregistrée sur un plan (client + méthode Stripe) —
+ *  utilisé quand un parent paie un versement en retard avec une nouvelle
+ *  carte (la sienne au dossier a échoué) : les versements suivants seront
+ *  prélevés sur la nouvelle carte plutôt que de rééchouer sur l'ancienne. */
+export async function updatePaymentPlanCard(planId: string, input: { stripeCustomerId: string; stripePaymentMethodId: string }): Promise<void> {
+  const { error } = await db()
+    .from("registration_payment_plans")
+    .update({ stripe_customer_id: input.stripeCustomerId, stripe_payment_method_id: input.stripePaymentMethodId })
+    .eq("id", planId);
+  if (error) throw new Error(error.message);
+}
+
+export interface InstallmentWithContext {
+  id: string;
+  planId: string;
+  sequenceNo: number;
+  amountCents: number;
+  installmentCount: number;
+  status: "pending" | "paid" | "failed" | "failed_final";
+  registrationId: string;
+  parentName: string;
+  parentEmail: string;
+  programId: string | null;
+  playerFirstName: string | null;
+  playerLastName: string | null;
+}
+
+/** Un versement précis avec le contexte nécessaire pour générer un lien de
+ *  paiement de remplacement (voir /api/admin/paiements-echelonnes/[id]/lien-paiement). */
+export async function getInstallmentWithContext(installmentId: string): Promise<InstallmentWithContext | null> {
+  const { data, error } = await db()
+    .from("registration_payment_plan_installments")
+    .select(`
+      id, plan_id, sequence_no, amount_cents, status,
+      registration_payment_plans!inner (
+        installment_count,
+        registrations!inner ( id, parent_name, parent_email, program_id, player_first_name, player_last_name )
+      )
+    `)
+    .eq("id", installmentId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const plan = (data as any).registration_payment_plans;
+  const registration = plan.registrations;
+  return {
+    id: data.id,
+    planId: data.plan_id,
+    sequenceNo: data.sequence_no,
+    amountCents: data.amount_cents,
+    installmentCount: plan.installment_count,
+    status: data.status,
+    registrationId: registration.id,
+    parentName: registration.parent_name,
+    parentEmail: registration.parent_email,
+    programId: registration.program_id,
+    playerFirstName: registration.player_first_name,
+    playerLastName: registration.player_last_name
+  };
 }
 
 /** Compte les inscriptions actives (hors annulées) pour une combinaison

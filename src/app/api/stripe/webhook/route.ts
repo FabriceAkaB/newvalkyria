@@ -8,7 +8,13 @@ import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
 import { hasProcessedStripeEvent, markLeadAsPaid, recordStripeEvent } from "@/lib/repositories";
 import { PROGRAMS, type ProgramCode } from "@/lib/season-2027";
-import { activatePaymentPlan, completeDirectLinkRegistration, markRegistrationPaidByCheckoutSession } from "@/lib/season-admin-repo";
+import {
+  activatePaymentPlan,
+  completeDirectLinkRegistration,
+  markInstallmentPaid,
+  markRegistrationPaidByCheckoutSession,
+  updatePaymentPlanCard
+} from "@/lib/season-admin-repo";
 import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
 import {
   activatePaymentPlan as activateSessionProgramPaymentPlan,
@@ -115,6 +121,33 @@ export async function POST(request: Request) {
       await markOrderPaidByCheckoutSession(session.id, paymentIntentId).catch((error) => {
         console.error("Unable to mark signup-bonus bag order as paid", error);
       });
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Lien de paiement de remplacement pour un versement échelonné en
+    // échec — voir /api/admin/paiements-echelonnes/[id]/lien-paiement. Marque
+    // uniquement ce versement payé et remplace la carte du plan par la
+    // nouvelle, sans toucher au statut de l'inscription (déjà "paid" depuis
+    // le 1er versement) ni renvoyer de courriel de confirmation d'inscription. ──
+    if (checkoutType === "installment-retry") {
+      const installmentId = session.metadata?.installmentId;
+      const planId = session.metadata?.planId;
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
+      if (installmentId && paymentIntentId) {
+        try {
+          await markInstallmentPaid(installmentId, paymentIntentId);
+          if (planId) {
+            const stripeCustomerId = typeof session.customer === "string" ? session.customer : undefined;
+            const paymentIntent = await getStripeClient().paymentIntents.retrieve(paymentIntentId);
+            const stripePaymentMethodId = typeof paymentIntent.payment_method === "string" ? paymentIntent.payment_method : undefined;
+            if (stripeCustomerId && stripePaymentMethodId) {
+              await updatePaymentPlanCard(planId, { stripeCustomerId, stripePaymentMethodId });
+            }
+          }
+        } catch (error) {
+          console.error("Unable to process installment retry payment", error);
+        }
+      }
       return NextResponse.json({ received: true });
     }
 

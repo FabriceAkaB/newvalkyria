@@ -3,6 +3,47 @@
 import Link from "next/link";
 import { Fragment, useMemo, useState } from "react";
 
+function GenerateLinkButton({ installmentId }: { installmentId: string }) {
+  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
+  const [link, setLink] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const generate = async () => {
+    setState("loading");
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/paiements-echelonnes/${installmentId}/lien-paiement`, { method: "POST" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? "Erreur");
+      setLink(data.checkoutUrl);
+      setState("done");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+      setState("idle");
+    }
+  };
+
+  if (link) {
+    return (
+      <div style={{ marginTop: "0.4rem", display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+        <input className="admin-input" readOnly value={link} onFocus={(e) => e.target.select()} style={{ fontSize: "0.68rem" }} />
+        <button className="admin-btn-ghost" style={{ fontSize: "0.62rem", padding: "0.2rem 0.5rem", alignSelf: "flex-start" }} onClick={() => navigator.clipboard.writeText(link)}>
+          📋 Copier le lien
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: "0.4rem" }}>
+      <button className="admin-btn-ghost" style={{ fontSize: "0.62rem", padding: "0.2rem 0.5rem" }} onClick={generate} disabled={state === "loading"}>
+        {state === "loading" ? "..." : "💳 Générer un lien de paiement (autre carte)"}
+      </button>
+      {error && <p className="admin-error" style={{ fontSize: "0.65rem", margin: "0.2rem 0 0" }}>{error}</p>}
+    </div>
+  );
+}
+
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { PaymentPlanOverview } from "@/lib/season-admin-repo";
 import { formatCAD } from "@/lib/season-2027";
@@ -141,6 +182,7 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
                                     {" · "}{INSTALLMENT_STATUS_LABELS[i.status] ?? i.status}
                                     {i.paidAt && ` (${new Date(i.paidAt).toLocaleDateString("fr-CA", { day: "numeric", month: "short" })})`}
                                   </p>
+                                  {i.status !== "paid" && <GenerateLinkButton installmentId={i.id} />}
                                 </div>
                               ))}
                             </div>
