@@ -151,6 +151,29 @@ export function AdminSessionProgram({
     }
   };
 
+  const exportCsv = () => {
+    const headers = ["Date", "Nom parent", "Prénom joueur", "Nom joueur", "Date de naissance", "Courriel", "Téléphone", "Ville", "Statut"];
+    const rows = registrations.map((r) => [
+      new Date(r.created_at).toLocaleDateString("fr-CA"),
+      r.parent_name,
+      r.player_first_name,
+      r.player_last_name,
+      r.player_dob ?? "",
+      r.parent_email,
+      r.parent_phone,
+      r.city ?? "",
+      REGISTRATION_STATUSES.find((s) => s.value === r.status)?.label ?? r.status
+    ]);
+    const csv = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slug}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <AdminTopbar />
@@ -180,9 +203,14 @@ export function AdminSessionProgram({
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "1.5rem 0 0.6rem", flexWrap: "wrap", gap: "0.5rem" }}>
             <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", margin: 0 }}>Inscrits ({registrations.length})</p>
-            <button className="admin-btn-ghost" onClick={copyEmails} disabled={copyingEmails} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>
-              {copyingEmails ? "..." : "📋 Copier tous les courriels"}
-            </button>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button className="admin-btn-ghost" onClick={copyEmails} disabled={copyingEmails} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>
+                {copyingEmails ? "..." : "📋 Copier tous les courriels"}
+              </button>
+              <button className="admin-btn-ghost" onClick={exportCsv} disabled={registrations.length === 0} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>
+                ↓ Exporter CSV
+              </button>
+            </div>
           </div>
           {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
 
