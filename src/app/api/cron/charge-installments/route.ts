@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isAdminRequest } from "@/lib/admin-auth";
 import { sendInstallmentReceiptEmail, sendPaymentPlanFailedEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
@@ -18,13 +19,13 @@ import { getStripeClient } from "@/lib/stripe";
 
 /** Prélève automatiquement les versements échus (saison Automne/Hiver +
  *  Sport-Études) sur la carte enregistrée à l'inscription. Déclenché
- *  quotidiennement par Vercel Cron (voir vercel.json) ; peut aussi être
- *  appelé manuellement pour vérification, avec le bon secret. */
+ *  quotidiennement par Vercel Cron (voir vercel.json, authentifié via
+ *  CRON_SECRET) ; peut aussi être déclenché manuellement par un admin
+ *  connecté (ex. pour vérifier/forcer un prélèvement sans attendre le cron). */
 export async function GET(request: Request) {
-  if (!env.cronSecret) return jsonError("CRON_SECRET manquant", 500);
-
   const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${env.cronSecret}`) return jsonError("Non autorisé", 401);
+  const hasValidCronSecret = env.cronSecret && auth === `Bearer ${env.cronSecret}`;
+  if (!hasValidCronSecret && !(await isAdminRequest())) return jsonError("Non autorisé", 401);
 
   const [seasonDue, sportEtudesDue, sessionProgramDue] = await Promise.all([
     getDueSeasonInstallments(),
