@@ -201,29 +201,72 @@ function durationHHMM(start: string, end: string): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-function eventRow(input: { date: string; startTime: string; endTime: string; location: string; groupe: string; titre: string }): (string | null)[] {
+/** Ligne "Évènement" (pratique, tournoi, camp...) — tout ce qui n'est pas un
+ *  match officiel contre un autre club. */
+function eventRow(input: { date: string; startTime: string; endTime: string; location: string | null; groupe: string; titre: string }): (string | null)[] {
   return [
     "Évènement",
     input.date,
     input.startTime.slice(0, 5),
     durationHHMM(input.startTime.slice(0, 5), input.endTime.slice(0, 5)),
-    input.location,
-    null,
+    input.location ?? "",
+    null, // Opposant — uniquement compétition
     input.groupe,
     "", // ACTIVITÉ — à compléter avec le nom exact de la plateforme
-    null,
-    null,
-    null,
+    null, // Numéro de compétition — uniquement compétition
+    null, // Type de compétition — uniquement compétition
+    null, // Domicile ou visiteur — uniquement compétition
     input.titre,
-    null,
-    null
+    null, // Description
+    null // Marquer comme présent
   ];
 }
 
-/** Rassemble toutes les dates réelles ajoutées à l'horaire (pratiques
- *  hebdomadaires Automne/Hiver) ainsi que les séances à dates fixes
- *  (Sport-Études, Privilège Valkyria, Programme Intensif) en une seule
- *  liste prête pour l'import d'événements MonClubSportif. */
+/** Ligne "Compétition" (match contre un autre club) — OPPOSANT est
+ *  obligatoire dans le gabarit, donc un match sans adversaire connu
+ *  (match_details pas encore rempli) est exporté comme "Évènement" plutôt
+ *  que de produire une ligne compétition incomplète (voir appelant). */
+function competitionRow(input: {
+  date: string;
+  startTime: string;
+  endTime: string;
+  location: string | null;
+  groupe: string;
+  opposant: string;
+  typeCompetition: string;
+  domicileOuVisiteur: "Domicile" | "Visiteur";
+}): (string | null)[] {
+  return [
+    "Compétition",
+    input.date,
+    input.startTime.slice(0, 5),
+    durationHHMM(input.startTime.slice(0, 5), input.endTime.slice(0, 5)),
+    input.location ?? "",
+    input.opposant,
+    input.groupe,
+    "", // ACTIVITÉ — à compléter avec le nom exact de la plateforme
+    null, // Numéro de compétition — jamais suivi dans nos systèmes
+    input.typeCompetition,
+    input.domicileOuVisiteur,
+    null, // Titre — uniquement évènement
+    null, // Description — uniquement évènement
+    null // Marquer comme présent
+  ];
+}
+
+/** Rassemble toutes les activités réelles de tous les programmes (peu
+ *  importe lequel) en une seule liste prête pour l'import d'événements
+ *  MonClubSportif :
+ *  - Horaire Automne/Hiver (pratiques hebdomadaires TV/SV/NV...)
+ *  - Sport-Études, Privilège Valkyria, Programme Intensif (dates fixes)
+ *  - Entraînement (coach_activities) — pratiques, matchs, tournois, camps...
+ *    planifiés depuis l'onglet Entraînement, quel que soit le groupe/la
+ *    catégorie. Un match devient une ligne "Compétition" dès que son
+ *    adversaire est renseigné (voir la fiche du match) ; sinon il reste une
+ *    ligne "Évènement" en attendant.
+ *  Note : si une même pratique est à la fois une plage horaire ET une
+ *  activité d'Entraînement pour la même date, elle apparaîtra deux fois —
+ *  à fusionner manuellement au besoin avant l'import. */
 export async function getAllEventsForExport(): Promise<(string | null)[][]> {
   const supabase = db();
   const rows: (string | null)[][] = [];
@@ -270,6 +313,56 @@ export async function getAllEventsForExport(): Promise<(string | null)[][]> {
     const program = d.session_programs as { name?: string } | null;
     const groupe = program?.name ?? "Programme";
     rows.push(eventRow({ date: d.session_date, startTime: d.start_time, endTime: d.end_time, location: d.location, groupe, titre: `Pratique ${groupe}` }));
+  }
+
+  // ── Entraînement — toutes les activités (pratiques, matchs, tournois...)
+  //    planifiées depuis coach_activities, peu importe la catégorie/le groupe ──
+  const { data: activities, error: activitiesError } = await supabase
+    .from("coach_activities")
+    .select("id, activity_date, start_time, end_time, location, category, activity_type, title");
+  if (activitiesError) throw new Error(activitiesError.message);
+
+  const matchIds = (activities ?? []).filter((a: any) => a.activity_type === "Match").map((a: any) => a.id);
+  const matchDetailsById = new Map<string, { opponent_name: string; home_away: string; status: string }>();
+  if (matchIds.length > 0) {
+    const { data: matchDetails, error: matchError } = await supabase
+      .from("match_details")
+      .select("activity_id, opponent_name, home_away, status")
+      .in("activity_id", matchIds);
+    if (matchError) throw new Error(matchError.message);
+    for (const m of matchDetails ?? []) matchDetailsById.set(m.activity_id, m);
+  }
+
+  for (const a of activities ?? []) {
+    const groupe = a.category ?? a.activity_type;
+    if (a.activity_type === "Match") {
+      const details = matchDetailsById.get(a.id);
+      if (details?.opponent_name) {
+        rows.push(
+          competitionRow({
+            date: a.activity_date,
+            startTime: a.start_time,
+            endTime: a.end_time,
+            location: a.location,
+            groupe,
+            opposant: details.opponent_name,
+            typeCompetition: "Saison",
+            domicileOuVisiteur: details.home_away === "away" ? "Visiteur" : "Domicile"
+          })
+        );
+        continue;
+      }
+    }
+    rows.push(
+      eventRow({
+        date: a.activity_date,
+        startTime: a.start_time,
+        endTime: a.end_time,
+        location: a.location,
+        groupe,
+        titre: a.title ? `${a.activity_type} — ${a.title}` : `${a.activity_type} — ${groupe}`
+      })
+    );
   }
 
   return rows;
