@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as {
     programCode?: ProgramCode;
-    year?: "2017" | "2016" | "2015" | "2014-2013";
+    year?: "2017" | "2016" | "2015" | "2014-2013" | "2013-2012";
     slotId?: string;
     paymentPlan?: "full" | "installments";
     /** Facultatif — pré-remplit la fiche en attente pour savoir à qui le lien a
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   // La Demi-saison (TVD) est volontairement fermée au tunnel public (eligibleYears
   // vide) : elle ne se vend que par lien direct, donc l'admin n'y est pas bloqué.
   const eligibleYears = body.programCode === "TVD" ? undefined : PROGRAMS[body.programCode]?.eligibleYears;
-  if (eligibleYears && !eligibleYears.includes(body.year)) {
+  if (eligibleYears && !(eligibleYears as readonly string[]).includes(body.year)) {
     return jsonError("Ce programme n'est pas disponible pour cette catégorie.", 409);
   }
 
