@@ -3,6 +3,36 @@
 import Link from "next/link";
 import { Fragment, useMemo, useState } from "react";
 
+function ChargeNowButton({ installmentId, onCharged }: { installmentId: string; onCharged: () => void }) {
+  const [state, setState] = useState<"idle" | "loading">("idle");
+  const [result, setResult] = useState<string | null>(null);
+
+  const charge = async () => {
+    setState("loading");
+    setResult(null);
+    try {
+      const res = await fetch(`/api/admin/paiements-echelonnes/${installmentId}/prelever`, { method: "POST" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? "Erreur");
+      setResult("✓ Prélevé avec succès");
+      onCharged();
+    } catch (err) {
+      setResult(`✗ ${err instanceof Error ? err.message : "Erreur"}`);
+    } finally {
+      setState("idle");
+    }
+  };
+
+  return (
+    <div style={{ marginTop: "0.3rem" }}>
+      <button className="admin-btn-ghost" style={{ fontSize: "0.62rem", padding: "0.2rem 0.5rem" }} onClick={charge} disabled={state === "loading"}>
+        {state === "loading" ? "..." : "💰 Prélever maintenant (carte au dossier)"}
+      </button>
+      {result && <p style={{ fontSize: "0.65rem", color: result.startsWith("✓") ? "#7fd88f" : "#ff9999", margin: "0.2rem 0 0" }}>{result}</p>}
+    </div>
+  );
+}
+
 function GenerateLinkButton({ installmentId }: { installmentId: string }) {
   const [state, setState] = useState<"idle" | "loading" | "done">("idle");
   const [link, setLink] = useState<string | null>(null);
@@ -182,7 +212,12 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
                                     {" · "}{INSTALLMENT_STATUS_LABELS[i.status] ?? i.status}
                                     {i.paidAt && ` (${new Date(i.paidAt).toLocaleDateString("fr-CA", { day: "numeric", month: "short" })})`}
                                   </p>
-                                  {i.status !== "paid" && <GenerateLinkButton installmentId={i.id} />}
+                                  {i.status !== "paid" && (
+                                    <>
+                                      <ChargeNowButton installmentId={i.id} onCharged={() => window.location.reload()} />
+                                      <GenerateLinkButton installmentId={i.id} />
+                                    </>
+                                  )}
                                 </div>
                               ))}
                             </div>
