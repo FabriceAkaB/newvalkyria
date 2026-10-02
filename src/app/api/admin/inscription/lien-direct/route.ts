@@ -55,7 +55,9 @@ export async function POST(request: Request) {
   const program = programs.find((p) => p.id === body.programCode);
   if (!program) return jsonError("Programme introuvable", 404);
 
-  const eligibleYears = PROGRAMS[body.programCode]?.eligibleYears;
+  // La Demi-saison (TVD) est volontairement fermée au tunnel public (eligibleYears
+  // vide) : elle ne se vend que par lien direct, donc l'admin n'y est pas bloqué.
+  const eligibleYears = body.programCode === "TVD" ? undefined : PROGRAMS[body.programCode]?.eligibleYears;
   if (eligibleYears && !eligibleYears.includes(body.year)) {
     return jsonError("Ce programme n'est pas disponible pour cette catégorie.", 409);
   }
