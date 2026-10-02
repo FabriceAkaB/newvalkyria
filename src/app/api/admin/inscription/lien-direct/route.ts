@@ -16,7 +16,6 @@ import {
   getSeasonProgramCategories,
   getSeasonPrograms,
   getSeasonSlots,
-  setRegistrationCheckoutSession
 } from "@/lib/season-admin-repo";
 import { getStripeClient } from "@/lib/stripe";
 
@@ -36,6 +35,13 @@ export async function POST(request: Request) {
     year?: "2017" | "2016" | "2015" | "2014-2013";
     slotId?: string;
     paymentPlan?: "full" | "installments";
+    /** Facultatif — pré-remplit la fiche en attente pour savoir à qui le lien a
+     *  été envoyé (le parent peut quand même saisir ses vraies infos sur Stripe). */
+    parentName?: string;
+    parentEmail?: string;
+    parentPhone?: string;
+    playerFirstName?: string;
+    playerLastName?: string;
   } | null;
 
   if (!body?.programCode || !body.year) return jsonError("Programme et année requis", 400);
@@ -83,12 +89,12 @@ export async function POST(request: Request) {
     programId: body.programCode,
     categoryId: body.year,
     timeSlotTemplateId: dbSlotId ?? null,
-    parentName: "(à compléter — lien direct)",
-    parentEmail: "en-attente@newvalkyria.temp",
-    parentPhone: "",
+    parentName: body.parentName?.trim() || "(à compléter — lien direct)",
+    parentEmail: body.parentEmail?.trim() || "en-attente@newvalkyria.temp",
+    parentPhone: body.parentPhone?.trim() || "",
     city: null,
-    playerFirstName: null,
-    playerLastName: null,
+    playerFirstName: body.playerFirstName?.trim() || null,
+    playerLastName: body.playerLastName?.trim() || null,
     playerDob: null,
     advancedGroup: false,
     isTrial: false
@@ -120,8 +126,12 @@ export async function POST(request: Request) {
       ? `${program.name} — Saison Automne/Hiver 2026 (1er versement sur ${installmentPlan.dueDates.length})`
       : `${program.name} — Saison Automne/Hiver 2026`;
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+    // Payment Link (lien court buy.stripe.com, à usage unique) plutôt qu'une
+    // Checkout Session brute : l'URL longue d'une session casse facilement
+    // quand elle est copiée-collée dans un texto. La session Stripe n'existe
+    // qu'au paiement — le webhook rattache alors l'inscription via
+    // metadata.registrationId (voir stripe/webhook).
+    const session = await stripe.paymentLinks.create({
       payment_method_types: ["card"],
       phone_number_collection: { enabled: true },
       custom_fields: customFields,
@@ -135,9 +145,8 @@ export async function POST(request: Request) {
           }
         }
       ],
-      ...(installmentPlan
-        ? { customer_creation: "always" as const, payment_intent_data: { setup_future_usage: "off_session" as const } }
-        : {}),
+      ...(installmentPlan ? { customer_creation: "always" as const, payment_intent_data: { setup_future_usage: "off_session" as const } } : {}),
+      restrictions: { completed_sessions: { limit: 1 } },
       metadata: {
         checkoutType: "season-registration",
         seasonId: SEASON_DB_ID,
@@ -145,15 +154,12 @@ export async function POST(request: Request) {
         isDirectLink: "true",
         ...(paymentPlanId ? { paymentPlanId } : {})
       },
-      success_url: `${baseUrl}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/inscription?cancelled=1`
+      after_completion: { type: "redirect", redirect: { url: `${baseUrl}/confirmation?session_id={CHECKOUT_SESSION_ID}` } }
     });
 
     if (!session.url) throw new Error("Stripe n'a pas retourné d'URL de paiement.");
 
-    await setRegistrationCheckoutSession(registrationId, session.id);
-
-    return NextResponse.json({ checkoutUrl: session.url });
+    return NextResponse.json({ checkoutUrl: session.url, registrationId });
   } catch (error) {
     await cancelRegistration(registrationId).catch(() => {});
     if (paymentPlanId) await deletePaymentPlan(paymentPlanId).catch(() => {});

@@ -13,6 +13,7 @@ import {
   completeDirectLinkRegistration,
   markInstallmentPaid,
   markRegistrationPaidByCheckoutSession,
+  setRegistrationCheckoutSession,
   updatePaymentPlanCard
 } from "@/lib/season-admin-repo";
 import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
@@ -70,6 +71,9 @@ export async function POST(request: Request) {
         const [playerFirstName, ...playerLastParts] = rawPlayerName.split(/\s+/).filter(Boolean);
         const playerLastName = playerLastParts.join(" ");
         try {
+          // Un Payment Link n'a pas de session connue à l'avance : on rattache
+          // la session Stripe à l'inscription ici, avant de la marquer payée.
+          await setRegistrationCheckoutSession(session.metadata.registrationId, session.id);
           await completeDirectLinkRegistration(session.metadata.registrationId, {
             parentName,
             parentEmail: session.customer_details?.email ?? "inconnu@newvalkyria.temp",
