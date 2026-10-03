@@ -25,6 +25,7 @@ const STATUS_LABELS: Record<RegistrationStatus, string> = {
   confirmed: "Confirmée",
   paid: "Payée",
   waitlist: "Liste d'attente",
+  unavailable: "Indisponible pour cette saison",
   cancelled: "Annulée"
 };
 
@@ -44,6 +45,7 @@ function isHalfSeasonExpiringSoon(r: Registration): boolean {
 }
 
 function StatusBadge({ status, isTrial, trialDate }: { status: RegistrationStatus; isTrial?: boolean; trialDate?: string | null }) {
+  if (status === "unavailable") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(150,150,170,0.18)", color: "#b4b4c8", borderColor: "rgba(150,150,170,0.45)" }}>Indisponible cette saison</span>;
   if (status === "waitlist") return <span className="admin-badge admin-badge-waitlist">Liste d&apos;attente</span>;
   if (status === "paid") return <span className="admin-badge admin-badge-paid">✓ Payée</span>;
   if (status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "#9ec9ff", borderColor: "#465671" }}>✓ Confirmée</span>;
@@ -634,12 +636,13 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
     confirmed: registrations.filter((r) => r.status === "confirmed").length,
     paid: registrations.filter((r) => r.status === "paid").length,
     waitlist: registrations.filter((r) => r.status === "waitlist").length,
+    unavailable: registrations.filter((r) => r.status === "unavailable").length,
     cancelled: registrations.filter((r) => r.status === "cancelled").length
   };
 
   const filtered = registrations
     .filter((r) => {
-      if (filter === "all" && r.status === "cancelled") return false;
+      if (filter === "all" && (r.status === "cancelled" || r.status === "unavailable")) return false;
       if (filter !== "all" && r.status !== filter) return false;
       if (categoryFilter !== "all" && r.category_id !== categoryFilter) return false;
       if (programFilter !== "all" && r.program_id !== programFilter) return false;
@@ -709,7 +712,7 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
       const emails = Array.from(
         new Set(
           registrations
-            .filter((r) => r.status !== "cancelled")
+            .filter((r) => r.status !== "cancelled" && r.status !== "unavailable")
             .map((r) => r.parent_email.trim().toLowerCase())
         )
       ).sort();
@@ -747,7 +750,7 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
 
           <div className="admin-filters-row">
             <div className="admin-filters">
-              {(["all", "pending", "confirmed", "paid", "waitlist", "cancelled"] as const).map((f) => (
+              {(["all", "pending", "confirmed", "paid", "waitlist", "unavailable", "cancelled"] as const).map((f) => (
                 <button key={f} onClick={() => setFilter(f)} data-active={String(filter === f)} className="admin-filter-btn">
                   {f === "all" ? "Toutes" : STATUS_LABELS[f]}
                   <span className="admin-filter-count">{counts[f]}</span>

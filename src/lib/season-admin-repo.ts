@@ -73,7 +73,7 @@ export interface TimeSlotDate {
   note: string | null;
 }
 
-export type RegistrationStatus = "pending" | "confirmed" | "paid" | "waitlist" | "cancelled";
+export type RegistrationStatus = "pending" | "confirmed" | "paid" | "waitlist" | "unavailable" | "cancelled";
 
 export interface Registration {
   id: string;

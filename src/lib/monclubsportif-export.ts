@@ -90,7 +90,8 @@ export async function getAllMembersForExport(): Promise<(string | null)[][]> {
   const { data: seasonRegs, error: seasonError } = await supabase
     .from("registrations")
     .select("player_first_name, player_last_name, player_dob, parent_name, parent_email, parent_phone, city, category_id, program_id, season_id")
-    .neq("status", "cancelled");
+    .neq("status", "cancelled")
+    .neq("status", "unavailable");
   if (seasonError) throw new Error(seasonError.message);
   for (const r of seasonRegs ?? []) {
     rows.push({

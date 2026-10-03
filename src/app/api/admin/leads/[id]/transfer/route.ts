@@ -4,7 +4,7 @@ import { isAdminRequest } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
 import { createRegistration, type RegistrationStatus } from "@/lib/season-admin-repo";
 
-const VALID_STATUSES: readonly string[] = ["pending", "confirmed", "paid", "waitlist", "cancelled"] satisfies readonly RegistrationStatus[];
+const VALID_STATUSES: readonly string[] = ["pending", "confirmed", "paid", "waitlist", "unavailable", "cancelled"] satisfies readonly RegistrationStatus[];
 
 /** Transfère une inscription Été 2026 (lead) vers une inscription d'une
  *  autre saison — crée une NOUVELLE inscription, ne touche jamais au lead

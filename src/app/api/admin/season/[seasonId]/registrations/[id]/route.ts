@@ -6,7 +6,7 @@ import { jsonError } from "@/lib/http";
 import type { RegistrationStatus } from "@/lib/season-admin-repo";
 import { convertTrialToOfficial, deleteRegistration, getRegistrationById, updateRegistration } from "@/lib/season-admin-repo";
 
-const VALID_STATUSES: readonly string[] = ["pending", "confirmed", "paid", "waitlist", "cancelled"] satisfies readonly RegistrationStatus[];
+const VALID_STATUSES: readonly string[] = ["pending", "confirmed", "paid", "waitlist", "unavailable", "cancelled"] satisfies readonly RegistrationStatus[];
 const ACTOR_LABEL: Record<"admin" | "gerante", string> = { admin: "JP", gerante: "Gérante" };
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {

@@ -39,7 +39,7 @@ export function AdminSaisonOverview({ season, categories, programs, slots, regis
     localStorage.setItem(key, String(Date.now()));
   }, [season.id]);
 
-  const active = registrations.filter((r) => r.status !== "cancelled");
+  const active = registrations.filter((r) => r.status !== "cancelled" && r.status !== "unavailable");
   const paid = active.filter((r) => r.status === "paid");
   const pending = active.filter((r) => r.status === "pending" || r.status === "confirmed");
   const waitlist = active.filter((r) => r.status === "waitlist");
