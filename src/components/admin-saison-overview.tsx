@@ -116,7 +116,8 @@ export function AdminSaisonOverview({ season, categories, programs, slots, regis
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "1rem" }}>Par plage horaire</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
             {slots.map((slot) => {
-              const slotRegs = active.filter((r) => r.time_slot_template_id === slot.id);
+              // Une inscription n'apparaît dans la plage horaire (et n'y occupe une place) qu'une fois payée.
+              const slotRegs = paid.filter((r) => r.time_slot_template_id === slot.id);
               const isFull = slotRegs.length >= slot.max_places;
               const remaining = Math.max(0, slot.max_places - slotRegs.length);
               return (

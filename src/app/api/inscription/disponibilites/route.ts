@@ -16,7 +16,8 @@ export async function GET() {
     getSeasonRegistrations(SEASON_DB_ID)
   ]);
 
-  const active = registrations.filter((r) => r.status !== "cancelled");
+  // Seules les inscriptions payées occupent une place (capacité et plages horaires).
+  const active = registrations.filter((r) => r.status === "paid");
 
   const programCategory: Record<string, { max: number; taken: number }> = {};
   for (const pc of programCategories) {

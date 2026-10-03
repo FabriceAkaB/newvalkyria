@@ -28,7 +28,8 @@ export function AdminSaisonCapacite({ season, categories, programs, programCateg
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const active = registrations.filter((r) => r.status !== "cancelled");
+  // Seules les inscriptions payées occupent une place.
+  const active = registrations.filter((r) => r.status === "paid");
 
   const takenFor = (programId: string, categoryId: string) =>
     active.filter((r) => r.program_id === programId && r.category_id === categoryId).length;

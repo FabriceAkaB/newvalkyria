@@ -554,6 +554,24 @@ export interface CreateRegistrationInput {
   trialDate?: string | null;
 }
 
+/** Une personne ne peut pas figurer deux fois dans les listes : quand une
+ *  vraie inscription (en attente ou payée) est créée pour une joueuse, ses
+ *  entrées de liste d'attente de la même saison sont retirées (annulées). */
+async function cancelDuplicateWaitlistEntries(seasonId: string, playerId: string | null, parentEmail: string, first: string | null, last: string | null): Promise<void> {
+  const supabase = db();
+  const { data } = await supabase
+    .from("registrations")
+    .select("id, player_id, player_first_name, player_last_name, parent_email")
+    .eq("season_id", seasonId)
+    .eq("status", "waitlist");
+  const norm = (v: string | null | undefined) => (v ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  const name = `${norm(first)} ${norm(last)}`.trim();
+  const ids = ((data ?? []) as { id: string; player_id: string | null; player_first_name: string | null; player_last_name: string | null; parent_email: string }[])
+    .filter((r) => (playerId && r.player_id === playerId) || (name && `${norm(r.player_first_name)} ${norm(r.player_last_name)}`.trim() === name) || (!name && norm(r.parent_email) === norm(parentEmail)))
+    .map((r) => r.id);
+  if (ids.length > 0) await supabase.from("registrations").update({ status: "cancelled", updated_at: new Date().toISOString() }).in("id", ids);
+}
+
 export async function createRegistration(input: CreateRegistrationInput): Promise<string> {
   const supabase = db();
   const playerId = await findOrCreatePlayer({
@@ -588,6 +606,9 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
     .select("id")
     .single();
   if (error) throw new Error(error.message);
+  if ((input.status ?? "pending") !== "waitlist") {
+    await cancelDuplicateWaitlistEntries(input.seasonId, playerId, input.parentEmail, input.playerFirstName, input.playerLastName).catch(() => {});
+  }
   return data.id as string;
 }
 
@@ -596,6 +617,21 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
  *  se libère (changement de statut depuis l'admin). */
 export async function createWaitlistRegistration(input: CreateRegistrationInput): Promise<string> {
   const supabase = db();
+  // Pas de doublon : si la joueuse a déjà une inscription active cette saison
+  // (liste d'attente, en attente ou payée), on réutilise cette fiche.
+  const norm = (v: string | null | undefined) => (v ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  const wantedName = `${norm(input.playerFirstName)} ${norm(input.playerLastName)}`.trim();
+  if (wantedName) {
+    const { data: existing } = await supabase
+      .from("registrations")
+      .select("id, player_first_name, player_last_name")
+      .eq("season_id", input.seasonId)
+      .in("status", ["waitlist", "pending", "paid"]);
+    const dup = ((existing ?? []) as { id: string; player_first_name: string | null; player_last_name: string | null }[]).find(
+      (r) => `${norm(r.player_first_name)} ${norm(r.player_last_name)}`.trim() === wantedName
+    );
+    if (dup) return dup.id;
+  }
   const playerId = await findOrCreatePlayer({
     firstName: input.playerFirstName,
     lastName: input.playerLastName,
@@ -1065,12 +1101,15 @@ export async function getInstallmentWithContext(installmentId: string): Promise<
 
 /** Compte les inscriptions actives (hors annulées) pour une combinaison
  *  programme × catégorie, utilisé pour vérifier la capacité avant paiement. */
+/** Places occupées : UNIQUEMENT les inscriptions marquées « payée ». Une fiche
+ *  en attente (lien de paiement envoyé) ou en liste d'attente ne retient ni
+ *  place dans la capacité du programme, ni place dans la plage horaire. */
 export async function countActiveRegistrations(
   seasonId: string,
   filter: { programId?: string; categoryId?: string; timeSlotTemplateId?: string }
 ): Promise<number> {
   const supabase = db();
-  let query = supabase.from("registrations").select("id", { count: "exact", head: true }).eq("season_id", seasonId).neq("status", "cancelled");
+  let query = supabase.from("registrations").select("id", { count: "exact", head: true }).eq("season_id", seasonId).eq("status", "paid");
   if (filter.programId) query = query.eq("program_id", filter.programId);
   if (filter.categoryId) query = query.eq("category_id", filter.categoryId);
   if (filter.timeSlotTemplateId) query = query.eq("time_slot_template_id", filter.timeSlotTemplateId);
