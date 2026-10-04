@@ -1,7 +1,8 @@
 import { AdminEssaisCalendrier, type TrialCalendarEntry } from "@/components/admin-essais-calendrier";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAllLeads } from "@/lib/repositories";
-import { getSeasonRegistrations, getSeasons } from "@/lib/season-admin-repo";
+import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
+import { getAllTrialSlots, getSeasonCategories, getSeasonRegistrations, getSeasons } from "@/lib/season-admin-repo";
 
 export const metadata = { title: "Calendrier des essais — Admin New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ function childNameFromGoal(goal: string): string {
 export default async function AdminEssaisCalendrierPage() {
   await requireAdmin();
 
-  const [leads, seasons] = await Promise.all([getAllLeads(), getSeasons()]);
+  const [leads, seasons, trialSlots, categories] = await Promise.all([getAllLeads(), getSeasons(), getAllTrialSlots(), getSeasonCategories(SEASON_DB_ID)]);
 
   const entries: TrialCalendarEntry[] = [];
 
@@ -43,11 +44,19 @@ export default async function AdminEssaisCalendrierPage() {
           parentName: r.parent_name,
           parentPhone: r.parent_phone,
           seasonLabel: season.label,
-          detailHref: `/admin/saison/${season.id}/essais`
+          detailHref: `/admin/saison/${season.id}/essais`,
+          seasonId: season.id,
+          slotId: r.trial_slot_id ?? null
         });
       }
     }
   });
 
-  return <AdminEssaisCalendrier entries={entries} />;
+  return (
+    <AdminEssaisCalendrier
+      entries={entries}
+      slots={trialSlots.map((s) => ({ id: s.id, date: s.slot_date, start: s.start_time, end: s.end_time, location: s.location, max: s.max_places, active: s.active }))}
+      categories={categories.map((c) => ({ id: c.id, label: c.label }))}
+    />
+  );
 }

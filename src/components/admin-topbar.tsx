@@ -56,9 +56,21 @@ const SEASON_AUTOMNE_HIVER_LINKS: { href: string; label: string; icon: IconName 
   { href: "/admin/essais-dates", label: "Dates d'essai", icon: "grid" },
 ];
 
+/** Vue combinée des essais des deux saisons — reste visible peu importe la
+ *  saison choisie dans le sélecteur ci-dessous. */
+const SEASON_SHARED_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/essais-calendrier", label: "Calendrier essais (les 2 saisons)", icon: "calendar" },
+];
+
 const BOUTIQUE_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/boutique", label: "Produits", icon: "tag" },
   { href: "/admin/boutique/commandes", label: "Commandes", icon: "bag" },
+];
+
+const CALENDRIER_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/calendrier", label: "Vue globale", icon: "calendar" },
+  { href: "/admin/terrains", label: "Terrains", icon: "grid" },
+  { href: "/admin/seances-privees", label: "Séances privées", icon: "user" },
 ];
 
 const COMMUNICATIONS_LINKS: { href: string; label: string; icon: IconName }[] = [
@@ -202,6 +214,7 @@ const GROUPS: Group[] = [
   { label: "Évaluations", dotColor: "#8fce9f", links: EVALUATIONS_LINKS },
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
   { label: "Uniformes", dotColor: "#e0b0d8", links: UNIFORMES_LINKS },
+  { label: "Calendrier", dotColor: "#c3a6ff", links: CALENDRIER_LINKS },
   { label: "Revenus", dotColor: "#ff9999", links: REVENUS_LINKS, adminOnly: true },
   { label: "Entraîneurs", dotColor: "#a0c8ff", links: ENTRAINEURS_LINKS, adminOnly: true },
   { label: "Communications", dotColor: "#f0c878", links: COMMUNICATIONS_LINKS, adminOnly: true },
@@ -278,7 +291,7 @@ export function AdminTopbar() {
 
       <nav className="admin-sidebar-nav">
         {visibleGroups.map((group) => {
-          const links = group.isSeasonSwitcher ? SEASON_LINKS_BY_KEY[activeSeason] : group.links;
+          const links = group.isSeasonSwitcher ? [...SEASON_LINKS_BY_KEY[activeSeason], ...SEASON_SHARED_LINKS] : group.links;
           return (
             <div className="admin-sidebar-group" key={group.label}>
               <div className="admin-sidebar-group-head">

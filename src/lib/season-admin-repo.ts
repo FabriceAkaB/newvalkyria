@@ -91,6 +91,8 @@ export interface Registration {
   status: RegistrationStatus;
   is_trial: boolean;
   trial_date: string | null;
+  /** Plage d'essai officielle (trial_slots) choisie ou assignée, s'il y en a une. */
+  trial_slot_id?: string | null;
   is_half_season: boolean;
   half_season_ends_on: string | null;
   advanced_group: boolean;
