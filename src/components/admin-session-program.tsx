@@ -46,6 +46,25 @@ export function RegistrationRow({
     }
   };
 
+  const [transferring, setTransferring] = useState(false);
+  const transfer = async () => {
+    if (!confirm(`Transférer vers Sport-Études : ${registration.player_first_name} ${registration.player_last_name} ? Son statut, ce qu'il a payé et son plan de versements sont conservés; l'ancienne inscription est annulée.`)) return;
+    setTransferring(true);
+    try {
+      const res = await fetch("/api/admin/garcons-transfert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from: "intensif-garcons", to: "sport-etudes", id: registration.id })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Erreur de transfert");
+      window.location.reload();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Erreur de transfert");
+      setTransferring(false);
+    }
+  };
+
   const remove = async () => {
     if (!confirm(`Supprimer définitivement l'inscription de ${registration.player_first_name} ${registration.player_last_name} ? Cette action est irréversible.`)) return;
     setDeleting(true);
@@ -95,6 +114,15 @@ export function RegistrationRow({
           {registration.comments && <p style={{ fontSize: "0.72rem", color: "#c3c2c8", margin: "0 0 0.3rem" }}>Commentaires : {registration.comments}</p>}
           {registration.price_cents != null && <p style={{ fontSize: "0.72rem", color: "#c3c2c8", margin: "0 0 0.3rem" }}>Prix : {(registration.price_cents / 100).toFixed(2)} $</p>}
 
+{slug === "intensif-garcons" && (
+          <button
+            onClick={transfer}
+            disabled={transferring}
+            style={{ marginTop: "0.5rem", marginRight: "0.5rem", fontSize: "0.7rem", color: "#9ec9ff", background: "none", border: "1px solid rgba(158,201,255,0.35)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
+          >
+            {transferring ? "Transfert…" : "Transférer vers Sport-Études"}
+          </button>
+          )}
           <button
             onClick={remove}
             disabled={deleting}

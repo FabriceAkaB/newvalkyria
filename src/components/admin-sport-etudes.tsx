@@ -227,6 +227,25 @@ function RegistrationRow({
     }
   };
 
+  const [transferring, setTransferring] = useState(false);
+  const transfer = async () => {
+    if (!confirm(`Transférer vers le Programme Intensif : ${registration.player_first_name} ${registration.player_last_name} ? Son statut, ce qu'il a payé et son plan de versements sont conservés; l'ancienne inscription est annulée.`)) return;
+    setTransferring(true);
+    try {
+      const res = await fetch("/api/admin/garcons-transfert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from: "sport-etudes", to: "intensif-garcons", id: registration.id })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Erreur de transfert");
+      window.location.reload();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Erreur de transfert");
+      setTransferring(false);
+    }
+  };
+
   const remove = async () => {
     if (!confirm(`Supprimer définitivement l'inscription de ${registration.player_first_name} ${registration.player_last_name} ? Cette action est irréversible.`)) return;
     setDeleting(true);
@@ -332,6 +351,13 @@ function RegistrationRow({
           )}
           {notes && <TechnicalNotesEditor registrationId={registration.id} existing={notes} />}
 
+          <button
+            onClick={transfer}
+            disabled={transferring}
+            style={{ marginTop: "0.75rem", marginRight: "0.5rem", fontSize: "0.7rem", color: "#9ec9ff", background: "none", border: "1px solid rgba(158,201,255,0.35)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
+          >
+            {transferring ? "Transfert…" : "Transférer vers le Programme Intensif"}
+          </button>
           <button
             onClick={remove}
             disabled={deleting}
