@@ -5,9 +5,34 @@
  *  spécifiée, dans l'ordre : drapeau attitude → blocage technique → paliers.
  */
 
+/** Sections de la fiche d'évaluation de l'athlète, dans l'ordre de la fiche.
+ *  « jeu » est conservé seulement pour d'anciennes configurations. */
+export type CriterionBlock = "technique" | "tactique" | "physique" | "mentalite" | "jeu";
+
+export const FICHE_SECTIONS: { block: Exclude<CriterionBlock, "jeu">; title: string }[] = [
+  { block: "technique", title: "Technique" },
+  { block: "tactique", title: "Tactique" },
+  { block: "physique", title: "Physique" },
+  { block: "mentalite", title: "Mentalité" }
+];
+
+/** Échelle de la fiche : 5 (meilleur) → 1. B = 5-4, M = 3, F = 2-1. */
+export const RATING_VALUES = [5, 4, 3, 2, 1] as const;
+export const RATING_MAX = 5;
+
+export type RatingBand = "B" | "M" | "F";
+
+export function ratingBand(value: number): RatingBand {
+  if (value >= 4) return "B";
+  if (value === 3) return "M";
+  return "F";
+}
+
+export const RATING_BAND_LABELS: Record<RatingBand, string> = { B: "Bon", M: "Moyen", F: "Faible" };
+
 export interface CriterionConfig {
   id: string;
-  block: "technique" | "jeu";
+  block: CriterionBlock;
   label: string;
   coefficient: number;
   order: number;
@@ -131,3 +156,24 @@ export const VERDICT_COLORS: Record<string, string> = {
   pas_prete_technique: "#e6394a",
   a_revoir: "#e6394a"
 };
+
+export interface SectionSummary {
+  block: CriterionBlock;
+  title: string;
+  rated: number;
+  total: number;
+  /** Moyenne sur 5 des critères notés de la section (null si aucun). */
+  average: number | null;
+  band: RatingBand | null;
+}
+
+/** Résumé par section de la fiche (nombre de critères remplis + moyenne et
+ *  bande B/M/F) — sert à l'affichage et à l'impression de la fiche. */
+export function summarizeSections(criteria: CriterionConfig[], scores: Record<string, CriterionScoreInput>): SectionSummary[] {
+  return FICHE_SECTIONS.map(({ block, title }) => {
+    const list = criteria.filter((c) => c.block === block);
+    const values = list.map((c) => effectiveScore(scores[c.id])).filter((v) => v > 0);
+    const average = values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+    return { block, title, rated: values.length, total: list.length, average, band: average === null ? null : ratingBand(Math.round(average)) };
+  });
+}

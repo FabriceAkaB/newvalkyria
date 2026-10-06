@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { computeVerdict, type CriterionConfig, type CriterionScoreInput, type ThresholdsConfig } from "@/lib/tryout-scoring";
+import { computeVerdict, ratingBand, summarizeSections, type CriterionConfig, type CriterionScoreInput, type ThresholdsConfig } from "@/lib/tryout-scoring";
 
 const CRITERIA: CriterionConfig[] = [
   { id: "c1", block: "technique", label: "Première touche", coefficient: 1.5, order: 1 },
@@ -143,5 +143,29 @@ describe("computeVerdict — cas limites", () => {
   it("note minimale (1) déclenche à la fois le drapeau attitude et le blocage technique — l'attitude gagne (vérifiée en premier)", () => {
     const result = computeVerdict(CRITERIA, THRESHOLDS, scoreAll(1));
     expect(result.verdict).toBe("a_revoir");
+  });
+});
+
+describe("summarizeSections (fiche d'évaluation)", () => {
+  const FICHE: CriterionConfig[] = [
+    { id: "t1", block: "technique", label: "Dribble", coefficient: 1, order: 1 },
+    { id: "t2", block: "technique", label: "Conduite", coefficient: 1, order: 2 },
+    { id: "x1", block: "tactique", label: "Vision", coefficient: 1, order: 3 },
+    { id: "p1", block: "physique", label: "Vitesse", coefficient: 1, order: 4 },
+    { id: "m1", block: "mentalite", label: "Attitude", coefficient: 1, order: 5 }
+  ];
+
+  it("calcule la moyenne et la bande B/M/F de chaque section, dans l'ordre de la fiche", () => {
+    const scores: Record<string, CriterionScoreInput> = { t1: { score: 5 }, t2: { score: 4 }, x1: { score: 3 }, p1: { score: 1 } };
+    const out = summarizeSections(FICHE, scores);
+    expect(out.map((s) => s.block)).toEqual(["technique", "tactique", "physique", "mentalite"]);
+    expect(out[0]).toMatchObject({ rated: 2, total: 2, average: 4.5, band: "B" });
+    expect(out[1]).toMatchObject({ average: 3, band: "M" });
+    expect(out[2]).toMatchObject({ average: 1, band: "F" });
+    expect(out[3]).toMatchObject({ rated: 0, average: null, band: null });
+  });
+
+  it("classe les notes : 5-4 = B, 3 = M, 2-1 = F", () => {
+    expect([5, 4, 3, 2, 1].map(ratingBand)).toEqual(["B", "B", "M", "F", "F"]);
   });
 });

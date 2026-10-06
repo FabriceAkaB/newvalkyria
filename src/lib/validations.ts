@@ -221,6 +221,9 @@ export const tryoutExternalPlayerSchema = z.object({
   lastName: z.string().min(1, "Nom requis"),
   dob: z.string().min(1, "Date de naissance requise"),
   primaryPosition: z.string().optional(),
+  preferredPosition: z.string().optional(),
+  strongFoot: z.string().optional(),
+  currentLevel: z.string().optional(),
   currentClub: z.string().optional(),
   parentName: z.string().optional(),
   parentEmail: z.string().email("Courriel invalide").optional().or(z.literal("")),
@@ -230,10 +233,12 @@ export const tryoutExternalPlayerSchema = z.object({
 export const tryoutEvaluationSaveSchema = z.object({
   evaluatorId: z.string().min(1),
   criteriaScores: z.record(z.string(), z.union([
-    z.object({ score: z.number().min(1).max(10) }),
-    z.object({ isole: z.number().min(1).max(10), match: z.number().min(1).max(10) })
+    z.object({ score: z.number().min(1).max(5) }),
+    z.object({ isole: z.number().min(1).max(5), match: z.number().min(1).max(5) })
   ])),
   comment: z.string().optional(),
+  sectionRemarks: z.record(z.string(), z.string()).optional(),
+  evaluatedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   commentInternal: z.boolean().optional(),
   completed: z.boolean().optional()
 });

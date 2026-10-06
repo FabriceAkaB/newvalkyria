@@ -23,6 +23,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pa
       criteriaScores: payload.criteriaScores,
       comment: payload.comment,
       commentInternal: payload.commentInternal,
+      sectionRemarks: payload.sectionRemarks,
+      evaluatedOn: payload.evaluatedOn,
       completed: payload.completed
     });
     return NextResponse.json({ evaluation });

@@ -56,7 +56,7 @@ export function AdminEvaluationEventDetail({
   const [searching, setSearching] = useState(false);
 
   const [showExternal, setShowExternal] = useState(false);
-  const [ext, setExt] = useState({ firstName: "", lastName: "", dob: "", primaryPosition: "", currentClub: "", parentName: "", parentEmail: "", parentPhone: "" });
+  const [ext, setExt] = useState({ firstName: "", lastName: "", dob: "", primaryPosition: "", preferredPosition: "", strongFoot: "", currentLevel: "", currentClub: "", parentName: "", parentEmail: "", parentPhone: "" });
   const [extSaving, setExtSaving] = useState(false);
   const [extError, setExtError] = useState<string | null>(null);
 
@@ -174,7 +174,7 @@ export function AdminEvaluationEventDetail({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Erreur");
-      setExt({ firstName: "", lastName: "", dob: "", primaryPosition: "", currentClub: "", parentName: "", parentEmail: "", parentPhone: "" });
+      setExt({ firstName: "", lastName: "", dob: "", primaryPosition: "", preferredPosition: "", strongFoot: "", currentLevel: "", currentClub: "", parentName: "", parentEmail: "", parentPhone: "" });
       setShowExternal(false);
       await refreshParticipants();
     } catch (err) {
@@ -340,7 +340,17 @@ export function AdminEvaluationEventDetail({
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                   <input className="admin-input" placeholder="Poste principal" value={ext.primaryPosition} onChange={(e) => setExt({ ...ext, primaryPosition: e.target.value })} style={{ flex: 1, minWidth: "140px" }} />
+                  <input className="admin-input" placeholder="Position préférée" value={ext.preferredPosition} onChange={(e) => setExt({ ...ext, preferredPosition: e.target.value })} style={{ flex: 1, minWidth: "140px" }} />
+                  <select className="admin-input" value={ext.strongFoot} onChange={(e) => setExt({ ...ext, strongFoot: e.target.value })} style={{ flex: 1, minWidth: "120px" }}>
+                    <option value="">Pied fort…</option>
+                    <option value="Droit">Droit</option>
+                    <option value="Gauche">Gauche</option>
+                    <option value="Les deux">Les deux</option>
+                  </select>
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                   <input className="admin-input" placeholder="Club actuel" value={ext.currentClub} onChange={(e) => setExt({ ...ext, currentClub: e.target.value })} style={{ flex: 1, minWidth: "140px" }} />
+                  <input className="admin-input" placeholder="Niveau actuel (D1, D2…)" value={ext.currentLevel} onChange={(e) => setExt({ ...ext, currentLevel: e.target.value })} style={{ flex: 1, minWidth: "140px" }} />
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                   <input className="admin-input" placeholder="Nom du parent" value={ext.parentName} onChange={(e) => setExt({ ...ext, parentName: e.target.value })} style={{ flex: 1, minWidth: "140px" }} />
@@ -467,6 +477,16 @@ export function AdminEvaluationEventDetail({
                     <option value="">Équipe...</option>
                     {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
+                  <a
+                    href={`/admin/evaluations/${event.id}/fiche/${p.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Ouvrir la fiche d'évaluation de l'athlète"
+                    className="admin-btn-ghost"
+                    style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem", textDecoration: "none" }}
+                  >
+                    Fiche
+                  </a>
                   <button
                     onClick={() => updateParticipant(p.id, { primaryPositionObserved: p.primary_position_observed === "GK" ? null : "GK" })}
                     title="Marquer comme gardienne durant cette évaluation"

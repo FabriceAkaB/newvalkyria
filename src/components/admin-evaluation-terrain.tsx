@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { computeVerdict, VERDICT_COLORS, type CriterionScoreInput } from "@/lib/tryout-scoring";
+import { computeVerdict, FICHE_SECTIONS, RATING_BAND_LABELS, RATING_VALUES, ratingBand, summarizeSections, VERDICT_COLORS, type CriterionScoreInput } from "@/lib/tryout-scoring";
 import type {
   QuickComment,
   TryoutCriteriaConfig,
@@ -33,6 +33,15 @@ function Avatar({ firstName, lastName, photoUrl, colorHex, size = 44 }: { firstN
 
 type LocalScores = Record<string, CriterionScoreInput>;
 
+function FicheField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+      <span style={{ fontSize: "0.62rem", fontWeight: 700, color: "#9d9da0", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</span>
+      {children}
+    </label>
+  );
+}
+
 function scoreButton(value: number, current: number | undefined, onClick: () => void, key: string) {
   const active = current === value;
   return (
@@ -58,7 +67,7 @@ function scoreButton(value: number, current: number | undefined, onClick: () => 
 
 export function AdminEvaluationTerrain({
   event,
-  participants,
+  participants: initialParticipants,
   teams,
   evaluators,
   config,
@@ -74,6 +83,7 @@ export function AdminEvaluationTerrain({
   quickComments: QuickComment[];
 }) {
   const storageKey = `tryout_evaluator_${event.id}`;
+  const [participants, setParticipants] = useState<TryoutParticipantWithPlayer[]>(initialParticipants);
   const [evaluatorId, setEvaluatorId] = useState<string>("");
   const [evaluations, setEvaluations] = useState<TryoutEvaluation[]>(initialEvaluations);
   const [teamFilters, setTeamFilters] = useState<string[]>([]);
@@ -84,6 +94,11 @@ export function AdminEvaluationTerrain({
 
   const [localScores, setLocalScores] = useState<LocalScores>({});
   const [comment, setComment] = useState("");
+  const [remarks, setRemarks] = useState<Record<string, string>>({});
+  // Copie synchrone des remarques : l'enregistrement au blur envoie toujours
+  // toutes les sections à jour, même si deux champs sont quittés très vite.
+  const remarksRef = useRef<Record<string, string>>({});
+  const [evaluatedOn, setEvaluatedOn] = useState("");
   const [commentInternal, setCommentInternal] = useState(false);
   const [sweetheart, setSweetheart] = useState(false);
   const [insufficientData, setInsufficientData] = useState(false);
@@ -143,25 +158,50 @@ export function AdminEvaluationTerrain({
 
   const selected = participants.find((p) => p.id === selectedId) ?? null;
 
+  // Toutes les sauvegardes de la fiche passent dans une seule file : deux
+  // envois rapprochés ne peuvent plus arriver dans le désordre et s'écraser.
+  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const enqueueSave = <T,>(task: () => Promise<T>): Promise<T> => {
+    const run = saveQueue.current.then(task, task);
+    saveQueue.current = run.catch(() => undefined);
+    return run;
+  };
+
+  const myEvalRef = useRef(myEvalByParticipant);
+  myEvalRef.current = myEvalByParticipant;
+  const participantsRef = useRef(participants);
+  participantsRef.current = participants;
+
+  // Initialisation du formulaire seulement quand on change d'athlète ou
+  // d'évaluateur — jamais à chaque sauvegarde, pour ne rien écraser pendant la saisie.
   useEffect(() => {
-    if (!selected || !evaluatorId) {
+    if (!selectedId || !evaluatorId) {
       setLocalScores({});
       setComment("");
+      setRemarks({});
+      remarksRef.current = {};
+      setEvaluatedOn("");
       setCommentInternal(false);
       return;
     }
-    const existing = myEvalByParticipant.get(selected.id);
+    const existing = myEvalRef.current.get(selectedId);
+    const part = participantsRef.current.find((p) => p.id === selectedId);
     setLocalScores(existing?.criteria_scores ?? {});
     setComment(existing?.comment ?? "");
+    setRemarks(existing?.section_remarks ?? {});
+    remarksRef.current = { ...(existing?.section_remarks ?? {}) };
+    setEvaluatedOn(existing?.evaluated_on ?? new Date().toISOString().slice(0, 10));
     setCommentInternal(existing?.comment_internal ?? false);
-    setSweetheart(selected.sweetheart);
-    setInsufficientData(selected.insufficient_data);
-  }, [selected, evaluatorId, myEvalByParticipant]);
+    setSweetheart(part?.sweetheart ?? false);
+    setInsufficientData(part?.insufficient_data ?? false);
+  }, [selectedId, evaluatorId]);
 
   const verdict = useMemo(
     () => computeVerdict(config.criteria, config.thresholds, localScores),
     [config, localScores]
   );
+
+  const sectionSummaries = useMemo(() => summarizeSections(config.criteria, localScores), [config, localScores]);
 
   const completedCriteriaCount = config.criteria.filter((c) => {
     const raw = localScores[c.id];
@@ -171,21 +211,24 @@ export function AdminEvaluationTerrain({
 
   const persistScores = async (next: LocalScores) => {
     if (!selected || !evaluatorId) return;
+    const participantId = selected.id;
     setSaving(true);
     setLastSyncedAgo(0);
     try {
-      const res = await fetch(`/api/admin/evaluations/participants/${selected.id}/evaluations/${evaluatorId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ criteriaScores: next })
-      });
-      const data = await res.json();
-      if (data.evaluation) {
-        setEvaluations((prev) => {
-          const others = prev.filter((e) => !(e.participant_id === selected.id && e.evaluator_id === evaluatorId));
-          return [...others, data.evaluation];
+      await enqueueSave(async () => {
+        const res = await fetch(`/api/admin/evaluations/participants/${participantId}/evaluations/${evaluatorId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ criteriaScores: next })
         });
-      }
+        const data = await res.json();
+        if (data.evaluation) {
+          setEvaluations((prev) => {
+            const others = prev.filter((e) => !(e.participant_id === participantId && e.evaluator_id === evaluatorId));
+            return [...others, data.evaluation];
+          });
+        }
+      });
     } finally {
       setSaving(false);
     }
@@ -208,9 +251,24 @@ export function AdminEvaluationTerrain({
     });
   };
 
-  const saveCommentField = async (patch: { comment?: string; commentInternal?: boolean }) => {
+  const saveCommentField = async (patch: { comment?: string; commentInternal?: boolean; sectionRemarks?: Record<string, string>; evaluatedOn?: string | null }) => {
     if (!selected || !evaluatorId) return;
-    await fetch(`/api/admin/evaluations/participants/${selected.id}/evaluations/${evaluatorId}`, {
+    const participantId = selected.id;
+    await enqueueSave(() =>
+      fetch(`/api/admin/evaluations/participants/${participantId}/evaluations/${evaluatorId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch)
+      })
+    );
+  };
+
+  /** Champs de l'en-tête de la fiche (poste, pied fort, club, niveau, contact…) :
+   *  enregistrés sur la participation et reflétés tout de suite dans la liste locale. */
+  const saveHeaderField = async (patch: Record<string, string | null>, local: Partial<TryoutParticipantWithPlayer>) => {
+    if (!selected) return;
+    setParticipants((prev) => prev.map((p) => (p.id === selected.id ? { ...p, ...local } : p)));
+    await fetch(`/api/admin/evaluations/events/${event.id}/participants/${selected.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch)
@@ -228,12 +286,16 @@ export function AdminEvaluationTerrain({
 
   const completeEvaluation = async () => {
     if (!selected || !evaluatorId) return;
-    const res = await fetch(`/api/admin/evaluations/participants/${selected.id}/evaluations/${evaluatorId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completed: true })
+    if (completedCriteriaCount < config.criteria.length && !confirm(`Il reste ${config.criteria.length - completedCriteriaCount} critère(s) sans note sur la fiche. Terminer quand même ?`)) return;
+    const participantId = selected.id;
+    const data = await enqueueSave(async () => {
+      const res = await fetch(`/api/admin/evaluations/participants/${participantId}/evaluations/${evaluatorId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: true, evaluatedOn: evaluatedOn || null })
+      });
+      return res.json();
     });
-    const data = await res.json();
     if (data.evaluation) {
       setEvaluations((prev) => {
         const others = prev.filter((e) => !(e.participant_id === selected.id && e.evaluator_id === evaluatorId));
@@ -418,12 +480,16 @@ export function AdminEvaluationTerrain({
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", margin: 0 }}>{verdict.total.toFixed(1)}<span style={{ fontSize: "0.8rem", color: "#6d6b71" }}>/100</span></p>
-              <p style={{ fontSize: "0.68rem", color: VERDICT_COLORS[verdict.verdict] ?? "#9d9da0", margin: 0, fontWeight: 700 }}>{verdict.verdictLabel}</p>
+              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", margin: 0 }}>{verdict.total.toFixed(1)}<span style={{ fontSize: "0.8rem", color: "#6d6b71" }}>/{config.criteria.length * 5}</span></p>
+              {completedCriteriaCount >= config.criteria.length ? (
+                <p style={{ fontSize: "0.68rem", color: VERDICT_COLORS[verdict.verdict] ?? "#9d9da0", margin: 0, fontWeight: 700 }}>{verdict.verdictLabel}</p>
+              ) : (
+                <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: 0 }}>Fiche incomplète</p>
+              )}
             </div>
           </div>
 
-          {verdict.maturationAlert && (
+          {completedCriteriaCount >= config.criteria.length && verdict.maturationAlert && (
             <div style={{ background: "rgba(240,200,120,0.1)", border: "1px solid rgba(240,200,120,0.3)", borderRadius: "8px", padding: "0.6rem 0.8rem", marginBottom: "0.8rem" }}>
               <p style={{ fontSize: "0.75rem", color: "#f0c878", margin: 0 }}>
                 ⚠ Profil physiquement dominant, techniquement en retard — vérifier l&apos;âge relatif et la maturation avant de conclure.
@@ -433,52 +499,96 @@ export function AdminEvaluationTerrain({
 
           <p style={{ fontSize: "0.72rem", color: "#9d9da0", marginBottom: "0.8rem" }}>{completedCriteriaCount} / {config.criteria.length} critères remplis</p>
 
-          {/* ── Critères ── */}
-          {(["technique", "jeu"] as const).map((block) => (
-            <div key={block} style={{ marginBottom: "1rem" }}>
-              <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#c4a4e4", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
-                {block === "technique" ? "Technique" : "Jeu, physique et mental"}
-              </p>
-              {config.criteria.filter((c) => c.block === block).map((c) => {
-                const raw = localScores[c.id];
-                const points = verdict.criterionPoints[c.id] ?? 0;
-                return (
-                  <div key={c.id} style={{ marginBottom: "0.9rem" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.35rem" }}>
-                      <span style={{ fontSize: "0.8rem", color: "#fff" }}>{c.label}</span>
-                      <span style={{ fontSize: "0.7rem", color: "#6d6b71" }}>{(verdict.effectiveScores[c.id] ?? 0)} × {c.coefficient} = {points.toFixed(1)} pts</span>
-                    </div>
-                    {config.doubleScoringEnabled ? (
-                      <>
-                        <p style={{ fontSize: "0.65rem", color: "#6d6b71", margin: "0 0 0.2rem" }}>Isolé</p>
-                        <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginBottom: "0.4rem" }}>
-                          {Array.from({ length: 10 }, (_, i) => i + 1).map((v) =>
-                            scoreButton(v, raw && "isole" in raw ? raw.isole : undefined, () => setScore(c.id, "isole", v), `${c.id}-isole-${v}`)
-                          )}
-                        </div>
-                        <p style={{ fontSize: "0.65rem", color: "#6d6b71", margin: "0 0 0.2rem" }}>Match</p>
-                        <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
-                          {Array.from({ length: 10 }, (_, i) => i + 1).map((v) =>
-                            scoreButton(v, raw && "match" in raw ? raw.match : undefined, () => setScore(c.id, "match", v), `${c.id}-match-${v}`)
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
-                        {Array.from({ length: 10 }, (_, i) => i + 1).map((v) =>
-                          scoreButton(v, raw && "score" in raw ? raw.score : undefined, () => setScore(c.id, "score", v), `${c.id}-${v}`)
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+          {/* ── FICHE D'ÉVALUATION DE L'ATHLÈTE — en-tête ── */}
+          <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
+            <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#c4a4e4", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.7rem" }}>Fiche d&apos;évaluation de l&apos;athlète</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "0.6rem" }}>
+              <FicheField label="Nom complet"><input className="admin-input" readOnly value={`${selected.player_first_name} ${selected.player_last_name}`.trim()} style={{ width: "100%", opacity: 0.8 }} /></FicheField>
+              <FicheField label="Position jouée"><input className="admin-input" key={`pj-${selected.id}`} defaultValue={selected.primary_position_observed ?? ""} onBlur={(e) => saveHeaderField({ primaryPositionObserved: e.target.value.trim() || null }, { primary_position_observed: e.target.value.trim() || null })} placeholder="ex. Milieu" style={{ width: "100%" }} /></FicheField>
+              <FicheField label="Position préférée"><input className="admin-input" key={`pp-${selected.id}`} defaultValue={selected.preferred_position ?? ""} onBlur={(e) => saveHeaderField({ preferredPosition: e.target.value.trim() || null }, { preferred_position: e.target.value.trim() || null })} placeholder="ex. Attaquante" style={{ width: "100%" }} /></FicheField>
+              <FicheField label="Pied fort">
+                <select className="admin-group-select" key={`pf-${selected.id}`} defaultValue={selected.strong_foot ?? ""} onChange={(e) => saveHeaderField({ strongFoot: e.target.value || null }, { strong_foot: e.target.value || null })} style={{ width: "100%" }}>
+                  <option value="">—</option>
+                  <option value="Droit">Droit</option>
+                  <option value="Gauche">Gauche</option>
+                  <option value="Les deux">Les deux</option>
+                </select>
+              </FicheField>
+              <FicheField label="Groupe"><input className="admin-input" key={`gr-${selected.id}`} defaultValue={selected.group_label ?? event.age_category ?? (selected.player_dob ? birthYear(selected.player_dob) : "")} onBlur={(e) => saveHeaderField({ groupLabel: e.target.value.trim() || null }, { group_label: e.target.value.trim() || null })} style={{ width: "100%" }} /></FicheField>
+              <FicheField label="Date de naissance"><input className="admin-input" readOnly value={selected.player_dob ? new Date(selected.player_dob + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" }) : "—"} style={{ width: "100%", opacity: 0.8 }} /></FicheField>
+              <FicheField label="Courriel"><input className="admin-input" type="email" key={`em-${selected.id}`} defaultValue={selected.contact_email ?? ""} onBlur={(e) => saveHeaderField({ parentEmail: e.target.value.trim() || null }, { parent_email: e.target.value.trim() || null, contact_email: e.target.value.trim() || null })} style={{ width: "100%" }} /></FicheField>
+              <FicheField label="Téléphone"><input className="admin-input" type="tel" key={`ph-${selected.id}`} defaultValue={selected.contact_phone ?? ""} onBlur={(e) => saveHeaderField({ parentPhone: e.target.value.trim() || null }, { parent_phone: e.target.value.trim() || null, contact_phone: e.target.value.trim() || null })} style={{ width: "100%" }} /></FicheField>
+              <FicheField label="Club actuel"><input className="admin-input" key={`cl-${selected.id}`} defaultValue={selected.current_club ?? ""} onBlur={(e) => saveHeaderField({ currentClub: e.target.value.trim() || null }, { current_club: e.target.value.trim() || null })} style={{ width: "100%" }} /></FicheField>
+              <FicheField label="Niveau actuel">
+                <input className="admin-input" list="fiche-niveaux" key={`nv-${selected.id}`} defaultValue={selected.current_level ?? ""} onBlur={(e) => saveHeaderField({ currentLevel: e.target.value.trim() || null }, { current_level: e.target.value.trim() || null })} placeholder="ex. D1, Débutante…" style={{ width: "100%" }} />
+                <datalist id="fiche-niveaux">
+                  {["Débutante", "D3", "D2", "D1", "Intermédiaire", "Élite"].map((n) => <option key={n} value={n} />)}
+                </datalist>
+              </FicheField>
             </div>
-          ))}
+          </div>
 
-          {/* ── Commentaire ── */}
-          <div style={{ marginBottom: "1rem" }}>
-            <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#c4a4e4", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>Commentaire</p>
+          {/* ── Sections notées (5 → 1) + remarques de section ── */}
+          {FICHE_SECTIONS.map(({ block, title }) => {
+            const summary = sectionSummaries.find((x) => x.block === block);
+            return (
+              <div key={block} style={{ marginBottom: "1.1rem", background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.8rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.5rem" }}>
+                  <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#c4a4e4", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>{title}</p>
+                  <span style={{ fontSize: "0.68rem", color: "#9d9da0" }}>
+                    {summary?.rated ?? 0}/{summary?.total ?? 0}
+                    {summary?.average != null && <> · moy. {summary.average.toFixed(1)}/5 · <strong style={{ color: summary.band === "B" ? "#8fce9f" : summary.band === "M" ? "#f0c878" : "#e6394a" }}>{summary.band} ({RATING_BAND_LABELS[summary.band!]})</strong></>}
+                  </span>
+                </div>
+                {!config.doubleScoringEnabled && (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr repeat(5, 44px)", gap: "0.3rem", alignItems: "end", marginBottom: "0.2rem" }}>
+                    <span />
+                    {RATING_VALUES.map((v) => (
+                      <span key={v} style={{ textAlign: "center", fontSize: "0.65rem", fontWeight: 700, color: "#6d6b71" }}>{ratingBand(v)}</span>
+                    ))}
+                  </div>
+                )}
+                {config.criteria.filter((c) => c.block === block).map((c) => {
+                  const raw = localScores[c.id];
+                  return config.doubleScoringEnabled ? (
+                    <div key={c.id} style={{ marginBottom: "0.8rem" }}>
+                      <p style={{ fontSize: "0.8rem", color: "#fff", margin: "0 0 0.3rem" }}>{c.label}</p>
+                      <p style={{ fontSize: "0.65rem", color: "#6d6b71", margin: "0 0 0.2rem" }}>Isolé</p>
+                      <div style={{ display: "flex", gap: "0.3rem", marginBottom: "0.4rem" }}>
+                        {RATING_VALUES.map((v) => scoreButton(v, raw && "isole" in raw ? raw.isole : undefined, () => setScore(c.id, "isole", v), `${c.id}-isole-${v}`))}
+                      </div>
+                      <p style={{ fontSize: "0.65rem", color: "#6d6b71", margin: "0 0 0.2rem" }}>Match</p>
+                      <div style={{ display: "flex", gap: "0.3rem" }}>
+                        {RATING_VALUES.map((v) => scoreButton(v, raw && "match" in raw ? raw.match : undefined, () => setScore(c.id, "match", v), `${c.id}-match-${v}`))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={c.id} style={{ display: "grid", gridTemplateColumns: "1fr repeat(5, 44px)", gap: "0.3rem", alignItems: "center", marginBottom: "0.35rem" }}>
+                      <span style={{ fontSize: "0.8rem", color: "#fff", paddingRight: "0.3rem" }}>{c.label}</span>
+                      {RATING_VALUES.map((v) => scoreButton(v, raw && "score" in raw ? raw.score : undefined, () => setScore(c.id, "score", v), `${c.id}-${v}`))}
+                    </div>
+                  );
+                })}
+                <p style={{ fontSize: "0.68rem", fontWeight: 700, color: "#9d9da0", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0.7rem 0 0.3rem" }}>Remarques — {title}</p>
+                <textarea
+                  className="admin-input"
+                  value={remarks[block] ?? ""}
+                  onChange={(e) => {
+                    remarksRef.current = { ...remarksRef.current, [block]: e.target.value };
+                    setRemarks(remarksRef.current);
+                  }}
+                  onBlur={() => saveCommentField({ sectionRemarks: remarksRef.current })}
+                  rows={2}
+                  style={{ width: "100%", resize: "vertical" }}
+                  placeholder={`Remarques sur la section ${title.toLowerCase()}…`}
+                />
+              </div>
+            );
+          })}
+
+          {/* ── ÉVALUATION : commentaires généraux, évaluateur, date ── */}
+          <div style={{ marginBottom: "1rem", background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.8rem" }}>
+            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#c4a4e4", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.5rem" }}>Évaluation — commentaires généraux</p>
             <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
               {quickComments.map((qc) => (
                 <button
@@ -496,14 +606,23 @@ export function AdminEvaluationTerrain({
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               onBlur={() => saveCommentField({ comment })}
-              rows={4}
+              rows={5}
               style={{ width: "100%", resize: "vertical" }}
-              placeholder="Observations libres..."
+              placeholder="Commentaires généraux…"
             />
             <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.4rem", fontSize: "0.75rem", color: "#9d9da0" }}>
               <input type="checkbox" checked={commentInternal} onChange={(e) => { setCommentInternal(e.target.checked); saveCommentField({ commentInternal: e.target.checked }); }} />
               Commentaire interne — ne pas partager avec le parent
             </label>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "0.6rem", marginTop: "0.8rem" }}>
+              <FicheField label="Évaluateur"><input className="admin-input" readOnly value={currentEvaluator?.guest_name ?? `${currentEvaluator?.coach_first_name ?? ""} ${currentEvaluator?.coach_last_name ?? ""}`.trim()} style={{ width: "100%", opacity: 0.8 }} /></FicheField>
+              <FicheField label="Date"><input className="admin-input" type="date" value={evaluatedOn} onChange={(e) => { setEvaluatedOn(e.target.value); saveCommentField({ evaluatedOn: e.target.value || null }); }} style={{ width: "100%" }} /></FicheField>
+            </div>
+            {selected && evaluatorId && (
+              <p style={{ margin: "0.6rem 0 0", fontSize: "0.7rem" }}>
+                <a href={`/admin/evaluations/${event.id}/fiche/${selected.id}`} target="_blank" rel="noreferrer" style={{ color: "#c4a4e4" }}>Voir / imprimer la fiche →</a>
+              </p>
+            )}
           </div>
 
           {/* ── Champs additionnels ── */}

@@ -183,6 +183,10 @@ export interface TryoutParticipant {
   is_trial: boolean;
   sweetheart: boolean;
   insufficient_data: boolean;
+  preferred_position: string | null;
+  strong_foot: string | null;
+  group_label: string | null;
+  current_level: string | null;
   current_club: string | null;
   parent_name: string | null;
   parent_email: string | null;
@@ -196,6 +200,10 @@ export interface TryoutParticipantWithPlayer extends TryoutParticipant {
   player_last_name: string;
   player_dob: string | null;
   player_photo_url: string | null;
+  /** Courriel/téléphone pour l'en-tête de la fiche : celui saisi sur la
+   *  participation, sinon retrouvé dans l'inscription connue de la joueuse. */
+  contact_email: string | null;
+  contact_phone: string | null;
 }
 
 export async function getParticipantsForEvent(eventId: string): Promise<TryoutParticipantWithPlayer[]> {
@@ -205,12 +213,36 @@ export async function getParticipantsForEvent(eventId: string): Promise<TryoutPa
     .eq("event_id", eventId)
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
-  return (data ?? []).map((row: any) => ({
+  const rows = (data ?? []) as any[];
+
+  // Coordonnées de repli pour les participantes sans courriel/téléphone saisi.
+  const missing = rows.filter((r) => !r.parent_email || !r.parent_phone).map((r) => r.player_id as string);
+  const contactByPlayer = new Map<string, { email: string | null; phone: string | null }>();
+  if (missing.length > 0) {
+    const supabase = db();
+    const [{ data: regRows }, { data: leadRows }, { data: seRows }] = await Promise.all([
+      supabase.from("registrations").select("player_id, parent_email, parent_phone").in("player_id", missing),
+      supabase.from("leads").select("player_id, email, phone").in("player_id", missing),
+      supabase.from("sport_etudes_registrations").select("player_id, parent_email, parent_phone").in("player_id", missing)
+    ]);
+    const put = (playerId: string, email: string | null, phone: string | null) => {
+      if (!playerId) return;
+      const cur = contactByPlayer.get(playerId) ?? { email: null, phone: null };
+      contactByPlayer.set(playerId, { email: cur.email || (email && !email.endsWith("@newvalkyria.temp") ? email : null), phone: cur.phone || phone || null });
+    };
+    for (const r of regRows ?? []) put(r.player_id, r.parent_email, r.parent_phone);
+    for (const r of leadRows ?? []) put(r.player_id, r.email, r.phone);
+    for (const r of seRows ?? []) put(r.player_id, r.parent_email, r.parent_phone);
+  }
+
+  return rows.map((row) => ({
     ...row,
     player_first_name: row.player?.first_name ?? "",
     player_last_name: row.player?.last_name ?? "",
     player_dob: row.player?.dob ?? null,
-    player_photo_url: row.player?.photo_url ?? null
+    player_photo_url: row.player?.photo_url ?? null,
+    contact_email: row.parent_email || contactByPlayer.get(row.player_id)?.email || null,
+    contact_phone: row.parent_phone || contactByPlayer.get(row.player_id)?.phone || null
   }));
 }
 
@@ -336,6 +368,9 @@ export interface ExternalPlayerInput {
   lastName: string;
   dob: string;
   primaryPosition?: string | null;
+  preferredPosition?: string | null;
+  strongFoot?: string | null;
+  currentLevel?: string | null;
   currentClub?: string | null;
   parentName?: string | null;
   parentEmail?: string | null;
@@ -362,6 +397,9 @@ export async function createExternalPlayerAndAdd(eventId: string, input: Externa
       player_id: playerId,
       is_trial: true,
       primary_position_observed: input.primaryPosition || null,
+      preferred_position: input.preferredPosition || null,
+      strong_foot: input.strongFoot || null,
+      current_level: input.currentLevel || null,
       current_club: input.currentClub || null,
       parent_name: input.parentName || null,
       parent_email: input.parentEmail || null,
@@ -575,6 +613,10 @@ export interface TryoutEvaluation {
   criteria_scores: Record<string, CriterionScoreInput>;
   comment: string | null;
   comment_internal: boolean;
+  /** Remarques par section de la fiche : technique / tactique / physique / mentalite. */
+  section_remarks: Record<string, string>;
+  /** Date inscrite au bas de la fiche (AAAA-MM-JJ). */
+  evaluated_on: string | null;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -620,6 +662,8 @@ export async function saveEvaluation(
     criteriaScores?: Record<string, CriterionScoreInput>;
     comment?: string | null;
     commentInternal?: boolean;
+    sectionRemarks?: Record<string, string>;
+    evaluatedOn?: string | null;
     completed?: boolean;
     changedBy?: string | null;
   }
@@ -631,6 +675,8 @@ export async function saveEvaluation(
   if (patch.criteriaScores !== undefined) columnPatch.criteria_scores = patch.criteriaScores;
   if (patch.comment !== undefined) columnPatch.comment = patch.comment;
   if (patch.commentInternal !== undefined) columnPatch.comment_internal = patch.commentInternal;
+  if (patch.sectionRemarks !== undefined) columnPatch.section_remarks = patch.sectionRemarks;
+  if (patch.evaluatedOn !== undefined) columnPatch.evaluated_on = patch.evaluatedOn;
   if (patch.completed !== undefined) columnPatch.completed_at = patch.completed ? new Date().toISOString() : null;
 
   let row: any;
@@ -674,6 +720,13 @@ export async function updateAttendance(
     teamId?: string | null;
     quickNote?: string | null;
     primaryPositionObserved?: string | null;
+    preferredPosition?: string | null;
+    strongFoot?: string | null;
+    groupLabel?: string | null;
+    currentLevel?: string | null;
+    currentClub?: string | null;
+    parentEmail?: string | null;
+    parentPhone?: string | null;
     sweetheart?: boolean;
     insufficientData?: boolean;
   }
@@ -684,6 +737,13 @@ export async function updateAttendance(
   if (patch.teamId !== undefined) columnPatch.team_id = patch.teamId;
   if (patch.quickNote !== undefined) columnPatch.quick_note = patch.quickNote;
   if (patch.primaryPositionObserved !== undefined) columnPatch.primary_position_observed = patch.primaryPositionObserved;
+  if (patch.preferredPosition !== undefined) columnPatch.preferred_position = patch.preferredPosition;
+  if (patch.strongFoot !== undefined) columnPatch.strong_foot = patch.strongFoot;
+  if (patch.groupLabel !== undefined) columnPatch.group_label = patch.groupLabel;
+  if (patch.currentLevel !== undefined) columnPatch.current_level = patch.currentLevel;
+  if (patch.currentClub !== undefined) columnPatch.current_club = patch.currentClub;
+  if (patch.parentEmail !== undefined) columnPatch.parent_email = patch.parentEmail;
+  if (patch.parentPhone !== undefined) columnPatch.parent_phone = patch.parentPhone;
   if (patch.sweetheart !== undefined) columnPatch.sweetheart = patch.sweetheart;
   if (patch.insufficientData !== undefined) columnPatch.insufficient_data = patch.insufficientData;
   const { error } = await db().from("tryout_participants").update(columnPatch).eq("id", participantId);
