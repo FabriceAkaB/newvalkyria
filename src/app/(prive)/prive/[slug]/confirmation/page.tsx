@@ -2,7 +2,11 @@ import { Container } from "@/components/container";
 import { formatMoney } from "@/lib/private-programs";
 import { getPrivateProgram, getPrivateRegistrationById } from "@/lib/private-programs-repo";
 
-export const metadata = { title: "Confirmation — New Valkyria", robots: { index: false, follow: false } };
+export const metadata = {
+  title: "Confirmation — New Valkyria",
+  robots: { index: false, follow: false },
+  openGraph: { title: "New Valkyria", images: [{ url: "/og/garcons.jpg", width: 1200, height: 628 }] }
+};
 export const dynamic = "force-dynamic";
 
 export default async function PrivateConfirmationPage({

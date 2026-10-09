@@ -20,11 +20,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // sur fond neutre — jamais la photo d'accueil du site.
   const description = "Programme de développement de soccer New Valkyria — places limitées.";
   const image = { url: "/og/garcons.jpg", width: 1200, height: 628, alt: "New Valkyria" };
+  // IMPORTANT : canonique et og:url propres à la page. Sans ça, Messenger/Facebook
+  // suivent le canonique du site (l'accueil) et affichent sa photo et ses textes.
+  const path = program ? `/prive/${program.slug}` : "/";
   return {
     title,
     description,
+    alternates: { canonical: path },
     robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
-    openGraph: { title, description, type: "website", locale: "fr_CA", siteName: "New Valkyria", images: [image] },
+    openGraph: { title, description, url: path, type: "website", locale: "fr_CA", siteName: "New Valkyria", images: [image] },
     twitter: { card: "summary_large_image", title, description, images: [image.url] }
   };
 }
