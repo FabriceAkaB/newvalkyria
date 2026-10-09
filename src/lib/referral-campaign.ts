@@ -82,6 +82,20 @@ export async function getCampaignPrograms(origin: string, code: string): Promise
   });
 }
 
+/** Le message de l'offre, prêt à transmettre à une autre famille (texte du bloc
+ *  « Message à transmettre » du courriel 1). Contient les liens PERSONNELS de la famille. */
+export function buildOfferMessage(programs: CampaignProgram[]): string {
+  const discount = formatMoney(programs[0]?.referralDiscountCents ?? 5000);
+  const size = capacityLabel(programs[0]?.minCapacity ?? null, programs[0]?.capacity ?? 14);
+  return [
+    "Bonjour !",
+    "Je voulais te partager un nouveau programme de soccer pour garçons proposé par New Valkyria, encadré par les meilleurs entraîneurs de l'académie.",
+    ...programs.map((g) => `• ${g.shortName} — ${formatMoney(g.priceCents)} : ${g.link}`),
+    `Au programme : ${programs[0]?.practices ?? 16} pratiques et ${programs[0]?.matches ?? 3} matchs, en petit groupe de ${size} joueurs. Paiement en 2 versements possible.`,
+    `Avec mon lien, tu profites de ${discount} de rabais à l'inscription.`
+  ].join("\n\n");
+}
+
 export type CampaignStep = 1 | 2 | 3;
 
 export const CAMPAIGN_STEPS: { step: CampaignStep; label: string; when: string }[] = [
@@ -129,13 +143,36 @@ export function buildCampaignEmail(input: { step?: CampaignStep; firstName: stri
     )
     .join("");
 
+  // Récompenses mises en évidence : 50 $ de rabais pour eux + sac (ou crédit) pour vous.
+  const rewardsHighlight = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 18px">
+      <tr>
+        <td width="50%" valign="top" style="padding-right:6px">
+          <div style="background:#72499a;color:#ffffff;border-radius:14px;padding:30px 14px;text-align:center;height:100%">
+            <p style="margin:0;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#e3d3f5;font-weight:bold">Pour eux</p>
+            <p style="margin:6px 0 0;font-size:44px;line-height:1;font-weight:bold">${escapeHtml(discount.replace(/,00/, ""))}</p>
+            <p style="margin:6px 0 0;font-size:16px;font-weight:bold">DE RABAIS</p>
+            <p style="margin:8px 0 0;font-size:13px;line-height:1.4;color:#efe6fa">sur l'inscription de chaque famille que vous référez</p>
+          </div>
+        </td>
+        <td width="50%" valign="top" style="padding-left:6px">
+          <div style="background:#f7f4fb;border:2px solid #72499a;border-radius:14px;padding:12px 10px;text-align:center;height:100%">
+            <p style="margin:0;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#72499a;font-weight:bold">Pour vous</p>
+            <img src="${origin}/og/sac-nv.jpg" width="120" height="120" alt="Sac à dos New Valkyria" style="display:block;margin:6px auto;width:120px;height:120px;border:0;border-radius:8px" />
+            <p style="margin:0;font-size:15px;font-weight:bold;color:#2a1a45">Un sac à dos New Valkyria</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#3d3852">ou ${escapeHtml(credit.replace(/,00/, ""))} de crédit pour la prochaine saison — à votre choix</p>
+          </div>
+        </td>
+      </tr>
+    </table>`;
   const rewardBox = `
-    <div style="background:#2a1a45;color:#ffffff;border-radius:12px;padding:16px 18px;margin:0 0 18px">
-      <p style="margin:0 0 6px;font-weight:bold;font-size:16px">Comment ça fonctionne</p>
+    ${rewardsHighlight}
+    <div style="background:#2a1a45;color:#ffffff;border-radius:12px;padding:14px 18px;margin:0 0 18px">
+      <p style="margin:0 0 6px;font-weight:bold;font-size:15px">Comment ça fonctionne</p>
       <p style="margin:0;font-size:14px;line-height:1.6">
         1. Envoyez votre lien personnel à une famille.<br/>
-        2. Elle s'inscrit et profite de <strong>${discount} de rabais</strong>.<br/>
-        3. Vous choisissez : <strong>un sac New Valkyria</strong> ou <strong>${credit} de crédit</strong> pour la prochaine saison.
+        2. Elle s'inscrit et profite du rabais.<br/>
+        3. Vous choisissez votre récompense : le sac ou le crédit.
       </p>
     </div>`;
 
@@ -187,17 +224,25 @@ export function buildCampaignEmail(input: { step?: CampaignStep; firstName: stri
   <div style="background:#efeaf5;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
     <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden">
       <div style="background:#2a1a45;padding:22px 24px;text-align:center">
-        <img src="${origin}/og/logo-courriel.jpg" width="120" height="120" alt="New Valkyria" style="display:block;margin:0 auto 12px;width:120px;height:120px;border-radius:14px;border:0" />
+        <img src="${origin}/og/logo-courriel.png" width="130" height="130" alt="New Valkyria" style="display:block;margin:0 auto 10px;width:130px;height:130px;border:0" />
         <p style="margin:0;color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:.06em">NEW VALKYRIA</p>
         <p style="margin:2px 0 0;color:#c8aae0;font-size:13px">Académie technique de soccer</p>
       </div>
       <div style="padding:24px;color:#161419;font-size:15px;line-height:1.55">
         ${intro}
-        ${step !== 2 ? rewardBox : `<div style="background:#2a1a45;color:#fff;border-radius:12px;padding:14px 18px;margin:0 0 18px;font-size:14px;line-height:1.6">Pour eux : <strong>${discount} de rabais</strong>. Pour vous : <strong>un sac New Valkyria</strong> ou <strong>${credit} de crédit</strong>.</div>`}
+        ${step !== 2 ? rewardBox : rewardsHighlight}
         <p style="margin:0 0 10px;font-weight:bold">Touchez un bouton — le message est déjà écrit :</p>
         ${cards}
+        ${step === 1 ? `
+        <p style="margin:0 0 8px;font-weight:bold">Le message à transmettre (vous pouvez le copier-coller tel quel) :</p>
+        <div style="background:#ffffff;border:1px dashed #b9a3d6;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:14px;line-height:1.55;color:#161419;white-space:pre-wrap">${escapeHtml(buildOfferMessage(programs))}</div>` : ""}
         <p style="margin:0 0 6px;font-size:14px">Votre code : <strong style="letter-spacing:.1em;color:#72499a">${escapeHtml(code)}</strong> (déjà inclus dans vos liens).</p>
         <p style="margin:0 0 18px;font-size:14px">Suivez vos recommandations et choisissez votre récompense : <a href="${origin}/compte/recommandations" style="color:#72499a;font-weight:bold">Mes recommandations</a></p>
+        ${step === 1 ? `
+        <div style="background:#f7f4fb;border-left:4px solid #72499a;border-radius:6px;padding:14px 16px;margin:0 0 18px">
+          <p style="margin:0 0 6px;font-weight:bold;color:#2a1a45">Notre engagement</p>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:#3d3852"><strong>New Valkyria restera toujours une académie 100 % féminine.</strong> Ces projets éclair nous permettent d'offrir un excellent service à plus de jeunes et d'offrir davantage d'opportunités aux filles de l'académie.</p>
+        </div>` : ""}
         ${outro}
         <p style="margin:0;font-size:14px">L'équipe New Valkyria<br/>info@newvalkyria.com</p>
       </div>
@@ -214,6 +259,7 @@ export function buildCampaignEmail(input: { step?: CampaignStep; firstName: stri
     "",
     ...programs.map((g) => `• ${g.shortName} — ${formatMoney(g.priceCents)} : ${g.link}`),
     "",
+    ...(step === 1 ? ["Notre engagement : New Valkyria restera toujours une académie 100 % féminine. Ces projets éclair nous permettent d'offrir un excellent service à plus de jeunes et d'offrir davantage d'opportunités aux filles de l'académie.", ""] : []),
     `Pour eux : ${discount} de rabais. Pour vous : un sac New Valkyria ou ${credit} de crédit.`,
     `Votre code : ${code}`,
     `Mes recommandations : ${origin}/compte/recommandations`,
