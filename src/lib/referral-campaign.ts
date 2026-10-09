@@ -186,7 +186,8 @@ export function buildCampaignEmail(input: { step?: CampaignStep; firstName: stri
   const html = `
   <div style="background:#efeaf5;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
     <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden">
-      <div style="background:#2a1a45;padding:22px 24px">
+      <div style="background:#2a1a45;padding:22px 24px;text-align:center">
+        <img src="${origin}/og/logo-courriel.jpg" width="120" height="120" alt="New Valkyria" style="display:block;margin:0 auto 12px;width:120px;height:120px;border-radius:14px;border:0" />
         <p style="margin:0;color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:.06em">NEW VALKYRIA</p>
         <p style="margin:2px 0 0;color:#c8aae0;font-size:13px">Académie technique de soccer</p>
       </div>
