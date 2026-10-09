@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { env } from "@/lib/env";
-import { getResendClient } from "@/lib/resend";
+import { getResendClient, isEmailConfigured } from "@/lib/resend";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { birth_year, club, division, phone, email, expectations } = body;
 
-    if (env.resendApiKey) {
+    if (isEmailConfigured()) {
       const resend = getResendClient();
       void resend.emails.send({
         from: env.resendFrom,

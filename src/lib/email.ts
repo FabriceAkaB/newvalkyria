@@ -1,5 +1,5 @@
 import { env } from "@/lib/env";
-import { getResendClient } from "@/lib/resend";
+import { getResendClient, isEmailConfigured } from "@/lib/resend";
 import { getTrialConfig } from "@/lib/trial-dates-store";
 import type { LeadFormPayload } from "@/lib/validations";
 
@@ -17,7 +17,7 @@ interface TrialEmailInput {
 }
 
 export async function sendLeadNotificationEmail(lead: LeadFormPayload) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
 
   const resend = getResendClient();
 
@@ -72,7 +72,7 @@ export async function sendLeadNotificationEmail(lead: LeadFormPayload) {
 }
 
 export async function sendTrialConfirmationEmail(input: TrialEmailInput) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
 
   const resend = getResendClient();
   const config = await getTrialConfig();
@@ -140,7 +140,7 @@ export async function sendTrialConfirmationEmail(input: TrialEmailInput) {
 }
 
 export async function sendConfirmationEmail(input: ConfirmationEmailInput) {
-  if (!env.resendApiKey) {
+  if (!isEmailConfigured()) {
     return;
   }
 
@@ -170,7 +170,7 @@ interface SeasonTrialEmailInput {
  *  données) — distincte de sendTrialConfirmationEmail qui sert l'ancien
  *  système d'essai (leads + horaires configurés dans trial-dates-store). */
 export async function sendSeasonTrialConfirmationEmail(input: SeasonTrialEmailInput) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
 
   const resend = getResendClient();
 
@@ -196,7 +196,7 @@ interface WaitlistEmailInput {
 }
 
 export async function sendWaitlistConfirmationEmail(input: WaitlistEmailInput) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
 
   const resend = getResendClient();
 
@@ -223,7 +223,7 @@ interface ShopOrderEmailInput {
 }
 
 export async function sendShopOrderConfirmationEmail(input: ShopOrderEmailInput) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
 
   const resend = getResendClient();
   const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
@@ -268,7 +268,7 @@ interface InstallmentReceiptEmailInput {
 }
 
 export async function sendInstallmentReceiptEmail(input: InstallmentReceiptEmailInput) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
 
   const resend = getResendClient();
   const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
@@ -301,7 +301,7 @@ interface PaymentPlanFailedEmailInput {
  *  échec de prélèvement d'un versement, et à nouveau si le suivi manuel
  *  devient nécessaire après le nombre maximal de tentatives automatiques. */
 export async function sendPaymentPlanFailedEmail(input: PaymentPlanFailedEmailInput) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
 
   const resend = getResendClient();
   const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
@@ -330,7 +330,7 @@ export async function sendPaymentPlanFailedEmail(input: PaymentPlanFailedEmailIn
  *  par l'admin ; on ne rend jamais de HTML arbitraire, seulement les sauts
  *  de ligne convertis en paragraphes. */
 export async function sendBroadcastEmail(input: { to: string; subject: string; body: string }): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!env.resendApiKey) return { ok: false, error: "Resend non configuré" };
+  if (!isEmailConfigured()) return { ok: false, error: "Resend non configuré" };
 
   const resend = getResendClient();
   const paragraphs = input.body
@@ -381,7 +381,7 @@ interface PrivateProgramConfirmationInput {
 /** Confirmation d'inscription à un programme garçons privé : détail complet
  *  du prix, du rabais, du montant payé et du solde (bloc 6.3). */
 export async function sendPrivateProgramConfirmationEmail(input: PrivateProgramConfirmationInput) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
 
   const resend = getResendClient();
   const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
@@ -430,7 +430,7 @@ interface InstallmentReminderInput {
 
 /** Rappel envoyé quelques jours avant le prélèvement automatique du 2e versement. */
 export async function sendInstallmentReminderEmail(input: InstallmentReminderInput) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
   const resend = getResendClient();
   const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
   await resend.emails.send({
@@ -462,7 +462,7 @@ interface TerrainRentalEmailInput {
 
 /** Confirmation d'une location de terrain payée — au locataire, copie à l'académie. */
 export async function sendTerrainRentalConfirmationEmail(input: TerrainRentalEmailInput) {
-  if (!env.resendApiKey) return;
+  if (!isEmailConfigured()) return;
   const resend = getResendClient();
   const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
   const dateLabel = new Date(input.date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -502,7 +502,7 @@ export async function sendCampaignEmail(input: { to: string; subject: string; ht
     }
   }
 
-  if (!env.resendApiKey) return { ok: false, error: "Resend non configuré" };
+  if (!isEmailConfigured()) return { ok: false, error: "Resend non configuré" };
   try {
     const resend = getResendClient();
     const { error } = await resend.emails.send({ from: input.from ?? env.resendFrom, to: input.to, subject: input.subject, html: input.html, text: input.text, replyTo: "info@newvalkyria.com" });
