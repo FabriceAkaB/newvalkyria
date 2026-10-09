@@ -64,7 +64,8 @@ export async function GET(request: Request) {
     audienceAll: all.length,
     alreadySent: audience.filter((r) => sentSet.has(r.email)).length,
     programs: programs.map((p) => ({ slug: p.slug, name: p.shortName, priceCents: p.priceCents })),
-    from: env.resendFrom,
+    from: process.env.GMAIL_SMTP_USER ? `${process.env.GMAIL_SMTP_FROM_NAME ?? "New Valkyria"} <${process.env.GMAIL_SMTP_USER}>` : env.resendFrom,
+    via: process.env.GMAIL_SMTP_USER && process.env.GMAIL_SMTP_APP_PASSWORD ? "gmail" : "resend",
     preview: { subject: preview.subject, html: preview.html },
     families: await Promise.all(
       audience.map(async (r) => {
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
     const mail = buildCampaignEmail({ step, firstName: "Jean-Paul", code: code.code, programs, origin });
     const result = await sendCampaignEmail({ to, subject: `[TEST] ${mail.subject}`, html: mail.html, text: mail.text });
     if (!result.ok) return NextResponse.json({ ok: false, error: result.error, from: env.resendFrom }, { status: 502 });
-    return NextResponse.json({ ok: true, to });
+    return NextResponse.json({ ok: true, to, via: result.via });
   }
 
   // ── Envoi à toutes les familles (par lots, jamais deux fois la même) ──

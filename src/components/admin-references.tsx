@@ -98,6 +98,7 @@ export function AdminReferences({
     alreadySent: number;
     programs: { slug: string; name: string; priceCents: number }[];
     from: string;
+    via: "gmail" | "resend";
     preview: { subject: string; html: string };
     families: { name: string; email: string; phone: string | null; code: string; sent: boolean; message: string; whatsapp: string | null; sms: string | null }[];
   }
@@ -125,7 +126,7 @@ export function AdminReferences({
     try {
       const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "test", to: testTo, step }) });
       const json = await res.json().catch(() => ({}));
-      setCampMsg(res.ok ? `✓ Courriel de test envoyé à ${json.to}.` : `✗ Envoi impossible : ${json.error ?? "erreur"}`);
+      setCampMsg(res.ok ? `✓ Courriel de test envoyé à ${json.to}${json.via === "gmail" ? " (depuis votre boîte)" : ""}.` : `✗ Envoi impossible : ${json.error ?? "erreur"}`);
     } finally {
       setCampBusy(false);
     }
@@ -358,7 +359,11 @@ export function AdminReferences({
               ) : (
                 <>
                   <div style={{ background: "#1c1408", border: "1px solid #5a4410", borderRadius: "10px", padding: "0.8rem 1rem", marginBottom: "1rem", fontSize: "0.76rem", color: "#f0c878" }}>
-                    Expéditeur configuré : <strong>{camp.from}</strong>. Pour que les courriels partent vers les familles, le domaine d&apos;envoi doit être vérifié dans Resend (resend.com/domains). Tant que ce n&apos;est pas fait, utilisez les boutons WhatsApp / SMS ci-dessous ou l&apos;export CSV.
+                    {camp.via === "gmail" ? (
+                      <>Envoi depuis votre boîte courriel : <strong>{camp.from}</strong> — chaque famille reçoit un courriel personnalisé, les réponses arrivent dans votre boîte.</>
+                    ) : (
+                      <>Expéditeur configuré : <strong>{camp.from}</strong>. Pour que les courriels partent vers les familles, ajoutez la connexion à votre boîte courriel (variables GMAIL_SMTP_USER / GMAIL_SMTP_APP_PASSWORD) ou vérifiez un domaine dans Resend. En attendant, utilisez les boutons WhatsApp / SMS ci-dessous ou l&apos;export CSV.</>
+                    )}
                   </div>
 
                   <div className="admin-stats" style={{ marginBottom: "1rem" }}>
