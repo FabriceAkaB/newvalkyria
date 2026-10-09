@@ -4,11 +4,14 @@ import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { sendCampaignEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
-import { buildCampaignEmail, buildDirectMessage, getCampaignAudience, getCampaignPrograms, phoneDigits } from "@/lib/referral-campaign";
+import { buildCampaignEmail, buildDirectMessage, campaignKey, CAMPAIGN_STEPS, getCampaignAudience, getCampaignPrograms, phoneDigits, type CampaignStep } from "@/lib/referral-campaign";
 import { getOrCreateReferralCode, normalizeEmail } from "@/lib/referrals-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
-const CAMPAIGN = "partage-2026-10";
+function parseStep(v: unknown): CampaignStep {
+  const n = Number(v);
+  return n === 2 || n === 3 ? n : 1;
+}
 
 function db() {
   return getSupabaseAdminClient() as any;
@@ -23,6 +26,8 @@ export async function GET(request: Request) {
   if (role !== "admin") return jsonError("Non autorisé", 401);
   const { searchParams } = new URL(request.url);
   const includePast = searchParams.get("includePast") === "1";
+  const step = parseStep(searchParams.get("step"));
+  const CAMPAIGN = campaignKey(step);
   const origin = env.publicSiteUrl;
 
   const [current, all] = await Promise.all([getCampaignAudience(), getCampaignAudience({ includePast: true })]);
@@ -49,10 +54,12 @@ export async function GET(request: Request) {
   const sentSet = new Set((sent ?? []).filter((s: any) => s.status === "sent").map((s: any) => s.email));
   const sample = audience[0] ?? { firstName: "Marie", code: "ABC123" };
   const programs = await getCampaignPrograms(origin, sample.code);
-  const preview = buildCampaignEmail({ firstName: sample.firstName, code: sample.code, programs, origin });
+  const preview = buildCampaignEmail({ step, firstName: sample.firstName, code: sample.code, programs, origin });
 
   return NextResponse.json({
     campaign: CAMPAIGN,
+    step,
+    steps: CAMPAIGN_STEPS,
     audienceCurrent: current.length,
     audienceAll: all.length,
     alreadySent: audience.filter((r) => sentSet.has(r.email)).length,
@@ -82,8 +89,10 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const role = await getCurrentAdminRole();
   if (role !== "admin") return jsonError("Non autorisé", 401);
-  const body = (await request.json().catch(() => null)) as { action?: "test" | "send_all"; to?: string; includePast?: boolean; limit?: number } | null;
+  const body = (await request.json().catch(() => null)) as { action?: "test" | "send_all"; to?: string; includePast?: boolean; limit?: number; step?: number } | null;
   if (!body?.action) return jsonError("Action requise", 400);
+  const step = parseStep(body.step);
+  const CAMPAIGN = campaignKey(step);
   const origin = env.publicSiteUrl;
 
   const programsProbe = await getCampaignPrograms(origin, "TEST00");
@@ -95,7 +104,7 @@ export async function POST(request: Request) {
     if (!to.includes("@")) return jsonError("Courriel de test invalide.", 400);
     const code = await getOrCreateReferralCode(to, "Test administrateur");
     const programs = await getCampaignPrograms(origin, code.code);
-    const mail = buildCampaignEmail({ firstName: "Jean-Paul", code: code.code, programs, origin });
+    const mail = buildCampaignEmail({ step, firstName: "Jean-Paul", code: code.code, programs, origin });
     const result = await sendCampaignEmail({ to, subject: `[TEST] ${mail.subject}`, html: mail.html, text: mail.text });
     if (!result.ok) return NextResponse.json({ ok: false, error: result.error, from: env.resendFrom }, { status: 502 });
     return NextResponse.json({ ok: true, to });
@@ -113,7 +122,7 @@ export async function POST(request: Request) {
     let firstError: string | null = null;
     for (const r of todo) {
       const programs = await getCampaignPrograms(origin, r.code);
-      const mail = buildCampaignEmail({ firstName: r.firstName, code: r.code, programs, origin });
+      const mail = buildCampaignEmail({ step, firstName: r.firstName, code: r.code, programs, origin });
       const result = await sendCampaignEmail({ to: r.email, subject: mail.subject, html: mail.html, text: mail.text });
       await db().from("referral_campaign_sends").upsert({ campaign: CAMPAIGN, email: r.email, status: result.ok ? "sent" : "failed", error: result.ok ? null : result.error, sent_at: new Date().toISOString() }, { onConflict: "campaign,email" });
       if (result.ok) ok++;

@@ -103,16 +103,17 @@ export function AdminReferences({
   }
   const [camp, setCamp] = useState<CampaignData | null>(null);
   const [includePast, setIncludePast] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [testTo, setTestTo] = useState("");
   const [campMsg, setCampMsg] = useState<string | null>(null);
   const [campBusy, setCampBusy] = useState(false);
   const [famSearch, setFamSearch] = useState("");
 
   const loadCampaign = useCallback(async () => {
-    const res = await fetch(`/api/admin/references/campagne?includePast=${includePast ? 1 : 0}`);
+    const res = await fetch(`/api/admin/references/campagne?includePast=${includePast ? 1 : 0}&step=${step}`);
     if (res.ok) setCamp(await res.json());
     else setCampMsg((await res.json().catch(() => ({}))).error ?? "Erreur de chargement");
-  }, [includePast]);
+  }, [includePast, step]);
 
   useEffect(() => {
     if (tab === "campagne") loadCampaign();
@@ -122,7 +123,7 @@ export function AdminReferences({
     setCampBusy(true);
     setCampMsg(null);
     try {
-      const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "test", to: testTo }) });
+      const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "test", to: testTo, step }) });
       const json = await res.json().catch(() => ({}));
       setCampMsg(res.ok ? `✓ Courriel de test envoyé à ${json.to}.` : `✗ Envoi impossible : ${json.error ?? "erreur"}`);
     } finally {
@@ -139,7 +140,7 @@ export function AdminReferences({
     let sent = 0;
     try {
       for (let i = 0; i < 20; i++) {
-        const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "send_all", includePast, limit: 40 }) });
+        const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "send_all", includePast, limit: 40, step }) });
         const json = await res.json().catch(() => ({}));
         if (!res.ok && !json.sent) throw new Error(json.error ?? "Erreur");
         sent += json.sent ?? 0;
@@ -364,6 +365,15 @@ export function AdminReferences({
                     <div className="admin-stat-card"><p className="admin-stat-value">{camp.audienceCurrent}</p><p className="admin-stat-label">Familles de la saison en cours</p></div>
                     <div className="admin-stat-card"><p className="admin-stat-value">{camp.audienceAll}</p><p className="admin-stat-label">Toutes les familles connues</p></div>
                     <div className="admin-stat-card"><p className="admin-stat-value">{camp.alreadySent}</p><p className="admin-stat-label">Déjà envoyés</p></div>
+                  </div>
+
+                  <div className="admin-filters" style={{ marginBottom: "0.9rem" }}>
+                    {[1, 2, 3].map((n) => {
+                      const info = [{ l: "1. Annonce — aujourd'hui" }, { l: "2. Rappel simple — dimanche" }, { l: "3. Dernières places — mercredi" }][n - 1];
+                      return (
+                        <button key={n} className="admin-filter-btn" data-active={String(step === n)} onClick={() => setStep(n as 1 | 2 | 3)}>{info.l}</button>
+                      );
+                    })}
                   </div>
 
                   <label style={{ fontSize: "0.76rem", color: "#c3c2c8", display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.9rem" }}>
