@@ -481,3 +481,16 @@ export async function sendTerrainRentalConfirmationEmail(input: TerrainRentalEma
     </div>`;
   await resend.emails.send({ from: env.resendFrom, to: input.to, bcc: "info@newvalkyria.com", subject: `New Valkyria — Réservation de terrain confirmée (${dateLabel})`, html });
 }
+
+/** Envoi d'un courriel promotionnel déjà composé (campagne « Partagez New Valkyria »). */
+export async function sendCampaignEmail(input: { to: string; subject: string; html: string; text: string; from?: string }): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!env.resendApiKey) return { ok: false, error: "Resend non configuré" };
+  try {
+    const resend = getResendClient();
+    const { error } = await resend.emails.send({ from: input.from ?? env.resendFrom, to: input.to, subject: input.subject, html: input.html, text: input.text, replyTo: "info@newvalkyria.com" });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Erreur d'envoi" };
+  }
+}

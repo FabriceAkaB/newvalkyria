@@ -24,7 +24,7 @@ export async function GET() {
   return NextResponse.json({
     summary,
     ledger: ledger.slice(0, 20).map((e) => ({ id: e.id, deltaCents: e.delta_cents, kind: e.kind, note: e.note, createdAt: e.created_at })),
-    origin: env.siteUrl,
+    origin: env.publicSiteUrl,
     programs: programs
       .filter((p) => p.active && p.published)
       .map((p) => ({

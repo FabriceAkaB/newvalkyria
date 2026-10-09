@@ -59,7 +59,7 @@ export default async function PrivateProgramPage({
     secondInstallmentDate: program.second_installment_date,
     dates,
     presentation,
-    origin: env.siteUrl
+    origin: env.publicSiteUrl
   };
 
   return <PrivateProgramContent program={view} initialRef={ref?.trim() || null} />;

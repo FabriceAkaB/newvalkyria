@@ -7,8 +7,12 @@ const REQUIRED = {
   RESEND_API_KEY: process.env.RESEND_API_KEY
 };
 
+const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const env = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  siteUrl: rawSiteUrl,
+  /** URL publique à mettre dans les liens partagés/courriels : jamais localhost. */
+  publicSiteUrl: /localhost|127\.0\.0\.1/.test(rawSiteUrl) ? "https://www.newvalkyria.com" : rawSiteUrl,
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   stripeSecretKey: process.env.STRIPE_SECRET_KEY,

@@ -1,12 +1,12 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { formatMoney } from "@/lib/private-programs";
 import type { CodeRow, CreditFamilyRow, FinancialSummary, ReferralAdminRow } from "@/lib/private-programs-admin";
 
-type Tab = "references" | "credits" | "codes" | "finances";
+type Tab = "references" | "credits" | "codes" | "finances" | "campagne";
 
 const STATUS_LABELS: Record<string, string> = { a_verifier: "À vérifier", confirme: "Confirmée", valide: "Validée", rejete: "Refusée", annule: "Annulée" };
 const STATUS_COLORS: Record<string, string> = { a_verifier: "#f0c878", confirme: "#9ec9ff", valide: "#8fce9f", rejete: "#ff9999", annule: "#ff9999" };
@@ -91,6 +91,71 @@ export function AdminReferences({
   const head: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid #251f30", color: "#9d9da0", fontWeight: 600, textAlign: "left" };
   const f = data.financials;
 
+  /* ── Campagne « Partagez New Valkyria » ── */
+  interface CampaignData {
+    audienceCurrent: number;
+    audienceAll: number;
+    alreadySent: number;
+    programs: { slug: string; name: string; priceCents: number }[];
+    from: string;
+    preview: { subject: string; html: string };
+    families: { name: string; email: string; phone: string | null; code: string; sent: boolean; message: string; whatsapp: string | null; sms: string | null }[];
+  }
+  const [camp, setCamp] = useState<CampaignData | null>(null);
+  const [includePast, setIncludePast] = useState(false);
+  const [testTo, setTestTo] = useState("");
+  const [campMsg, setCampMsg] = useState<string | null>(null);
+  const [campBusy, setCampBusy] = useState(false);
+  const [famSearch, setFamSearch] = useState("");
+
+  const loadCampaign = useCallback(async () => {
+    const res = await fetch(`/api/admin/references/campagne?includePast=${includePast ? 1 : 0}`);
+    if (res.ok) setCamp(await res.json());
+    else setCampMsg((await res.json().catch(() => ({}))).error ?? "Erreur de chargement");
+  }, [includePast]);
+
+  useEffect(() => {
+    if (tab === "campagne") loadCampaign();
+  }, [tab, loadCampaign]);
+
+  const sendTest = async () => {
+    setCampBusy(true);
+    setCampMsg(null);
+    try {
+      const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "test", to: testTo }) });
+      const json = await res.json().catch(() => ({}));
+      setCampMsg(res.ok ? `✓ Courriel de test envoyé à ${json.to}.` : `✗ Envoi impossible : ${json.error ?? "erreur"}`);
+    } finally {
+      setCampBusy(false);
+    }
+  };
+
+  const sendAll = async () => {
+    if (!camp) return;
+    const count = includePast ? camp.audienceAll : camp.audienceCurrent;
+    if (!confirm(`Envoyer ce courriel à ${count - camp.alreadySent} famille(s) ? Chaque famille reçoit son propre code. Cette action ne peut pas être annulée.`)) return;
+    setCampBusy(true);
+    setCampMsg(null);
+    let sent = 0;
+    try {
+      for (let i = 0; i < 20; i++) {
+        const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "send_all", includePast, limit: 40 }) });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok && !json.sent) throw new Error(json.error ?? "Erreur");
+        sent += json.sent ?? 0;
+        setCampMsg(`Envoi en cours… ${sent} envoyé(s), ${json.remaining ?? 0} restant(s).`);
+        if (json.failed > 0) throw new Error(json.error ?? "Des envois ont échoué");
+        if (!json.remaining) break;
+      }
+      setCampMsg(`✓ Campagne terminée : ${sent} courriel(s) envoyé(s).`);
+    } catch (err) {
+      setCampMsg(`✗ ${err instanceof Error ? err.message : "Erreur"} (${sent} envoyé(s) avant l'arrêt)`);
+    } finally {
+      setCampBusy(false);
+      loadCampaign();
+    }
+  };
+
   return (
     <>
       <AdminTopbar />
@@ -107,6 +172,7 @@ export function AdminReferences({
             {tabBtn("credits", "Crédits", data.credits.length)}
             {tabBtn("codes", "Codes", data.codes.length)}
             {tabBtn("finances", "Finances")}
+            {tabBtn("campagne", "Campagne de partage")}
           </div>
 
           {/* ─────────── Références ─────────── */}
@@ -277,6 +343,97 @@ export function AdminReferences({
                 </tbody>
               </table>
               {data.codes.length === 0 && <p className="admin-empty-text">Aucun code encore.</p>}
+            </>
+          )}
+
+          {/* ─────────── Campagne de partage ─────────── */}
+          {tab === "campagne" && (
+            <>
+              <p style={{ fontSize: "0.8rem", color: "#c3c2c8", margin: "0 0 0.9rem" }}>
+                Chaque famille reçoit <strong>son propre code et ses liens</strong>, avec des boutons prêts à l&apos;emploi (WhatsApp, courriel, SMS). Seuls les programmes <em>publiés</em> sont promus.
+              </p>
+              {!camp ? (
+                <p style={{ color: "#9d9da0" }}>Chargement…</p>
+              ) : (
+                <>
+                  <div style={{ background: "#1c1408", border: "1px solid #5a4410", borderRadius: "10px", padding: "0.8rem 1rem", marginBottom: "1rem", fontSize: "0.76rem", color: "#f0c878" }}>
+                    Expéditeur configuré : <strong>{camp.from}</strong>. Pour que les courriels partent vers les familles, le domaine d&apos;envoi doit être vérifié dans Resend (resend.com/domains). Tant que ce n&apos;est pas fait, utilisez les boutons WhatsApp / SMS ci-dessous ou l&apos;export CSV.
+                  </div>
+
+                  <div className="admin-stats" style={{ marginBottom: "1rem" }}>
+                    <div className="admin-stat-card"><p className="admin-stat-value">{camp.audienceCurrent}</p><p className="admin-stat-label">Familles de la saison en cours</p></div>
+                    <div className="admin-stat-card"><p className="admin-stat-value">{camp.audienceAll}</p><p className="admin-stat-label">Toutes les familles connues</p></div>
+                    <div className="admin-stat-card"><p className="admin-stat-value">{camp.alreadySent}</p><p className="admin-stat-label">Déjà envoyés</p></div>
+                  </div>
+
+                  <label style={{ fontSize: "0.76rem", color: "#c3c2c8", display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.9rem" }}>
+                    <input type="checkbox" checked={includePast} onChange={(e) => setIncludePast(e.target.checked)} />
+                    Inclure aussi les familles des saisons passées (Été 2026, essais…)
+                  </label>
+
+                  <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
+                    <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>1. Recevoir un courriel de test</p>
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <input className="admin-input" placeholder="Votre courriel" style={{ width: "260px" }} value={testTo} onChange={(e) => setTestTo(e.target.value)} />
+                      <button className="admin-btn-primary" style={{ fontSize: "0.74rem" }} disabled={campBusy || !testTo.includes("@")} onClick={sendTest}>Envoyer le test</button>
+                    </div>
+                    <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.5rem 0 0" }}>Objet : {camp.preview.subject}</p>
+                  </div>
+
+                  <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
+                    <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem", fontSize: "0.82rem" }}>Aperçu (exemple avec une famille)</p>
+                    <iframe title="Aperçu du courriel" srcDoc={camp.preview.html} style={{ width: "100%", height: "640px", border: "1px solid #302e36", borderRadius: "8px", background: "#fff" }} />
+                  </div>
+
+                  <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
+                    <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>2. Envoyer à toutes les familles</p>
+                    <button className="admin-btn-primary" style={{ fontSize: "0.76rem" }} disabled={campBusy} onClick={sendAll}>
+                      {campBusy ? "Envoi…" : `Envoyer à ${(includePast ? camp.audienceAll : camp.audienceCurrent) - camp.alreadySent} famille(s)`}
+                    </button>
+                    <span style={{ fontSize: "0.72rem", color: "#6d6b71", marginLeft: "0.6rem" }}>Une famille ne reçoit jamais deux fois ce courriel.</span>
+                  </div>
+
+                  {campMsg && <p style={{ fontSize: "0.8rem", color: campMsg.startsWith("✗") ? "#ff9999" : "#8fce9f", margin: "0 0 1rem" }}>{campMsg}</p>}
+
+                  <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", flexWrap: "wrap", marginBottom: "0.6rem", alignItems: "center" }}>
+                      <p style={{ fontWeight: 700, color: "#fff", margin: 0, fontSize: "0.82rem" }}>Envoi direct par WhatsApp / SMS (un clic par famille)</p>
+                      <a className="admin-export-btn" href={`/api/admin/references/campagne?format=csv&includePast=${includePast ? 1 : 0}`}>↓ Exporter CSV (liens + messages)</a>
+                    </div>
+                    <input type="search" className="admin-search-input" placeholder="Rechercher une famille…" value={famSearch} onChange={(e) => setFamSearch(e.target.value)} style={{ marginBottom: "0.6rem" }} />
+                    <div style={{ maxHeight: "460px", overflowY: "auto" }}>
+                      {camp.families
+                        .filter((x) => !famSearch.trim() || `${x.name} ${x.email}`.toLowerCase().includes(famSearch.trim().toLowerCase()))
+                        .map((x) => (
+                          <div key={x.email} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", alignItems: "center", padding: "0.4rem 0", borderBottom: "1px solid #1f1d25", fontSize: "0.76rem", flexWrap: "wrap" }}>
+                            <span style={{ color: "#fff" }}>
+                              {x.name || x.email} <span style={{ color: "#6d6b71" }}>· {x.code}{x.phone ? ` · ${x.phone}` : ""}</span>
+                              {x.sent && <span style={{ color: "#8fce9f" }}> ✓ courriel envoyé</span>}
+                            </span>
+                            <span style={{ display: "flex", gap: "0.35rem" }}>
+                              {x.whatsapp && <a className="admin-btn-ghost" style={{ fontSize: "0.66rem", textDecoration: "none" }} href={x.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>}
+                              {x.sms && <a className="admin-btn-ghost" style={{ fontSize: "0.66rem", textDecoration: "none" }} href={x.sms}>SMS</a>}
+                              <button
+                                className="admin-btn-ghost"
+                                style={{ fontSize: "0.66rem" }}
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(x.message);
+                                    flash("Message copié.");
+                                  } catch {
+                                    window.prompt("Copiez ce message :", x.message);
+                                  }
+                                }}
+                              >
+                                Copier le message
+                              </button>
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
 
