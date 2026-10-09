@@ -27,6 +27,7 @@ import {
   enrollInAllActiveSessions,
   markRegistrationPaid as markSportEtudesRegistrationPaid
 } from "@/lib/sport-etudes-repo";
+import { onPrivateCheckoutExpired, onPrivateRefund, onPrivateRegistrationPaid } from "@/lib/private-programs-lifecycle";
 import { getStripeClient } from "@/lib/stripe";
 
 export async function POST(request: Request) {
@@ -197,12 +198,15 @@ export async function POST(request: Request) {
     if (checkoutType === "sessionprogram") {
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
       const registration = await markSessionProgramRegistrationPaid(session.id, paymentIntentId);
+      const isPrivateProgram = session.metadata?.privateProgram === "true";
       if (registration) {
         await enrollInAllDates(registration.id, registration.program_slug as "privilege-valkyria" | "intensif-garcons");
-        try {
-          await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name });
-        } catch (error) {
-          console.error("Unable to send session-program confirmation email", error);
+        if (!isPrivateProgram) {
+          try {
+            await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name });
+          } catch (error) {
+            console.error("Unable to send session-program confirmation email", error);
+          }
         }
       }
 
@@ -219,6 +223,16 @@ export async function POST(request: Request) {
           }
         } catch (error) {
           console.error("Unable to activate session-program payment plan", error);
+        }
+      }
+
+      // Programmes privés : validation du référencement, récompense et courriel détaillé
+      // (après l'activation du plan, pour que les montants soient à jour).
+      if (registration && isPrivateProgram) {
+        try {
+          await onPrivateRegistrationPaid(registration as any);
+        } catch (error) {
+          console.error("Unable to finalize private program registration", error);
         }
       }
 
@@ -279,6 +293,31 @@ export async function POST(request: Request) {
         });
       } catch (error) {
         console.error("Unable to send confirmation email", error);
+      }
+    }
+  }
+
+  // ── Session de paiement expirée : la réservation d'un programme privé est libérée ──
+  if (event.type === "checkout.session.expired") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    if (session.metadata?.privateProgram === "true") {
+      try {
+        await onPrivateCheckoutExpired(session.id);
+      } catch (error) {
+        console.error("Unable to release expired private program reservation", error);
+      }
+    }
+  }
+
+  // ── Remboursement : on déclenche la vérification de la récompense liée ──
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : undefined;
+    if (paymentIntentId) {
+      try {
+        await onPrivateRefund(paymentIntentId);
+      } catch (error) {
+        console.error("Unable to flag refunded private program registration", error);
       }
     }
   }

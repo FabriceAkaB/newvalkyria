@@ -359,3 +359,91 @@ export async function sendBroadcastEmail(input: { to: string; subject: string; b
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+interface PrivateProgramConfirmationInput {
+  to: string;
+  parentName: string;
+  playerName: string;
+  programName: string;
+  practices: number | null;
+  matches: number | null;
+  listPriceCents: number;
+  referralDiscountCents: number;
+  creditAppliedCents: number;
+  installmentFeeCents: number;
+  totalCents: number;
+  paidCents: number;
+  nextInstallmentDate: string | null;
+  nextInstallmentCents: number | null;
+  accountUrl: string;
+}
+
+/** Confirmation d'inscription à un programme garçons privé : détail complet
+ *  du prix, du rabais, du montant payé et du solde (bloc 6.3). */
+export async function sendPrivateProgramConfirmationEmail(input: PrivateProgramConfirmationInput) {
+  if (!env.resendApiKey) return;
+
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  const remaining = Math.max(0, input.totalCents - input.paidCents);
+  const row = (label: string, value: string, bold = false) =>
+    `<tr><td style="padding:6px 10px;${bold ? "font-weight:bold;" : ""}">${label}</td><td style="padding:6px 10px;text-align:right;${bold ? "font-weight:bold;" : ""}">${value}</td></tr>`;
+
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    subject: `New Valkyria — Inscription confirmée : ${input.playerName}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:22px;margin-bottom:6px">Merci ${escapeHtml(input.parentName)}, l'inscription est confirmée.</h1>
+        <p style="margin-top:0"><strong>${escapeHtml(input.playerName)}</strong> est inscrit au programme <strong>${escapeHtml(input.programName)}</strong>.</p>
+        ${input.practices || input.matches ? `<p>Le programme comprend ${input.practices ?? "—"} pratiques et ${input.matches ?? "—"} matchs. Le calendrier détaillé vous sera communiqué.</p>` : ""}
+        <table style="width:100%;border-collapse:collapse;font-size:14px;background:#f7f4fb;margin:14px 0">
+          ${row("Prix du programme", fmt(input.listPriceCents))}
+          ${input.referralDiscountCents > 0 ? row("Rabais de référencement", `− ${fmt(input.referralDiscountCents)}`) : ""}
+          ${input.creditAppliedCents > 0 ? row("Crédit familial utilisé", `− ${fmt(input.creditAppliedCents)}`) : ""}
+          ${input.installmentFeeCents > 0 ? row("Supplément — paiement en 2 versements", `+ ${fmt(input.installmentFeeCents)}`) : ""}
+          ${row("Total", fmt(input.totalCents), true)}
+          ${row("Montant payé", fmt(input.paidCents))}
+          ${row("Solde restant", fmt(remaining), true)}
+        </table>
+        ${
+          remaining > 0 && input.nextInstallmentDate
+            ? `<p>Le prochain versement de <strong>${fmt(input.nextInstallmentCents ?? remaining)}</strong> sera prélevé automatiquement sur la carte utilisée le <strong>${new Date(input.nextInstallmentDate + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}</strong>, comme vous l'avez autorisé. Un rappel vous sera envoyé avant la date.</p>`
+            : ""
+        }
+        <p>Vous pouvez consulter votre dossier et vos recommandations dans votre espace parent : <a href="${input.accountUrl}">${input.accountUrl}</a></p>
+        <p style="margin-top:24px">New Valkyria<br/>info@newvalkyria.com</p>
+      </div>
+    `
+  });
+}
+
+interface InstallmentReminderInput {
+  to: string;
+  parentName: string;
+  playerName: string;
+  programName: string;
+  amountCents: number;
+  dueDate: string;
+}
+
+/** Rappel envoyé quelques jours avant le prélèvement automatique du 2e versement. */
+export async function sendInstallmentReminderEmail(input: InstallmentReminderInput) {
+  if (!env.resendApiKey) return;
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    subject: `New Valkyria — Rappel : versement de ${fmt(input.amountCents)} le ${new Date(input.dueDate + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:20px">Bonjour ${escapeHtml(input.parentName)},</h1>
+        <p>Petit rappel : le deuxième versement du programme <strong>${escapeHtml(input.programName)}</strong> pour <strong>${escapeHtml(input.playerName)}</strong> sera prélevé automatiquement sur la carte enregistrée le <strong>${new Date(input.dueDate + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}</strong>.</p>
+        <p>Montant : <strong>${fmt(input.amountCents)}</strong>. Si votre carte a changé, écrivez-nous à info@newvalkyria.com avant cette date.</p>
+        <p style="margin-top:24px">New Valkyria</p>
+      </div>
+    `
+  });
+}

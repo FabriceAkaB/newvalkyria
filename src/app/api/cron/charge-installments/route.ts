@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
-import { sendInstallmentReceiptEmail, sendPaymentPlanFailedEmail } from "@/lib/email";
+import { sendInstallmentReceiptEmail, sendInstallmentReminderEmail, sendPaymentPlanFailedEmail } from "@/lib/email";
+import { getInstallmentsNeedingReminder, markInstallmentReminderSent } from "@/lib/private-programs-repo";
 import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
 import { getDueInstallments as getDueSeasonInstallments, markInstallmentFailed as markSeasonInstallmentFailed, markInstallmentPaid as markSeasonInstallmentPaid } from "@/lib/season-admin-repo";
@@ -26,6 +27,18 @@ export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
   const hasValidCronSecret = env.cronSecret && auth === `Bearer ${env.cronSecret}`;
   if (!hasValidCronSecret && !(await isAdminRequest())) return jsonError("Non autorisé", 401);
+
+  // Rappel (3 jours avant) pour les 2es versements des programmes privés garçons.
+  let reminders = 0;
+  try {
+    for (const r of await getInstallmentsNeedingReminder()) {
+      await sendInstallmentReminderEmail({ to: r.parent_email, parentName: r.parent_name, playerName: r.player_name, programName: r.program_name, amountCents: r.amount_cents, dueDate: r.due_date });
+      await markInstallmentReminderSent(r.id);
+      reminders++;
+    }
+  } catch (err) {
+    console.error("Installment reminders failed", err);
+  }
 
   const [seasonDue, sportEtudesDue, sessionProgramDue] = await Promise.all([
     getDueSeasonInstallments(),
@@ -101,5 +114,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ processed: due.length, succeeded, failed, skipped });
+  return NextResponse.json({ processed: due.length, succeeded, failed, skipped, reminders });
 }

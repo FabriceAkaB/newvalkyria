@@ -242,3 +242,31 @@ export const tryoutEvaluationSaveSchema = z.object({
   commentInternal: z.boolean().optional(),
   completed: z.boolean().optional()
 });
+
+export const privateProgramRegistrationSchema = z.object({
+  programSlug: z.string().min(1),
+  playerFirstName: z.string().trim().min(1, "Prénom de l'enfant requis"),
+  playerLastName: z.string().trim().min(1, "Nom de l'enfant requis"),
+  birthYear: z.number().int().min(2000, "Année de naissance invalide").max(2026, "Année de naissance invalide"),
+  playerDob: z.string().optional(),
+  parentFirstName: z.string().trim().min(1, "Prénom du parent requis"),
+  parentLastName: z.string().trim().min(1, "Nom du parent requis"),
+  parentEmail: z.string().trim().email("Courriel invalide"),
+  parentPhone: z.string().refine(isValidPhone, "Numéro de téléphone invalide (10 chiffres)"),
+  city: z.string().optional(),
+  comments: z.string().optional(),
+  paymentOption: z.enum(["full", "two_installments"]),
+  termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" }),
+  autoDebitConsent: z.boolean().optional(),
+  referral: z
+    .object({
+      answer: z.enum(["oui", "non"]),
+      codeOrEmail: z.string().optional(),
+      referrerName: z.string().optional(),
+      referrerPlayer: z.string().optional()
+    })
+    .optional(),
+  useCredit: z.boolean().optional()
+});
+
+export type PrivateProgramRegistrationPayload = z.infer<typeof privateProgramRegistrationSchema>;

@@ -484,6 +484,14 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
     <div className="nv27-step">
       {error && <p className="nv27-pay-error">{error}</p>}
 
+      <a
+        href="/compte/recommandations"
+        style={{ display: "block", background: "#100e17", border: "1px solid #3a2f4d", borderRadius: "12px", padding: "0.9rem 1.1rem", marginBottom: "1rem", textDecoration: "none" }}
+      >
+        <p style={{ margin: 0, fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>🎁 Mes recommandations</p>
+        <p style={{ margin: "0.2rem 0 0", color: "#9d9da0", fontSize: "0.75rem" }}>Partagez New Valkyria : 50 $ de rabais pour l&apos;autre famille, un sac ou 50 $ de crédit pour vous.</p>
+      </a>
+
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
         {children.length === 0 && !showAddForm && (
           <p className="nv27-empty">Aucun enfant enregistré pour l&apos;instant.</p>
