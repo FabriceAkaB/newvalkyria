@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { sendCampaignEmail } from "@/lib/email";
 import { env } from "@/lib/env";
+import { getMailConfig } from "@/lib/mail-config";
 import { jsonError } from "@/lib/http";
 import { buildCampaignEmail, buildDirectMessage, campaignKey, CAMPAIGN_STEPS, getCampaignAudience, getCampaignPrograms, phoneDigits, type CampaignStep } from "@/lib/referral-campaign";
 import { getOrCreateReferralCode, normalizeEmail } from "@/lib/referrals-repo";
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
     });
   }
 
+  const mailCfg = await getMailConfig();
   const { data: sent } = await db().from("referral_campaign_sends").select("email, status").eq("campaign", CAMPAIGN);
   const sentSet = new Set((sent ?? []).filter((s: any) => s.status === "sent").map((s: any) => s.email));
   const sample = audience[0] ?? { firstName: "Marie", code: "ABC123" };
@@ -64,8 +66,8 @@ export async function GET(request: Request) {
     audienceAll: all.length,
     alreadySent: audience.filter((r) => sentSet.has(r.email)).length,
     programs: programs.map((p) => ({ slug: p.slug, name: p.shortName, priceCents: p.priceCents })),
-    from: process.env.GMAIL_SMTP_USER ? `${process.env.GMAIL_SMTP_FROM_NAME ?? "New Valkyria"} <${process.env.GMAIL_SMTP_USER}>` : env.resendFrom,
-    via: process.env.GMAIL_SMTP_USER && process.env.GMAIL_SMTP_APP_PASSWORD ? "gmail" : "resend",
+    from: mailCfg ? `${mailCfg.fromName} <${mailCfg.user}>` : env.resendFrom,
+    via: mailCfg ? "gmail" : "resend",
     preview: { subject: preview.subject, html: preview.html },
     families: await Promise.all(
       audience.map(async (r) => {

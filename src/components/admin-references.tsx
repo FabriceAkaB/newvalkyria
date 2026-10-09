@@ -105,6 +105,8 @@ export function AdminReferences({
   const [camp, setCamp] = useState<CampaignData | null>(null);
   const [includePast, setIncludePast] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [mailUser, setMailUser] = useState("info@newvalkyria.com");
+  const [mailPass, setMailPass] = useState("");
   const [testTo, setTestTo] = useState("");
   const [campMsg, setCampMsg] = useState<string | null>(null);
   const [campBusy, setCampBusy] = useState(false);
@@ -365,6 +367,27 @@ export function AdminReferences({
                       <>Expéditeur configuré : <strong>{camp.from}</strong>. Pour que les courriels partent vers les familles, ajoutez la connexion à votre boîte courriel (variables GMAIL_SMTP_USER / GMAIL_SMTP_APP_PASSWORD) ou vérifiez un domaine dans Resend. En attendant, utilisez les boutons WhatsApp / SMS ci-dessous ou l&apos;export CSV.</>
                     )}
                   </div>
+
+                  <details style={{ marginBottom: "1rem" }}>
+                    <summary style={{ fontSize: "0.76rem", color: "#9d9da0", cursor: "pointer" }}>Changer la boîte d&apos;envoi (adresse + mot de passe d&apos;application Google)</summary>
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.6rem" }}>
+                      <input className="admin-input" placeholder="info@newvalkyria.com" style={{ width: "230px" }} value={mailUser} onChange={(e) => setMailUser(e.target.value)} />
+                      <input className="admin-input" type="password" autoComplete="new-password" placeholder="Mot de passe d'application (16 lettres)" style={{ width: "280px" }} value={mailPass} onChange={(e) => setMailPass(e.target.value)} />
+                      <button
+                        className="admin-btn-primary"
+                        style={{ fontSize: "0.72rem" }}
+                        disabled={campBusy || !mailUser.includes("@") || mailPass.replace(/\s/g, "").length < 8}
+                        onClick={async () => {
+                          const res = await fetch("/api/admin/courriel-config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user: mailUser, password: mailPass }) });
+                          const json = await res.json().catch(() => ({}));
+                          setCampMsg(res.ok ? "✓ Boîte d'envoi enregistrée (mot de passe chiffré)." : `✗ ${json.error ?? "Erreur"}`);
+                          if (res.ok) { setMailPass(""); loadCampaign(); }
+                        }}
+                      >
+                        Enregistrer
+                      </button>
+                    </div>
+                  </details>
 
                   <div className="admin-stats" style={{ marginBottom: "1rem" }}>
                     <div className="admin-stat-card"><p className="admin-stat-value">{camp.audienceCurrent}</p><p className="admin-stat-label">Familles de la saison en cours</p></div>

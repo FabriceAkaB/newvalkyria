@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { getMailConfig } from "@/lib/mail-config";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
 import { getTrialConfig } from "@/lib/trial-dates-store";
 import type { LeadFormPayload } from "@/lib/validations";
@@ -483,31 +484,20 @@ export async function sendTerrainRentalConfirmationEmail(input: TerrainRentalEma
 }
 
 /** Envoi d'un courriel promotionnel déjà composé (campagne « Partagez New Valkyria »).
- *  Si GMAIL_SMTP_USER + GMAIL_SMTP_APP_PASSWORD sont définis, le courriel part
- *  directement de la boîte Gmail / Google Workspace de l'académie (personnalisé,
- *  les réponses arrivent dans cette boîte). Sinon, il passe par Resend. */
-export async function sendCampaignEmail(input: { to: string; subject: string; html: string; text: string; from?: string }): Promise<{ ok: true; via: "gmail" | "resend" } | { ok: false; error: string }> {
-  const gmailUser = process.env.GMAIL_SMTP_USER;
-  const gmailPass = process.env.GMAIL_SMTP_APP_PASSWORD;
-
-  if (gmailUser && gmailPass) {
-    try {
-      const nodemailer = await import("nodemailer");
-      const transport = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: gmailUser, pass: gmailPass.replace(/\s+/g, "") } });
-      const fromName = process.env.GMAIL_SMTP_FROM_NAME ?? "New Valkyria";
-      await transport.sendMail({ from: `${fromName} <${gmailUser}>`, to: input.to, subject: input.subject, html: input.html, text: input.text, replyTo: gmailUser });
-      return { ok: true, via: "gmail" };
-    } catch (err) {
-      return { ok: false, error: `Gmail : ${err instanceof Error ? err.message : "Erreur d'envoi"}` };
-    }
-  }
-
-  if (!isEmailConfigured()) return { ok: false, error: "Resend non configuré" };
+ *  Part de la boîte configurée (Gmail / Google Workspace) sinon de Resend. */
+export async function sendCampaignEmail(input: { to: string; subject: string; html: string; text: string }): Promise<{ ok: true; via: "gmail" | "resend" } | { ok: false; error: string }> {
+  const cfg = await getMailConfig();
   try {
-    const resend = getResendClient();
-    const { error } = await resend.emails.send({ from: input.from ?? env.resendFrom, to: input.to, subject: input.subject, html: input.html, text: input.text, replyTo: "info@newvalkyria.com" });
+    const { error } = await getResendClient().emails.send({
+      from: env.resendFrom,
+      to: input.to,
+      subject: input.subject,
+      html: input.html,
+      text: input.text,
+      replyTo: cfg ? cfg.user : "info@newvalkyria.com"
+    });
     if (error) return { ok: false, error: error.message };
-    return { ok: true, via: "resend" };
+    return { ok: true, via: cfg ? "gmail" : "resend" };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Erreur d'envoi" };
   }
