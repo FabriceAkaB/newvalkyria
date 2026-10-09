@@ -145,15 +145,16 @@ export function buildCampaignEmail(input: { step?: CampaignStep; firstName: stri
   const textIntro: string[] = [];
 
   if (step === 1) {
-    subject = "New Valkyria reste 100 % féminine — et voici pourquoi nous ajoutons un programme pour garçons";
+    subject = "Nouveau programme pour garçons — New Valkyria reste 100 % féminine";
     intro =
+      `<p style="margin:0 0 16px"><span style="display:inline-block;background:#72499a;color:#ffffff;font-size:12px;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:999px">Nouveau programme pour garçons</span></p>` +
       p(hello) +
       p("Une précision importante d'abord : <strong>New Valkyria reste une académie entièrement féminine.</strong> Rien ne change pour nos joueuses, leurs groupes et leurs entraînements.") +
-      p(`Ce qui s'ajoute : deux programmes de développement pour garçons, offerts <strong>en parallèle</strong>. Pourquoi ? Parce qu'ils nous permettent de <strong>financer davantage de projets gratuits pour les filles de l'académie</strong>. Chaque inscription compte pour elles.`) +
+      p(`Ce qui s'ajoute : un <strong>nouveau programme pour garçons</strong> — en réalité deux groupes de développement (2018 et 2014–2015), offerts <strong>en parallèle</strong>. Pourquoi ? Parce qu'ils nous permettent de <strong>financer davantage de projets gratuits pour les filles de l'académie</strong>. Chaque inscription compte pour elles.`) +
       p(`Le projet sera encadré par <strong>nos meilleurs entraîneurs, ${COACHES}</strong> — les mêmes qui travaillent avec vos filles.`) +
       p("Si vous connaissez une famille qui pourrait être intéressée, voici comment nous aider en deux clics :");
     outro = p("Merci de nous aider à faire grandir l'académie, au bénéfice de toutes nos filles.");
-    textIntro.push("New Valkyria reste une académie entièrement féminine.", "Ces programmes pour garçons, offerts en parallèle, nous permettent de financer davantage de projets gratuits pour les filles de l'académie. Encadrement : JP et Maeva, nos meilleurs entraîneurs.");
+    textIntro.push("NOUVEAU PROGRAMME POUR GARÇONS", "New Valkyria reste une académie entièrement féminine.", "Ces programmes pour garçons, offerts en parallèle, nous permettent de financer davantage de projets gratuits pour les filles de l'académie. Encadrement : JP et Maeva, nos meilleurs entraîneurs.");
   } else if (step === 2) {
     subject = "Un seul message suffit : partagez le programme à une famille";
     intro =
