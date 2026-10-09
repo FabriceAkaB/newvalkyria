@@ -21,6 +21,10 @@ export interface PrivateProgram {
   eligible_birth_years: string[] | null;
   second_installment_date: string | null;
   presentation: Record<string, unknown> | null;
+  program_kind: string;
+  published: boolean;
+  cost_per_session_cents: number;
+  fixed_costs_cents: number;
 }
 
 export interface PrivateRegistration {
@@ -75,6 +79,9 @@ export async function updatePrivateProgram(
     referralDiscountCents: number;
     secondInstallmentDate: string | null;
     active: boolean;
+    published: boolean;
+    costPerSessionCents: number;
+    fixedCostsCents: number;
     presentation: Record<string, unknown>;
   }>
 ): Promise<void> {
@@ -85,6 +92,9 @@ export async function updatePrivateProgram(
   if (patch.referralDiscountCents !== undefined) columns.referral_discount_cents = patch.referralDiscountCents;
   if (patch.secondInstallmentDate !== undefined) columns.second_installment_date = patch.secondInstallmentDate;
   if (patch.active !== undefined) columns.active = patch.active;
+  if (patch.published !== undefined) columns.published = patch.published;
+  if (patch.costPerSessionCents !== undefined) columns.cost_per_session_cents = patch.costPerSessionCents;
+  if (patch.fixedCostsCents !== undefined) columns.fixed_costs_cents = patch.fixedCostsCents;
   if (patch.presentation !== undefined) columns.presentation = patch.presentation;
   const { error } = await db().from("session_programs").update(columns).eq("slug", slug).eq("is_private", true);
   if (error) throw new Error(error.message);

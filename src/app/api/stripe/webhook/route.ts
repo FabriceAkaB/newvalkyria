@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-import { sendConfirmationEmail, sendShopOrderConfirmationEmail } from "@/lib/email";
+import { sendConfirmationEmail, sendShopOrderConfirmationEmail, sendTerrainRentalConfirmationEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
@@ -29,6 +29,8 @@ import {
 } from "@/lib/sport-etudes-repo";
 import { onPrivateCheckoutExpired, onPrivateRefund, onPrivateRegistrationPaid } from "@/lib/private-programs-lifecycle";
 import { getStripeClient } from "@/lib/stripe";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { markRentalPaid, releaseRentalBySession } from "@/lib/terrain-rentals-repo";
 
 export async function POST(request: Request) {
   if (!env.stripeWebhookSecret) {
@@ -239,6 +241,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
+    // ── Location de terrain — créneau payé ──
+    if (checkoutType === "terrain-rental") {
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
+      const rental = await markRentalPaid(session.id, paymentIntentId);
+      if (rental) {
+        try {
+          const { data: terrain } = await (getSupabaseAdminClient() as any).from("terrains").select("name, address").eq("id", rental.terrain_id).maybeSingle();
+          await sendTerrainRentalConfirmationEmail({
+            to: rental.contact_email,
+            contactName: rental.contact_name,
+            organizationName: rental.organization_name,
+            terrainName: terrain?.name ?? "Terrain",
+            terrainAddress: terrain?.address ?? null,
+            date: rental.rental_date,
+            start: rental.start_time,
+            end: rental.end_time,
+            priceCents: rental.price_cents
+          });
+          await (getSupabaseAdminClient() as any).from("terrain_rentals").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", rental.id);
+        } catch (error) {
+          console.error("Unable to send terrain rental confirmation email", error);
+        }
+      }
+      return NextResponse.json({ received: true });
+    }
+
     // ── Boutique — commande en base de données ──
     if (checkoutType === "shop-order") {
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
@@ -300,6 +328,13 @@ export async function POST(request: Request) {
   // ── Session de paiement expirée : la réservation d'un programme privé est libérée ──
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
+    if (session.metadata?.checkoutType === "terrain-rental") {
+      try {
+        await releaseRentalBySession(session.id);
+      } catch (error) {
+        console.error("Unable to release expired terrain rental", error);
+      }
+    }
     if (session.metadata?.privateProgram === "true") {
       try {
         await onPrivateCheckoutExpired(session.id);

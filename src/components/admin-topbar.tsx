@@ -70,6 +70,7 @@ const BOUTIQUE_LINKS: { href: string; label: string; icon: IconName }[] = [
 const CALENDRIER_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/calendrier", label: "Vue globale", icon: "calendar" },
   { href: "/admin/terrains", label: "Terrains", icon: "grid" },
+  { href: "/admin/location-terrains", label: "Location de terrains", icon: "calendar" },
   { href: "/admin/seances-privees", label: "Séances privées", icon: "user" },
 ];
 
@@ -82,6 +83,7 @@ const SPORT_ETUDES_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/programme-intensif", label: "Programme Intensif", icon: "flask" },
   { href: "/admin/garcons-prives", label: "Programmes privés", icon: "list" },
   { href: "/admin/references", label: "Références & crédits", icon: "users" },
+  { href: "/admin/commandites", label: "Commandites", icon: "tag" },
 ];
 
 const EVALUATIONS_LINKS: { href: string; label: string; icon: IconName }[] = [

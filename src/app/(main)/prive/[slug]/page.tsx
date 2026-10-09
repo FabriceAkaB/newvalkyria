@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { getCurrentAdminRole } from "@/lib/admin-auth";
+
 import { PrivateProgramContent, type PrivateProgramView } from "@/components/private-program-content";
 import { env } from "@/lib/env";
 import { countHeldPlaces, getPrivateProgram } from "@/lib/private-programs-repo";
@@ -30,7 +32,9 @@ export default async function PrivateProgramPage({
   const { ref } = await searchParams;
 
   const program = await getPrivateProgram(slug);
-  if (!program || !program.active) notFound();
+  const isAdmin = Boolean(await getCurrentAdminRole());
+  const live = Boolean(program && program.active && program.published);
+  if (!program || (!live && !isAdmin)) notFound();
 
   const [dates, held] = await Promise.all([getProgramDates(slug as never), countHeldPlaces(slug)]);
   const remaining = Math.max(0, program.max_capacity - held);
@@ -39,8 +43,10 @@ export default async function PrivateProgramPage({
   const view: PrivateProgramView = {
     slug: program.slug,
     name: program.name,
-    shortName: program.birth_years.includes("-") ? `Garçons ${program.birth_years.replace("-", "–")}` : `Garçons ${program.birth_years}`,
+    shortName: `${program.gender === "filles" ? "Filles" : program.gender === "mixte" ? "Joueurs" : "Garçons"} ${program.birth_years.replace("-", "–")}`,
     birthYearsLabel: program.birth_years.replace("-", " et "),
+    genderLabel: program.gender === "filles" ? "Filles nées" : program.gender === "mixte" ? "Joueurs nés" : "Garçons nés",
+    draft: !live,
     eligibleBirthYears: program.eligible_birth_years ?? [],
     priceCents: program.price_cents,
     capacity: program.max_capacity,

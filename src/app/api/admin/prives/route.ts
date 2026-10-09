@@ -15,6 +15,9 @@ export async function PATCH(request: Request) {
     referralDiscountCents?: number;
     secondInstallmentDate?: string | null;
     active?: boolean;
+    published?: boolean;
+    costPerSessionCents?: number;
+    fixedCostsCents?: number;
     presentation?: Record<string, unknown>;
   } | null;
   if (!body?.slug) return jsonError("Programme requis", 400);
@@ -28,6 +31,9 @@ export async function PATCH(request: Request) {
       referralDiscountCents: int(body.referralDiscountCents),
       secondInstallmentDate: body.secondInstallmentDate === undefined ? undefined : body.secondInstallmentDate || null,
       active: typeof body.active === "boolean" ? body.active : undefined,
+      published: typeof body.published === "boolean" ? body.published : undefined,
+      costPerSessionCents: int(body.costPerSessionCents),
+      fixedCostsCents: int(body.fixedCostsCents),
       presentation: body.presentation
     });
     return NextResponse.json({ ok: true });

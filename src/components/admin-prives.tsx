@@ -23,15 +23,21 @@ function csvEscape(v: string | number | null | undefined): string {
 export function AdminPrives({
   programs: initialPrograms,
   stats,
+  dates: initialDates,
   registrations: initialRegistrations,
   origin
 }: {
   programs: PrivateProgram[];
   stats: Record<string, ProgramStats>;
+  dates: Record<string, { id: string; session_date: string; start_time: string; end_time: string; location: string }[]>;
   registrations: PrivateRegistrationRow[];
   origin: string;
 }) {
   const [programs, setPrograms] = useState(initialPrograms);
+  const [dates, setDates] = useState(initialDates);
+  const [newDate, setNewDate] = useState<Record<string, { sessionDate: string; startTime: string; endTime: string; location: string }>>({});
+  const [showNew, setShowNew] = useState(false);
+  const [np, setNp] = useState({ name: "", gender: "mixte", years: "", price: "", capacity: "6", fee: "40", discount: "50", practices: "", matches: "0", costPerSession: "", fixedCosts: "" });
   const [registrations, setRegistrations] = useState(initialRegistrations);
   const [search, setSearch] = useState("");
   const [programFilter, setProgramFilter] = useState("all");
@@ -143,6 +149,62 @@ export function AdminPrives({
           </p>
           {message && <p style={{ fontSize: "0.78rem", color: "#8fce9f", marginBottom: "0.8rem" }}>{message}</p>}
 
+          {/* ── Nouveau programme juvénile semi-privé ── */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <button className="admin-btn-ghost" style={{ fontSize: "0.76rem" }} onClick={() => setShowNew((v) => !v)}>{showNew ? "Fermer" : "+ Nouveau programme juvénile semi-privé (gabarit)"}</button>
+            {showNew && (
+              <div style={{ background: "#100e17", border: "1px solid #3a3550", borderRadius: "12px", padding: "1rem", marginTop: "0.7rem" }}>
+                <p style={{ fontSize: "0.74rem", color: "#9d9da0", margin: "0 0 0.7rem" }}>Maximum 6 joueurs, séances techniques semi-privées. Le programme est créé en <strong>brouillon</strong> : rien n&apos;est publié avant votre validation.</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "0.6rem" }}>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Nom *<input className="admin-input" style={{ width: "100%" }} value={np.name} onChange={(e) => setNp({ ...np, name: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Public
+                    <select className="admin-group-select" style={{ width: "100%" }} value={np.gender} onChange={(e) => setNp({ ...np, gender: e.target.value })}>
+                      <option value="mixte">Mixte</option><option value="filles">Filles</option><option value="garcons">Garçons</option>
+                    </select>
+                  </label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Années de naissance * (séparées par des virgules)<input className="admin-input" style={{ width: "100%" }} placeholder="2016, 2017" value={np.years} onChange={(e) => setNp({ ...np, years: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Prix ($)<input className="admin-input" style={{ width: "100%" }} value={np.price} onChange={(e) => setNp({ ...np, price: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Places (max 6)<input type="number" min={1} max={6} className="admin-input" style={{ width: "100%" }} value={np.capacity} onChange={(e) => setNp({ ...np, capacity: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Supplément 2 versements ($)<input className="admin-input" style={{ width: "100%" }} value={np.fee} onChange={(e) => setNp({ ...np, fee: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Rabais référencement ($)<input className="admin-input" style={{ width: "100%" }} value={np.discount} onChange={(e) => setNp({ ...np, discount: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Nombre de séances<input type="number" className="admin-input" style={{ width: "100%" }} value={np.practices} onChange={(e) => setNp({ ...np, practices: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Matchs inclus<input type="number" className="admin-input" style={{ width: "100%" }} value={np.matches} onChange={(e) => setNp({ ...np, matches: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Coût par séance ($)<input className="admin-input" style={{ width: "100%" }} value={np.costPerSession} onChange={(e) => setNp({ ...np, costPerSession: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Frais fixes ($)<input className="admin-input" style={{ width: "100%" }} value={np.fixedCosts} onChange={(e) => setNp({ ...np, fixedCosts: e.target.value })} /></label>
+                </div>
+                <button
+                  className="admin-btn-primary"
+                  style={{ marginTop: "0.8rem", fontSize: "0.76rem" }}
+                  onClick={async () => {
+                    const dollars = (v: string) => Math.round((parseFloat(v.replace(",", ".")) || 0) * 100);
+                    const res = await fetch("/api/admin/prives/programmes", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        name: np.name,
+                        gender: np.gender,
+                        birthYears: np.years.split(/[ ,;]+/).filter(Boolean),
+                        priceCents: dollars(np.price),
+                        capacity: parseInt(np.capacity, 10) || 6,
+                        installmentFeeCents: dollars(np.fee),
+                        referralDiscountCents: dollars(np.discount),
+                        practices: parseInt(np.practices, 10) || 0,
+                        matches: parseInt(np.matches, 10) || 0,
+                        costPerSessionCents: dollars(np.costPerSession),
+                        fixedCostsCents: dollars(np.fixedCosts)
+                      })
+                    });
+                    const json = await res.json().catch(() => ({}));
+                    if (!res.ok) return flash(json.error ?? "Erreur");
+                    location.reload();
+                  }}
+                >
+                  Créer en brouillon
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* ── Programmes : lien, capacité, réglages ── */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
             {programs.map((p, idx) => {
@@ -205,7 +267,95 @@ export function AdminPrives({
                       Page ouverte
                     </label>
                   </div>
-                  {idx === 0 && null}
+                  {p.program_kind === "semi_prive_juvenile" && (
+                    <div style={{ marginTop: "0.8rem", borderTop: "1px solid #251f30", paddingTop: "0.7rem" }}>
+                      <p style={{ fontSize: "0.7rem", color: p.published ? "#8fce9f" : "#f0c878", margin: "0 0 0.5rem", fontWeight: 700 }}>
+                        {p.published && p.active ? "Publié" : "Brouillon — non publié"}
+                      </p>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.6rem" }}>
+                        <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Coût par séance ($)
+                          <input type="number" min={0} step="0.01" className="admin-input" style={input} value={(p.cost_per_session_cents / 100).toString()} onChange={(e) => update({ cost_per_session_cents: Math.round((parseFloat(e.target.value) || 0) * 100) })} />
+                        </label>
+                        <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Frais fixes ($)
+                          <input type="number" min={0} step="0.01" className="admin-input" style={input} value={(p.fixed_costs_cents / 100).toString()} onChange={(e) => update({ fixed_costs_cents: Math.round((parseFloat(e.target.value) || 0) * 100) })} />
+                        </label>
+                      </div>
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <button className="admin-btn-ghost" style={{ fontSize: "0.7rem" }} disabled={busy === p.slug} onClick={() => saveProgram(p.slug, { costPerSessionCents: p.cost_per_session_cents, fixedCostsCents: p.fixed_costs_cents })}>Enregistrer les coûts</button>
+                        {!(p.published && p.active) ? (
+                          <button
+                            className="admin-btn-primary"
+                            style={{ fontSize: "0.7rem" }}
+                            disabled={busy === p.slug}
+                            onClick={() => {
+                              if (!confirm("Publier ce programme ? La page deviendra accessible par son lien et les inscriptions s'ouvriront. Vérifiez d'abord le prix, la capacité et le calendrier.")) return;
+                              update({ published: true, active: true });
+                              saveProgram(p.slug, { published: true, active: true });
+                            }}
+                          >
+                            Publier (après validation)
+                          </button>
+                        ) : (
+                          <button
+                            className="admin-btn-ghost"
+                            style={{ fontSize: "0.7rem" }}
+                            disabled={busy === p.slug}
+                            onClick={() => {
+                              update({ published: false, active: false });
+                              saveProgram(p.slug, { published: false, active: false });
+                            }}
+                          >
+                            Dépublier
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Calendrier configurable */}
+                  <div style={{ marginTop: "0.8rem", borderTop: "1px solid #251f30", paddingTop: "0.7rem" }}>
+                    <p style={{ fontSize: "0.72rem", color: "#9d9da0", margin: "0 0 0.4rem", fontWeight: 700 }}>Calendrier ({(dates[p.slug] ?? []).length} séance{(dates[p.slug] ?? []).length !== 1 ? "s" : ""})</p>
+                    {(dates[p.slug] ?? []).map((d) => (
+                      <div key={d.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#c3c2c8", padding: "0.15rem 0" }}>
+                        <span>{d.session_date} · {d.start_time}–{d.end_time} · {d.location}</span>
+                        <button
+                          className="admin-btn-ghost"
+                          style={{ fontSize: "0.62rem", color: "#ff9999" }}
+                          onClick={async () => {
+                            await fetch(`/api/admin/prives/dates?id=${d.id}`, { method: "DELETE" });
+                            setDates((prev) => ({ ...prev, [p.slug]: (prev[p.slug] ?? []).filter((x) => x.id !== d.id) }));
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {(() => {
+                      const nd = newDate[p.slug] ?? { sessionDate: "", startTime: "", endTime: "", location: "" };
+                      const set = (patch: Partial<typeof nd>) => setNewDate((prev) => ({ ...prev, [p.slug]: { ...nd, ...patch } }));
+                      return (
+                        <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginTop: "0.4rem" }}>
+                          <input type="date" className="admin-input" value={nd.sessionDate} onChange={(e) => set({ sessionDate: e.target.value })} />
+                          <input type="time" className="admin-input" value={nd.startTime} onChange={(e) => set({ startTime: e.target.value })} />
+                          <input type="time" className="admin-input" value={nd.endTime} onChange={(e) => set({ endTime: e.target.value })} />
+                          <input className="admin-input" placeholder="Lieu" style={{ flex: 1, minWidth: "120px" }} value={nd.location} onChange={(e) => set({ location: e.target.value })} />
+                          <button
+                            className="admin-btn-ghost"
+                            style={{ fontSize: "0.68rem" }}
+                            onClick={async () => {
+                              if (!nd.sessionDate || !nd.startTime || !nd.endTime || !nd.location) return flash("Date, heures et lieu requis.");
+                              const res = await fetch("/api/admin/prives/dates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug: p.slug, ...nd }) });
+                              const json = await res.json().catch(() => ({}));
+                              if (!res.ok) return flash(json.error ?? "Erreur");
+                              location.reload();
+                            }}
+                          >
+                            + Séance
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               );
             })}

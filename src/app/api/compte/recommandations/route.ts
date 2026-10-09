@@ -26,11 +26,11 @@ export async function GET() {
     ledger: ledger.slice(0, 20).map((e) => ({ id: e.id, deltaCents: e.delta_cents, kind: e.kind, note: e.note, createdAt: e.created_at })),
     origin: env.siteUrl,
     programs: programs
-      .filter((p) => p.active)
+      .filter((p) => p.active && p.published)
       .map((p) => ({
         slug: p.slug,
         name: p.name,
-        shortName: p.birth_years.includes("-") ? `Garçons ${p.birth_years.replace("-", "–")}` : `Garçons ${p.birth_years}`,
+        shortName: `${p.gender === "filles" ? "Filles" : p.gender === "mixte" ? "Joueurs" : "Garçons"} ${p.birth_years.replace("-", "–")}`,
         priceCents: p.price_cents,
         practices: p.practices_count ?? 16,
         matches: p.matches_count ?? 3,

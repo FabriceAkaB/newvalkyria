@@ -288,6 +288,10 @@ export interface ProgramFinancials {
   collectedCents: number;
   upcomingCents: number;
   failedCents: number;
+  /** Rentabilité : coûts estimés (séances × coût par séance + frais fixes) et marge sur l'encaissé. */
+  costCents: number;
+  marginCents: number;
+  sessions: number;
 }
 
 export interface FinancialSummary {
@@ -307,8 +311,14 @@ export async function getFinancialSummary(): Promise<FinancialSummary> {
     supabase.from("program_referrals").select("status, reward_status")
   ]);
 
+  const { data: dateRows } = await supabase.from("session_program_dates").select("program_slug").in("program_slug", programs.map((p) => p.slug));
+  const sessionsBy = new Map<string, number>();
+  for (const d of dateRows ?? []) sessionsBy.set(d.program_slug, (sessionsBy.get(d.program_slug) ?? 0) + 1);
+
   const out: ProgramFinancials[] = programs.map((p) => {
     const regs = rows.filter((r) => r.program_slug === p.slug);
+    const sessions = sessionsBy.get(p.slug) ?? p.practices_count ?? 0;
+    const costCents = sessions * p.cost_per_session_cents + p.fixed_costs_cents;
     const active = regs.filter((r) => r.status === "paid" || r.status === "confirmed");
     const upcoming = active.reduce((s, r) => s + r.installments.filter((i) => i.status === "pending").reduce((a, i) => a + i.amount_cents, 0), 0);
     const failed = active.reduce((s, r) => s + r.installments.filter((i) => i.status === "failed" || i.status === "failed_final").reduce((a, i) => a + i.amount_cents, 0), 0);
@@ -325,7 +335,10 @@ export async function getFinancialSummary(): Promise<FinancialSummary> {
       feesCents: active.reduce((s, r) => s + r.installment_fee_cents, 0),
       collectedCents: active.reduce((s, r) => s + r.paid_cents, 0),
       upcomingCents: upcoming,
-      failedCents: failed
+      failedCents: failed,
+      costCents,
+      marginCents: active.reduce((s, r) => s + r.paid_cents, 0) - costCents,
+      sessions
     };
   });
 
@@ -341,7 +354,10 @@ export async function getFinancialSummary(): Promise<FinancialSummary> {
       feesCents: sum("feesCents"),
       collectedCents: sum("collectedCents"),
       upcomingCents: sum("upcomingCents"),
-      failedCents: sum("failedCents")
+      failedCents: sum("failedCents"),
+      costCents: sum("costCents"),
+      marginCents: sum("marginCents"),
+      sessions: sum("sessions")
     },
     creditsGrantedCents: (ledger ?? []).filter((l: any) => l.delta_cents > 0 && l.kind !== "annulation_utilisation").reduce((s: number, l: any) => s + l.delta_cents, 0),
     creditsUsedCents: (ledger ?? []).reduce((s: number, l: any) => (l.kind === "utilisation" ? s - l.delta_cents : l.kind === "annulation_utilisation" ? s - l.delta_cents : s), 0),

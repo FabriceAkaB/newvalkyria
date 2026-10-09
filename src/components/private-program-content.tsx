@@ -27,6 +27,8 @@ export interface PrivateProgramView {
   name: string;
   shortName: string;
   birthYearsLabel: string;
+  genderLabel: string;
+  draft: boolean;
   eligibleBirthYears: string[];
   priceCents: number;
   capacity: number;
@@ -223,7 +225,8 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
       <section className="insc-hero se-hero">
         <Container>
           <div className="insc-hero-inner" style={{ textAlign: "center" }}>
-            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Garçons nés en {program.birthYearsLabel}</p>
+            {program.draft && <p style={{ background: "#3a2f10", color: "#f0c878", fontSize: "0.78rem", padding: "0.4rem 0.8rem", borderRadius: "8px", display: "inline-block", marginBottom: "0.6rem" }}>Brouillon — non publié (visible seulement par l'administrateur)</p>}
+            <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">{program.genderLabel} en {program.birthYearsLabel}</p>
             <h1 className="insc-hero-title">{program.name}</h1>
             <p className="insc-hero-sub">
               {program.presentation.intro ??

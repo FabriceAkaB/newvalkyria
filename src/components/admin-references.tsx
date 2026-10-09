@@ -303,7 +303,7 @@ export function AdminReferences({
                 ))}
               </div>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.76rem" }}>
-                <thead><tr>{["Programme", "Inscrits", "Attente", "Remplissage", "Brut", "Rabais", "Crédits", "Suppléments", "Encaissé", "À venir", "Échoué"].map((h) => <th key={h} style={head}>{h}</th>)}</tr></thead>
+                <thead><tr>{["Programme", "Inscrits", "Attente", "Remplissage", "Brut", "Rabais", "Crédits", "Suppléments", "Encaissé", "À venir", "Échoué", "Coûts est.", "Marge"].map((h) => <th key={h} style={head}>{h}</th>)}</tr></thead>
                 <tbody>
                   {f.programs.map((p) => (
                     <tr key={p.slug}>
@@ -318,6 +318,8 @@ export function AdminReferences({
                       <td style={{ ...cell, color: "#8fce9f", fontWeight: 700 }}>{formatMoney(p.collectedCents)}</td>
                       <td style={cell}>{formatMoney(p.upcomingCents)}</td>
                       <td style={{ ...cell, color: p.failedCents > 0 ? "#ff9999" : "#c3c2c8" }}>{formatMoney(p.failedCents)}</td>
+                      <td style={cell}>{p.costCents > 0 ? formatMoney(p.costCents) : "—"}</td>
+                      <td style={{ ...cell, color: p.costCents > 0 ? (p.marginCents >= 0 ? "#8fce9f" : "#ff9999") : "#c3c2c8", fontWeight: 700 }}>{p.costCents > 0 ? formatMoney(p.marginCents) : "—"}</td>
                     </tr>
                   ))}
                 </tbody>

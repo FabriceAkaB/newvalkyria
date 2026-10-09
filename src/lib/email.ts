@@ -447,3 +447,37 @@ export async function sendInstallmentReminderEmail(input: InstallmentReminderInp
     `
   });
 }
+
+interface TerrainRentalEmailInput {
+  to: string;
+  contactName: string;
+  organizationName: string;
+  terrainName: string;
+  terrainAddress: string | null;
+  date: string;
+  start: string;
+  end: string;
+  priceCents: number;
+}
+
+/** Confirmation d'une location de terrain payée — au locataire, copie à l'académie. */
+export async function sendTerrainRentalConfirmationEmail(input: TerrainRentalEmailInput) {
+  if (!env.resendApiKey) return;
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  const dateLabel = new Date(input.date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+      <h1 style="font-size:22px">Réservation confirmée</h1>
+      <p>Bonjour ${escapeHtml(input.contactName)}, la réservation de <strong>${escapeHtml(input.organizationName)}</strong> est confirmée.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;background:#f7f4fb;margin:14px 0">
+        <tr><td style="padding:6px 10px;font-weight:bold">Terrain</td><td style="padding:6px 10px">${escapeHtml(input.terrainName)}${input.terrainAddress ? `<br/>${escapeHtml(input.terrainAddress)}` : ""}</td></tr>
+        <tr><td style="padding:6px 10px;font-weight:bold">Date</td><td style="padding:6px 10px">${dateLabel}</td></tr>
+        <tr><td style="padding:6px 10px;font-weight:bold">Heure</td><td style="padding:6px 10px">${input.start} – ${input.end}</td></tr>
+        <tr><td style="padding:6px 10px;font-weight:bold">Montant payé</td><td style="padding:6px 10px">${fmt(input.priceCents)}</td></tr>
+      </table>
+      <p>Pour toute question ou modification : info@newvalkyria.com.</p>
+      <p style="margin-top:24px">New Valkyria</p>
+    </div>`;
+  await resend.emails.send({ from: env.resendFrom, to: input.to, bcc: "info@newvalkyria.com", subject: `New Valkyria — Réservation de terrain confirmée (${dateLabel})`, html });
+}

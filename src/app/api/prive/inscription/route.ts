@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   try {
     const payload = privateProgramRegistrationSchema.parse(await request.json());
     const program = await getPrivateProgram(payload.programSlug);
-    if (!program || !program.active) return jsonError("Ce programme est introuvable ou fermé.", 404);
+    if (!program || !program.active || !program.published) return jsonError("Ce programme est introuvable ou fermé.", 404);
 
     // ── Admissibilité par année de naissance ──
     if (!isBirthYearEligible(payload.birthYear, program.eligible_birth_years)) {
