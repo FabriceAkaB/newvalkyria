@@ -11,6 +11,7 @@ export interface ShareProgram {
   practices: number;
   matches: number;
   capacity: number;
+  minCapacity?: number | null;
   feeCents: number;
   referralDiscountCents: number;
 }
@@ -28,6 +29,7 @@ export function ShareProgramButtons({ program, refCode, origin }: { program: Sha
     practices: program.practices,
     matches: program.matches,
     capacity: program.capacity,
+    minCapacity: program.minCapacity,
     feeCents: program.feeCents,
     referralDiscountCents: program.referralDiscountCents,
     withReferralMention: Boolean(refCode)

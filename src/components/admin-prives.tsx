@@ -222,8 +222,11 @@ export function AdminPrives({
                     <button className="admin-btn-primary" style={{ fontSize: "0.72rem", padding: "0.4rem 0.7rem" }} onClick={() => copy(link)}>Copier</button>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
-                    <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Capacité max.
+                    <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Capacité max. (limite des inscriptions)
                       <input type="number" min={0} className="admin-input" style={input} value={p.max_capacity} onChange={(e) => update({ max_capacity: Math.max(0, parseInt(e.target.value, 10) || 0) })} />
+                    </label>
+                    <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Taille min. affichée (« 12 à 14 »)
+                      <input type="number" min={0} className="admin-input" style={input} value={p.min_capacity ?? ""} onChange={(e) => update({ min_capacity: e.target.value === "" ? null : Math.max(0, parseInt(e.target.value, 10) || 0) })} />
                     </label>
                     <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Prix ($)
                       <input type="number" min={0} step="0.01" className="admin-input" style={input} value={(p.price_cents / 100).toString()} onChange={(e) => update({ price_cents: Math.round((parseFloat(e.target.value) || 0) * 100) })} />
@@ -246,6 +249,7 @@ export function AdminPrives({
                       onClick={() =>
                         saveProgram(p.slug, {
                           maxCapacity: p.max_capacity,
+                          minCapacity: p.min_capacity,
                           priceCents: p.price_cents,
                           installmentFeeCents: p.installment_fee_cents,
                           referralDiscountCents: p.referral_discount_cents,

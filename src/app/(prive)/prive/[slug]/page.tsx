@@ -62,6 +62,7 @@ export default async function PrivateProgramPage({
     eligibleBirthYears: program.eligible_birth_years ?? [],
     priceCents: program.price_cents,
     capacity: program.max_capacity,
+    minCapacity: program.min_capacity,
     remaining,
     isFull: remaining <= 0,
     practices: program.practices_count ?? 16,

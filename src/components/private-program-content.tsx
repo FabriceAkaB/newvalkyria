@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Container } from "@/components/container";
 import { ShareProgramButtons, type ShareProgram } from "@/components/share-program-buttons";
-import { computePrice, formatMoney, isBirthYearEligible, type PaymentOption } from "@/lib/private-programs";
+import { capacityLabel, computePrice, formatMoney, isBirthYearEligible, type PaymentOption } from "@/lib/private-programs";
 
 interface DateRow {
   id: string;
@@ -32,6 +32,7 @@ export interface PrivateProgramView {
   eligibleBirthYears: string[];
   priceCents: number;
   capacity: number;
+  minCapacity: number | null;
   remaining: number;
   isFull: boolean;
   practices: number;
@@ -208,6 +209,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
     practices: program.practices,
     matches: program.matches,
     capacity: program.capacity,
+    minCapacity: program.minCapacity,
     feeCents: program.installmentFeeCents,
     referralDiscountCents: program.referralDiscountCents
   };
@@ -230,7 +232,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
             <h1 className="insc-hero-title">{program.name}</h1>
             <p className="insc-hero-sub">
               {program.presentation.intro ??
-                `Un programme de développement technique de ${program.practices} pratiques et ${program.matches} matchs, en petit groupe de ${program.capacity} joueurs maximum.`}
+                `Un programme de développement technique de ${program.practices} pratiques et ${program.matches} matchs, en petit groupe de ${capacityLabel(program.minCapacity, program.capacity)} joueurs.`}
             </p>
           </div>
         </Container>
@@ -244,7 +246,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
               [String(program.practices), "pratiques"],
               [String(program.matches), "matchs inclus"],
               [String(program.practices + program.matches), "activités au total"],
-              [String(program.capacity), "joueurs maximum"]
+              [capacityLabel(program.minCapacity, program.capacity), program.minCapacity ? "joueurs par groupe" : "joueurs maximum"]
             ].map(([n, l]) => (
               <div key={l} style={{ ...card, marginBottom: 0, textAlign: "center", padding: "0.8rem 0.5rem" }}>
                 <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "#c4a4e4", margin: 0 }}>{n}</p>

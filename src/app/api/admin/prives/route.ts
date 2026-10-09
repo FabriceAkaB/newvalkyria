@@ -10,6 +10,7 @@ export async function PATCH(request: Request) {
   const body = (await request.json().catch(() => null)) as {
     slug?: string;
     maxCapacity?: number;
+    minCapacity?: number | null;
     priceCents?: number;
     installmentFeeCents?: number;
     referralDiscountCents?: number;
@@ -26,6 +27,7 @@ export async function PATCH(request: Request) {
   try {
     await updatePrivateProgram(body.slug, {
       maxCapacity: int(body.maxCapacity),
+      minCapacity: body.minCapacity === null ? null : int(body.minCapacity),
       priceCents: int(body.priceCents),
       installmentFeeCents: int(body.installmentFeeCents),
       referralDiscountCents: int(body.referralDiscountCents),

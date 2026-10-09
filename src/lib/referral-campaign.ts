@@ -1,4 +1,4 @@
-import { buildShareMessage, formatMoney, privateProgramUrl, shareLinks } from "@/lib/private-programs";
+import { buildShareMessage, capacityLabel, formatMoney, privateProgramUrl, shareLinks } from "@/lib/private-programs";
 import { getAllPrivatePrograms, type PrivateProgram } from "@/lib/private-programs-repo";
 import { getOrCreateReferralCode, normalizeEmail } from "@/lib/referrals-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -26,6 +26,7 @@ export interface CampaignProgram {
   practices: number;
   matches: number;
   capacity: number;
+  minCapacity: number | null;
   feeCents: number;
   referralDiscountCents: number;
   link: string;
@@ -52,6 +53,7 @@ export async function getCampaignPrograms(origin: string, code: string): Promise
       practices: p.practices_count ?? 16,
       matches: p.matches_count ?? 3,
       capacity: p.max_capacity,
+      minCapacity: p.min_capacity,
       feeCents: p.installment_fee_cents,
       referralDiscountCents: p.referral_discount_cents,
       withReferralMention: true
@@ -64,6 +66,7 @@ export async function getCampaignPrograms(origin: string, code: string): Promise
       practices: p.practices_count ?? 16,
       matches: p.matches_count ?? 3,
       capacity: p.max_capacity,
+      minCapacity: p.min_capacity,
       feeCents: p.installment_fee_cents,
       referralDiscountCents: p.referral_discount_cents,
       link,
@@ -90,7 +93,7 @@ export function buildCampaignEmail(input: { firstName: string; code: string; pro
       <div style="background:#f7f4fb;border:1px solid #e3dbf0;border-radius:12px;padding:16px;margin:0 0 16px">
         <p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#72499a;font-weight:bold">${escapeHtml(p.shortName)}</p>
         <p style="margin:4px 0 8px;font-size:20px;font-weight:bold;color:#161419">${formatMoney(p.priceCents)}</p>
-        <p style="margin:0 0 12px;font-size:14px;color:#3d3852">${p.practices} pratiques · ${p.matches} matchs inclus · ${p.capacity} joueurs maximum${p.feeCents > 0 ? ` · paiement en 2 versements possible (+ ${formatMoney(p.feeCents)})` : ""}</p>
+        <p style="margin:0 0 12px;font-size:14px;color:#3d3852">${p.practices} pratiques · ${p.matches} matchs inclus · ${capacityLabel(p.minCapacity, p.capacity)} joueurs${p.feeCents > 0 ? ` · paiement en 2 versements possible (+ ${formatMoney(p.feeCents)})` : ""}</p>
         <div>
           ${btn(p.whatsapp, "Partager sur WhatsApp", "#1f9d55")}
           ${btn(p.email, "Envoyer par courriel", "#72499a")}

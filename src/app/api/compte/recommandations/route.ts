@@ -35,6 +35,7 @@ export async function GET() {
         practices: p.practices_count ?? 16,
         matches: p.matches_count ?? 3,
         capacity: p.max_capacity,
+        minCapacity: p.min_capacity,
         feeCents: p.installment_fee_cents,
         referralDiscountCents: p.referral_discount_cents
       }))

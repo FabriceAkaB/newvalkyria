@@ -11,6 +11,7 @@ export interface PrivateProgram {
   birth_years: string;
   price_cents: number;
   max_capacity: number;
+  min_capacity: number | null;
   description: string | null;
   active: boolean;
   is_private: boolean;
@@ -74,6 +75,7 @@ export async function updatePrivateProgram(
   slug: string,
   patch: Partial<{
     maxCapacity: number;
+    minCapacity: number | null;
     priceCents: number;
     installmentFeeCents: number;
     referralDiscountCents: number;
@@ -87,6 +89,7 @@ export async function updatePrivateProgram(
 ): Promise<void> {
   const columns: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (patch.maxCapacity !== undefined) columns.max_capacity = patch.maxCapacity;
+  if (patch.minCapacity !== undefined) columns.min_capacity = patch.minCapacity;
   if (patch.priceCents !== undefined) columns.price_cents = patch.priceCents;
   if (patch.installmentFeeCents !== undefined) columns.installment_fee_cents = patch.installmentFeeCents;
   if (patch.referralDiscountCents !== undefined) columns.referral_discount_cents = patch.referralDiscountCents;

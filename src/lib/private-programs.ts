@@ -46,6 +46,11 @@ export function computePrice(input: PriceInput): PriceBreakdown {
   return { listCents: input.listCents, referralDiscountCents, creditCents, subtotalCents, installmentFeeCents, totalCents, paymentsCents };
 }
 
+/** « 12 à 14 » quand une capacité minimale est définie, sinon le maximum seul. */
+export function capacityLabel(min: number | null | undefined, max: number): string {
+  return min && min < max ? `${min} à ${max}` : String(max);
+}
+
 export function formatMoney(cents: number): string {
   return (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
 }
@@ -85,11 +90,12 @@ export function buildShareMessage(input: {
   practices: number;
   matches: number;
   capacity: number;
+  minCapacity?: number | null;
   feeCents: number;
   referralDiscountCents: number;
   withReferralMention: boolean;
 }): string {
-  const { program, link, practices, matches, capacity, feeCents, referralDiscountCents, withReferralMention } = input;
+  const { program, link, practices, matches, capacity, minCapacity, feeCents, referralDiscountCents, withReferralMention } = input;
   const lines = [
     "Bonjour !",
     "Je voulais te partager un programme de développement de soccer proposé par New Valkyria.",
@@ -98,7 +104,7 @@ export function buildShareMessage(input: {
     `• ${practices} pratiques d'entraînement`,
     `• ${matches} matchs inclus`,
     "• Un environnement axé sur le développement technique et la progression individuelle",
-    `• Un nombre limité de ${capacity} joueurs`,
+    `• Un nombre limité de ${capacityLabel(minCapacity, capacity)} joueurs`,
     "",
     `Groupe : ${program.shortName} — ${formatMoney(program.priceCents)}.`,
     feeCents > 0 ? `Possibilité de payer en deux versements avec un supplément total de ${formatMoney(feeCents)}.` : ""

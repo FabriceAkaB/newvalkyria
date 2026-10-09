@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildShareMessage, computePrice, isBirthYearEligible } from "@/lib/private-programs";
+import { buildShareMessage, capacityLabel, computePrice, isBirthYearEligible } from "@/lib/private-programs";
 
 describe("computePrice — programmes privés garçons", () => {
   it("garçons 2018 : paiement complet 375 $", () => {
@@ -74,5 +74,22 @@ describe("admissibilité et message de partage", () => {
     expect(msg).toContain("375");
     expect(msg).toContain("16 pratiques");
     expect(msg).toContain("rabais de");
+  });
+});
+
+describe("taille du groupe", () => {
+  it("affiche « 12 à 14 » quand un minimum est défini, sinon le maximum seul", () => {
+    expect(capacityLabel(12, 14)).toBe("12 à 14");
+    expect(capacityLabel(null, 12)).toBe("12");
+    expect(capacityLabel(14, 14)).toBe("14");
+  });
+
+  it("le message partagé annonce « 12 à 14 joueurs »", () => {
+    const msg = buildShareMessage({
+      program: { slug: "garcons-2018", shortName: "Garçons 2018", priceCents: 37500 },
+      link: "https://www.newvalkyria.com/prive/garcons-2018",
+      practices: 16, matches: 3, capacity: 14, minCapacity: 12, feeCents: 4000, referralDiscountCents: 5000, withReferralMention: false
+    });
+    expect(msg).toContain("12 à 14 joueurs");
   });
 });
