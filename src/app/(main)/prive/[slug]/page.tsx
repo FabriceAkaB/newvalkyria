@@ -15,9 +15,17 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const program = await getPrivateProgram(slug);
+  const title = program ? `${program.name} | New Valkyria` : "New Valkyria";
+  // L'aperçu du lien (texto, WhatsApp, courriel) montre le logo de l'académie
+  // sur fond neutre — jamais la photo d'accueil du site.
+  const description = "Programme de développement de soccer New Valkyria — places limitées.";
+  const image = { url: "/og/garcons.jpg", width: 1200, height: 628, alt: "New Valkyria" };
   return {
-    title: program ? `${program.name} | New Valkyria` : "New Valkyria",
-    robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } }
+    title,
+    description,
+    robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
+    openGraph: { title, description, type: "website", locale: "fr_CA", siteName: "New Valkyria", images: [image] },
+    twitter: { card: "summary_large_image", title, description, images: [image.url] }
   };
 }
 
