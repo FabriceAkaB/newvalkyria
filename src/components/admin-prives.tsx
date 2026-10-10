@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { formatMoney, privateProgramUrl } from "@/lib/private-programs";
@@ -37,6 +37,10 @@ export function AdminPrives({
   const [dates, setDates] = useState(initialDates);
   const [newDate, setNewDate] = useState<Record<string, { sessionDate: string; startTime: string; endTime: string; location: string }>>({});
   const [showNew, setShowNew] = useState(false);
+  const [trials, setTrials] = useState<any[] | null>(null);
+  useEffect(() => {
+    fetch("/api/admin/prives/essais").then((r) => r.json()).then((j) => setTrials(j.trials ?? [])).catch(() => setTrials([]));
+  }, []);
   const [np, setNp] = useState({ name: "", gender: "mixte", years: "", price: "", capacity: "6", fee: "40", discount: "50", practices: "", matches: "0", costPerSession: "", fixedCosts: "" });
   const [registrations, setRegistrations] = useState(initialRegistrations);
   const [search, setSearch] = useState("");
@@ -363,6 +367,47 @@ export function AdminPrives({
                 </div>
               );
             })}
+          </div>
+
+          {/* ── Essais gratuits du mardi ── */}
+          <p className="admin-section-title" style={{ marginBottom: "0.6rem" }}>Essais gratuits du mardi ({(trials ?? []).filter((t) => t.status !== "cancelled").length})</p>
+          <div style={{ overflowX: "auto", marginBottom: "2rem" }}>
+            {(trials ?? []).length === 0 ? (
+              <p className="admin-empty-text">Aucun essai réservé pour l&apos;instant.</p>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.74rem", minWidth: "760px" }}>
+                <tbody>
+                  {(trials ?? []).map((t) => (
+                    <tr key={t.id} style={{ borderBottom: "1px solid #1f1d25", opacity: t.status === "cancelled" ? 0.5 : 1 }}>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "#c3c2c8" }}>{t.trial_date}</td>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "#fff", fontWeight: 600 }}>{t.player_first_name} {t.player_last_name} <span style={{ color: "#6d6b71", fontWeight: 400 }}>({t.birth_year})</span></td>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "#c3c2c8" }}>{t.program?.name ?? t.program_slug}</td>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "#c3c2c8" }}>{t.parent_name} · {t.parent_phone} · {t.parent_email}</td>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "#c3c2c8" }}>{t.status === "confirmed" ? "Confirmé" : t.status === "attended" ? "Présent" : t.status === "absent" ? "Absent" : "Annulé"}</td>
+                      <td style={{ padding: "0.4rem 0.5rem" }}>
+                        {t.status === "confirmed" && (
+                          <>
+                            {(["attended", "absent", "cancelled"] as const).map((st) => (
+                              <button
+                                key={st}
+                                className="admin-btn-ghost"
+                                style={{ fontSize: "0.64rem", marginRight: "0.25rem" }}
+                                onClick={async () => {
+                                  await fetch("/api/admin/prives/essais", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: t.id, status: st }) });
+                                  setTrials((prev) => (prev ?? []).map((x) => (x.id === t.id ? { ...x, status: st } : x)));
+                                }}
+                              >
+                                {st === "attended" ? "Présent" : st === "absent" ? "Absent" : "Annuler"}
+                              </button>
+                            ))}
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
           {/* ── Tableau des inscriptions ── */}

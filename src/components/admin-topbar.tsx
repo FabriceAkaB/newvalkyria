@@ -84,6 +84,7 @@ const SPORT_ETUDES_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/garcons-prives", label: "Programmes privés", icon: "list" },
   { href: "/admin/references", label: "Références & crédits", icon: "users" },
   { href: "/admin/commandites", label: "Commandites", icon: "tag" },
+  { href: "/admin/matchs", label: "Matchs vendus", icon: "calendar" },
 ];
 
 const EVALUATIONS_LINKS: { href: string; label: string; icon: IconName }[] = [

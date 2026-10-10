@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { BoysTrialSection } from "@/components/boys-trial-section";
 import { Container } from "@/components/container";
 
 interface DateRow {
@@ -129,6 +130,8 @@ export function SessionProgramContent({
               </p>
             ))}
           </div>
+
+          {slug === "intensif-garcons" && <BoysTrialSection slug={slug} eligibleYears={["2014", "2015"]} />}
 
           {isFull ? (
             <p style={{ fontSize: "0.9rem", color: "#ffb464", marginBottom: "1.5rem" }}>Ce programme est complet pour le moment.</p>

@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-import { sendConfirmationEmail, sendShopOrderConfirmationEmail, sendTerrainRentalConfirmationEmail } from "@/lib/email";
+import { sendConfirmationEmail, sendMatchSlotsConfirmationEmail, sendShopOrderConfirmationEmail, sendTerrainRentalConfirmationEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
@@ -30,6 +30,7 @@ import {
 import { onPrivateCheckoutExpired, onPrivateRefund, onPrivateRegistrationPaid } from "@/lib/private-programs-lifecycle";
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { markBookingsPaid, releaseBySession as releaseMatchBySession } from "@/lib/match-slots-repo";
 import { markRentalPaid, releaseRentalBySession } from "@/lib/terrain-rentals-repo";
 
 export async function POST(request: Request) {
@@ -241,6 +242,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
+    // ── Matchs vendus à d'autres académies — plages payées ──
+    if (checkoutType === "match-slot") {
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
+      const bookings = await markBookingsPaid(session.id, paymentIntentId);
+      if (bookings.length > 0) {
+        try {
+          await sendMatchSlotsConfirmationEmail({
+            to: bookings[0].contact_email,
+            contactName: bookings[0].contact_name,
+            orgName: bookings[0].org_name,
+            teamLabel: bookings[0].team_label,
+            slots: bookings.map((b) => ({ date: b.slot.slot_date, start: b.slot.start_time, end: b.slot.end_time, location: b.slot.location })),
+            totalCents: bookings.reduce((n, b) => n + b.price_cents, 0)
+          });
+          await (getSupabaseAdminClient() as any).from("match_slot_bookings").update({ confirmation_sent_at: new Date().toISOString() }).in("id", bookings.map((b) => b.id));
+        } catch (error) {
+          console.error("Unable to send match slot confirmation email", error);
+        }
+      }
+      return NextResponse.json({ received: true });
+    }
+
     // ── Location de terrain — créneau payé ──
     if (checkoutType === "terrain-rental") {
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
@@ -328,6 +351,13 @@ export async function POST(request: Request) {
   // ── Session de paiement expirée : la réservation d'un programme privé est libérée ──
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
+    if (session.metadata?.checkoutType === "match-slot") {
+      try {
+        await releaseMatchBySession(session.id);
+      } catch (error) {
+        console.error("Unable to release expired match slot reservation", error);
+      }
+    }
     if (session.metadata?.checkoutType === "terrain-rental") {
       try {
         await releaseRentalBySession(session.id);

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Container } from "@/components/container";
+import { BoysTrialSection } from "@/components/boys-trial-section";
 import { ShareProgramButtons, type ShareProgram } from "@/components/share-program-buttons";
 import { capacityLabel, computePrice, formatMoney, isBirthYearEligible, type PaymentOption } from "@/lib/private-programs";
 
@@ -305,6 +306,9 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
               <p style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: "0.6rem 0 0" }}>Entraîneurs : {program.presentation.coaches.join(", ")}</p>
             )}
           </div>
+
+          {/* ── Essai gratuit du mardi ── */}
+          <BoysTrialSection slug={program.slug} eligibleYears={program.eligibleBirthYears} />
 
           {/* ── Inscription ── */}
           {waitlisted ? (

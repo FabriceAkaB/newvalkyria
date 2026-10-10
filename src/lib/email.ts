@@ -502,3 +502,73 @@ export async function sendCampaignEmail(input: { to: string; subject: string; ht
     return { ok: false, error: err instanceof Error ? err.message : "Erreur d'envoi" };
   }
 }
+
+interface MatchSlotsEmailInput {
+  to: string;
+  contactName: string;
+  orgName: string;
+  teamLabel: string;
+  slots: { date: string; start: string; end: string; location: string }[];
+  totalCents: number;
+}
+
+/** Confirmation d'une réservation de match payée (équipe extérieure) — copie à l'académie. */
+export async function sendMatchSlotsConfirmationEmail(input: MatchSlotsEmailInput) {
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  const rows = input.slots
+    .map((s) => {
+      const label = new Date(s.date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+      return `<tr><td style="padding:8px 10px;border-bottom:1px solid #e6e1ee"><strong>${label}</strong><br/>${s.start} – ${s.end}<br/><span style="color:#6d6880;font-size:13px">${escapeHtml(s.location)}</span></td></tr>`;
+    })
+    .join("");
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    bcc: "info@newvalkyria.com",
+    subject: `New Valkyria — Match confirmé : ${input.slots.length > 1 ? `${input.slots.length} plages` : "1 plage"} réservée${input.slots.length > 1 ? "s" : ""}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">Réservation confirmée</h1>
+        <p>Bonjour ${escapeHtml(input.contactName)}, les plages suivantes sont réservées pour <strong>${escapeHtml(input.orgName)}</strong> (${escapeHtml(input.teamLabel)}) :</p>
+        <table style="width:100%;border-collapse:collapse;background:#f7f4fb;margin:14px 0">${rows}</table>
+        <p>Montant payé : <strong>${fmt(input.totalCents)}</strong>. Nous vous contacterons pour les détails du match (arrivée, équipe adverse, équipement).</p>
+        <p style="margin-top:24px">New Valkyria<br/>info@newvalkyria.com</p>
+      </div>`
+  });
+}
+
+interface BoysTrialEmailInput {
+  to: string;
+  parentName: string;
+  playerName: string;
+  programName: string;
+  date: string;
+  start: string;
+  end: string;
+  location: string;
+}
+
+/** Confirmation d'un essai gratuit (mardi) — copie à l'académie. */
+export async function sendBoysTrialConfirmationEmail(input: BoysTrialEmailInput) {
+  const resend = getResendClient();
+  const label = new Date(input.date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    bcc: "info@newvalkyria.com",
+    subject: `New Valkyria — Essai gratuit confirmé : ${input.playerName}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">Essai gratuit confirmé</h1>
+        <p>Bonjour ${escapeHtml(input.parentName)}, <strong>${escapeHtml(input.playerName)}</strong> est attendu pour un essai gratuit au programme <strong>${escapeHtml(input.programName)}</strong>.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;background:#f7f4fb;margin:14px 0">
+          <tr><td style="padding:8px 10px;font-weight:bold">Date</td><td style="padding:8px 10px">${label}</td></tr>
+          <tr><td style="padding:8px 10px;font-weight:bold">Heure</td><td style="padding:8px 10px">${input.start} – ${input.end}</td></tr>
+          <tr><td style="padding:8px 10px;font-weight:bold">Lieu</td><td style="padding:8px 10px">${escapeHtml(input.location)}</td></tr>
+        </table>
+        <p>Merci d'arriver 10 minutes à l'avance, avec des souliers d'intérieur et une bouteille d'eau. Pour toute question : info@newvalkyria.com.</p>
+        <p style="margin-top:24px">New Valkyria</p>
+      </div>`
+  });
+}
