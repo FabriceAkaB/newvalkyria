@@ -3,7 +3,7 @@
 import { Fragment, useMemo, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
-import { restrictionLabel, totalsFor } from "@/lib/match-slots-core";
+import { effectiveCategories, restrictionLabel, totalsFor, type SlotGender } from "@/lib/match-slots-core";
 import { formatMoney } from "@/lib/private-programs";
 import type { MatchBooking, MatchSlot } from "@/lib/match-slots-repo";
 
@@ -13,12 +13,18 @@ const STATUS: Record<string, [string, string]> = { pending: ["En attente", "#f0c
 const GENDER_LABEL: Record<string, string> = { filles: "Filles", garcons: "Garçons", mixte: "Mixte" };
 
 /** Valeurs du formulaire d'édition d'une plage (tout en texte, converti à l'envoi). */
+interface CategoryDraft {
+  gender: SlotGender;
+  min: string;
+  max: string;
+}
+
 interface Draft {
   format: string;
   opponent: string;
-  allowedGender: "tous" | "filles" | "garcons";
-  birthYearMin: string;
-  birthYearMax: string;
+  /** Catégories d'équipes admises (une ligne = genre + années). Vide = aucune restriction. */
+  categories: CategoryDraft[];
+  preferred: string;
   restrictionNote: string;
   notes: string;
   deposit: string;
@@ -27,13 +33,22 @@ interface Draft {
   field: string;
 }
 
+/** Équipes de chez nous, pour annoncer clairement l'adversaire (menu rapide). */
+const NV_TEAMS = [
+  "Équipe 2015 AV (filles)",
+  "Équipe 2016-2017 AV (filles)",
+  "Équipe 2015 INT (filles)",
+  "Équipe 2016-2017 INT (filles)",
+  "Équipe 2013-2014 INT (filles)"
+];
+
 function draftOf(s: MatchSlot): Draft {
+  const cats = effectiveCategories(s) ?? [];
   return {
     format: s.match_format ?? "",
     opponent: s.opponent ?? "",
-    allowedGender: s.allowed_gender,
-    birthYearMin: s.birth_year_min?.toString() ?? "",
-    birthYearMax: s.birth_year_max?.toString() ?? "",
+    categories: cats.map((c) => ({ gender: c.gender, min: c.birthYearMin?.toString() ?? "", max: c.birthYearMax?.toString() ?? "" })),
+    preferred: s.preferred_note ?? "",
     restrictionNote: s.restriction_note ?? "",
     notes: s.notes ?? "",
     deposit: (s.price_cents / 100).toString(),
@@ -46,37 +61,29 @@ function draftOf(s: MatchSlot): Draft {
 const toCents = (v: string) => Math.round((parseFloat(v.replace(",", ".")) || 0) * 100);
 
 function payload(d: Draft, only?: Set<keyof Draft>): Record<string, unknown> {
-  const all: Record<string, unknown> = {
-    format: d.format,
-    opponent: d.opponent,
-    allowedGender: d.allowedGender,
-    birthYearMin: d.birthYearMin,
-    birthYearMax: d.birthYearMax,
-    restrictionNote: d.restrictionNote,
-    notes: d.notes,
-    priceCents: toCents(d.deposit),
-    balanceDueCents: toCents(d.balance),
-    location: d.location,
-    field: d.field
+  const all: Record<keyof Draft, Record<string, unknown>> = {
+    format: { format: d.format },
+    opponent: { opponent: d.opponent },
+    // Les catégories remplacent entièrement les anciennes colonnes simples (genre + années).
+    categories: {
+      allowedCategories: d.categories.map((c) => ({ gender: c.gender, birthYearMin: c.min, birthYearMax: c.max })),
+      allowedGender: "tous",
+      birthYearMin: "",
+      birthYearMax: ""
+    },
+    preferred: { preferredNote: d.preferred },
+    restrictionNote: { restrictionNote: d.restrictionNote },
+    notes: { notes: d.notes },
+    deposit: { priceCents: toCents(d.deposit) },
+    balance: { balanceDueCents: toCents(d.balance) },
+    location: { location: d.location },
+    field: { field: d.field }
   };
-  if (!only) return all;
-  const keys: Record<keyof Draft, string> = {
-    format: "format",
-    opponent: "opponent",
-    allowedGender: "allowedGender",
-    birthYearMin: "birthYearMin",
-    birthYearMax: "birthYearMax",
-    restrictionNote: "restrictionNote",
-    notes: "notes",
-    deposit: "priceCents",
-    balance: "balanceDueCents",
-    location: "location",
-    field: "field"
-  };
-  return Object.fromEntries(Array.from(only).map((k) => [keys[k], all[keys[k]]]));
+  const keys = (only ? Array.from(only) : (Object.keys(all) as (keyof Draft)[]));
+  return Object.assign({}, ...keys.map((k) => all[k]));
 }
 
-const EMPTY_BULK: Draft = { format: "", opponent: "", allowedGender: "tous", birthYearMin: "", birthYearMax: "", restrictionNote: "", notes: "", deposit: "", balance: "", location: "", field: "" };
+const EMPTY_BULK: Draft = { format: "", opponent: "", categories: [], preferred: "", restrictionNote: "", notes: "", deposit: "", balance: "", location: "", field: "" };
 
 export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; bookings: Booking[] }; origin: string }) {
   const [data, setData] = useState(initial);
@@ -142,16 +149,36 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
     return (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: "0.6rem" }}>
         {wrap("format", "Format du match", <input className="admin-input" placeholder="ex. 7 contre 7" value={d.format} onChange={(e) => { touch("format"); set({ ...d, format: e.target.value }); }} />)}
-        {wrap("opponent", "Adversaire annoncé", <input className="admin-input" placeholder="ex. New Valkyria U12 féminin (2014)" value={d.opponent} onChange={(e) => { touch("opponent"); set({ ...d, opponent: e.target.value }); }} />)}
-        {wrap("allowedGender", "Équipes admises", (
-          <select className="admin-input" value={d.allowedGender} onChange={(e) => { touch("allowedGender"); set({ ...d, allowedGender: e.target.value as Draft["allowedGender"] }); }}>
-            <option value="tous">Tous (filles, garçons, mixte)</option>
-            <option value="filles">Filles seulement</option>
-            <option value="garcons">Garçons seulement</option>
-          </select>
+        {wrap("opponent", "Adversaire (équipe de chez nous)", (
+          <>
+            <select className="admin-input" value="" onChange={(e) => { if (e.target.value) { touch("opponent"); set({ ...d, opponent: `New Valkyria — ${e.target.value}` }); } }}>
+              <option value="">Choisir une équipe…</option>
+              {NV_TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <input className="admin-input" placeholder="ou écrire : New Valkyria — Équipe 2015 AV" value={d.opponent} onChange={(e) => { touch("opponent"); set({ ...d, opponent: e.target.value }); }} />
+          </>
         ))}
-        {wrap("birthYearMin", "Nés en … ou plus tard (âge maximum)", <input className="admin-input" inputMode="numeric" placeholder="ex. 2015 (vide = aucune limite)" value={d.birthYearMin} onChange={(e) => { touch("birthYearMin"); set({ ...d, birthYearMin: e.target.value.replace(/\D/g, "").slice(0, 4) }); }} />)}
-        {wrap("birthYearMax", "Nés en … ou plus tôt (âge minimum)", <input className="admin-input" inputMode="numeric" placeholder="ex. 2014 (vide = aucune limite)" value={d.birthYearMax} onChange={(e) => { touch("birthYearMax"); set({ ...d, birthYearMax: e.target.value.replace(/\D/g, "").slice(0, 4) }); }} />)}
+        {wrap("categories", "Équipes admises (catégories)", (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+            {d.categories.length === 0 && <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>Aucune restriction : toutes les équipes sont admises.</span>}
+            {d.categories.map((c, i) => (
+              <div key={i} style={{ display: "flex", gap: "0.3rem", alignItems: "center", flexWrap: "wrap" }}>
+                <select className="admin-input" value={c.gender} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, gender: e.target.value as SlotGender } : x)) }); }}>
+                  <option value="tous">Tous genres</option>
+                  <option value="filles">Filles</option>
+                  <option value="garcons">Garçons</option>
+                </select>
+                <input className="admin-input" style={{ width: "64px" }} inputMode="numeric" placeholder="de 2014" title="Année de naissance la plus ancienne admise" value={c.min} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, min: e.target.value.replace(/\D/g, "").slice(0, 4) } : x)) }); }} />
+                <span style={{ fontSize: "0.7rem" }}>à</span>
+                <input className="admin-input" style={{ width: "64px" }} inputMode="numeric" placeholder="à 2015" title="Année de naissance la plus récente admise" value={c.max} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, max: e.target.value.replace(/\D/g, "").slice(0, 4) } : x)) }); }} />
+                <button type="button" className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} onClick={() => { touch("categories"); set({ ...d, categories: d.categories.filter((_, j) => j !== i) }); }}>Retirer</button>
+              </div>
+            ))}
+            <button type="button" className="admin-btn-ghost" style={{ fontSize: "0.7rem", alignSelf: "flex-start" }} onClick={() => { touch("categories"); set({ ...d, categories: [...d.categories, { gender: "garcons", min: "", max: "" }] }); }}>+ Ajouter une catégorie admise</button>
+            <span style={{ fontSize: "0.66rem", color: "#6d6b71" }}>Ex. : « Garçons de 2014 à 2014 » + « Filles de 2014 à 2015 ». L&apos;équipe doit correspondre à au moins une ligne.</span>
+          </div>
+        ))}
+        {wrap("preferred", "Équipe recherchée (message positif)", <input className="admin-input" placeholder="ex. Équipe 2014 recherchée" value={d.preferred} onChange={(e) => { touch("preferred"); set({ ...d, preferred: e.target.value }); }} />)}
         {wrap("restrictionNote", "Autre restriction (texte)", <input className="admin-input" placeholder="ex. niveau compétitif" value={d.restrictionNote} onChange={(e) => { touch("restrictionNote"); set({ ...d, restrictionNote: e.target.value }); }} />)}
         {wrap("deposit", "Acompte pour réserver ($)", <input className="admin-input" value={d.deposit} onChange={(e) => { touch("deposit"); set({ ...d, deposit: e.target.value }); }} />)}
         {wrap("balance", "Solde le jour du match ($)", <input className="admin-input" value={d.balance} onChange={(e) => { touch("balance"); set({ ...d, balance: e.target.value }); }} />)}
@@ -296,7 +323,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                             <br />Adversaire : {s.opponent ?? <em style={{ color: "#f0c878" }}>à préciser</em>}
                             <br />{s.field_label ?? s.location.split("–")[0]}
                           </td>
-                          <td style={cell}>{restr ?? <span style={{ color: "#6d6b71" }}>Aucune restriction</span>}</td>
+                          <td style={cell}>{restr ?? <span style={{ color: "#6d6b71" }}>Aucune restriction</span>}{s.preferred_note ? <><br /><span style={{ color: "#8fce9f" }}>{s.preferred_note}</span></> : null}</td>
                           <td style={cell}>Acompte {formatMoney(s.price_cents)}<br />Solde {formatMoney(s.balance_due_cents)}</td>
                           <td style={cell}>{b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : <span style={{ color: "#8fce9f" }}>Libre</span>}</td>
                           <td style={cell}>

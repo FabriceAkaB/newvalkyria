@@ -42,6 +42,18 @@ function slotPatch(body: Record<string, any>): Record<string, unknown> {
   if (body.birthYearMin !== undefined) patch.birth_year_min = year(body.birthYearMin);
   if (body.birthYearMax !== undefined) patch.birth_year_max = year(body.birthYearMax);
   if (body.restrictionNote !== undefined) patch.restriction_note = text(body.restrictionNote);
+  if (body.preferredNote !== undefined) patch.preferred_note = text(body.preferredNote);
+  if (body.allowedCategories !== undefined) {
+    const list = Array.isArray(body.allowedCategories) ? body.allowedCategories : [];
+    const cats = list.map((c: any) => {
+      if (!["tous", "filles", "garcons"].includes(c?.gender)) throw new Error("Genre invalide dans une catégorie admise.");
+      const lo = year(c.birthYearMin);
+      const hi = year(c.birthYearMax);
+      if (lo != null && hi != null && lo > hi) throw new Error("Dans une catégorie, l'année la plus ancienne doit être inférieure ou égale à la plus récente.");
+      return { gender: c.gender, birthYearMin: lo, birthYearMax: hi };
+    });
+    patch.allowed_categories = cats.length > 0 ? cats : null;
+  }
   if (body.notes !== undefined) patch.notes = text(body.notes);
   if (body.location !== undefined && text(body.location)) patch.location = text(body.location);
   if (body.field !== undefined) patch.field_label = text(body.field);
@@ -71,7 +83,7 @@ export async function POST(request: Request) {
             field_label: body.field || null,
             price_cents: body.priceCents !== undefined ? Math.max(0, Math.round(Number(body.priceCents) || 0)) : 5000,
             balance_due_cents: body.balanceDueCents !== undefined ? Math.max(0, Math.round(Number(body.balanceDueCents) || 0)) : 15000,
-            ...slotPatch({ format: body.format, opponent: body.opponent, allowedGender: body.allowedGender ?? "tous", birthYearMin: body.birthYearMin, birthYearMax: body.birthYearMax, restrictionNote: body.restrictionNote, notes: body.notes })
+            ...slotPatch({ format: body.format, opponent: body.opponent, allowedGender: body.allowedGender ?? "tous", birthYearMin: body.birthYearMin, birthYearMax: body.birthYearMax, restrictionNote: body.restrictionNote, allowedCategories: body.allowedCategories, preferredNote: body.preferredNote, notes: body.notes })
           })
           .select("*")
           .single();

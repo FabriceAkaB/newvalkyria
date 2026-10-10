@@ -37,6 +37,34 @@ describe("restrictions de plage", () => {
   });
 });
 
+describe("catégories admises multiples", () => {
+  // Ex. : plage contre notre groupe AV 2015 → garçons 2014 ou filles 2014–2015
+  const rules: SlotRules = {
+    ...open,
+    allowed_categories: [
+      { gender: "garcons", birthYearMin: 2014, birthYearMax: 2014 },
+      { gender: "filles", birthYearMin: 2014, birthYearMax: 2015 }
+    ],
+    preferred_note: "Équipe 2014 recherchée"
+  };
+  it("libellé lisible avec accord au féminin", () => {
+    expect(restrictionLabel(rules)).toBe("Garçons nés en 2014 · Filles nées entre 2014 et 2015");
+  });
+  it("accepte une catégorie parmi la liste, refuse les autres", () => {
+    expect(checkEligibility(rules, { gender: "garcons", birthYear: 2014 }).ok).toBe(true);
+    expect(checkEligibility(rules, { gender: "filles", birthYear: 2015 }).ok).toBe(true);
+    expect(checkEligibility(rules, { gender: "garcons", birthYear: 2015 }).ok).toBe(false);
+    expect(checkEligibility(rules, { gender: "filles", birthYear: 2013 }).ok).toBe(false);
+    expect(checkEligibility(rules, { gender: "mixte", birthYear: 2014 }).ok).toBe(false);
+    expect(checkEligibility(rules, null).ok).toBe(false);
+  });
+  it("une catégorie « tous genres » accepte aussi les équipes mixtes", () => {
+    const r: SlotRules = { ...open, allowed_categories: [{ gender: "tous", birthYearMin: 2016, birthYearMax: 2017 }] };
+    expect(checkEligibility(r, { gender: "mixte", birthYear: 2016 }).ok).toBe(true);
+    expect(checkEligibility(r, { gender: "filles", birthYear: 2015 }).ok).toBe(false);
+  });
+});
+
 describe("doubles cédules", () => {
   const slots = [
     { id: "a", double_group: "g1" },

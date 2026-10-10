@@ -19,7 +19,10 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const slots = await getSlotsWithAvailability();
+  const all = await getSlotsWithAvailability();
+  // Une plage réservée (ou une double cédule dont une moitié l'est) disparaît de la page publique.
+  const blockedGroups = new Set(all.filter((s) => !s.available && s.double_group).map((s) => s.double_group));
+  const slots = all.filter((s) => s.available && !(s.double_group && blockedGroups.has(s.double_group)));
   return NextResponse.json({
     maxPerTeam: MAX_SLOTS_PER_TEAM,
     slots: slots.map((s) => ({
@@ -37,6 +40,14 @@ export async function GET() {
       birthYearMin: s.birth_year_min,
       birthYearMax: s.birth_year_max,
       restriction: restrictionLabel(s),
+      preferred: s.preferred_note,
+      rules: {
+        allowed_gender: s.allowed_gender,
+        birth_year_min: s.birth_year_min,
+        birth_year_max: s.birth_year_max,
+        restriction_note: null,
+        allowed_categories: s.allowed_categories
+      },
       doubleGroup: s.double_group,
       notes: s.notes,
       available: s.available

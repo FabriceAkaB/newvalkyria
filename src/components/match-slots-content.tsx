@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Container } from "@/components/container";
-import { checkEligibility, type SlotGender, type TeamCategory, type TeamGender } from "@/lib/match-slots-core";
+import { checkEligibility, type SlotRules, type TeamCategory, type TeamGender } from "@/lib/match-slots-core";
 import { formatMoney } from "@/lib/private-programs";
 
 interface Slot {
@@ -17,10 +17,9 @@ interface Slot {
   balanceDueCents: number;
   format: string | null;
   opponent: string | null;
-  allowedGender: SlotGender;
-  birthYearMin: number | null;
-  birthYearMax: number | null;
+  rules: SlotRules;
   restriction: string | null;
+  preferred: string | null;
   doubleGroup: string | null;
   notes: string | null;
   available: boolean;
@@ -61,6 +60,9 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   const [category, setCategory] = useState<{ gender: TeamGender | ""; birthYear: string }>({ gender: "", birthYear: "" });
   const [form, setForm] = useState({ orgName: "", teamLabel: "", contactName: "", contactEmail: "", contactPhone: "", notes: "" });
   const [terms, setTerms] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const scrolledRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(cancelled ? "Le paiement a été annulé. Vos plages ne sont pas réservées." : null);
 
@@ -97,28 +99,39 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
     return out;
   }, [slots]);
 
-  const byMonth = useMemo(() => {
-    const map = new Map<string, Unit[]>();
-    for (const u of units) {
-      const k = monthKey(u.date);
-      map.set(k, [...(map.get(k) ?? []), u]);
-    }
-    return Array.from(map.entries());
-  }, [units]);
-
   const unitState = (u: Unit): { available: boolean; reason: string | null } => {
     if (u.slots.some((s) => !s.available)) return { available: false, reason: "Réservée" };
     const restricted = u.slots.some((s) => s.restriction);
     if (restricted && !team) return { available: true, reason: null };
     for (const s of u.slots) {
-      const elig = checkEligibility(
-        { allowed_gender: s.allowedGender, birth_year_min: s.birthYearMin, birth_year_max: s.birthYearMax, restriction_note: null },
-        team
-      );
+      const elig = checkEligibility(s.rules, team);
       if (!elig.ok) return { available: false, reason: elig.reason };
     }
     return { available: true, reason: null };
   };
+
+  // Dès que la catégorie est connue, on ne montre d'abord que les plages qui lui conviennent.
+  const stateOf = new Map(units.map((u) => [u.key, unitState(u)]));
+  const fits = (u: Unit) => stateOf.get(u.key)?.available === true;
+  const matching = team ? units.filter(fits) : units;
+  const hiddenCount = team ? units.length - matching.length : 0;
+  const shownUnits = team && !showAll ? matching : units;
+  const byMonth = (() => {
+    const map = new Map<string, Unit[]>();
+    for (const u of shownUnits) {
+      const k = monthKey(u.date);
+      map.set(k, [...(map.get(k) ?? []), u]);
+    }
+    return Array.from(map.entries());
+  })();
+
+  // Première fois que la catégorie est complète : on amène le visiteur vers ses plages.
+  useEffect(() => {
+    if (team && slots && !scrolledRef.current) {
+      scrolledRef.current = true;
+      listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [team, slots]);
 
   const selectedIds = new Set(selected);
   const chosen = (slots ?? []).filter((s) => selectedIds.has(s.id));
@@ -143,7 +156,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
       const next = prev.filter((id) => {
         const s = (slots ?? []).find((x) => x.id === id);
         if (!s) return false;
-        return checkEligibility({ allowed_gender: s.allowedGender, birth_year_min: s.birthYearMin, birth_year_max: s.birthYearMax, restriction_note: null }, team).ok;
+        return checkEligibility(s.rules, team).ok;
       });
       return next.length === prev.length ? prev : next;
     });
@@ -237,6 +250,24 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             </div>
           </div>
 
+          <div ref={listRef} style={{ scrollMarginTop: "1rem" }} />
+          {team && slots !== null && slots.length > 0 && (
+            <div style={{ ...card, borderColor: matching.length > 0 ? "#2f5a3b" : "#5a2f2f" }}>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#e5e4ea", lineHeight: 1.55 }}>
+                {matching.length > 0 ? (
+                  <>✓ <strong>{matching.length} plage{matching.length > 1 ? "s" : ""}</strong> correspond{matching.length > 1 ? "ent" : ""} à votre équipe ({GENDERS.find((g) => g.value === team.gender)?.label.toLowerCase()}, nés en {team.birthYear}).</>
+                ) : (
+                  <>Aucune plage ne correspond à votre catégorie pour le moment. Écrivez-nous à info@newvalkyria.com : nous pourrons peut-être ajouter un match pour votre équipe.</>
+                )}
+              </p>
+              {hiddenCount > 0 && (
+                <button type="button" onClick={() => setShowAll((v) => !v)} style={{ marginTop: "0.5rem", background: "none", border: "none", padding: 0, color: "#c4a4e4", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}>
+                  {showAll ? "Masquer les plages qui ne conviennent pas" : `Voir aussi les ${hiddenCount} autre${hiddenCount > 1 ? "s" : ""} plage${hiddenCount > 1 ? "s" : ""} (non admissibles pour votre catégorie)`}
+                </button>
+              )}
+            </div>
+          )}
+
           {slots === null && <p style={{ color: "#9d9da0" }}>Chargement des plages…</p>}
           {slots !== null && slots.length === 0 && (
             <div style={card}><p style={{ margin: 0, color: "#c3c2c8" }}>Aucune plage n&apos;est offerte pour le moment. Écrivez-nous à info@newvalkyria.com.</p></div>
@@ -290,6 +321,11 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                           {s.restriction && (
                             <>
                               <br /><span style={{ color: disabled ? "#7a5a5a" : "#f0c878", fontWeight: 600 }}>Admissibilité : {s.restriction}</span>
+                            </>
+                          )}
+                          {s.preferred && (
+                            <>
+                              <br /><span style={{ color: disabled ? "#5d5a66" : "#8fce9f", fontWeight: 600 }}>{s.preferred}</span>
                             </>
                           )}
                           {s.notes && <><br />{s.notes}</>}

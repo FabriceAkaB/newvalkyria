@@ -1,4 +1,4 @@
-import { checkEligibility, expandDoubles, type SlotGender, type TeamGender } from "@/lib/match-slots-core";
+import { checkEligibility, expandDoubles, type CategoryRule, type SlotGender, type TeamGender } from "@/lib/match-slots-core";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 function db() {
@@ -27,6 +27,10 @@ export interface MatchSlot {
   birth_year_min: number | null;
   birth_year_max: number | null;
   restriction_note: string | null;
+  /** Catégories admises (genre + années) ; remplace les colonnes simples quand elle est remplie. */
+  allowed_categories: CategoryRule[] | null;
+  /** Précision positive (p. ex. « Équipe 2014 recherchée »). */
+  preferred_note: string | null;
   /** Deux plages (ou plus) partageant ce code forment une double cédule, réservée en bloc. */
   double_group: string | null;
   active: boolean;

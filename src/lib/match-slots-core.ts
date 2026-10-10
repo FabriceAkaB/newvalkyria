@@ -4,11 +4,23 @@
 export type SlotGender = "tous" | "filles" | "garcons";
 export type TeamGender = "filles" | "garcons" | "mixte";
 
+/** Une catégorie d'équipe admise sur une plage (genre + années de naissance). */
+export interface CategoryRule {
+  /** « tous » = n'importe quel genre. */
+  gender: SlotGender;
+  birthYearMin: number | null;
+  birthYearMax: number | null;
+}
+
 export interface SlotRules {
   allowed_gender: SlotGender;
   birth_year_min: number | null;
   birth_year_max: number | null;
   restriction_note: string | null;
+  /** Si présent, remplace allowed_gender / birth_year_* : l'équipe doit correspondre à AU MOINS une catégorie. */
+  allowed_categories?: CategoryRule[] | null;
+  /** Précision positive affichée aux équipes (p. ex. « Équipe 2014 recherchée »). */
+  preferred_note?: string | null;
 }
 
 export interface TeamCategory {
@@ -18,35 +30,70 @@ export interface TeamCategory {
 
 const GENDER_LABEL: Record<SlotGender, string> = { tous: "", filles: "filles", garcons: "garçons" };
 
+/** Catégories admises de la plage, en tenant compte des anciennes colonnes simples. */
+export function effectiveCategories(rules: SlotRules): CategoryRule[] | null {
+  if (rules.allowed_categories && rules.allowed_categories.length > 0) return rules.allowed_categories;
+  if (rules.allowed_gender !== "tous" || rules.birth_year_min != null || rules.birth_year_max != null) {
+    return [{ gender: rules.allowed_gender, birthYearMin: rules.birth_year_min, birthYearMax: rules.birth_year_max }];
+  }
+  return null;
+}
+
+function yearsLabel(min: number | null, max: number | null, feminine: boolean): string | null {
+  const nes = feminine ? "nées" : "nés";
+  if (min != null && max != null) return min === max ? `${nes} en ${min}` : `${nes} entre ${min} et ${max}`;
+  if (max != null) return `${nes} en ${max} ou plus tôt`;
+  if (min != null) return `${nes} en ${min} ou plus tard`;
+  return null;
+}
+
+/** Libellé d'une catégorie : « Garçons nés en 2014 », « Filles nées entre 2015 et 2016 », « Toutes les équipes… ». */
+export function categoryLabel(c: CategoryRule): string {
+  const feminine = c.gender === "filles";
+  const years = yearsLabel(c.birthYearMin, c.birthYearMax, feminine);
+  const who = c.gender === "tous" ? "Tous genres" : c.gender === "filles" ? "Filles" : "Garçons";
+  return years ? `${who} ${years}` : who;
+}
+
 /** Texte clair des restrictions d'une plage, ou null si aucune (ouverte à tous). */
 export function restrictionLabel(rules: SlotRules): string | null {
+  const cats = effectiveCategories(rules);
   const parts: string[] = [];
-  if (rules.allowed_gender !== "tous") parts.push(`Équipes ${GENDER_LABEL[rules.allowed_gender]} seulement`);
-  const { birth_year_min: min, birth_year_max: max } = rules;
-  if (min != null && max != null) parts.push(min === max ? `nés en ${min}` : `nés entre ${min} et ${max}`);
-  else if (max != null) parts.push(`nés en ${max} ou plus tôt`);
-  else if (min != null) parts.push(`nés en ${min} ou plus tard`);
+  if (cats) {
+    const legacySingle = !(rules.allowed_categories && rules.allowed_categories.length > 0);
+    if (legacySingle) {
+      const c = cats[0];
+      if (c.gender !== "tous") parts.push(`Équipes ${GENDER_LABEL[c.gender]} seulement`);
+      const y = yearsLabel(c.birthYearMin, c.birthYearMax, false);
+      if (y) parts.push(y);
+    } else {
+      parts.push(cats.map(categoryLabel).join(" · ") );
+    }
+  }
   if (rules.restriction_note?.trim()) parts.push(rules.restriction_note.trim());
   if (parts.length === 0) return null;
-  const [first, ...rest] = parts;
-  return [first, ...rest].join(" · ");
+  return parts.join(" · ");
 }
 
 /** Une équipe peut-elle réserver cette plage ? `reason` explique le refus. */
 export function checkEligibility(rules: SlotRules, team: TeamCategory | null): { ok: true } | { ok: false; reason: string } {
-  const restricted = rules.allowed_gender !== "tous" || rules.birth_year_min != null || rules.birth_year_max != null;
-  if (!restricted) return { ok: true };
+  const cats = effectiveCategories(rules);
+  if (!cats) return { ok: true };
   if (!team) return { ok: false, reason: "Indiquez d'abord la catégorie de votre équipe." };
-  if (rules.allowed_gender !== "tous" && team.gender !== rules.allowed_gender) {
-    return { ok: false, reason: `Plage réservée aux équipes ${GENDER_LABEL[rules.allowed_gender]}.` };
+  const matches = cats.some((c) => {
+    const genderOk = c.gender === "tous" || c.gender === team.gender;
+    const minOk = c.birthYearMin == null || team.birthYear >= c.birthYearMin;
+    const maxOk = c.birthYearMax == null || team.birthYear <= c.birthYearMax;
+    return genderOk && minOk && maxOk;
+  });
+  if (matches) return { ok: true };
+  if (cats.length === 1) {
+    const c = cats[0];
+    if (c.gender !== "tous" && team.gender !== c.gender) return { ok: false, reason: `Plage réservée aux équipes ${GENDER_LABEL[c.gender]}.` };
+    if (c.birthYearMin != null && team.birthYear < c.birthYearMin) return { ok: false, reason: `Plage réservée aux joueurs nés en ${c.birthYearMin} ou plus tard.` };
+    if (c.birthYearMax != null && team.birthYear > c.birthYearMax) return { ok: false, reason: `Plage réservée aux joueurs nés en ${c.birthYearMax} ou plus tôt.` };
   }
-  if (rules.birth_year_min != null && team.birthYear < rules.birth_year_min) {
-    return { ok: false, reason: `Plage réservée aux joueurs nés en ${rules.birth_year_min} ou plus tard.` };
-  }
-  if (rules.birth_year_max != null && team.birthYear > rules.birth_year_max) {
-    return { ok: false, reason: `Plage réservée aux joueurs nés en ${rules.birth_year_max} ou plus tôt.` };
-  }
-  return { ok: true };
+  return { ok: false, reason: `Plage réservée à : ${cats.map(categoryLabel).join(" ou ").toLowerCase()}.` };
 }
 
 interface GroupedSlot {
