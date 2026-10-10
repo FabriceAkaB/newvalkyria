@@ -6,6 +6,9 @@ import { useState } from "react";
 import { BoysTrialSection } from "@/components/boys-trial-section";
 import { Container } from "@/components/container";
 
+/** Séances visibles avant « Voir tout le calendrier » (liste trop longue sur téléphone). */
+const DATES_PREVIEW = 4;
+
 interface DateRow {
   id: string;
   session_date: string;
@@ -72,6 +75,7 @@ export function SessionProgramContent({
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAllDates, setShowAllDates] = useState(false);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -124,11 +128,21 @@ export function SessionProgramContent({
         <Container className="max-w-2xl">
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem" }}>Les {dates.length} séances</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "1.5rem" }}>
-            {dates.map((d) => (
+            {(showAllDates ? dates : dates.slice(0, DATES_PREVIEW)).map((d) => (
               <p key={d.id} style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: 0 }}>
                 {formatSessionDate(d.session_date)} · {d.start_time.slice(0, 5)}–{d.end_time.slice(0, 5)} · {d.location}
               </p>
             ))}
+            {dates.length > DATES_PREVIEW && (
+              <button
+                type="button"
+                onClick={() => setShowAllDates((v) => !v)}
+                aria-expanded={showAllDates}
+                style={{ alignSelf: "flex-start", marginTop: "0.4rem", background: "none", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "999px", color: "#e5e4ea", padding: "0.4rem 0.9rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}
+              >
+                {showAllDates ? "Voir moins" : `Voir tout le calendrier (${dates.length} séances)`}
+              </button>
+            )}
           </div>
 
           {slug === "intensif-garcons" && <BoysTrialSection slug={slug} eligibleYears={["2014", "2015"]} />}

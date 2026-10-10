@@ -46,6 +46,9 @@ export interface PrivateProgramView {
   origin: string;
 }
 
+/** Nombre de pratiques visibles avant « Voir tout le calendrier » (section trop longue sur téléphone). */
+const DATES_PREVIEW = 4;
+
 const REF_STORAGE_KEY = "nv_referral_code";
 
 function formatSessionDate(iso: string): string {
@@ -81,6 +84,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [waitlisted, setWaitlisted] = useState(false);
+  const [showAllDates, setShowAllDates] = useState(false);
 
   // Le code de référencement est conservé pendant toute la procédure (même si
   // le parent change de page ou recharge) : lien ?ref= → stockage local.
@@ -282,12 +286,22 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
               <>
                 <p style={{ fontSize: "0.78rem", color: "#9d9da0", margin: "0 0 0.5rem" }}>{program.dates.length} pratiques planifiées</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                  {program.dates.map((d) => (
+                  {(showAllDates ? program.dates : program.dates.slice(0, DATES_PREVIEW)).map((d) => (
                     <p key={d.id} style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: 0 }}>
                       {formatSessionDate(d.session_date)} · {d.start_time.slice(0, 5)}–{d.end_time.slice(0, 5)} · {d.location}
                     </p>
                   ))}
                 </div>
+                {program.dates.length > DATES_PREVIEW && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllDates((v) => !v)}
+                    aria-expanded={showAllDates}
+                    style={{ marginTop: "0.7rem", background: "none", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "999px", color: "#e5e4ea", padding: "0.4rem 0.9rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}
+                  >
+                    {showAllDates ? "Voir moins" : `Voir tout le calendrier (${program.dates.length} pratiques)`}
+                  </button>
+                )}
                 {program.matches > 0 && (
                   <p style={{ fontSize: "0.8rem", color: "#9d9da0", margin: "0.7rem 0 0" }}>
                     + {program.matches} matchs inclus : les dates seront annoncées aux familles inscrites.
