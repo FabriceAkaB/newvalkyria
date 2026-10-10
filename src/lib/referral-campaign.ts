@@ -82,20 +82,6 @@ export async function getCampaignPrograms(origin: string, code: string): Promise
   });
 }
 
-/** Le message de l'offre, prêt à transmettre à une autre famille (texte du bloc
- *  « Message à transmettre » du courriel 1). Contient les liens PERSONNELS de la famille. */
-export function buildOfferMessage(programs: CampaignProgram[]): string {
-  const discount = formatMoney(programs[0]?.referralDiscountCents ?? 5000);
-  const size = capacityLabel(programs[0]?.minCapacity ?? null, programs[0]?.capacity ?? 14);
-  return [
-    "Bonjour !",
-    "Je voulais te partager un nouveau programme de soccer pour garçons proposé par New Valkyria, encadré par les meilleurs entraîneurs de l'académie.",
-    ...programs.map((g) => `• ${g.shortName} — ${formatMoney(g.priceCents)} : ${g.link}`),
-    `Au programme : ${programs[0]?.practices ?? 16} pratiques et ${programs[0]?.matches ?? 3} matchs, en petit groupe de ${size} joueurs. Paiement en 2 versements possible.`,
-    `Avec mon lien, tu profites de ${discount} de rabais à l'inscription.`
-  ].join("\n\n");
-}
-
 export type CampaignStep = 1 | 2 | 3;
 
 export const CAMPAIGN_STEPS: { step: CampaignStep; label: string; when: string }[] = [
@@ -182,16 +168,15 @@ export function buildCampaignEmail(input: { step?: CampaignStep; firstName: stri
   const textIntro: string[] = [];
 
   if (step === 1) {
-    subject = "Nouveau programme pour garçons — New Valkyria reste 100 % féminine";
+    subject = "Nouveau programme pour garçons : 50 $ de rabais pour eux, un sac pour vous";
     intro =
       `<p style="margin:0 0 16px"><span style="display:inline-block;background:#72499a;color:#ffffff;font-size:12px;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:999px">Nouveau programme pour garçons</span></p>` +
       p(hello) +
-      p("Une précision importante d'abord : <strong>New Valkyria reste une académie entièrement féminine.</strong> Rien ne change pour nos joueuses, leurs groupes et leurs entraînements.") +
-      p(`Ce qui s'ajoute : un <strong>nouveau programme pour garçons</strong> — en réalité deux groupes de développement (2018 et 2014–2015), offerts <strong>en parallèle</strong>. Pourquoi ? Parce qu'ils nous permettent de <strong>financer davantage de projets gratuits pour les filles de l'académie</strong>. Chaque inscription compte pour elles.`) +
-      p(`Le projet sera encadré par <strong>nos meilleurs entraîneurs, ${COACHES}</strong> — les mêmes qui travaillent avec vos filles.`) +
-      p("Si vous connaissez une famille qui pourrait être intéressée, voici comment nous aider en deux clics :");
+      p("Nous lançons un <strong>nouveau programme de développement pour garçons</strong> (2018 et 2014–2015), encadré par <strong>JP et Maeva</strong>, nos meilleurs entraîneurs.") +
+      p("Chaque inscription nous permet de <strong>financer davantage de projets gratuits pour les filles de l'académie</strong>.") +
+      p("<strong>Une famille en tête ? Envoyez-lui votre lien :</strong>");
     outro = p("Merci de nous aider à faire grandir l'académie, au bénéfice de toutes nos filles.");
-    textIntro.push("NOUVEAU PROGRAMME POUR GARÇONS", "New Valkyria reste une académie entièrement féminine.", "Ces programmes pour garçons, offerts en parallèle, nous permettent de financer davantage de projets gratuits pour les filles de l'académie. Encadrement : JP et Maeva, nos meilleurs entraîneurs.");
+    textIntro.push("NOUVEAU PROGRAMME POUR GARÇONS (2018 et 2014–2015), encadré par JP et Maeva, nos meilleurs entraîneurs.", "Chaque inscription nous permet de financer davantage de projets gratuits pour les filles de l'académie.");
   } else if (step === 2) {
     subject = "Un seul message suffit : partagez le programme à une famille";
     intro =
@@ -233,9 +218,7 @@ export function buildCampaignEmail(input: { step?: CampaignStep; firstName: stri
         ${step !== 2 ? rewardBox : rewardsHighlight}
         <p style="margin:0 0 10px;font-weight:bold">Touchez un bouton — le message est déjà écrit :</p>
         ${cards}
-        ${step === 1 ? `
-        <p style="margin:0 0 8px;font-weight:bold">Le message à transmettre (vous pouvez le copier-coller tel quel) :</p>
-        <div style="background:#ffffff;border:1px dashed #b9a3d6;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:14px;line-height:1.55;color:#161419;white-space:pre-wrap">${escapeHtml(buildOfferMessage(programs))}</div>` : ""}
+
         <p style="margin:0 0 6px;font-size:14px">Votre code : <strong style="letter-spacing:.1em;color:#72499a">${escapeHtml(code)}</strong> (déjà inclus dans vos liens).</p>
         <p style="margin:0 0 18px;font-size:14px">Suivez vos recommandations et choisissez votre récompense : <a href="${origin}/compte/recommandations" style="color:#72499a;font-weight:bold">Mes recommandations</a></p>
         ${step === 1 ? `
