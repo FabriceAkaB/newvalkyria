@@ -17,5 +17,5 @@ export default async function AdminGarconsPrivesPage() {
     stats[p.slug] = { held, paid, waitlist };
     dates[p.slug] = d;
   }
-  return <AdminPrives programs={programs} stats={stats} dates={dates} registrations={registrations} origin={env.siteUrl} />;
+  return <AdminPrives programs={programs} stats={stats} dates={dates} registrations={registrations} origin={env.publicSiteUrl} />;
 }

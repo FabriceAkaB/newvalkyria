@@ -9,5 +9,5 @@ export const dynamic = "force-dynamic";
 export default async function AdminLocationTerrainsPage() {
   await requireAdmin();
   const [terrains, windows, blocks, rentals] = await Promise.all([getAllTerrainsForRental(), getWindows(), getBlocks(), getRentals()]);
-  return <AdminLocationTerrains initial={{ terrains, windows, blocks, rentals }} origin={env.siteUrl} />;
+  return <AdminLocationTerrains initial={{ terrains, windows, blocks, rentals }} origin={env.publicSiteUrl} />;
 }
