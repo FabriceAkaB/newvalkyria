@@ -269,11 +269,12 @@ export async function getCampaignAudience(options: { includePast?: boolean } = {
   };
 
   const [reg, spr, se] = await Promise.all([
-    supabase.from("registrations").select("parent_name, parent_email, parent_phone").eq("season_id", "automne-hiver-2026").eq("status", "paid").eq("is_trial", false),
+    // Inscriptions payées ; un essai « payé » rattaché à un programme est une famille inscrite.
+    supabase.from("registrations").select("parent_name, parent_email, parent_phone, is_trial, program_id").eq("season_id", "automne-hiver-2026").eq("status", "paid"),
     supabase.from("session_program_registrations").select("parent_name, parent_email, parent_phone").in("status", ["paid", "confirmed"]),
     supabase.from("sport_etudes_registrations").select("parent_first_name, parent_last_name, parent_email, parent_phone").in("status", ["paid", "confirmed"])
   ]);
-  for (const r of reg.data ?? []) add(r.parent_email, r.parent_name, r.parent_phone);
+  for (const r of reg.data ?? []) if (!r.is_trial || r.program_id) add(r.parent_email, r.parent_name, r.parent_phone);
   for (const r of spr.data ?? []) add(r.parent_email, r.parent_name, r.parent_phone);
   for (const r of se.data ?? []) add(r.parent_email, `${r.parent_first_name} ${r.parent_last_name}`, r.parent_phone);
 
@@ -330,7 +331,18 @@ export async function getFormerFamiliesAudience(): Promise<CampaignRecipient[]> 
   const supabase = db();
   const { data: active } = await supabase.from("registrations").select("parent_email").eq("season_id", "automne-hiver-2026").in("status", ["pending", "waitlist"]);
   const busy = new Set((active ?? []).map((r: any) => normalizeEmail(r.parent_email)));
-  return all.filter((r) => !currentSet.has(r.email) && !busy.has(r.email));
+  // Un parent actuel qui apparaît sous une autre adresse (ex. courriel d'un ancien
+  // formulaire) n'est pas une « ancienne famille » : on compare aussi les noms.
+  const norm = (v: string) => v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean).sort().join(" ");
+  const currentNames = new Set(current.map((r) => norm(r.name)).filter(Boolean));
+  const busyNames = new Set<string>();
+  const { data: busyRows } = await supabase.from("registrations").select("parent_name").eq("season_id", "automne-hiver-2026").in("status", ["pending", "waitlist"]);
+  for (const r of busyRows ?? []) if (r.parent_name) busyNames.add(norm(r.parent_name));
+  return all.filter((r) => {
+    if (currentSet.has(r.email) || busy.has(r.email)) return false;
+    const n = norm(r.name);
+    return !(n && (currentNames.has(n) || busyNames.has(n)));
+  });
 }
 
 /** Courriel pour les anciennes familles : un seul message, uniquement le rabais
