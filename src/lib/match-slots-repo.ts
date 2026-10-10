@@ -53,12 +53,91 @@ export interface MatchBooking {
   balance_paid_at: string | null;
   team_gender: TeamGender | null;
   team_birth_year: number | null;
+  team_level: string | null;
+  team_players: number | null;
+  team_profile_id: string | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
   reservation_expires_at: string | null;
   confirmation_sent_at: string | null;
   cancelled_reason: string | null;
   created_at: string;
+}
+
+export const TEAM_LEVELS = ["Récréatif", "Intermédiaire", "Compétitif", "Élite"] as const;
+
+export interface MatchTeamProfile {
+  id: string;
+  org_name: string;
+  org_key: string;
+  team_label: string;
+  team_gender: TeamGender;
+  team_birth_year: number;
+  team_level: string;
+  team_players: number | null;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface TeamProfileInput {
+  orgName: string;
+  teamLabel: string;
+  teamGender: TeamGender;
+  teamBirthYear: number;
+  teamLevel: string;
+  teamPlayers: number | null;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  notes: string | null;
+}
+
+/** Enregistre (ou met à jour) le formulaire « Votre équipe » : étape obligatoire avant de choisir une plage. */
+export async function saveTeamProfile(input: TeamProfileInput): Promise<MatchTeamProfile> {
+  const key = orgKey(input.orgName);
+  if (!key) throw new MatchConflictError("Nom d'organisation invalide.");
+  const email = input.contactEmail.trim();
+  const { data: existing } = await db()
+    .from("match_team_profiles")
+    .select("id")
+    .ilike("contact_email", email)
+    .eq("org_key", key)
+    .eq("team_gender", input.teamGender)
+    .eq("team_birth_year", input.teamBirthYear)
+    .ilike("team_label", input.teamLabel.trim())
+    .maybeSingle();
+  const row = {
+    org_name: input.orgName,
+    org_key: key,
+    team_label: input.teamLabel,
+    team_gender: input.teamGender,
+    team_birth_year: input.teamBirthYear,
+    team_level: input.teamLevel,
+    team_players: input.teamPlayers,
+    contact_name: input.contactName,
+    contact_email: email,
+    contact_phone: input.contactPhone,
+    notes: input.notes,
+    updated_at: new Date().toISOString()
+  };
+  const q = existing?.id ? db().from("match_team_profiles").update(row).eq("id", existing.id) : db().from("match_team_profiles").insert(row);
+  const { data, error } = await q.select("*").single();
+  if (error) throw new Error(error.message);
+  return data as MatchTeamProfile;
+}
+
+export async function getTeamProfile(id: string): Promise<MatchTeamProfile | null> {
+  const { data } = await db().from("match_team_profiles").select("*").eq("id", id).maybeSingle();
+  return (data as MatchTeamProfile | null) ?? null;
+}
+
+export async function getAllTeamProfiles(): Promise<MatchTeamProfile[]> {
+  const { data, error } = await db().from("match_team_profiles").select("*").order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as MatchTeamProfile[];
 }
 
 export function orgKey(name: string): string {
@@ -117,6 +196,8 @@ export interface ReserveInput {
   contactPhone: string;
   teamGender: TeamGender;
   teamBirthYear: number;
+  /** Formulaire « Votre équipe » rempli au préalable (obligatoire). */
+  profileId: string;
   notes: string | null;
 }
 
@@ -126,6 +207,17 @@ export interface ReserveInput {
 export async function reserveSlots(input: ReserveInput): Promise<{ bookings: MatchBooking[]; slots: MatchSlot[]; totalCents: number; depositCents: number; balanceCents: number }> {
   let slotIds = Array.from(new Set(input.slotIds));
   if (slotIds.length === 0) throw new MatchConflictError("Choisissez au moins une plage.");
+
+  // Le formulaire de l'équipe doit exister et correspondre à la catégorie/au contact de la demande.
+  const profile = await getTeamProfile(input.profileId);
+  if (
+    !profile ||
+    profile.team_gender !== input.teamGender ||
+    profile.team_birth_year !== input.teamBirthYear ||
+    profile.contact_email.trim().toLowerCase() !== input.contactEmail.trim().toLowerCase()
+  ) {
+    throw new MatchConflictError("Remplissez d'abord le formulaire de votre équipe avant de choisir une plage.");
+  }
 
   // Double cédule : on ajoute automatiquement l'autre moitié du bloc.
   {
@@ -179,6 +271,9 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
         balance_due_cents: s.balance_due_cents,
         team_gender: input.teamGender,
         team_birth_year: input.teamBirthYear,
+        team_level: profile.team_level,
+        team_players: profile.team_players,
+        team_profile_id: profile.id,
         reservation_expires_at: expires
       })
       .select("*")

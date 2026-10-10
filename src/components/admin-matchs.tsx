@@ -5,7 +5,7 @@ import { Fragment, useMemo, useState } from "react";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { effectiveCategories, restrictionLabel, totalsFor, type SlotGender } from "@/lib/match-slots-core";
 import { formatMoney } from "@/lib/private-programs";
-import type { MatchBooking, MatchSlot } from "@/lib/match-slots-repo";
+import type { MatchBooking, MatchSlot, MatchTeamProfile } from "@/lib/match-slots-repo";
 
 type Slot = MatchSlot & { available: boolean };
 type Booking = MatchBooking & { slot: MatchSlot };
@@ -85,7 +85,7 @@ function payload(d: Draft, only?: Set<keyof Draft>): Record<string, unknown> {
 
 const EMPTY_BULK: Draft = { format: "", opponent: "", categories: [], preferred: "", restrictionNote: "", notes: "", deposit: "", balance: "", location: "", field: "" };
 
-export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; bookings: Booking[] }; origin: string }) {
+export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; bookings: Booking[]; profiles: MatchTeamProfile[] }; origin: string }) {
   const [data, setData] = useState(initial);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -218,6 +218,33 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             Potentiel : {upcoming.length} plage{upcoming.length > 1 ? "s" : ""} = {formatMoney(potential.depositCents)} d&apos;acomptes + {formatMoney(potential.balanceCents)} de soldes le jour du match.
           </p>
 
+          {/* ── Équipes ayant rempli le formulaire ── */}
+          <div style={card}>
+            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Équipes ayant rempli le formulaire ({data.profiles.length})</p>
+            <p style={{ fontSize: "0.74rem", color: "#6d6b71", margin: "0 0 0.6rem" }}>Une équipe doit remplir ce formulaire avant de pouvoir choisir une plage. Utile pour relancer celles qui n&apos;ont pas réservé.</p>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
+                <thead><tr>{["Académie / équipe", "Catégorie", "Niveau", "Contact", "Réservation", "Reçu le"].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {data.profiles.map((p) => {
+                    const booked = data.bookings.filter((b) => b.team_profile_id === p.id && b.status !== "cancelled").length;
+                    return (
+                      <tr key={p.id}>
+                        <td style={cell}><strong style={{ color: "#fff" }}>{p.org_name}</strong><br />{p.team_label}{p.notes ? <><br /><em>{p.notes}</em></> : null}</td>
+                        <td style={cell}>{GENDER_LABEL[p.team_gender]} · nés en {p.team_birth_year}</td>
+                        <td style={cell}>{p.team_level}{p.team_players ? <><br />{p.team_players} joueurs</> : null}</td>
+                        <td style={cell}>{p.contact_name}<br />{p.contact_email}<br />{p.contact_phone}</td>
+                        <td style={cell}>{booked > 0 ? <span style={{ color: "#8fce9f", fontWeight: 700 }}>{booked} plage{booked > 1 ? "s" : ""}</span> : <span style={{ color: "#f0c878" }}>Aucune — à relancer</span>}</td>
+                        <td style={cell}>{new Date(p.created_at).toLocaleDateString("fr-CA")}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {data.profiles.length === 0 && <p className="admin-empty-text">Aucune équipe n&apos;a encore rempli le formulaire.</p>}
+            </div>
+          </div>
+
           {/* ── Réservations ── */}
           <div style={card}>
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Réservations ({data.bookings.length})</p>
@@ -230,7 +257,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                       <td style={cell}>{b.slot.slot_date}<br />{b.slot.start_time} – {b.slot.end_time}{b.slot.double_group ? <><br /><span style={{ color: "#c4a4e4" }}>Double cédule</span></> : null}</td>
                       <td style={cell}>
                         <strong style={{ color: "#fff" }}>{b.org_name}</strong><br />{b.team_label}
-                        {b.team_gender ? <><br />{GENDER_LABEL[b.team_gender]}{b.team_birth_year ? ` · nés en ${b.team_birth_year}` : ""}</> : null}
+                        {b.team_gender ? <><br />{GENDER_LABEL[b.team_gender]}{b.team_birth_year ? ` · nés en ${b.team_birth_year}` : ""}{b.team_level ? ` · ${b.team_level}` : ""}</> : null}
                         {b.notes ? <><br /><em>{b.notes}</em></> : null}
                       </td>
                       <td style={cell}>{b.contact_name}<br />{b.contact_email}<br />{b.contact_phone}</td>

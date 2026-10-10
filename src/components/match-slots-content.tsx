@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Container } from "@/components/container";
 import { checkEligibility, type SlotRules, type TeamCategory, type TeamGender } from "@/lib/match-slots-core";
+
+const TEAM_LEVELS = ["Récréatif", "Intermédiaire", "Compétitif", "Élite"] as const;
 import { formatMoney } from "@/lib/private-programs";
 
 interface Slot {
@@ -57,8 +59,21 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [max, setMax] = useState(2);
   const [selected, setSelected] = useState<string[]>([]);
-  const [category, setCategory] = useState<{ gender: TeamGender | ""; birthYear: string }>({ gender: "", birthYear: "" });
-  const [form, setForm] = useState({ orgName: "", teamLabel: "", contactName: "", contactEmail: "", contactPhone: "", notes: "" });
+  const [form, setForm] = useState({
+    orgName: "",
+    teamLabel: "",
+    gender: "" as TeamGender | "",
+    birthYear: "",
+    level: "",
+    players: "",
+    contactName: "",
+    contactEmail: "",
+    contactPhone: "",
+    notes: ""
+  });
+  // Le formulaire « Votre équipe » doit être enregistré avant de pouvoir choisir une plage.
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [terms, setTerms] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -78,10 +93,11 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   }, [load]);
 
   const team: TeamCategory | null = useMemo(() => {
-    const year = Number(category.birthYear);
-    if (!category.gender || !Number.isInteger(year) || year < 2000 || year > 2026) return null;
-    return { gender: category.gender, birthYear: year };
-  }, [category]);
+    if (!profileId) return null;
+    const year = Number(form.birthYear);
+    if (!form.gender || !Number.isInteger(year) || year < 2000 || year > 2026) return null;
+    return { gender: form.gender, birthYear: year };
+  }, [profileId, form.gender, form.birthYear]);
 
   const units: Unit[] = useMemo(() => {
     const out: Unit[] = [];
@@ -115,6 +131,8 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   const fits = (u: Unit) => stateOf.get(u.key)?.available === true;
   const matching = team ? units.filter(fits) : units;
   const hiddenCount = team ? units.length - matching.length : 0;
+  const matchingSlotCount = matching.reduce((n, u) => n + u.slots.length, 0);
+  const matchingDoubles = matching.filter((u) => u.slots.length > 1).length;
   const shownUnits = team && !showAll ? matching : units;
   const byMonth = (() => {
     const map = new Map<string, Unit[]>();
@@ -143,7 +161,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
     const ids = u.slots.map((s) => s.id);
     const on = ids.every((id) => selectedIds.has(id));
     if (on) return setSelected((prev) => prev.filter((id) => !ids.includes(id)));
-    if (u.slots.some((s) => s.restriction) && !team) return setError("Indiquez d'abord le genre et l'année de naissance de votre équipe pour vérifier l'admissibilité.");
+    if (!team) return setError("Remplissez d'abord le formulaire de votre équipe.");
     if (selected.length + ids.length > max) {
       return setError(`Une équipe peut réserver au maximum ${max} plages (une double cédule compte pour ${u.slots.length}).`);
     }
@@ -162,18 +180,66 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
     });
   }, [team, slots]);
 
+  const saveProfile = async () => {
+    setError(null);
+    const f = form;
+    if (!f.orgName || !f.teamLabel || !f.gender || !f.birthYear || !f.level || !f.contactName || !f.contactEmail || !f.contactPhone) {
+      return setError("Merci de remplir tous les champs obligatoires du formulaire de l'équipe.");
+    }
+    setSavingProfile(true);
+    try {
+      const res = await fetch("/api/prive/matchs/equipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orgName: f.orgName,
+          teamLabel: f.teamLabel,
+          teamGender: f.gender,
+          teamBirthYear: Number(f.birthYear),
+          teamLevel: f.level,
+          teamPlayers: f.players ? Number(f.players) : null,
+          contactName: f.contactName,
+          contactEmail: f.contactEmail,
+          contactPhone: f.contactPhone,
+          notes: f.notes
+        })
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error ?? "Impossible d'enregistrer le formulaire");
+      setSelected([]);
+      setShowAll(false);
+      scrolledRef.current = false;
+      setProfileId(json.profileId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const submit = async () => {
     setError(null);
+    if (!profileId || !team) return setError("Remplissez d'abord le formulaire de votre équipe.");
     if (chosen.length === 0) return setError("Choisissez au moins une plage.");
-    if (!team) return setError("Indiquez le genre et l'année de naissance de votre équipe.");
-    if (!form.orgName || !form.teamLabel || !form.contactName || !form.contactEmail || !form.contactPhone) return setError("Merci de remplir tous les champs obligatoires.");
     if (!terms) return setError("Vous devez accepter les conditions de réservation.");
     setSubmitting(true);
     try {
       const res = await fetch("/api/prive/matchs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slotIds: selected, ...form, teamGender: team.gender, teamBirthYear: team.birthYear, termsAccepted: terms })
+        body: JSON.stringify({
+          profileId,
+          slotIds: selected,
+          orgName: form.orgName,
+          teamLabel: form.teamLabel,
+          teamGender: team.gender,
+          teamBirthYear: team.birthYear,
+          contactName: form.contactName,
+          contactEmail: form.contactEmail,
+          contactPhone: form.contactPhone,
+          notes: form.notes,
+          termsAccepted: terms
+        })
       });
       const json = await res.json().catch(() => null);
       if (!res.ok) {
@@ -215,7 +281,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
           <div style={{ ...card, borderColor: "#3a2f4d" }}>
             <p style={{ margin: 0, fontSize: "0.85rem", color: "#c3c2c8", lineHeight: 1.65 }}>
               <strong style={{ color: "#fff" }}>Comment ça marche</strong>
-              <br />1) Indiquez la catégorie de votre équipe : certains matchs sont réservés à un genre ou à des années de naissance précises.
+              <br />1) Remplissez le formulaire de votre équipe (genre, année de naissance, niveau) : certains matchs sont réservés à des catégories précises, et les plages ne s&apos;affichent qu&apos;ensuite.
               <br />2) Choisissez jusqu&apos;à <strong>{max} plages</strong> d&apos;une heure (maximum par équipe).
               <br />3) Payez l&apos;acompte de <strong>{formatMoney(depositEach)} par plage</strong> pour la réserver (coût total : <strong>{formatMoney(depositEach + balanceEach)} par plage</strong>).
               <br />4) Réglez le solde de <strong>{formatMoney(balanceEach)} par plage</strong> sur place, le jour du match.
@@ -232,22 +298,71 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             </div>
           )}
 
+          {/* ── Étape 1 : formulaire de l'équipe (obligatoire avant de choisir une plage) ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Votre catégorie</p>
-            <p style={{ fontSize: "0.78rem", color: "#9d9da0", margin: "0 0 0.7rem" }}>Sert à vérifier que vous êtes admissible aux matchs choisis.</p>
-            <div className="nv27-grid2">
-              <label className="insc-field">
-                <span>Genre de l&apos;équipe *</span>
-                <select className="insc-input" value={category.gender} onChange={(e) => setCategory({ ...category, gender: e.target.value as TeamGender | "" })}>
-                  <option value="">Choisir…</option>
-                  {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
-                </select>
-              </label>
-              <label className="insc-field">
-                <span>Année de naissance des joueurs *</span>
-                <input className="insc-input" inputMode="numeric" placeholder="ex. 2014" maxLength={4} value={category.birthYear} onChange={(e) => setCategory({ ...category, birthYear: e.target.value.replace(/\D/g, "") })} />
-              </label>
-            </div>
+            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Étape 1 — Votre équipe</p>
+            {profileId && team ? (
+              <>
+                <p style={{ fontSize: "0.85rem", color: "#c3c2c8", margin: "0.3rem 0 0", lineHeight: 1.6 }}>
+                  <strong style={{ color: "#fff" }}>{form.orgName}</strong> — {form.teamLabel}
+                  <br />{GENDERS.find((g) => g.value === team.gender)?.label} · nés en {team.birthYear} · niveau {form.level.toLowerCase()}{form.players ? ` · ${form.players} joueurs` : ""}
+                  <br />{form.contactName} · {form.contactEmail} · {form.contactPhone}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setProfileId(null); setSelected([]); scrolledRef.current = false; }}
+                  style={{ marginTop: "0.6rem", background: "none", border: "none", padding: 0, color: "#c4a4e4", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
+                >
+                  Modifier les informations de mon équipe
+                </button>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: "0.78rem", color: "#9d9da0", margin: "0 0 0.9rem" }}>
+                  Décrivez votre groupe pour voir les plages qui lui conviennent. Les plages ne s&apos;affichent qu&apos;une fois ce formulaire rempli.
+                </p>
+                <div className="nv27-form-fields">
+                  <label className="insc-field"><span>Académie / club *</span><input className="insc-input" value={form.orgName} onChange={(e) => setForm({ ...form, orgName: e.target.value })} /></label>
+                  <label className="insc-field"><span>Nom ou catégorie de l&apos;équipe *</span><input className="insc-input" placeholder="ex. U12 féminin A" value={form.teamLabel} onChange={(e) => setForm({ ...form, teamLabel: e.target.value })} /></label>
+                  <div className="nv27-grid2">
+                    <label className="insc-field">
+                      <span>Genre de l&apos;équipe *</span>
+                      <select className="insc-input" value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value as TeamGender | "" })}>
+                        <option value="">Choisir…</option>
+                        {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+                      </select>
+                    </label>
+                    <label className="insc-field">
+                      <span>Année de naissance des joueurs *</span>
+                      <input className="insc-input" inputMode="numeric" placeholder="ex. 2014" maxLength={4} value={form.birthYear} onChange={(e) => setForm({ ...form, birthYear: e.target.value.replace(/\D/g, "") })} />
+                    </label>
+                  </div>
+                  <div className="nv27-grid2">
+                    <label className="insc-field">
+                      <span>Niveau de l&apos;équipe *</span>
+                      <select className="insc-input" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}>
+                        <option value="">Choisir…</option>
+                        {TEAM_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+                      </select>
+                    </label>
+                    <label className="insc-field">
+                      <span>Nombre de joueurs</span>
+                      <input className="insc-input" inputMode="numeric" placeholder="ex. 12" maxLength={2} value={form.players} onChange={(e) => setForm({ ...form, players: e.target.value.replace(/\D/g, "") })} />
+                    </label>
+                  </div>
+                  <label className="insc-field"><span>Responsable (nom complet) *</span><input className="insc-input" value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></label>
+                  <div className="nv27-grid2">
+                    <label className="insc-field"><span>Courriel *</span><input type="email" className="insc-input" value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} /></label>
+                    <label className="insc-field"><span>Téléphone *</span><input type="tel" className="insc-input" value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} /></label>
+                  </div>
+                  <label className="insc-field"><span>Précisions (style de jeu, disponibilités, remarques…)</span><textarea className="insc-input insc-textarea" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
+                  {error && <p className="nv27-pay-error">{error}</p>}
+                  <button type="button" className="nv27-btn-primary" onClick={saveProfile} disabled={savingProfile} style={{ padding: "0.75rem", marginTop: "0.6rem" }}>
+                    {savingProfile ? "..." : "Voir les plages qui conviennent à mon équipe"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           <div ref={listRef} style={{ scrollMarginTop: "1rem" }} />
@@ -255,7 +370,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             <div style={{ ...card, borderColor: matching.length > 0 ? "#2f5a3b" : "#5a2f2f" }}>
               <p style={{ margin: 0, fontSize: "0.85rem", color: "#e5e4ea", lineHeight: 1.55 }}>
                 {matching.length > 0 ? (
-                  <>✓ <strong>{matching.length} plage{matching.length > 1 ? "s" : ""}</strong> correspond{matching.length > 1 ? "ent" : ""} à votre équipe ({GENDERS.find((g) => g.value === team.gender)?.label.toLowerCase()}, nés en {team.birthYear}).</>
+                  <>✓ <strong>{matchingSlotCount} plage{matchingSlotCount > 1 ? "s" : ""}</strong> correspond{matchingSlotCount > 1 ? "ent" : ""} à votre équipe ({GENDERS.find((g) => g.value === team.gender)?.label.toLowerCase()}, nés en {team.birthYear}){matchingDoubles > 0 ? `, dont ${matchingDoubles} double${matchingDoubles > 1 ? "s" : ""} cédule${matchingDoubles > 1 ? "s" : ""}` : ""}.</>
                 ) : (
                   <>Aucune plage ne correspond à votre catégorie pour le moment. Écrivez-nous à info@newvalkyria.com : nous pourrons peut-être ajouter un match pour votre équipe.</>
                 )}
@@ -268,12 +383,15 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             </div>
           )}
 
-          {slots === null && <p style={{ color: "#9d9da0" }}>Chargement des plages…</p>}
-          {slots !== null && slots.length === 0 && (
+          {!profileId && slots !== null && slots.length > 0 && (
+            <p style={{ color: "#9d9da0", fontSize: "0.85rem", margin: "0 0 1.2rem" }}>{slots.length} plage{slots.length > 1 ? "s" : ""} offerte{slots.length > 1 ? "s" : ""} : remplissez le formulaire de votre équipe pour les voir.</p>
+          )}
+          {profileId && slots === null && <p style={{ color: "#9d9da0" }}>Chargement des plages…</p>}
+          {profileId && slots !== null && slots.length === 0 && (
             <div style={card}><p style={{ margin: 0, color: "#c3c2c8" }}>Aucune plage n&apos;est offerte pour le moment. Écrivez-nous à info@newvalkyria.com.</p></div>
           )}
 
-          {byMonth.map(([key, list]) => (
+          {profileId && byMonth.map(([key, list]) => (
             <div key={key} style={{ marginBottom: "1.2rem" }}>
               <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#c4a4e4", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.5rem" }}>{monthLabel(key)}</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
@@ -346,23 +464,15 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             </div>
           ))}
 
-          {slots && slots.length > 0 && (
+          {profileId && slots && slots.length > 0 && (
             <div style={card}>
-              <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Votre équipe</p>
+              <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Étape 3 — Confirmer et payer l&apos;acompte</p>
               <p style={{ fontSize: "0.8rem", color: "#9d9da0", margin: "0 0 0.9rem" }}>
                 {chosen.length}/{max} plage{max > 1 ? "s" : ""} choisie{chosen.length > 1 ? "s" : ""}
                 {chosen.length > 0 ? ` · acompte ${formatMoney(deposit)} maintenant, solde ${formatMoney(balance)} le jour du match` : ""}
               </p>
               <div className="nv27-form-fields">
-                <label className="insc-field"><span>Académie / club *</span><input className="insc-input" value={form.orgName} onChange={(e) => setForm({ ...form, orgName: e.target.value })} /></label>
-                <label className="insc-field"><span>Nom ou catégorie de l&apos;équipe *</span><input className="insc-input" placeholder="ex. U12 féminin A" value={form.teamLabel} onChange={(e) => setForm({ ...form, teamLabel: e.target.value })} /></label>
-                <label className="insc-field"><span>Responsable (nom complet) *</span><input className="insc-input" value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></label>
-                <div className="nv27-grid2">
-                  <label className="insc-field"><span>Courriel *</span><input type="email" className="insc-input" value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} /></label>
-                  <label className="insc-field"><span>Téléphone *</span><input type="tel" className="insc-input" value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} /></label>
-                </div>
-                <label className="insc-field"><span>Précisions (niveau, nombre de joueurs…)</span><textarea className="insc-input insc-textarea" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
-                <label className="insc-consent" style={{ marginTop: "0.5rem" }}>
+                <label className="insc-consent">
                   <div className="insc-checkbox-wrap"><input type="checkbox" className="insc-checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} /><span className="insc-checkbox-custom" aria-hidden /></div>
                   <span>
                     Je comprends que l&apos;acompte réserve la plage et qu&apos;un solde de {formatMoney(balanceEach)} par plage est payable le jour du match. L&apos;acompte n&apos;est pas remboursable après confirmation, sauf annulation par New Valkyria.

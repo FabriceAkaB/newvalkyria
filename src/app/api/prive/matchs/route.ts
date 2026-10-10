@@ -56,6 +56,7 @@ export async function GET() {
 }
 
 const schema = z.object({
+  profileId: z.string({ message: "Remplissez d'abord le formulaire de votre équipe." }).uuid("Remplissez d'abord le formulaire de votre équipe."),
   slotIds: z.array(z.string().min(1)).min(1, "Choisissez au moins une plage.").max(MAX_SLOTS_PER_TEAM, `Une équipe ne peut réserver que ${MAX_SLOTS_PER_TEAM} plages.`),
   orgName: z.string().trim().min(2, "Nom de l'académie ou du club requis"),
   teamGender: z.enum(["filles", "garcons", "mixte"], { message: "Genre de l'équipe requis" }),
@@ -83,6 +84,7 @@ export async function POST(request: Request) {
       contactPhone: payload.contactPhone,
       teamGender: payload.teamGender,
       teamBirthYear: payload.teamBirthYear,
+      profileId: payload.profileId,
       notes: payload.notes?.trim() || null
     });
 
