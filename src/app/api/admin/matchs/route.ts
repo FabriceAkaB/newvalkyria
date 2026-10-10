@@ -70,7 +70,7 @@ export async function POST(request: Request) {
             location: body.location,
             field_label: body.field || null,
             price_cents: body.priceCents !== undefined ? Math.max(0, Math.round(Number(body.priceCents) || 0)) : 5000,
-            balance_due_cents: body.balanceDueCents !== undefined ? Math.max(0, Math.round(Number(body.balanceDueCents) || 0)) : 20000,
+            balance_due_cents: body.balanceDueCents !== undefined ? Math.max(0, Math.round(Number(body.balanceDueCents) || 0)) : 15000,
             ...slotPatch({ format: body.format, opponent: body.opponent, allowedGender: body.allowedGender ?? "tous", birthYearMin: body.birthYearMin, birthYearMax: body.birthYearMax, restrictionNote: body.restrictionNote, notes: body.notes })
           })
           .select("*")

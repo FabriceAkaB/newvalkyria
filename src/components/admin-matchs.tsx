@@ -88,7 +88,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
   const [checked, setChecked] = useState<string[]>([]);
   const [bulk, setBulk] = useState<Draft>(EMPTY_BULK);
   const [bulkFields, setBulkFields] = useState<Set<keyof Draft>>(new Set());
-  const [ns, setNs] = useState({ date: "", start: "17:30", end: "18:30", location: "Complexe sportif Terrebonne, Centre de soccer multifonctionnel, terrain #4 – 2475, boul. des Entreprises, Terrebonne J6X 4J9", field: "Terrain n° 4", deposit: "50", balance: "200" });
+  const [ns, setNs] = useState({ date: "", start: "17:30", end: "18:30", location: "Complexe sportif Terrebonne, Centre de soccer multifonctionnel, terrain #4 – 2475, boul. des Entreprises, Terrebonne J6X 4J9", field: "Terrain n° 4", deposit: "50", balance: "150" });
   const today = new Date().toISOString().slice(0, 10);
   const link = `${origin}/prive/matchs`;
 
@@ -175,7 +175,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             Page de réservation à envoyer aux équipes extérieures :{" "}
             <a href={link} target="_blank" rel="noreferrer" style={{ color: "#c4a4e4" }}>{link}</a>{" "}
             <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => navigator.clipboard.writeText(link).then(() => flash("Lien copié."))}>Copier</button>
-            <br />Règles automatiques : acompte en ligne pour réserver (50 $ par plage par défaut), solde payable le jour du match (200 $ par plage par défaut), 2 plages maximum par équipe, doubles cédules réservées en bloc, restrictions vérifiées côté serveur.
+            <br />Règles automatiques : acompte en ligne pour réserver (50 $ par plage par défaut), solde payable le jour du match (150 $ par plage par défaut, pour un total de 200 $ par plage), 2 plages maximum par équipe, doubles cédules réservées en bloc, restrictions vérifiées côté serveur.
           </p>
           {msg && <p style={{ fontSize: "0.78rem", color: "#8fce9f" }}>{msg}</p>}
 

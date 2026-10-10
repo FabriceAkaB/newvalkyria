@@ -181,7 +181,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   // Une seule adresse pour tous les matchs → affichée une fois en haut plutôt que sur chaque carte.
   const commonLocation = slots && slots.length > 0 && slots.every((s) => s.location === slots[0].location) ? slots[0].location : null;
   const depositEach = slots?.[0]?.depositCents ?? 5000;
-  const balanceEach = slots?.[0]?.balanceDueCents ?? 20000;
+  const balanceEach = slots?.[0]?.balanceDueCents ?? 15000;
 
   return (
     <>
@@ -191,7 +191,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Académies, clubs et équipes</p>
             <h1 className="insc-hero-title">Réservez votre match</h1>
             <p className="insc-hero-sub">
-              Jouez contre New Valkyria au Complexe sportif de Terrebonne. Réservez votre plage d&apos;une heure avec un acompte de {formatMoney(depositEach)}; le solde de {formatMoney(balanceEach)} se paie le jour du match.
+              Jouez contre New Valkyria au Complexe sportif de Terrebonne. Chaque plage d&apos;une heure coûte {formatMoney(depositEach + balanceEach)} au total : un acompte de {formatMoney(depositEach)} pour la réserver, puis {formatMoney(balanceEach)} le jour du match.
             </p>
           </div>
         </Container>
@@ -204,7 +204,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
               <strong style={{ color: "#fff" }}>Comment ça marche</strong>
               <br />1) Indiquez la catégorie de votre équipe : certains matchs sont réservés à un genre ou à des années de naissance précises.
               <br />2) Choisissez jusqu&apos;à <strong>{max} plages</strong> d&apos;une heure (maximum par équipe).
-              <br />3) Payez l&apos;acompte de <strong>{formatMoney(depositEach)} par plage</strong> pour la réserver.
+              <br />3) Payez l&apos;acompte de <strong>{formatMoney(depositEach)} par plage</strong> pour la réserver (coût total : <strong>{formatMoney(depositEach + balanceEach)} par plage</strong>).
               <br />4) Réglez le solde de <strong>{formatMoney(balanceEach)} par plage</strong> sur place, le jour du match.
             </p>
             <p style={{ margin: "0.7rem 0 0", fontSize: "0.82rem", color: "#c3c2c8", lineHeight: 1.6 }}>
