@@ -95,6 +95,7 @@ export function AdminReferences({
   interface CampaignData {
     audienceCurrent: number;
     audienceAll: number;
+    audienceFormer: number;
     alreadySent: number;
     programs: { slug: string; name: string; priceCents: number }[];
     from: string;
@@ -104,6 +105,7 @@ export function AdminReferences({
   }
   const [camp, setCamp] = useState<CampaignData | null>(null);
   const [includePast, setIncludePast] = useState(false);
+  const [audienceKind, setAudienceKind] = useState<"current" | "former">("current");
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mailUser, setMailUser] = useState("info@newvalkyria.com");
   const [mailPass, setMailPass] = useState("");
@@ -113,10 +115,10 @@ export function AdminReferences({
   const [famSearch, setFamSearch] = useState("");
 
   const loadCampaign = useCallback(async () => {
-    const res = await fetch(`/api/admin/references/campagne?includePast=${includePast ? 1 : 0}&step=${step}`);
+    const res = await fetch(`/api/admin/references/campagne?includePast=${includePast ? 1 : 0}&step=${step}&audience=${audienceKind}`);
     if (res.ok) setCamp(await res.json());
     else setCampMsg((await res.json().catch(() => ({}))).error ?? "Erreur de chargement");
-  }, [includePast, step]);
+  }, [includePast, step, audienceKind]);
 
   useEffect(() => {
     if (tab === "campagne") loadCampaign();
@@ -126,7 +128,7 @@ export function AdminReferences({
     setCampBusy(true);
     setCampMsg(null);
     try {
-      const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "test", to: testTo, step }) });
+      const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "test", to: testTo, step, audience: audienceKind }) });
       const json = await res.json().catch(() => ({}));
       setCampMsg(res.ok ? `✓ Courriel de test envoyé à ${json.to}${json.via === "gmail" ? " (depuis votre boîte)" : ""}.` : `✗ Envoi impossible : ${json.error ?? "erreur"}`);
     } finally {
@@ -136,14 +138,14 @@ export function AdminReferences({
 
   const sendAll = async () => {
     if (!camp) return;
-    const count = includePast ? camp.audienceAll : camp.audienceCurrent;
+    const count = audienceKind === "former" ? camp.audienceFormer : includePast ? camp.audienceAll : camp.audienceCurrent;
     if (!confirm(`Envoyer ce courriel à ${count - camp.alreadySent} famille(s) ? Chaque famille reçoit son propre code. Cette action ne peut pas être annulée.`)) return;
     setCampBusy(true);
     setCampMsg(null);
     let sent = 0;
     try {
       for (let i = 0; i < 20; i++) {
-        const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "send_all", includePast, limit: 40, step }) });
+        const res = await fetch("/api/admin/references/campagne", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "send_all", includePast, limit: 40, step, audience: audienceKind }) });
         const json = await res.json().catch(() => ({}));
         if (!res.ok && !json.sent) throw new Error(json.error ?? "Erreur");
         sent += json.sent ?? 0;
@@ -404,10 +406,10 @@ export function AdminReferences({
                     })}
                   </div>
 
-                  <label style={{ fontSize: "0.76rem", color: "#c3c2c8", display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.9rem" }}>
-                    <input type="checkbox" checked={includePast} onChange={(e) => setIncludePast(e.target.checked)} />
-                    Inclure aussi les familles des saisons passées (Été 2026, essais…)
-                  </label>
+                  <div className="admin-filters" style={{ marginBottom: "0.9rem" }}>
+                    <button className="admin-filter-btn" data-active={String(audienceKind === "current")} onClick={() => setAudienceKind("current")}>Familles de la saison en cours ({camp.audienceCurrent})</button>
+                    <button className="admin-filter-btn" data-active={String(audienceKind === "former")} onClick={() => setAudienceKind("former")}>Anciennes familles — rabais seulement, sans sac ({camp.audienceFormer})</button>
+                  </div>
 
                   <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
                     <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>1. Recevoir un courriel de test</p>

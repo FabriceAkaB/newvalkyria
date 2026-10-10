@@ -326,14 +326,20 @@ export async function onReferredRegistrationPaid(registrationId: string): Promis
   if (!referral.referrer_email) return { rewardCreated: false };
   if (referral.status !== "confirme") return { rewardCreated: false }; // a_verifier : attend l'administrateur
 
+  // Anciennes familles : le rabais est accordé à la famille référée, mais pas de récompense.
+  const { data: codeRow } = referral.referrer_code
+    ? await supabase.from("referral_codes").select("rewards_enabled").eq("code", referral.referrer_code).maybeSingle()
+    : await supabase.from("referral_codes").select("rewards_enabled").eq("family_email", normalizeEmail(referral.referrer_email)).maybeSingle();
+  const rewardsEnabled = codeRow?.rewards_enabled !== false;
+
   const { error } = await supabase
     .from("program_referrals")
-    .update({ status: "valide", reward_status: "a_choisir", updated_at: new Date().toISOString() })
+    .update({ status: "valide", reward_status: rewardsEnabled ? "a_choisir" : "aucune", updated_at: new Date().toISOString() })
     .eq("id", referral.id)
     .eq("reward_status", "aucune");
   if (error) throw new Error(error.message);
-  await logReferralAudit(referral.id, "recompense_creee", "systeme", { registrationId });
-  return { rewardCreated: true };
+  await logReferralAudit(referral.id, rewardsEnabled ? "recompense_creee" : "validee_sans_recompense", "systeme", { registrationId });
+  return { rewardCreated: rewardsEnabled };
 }
 
 export type ChooseRewardResult = { ok: true } | { ok: false; error: string };

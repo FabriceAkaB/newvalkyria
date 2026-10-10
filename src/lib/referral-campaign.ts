@@ -100,7 +100,8 @@ const COACHES = "JP et Maeva";
 /** Séquence de 3 courriels personnalisés par famille : chaque message contient
  *  le code et les liens de CETTE famille, avec des boutons de partage prêts à
  *  l'emploi (WhatsApp, courriel, SMS). */
-export function buildCampaignEmail(input: { step?: CampaignStep; firstName: string; code: string; programs: CampaignProgram[]; origin: string }): { subject: string; html: string; text: string } {
+export function buildCampaignEmail(input: { step?: CampaignStep; firstName: string; code: string; programs: CampaignProgram[]; origin: string; audience?: "current" | "former" }): { subject: string; html: string; text: string } {
+  if (input.audience === "former") return buildFormerFamilyEmail(input);
   const step: CampaignStep = input.step ?? 1;
   const { firstName, code, programs, origin } = input;
   const discount = formatMoney(programs[0]?.referralDiscountCents ?? 5000);
@@ -317,4 +318,97 @@ export function phoneDigits(phone: string | null): string | null {
   if (d.length === 10) return `1${d}`;
   if (d.length === 11 && d.startsWith("1")) return d;
   return d.length >= 10 ? d : null;
+}
+
+/** Anciennes familles : connues du système (Été 2026, essais, inscriptions passées)
+ *  mais sans inscription payée en cours — et sans offre en attente (inscription
+ *  « en attente » ou liste d'attente), pour ne pas les confondre. Les familles
+ *  ayant payé un essai en font partie. */
+export async function getFormerFamiliesAudience(): Promise<CampaignRecipient[]> {
+  const [all, current] = await Promise.all([getCampaignAudience({ includePast: true }), getCampaignAudience()]);
+  const currentSet = new Set(current.map((r) => r.email));
+  const supabase = db();
+  const { data: active } = await supabase.from("registrations").select("parent_email").eq("season_id", "automne-hiver-2026").in("status", ["pending", "waitlist"]);
+  const busy = new Set((active ?? []).map((r: any) => normalizeEmail(r.parent_email)));
+  return all.filter((r) => !currentSet.has(r.email) && !busy.has(r.email));
+}
+
+/** Courriel pour les anciennes familles : un seul message, uniquement le rabais
+ *  pour la famille référée (aucune récompense de sac ni de crédit promise). */
+function buildFormerFamilyEmail(input: { firstName: string; code: string; programs: CampaignProgram[]; origin: string }): { subject: string; html: string; text: string } {
+  const { firstName, code, programs, origin } = input;
+  const discount = formatMoney(programs[0]?.referralDiscountCents ?? 5000);
+  const discountShort = discount.replace(/,00/, "");
+  const btn = (href: string, label: string, bg: string) =>
+    `<a href="${escapeHtml(href)}" style="display:inline-block;background:${bg};color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:12px 18px;border-radius:8px;margin:4px 6px 4px 0">${label}</a>`;
+  const p = (html: string) => `<p style="margin:0 0 14px">${html}</p>`;
+
+  const cards = programs
+    .map(
+      (g) => `
+      <div style="background:#f7f4fb;border:1px solid #e3dbf0;border-radius:12px;padding:16px;margin:0 0 16px">
+        <p style="margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#72499a;font-weight:bold">${escapeHtml(g.shortName)}</p>
+        <p style="margin:4px 0 8px;font-size:20px;font-weight:bold;color:#161419">${formatMoney(g.priceCents)}</p>
+        <p style="margin:0 0 12px;font-size:14px;color:#3d3852">${g.practices} pratiques · ${g.matches} matchs inclus · ${capacityLabel(g.minCapacity, g.capacity)} joueurs</p>
+        <div>
+          ${btn(g.whatsapp, "Partager sur WhatsApp", "#1f9d55")}
+          ${btn(g.email, "Envoyer par courriel", "#72499a")}
+          ${btn(g.sms, "Envoyer par SMS", "#3d3852")}
+        </div>
+        <p style="margin:10px 0 0;font-size:12px;color:#6d6880">Votre lien personnel :<br/><a href="${escapeHtml(g.link)}" style="color:#72499a;word-break:break-all">${escapeHtml(g.link)}</a></p>
+      </div>`
+    )
+    .join("");
+
+  const html = `
+  <div style="background:#efeaf5;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
+    <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden">
+      <div style="background:#2a1a45;padding:22px 24px;text-align:center">
+        <img src="${origin}/og/logo-courriel.png" width="130" height="130" alt="New Valkyria" style="display:block;margin:0 auto 10px;width:130px;height:130px;border:0" />
+        <p style="margin:0;color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:.06em">NEW VALKYRIA</p>
+        <p style="margin:2px 0 0;color:#c8aae0;font-size:13px">Académie technique de soccer</p>
+      </div>
+      <div style="padding:24px;color:#161419;font-size:15px;line-height:1.55">
+        <p style="margin:0 0 16px"><span style="display:inline-block;background:#72499a;color:#ffffff;font-size:12px;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:999px">Nouveau programme pour garçons</span></p>
+        ${p(`Bonjour${firstName ? " " + escapeHtml(firstName) : ""},`)}
+        ${p("Merci d'avoir fait un bout de chemin avec New Valkyria. Nous lançons un <strong>nouveau programme de développement pour garçons</strong> (2018 et 2014–2015), encadré par <strong>JP et Maeva</strong>, nos meilleurs entraîneurs.")}
+        ${p("Chaque inscription nous permet de <strong>financer davantage de projets gratuits pour les filles de l'académie</strong>.")}
+        ${p("<strong>Une famille en tête ? Envoyez-lui votre lien :</strong>")}
+        <div style="background:#72499a;color:#ffffff;border-radius:14px;padding:22px 16px;text-align:center;margin:0 0 18px">
+          <p style="margin:0;font-size:44px;line-height:1;font-weight:bold">${escapeHtml(discountShort)}</p>
+          <p style="margin:6px 0 0;font-size:16px;font-weight:bold">DE RABAIS</p>
+          <p style="margin:8px 0 0;font-size:13px;line-height:1.4;color:#efe6fa">pour la famille qui s'inscrit avec votre lien</p>
+        </div>
+        <p style="margin:0 0 10px;font-weight:bold">Touchez un bouton — le message est déjà écrit :</p>
+        ${cards}
+        <p style="margin:0 0 18px;font-size:14px">Votre code : <strong style="letter-spacing:.1em;color:#72499a">${escapeHtml(code)}</strong> (déjà inclus dans vos liens).</p>
+        <div style="background:#f7f4fb;border-left:4px solid #72499a;border-radius:6px;padding:14px 16px;margin:0 0 18px">
+          <p style="margin:0 0 6px;font-weight:bold;color:#2a1a45">Notre engagement</p>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:#3d3852"><strong>New Valkyria restera toujours une académie 100 % féminine.</strong> Ces projets éclair nous permettent d'offrir un excellent service à plus de jeunes et d'offrir davantage d'opportunités aux filles de l'académie.</p>
+        </div>
+        ${p("Merci de faire connaître New Valkyria autour de vous.")}
+        <p style="margin:0;font-size:14px">L'équipe New Valkyria<br/>info@newvalkyria.com</p>
+      </div>
+      <div style="background:#f7f4fb;padding:12px 24px;font-size:11px;color:#6d6880">
+        Vous recevez ce message parce que votre famille a déjà participé à une activité New Valkyria. Pour ne plus recevoir nos messages, répondez simplement « STOP ».
+      </div>
+    </div>
+  </div>`;
+
+  const text = [
+    `Bonjour${firstName ? " " + firstName : ""},`,
+    "",
+    "NOUVEAU PROGRAMME POUR GARÇONS (2018 et 2014–2015), encadré par JP et Maeva, nos meilleurs entraîneurs.",
+    "Chaque inscription nous permet de financer davantage de projets gratuits pour les filles de l'académie.",
+    "",
+    ...programs.map((g) => `• ${g.shortName} — ${formatMoney(g.priceCents)} : ${g.link}`),
+    "",
+    `${discount} de rabais pour la famille qui s'inscrit avec votre lien. Votre code : ${code}`,
+    "",
+    "Notre engagement : New Valkyria restera toujours une académie 100 % féminine. Ces projets éclair nous permettent d'offrir un excellent service à plus de jeunes et d'offrir davantage d'opportunités aux filles de l'académie.",
+    "",
+    "L'équipe New Valkyria — info@newvalkyria.com"
+  ].join("\n");
+
+  return { subject: `Nouveau programme pour garçons : ${discount} de rabais avec votre lien`, html, text };
 }
