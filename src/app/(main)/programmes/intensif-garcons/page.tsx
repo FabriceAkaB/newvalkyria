@@ -6,7 +6,7 @@ import { countActiveRegistrations, getProgram, getProgramDates } from "@/lib/ses
 
 export const metadata: Metadata = {
   title: "Programme Intensif — Garçons 2015-2014 | New Valkyria",
-  description: "Préparation technique intensive pour garçons nés en 2015-2014 — 12 séances réparties entre deux lieux d'entraînement, incluant 3 matchs amicaux.",
+  description: "Préparation technique intensive pour garçons nés en 2015-2014 — 16 pratiques réparties entre deux lieux d'entraînement, incluant 3 matchs amicaux.",
   alternates: { canonical: "/programmes/intensif-garcons" }
 };
 
@@ -29,7 +29,7 @@ export default async function ProgrammeIntensifPage() {
       slug={slug}
       title={program.name}
       tagline="Garçons nés 2015-2014"
-      intro="Une préparation technique intensive de 12 séances, réparties entre l'École de la Voltige (Sainte-Thérèse) et l'École Chambéry (Blainville), incluant 3 matchs amicaux (dates à déterminer)."
+      intro="Une préparation technique intensive de 16 pratiques, réparties entre l'École de la Voltige (Sainte-Thérèse) et l'École Chambéry (Blainville), incluant 3 matchs amicaux (dates à déterminer)."
       priceCents={program.price_cents}
       allowInstallments
       dates={dates}
