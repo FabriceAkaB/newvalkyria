@@ -30,7 +30,7 @@ import {
 import { onPrivateCheckoutExpired, onPrivateRefund, onPrivateRegistrationPaid } from "@/lib/private-programs-lifecycle";
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
-import { markBookingsPaid, releaseBySession as releaseMatchBySession } from "@/lib/match-slots-repo";
+import { markBookingsPaid, releaseBySession as releaseMatchBySession, toEmailSlots } from "@/lib/match-slots-repo";
 import { markRentalPaid, releaseRentalBySession } from "@/lib/terrain-rentals-repo";
 
 export async function POST(request: Request) {
@@ -253,8 +253,7 @@ export async function POST(request: Request) {
             contactName: bookings[0].contact_name,
             orgName: bookings[0].org_name,
             teamLabel: bookings[0].team_label,
-            slots: bookings.map((b) => ({ date: b.slot.slot_date, start: b.slot.start_time, end: b.slot.end_time, location: b.slot.location })),
-            totalCents: bookings.reduce((n, b) => n + b.price_cents, 0)
+            slots: toEmailSlots(bookings)
           });
           await (getSupabaseAdminClient() as any).from("match_slot_bookings").update({ confirmation_sent_at: new Date().toISOString() }).in("id", bookings.map((b) => b.id));
         } catch (error) {

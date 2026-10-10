@@ -508,18 +508,38 @@ interface MatchSlotsEmailInput {
   contactName: string;
   orgName: string;
   teamLabel: string;
-  slots: { date: string; start: string; end: string; location: string }[];
-  totalCents: number;
+  slots: {
+    date: string;
+    start: string;
+    end: string;
+    location: string;
+    format?: string | null;
+    opponent?: string | null;
+    /** Vrai si la plage fait partie d'une double cédule (deux matchs consécutifs). */
+    double?: boolean;
+    depositCents: number;
+    balanceCents: number;
+  }[];
 }
 
 /** Confirmation d'une réservation de match payée (équipe extérieure) — copie à l'académie. */
 export async function sendMatchSlotsConfirmationEmail(input: MatchSlotsEmailInput) {
   const resend = getResendClient();
   const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  const deposit = input.slots.reduce((n, s) => n + s.depositCents, 0);
+  const balance = input.slots.reduce((n, s) => n + s.balanceCents, 0);
+  const hasDouble = input.slots.some((s) => s.double);
   const rows = input.slots
     .map((s) => {
       const label = new Date(s.date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-      return `<tr><td style="padding:8px 10px;border-bottom:1px solid #e6e1ee"><strong>${label}</strong><br/>${s.start} – ${s.end}<br/><span style="color:#6d6880;font-size:13px">${escapeHtml(s.location)}</span></td></tr>`;
+      const details = [
+        s.double ? "Double cédule (deux matchs consécutifs)" : null,
+        s.format ? `Format : ${escapeHtml(s.format)}` : null,
+        `Adversaire : ${escapeHtml(s.opponent?.trim() || "à confirmer par New Valkyria")}`
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      return `<tr><td style="padding:8px 10px;border-bottom:1px solid #e6e1ee"><strong>${label}</strong><br/>${s.start} – ${s.end}<br/><span style="font-size:13px">${details}</span><br/><span style="color:#6d6880;font-size:13px">${escapeHtml(s.location)}</span></td></tr>`;
     })
     .join("");
   await resend.emails.send({
@@ -532,7 +552,13 @@ export async function sendMatchSlotsConfirmationEmail(input: MatchSlotsEmailInpu
         <h1 style="font-size:22px">Réservation confirmée</h1>
         <p>Bonjour ${escapeHtml(input.contactName)}, les plages suivantes sont réservées pour <strong>${escapeHtml(input.orgName)}</strong> (${escapeHtml(input.teamLabel)}) :</p>
         <table style="width:100%;border-collapse:collapse;background:#f7f4fb;margin:14px 0">${rows}</table>
-        <p>Montant payé : <strong>${fmt(input.totalCents)}</strong>. Nous vous contacterons pour les détails du match (arrivée, équipe adverse, équipement).</p>
+        ${hasDouble ? `<p style="font-size:14px">Une double cédule comprend deux matchs de suite : votre équipe joue les deux matchs, ou vous pouvez aligner deux équipes.</p>` : ""}
+        <table style="font-size:14px;margin:6px 0 14px">
+          <tr><td style="padding:3px 14px 3px 0">Acompte payé aujourd'hui</td><td><strong>${fmt(deposit)}</strong></td></tr>
+          <tr><td style="padding:3px 14px 3px 0">Solde à payer le jour du match</td><td><strong>${fmt(balance)}</strong></td></tr>
+          <tr><td style="padding:3px 14px 3px 0">Total</td><td><strong>${fmt(deposit + balance)}</strong></td></tr>
+        </table>
+        <p>Le solde est payable sur place, le jour du match. Nous vous contacterons pour les derniers détails (arrivée, équipement).</p>
         <p style="margin-top:24px">New Valkyria<br/>info@newvalkyria.com</p>
       </div>`
   });

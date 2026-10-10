@@ -24,9 +24,13 @@ export default async function MatchConfirmationPage({ searchParams }: { searchPa
               {bookings.map((b) => (
                 <p key={b.id} style={{ margin: "0 0 0.25rem" }}>
                   {new Date(b.slot.slot_date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · {b.slot.start_time} – {b.slot.end_time}
+                  {b.slot.double_group ? " · double cédule" : ""}
+                  {b.slot.match_format ? ` · ${b.slot.match_format}` : ""}
+                  {b.slot.opponent ? ` · contre ${b.slot.opponent}` : ""}
                 </p>
               ))}
-              <p style={{ margin: "0.6rem 0 0" }}>Montant : {formatMoney(bookings.reduce((n, b) => n + b.price_cents, 0))}</p>
+              <p style={{ margin: "0.6rem 0 0" }}>Acompte payé : {formatMoney(bookings.reduce((n, b) => n + b.price_cents, 0))}</p>
+              <p style={{ margin: "0.2rem 0 0" }}>Solde à payer le jour du match : <strong style={{ color: "#fff" }}>{formatMoney(bookings.reduce((n, b) => n + b.balance_due_cents, 0))}</strong></p>
             </div>
             <p style={{ fontSize: "0.82rem", color: "#9d9da0", marginTop: "1rem" }}>Une confirmation vous est envoyée par courriel.</p>
           </>

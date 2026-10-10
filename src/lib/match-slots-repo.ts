@@ -1,3 +1,4 @@
+import { checkEligibility, expandDoubles, type SlotGender, type TeamGender } from "@/lib/match-slots-core";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 function db() {
@@ -15,7 +16,19 @@ export interface MatchSlot {
   end_time: string;
   location: string;
   field_label: string | null;
+  /** Acompte payé en ligne pour réserver la plage. */
   price_cents: number;
+  /** Solde payable le jour du match. */
+  balance_due_cents: number;
+  match_format: string | null;
+  /** Adversaire annoncé (ex. « New Valkyria U12 féminin (2014) »). */
+  opponent: string | null;
+  allowed_gender: SlotGender;
+  birth_year_min: number | null;
+  birth_year_max: number | null;
+  restriction_note: string | null;
+  /** Deux plages (ou plus) partageant ce code forment une double cédule, réservée en bloc. */
+  double_group: string | null;
   active: boolean;
   notes: string | null;
 }
@@ -32,6 +45,10 @@ export interface MatchBooking {
   notes: string | null;
   status: "pending" | "paid" | "cancelled";
   price_cents: number;
+  balance_due_cents: number;
+  balance_paid_at: string | null;
+  team_gender: TeamGender | null;
+  team_birth_year: number | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
   reservation_expires_at: string | null;
@@ -94,15 +111,29 @@ export interface ReserveInput {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
+  teamGender: TeamGender;
+  teamBirthYear: number;
   notes: string | null;
 }
 
-/** Réserve 1 ou 2 plages d'un coup. Toutes les règles sont vérifiées côté serveur :
- *  plage existante/active/libre, 2 plages maximum par équipe, jamais de doublon. */
-export async function reserveSlots(input: ReserveInput): Promise<{ bookings: MatchBooking[]; slots: MatchSlot[]; totalCents: number }> {
-  const slotIds = Array.from(new Set(input.slotIds));
+/** Réserve 1 ou 2 plages d'un coup (une double cédule se réserve toujours en bloc).
+ *  Toutes les règles sont vérifiées côté serveur : plage existante/active/libre,
+ *  admissibilité de la catégorie de l'équipe, 2 plages maximum par équipe, jamais de doublon. */
+export async function reserveSlots(input: ReserveInput): Promise<{ bookings: MatchBooking[]; slots: MatchSlot[]; totalCents: number; depositCents: number; balanceCents: number }> {
+  let slotIds = Array.from(new Set(input.slotIds));
   if (slotIds.length === 0) throw new MatchConflictError("Choisissez au moins une plage.");
-  if (slotIds.length > MAX_SLOTS_PER_TEAM) throw new MatchConflictError(`Une équipe ne peut réserver que ${MAX_SLOTS_PER_TEAM} plages.`);
+
+  // Double cédule : on ajoute automatiquement l'autre moitié du bloc.
+  {
+    const { data: picked, error: pickErr } = await db().from("match_slots").select("id, double_group").in("id", slotIds);
+    if (pickErr) throw new Error(pickErr.message);
+    const groups = Array.from(new Set((picked ?? []).map((p: any) => p.double_group).filter(Boolean)));
+    if (groups.length > 0) {
+      const { data: siblings } = await db().from("match_slots").select("id, double_group").in("double_group", groups);
+      slotIds = expandDoubles(slotIds, [...(picked ?? []), ...(siblings ?? [])]);
+    }
+  }
+  if (slotIds.length > MAX_SLOTS_PER_TEAM) throw new MatchConflictError(`Une équipe ne peut réserver que ${MAX_SLOTS_PER_TEAM} plages (une double cédule compte pour 2).`);
 
   const key = orgKey(input.orgName);
   if (!key) throw new MatchConflictError("Nom d'organisation invalide.");
@@ -121,6 +152,8 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
   if ((slots ?? []).length !== slotIds.length) throw new MatchConflictError("Une des plages n'existe plus.");
   for (const s of slots as MatchSlot[]) {
     if (!s.active || s.slot_date < today) throw new MatchConflictError("Une des plages n'est plus offerte.");
+    const elig = checkEligibility(s, { gender: input.teamGender, birthYear: input.teamBirthYear });
+    if (!elig.ok) throw new MatchConflictError(`${new Date(s.slot_date + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}, ${s.start_time} : ${elig.reason}`);
   }
 
   const created: MatchBooking[] = [];
@@ -139,6 +172,9 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
         notes: input.notes,
         status: "pending",
         price_cents: s.price_cents,
+        balance_due_cents: s.balance_due_cents,
+        team_gender: input.teamGender,
+        team_birth_year: input.teamBirthYear,
         reservation_expires_at: expires
       })
       .select("*")
@@ -159,7 +195,9 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
     throw new MatchConflictError(`Une équipe ne peut réserver que ${MAX_SLOTS_PER_TEAM} plages.`);
   }
 
-  return { bookings: created, slots: slots as MatchSlot[], totalCents: created.reduce((s, b) => s + b.price_cents, 0) };
+  const depositCents = created.reduce((n, b) => n + b.price_cents, 0);
+  const balanceCents = created.reduce((n, b) => n + b.balance_due_cents, 0);
+  return { bookings: created, slots: slots as MatchSlot[], totalCents: depositCents, depositCents, balanceCents };
 }
 
 export async function setBookingsCheckoutSession(ids: string[], sessionId: string): Promise<void> {
@@ -203,4 +241,19 @@ export async function getBookingsByIds(ids: string[]): Promise<(MatchBooking & {
   const { data, error } = await db().from("match_slot_bookings").select("*, slot:match_slots(*)").in("id", ids);
   if (error) throw new Error(error.message);
   return (data ?? []) as (MatchBooking & { slot: MatchSlot })[];
+}
+
+/** Données du courriel de confirmation à partir de réservations (avec leur plage). */
+export function toEmailSlots(bookings: (MatchBooking & { slot: MatchSlot })[]) {
+  return bookings.map((b) => ({
+    date: b.slot.slot_date,
+    start: b.slot.start_time,
+    end: b.slot.end_time,
+    location: b.slot.location,
+    format: b.slot.match_format,
+    opponent: b.slot.opponent,
+    double: Boolean(b.slot.double_group),
+    depositCents: b.price_cents,
+    balanceCents: b.balance_due_cents
+  }));
 }
