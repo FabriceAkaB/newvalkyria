@@ -278,13 +278,21 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
           <div style={card}>
             <h2 style={h2}>Calendrier et lieux</h2>
             {program.dates.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                {program.dates.map((d) => (
-                  <p key={d.id} style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: 0 }}>
-                    {formatSessionDate(d.session_date)} · {d.start_time.slice(0, 5)}–{d.end_time.slice(0, 5)} · {d.location}
+              <>
+                <p style={{ fontSize: "0.78rem", color: "#9d9da0", margin: "0 0 0.5rem" }}>{program.dates.length} pratiques planifiées</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                  {program.dates.map((d) => (
+                    <p key={d.id} style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: 0 }}>
+                      {formatSessionDate(d.session_date)} · {d.start_time.slice(0, 5)}–{d.end_time.slice(0, 5)} · {d.location}
+                    </p>
+                  ))}
+                </div>
+                {program.matches > 0 && (
+                  <p style={{ fontSize: "0.8rem", color: "#9d9da0", margin: "0.7rem 0 0" }}>
+                    + {program.matches} matchs inclus : les dates seront annoncées aux familles inscrites.
                   </p>
-                ))}
-              </div>
+                )}
+              </>
             ) : (
               <p style={{ fontSize: "0.85rem", color: "#c3c2c8", margin: 0 }}>
                 Le calendrier des {program.practices} pratiques et des {program.matches} matchs sera communiqué aux familles inscrites.
