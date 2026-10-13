@@ -79,6 +79,7 @@ const COMMUNICATIONS_LINKS: { href: string; label: string; icon: IconName }[] = 
 ];
 
 const SPORT_ETUDES_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/inscriptions-garcons", label: "Inscriptions garçons (toutes)", icon: "users" },
   { href: "/admin/sport-etudes", label: "Sport-Études", icon: "flask" },
   { href: "/admin/programme-intensif", label: "Programme Intensif", icon: "flask" },
   { href: "/admin/garcons-prives", label: "Programmes privés", icon: "list" },

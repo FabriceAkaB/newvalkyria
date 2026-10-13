@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { BoysRegistrationsTable } from "@/components/admin-boys-registrations";
+import type { BoysRegistrationRow } from "@/lib/boys-registrations";
 import type { RegistrationStatus, SessionProgram, SessionProgramDate, SessionProgramRegistration } from "@/lib/session-programs-repo";
 
 export const REGISTRATION_STATUSES: { value: RegistrationStatus; label: string }[] = [
@@ -140,12 +142,15 @@ export function AdminSessionProgram({
   slug,
   program,
   initialDates,
-  initialRegistrations
+  initialRegistrations,
+  boysRegistrations
 }: {
   slug: string;
   program: SessionProgram;
   initialDates: SessionProgramDate[];
   initialRegistrations: SessionProgramRegistration[];
+  /** Si fourni, la liste des inscrits s'affiche comme celle des filles (tableau + filtres), tous programmes garçons. */
+  boysRegistrations?: BoysRegistrationRow[];
 }) {
   const [registrations, setRegistrations] = useState(initialRegistrations);
   const [copyingEmails, setCopyingEmails] = useState(false);
@@ -229,6 +234,12 @@ export function AdminSessionProgram({
             ))}
           </div>
 
+          {boysRegistrations ? (
+            <div style={{ marginTop: "1.5rem" }}>
+              <BoysRegistrationsTable initialRows={boysRegistrations} />
+            </div>
+          ) : (
+          <>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "1.5rem 0 0.6rem", flexWrap: "wrap", gap: "0.5rem" }}>
             <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", margin: 0 }}>Inscrits ({registrations.length})</p>
             <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -267,6 +278,8 @@ export function AdminSessionProgram({
               onDeleted={() => setRegistrations((prev) => prev.filter((x) => x.id !== r.id))}
             />
           ))}
+          </>
+          )}
         </div>
       </div>
     </>
