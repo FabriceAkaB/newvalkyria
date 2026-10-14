@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-import { sendConfirmationEmail, sendMatchSlotsConfirmationEmail, sendShopOrderConfirmationEmail, sendTerrainRentalConfirmationEmail } from "@/lib/email";
+import { sendConfirmationEmail, sendMatchSlotsConfirmationEmail, sendSponsorshipPaidNotification, sendShopOrderConfirmationEmail, sendTerrainRentalConfirmationEmail } from "@/lib/email";
 import { logAudit } from "@/lib/audit-repo";
 import { env } from "@/lib/env";
 import { markLeadPaidInSheet } from "@/lib/google-sheets";
@@ -130,6 +130,58 @@ export async function POST(request: Request) {
       await markOrderPaidByCheckoutSession(session.id, paymentIntentId).catch((error) => {
         console.error("Unable to mark signup-bonus bag order as paid", error);
       });
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Commandite 2027 payée par lien Stripe (programme de partenariat : Titre, Majeur,
+    // Signature, Manche, Site). Crée le commanditaire « Payé » dans l'admin et avise l'académie. ──
+    if (checkoutType === "sponsorship") {
+      try {
+        const supabase = getSupabaseAdminClient() as any;
+        const field = (key: string) => session.custom_fields?.find((f) => f.key === key)?.text?.value?.trim() || null;
+        const company = field("company_name") || session.customer_details?.name || "Entreprise (Stripe)";
+        const contactName = field("contact_person") || session.customer_details?.name || null;
+        const tier = session.metadata?.tier ?? "";
+        const tierLabel = session.metadata?.tierLabel ?? "Commandite";
+        const placement = session.metadata?.placement ?? "";
+        const amountCents = session.amount_total ?? 0;
+        const category = tier === "titre" || tier === "majeur" ? "principal" : tier === "site" ? "evenement" : "equipement";
+        const { data: sponsor, error } = await supabase
+          .from("sponsors")
+          .insert({
+            company_name: company,
+            contact_name: contactName,
+            contact_email: session.customer_details?.email ?? null,
+            contact_phone: session.customer_details?.phone ?? null,
+            category,
+            partnership_type: `${tierLabel} — ${placement} (2027)`,
+            proposed_amount_cents: amountCents,
+            status: "paye",
+            notes: `Payé par lien Stripe (${session.metadata?.slot ?? tier}). Secteur d'activité : ${field("sector") ?? "—"}. Session ${session.id}.`
+          })
+          .select("id")
+          .single();
+        if (error) throw new Error(error.message);
+        await supabase.from("sponsor_payments").insert({
+          sponsor_id: sponsor.id,
+          amount_cents: amountCents,
+          paid_at: new Date().toISOString(),
+          method: "Stripe",
+          note: `Lien de paiement ${session.metadata?.slot ?? tier}`
+        });
+        await sendSponsorshipPaidNotification({
+          company,
+          contactName,
+          contactEmail: session.customer_details?.email ?? null,
+          contactPhone: session.customer_details?.phone ?? null,
+          sector: field("sector"),
+          tierLabel,
+          placement,
+          amountCents
+        }).catch((error) => console.error("Unable to send sponsorship notification", error));
+      } catch (error) {
+        console.error("Unable to record sponsorship payment", error);
+      }
       return NextResponse.json({ received: true });
     }
 

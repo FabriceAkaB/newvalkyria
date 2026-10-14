@@ -598,3 +598,41 @@ export async function sendBoysTrialConfirmationEmail(input: BoysTrialEmailInput)
       </div>`
   });
 }
+
+interface SponsorshipPaidEmailInput {
+  company: string;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  sector: string | null;
+  tierLabel: string;
+  placement: string;
+  amountCents: number;
+}
+
+/** Avis interne : une commandite 2027 vient d'être payée par lien Stripe. */
+export async function sendSponsorshipPaidNotification(input: SponsorshipPaidEmailInput) {
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  const row = (label: string, value: string | null) =>
+    value ? `<tr><td style="padding:6px 10px;font-weight:bold;white-space:nowrap">${label}</td><td style="padding:6px 10px">${escapeHtml(value)}</td></tr>` : "";
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: "info@newvalkyria.com",
+    subject: `Commandite payée — ${input.company} (${input.tierLabel}, ${fmt(input.amountCents)})`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:20px">Nouvelle commandite payée</h1>
+        <table style="border-collapse:collapse;font-size:14px;background:#f7f4fb;width:100%">
+          ${row("Entreprise", input.company)}
+          ${row("Forfait", `${input.tierLabel} — ${input.placement}`)}
+          ${row("Montant", fmt(input.amountCents))}
+          ${row("Secteur", input.sector)}
+          ${row("Responsable", input.contactName)}
+          ${row("Courriel", input.contactEmail)}
+          ${row("Téléphone", input.contactPhone)}
+        </table>
+        <p style="margin-top:16px">La commandite est inscrite dans l'admin (Commandites) avec le statut « Payé ». Prochaine étape : récupérer le logo et confirmer l'emplacement.</p>
+      </div>`
+  });
+}
