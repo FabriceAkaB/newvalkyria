@@ -4,10 +4,18 @@ import type { Metadata } from "next";
 import { SessionProgramContent } from "@/components/session-program-content";
 import { countActiveRegistrations, getProgram, getProgramDates } from "@/lib/session-programs-repo";
 
+// L'aperçu du lien (texto, WhatsApp, Messenger, courriel) montre le logo de l'académie en
+// noir et blanc sur fond neutre — jamais la photo d'accueil ni de mention des filles.
+const TITLE = "Programme Intensif — Garçons 2015-2014 | New Valkyria";
+const DESCRIPTION = "Préparation technique intensive pour garçons nés en 2015-2014 — pratiques du samedi à l'École Chambéry (Blainville), incluant 3 matchs amicaux.";
+const OG_IMAGE = { url: "/og/garcons.jpg", width: 1200, height: 628, alt: "New Valkyria" };
+
 export const metadata: Metadata = {
-  title: "Programme Intensif — Garçons 2015-2014 | New Valkyria",
-  description: "Préparation technique intensive pour garçons nés en 2015-2014 — pratiques du samedi à l'École Chambéry (Blainville), incluant 3 matchs amicaux.",
-  alternates: { canonical: "/programmes/intensif-garcons" }
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/programmes/intensif-garcons" },
+  openGraph: { title: TITLE, description: DESCRIPTION, url: "/programmes/intensif-garcons", type: "website", locale: "fr_CA", siteName: "New Valkyria", images: [OG_IMAGE] },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: [OG_IMAGE.url] }
 };
 
 export const dynamic = "force-dynamic";
