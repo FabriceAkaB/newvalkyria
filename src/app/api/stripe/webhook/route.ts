@@ -162,6 +162,12 @@ export async function POST(request: Request) {
           .select("id")
           .single();
         if (error) throw new Error(error.message);
+        if (session.metadata?.slot) {
+          await supabase
+            .from("sponsor_slots_2027")
+            .update({ status: "sold", sponsor_id: sponsor.id, updated_at: new Date().toISOString() })
+            .eq("slot_key", session.metadata.slot);
+        }
         await supabase.from("sponsor_payments").insert({
           sponsor_id: sponsor.id,
           amount_cents: amountCents,

@@ -1,0 +1,198 @@
+"use client";
+
+import { useState } from "react";
+
+import { AdminTopbar } from "@/components/admin-topbar";
+import { formatMoney } from "@/lib/private-programs";
+import { SPONSORSHIP_GOAL_CENTS, TIER_BENEFITS } from "@/lib/sponsorship-2027";
+import type { SponsorSlotRow } from "@/app/api/admin/sponsors-2027/route";
+
+const STATUS_STYLE: Record<string, { label: string; color: string }> = {
+  available: { label: "Disponible", color: "#8fce9f" },
+  reserved: { label: "Réservé", color: "#f0c878" },
+  sold: { label: "Vendu", color: "#c4a4e4" }
+};
+
+export function AdminSponsors2027({ initialSlots, role }: { initialSlots: SponsorSlotRow[]; role: "admin" | "gerante" }) {
+  const isAdmin = role === "admin";
+  const [priceFor, setPriceFor] = useState<string | null>(null);
+  const [price, setPrice] = useState("");
+  const [slots, setSlots] = useState(initialSlots);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const [form, setForm] = useState({ company: "", contactName: "", contactEmail: "", note: "" });
+
+  const flash = (m: string) => {
+    setMsg(m);
+    setTimeout(() => setMsg(null), 5000);
+  };
+
+  const call = async (body: Record<string, unknown>, ok: string) => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/sponsors-2027", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Erreur");
+      setSlots(json.slots);
+      flash(ok);
+      setOpen(null);
+      setForm({ company: "", contactName: "", contactEmail: "", note: "" });
+    } catch (e) {
+      flash(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const soldCents = slots.filter((s) => s.status === "sold").reduce((n, s) => n + s.price_cents, 0);
+  const reservedCents = slots.filter((s) => s.status === "reserved").reduce((n, s) => n + s.price_cents, 0);
+  const availableCents = slots.filter((s) => s.status === "available").reduce((n, s) => n + s.price_cents, 0);
+  const count = (st: string) => slots.filter((s) => s.status === st).length;
+
+  const tiers = Array.from(new Map(slots.map((s) => [s.tier, s.tier_label])).entries());
+  const cell: React.CSSProperties = { padding: "0.55rem 0.5rem", borderBottom: "1px solid #1f1d25", fontSize: "0.78rem", color: "#c3c2c8", verticalAlign: "top" };
+  const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" };
+
+  return (
+    <>
+      <AdminTopbar />
+      <div className="admin-content">
+        <div className="admin-section">
+          <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Sponsors 2027</p>
+          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1rem" }}>
+            Programme de partenariat : 13 emplacements, chacun avec son lien de paiement Stripe à usage unique. Un paiement marque l&apos;emplacement « Vendu » automatiquement et crée le commanditaire dans « Commandites ».
+          </p>
+          {msg && <p style={{ fontSize: "0.78rem", color: "#8fce9f" }}>{msg}</p>}
+
+          <div className="admin-stats" style={{ marginBottom: "1.2rem" }}>
+            <div className="admin-stat-card admin-stat-card-accent"><p className="admin-stat-value">{formatMoney(soldCents)}</p><p className="admin-stat-label">Vendu ({count("sold")} emplacement{count("sold") > 1 ? "s" : ""})</p></div>
+            <div className="admin-stat-card admin-stat-card-warn"><p className="admin-stat-value">{formatMoney(reservedCents)}</p><p className="admin-stat-label">Réservé ({count("reserved")})</p></div>
+            <div className="admin-stat-card"><p className="admin-stat-value">{formatMoney(availableCents)}</p><p className="admin-stat-label">Encore disponible ({count("available")})</p></div>
+            <div className="admin-stat-card"><p className="admin-stat-value">{formatMoney(SPONSORSHIP_GOAL_CENTS)}</p><p className="admin-stat-label">Objectif 2027 ({slots.length} places)</p></div>
+          </div>
+
+          <div style={card}>
+            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Par forfait</p>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead><tr>{["Forfait", "Tarif", "Places", "Vendues", "Disponibles"].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+              <tbody>
+                {tiers.map(([tier, label]) => {
+                  const list = slots.filter((s) => s.tier === tier);
+                  return (
+                    <tr key={tier}>
+                      <td style={cell}><strong style={{ color: "#fff" }}>{label}</strong></td>
+                      <td style={cell}>{formatMoney(list[0].price_cents)}</td>
+                      <td style={cell}>{list.length}</td>
+                      <td style={cell}>{list.filter((s) => s.status !== "available").length}</td>
+                      <td style={cell}>{list.filter((s) => s.status === "available").length}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={card}>
+            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Emplacements ({slots.length})</p>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "820px" }}>
+                <thead><tr>{["Emplacement", "Tarif", "Statut", "Commanditaire", "Lien de paiement", ""].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {slots.map((s) => {
+                    const st = STATUS_STYLE[s.status];
+                    return (
+                      <tr key={s.slot_key}>
+                        <td style={cell}>
+                          <strong style={{ color: "#fff" }}>{s.tier_label}</strong>
+                          <br />{s.placement}
+                          <br /><span style={{ color: "#6d6b71" }}>{s.slot_key}</span>
+                        </td>
+                        <td style={cell}>
+                          {formatMoney(s.price_cents)}
+                          {s.list_price_cents != null && s.list_price_cents !== s.price_cents ? <><br /><span style={{ color: "#f0c878" }}>Prix négocié</span><br /><span style={{ color: "#6d6b71", textDecoration: "line-through" }}>{formatMoney(s.list_price_cents)}</span></> : null}
+                        </td>
+                        <td style={cell}><span style={{ color: st.color, fontWeight: 700 }}>{st.label}</span></td>
+                        <td style={cell}>
+                          {s.company_name ? (
+                            <>
+                              <strong style={{ color: "#fff" }}>{s.company_name}</strong>
+                              {s.contact_name ? <><br />{s.contact_name}</> : null}
+                              {s.contact_email ? <><br />{s.contact_email}</> : null}
+                            </>
+                          ) : <span style={{ color: "#6d6b71" }}>—</span>}
+                        </td>
+                        <td style={cell}>
+                          {s.status === "available" && s.payment_link_url ? (
+                            <>
+                              <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => navigator.clipboard.writeText(s.payment_link_url!).then(() => flash(`Lien copié : ${s.tier_label} — ${s.placement}`))}>Copier le lien</button>{" "}
+                              <a href={s.payment_link_url} target="_blank" rel="noreferrer" style={{ color: "#c4a4e4", fontSize: "0.68rem" }}>Ouvrir</a>
+                            </>
+                          ) : s.status === "available" ? (
+                            <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} disabled={busy} onClick={() => call({ action: "new_link", slotKey: s.slot_key }, "Lien créé.")}>Créer le lien</button>
+                          ) : (
+                            <span style={{ color: "#6d6b71" }}>Lien désactivé</span>
+                          )}
+                        </td>
+                        <td style={cell}>
+                          {s.status === "available" && (
+                            <>
+                              <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} disabled={busy} onClick={() => setOpen(open === s.slot_key ? null : s.slot_key)}>{isAdmin ? "Marquer vendu / réservé" : "Réserver"}</button>{" "}
+                              {isAdmin && (
+                                <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} disabled={busy} onClick={() => { setPriceFor(priceFor === s.slot_key ? null : s.slot_key); setPrice(String(s.price_cents / 100)); }}>Ajuster le prix</button>
+                              )}
+                              {priceFor === s.slot_key && (
+                                <div style={{ marginTop: "0.5rem", display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
+                                  <input className="admin-input" style={{ width: "100px" }} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} /> $
+                                  <button className="admin-btn-primary" style={{ fontSize: "0.68rem" }} disabled={busy} onClick={() => confirm(`Créer un nouveau lien à ${price} $ ? L'ancien lien sera désactivé.`) && call({ action: "custom_price", slotKey: s.slot_key, amountCents: Math.round((parseFloat(price.replace(",", ".")) || 0) * 100) }, "Nouveau lien créé au prix négocié.").then(() => setPriceFor(null))}>Créer le lien</button>
+                                </div>
+                              )}
+                            </>
+                          )}
+                          {s.status !== "available" && (
+                            <>
+                              <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} disabled={busy} onClick={() => setOpen(open === s.slot_key ? null : s.slot_key)}>Modifier l&apos;entreprise</button>{" "}
+                              {isAdmin && <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm("Remettre cet emplacement disponible ? Le lien de paiement sera réactivé.") && call({ action: "release", slotKey: s.slot_key }, "Emplacement remis disponible.")}>Remettre disponible</button>}
+                            </>
+                          )}
+                          {open === s.slot_key && (
+                            <div style={{ marginTop: "0.5rem", display: "grid", gap: "0.35rem", maxWidth: "280px" }}>
+                              <input className="admin-input" placeholder="Nom de l'entreprise *" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+                              <input className="admin-input" placeholder="Responsable" value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} />
+                              <input className="admin-input" placeholder="Courriel" value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} />
+                              {s.status === "available" ? (
+                                <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                                  {isAdmin && <button className="admin-btn-primary" style={{ fontSize: "0.68rem" }} disabled={busy || !form.company} onClick={() => call({ action: "mark_sold", slotKey: s.slot_key, ...form }, "Emplacement marqué vendu (lien désactivé).")}>Vendu (payé)</button>}
+                                  <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} disabled={busy || !form.company} onClick={() => call({ action: "reserve", slotKey: s.slot_key, ...form }, "Emplacement réservé (lien désactivé).")}>Réservé</button>
+                                </div>
+                              ) : (
+                                <button className="admin-btn-primary" style={{ fontSize: "0.68rem" }} disabled={busy || !form.company} onClick={() => call({ action: "set_company", slotKey: s.slot_key, ...form }, "Commanditaire mis à jour.")}>Enregistrer</button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style={card}>
+            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Ce qui est offert par forfait</p>
+            {tiers.map(([tier, label]) => (
+              <div key={tier} style={{ marginBottom: "0.8rem" }}>
+                <p style={{ margin: "0 0 0.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#c4a4e4" }}>{label}</p>
+                <ul style={{ margin: 0, paddingLeft: "1.1rem", fontSize: "0.76rem", color: "#c3c2c8", lineHeight: 1.55 }}>
+                  {TIER_BENEFITS[tier as keyof typeof TIER_BENEFITS].map((b) => <li key={b}>{b}</li>)}
+                </ul>
+              </div>
+            ))}
+            <p style={{ fontSize: "0.74rem", color: "#6d6b71", margin: 0 }}>Partenaire en nature : valeur variable, places illimitées — à négocier au cas par cas (aucun lien de paiement).</p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
