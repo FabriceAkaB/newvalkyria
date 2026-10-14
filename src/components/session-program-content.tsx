@@ -55,6 +55,7 @@ export function SessionProgramContent({
   tagline,
   intro,
   priceCents,
+  saturdayPackageCents = null,
   allowInstallments,
   dates,
   remaining,
@@ -65,6 +66,8 @@ export function SessionProgramContent({
   tagline: string;
   intro: string;
   priceCents: number;
+  /** Forfait « samedi seulement » (pratiques du samedi + matchs inclus) ; nul = non offert. */
+  saturdayPackageCents?: number | null;
   allowInstallments: boolean;
   dates: DateRow[];
   remaining: number;
@@ -76,10 +79,13 @@ export function SessionProgramContent({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAllDates, setShowAllDates] = useState(false);
+  const [pkg, setPkg] = useState<"complet" | "samedi">("complet");
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const totalCents = priceCents;
+  const isSaturday = (iso: string) => new Date(`${iso}T12:00:00`).getDay() === 6;
+  const saturdayCount = dates.filter((d) => isSaturday(d.session_date)).length;
+  const totalCents = pkg === "samedi" && saturdayPackageCents != null ? saturdayPackageCents : priceCents;
   const firstAmountCents = installments === 1 ? totalCents : Math.ceil(totalCents / installments);
 
   const submit = async () => {
@@ -97,7 +103,7 @@ export function SessionProgramContent({
       const res = await fetch("/api/programmes/inscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, programSlug: slug, installments: allowInstallments ? installments : 1 })
+        body: JSON.stringify({ ...form, programSlug: slug, installments: allowInstallments ? installments : 1, package: pkg })
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error ?? "Erreur d'inscription");
@@ -129,7 +135,7 @@ export function SessionProgramContent({
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem" }}>Les {dates.length} séances</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "1.5rem" }}>
             {(showAllDates ? dates : dates.slice(0, DATES_PREVIEW)).map((d) => (
-              <p key={d.id} style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: 0 }}>
+              <p key={d.id} style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: 0, opacity: pkg === "samedi" && !isSaturday(d.session_date) ? 0.4 : 1 }}>
                 {formatSessionDate(d.session_date)} · {d.start_time.slice(0, 5)}–{d.end_time.slice(0, 5)} · {d.location}
               </p>
             ))}
@@ -153,11 +159,25 @@ export function SessionProgramContent({
             <>
               <p style={{ fontSize: "0.82rem", color: "#6d6b71", marginBottom: "1.5rem" }}>{remaining} place{remaining !== 1 ? "s" : ""} restante{remaining !== 1 ? "s" : ""}.</p>
 
+              {saturdayPackageCents != null && (
+                <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem 1.1rem", marginBottom: "1.5rem" }}>
+                  <p style={{ fontSize: "0.72rem", color: "#9f85ba", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Choisissez votre forfait</p>
+                  <label className="nv27-radio" style={{ marginBottom: "0.6rem" }}>
+                    <input type="radio" name="package" checked={pkg === "complet"} onChange={() => setPkg("complet")} />
+                    <span><strong>Programme complet</strong> — {fmt(priceCents)} · {dates.length} pratiques (mardis et samedis) + 3 matchs inclus</span>
+                  </label>
+                  <label className="nv27-radio">
+                    <input type="radio" name="package" checked={pkg === "samedi"} onChange={() => setPkg("samedi")} />
+                    <span><strong>Forfait samedi</strong> — {fmt(saturdayPackageCents)} · {saturdayCount} pratiques du samedi seulement + 3 matchs inclus</span>
+                  </label>
+                </div>
+              )}
+
               {allowInstallments && (
                 <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem 1.1rem", marginBottom: "1.5rem" }}>
                   <label className="nv27-radio" style={{ marginBottom: "0.6rem" }}>
                     <input type="radio" name="installments" checked={installments === 1} onChange={() => setInstallments(1)} />
-                    <span>Payer en totalité aujourd&apos;hui — {fmt(priceCents)}</span>
+                    <span>Payer en totalité aujourd&apos;hui — {fmt(totalCents)}</span>
                   </label>
                   <label className="nv27-radio">
                     <input type="radio" name="installments" checked={installments === 2} onChange={() => setInstallments(2)} />

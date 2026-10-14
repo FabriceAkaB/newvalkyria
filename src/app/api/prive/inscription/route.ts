@@ -30,6 +30,13 @@ export async function POST(request: Request) {
     const program = await getPrivateProgram(payload.programSlug);
     if (!program || !program.active || !program.published) return jsonError("Ce programme est introuvable ou fermé.", 404);
 
+    // ── Forfait : programme complet ou « samedi seulement » (pratiques du samedi + matchs inclus) ──
+    const pkg: "complet" | "samedi" = payload.package === "samedi" ? "samedi" : "complet";
+    if (pkg === "samedi" && program.saturday_package_price_cents == null) {
+      return jsonError("Le forfait du samedi n'est pas offert pour ce programme.", 409);
+    }
+    const listCents = pkg === "samedi" ? (program.saturday_package_price_cents as number) : program.price_cents;
+
     // ── Admissibilité par année de naissance ──
     if (!isBirthYearEligible(payload.birthYear, program.eligible_birth_years)) {
       return NextResponse.json(
@@ -85,12 +92,13 @@ export async function POST(request: Request) {
         comments: payload.comments || null,
         status: "waitlist",
         paymentOption: payload.paymentOption,
-        listPriceCents: program.price_cents,
+        listPriceCents: listCents,
         referralDiscountCents: 0,
         creditAppliedCents: 0,
         installmentFeeCents: 0,
-        totalDueCents: program.price_cents,
-        autoDebitConsent: false
+        totalDueCents: listCents,
+        autoDebitConsent: false,
+        package: pkg
       });
       return NextResponse.json({ ok: true, waitlisted: true, registrationId: waitId });
     }
@@ -119,12 +127,12 @@ export async function POST(request: Request) {
       const account = userId ? await getParentAccount(userId) : null;
       if (account && normalizeEmail(account.email) === normalizeEmail(parentEmail)) {
         const balance = await getCreditBalance(parentEmail);
-        creditCents = Math.max(0, Math.min(balance, program.price_cents - referralDiscountCents));
+        creditCents = Math.max(0, Math.min(balance, listCents - referralDiscountCents));
       }
     }
 
     const price = computePrice({
-      listCents: program.price_cents,
+      listCents,
       option: payload.paymentOption,
       installmentFeeCents: program.installment_fee_cents,
       referralDiscountCents,
@@ -150,7 +158,8 @@ export async function POST(request: Request) {
       creditAppliedCents: price.creditCents,
       installmentFeeCents: price.installmentFeeCents,
       totalDueCents: price.totalCents,
-      autoDebitConsent: Boolean(payload.autoDebitConsent)
+      autoDebitConsent: Boolean(payload.autoDebitConsent),
+      package: pkg
     });
 
     // Deux parents sur la dernière place : l'ordre d'arrivée décide.
@@ -195,10 +204,11 @@ export async function POST(request: Request) {
 
       const stripe = getStripeClient();
       const baseUrl = getRequestOrigin(request);
-      const lineName = payload.paymentOption === "two_installments" ? `${program.name} — 1er versement sur 2` : program.name;
+      const baseName = pkg === "samedi" ? `${program.name} — forfait samedi (${program.matches_count ?? 3} matchs inclus)` : program.name;
+      const lineName = payload.paymentOption === "two_installments" ? `${baseName} — 1er versement sur 2` : baseName;
       const description =
         [
-          `Prix du programme : ${formatMoney(price.listCents)}`,
+          `${pkg === "samedi" ? "Prix du forfait samedi" : "Prix du programme"} : ${formatMoney(price.listCents)}`,
           price.referralDiscountCents > 0 ? `Rabais de référencement : -${formatMoney(price.referralDiscountCents)}` : null,
           price.creditCents > 0 ? `Crédit familial : -${formatMoney(price.creditCents)}` : null,
           price.installmentFeeCents > 0 ? `Supplément 2 versements : +${formatMoney(price.installmentFeeCents)}` : null,
@@ -226,6 +236,7 @@ export async function POST(request: Request) {
           registrationId,
           programSlug: program.slug,
           privateProgram: "true",
+          package: pkg,
           ...(paymentPlanId ? { paymentPlanId } : {})
         },
         success_url: `${baseUrl}/prive/${program.slug}/confirmation?registrationId=${registrationId}`,

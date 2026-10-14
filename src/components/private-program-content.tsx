@@ -32,6 +32,8 @@ export interface PrivateProgramView {
   draft: boolean;
   eligibleBirthYears: string[];
   priceCents: number;
+  /** Forfait « samedi seulement » : pratiques du samedi + matchs inclus ; nul = non offert. */
+  saturdayPackageCents: number | null;
   capacity: number;
   minCapacity: number | null;
   remaining: number;
@@ -85,6 +87,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
   const [error, setError] = useState<string | null>(null);
   const [waitlisted, setWaitlisted] = useState(false);
   const [showAllDates, setShowAllDates] = useState(false);
+  const [pkg, setPkg] = useState<"complet" | "samedi">("complet");
 
   // Le code de référencement est conservé pendant toute la procédure (même si
   // le parent change de page ou recharge) : lien ?ref= → stockage local.
@@ -139,13 +142,17 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
   const referralApplies = referralAnswer === "oui" && Boolean(refCodeOrEmail.trim());
   const creditCents = useCredit ? creditBalance : 0;
 
+  const listCents = pkg === "samedi" && program.saturdayPackageCents != null ? program.saturdayPackageCents : program.priceCents;
+  const isSaturday = (iso: string) => new Date(`${iso}T12:00:00`).getDay() === 6;
+  const saturdayCount = program.dates.filter((d) => isSaturday(d.session_date)).length;
+
   const priceFull = useMemo(
-    () => computePrice({ listCents: program.priceCents, option: "full", installmentFeeCents: program.installmentFeeCents, referralDiscountCents: referralApplies ? program.referralDiscountCents : 0, creditCents }),
-    [program, referralApplies, creditCents]
+    () => computePrice({ listCents, option: "full", installmentFeeCents: program.installmentFeeCents, referralDiscountCents: referralApplies ? program.referralDiscountCents : 0, creditCents }),
+    [program, listCents, referralApplies, creditCents]
   );
   const priceTwo = useMemo(
-    () => computePrice({ listCents: program.priceCents, option: "two_installments", installmentFeeCents: program.installmentFeeCents, referralDiscountCents: referralApplies ? program.referralDiscountCents : 0, creditCents }),
-    [program, referralApplies, creditCents]
+    () => computePrice({ listCents, option: "two_installments", installmentFeeCents: program.installmentFeeCents, referralDiscountCents: referralApplies ? program.referralDiscountCents : 0, creditCents }),
+    [program, listCents, referralApplies, creditCents]
   );
   const price = option === "full" ? priceFull : priceTwo;
 
@@ -184,6 +191,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
           city: form.city || undefined,
           comments: form.comments || undefined,
           paymentOption: option,
+          package: pkg,
           termsAccepted: terms,
           autoDebitConsent: autoDebit,
           useCredit,
@@ -287,7 +295,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
                 <p style={{ fontSize: "0.78rem", color: "#9d9da0", margin: "0 0 0.5rem" }}>{program.dates.length} pratiques planifiées</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                   {(showAllDates ? program.dates : program.dates.slice(0, DATES_PREVIEW)).map((d) => (
-                    <p key={d.id} style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: 0 }}>
+                    <p key={d.id} style={{ fontSize: "0.82rem", color: "#c3c2c8", margin: 0, opacity: pkg === "samedi" && !isSaturday(d.session_date) ? 0.4 : 1 }}>
                       {formatSessionDate(d.session_date)} · {d.start_time.slice(0, 5)}–{d.end_time.slice(0, 5)} · {d.location}
                     </p>
                   ))}
@@ -333,6 +341,20 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
           ) : (
             <div style={card}>
               <h2 style={h2}>{program.isFull ? "Liste d'attente" : "Inscrire mon enfant"}</h2>
+
+              {program.saturdayPackageCents != null && (
+                <div style={{ marginBottom: "1rem" }}>
+                  <p style={{ fontSize: "0.72rem", color: "#9f85ba", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Forfait</p>
+                  <label className="nv27-radio" style={{ marginBottom: "0.6rem" }}>
+                    <input type="radio" name="package" checked={pkg === "complet"} onChange={() => setPkg("complet")} />
+                    <span><strong>Programme complet</strong> — {formatMoney(program.priceCents)} · {program.dates.length || program.practices} pratiques (mardis et samedis) + {program.matches} matchs inclus</span>
+                  </label>
+                  <label className="nv27-radio">
+                    <input type="radio" name="package" checked={pkg === "samedi"} onChange={() => setPkg("samedi")} />
+                    <span><strong>Forfait samedi</strong> — {formatMoney(program.saturdayPackageCents)} · {saturdayCount || Math.round(program.practices / 2)} pratiques du samedi seulement + {program.matches} matchs inclus</span>
+                  </label>
+                </div>
+              )}
 
               {!program.isFull && (
                 <div style={{ marginBottom: "1rem" }}>

@@ -31,6 +31,7 @@ export default async function ProgrammeIntensifPage() {
       tagline="Garçons nés 2015-2014"
       intro="Une préparation technique intensive de 16 pratiques, réparties entre l'École de la Voltige (Sainte-Thérèse) et l'École Chambéry (Blainville), incluant 3 matchs amicaux (dates à déterminer)."
       priceCents={program.price_cents}
+      saturdayPackageCents={program.saturday_package_price_cents}
       allowInstallments
       dates={dates}
       remaining={remaining}

@@ -29,7 +29,11 @@ export async function POST(request: Request) {
     }
 
     const installments: 1 | 2 = payload.installments === 2 ? 2 : 1;
-    const totalCents = program.price_cents;
+    const pkg = payload.package === "samedi" ? "samedi" : "complet";
+    if (pkg === "samedi" && program.saturday_package_price_cents == null) {
+      return jsonError("Le forfait du samedi n'est pas offert pour ce programme.", 409);
+    }
+    const totalCents = pkg === "samedi" ? (program.saturday_package_price_cents as number) : program.price_cents;
     const installmentPlan = installments === 2 ? getIntensifInstallmentPlan(2, new Date(), totalCents) : null;
 
     const playerId = await findOrCreatePlayer({
@@ -52,7 +56,8 @@ export async function POST(request: Request) {
       city: payload.city || null,
       comments: payload.comments || null,
       termsAccepted: payload.termsAccepted,
-      priceCents: totalCents
+      priceCents: totalCents,
+      package: pkg
     });
 
     let paymentPlanId: string | null = null;
@@ -72,7 +77,8 @@ export async function POST(request: Request) {
       const stripe = getStripeClient();
       const baseUrl = getRequestOrigin(request);
 
-      const lineItemName = installmentPlan ? `${program.name} (1er versement sur ${installments})` : program.name;
+      const baseName = pkg === "samedi" ? `${program.name} — forfait samedi (8 pratiques + 3 matchs)` : program.name;
+      const lineItemName = installmentPlan ? `${baseName} (1er versement sur ${installments})` : baseName;
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
@@ -89,6 +95,7 @@ export async function POST(request: Request) {
           checkoutType: "sessionprogram",
           registrationId,
           programSlug: payload.programSlug,
+          package: pkg,
           ...(paymentPlanId ? { paymentPlanId } : {})
         },
         success_url: `${baseUrl}/programmes/${payload.programSlug}/confirmation?session_id={CHECKOUT_SESSION_ID}`,

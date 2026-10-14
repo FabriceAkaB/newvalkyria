@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { BoysRegistrationsTable } from "@/components/admin-boys-registrations";
 import type { BoysRegistrationRow } from "@/lib/boys-registrations";
 
-const base = { playerDob: null, birthYear: 2015, parentPhone: "514-555-0100", priceCents: 31595, trialDate: null, comments: null, statusDetail: null } as const;
+const base = { package: "complet" as const, playerDob: null, birthYear: 2015, parentPhone: "514-555-0100", priceCents: 31595, trialDate: null, comments: null, statusDetail: null } as const;
 
 const rows: BoysRegistrationRow[] = [
   { ...base, key: "session:1", source: "session", id: "1", programSlug: "intensif-garcons", programLabel: "Programme Intensif", playerName: "Laurent Bayard", parentName: "Marilyn Coutu", parentEmail: "m@example.com", status: "paid", createdAt: "2026-10-06T04:55:00Z" },

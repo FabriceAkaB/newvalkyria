@@ -10,6 +10,8 @@ export interface PrivateProgram {
   gender: string;
   birth_years: string;
   price_cents: number;
+  /** Forfait « samedi seulement » (pratiques du samedi + matchs inclus). Nul = non offert. */
+  saturday_package_price_cents: number | null;
   max_capacity: number;
   min_capacity: number | null;
   description: string | null;
@@ -181,6 +183,7 @@ export interface CreatePrivateRegistrationInput {
   installmentFeeCents: number;
   totalDueCents: number;
   autoDebitConsent: boolean;
+  package?: "complet" | "samedi";
 }
 
 export async function createPrivateRegistration(input: CreatePrivateRegistrationInput): Promise<string> {
@@ -209,6 +212,7 @@ export async function createPrivateRegistration(input: CreatePrivateRegistration
       total_due_cents: input.totalDueCents,
       price_cents: input.totalDueCents,
       auto_debit_consent: input.autoDebitConsent,
+      package: input.package ?? "complet",
       reservation_expires_at: reservation
     })
     .select("id")

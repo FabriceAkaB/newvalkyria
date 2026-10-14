@@ -27,6 +27,8 @@ export interface BoysRegistrationRow {
   priceCents: number | null;
   trialDate: string | null;
   comments: string | null;
+  /** « complet » ou « samedi » (forfait des pratiques du samedi + matchs). */
+  package: "complet" | "samedi";
   createdAt: string;
 }
 
@@ -74,6 +76,7 @@ export async function getAllBoysRegistrations(): Promise<BoysRegistrationRow[]> 
       priceCents: r.total_due_cents ?? r.price_cents ?? null,
       trialDate: null,
       comments: r.comments ?? null,
+      package: r.package === "samedi" ? "samedi" : "complet",
       createdAt: r.created_at
     });
   }
@@ -96,6 +99,7 @@ export async function getAllBoysRegistrations(): Promise<BoysRegistrationRow[]> 
       priceCents: r.price_cents ?? null,
       trialDate: null,
       comments: r.comments ?? null,
+      package: "complet",
       createdAt: r.created_at
     });
   }
@@ -118,6 +122,7 @@ export async function getAllBoysRegistrations(): Promise<BoysRegistrationRow[]> 
       priceCents: 0,
       trialDate: t.trial_date ?? null,
       comments: t.notes ?? null,
+      package: "complet",
       createdAt: t.created_at
     });
   }

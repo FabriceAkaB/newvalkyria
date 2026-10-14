@@ -132,7 +132,7 @@ function Drawer({ row, onClose, onStatus, onDeleted }: { row: BoysRegistrationRo
 
           <div className="admin-drawer-section">
             <p className="admin-drawer-section-title">Joueur</p>
-            {line("Programme", row.programLabel)}
+            {line("Programme", row.package === "samedi" ? `${row.programLabel} — forfait samedi (pratiques du samedi + 3 matchs)` : row.programLabel)}
             {line("Naissance", row.playerDob ? row.playerDob.slice(0, 10) : row.birthYear ? String(row.birthYear) : null)}
             {line("Date de l'essai", row.trialDate ? formatTrialDate(row.trialDate) : null)}
             {line("Montant", row.priceCents ? `${(row.priceCents / 100).toFixed(2)} $` : null)}
@@ -309,7 +309,7 @@ export function BoysRegistrationsTable({ initialRows, initialProgram = "all" }: 
                   <td className="admin-td-email">{r.parentEmail}</td>
                   <td className="admin-td-phone">{r.parentPhone}</td>
                   <td className="admin-td-cat">{r.birthYear ?? "—"}</td>
-                  <td style={{ fontSize: "0.75rem", color: "#858489" }}>{r.programLabel}</td>
+                  <td style={{ fontSize: "0.75rem", color: "#858489" }}>{r.programLabel}{r.package === "samedi" ? " · Forfait samedi" : ""}</td>
                   <td><StatusBadge row={r} /></td>
                 </tr>
               ))

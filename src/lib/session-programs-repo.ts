@@ -13,10 +13,14 @@ export interface SessionProgram {
   gender: "filles" | "garcons";
   birth_years: string;
   price_cents: number;
+  /** Forfait « samedi seulement » (pratiques du samedi + matchs inclus). Nul = non offert. */
+  saturday_package_price_cents: number | null;
   max_capacity: number;
   description: string | null;
   active: boolean;
 }
+
+export type RegistrationPackage = "complet" | "samedi";
 
 export interface SessionProgramDate {
   id: string;
@@ -63,6 +67,7 @@ export interface CreateSessionProgramRegistrationInput {
   comments: string | null;
   termsAccepted: boolean;
   priceCents: number;
+  package?: RegistrationPackage;
 }
 
 export interface SessionProgramRegistration {
@@ -80,6 +85,7 @@ export interface SessionProgramRegistration {
   terms_accepted: boolean;
   status: RegistrationStatus;
   price_cents: number | null;
+  package: RegistrationPackage;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
   created_at: string;
@@ -102,7 +108,8 @@ export async function createRegistration(input: CreateSessionProgramRegistration
       comments: input.comments,
       terms_accepted: input.termsAccepted,
       status: "pending",
-      price_cents: input.priceCents
+      price_cents: input.priceCents,
+      package: input.package ?? "complet"
     })
     .select("id")
     .single();
@@ -162,8 +169,12 @@ export async function markRegistrationPaidByCheckoutSession(
 /** Inscrit une joueuse/un joueur à toutes les dates fixes du programme —
  *  il n'existe qu'une seule option (pas de diagnostic/programme complet
  *  comme Sport-Études), donc toujours "toutes les dates". */
+/** Inscrit le joueur aux séances de son forfait : toutes les dates, ou seulement les samedis
+ *  pour le forfait « samedi ». */
 export async function enrollInAllDates(registrationId: string, programSlug: SessionProgramSlug): Promise<void> {
-  const dates = await getProgramDates(programSlug);
+  const [allDates, registration] = await Promise.all([getProgramDates(programSlug), getRegistrationById(registrationId)]);
+  const saturdayOnly = registration?.package === "samedi";
+  const dates = saturdayOnly ? allDates.filter((d) => new Date(`${d.session_date}T12:00:00`).getDay() === 6) : allDates;
   if (dates.length === 0) return;
   const { error } = await db()
     .from("session_program_enrollments")

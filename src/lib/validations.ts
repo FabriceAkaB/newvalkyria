@@ -201,7 +201,8 @@ export const sessionProgramRegistrationSchema = z.object({
   city: z.string().optional(),
   comments: z.string().optional(),
   termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" }),
-  installments: z.union([z.literal(1), z.literal(2)]).optional()
+  installments: z.union([z.literal(1), z.literal(2)]).optional(),
+  package: z.enum(["complet", "samedi"]).optional()
 });
 
 export type SessionProgramRegistrationPayload = z.infer<typeof sessionProgramRegistrationSchema>;
@@ -258,6 +259,7 @@ export const privateProgramRegistrationSchema = z.object({
   paymentOption: z.enum(["full", "two_installments"]),
   termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" }),
   autoDebitConsent: z.boolean().optional(),
+  package: z.enum(["complet", "samedi"]).optional(),
   referral: z
     .object({
       answer: z.enum(["oui", "non"]),

@@ -61,6 +61,7 @@ export default async function PrivateProgramPage({
     draft: !live,
     eligibleBirthYears: program.eligible_birth_years ?? [],
     priceCents: program.price_cents,
+    saturdayPackageCents: program.saturday_package_price_cents ?? null,
     capacity: program.max_capacity,
     minCapacity: program.min_capacity,
     remaining,
