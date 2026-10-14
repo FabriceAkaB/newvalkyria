@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 import { sendConfirmationEmail, sendMatchSlotsConfirmationEmail, sendShopOrderConfirmationEmail, sendTerrainRentalConfirmationEmail } from "@/lib/email";
+import { logAudit } from "@/lib/audit-repo";
 import { env } from "@/lib/env";
 import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
@@ -129,6 +130,32 @@ export async function POST(request: Request) {
       await markOrderPaidByCheckoutSession(session.id, paymentIntentId).catch((error) => {
         console.error("Unable to mark signup-bonus bag order as paid", error);
       });
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Complément de saison : une joueuse inscrite à la demi-saison paie la 2e moitié
+    // (lien de paiement envoyé par l'admin). Sa place devient une inscription saison complète. ──
+    if (checkoutType === "season-completion") {
+      const registrationId = session.metadata?.registrationId;
+      if (registrationId) {
+        try {
+          const supabase = getSupabaseAdminClient() as any;
+          const { data: before } = await supabase.from("registrations").select("player_first_name, player_last_name, is_half_season, half_season_ends_on").eq("id", registrationId).maybeSingle();
+          await supabase.from("registrations").update({ is_half_season: false, half_season_ends_on: null, updated_at: new Date().toISOString() }).eq("id", registrationId);
+          await logAudit({
+            actorRole: "system",
+            actorLabel: "Paiement Stripe",
+            action: "season_completion",
+            entityType: "registration",
+            entityId: registrationId,
+            entityLabel: before ? `${before.player_first_name} ${before.player_last_name}`.trim() : null,
+            before: before ? { is_half_season: before.is_half_season, half_season_ends_on: before.half_season_ends_on } : null,
+            after: { is_half_season: false, half_season_ends_on: null, amount_cents: session.amount_total }
+          });
+        } catch (error) {
+          console.error("Unable to complete half-season registration", error);
+        }
+      }
       return NextResponse.json({ received: true });
     }
 
