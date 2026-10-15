@@ -84,9 +84,15 @@ const SPORT_ETUDES_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/programme-intensif", label: "Programme Intensif", icon: "flask" },
   { href: "/admin/garcons-prives", label: "Programmes privés", icon: "list" },
   { href: "/admin/references", label: "Références & crédits", icon: "users" },
-  { href: "/admin/commandites", label: "Commandites", icon: "tag" },
+];
+
+const COMMANDITES_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/sponsors-2027", label: "Sponsors 2027", icon: "tag" },
-  { href: "/admin/matchs", label: "Matchs vendus", icon: "calendar" },
+  { href: "/admin/commandites", label: "Commandites (suivi)", icon: "tag" },
+];
+
+const MATCHS_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/matchs", label: "Vente de matchs", icon: "calendar" },
 ];
 
 const EVALUATIONS_LINKS: { href: string; label: string; icon: IconName }[] = [
@@ -218,6 +224,8 @@ function GlobalSearchBox() {
 const GROUPS: Group[] = [
   { label: "Saison", dotColor: "#f0c878", links: [], isSeasonSwitcher: true },
   { label: "Programmes (Garçons)", dotColor: "#78a8f0", links: SPORT_ETUDES_LINKS },
+  { label: "Commandites & sponsors", dotColor: "#e0b0d8", links: COMMANDITES_LINKS },
+  { label: "Vente de matchs", dotColor: "#78d0c8", links: MATCHS_LINKS },
   { label: "Évaluations", dotColor: "#8fce9f", links: EVALUATIONS_LINKS },
   { label: "Boutique", dotColor: "#8fce9f", links: BOUTIQUE_LINKS },
   { label: "Uniformes", dotColor: "#e0b0d8", links: UNIFORMES_LINKS },
