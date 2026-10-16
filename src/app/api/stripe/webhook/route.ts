@@ -191,6 +191,48 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
+    // ── Essai → inscription : lien de paiement direct envoyé après un essai. L'inscription
+    // existe déjà (formulaire rempli pour l'essai) : on la convertit en inscription payée,
+    // sans redemander le formulaire. ──
+    if (checkoutType === "trial-conversion") {
+      const registrationId = session.metadata?.registrationId;
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : null;
+      if (registrationId) {
+        try {
+          const supabase = getSupabaseAdminClient() as any;
+          const patch: Record<string, unknown> = {
+            status: "paid",
+            is_trial: false,
+            stripe_checkout_session_id: session.id,
+            stripe_payment_intent_id: paymentIntentId,
+            updated_at: new Date().toISOString()
+          };
+          if (session.metadata?.programId) patch.program_id = session.metadata.programId;
+          if (session.metadata?.timeSlotTemplateId) patch.time_slot_template_id = session.metadata.timeSlotTemplateId;
+          const { data: registration } = await supabase.from("registrations").update(patch).eq("id", registrationId).select("*").maybeSingle();
+          await logAudit({
+            actorRole: "system",
+            actorLabel: "Paiement Stripe",
+            action: "trial_converted",
+            entityType: "registration",
+            entityId: registrationId,
+            entityLabel: registration ? `${registration.player_first_name} ${registration.player_last_name}`.trim() : null,
+            before: { is_trial: true },
+            after: { status: "paid", program_id: session.metadata?.programId ?? null, amount_cents: session.amount_total }
+          });
+          if (registration) {
+            const programName = registration.program_id ? PROGRAMS[registration.program_id as ProgramCode]?.name : undefined;
+            await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name, programName }).catch((error) =>
+              console.error("Unable to send trial conversion confirmation", error)
+            );
+          }
+        } catch (error) {
+          console.error("Unable to convert trial registration", error);
+        }
+      }
+      return NextResponse.json({ received: true });
+    }
+
     // ── Complément de saison : une joueuse inscrite à la demi-saison paie la 2e moitié
     // (lien de paiement envoyé par l'admin). Sa place devient une inscription saison complète. ──
     if (checkoutType === "season-completion") {
