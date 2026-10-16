@@ -636,3 +636,58 @@ export async function sendSponsorshipPaidNotification(input: SponsorshipPaidEmai
       </div>`
   });
 }
+
+const PROGRAM_EMAIL_LABEL: Record<string, string> = {
+  "intensif-garcons": "Programme Intensif garçons",
+  "garcons-2018": "Programme de développement garçons 2018",
+  "garcons-2014-2015": "Programme de développement garçons 2014–2015"
+};
+
+export function programEmailLabel(slug: string): string {
+  return PROGRAM_EMAIL_LABEL[slug] ?? "programme New Valkyria";
+}
+
+/** Courriel envoyé à une famille qui a déjà payé mais n'a pas rempli le formulaire du joueur. */
+export async function sendRegistrationCompletionRequestEmail(input: { to: string; parentName: string | null; programSlug: string; amountCents: number; link: string }) {
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  const hello = input.parentName ? `Bonjour ${escapeHtml(input.parentName)},` : "Bonjour,";
+  const label = escapeHtml(programEmailLabel(input.programSlug));
+  const result = await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    bcc: "info@newvalkyria.com",
+    subject: "New Valkyria — Dernière étape : le formulaire de votre fils",
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">Dernière étape de l'inscription</h1>
+        <p>${hello}</p>
+        <p>Merci ! Nous avons bien reçu votre paiement de <strong>${fmt(input.amountCents)}</strong> pour le <strong>${label}</strong>.</p>
+        <p>Il nous manque seulement les informations de votre fils pour compléter son dossier et l'ajouter à la liste des joueurs. Cela prend moins de deux minutes :</p>
+        <p style="margin:22px 0"><a href="${escapeHtml(input.link)}" style="display:inline-block;background:#72499a;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px;padding:13px 22px;border-radius:8px">Remplir le formulaire</a></p>
+        <p style="font-size:13px;color:#6d6880">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br/><a href="${escapeHtml(input.link)}" style="color:#72499a;word-break:break-all">${escapeHtml(input.link)}</a></p>
+        <p>Aucun nouveau paiement n'est demandé. Pour toute question : info@newvalkyria.com</p>
+        <p style="margin-top:24px">New Valkyria</p>
+      </div>`,
+    text: `${input.parentName ? `Bonjour ${input.parentName},` : "Bonjour,"}\n\nNous avons bien reçu votre paiement de ${fmt(input.amountCents)} pour le ${programEmailLabel(input.programSlug)}.\nIl nous manque seulement les informations de votre fils pour compléter son dossier :\n${input.link}\n\nAucun nouveau paiement n'est demandé.\nNew Valkyria — info@newvalkyria.com`
+  });
+  if ((result as any)?.error) throw new Error((result as any).error.message ?? "Envoi impossible");
+}
+
+/** Confirmation une fois le formulaire rempli. */
+export async function sendRegistrationCompletedEmail(input: { to: string; parentName: string; playerName: string; programSlug: string }) {
+  const resend = getResendClient();
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    bcc: "info@newvalkyria.com",
+    subject: `New Valkyria — Inscription confirmée : ${input.playerName}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">Inscription confirmée</h1>
+        <p>Merci ${escapeHtml(input.parentName)} ! <strong>${escapeHtml(input.playerName)}</strong> est maintenant inscrit au <strong>${escapeHtml(programEmailLabel(input.programSlug))}</strong>.</p>
+        <p>Nous vous enverrons les détails des pratiques et des matchs. Pour toute question : info@newvalkyria.com</p>
+        <p style="margin-top:24px">New Valkyria</p>
+      </div>`
+  });
+}
