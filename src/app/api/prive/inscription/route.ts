@@ -18,6 +18,7 @@ import {
 import { addLedgerEntry, createProgramReferral, getCreditBalance, normalizeEmail, resolveReferral } from "@/lib/referrals-repo";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { createPaymentPlan, deletePaymentPlan, setRegistrationCheckoutSession } from "@/lib/session-programs-repo";
+import { isWaitlistOnly, programBrand } from "@/lib/private-program-view";
 import { getStripeClient } from "@/lib/stripe";
 import { privateProgramRegistrationSchema } from "@/lib/validations";
 
@@ -29,6 +30,11 @@ export async function POST(request: Request) {
     const payload = privateProgramRegistrationSchema.parse(await request.json());
     const program = await getPrivateProgram(payload.programSlug);
     if (!program || !program.active || !program.published) return jsonError("Ce programme est introuvable ou fermé.", 404);
+
+    const brand = programBrand(program);
+    const waitlistOnly = isWaitlistOnly(program);
+    // Les pages FC Atlantic ont leurs propres adresses (aucune mention de New Valkyria).
+    const pagePath = brand === "atlantic" ? `/programme/${program.slug}` : `/prive/${program.slug}`;
 
     // ── Forfait : programme complet ou « samedi seulement » (pratiques du samedi + matchs inclus) ──
     const pkg: "complet" | "samedi" = payload.package === "samedi" ? "samedi" : "complet";
@@ -77,7 +83,7 @@ export async function POST(request: Request) {
 
     // ── Programme complet → liste d'attente (aucun paiement) ──
     const held = await countHeldPlaces(program.slug);
-    if (held >= program.max_capacity) {
+    if (waitlistOnly || held >= program.max_capacity) {
       const waitId = await createPrivateRegistration({
         programSlug: program.slug,
         playerId,
@@ -106,7 +112,7 @@ export async function POST(request: Request) {
     // ── Référencement ──
     let referralDiscountCents = 0;
     let resolution: Awaited<ReturnType<typeof resolveReferral>> | null = null;
-    const wantsReferral = payload.referral?.answer === "oui";
+    const wantsReferral = brand === "nv" && payload.referral?.answer === "oui";
     if (wantsReferral) {
       resolution = await resolveReferral({
         codeOrEmail: payload.referral?.codeOrEmail,
@@ -122,7 +128,7 @@ export async function POST(request: Request) {
 
     // ── Crédit familial (seulement pour un parent connecté avec ce courriel) ──
     let creditCents = 0;
-    if (payload.useCredit) {
+    if (brand === "nv" && payload.useCredit) {
       const userId = await getParentUserId();
       const account = userId ? await getParentAccount(userId) : null;
       if (account && normalizeEmail(account.email) === normalizeEmail(parentEmail)) {
@@ -239,8 +245,8 @@ export async function POST(request: Request) {
           package: pkg,
           ...(paymentPlanId ? { paymentPlanId } : {})
         },
-        success_url: `${baseUrl}/prive/${program.slug}/confirmation?registrationId=${registrationId}`,
-        cancel_url: `${baseUrl}/prive/${program.slug}?cancelled=1`
+        success_url: `${baseUrl}${pagePath}/confirmation?registrationId=${registrationId}`,
+        cancel_url: `${baseUrl}${pagePath}?cancelled=1`
       });
       if (!session.url) throw new Error("Stripe n'a pas retourné d'URL de paiement.");
 

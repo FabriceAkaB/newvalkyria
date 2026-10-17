@@ -213,7 +213,8 @@ export function AdminPrives({
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
             {programs.map((p, idx) => {
               const s = stats[p.slug] ?? { held: 0, paid: 0, waitlist: 0 };
-              const link = privateProgramUrl(origin, p.slug);
+              // Programme FC Atlantic : page à part, sans mention de New Valkyria.
+              const link = (p.presentation as { brand?: string } | null)?.brand === "atlantic" ? `${origin.replace(/\/$/, "")}/programme/${p.slug}` : privateProgramUrl(origin, p.slug);
               const update = (patch: Partial<PrivateProgram>) => setPrograms((prev) => prev.map((x) => (x.slug === p.slug ? { ...x, ...patch } : x)));
               return (
                 <div key={p.slug} style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem" }}>

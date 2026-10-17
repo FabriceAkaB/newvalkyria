@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 
-import { PrivateProgramContent, type PrivateProgramView } from "@/components/private-program-content";
-import { env } from "@/lib/env";
-import { countHeldPlaces, getPrivateProgram } from "@/lib/private-programs-repo";
-import { getProgramDates } from "@/lib/session-programs-repo";
+import { PrivateProgramContent } from "@/components/private-program-content";
+import { getPrivateProgram } from "@/lib/private-programs-repo";
+import { buildPrivateProgramView, programBrand } from "@/lib/private-program-view";
 
 export const dynamic = "force-dynamic";
 
@@ -48,33 +47,9 @@ export default async function PrivateProgramPage({
   const live = Boolean(program && program.active && program.published);
   if (!program || (!live && !isAdmin)) notFound();
 
-  const [dates, held] = await Promise.all([getProgramDates(slug as never), countHeldPlaces(slug)]);
-  const remaining = Math.max(0, program.max_capacity - held);
-  const presentation = (program.presentation ?? {}) as PrivateProgramView["presentation"];
+  // Programme FC Atlantic : servi par sa propre page, sans aucune mention de New Valkyria.
+  if (programBrand(program) === "atlantic") redirect(`/programme/${program.slug}${ref ? `?ref=${encodeURIComponent(ref)}` : ""}`);
 
-  const view: PrivateProgramView = {
-    slug: program.slug,
-    name: program.name,
-    shortName: `${program.gender === "filles" ? "Filles" : program.gender === "mixte" ? "Joueurs" : "Garçons"} ${program.birth_years.replace("-", "–")}`,
-    birthYearsLabel: program.birth_years.replace("-", " et "),
-    genderLabel: program.gender === "filles" ? "Filles nées" : program.gender === "mixte" ? "Joueurs nés" : "Garçons nés",
-    draft: !live,
-    eligibleBirthYears: program.eligible_birth_years ?? [],
-    priceCents: program.price_cents,
-    saturdayPackageCents: program.saturday_package_price_cents ?? null,
-    capacity: program.max_capacity,
-    minCapacity: program.min_capacity,
-    remaining,
-    isFull: remaining <= 0,
-    practices: program.practices_count ?? 16,
-    matches: program.matches_count ?? 3,
-    installmentFeeCents: program.installment_fee_cents,
-    referralDiscountCents: program.referral_discount_cents,
-    secondInstallmentDate: program.second_installment_date,
-    dates,
-    presentation,
-    origin: env.publicSiteUrl
-  };
-
+  const view = await buildPrivateProgramView(program, live);
   return <PrivateProgramContent program={view} initialRef={ref?.trim() || null} />;
 }

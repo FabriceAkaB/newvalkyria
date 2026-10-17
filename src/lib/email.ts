@@ -377,6 +377,8 @@ interface PrivateProgramConfirmationInput {
   nextInstallmentDate: string | null;
   nextInstallmentCents: number | null;
   accountUrl: string;
+  /** « atlantic » : courriel signé FC Atlantic, sans espace parent ni recommandations. */
+  brand?: "nv" | "atlantic";
 }
 
 /** Confirmation d'inscription à un programme garçons privé : détail complet
@@ -393,12 +395,12 @@ export async function sendPrivateProgramConfirmationEmail(input: PrivateProgramC
   await resend.emails.send({
     from: env.resendFrom,
     to: input.to,
-    subject: `New Valkyria — Inscription confirmée : ${input.playerName}`,
+    subject: `${input.brand === "atlantic" ? "FC Atlantic" : "New Valkyria"} — Inscription confirmée : ${input.playerName}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
         <h1 style="font-size:22px;margin-bottom:6px">Merci ${escapeHtml(input.parentName)}, l'inscription est confirmée.</h1>
         <p style="margin-top:0"><strong>${escapeHtml(input.playerName)}</strong> est inscrit au programme <strong>${escapeHtml(input.programName)}</strong>.</p>
-        ${input.practices || input.matches ? `<p>Le programme comprend ${input.practices ?? "—"} pratiques et ${input.matches ?? "—"} matchs. Le calendrier détaillé vous sera communiqué.</p>` : ""}
+        ${input.practices || input.matches ? `<p>Le programme comprend ${input.practices ?? "—"} pratiques${input.matches ? ` et ${input.matches} matchs` : ""}. Le calendrier détaillé vous sera communiqué.</p>` : ""}
         <table style="width:100%;border-collapse:collapse;font-size:14px;background:#f7f4fb;margin:14px 0">
           ${row("Prix du programme", fmt(input.listPriceCents))}
           ${input.referralDiscountCents > 0 ? row("Rabais de référencement", `− ${fmt(input.referralDiscountCents)}`) : ""}
@@ -413,8 +415,8 @@ export async function sendPrivateProgramConfirmationEmail(input: PrivateProgramC
             ? `<p>Le prochain versement de <strong>${fmt(input.nextInstallmentCents ?? remaining)}</strong> sera prélevé automatiquement sur la carte utilisée le <strong>${new Date(input.nextInstallmentDate + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}</strong>, comme vous l'avez autorisé. Un rappel vous sera envoyé avant la date.</p>`
             : ""
         }
-        <p>Vous pouvez consulter votre dossier et vos recommandations dans votre espace parent : <a href="${input.accountUrl}">${input.accountUrl}</a></p>
-        <p style="margin-top:24px">New Valkyria<br/>info@newvalkyria.com</p>
+        ${input.brand === "atlantic" ? "" : `<p>Vous pouvez consulter votre dossier et vos recommandations dans votre espace parent : <a href="${input.accountUrl}">${input.accountUrl}</a></p>`}
+        <p style="margin-top:24px">${input.brand === "atlantic" ? "FC Atlantic" : "New Valkyria<br/>info@newvalkyria.com"}</p>
       </div>
     `
   });

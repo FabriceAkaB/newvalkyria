@@ -46,6 +46,10 @@ export interface PrivateProgramView {
   dates: DateRow[];
   presentation: Presentation;
   origin: string;
+  /** « atlantic » : page FC Atlantic, sans mention de New Valkyria (ni référencement, ni partage). */
+  brand?: "nv" | "atlantic";
+  /** Programme en attente : seulement l'inscription à la liste d'attente (ni dates, ni prix). */
+  waitlistOnly?: boolean;
 }
 
 /** Nombre de pratiques visibles avant « Voir tout le calendrier » (section trop longue sur téléphone). */
@@ -234,18 +238,23 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
 
   const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem 1.1rem", marginBottom: "1.25rem" };
   const h2: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" };
+  const atlantic = program.brand === "atlantic";
+  const waitlistOnly = Boolean(program.waitlistOnly);
+  const showReferral = !atlantic && !waitlistOnly;
 
   return (
     <>
       <section className="insc-hero se-hero">
         <Container>
           <div className="insc-hero-inner" style={{ textAlign: "center" }}>
-            {program.draft && <p style={{ background: "#3a2f10", color: "#f0c878", fontSize: "0.78rem", padding: "0.4rem 0.8rem", borderRadius: "8px", display: "inline-block", marginBottom: "0.6rem" }}>Brouillon — non publié (visible seulement par l'administrateur)</p>}
+            {program.draft && <p style={{ background: "#3a2f10", color: "#f0c878", fontSize: "0.78rem", padding: "0.4rem 0.8rem", borderRadius: "8px", display: "inline-block", marginBottom: "0.6rem" }}>Brouillon — non publié (visible seulement par l&apos;administrateur)</p>}
             <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">{program.genderLabel} en {program.birthYearsLabel}</p>
             <h1 className="insc-hero-title">{program.name}</h1>
             <p className="insc-hero-sub">
-              {program.presentation.intro ??
-                `Un programme de développement technique de ${program.practices} pratiques et ${program.matches} matchs, en petit groupe de ${capacityLabel(program.minCapacity, program.capacity)} joueurs.`}
+              {waitlistOnly
+                ? "Ce programme est en préparation. Inscrivez votre enfant sur la liste d'attente : nous vous écrirons dès que les dates et les places seront confirmées."
+                : program.presentation.intro ??
+                  `Un programme de développement technique de ${program.practices} pratiques${program.matches > 0 ? ` et ${program.matches} matchs` : ""}, en petit groupe de ${capacityLabel(program.minCapacity, program.capacity)} joueurs.`}
             </p>
           </div>
         </Container>
@@ -253,14 +262,23 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
 
       <section className="section-band">
         <Container className="max-w-2xl">
+          {!waitlistOnly && (
+          <>
           {/* ── Faits clés ── */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "0.6rem", marginBottom: "1.25rem" }}>
-            {[
-              [String(program.practices), "pratiques"],
-              [String(program.matches), "matchs inclus"],
-              [String(program.practices + program.matches), "activités au total"],
-              [capacityLabel(program.minCapacity, program.capacity), program.minCapacity ? "joueurs par groupe" : "joueurs maximum"]
-            ].map(([n, l]) => (
+            {(program.matches > 0
+              ? [
+                  [String(program.practices), "pratiques"],
+                  [String(program.matches), "matchs inclus"],
+                  [String(program.practices + program.matches), "activités au total"],
+                  [capacityLabel(program.minCapacity, program.capacity), program.minCapacity ? "joueurs par groupe" : "joueurs maximum"]
+                ]
+              : [
+                  [String(program.practices), "pratiques"],
+                  ["2", "pratiques par semaine"],
+                  [capacityLabel(program.minCapacity, program.capacity), program.minCapacity ? "joueurs par groupe" : "places seulement"]
+                ]
+            ).map(([n, l]) => (
               <div key={l} style={{ ...card, marginBottom: 0, textAlign: "center", padding: "0.8rem 0.5rem" }}>
                 <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "#c4a4e4", margin: 0 }}>{n}</p>
                 <p style={{ fontSize: "0.7rem", color: "#9d9da0", margin: 0 }}>{l}</p>
@@ -330,7 +348,9 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
           </div>
 
           {/* ── Essai gratuit du mardi ── */}
-          <BoysTrialSection slug={program.slug} eligibleYears={program.eligibleBirthYears} />
+          {!atlantic && <BoysTrialSection slug={program.slug} eligibleYears={program.eligibleBirthYears} />}
+          </>
+          )}
 
           {/* ── Inscription ── */}
           {waitlisted ? (
@@ -340,7 +360,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
             </div>
           ) : (
             <div style={card}>
-              <h2 style={h2}>{program.isFull ? "Liste d'attente" : "Inscrire mon enfant"}</h2>
+              <h2 style={h2}>{waitlistOnly ? "Inscription à la liste d'attente" : program.isFull ? "Liste d'attente" : "Inscrire mon enfant"}</h2>
 
               {program.saturdayPackageCents != null && (
                 <div style={{ marginBottom: "1rem" }}>
@@ -434,6 +454,8 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
                 <label className="insc-field"><span>Ville</span><input className="insc-input" value={form.city} onChange={(e) => set("city", e.target.value)} /></label>
 
                 {/* ── Référencement ── */}
+                {showReferral && (
+                <>
                 <p style={{ fontSize: "0.72rem", color: "#9f85ba", textTransform: "uppercase", margin: "1rem 0 0.2rem" }}>Recommandation</p>
                 <p style={{ fontSize: "0.85rem", color: "#fff", margin: "0 0 0.4rem" }}>Une famille ou une personne vous a-t-elle recommandé New Valkyria ?</p>
                 <div style={{ display: "flex", gap: "1.2rem", marginBottom: "0.5rem" }}>
@@ -453,7 +475,10 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
                   </div>
                 )}
 
-                {creditBalance > 0 && !program.isFull && (
+                </>
+                )}
+
+                {showReferral && creditBalance > 0 && !program.isFull && (
                   <label className="insc-consent" style={{ marginTop: "0.5rem" }}>
                     <div className="insc-checkbox-wrap"><input type="checkbox" className="insc-checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} /><span className="insc-checkbox-custom" aria-hidden /></div>
                     <span>Utiliser mon crédit familial ({formatMoney(creditBalance)} disponible)</span>
@@ -469,7 +494,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
                 {option === "two_installments" && !program.isFull && (
                   <label className="insc-consent" style={{ marginTop: "0.5rem" }}>
                     <div className="insc-checkbox-wrap"><input type="checkbox" className="insc-checkbox" checked={autoDebit} onChange={(e) => setAutoDebit(e.target.checked)} /><span className="insc-checkbox-custom" aria-hidden /></div>
-                    <span>J&apos;autorise New Valkyria à prélever automatiquement le deuxième versement de {formatMoney(priceTwo.paymentsCents[1])} sur la carte utilisée aujourd&apos;hui.</span>
+                    <span>{atlantic ? "J'autorise le prélèvement automatique du deuxième versement" : "J'autorise New Valkyria à prélever automatiquement le deuxième versement"} de {formatMoney(priceTwo.paymentsCents[1])} sur la carte utilisée aujourd&apos;hui.</span>
                   </label>
                 )}
 
@@ -489,6 +514,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
           )}
 
           {/* ── Partage ── */}
+          {showReferral && (
           <div style={card}>
             <h2 style={h2}>Partager ce programme</h2>
             <ShareProgramButtons program={shareProgram} refCode={myCode} origin={program.origin} />
@@ -498,6 +524,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
               </p>
             )}
           </div>
+          )}
         </Container>
       </section>
     </>

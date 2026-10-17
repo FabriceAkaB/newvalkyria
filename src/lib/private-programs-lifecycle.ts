@@ -55,7 +55,8 @@ export async function onPrivateRegistrationPaid(registration: PrivateRegistratio
       paidCents,
       nextInstallmentDate: next?.due_date ?? null,
       nextInstallmentCents: next?.amount_cents ?? null,
-      accountUrl: `${env.publicSiteUrl}/compte/recommandations`
+      accountUrl: `${env.publicSiteUrl}/compte/recommandations`,
+      brand: (program.presentation as { brand?: string } | null)?.brand === "atlantic" ? "atlantic" : "nv"
     });
   } catch (error) {
     console.error("Unable to send private program confirmation email", error);

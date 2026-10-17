@@ -26,7 +26,10 @@ export async function GET() {
     ledger: ledger.slice(0, 20).map((e) => ({ id: e.id, deltaCents: e.delta_cents, kind: e.kind, note: e.note, createdAt: e.created_at })),
     origin: env.publicSiteUrl,
     programs: programs
-      .filter((p) => p.active && p.published)
+      .filter((p) => {
+        const pres = (p.presentation ?? {}) as { brand?: string; waitlistOnly?: boolean };
+        return p.active && p.published && pres.brand !== "atlantic" && !pres.waitlistOnly;
+      })
       .map((p) => ({
         slug: p.slug,
         name: p.name,

@@ -45,7 +45,10 @@ export function programShortName(p: Pick<PrivateProgram, "gender" | "birth_years
 
 /** Programmes promus : ouverts ET publiés seulement (jamais un brouillon). */
 export async function getCampaignPrograms(origin: string, code: string): Promise<CampaignProgram[]> {
-  const programs = (await getAllPrivatePrograms()).filter((p) => p.active && p.published);
+  const programs = (await getAllPrivatePrograms()).filter((p) => {
+    const pres = (p.presentation ?? {}) as { brand?: string; waitlistOnly?: boolean };
+    return p.active && p.published && pres.brand !== "atlantic" && !pres.waitlistOnly;
+  });
   const held = await Promise.all(programs.map((p) => countHeldPlaces(p.slug)));
   return programs.map((p, i) => {
     const link = privateProgramUrl(origin, p.slug, code);
