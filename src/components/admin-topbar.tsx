@@ -81,7 +81,7 @@ const COMMUNICATIONS_LINKS: { href: string; label: string; icon: IconName }[] = 
 const SPORT_ETUDES_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/inscriptions-garcons", label: "Inscriptions garçons (toutes)", icon: "users" },
   { href: "/admin/programme/garcons-2014", label: "Intensif 2014 (FC Atlantic)", icon: "users" },
-  { href: "/admin/programme/garcons-2014-2015", label: "Intensif 2015", icon: "users" },
+  { href: "/admin/programme/intensif-garcons", label: "Intensif 2015", icon: "users" },
   { href: "/admin/programme/garcons-2018", label: "Garçons 2018 (liste d'attente)", icon: "users" },
   { href: "/admin/sport-etudes", label: "Sport-Études", icon: "flask" },
   { href: "/admin/programme-intensif", label: "Programme Intensif", icon: "flask" },

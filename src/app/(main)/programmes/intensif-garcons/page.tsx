@@ -6,8 +6,8 @@ import { countActiveRegistrations, getProgram, getProgramDates } from "@/lib/ses
 
 // L'aperçu du lien (texto, WhatsApp, Messenger, courriel) montre le logo de l'académie en
 // noir et blanc sur fond neutre — jamais la photo d'accueil ni de mention des filles.
-const TITLE = "Programme Intensif — Garçons 2015-2014 | New Valkyria";
-const DESCRIPTION = "Préparation technique intensive pour garçons nés en 2015-2014 — pratiques du samedi à l'École Chambéry (Blainville), incluant 3 matchs amicaux.";
+const TITLE = "Programme intensif garçons 2015 | New Valkyria";
+const DESCRIPTION = "Préparation technique intensive pour garçons nés en 2015 — 10 pratiques du samedi à l'École Chambéry (Blainville), incluant 3 matchs amicaux.";
 const OG_IMAGE = { url: "/og/garcons.jpg", width: 1200, height: 628, alt: "New Valkyria" };
 
 export const metadata: Metadata = {
@@ -36,7 +36,7 @@ export default async function ProgrammeIntensifPage() {
     <SessionProgramContent
       slug={slug}
       title={program.name}
-      tagline="Garçons nés 2015-2014"
+      tagline="Garçons nés en 2015"
       intro={`Une préparation technique intensive de ${dates.length} pratiques du samedi à l'École Chambéry (Blainville), incluant 3 matchs amicaux (dates à déterminer).`}
       priceCents={program.price_cents}
       saturdayPackageCents={program.saturday_package_price_cents}

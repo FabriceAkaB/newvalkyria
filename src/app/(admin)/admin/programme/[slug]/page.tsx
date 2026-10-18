@@ -12,7 +12,7 @@ export const metadata = { title: "Programme garçons — Admin New Valkyria", ro
 export const dynamic = "force-dynamic";
 
 /** Les programmes garçons suivis chacun dans leur propre section (menu « Programmes (Garçons) »). */
-const BOYS_PROGRAM_SECTIONS = ["garcons-2014", "garcons-2014-2015", "garcons-2018"] as const;
+const BOYS_PROGRAM_SECTIONS = ["garcons-2014", "intensif-garcons", "garcons-2018"] as const;
 
 async function stats(slug: string) {
   const [program, held, paid, waitlist] = await Promise.all([getPrivateProgram(slug), countHeldPlaces(slug), countPaidPlaces(slug), getWaitlistCount(slug)]);
@@ -31,7 +31,12 @@ export default async function AdminBoysProgramPage({ params }: { params: Promise
   if (!program) notFound();
 
   const brand = programBrand(program);
-  const link = brand === "atlantic" ? `${env.publicSiteUrl}/programme/${slug}` : `${env.publicSiteUrl}/prive/${slug}`;
+  const link =
+    slug === "intensif-garcons"
+      ? `${env.publicSiteUrl}/programmes/intensif-garcons`
+      : brand === "atlantic"
+        ? `${env.publicSiteUrl}/programme/${slug}`
+        : `${env.publicSiteUrl}/prive/${slug}`;
   const comparison: ProgramComparison[] = others
     .filter((o) => o.program)
     .map((o) => ({

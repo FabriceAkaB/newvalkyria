@@ -43,6 +43,8 @@ export default async function PrivateProgramPage({
   const { ref } = await searchParams;
 
   const program = await getPrivateProgram(slug);
+  const redirectTo = (program?.presentation as { redirectTo?: string } | null)?.redirectTo;
+  if (redirectTo && redirectTo.startsWith("/")) redirect(redirectTo);
   const isAdmin = Boolean(await getCurrentAdminRole());
   const live = Boolean(program && program.active && program.published);
   if (!program || (!live && !isAdmin)) notFound();
