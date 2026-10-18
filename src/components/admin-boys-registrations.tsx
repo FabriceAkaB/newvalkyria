@@ -165,7 +165,18 @@ function Drawer({ row, onClose, onStatus, onDeleted }: { row: BoysRegistrationRo
   );
 }
 
-export function BoysRegistrationsTable({ initialRows, initialProgram = "all" }: { initialRows: BoysRegistrationRow[]; initialProgram?: string }) {
+export function BoysRegistrationsTable({
+  initialRows,
+  initialProgram = "all",
+  lockProgram = false,
+  title = "Inscriptions garçons"
+}: {
+  initialRows: BoysRegistrationRow[];
+  initialProgram?: string;
+  /** Page d'un seul programme : pas de sélecteur de programme. */
+  lockProgram?: boolean;
+  title?: string;
+}) {
   const [rows, setRows] = useState(initialRows);
   const [filter, setFilter] = useState<FilterType>("all");
   const [program, setProgram] = useState<string>(initialProgram);
@@ -245,7 +256,7 @@ export function BoysRegistrationsTable({ initialRows, initialProgram = "all" }: 
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem", flexWrap: "wrap", gap: "0.75rem" }}>
-        <p className="admin-section-title" style={{ margin: 0 }}>Inscriptions garçons ({counts.all})</p>
+        <p className="admin-section-title" style={{ margin: 0 }}>{title} ({counts.all})</p>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <button onClick={copyEmails} className="admin-export-btn" title="Copier tous les courriels des inscriptions actives">📋 Copier tous les courriels</button>
           <button onClick={exportCsv} className="admin-export-btn" title="Exporter la sélection en CSV">↓ Exporter CSV</button>
@@ -265,10 +276,12 @@ export function BoysRegistrationsTable({ initialRows, initialProgram = "all" }: 
       </div>
 
       <div className="admin-filters-row" style={{ marginBottom: "1rem", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-        <select value={program} onChange={(e) => setProgram(e.target.value)} className="admin-group-select">
-          <option value="all">Tous les programmes garçons</option>
-          {programs.map(([slug, label]) => <option key={slug} value={slug}>{label}</option>)}
-        </select>
+        {!lockProgram && (
+          <select value={program} onChange={(e) => setProgram(e.target.value)} className="admin-group-select">
+            <option value="all">Tous les programmes garçons</option>
+            {programs.map(([slug, label]) => <option key={slug} value={slug}>{label}</option>)}
+          </select>
+        )}
         <div className="admin-search-wrap">
           <input type="search" placeholder="Rechercher parent, joueur, courriel…" value={search} onChange={(e) => setSearch(e.target.value)} className="admin-search-input" />
         </div>
