@@ -240,7 +240,8 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
   const h2: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" };
   const atlantic = program.brand === "atlantic";
   const waitlistOnly = Boolean(program.waitlistOnly);
-  const showReferral = !atlantic && !waitlistOnly;
+  // Le référencement n'est proposé que pour les programmes qui offrent un rabais de recommandation.
+  const showReferral = !atlantic && !waitlistOnly && program.referralDiscountCents > 0;
 
   return (
     <>

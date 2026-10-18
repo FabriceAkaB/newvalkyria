@@ -47,7 +47,7 @@ export function programShortName(p: Pick<PrivateProgram, "gender" | "birth_years
 export async function getCampaignPrograms(origin: string, code: string): Promise<CampaignProgram[]> {
   const programs = (await getAllPrivatePrograms()).filter((p) => {
     const pres = (p.presentation ?? {}) as { brand?: string; waitlistOnly?: boolean };
-    return p.active && p.published && pres.brand !== "atlantic" && !pres.waitlistOnly;
+    return p.active && p.published && pres.brand !== "atlantic" && !pres.waitlistOnly && p.referral_discount_cents > 0;
   });
   const held = await Promise.all(programs.map((p) => countHeldPlaces(p.slug)));
   return programs.map((p, i) => {
