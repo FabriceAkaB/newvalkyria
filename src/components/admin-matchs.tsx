@@ -235,7 +235,11 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                         <td style={cell}>{p.team_level}{p.team_players ? <><br />{p.team_players} joueurs</> : null}</td>
                         <td style={cell}>{p.contact_name}<br />{p.contact_email}<br />{p.contact_phone}</td>
                         <td style={cell}>{booked > 0 ? <span style={{ color: "#8fce9f", fontWeight: 700 }}>{booked} plage{booked > 1 ? "s" : ""}</span> : <span style={{ color: "#f0c878" }}>Aucune — à relancer</span>}</td>
-                        <td style={cell}>{new Date(p.created_at).toLocaleDateString("fr-CA")}</td>
+                        <td style={cell}>
+                          {new Date(p.created_at).toLocaleDateString("fr-CA")}
+                          <br />
+                          <button className="admin-btn-ghost" style={{ fontSize: "0.64rem" }} onClick={() => navigator.clipboard.writeText(`${origin}/prive/matchs?equipe=${p.access_token}`).then(() => flash("Lien personnel de l'équipe copié."))}>Copier son lien</button>
+                        </td>
                       </tr>
                     );
                   })}

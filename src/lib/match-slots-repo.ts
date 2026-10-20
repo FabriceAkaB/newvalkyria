@@ -79,6 +79,8 @@ export interface MatchTeamProfile {
   contact_email: string;
   contact_phone: string;
   notes: string | null;
+  /** Lien personnel : /prive/matchs?equipe=<access_token> — l'équipe n'a pas à refaire le formulaire. */
+  access_token: string;
   created_at: string;
 }
 
@@ -127,6 +129,12 @@ export async function saveTeamProfile(input: TeamProfileInput): Promise<MatchTea
   const { data, error } = await q.select("*").single();
   if (error) throw new Error(error.message);
   return data as MatchTeamProfile;
+}
+
+export async function getTeamProfileByToken(token: string): Promise<MatchTeamProfile | null> {
+  if (!/^[a-f0-9]{30,64}$/i.test(token)) return null;
+  const { data } = await db().from("match_team_profiles").select("*").eq("access_token", token).maybeSingle();
+  return (data as MatchTeamProfile | null) ?? null;
 }
 
 export async function getTeamProfile(id: string): Promise<MatchTeamProfile | null> {

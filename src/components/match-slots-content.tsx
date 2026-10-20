@@ -6,6 +6,7 @@ import { Container } from "@/components/container";
 import { checkEligibility, type SlotRules, type TeamCategory, type TeamGender } from "@/lib/match-slots-core";
 
 const TEAM_LEVELS = ["Récréatif", "Intermédiaire", "Compétitif", "Élite"] as const;
+const TEAM_TOKEN_KEY = "nv_match_team";
 import { formatMoney } from "@/lib/private-programs";
 
 interface Slot {
@@ -91,6 +92,48 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Équipe déjà enregistrée : lien personnel (?equipe=…) ou ce navigateur s'en souvient → pas de formulaire à refaire.
+  const [teamToken, setTeamToken] = useState<string | null>(null);
+  const applyProfile = (p: any) => {
+    setForm({
+      orgName: p.orgName ?? "",
+      teamLabel: p.teamLabel ?? "",
+      gender: p.teamGender ?? "",
+      birthYear: p.teamBirthYear ? String(p.teamBirthYear) : "",
+      level: p.teamLevel ?? "",
+      players: p.teamPlayers ? String(p.teamPlayers) : "",
+      contactName: p.contactName ?? "",
+      contactEmail: p.contactEmail ?? "",
+      contactPhone: p.contactPhone ?? "",
+      notes: p.notes ?? ""
+    });
+    setProfileId(p.profileId);
+    setTeamToken(p.token);
+  };
+  useEffect(() => {
+    let token: string | null = null;
+    try {
+      token = new URLSearchParams(window.location.search).get("equipe") || window.localStorage.getItem(TEAM_TOKEN_KEY);
+    } catch {
+      /* stockage indisponible */
+    }
+    if (!token) return;
+    fetch(`/api/prive/matchs/equipe?token=${encodeURIComponent(token)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (json?.profile) {
+          applyProfile(json.profile);
+          try {
+            window.localStorage.setItem(TEAM_TOKEN_KEY, json.profile.token);
+          } catch {
+            /* ignore */
+          }
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const team: TeamCategory | null = useMemo(() => {
     if (!profileId) return null;
@@ -210,6 +253,15 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
       setShowAll(false);
       scrolledRef.current = false;
       setProfileId(json.profileId);
+      if (json.token) {
+        setTeamToken(json.token);
+        try {
+          window.localStorage.setItem(TEAM_TOKEN_KEY, json.token);
+          window.history.replaceState(null, "", `${window.location.pathname}?equipe=${json.token}`);
+        } catch {
+          /* ignore */
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {
@@ -315,6 +367,22 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                 >
                   Modifier les informations de mon équipe
                 </button>
+                {teamToken && (
+                  <p style={{ fontSize: "0.74rem", color: "#9d9da0", margin: "0.6rem 0 0", lineHeight: 1.5 }}>
+                    Votre équipe est enregistrée : la prochaine fois, ce navigateur s&apos;en souviendra, et votre lien personnel vous a été envoyé par courriel. Pas votre équipe ?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try { window.localStorage.removeItem(TEAM_TOKEN_KEY); window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
+                        setTeamToken(null); setProfileId(null); setSelected([]);
+                        setForm({ orgName: "", teamLabel: "", gender: "", birthYear: "", level: "", players: "", contactName: "", contactEmail: "", contactPhone: "", notes: "" });
+                      }}
+                      style={{ background: "none", border: "none", padding: 0, color: "#c4a4e4", fontSize: "0.74rem", cursor: "pointer", textDecoration: "underline" }}
+                    >
+                      Changer d&apos;équipe
+                    </button>
+                  </p>
+                )}
               </>
             ) : (
               <>

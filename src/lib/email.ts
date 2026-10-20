@@ -693,3 +693,24 @@ export async function sendRegistrationCompletedEmail(input: { to: string; parent
       </div>`
   });
 }
+
+/** Équipe extérieure : son lien personnel pour réserver des matchs sans refaire le formulaire. */
+export async function sendMatchTeamLinkEmail(input: { to: string; contactName: string; orgName: string; teamLabel: string; link: string }) {
+  const resend = getResendClient();
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    bcc: "info@newvalkyria.com",
+    subject: `New Valkyria — Votre équipe est enregistrée (${input.orgName})`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:21px">Votre équipe est enregistrée</h1>
+        <p>Bonjour ${escapeHtml(input.contactName)},</p>
+        <p>Merci ! Les informations de <strong>${escapeHtml(input.orgName)}</strong> (${escapeHtml(input.teamLabel)}) sont enregistrées. Voici votre <strong>lien personnel</strong> pour voir les plages de match qui conviennent à votre équipe et les réserver, sans avoir à remplir le formulaire de nouveau :</p>
+        <p style="margin:20px 0"><a href="${escapeHtml(input.link)}" style="display:inline-block;background:#72499a;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px;padding:12px 20px;border-radius:8px">Voir et réserver nos plages de match</a></p>
+        <p style="font-size:13px;color:#6d6880">Conservez ce courriel. Lien : <a href="${escapeHtml(input.link)}" style="color:#72499a;word-break:break-all">${escapeHtml(input.link)}</a></p>
+        <p>Pour toute question : info@newvalkyria.com</p>
+        <p style="margin-top:22px">L'équipe New Valkyria</p>
+      </div>`
+  });
+}

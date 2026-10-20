@@ -3,7 +3,34 @@ import { z, ZodError } from "zod";
 
 import { isValidPhone } from "@/lib/form-validation";
 import { jsonError } from "@/lib/http";
-import { MatchConflictError, saveTeamProfile, TEAM_LEVELS } from "@/lib/match-slots-repo";
+import { sendMatchTeamLinkEmail } from "@/lib/email";
+import { env } from "@/lib/env";
+import { getTeamProfileByToken, MatchConflictError, saveTeamProfile, TEAM_LEVELS, type MatchTeamProfile } from "@/lib/match-slots-repo";
+
+function publicProfile(p: MatchTeamProfile) {
+  return {
+    profileId: p.id,
+    token: p.access_token,
+    orgName: p.org_name,
+    teamLabel: p.team_label,
+    teamGender: p.team_gender,
+    teamBirthYear: p.team_birth_year,
+    teamLevel: p.team_level,
+    teamPlayers: p.team_players,
+    contactName: p.contact_name,
+    contactEmail: p.contact_email,
+    contactPhone: p.contact_phone,
+    notes: p.notes
+  };
+}
+
+/** Retrouver son équipe par son lien personnel (aucun formulaire à refaire). */
+export async function GET(request: Request) {
+  const token = new URL(request.url).searchParams.get("token") ?? "";
+  const profile = await getTeamProfileByToken(token);
+  if (!profile) return jsonError("Équipe introuvable", 404);
+  return NextResponse.json({ ok: true, profile: publicProfile(profile) });
+}
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +63,12 @@ export async function POST(request: Request) {
       contactPhone: payload.contactPhone,
       notes: payload.notes?.trim() || null
     });
-    return NextResponse.json({ ok: true, profileId: profile.id });
+    // Courriel avec le lien personnel : pour revenir réserver sans refaire le formulaire.
+    const link = `${env.publicSiteUrl}/prive/matchs?equipe=${profile.access_token}`;
+    void sendMatchTeamLinkEmail({ to: profile.contact_email, contactName: profile.contact_name, orgName: profile.org_name, teamLabel: profile.team_label, link }).catch((e) =>
+      console.error("Unable to send match team link email", e)
+    );
+    return NextResponse.json({ ok: true, profileId: profile.id, token: profile.access_token, profile: publicProfile(profile) });
   } catch (error) {
     if (error instanceof ZodError) return jsonError(error.issues[0]?.message ?? "Données invalides", 422);
     if (error instanceof MatchConflictError) return jsonError(error.message, 409);
