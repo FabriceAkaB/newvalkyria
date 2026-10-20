@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
+import { closeOtherOffersForSlot, reopenOffersForSlot } from "@/lib/partnership-offers";
 import { buildPaymentLinkParams, type SponsorSlot } from "@/lib/sponsorship-2027";
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -83,11 +84,13 @@ export async function POST(request: Request) {
         }
         await db().from("sponsor_slots_2027").update({ status: sold ? "sold" : "reserved", sponsor_id: sponsor.id, updated_at: new Date().toISOString() }).eq("slot_key", slot.slot_key);
         await setLinkActive(slot.payment_link_id, false);
+        await closeOtherOffersForSlot(slot.slot_key, null);
         break;
       }
       case "release": {
         await db().from("sponsor_slots_2027").update({ status: "available", sponsor_id: null, updated_at: new Date().toISOString() }).eq("slot_key", slot.slot_key);
         await setLinkActive(slot.payment_link_id, true);
+        await reopenOffersForSlot(slot.slot_key);
         break;
       }
       case "set_company": {

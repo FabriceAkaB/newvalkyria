@@ -6,6 +6,21 @@ import { AdminTopbar } from "@/components/admin-topbar";
 import { formatMoney } from "@/lib/private-programs";
 import { SPONSORSHIP_GOAL_CENTS, TIER_BENEFITS } from "@/lib/sponsorship-2027";
 import type { SponsorSlotRow } from "@/app/api/admin/sponsors-2027/route";
+import type { PartnershipOffer } from "@/lib/partnership-offers";
+
+const OFFER_STATUS: Record<string, [string, string]> = {
+  draft: ["Brouillon (non envoyée)", "#9d9da0"],
+  sent: ["Envoyée", "#f0c878"],
+  accepted: ["Acceptée", "#8fce9f"],
+  declined: ["Refusée", "#ff9999"],
+  expired: ["Expirée", "#6d6b71"]
+};
+const OPTION_STATUS: Record<string, [string, string]> = {
+  open: ["Ouverte", "#c3c2c8"],
+  paid: ["Payée", "#8fce9f"],
+  unavailable: ["Emplacement plus disponible", "#ffb464"],
+  closed: ["Non retenue", "#6d6b71"]
+};
 
 const STATUS_STYLE: Record<string, { label: string; color: string }> = {
   available: { label: "Disponible", color: "#8fce9f" },
@@ -13,7 +28,24 @@ const STATUS_STYLE: Record<string, { label: string; color: string }> = {
   sold: { label: "Vendu", color: "#c4a4e4" }
 };
 
-export function AdminSponsors2027({ initialSlots, role }: { initialSlots: SponsorSlotRow[]; role: "admin" | "gerante" }) {
+export function AdminSponsors2027({ initialSlots, role, initialOffers = [], origin = "" }: { initialSlots: SponsorSlotRow[]; role: "admin" | "gerante"; initialOffers?: PartnershipOffer[]; origin?: string }) {
+  const [offers, setOffers] = useState(initialOffers);
+  const [optPrice, setOptPrice] = useState<Record<string, string>>({});
+  const offeredOn = (slotKey: string) =>
+    offers.filter((o) => o.status !== "declined" && o.status !== "expired" && o.options.some((x) => x.slot_key === slotKey && x.status === "open")).map((o) => o.company_name);
+  const offerCall = async (body: Record<string, unknown>, ok: string) => {
+    try {
+      const res = await fetch("/api/admin/partenariats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Erreur");
+      setOffers(json.offers);
+      const s = await fetch("/api/admin/sponsors-2027").then((r) => r.json());
+      if (s.slots) setSlots(s.slots);
+      flash(ok);
+    } catch (e) {
+      flash(e instanceof Error ? e.message : "Erreur");
+    }
+  };
   const isAdmin = role === "admin";
   const [priceFor, setPriceFor] = useState<string | null>(null);
   const [price, setPrice] = useState("");
@@ -112,7 +144,12 @@ export function AdminSponsors2027({ initialSlots, role }: { initialSlots: Sponso
                           {formatMoney(s.price_cents)}
                           {s.list_price_cents != null && s.list_price_cents !== s.price_cents ? <><br /><span style={{ color: "#f0c878" }}>Prix négocié</span><br /><span style={{ color: "#6d6b71", textDecoration: "line-through" }}>{formatMoney(s.list_price_cents)}</span></> : null}
                         </td>
-                        <td style={cell}><span style={{ color: st.color, fontWeight: 700 }}>{st.label}</span></td>
+                        <td style={cell}>
+                          <span style={{ color: st.color, fontWeight: 700 }}>{st.label}</span>
+                          {s.status === "available" && offeredOn(s.slot_key).length > 0 && (
+                            <><br /><span style={{ color: "#78a8f0", fontSize: "0.7rem" }}>Proposé à : {offeredOn(s.slot_key).join(", ")}</span></>
+                          )}
+                        </td>
                         <td style={cell}>
                           {s.company_name ? (
                             <>
@@ -177,6 +214,64 @@ export function AdminSponsors2027({ initialSlots, role }: { initialSlots: Sponso
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* ── Propositions personnalisées ── */}
+          <div style={card}>
+            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Propositions personnalisées ({offers.length})</p>
+            <p style={{ fontSize: "0.74rem", color: "#6d6b71", margin: "0 0 0.8rem" }}>
+              Chaque entreprise a sa page privée avec ses options et un bouton de paiement par option. Une option chandail est liée à un emplacement : dès que l&apos;emplacement est vendu (à elle ou à quelqu&apos;un d&apos;autre), toutes les autres offres sur cet emplacement se ferment automatiquement.
+            </p>
+            {offers.length === 0 && <p className="admin-empty-text">Aucune proposition pour l&apos;instant.</p>}
+            {offers.map((o) => {
+              const page = `${origin}/partenariat/${o.token}`;
+              const [label, color] = OFFER_STATUS[o.status] ?? [o.status, "#c3c2c8"];
+              return (
+                <div key={o.id} style={{ borderTop: "1px solid #1f1d25", padding: "0.8rem 0" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", flexWrap: "wrap" }}>
+                    <div>
+                      <strong style={{ color: "#fff" }}>{o.company_name}</strong>
+                      <span style={{ color, fontWeight: 700, fontSize: "0.74rem", marginLeft: "0.5rem" }}>{label}</span>
+                      <br />
+                      <span style={{ fontSize: "0.74rem", color: "#9d9da0" }}>
+                        {o.contact_name} · {o.contact_email}
+                        {o.respond_by ? ` · réponse attendue le ${new Date(`${o.respond_by}T12:00:00`).toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}` : ""}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                      <a href={page} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ fontSize: "0.68rem" }}>Voir sa page</a>
+                      <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => navigator.clipboard.writeText(page).then(() => flash("Lien de la proposition copié."))}>Copier le lien</button>
+                      {isAdmin && o.status === "sent" && (
+                        <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "#ff9999" }} onClick={() => confirm("Marquer cette proposition comme refusée ?") && offerCall({ action: "set_status", offerId: o.id, status: "declined" }, "Proposition marquée refusée.")}>Refusée</button>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gap: "0.3rem", marginTop: "0.5rem" }}>
+                    {o.options.map((x) => {
+                      const [ol, oc] = OPTION_STATUS[x.status] ?? [x.status, "#c3c2c8"];
+                      return (
+                        <div key={x.id} style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap", fontSize: "0.78rem", color: "#c3c2c8" }}>
+                          <span style={{ minWidth: "230px" }}>{x.slot_key ? `Chandail (${x.slot_key}) — ` : ""}{x.label}</span>
+                          <strong style={{ color: "#fff" }}>{x.price_cents != null ? formatMoney(x.price_cents) : "à convenir"}</strong>
+                          <span style={{ color: oc, fontWeight: 600 }}>{ol}</span>
+                          {x.payment_link_url && x.status === "open" && (
+                            <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} onClick={() => navigator.clipboard.writeText(x.payment_link_url!).then(() => flash(`Lien de paiement copié : ${x.label}`))}>Copier le lien de paiement</button>
+                          )}
+                          {isAdmin && x.status === "open" && x.slot_key && (
+                            <>
+                              <input className="admin-input" style={{ width: "90px" }} placeholder="Prix $" value={optPrice[x.id] ?? ""} onChange={(e) => setOptPrice({ ...optPrice, [x.id]: e.target.value })} />
+                              <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={!optPrice[x.id]} onClick={() => offerCall({ action: "set_option_price", optionId: x.id, priceCents: Math.round((parseFloat((optPrice[x.id] ?? "").replace(",", ".")) || 0) * 100) }, "Prix fixé : lien de paiement créé.")}>
+                                {x.price_cents != null ? "Changer le prix" : "Fixer le prix convenu"}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div style={card}>

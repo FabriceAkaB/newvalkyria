@@ -32,6 +32,7 @@ import { onPrivateCheckoutExpired, onPrivateRefund, onPrivateRegistrationPaid } 
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { markBookingsPaid, releaseBySession as releaseMatchBySession, toEmailSlots } from "@/lib/match-slots-repo";
+import { closeOtherOffersForSlot, onPartnershipOptionPaid } from "@/lib/partnership-offers";
 import { markRentalPaid, releaseRentalBySession } from "@/lib/terrain-rentals-repo";
 
 export async function POST(request: Request) {
@@ -167,6 +168,8 @@ export async function POST(request: Request) {
             .from("sponsor_slots_2027")
             .update({ status: "sold", sponsor_id: sponsor.id, updated_at: new Date().toISOString() })
             .eq("slot_key", session.metadata.slot);
+          // Emplacement vendu : les propositions personnalisées qui le visaient se ferment.
+          await closeOtherOffersForSlot(session.metadata.slot, null);
         }
         await supabase.from("sponsor_payments").insert({
           sponsor_id: sponsor.id,
@@ -187,6 +190,39 @@ export async function POST(request: Request) {
         }).catch((error) => console.error("Unable to send sponsorship notification", error));
       } catch (error) {
         console.error("Unable to record sponsorship payment", error);
+      }
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Proposition de partenariat personnalisée (ex. Alowa, Action Sport Physio) : option payée. ──
+    if (checkoutType === "partnership-offer") {
+      const offerId = session.metadata?.offerId;
+      const optionId = session.metadata?.optionId;
+      if (offerId && optionId) {
+        try {
+          const result = await onPartnershipOptionPaid({
+            offerId,
+            optionId,
+            amountCents: session.amount_total ?? 0,
+            sessionId: session.id,
+            email: session.customer_details?.email ?? null,
+            phone: session.customer_details?.phone ?? null
+          });
+          if (result) {
+            await sendSponsorshipPaidNotification({
+              company: result.offer.company_name,
+              contactName: result.offer.contact_name,
+              contactEmail: session.customer_details?.email ?? result.offer.contact_email,
+              contactPhone: session.customer_details?.phone ?? null,
+              sector: null,
+              tierLabel: result.option.label,
+              placement: result.option.slot_key ? `chandail (${result.option.slot_key})` : "proposition personnalisée",
+              amountCents: session.amount_total ?? 0
+            }).catch((error) => console.error("Unable to send partnership notification", error));
+          }
+        } catch (error) {
+          console.error("Unable to record partnership offer payment", error);
+        }
       }
       return NextResponse.json({ received: true });
     }
