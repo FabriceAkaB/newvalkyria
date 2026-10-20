@@ -3,10 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Container } from "@/components/container";
-import { checkEligibility, type SlotRules, type TeamCategory, type TeamGender } from "@/lib/match-slots-core";
+import { checkEligibility, parseTeamYears, teamYearsLabel, teamYearsValue, type SlotRules, type TeamCategory, type TeamGender } from "@/lib/match-slots-core";
 
 const TEAM_LEVELS = ["Récréatif", "Intermédiaire", "Compétitif", "Élite"] as const;
 const TEAM_TOKEN_KEY = "nv_match_team";
+
+/** Choix d'année : une seule année, ou un groupe de deux années (ex. 2014-2015). */
+const YEAR_SINGLE = Array.from({ length: 13 }, (_, i) => String(2020 - i));
+const YEAR_GROUPS = Array.from({ length: 12 }, (_, i) => `${2019 - i}-${2020 - i}`);
 import { formatMoney } from "@/lib/private-programs";
 
 interface Slot {
@@ -100,7 +104,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
       orgName: p.orgName ?? "",
       teamLabel: p.teamLabel ?? "",
       gender: p.teamGender ?? "",
-      birthYear: p.teamBirthYear ? String(p.teamBirthYear) : "",
+      birthYear: p.teamBirthYear ? teamYearsValue({ birthYear: p.teamBirthYear, birthYearTo: p.teamBirthYearTo }) : "",
       level: p.teamLevel ?? "",
       players: p.teamPlayers ? String(p.teamPlayers) : "",
       contactName: p.contactName ?? "",
@@ -137,9 +141,9 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
 
   const team: TeamCategory | null = useMemo(() => {
     if (!profileId) return null;
-    const year = Number(form.birthYear);
-    if (!form.gender || !Number.isInteger(year) || year < 2000 || year > 2026) return null;
-    return { gender: form.gender, birthYear: year };
+    const years = parseTeamYears(form.birthYear);
+    if (!form.gender || !years || years.from < 2000 || years.to > 2026) return null;
+    return { gender: form.gender, birthYear: years.from, birthYearTo: years.to };
   }, [profileId, form.gender, form.birthYear]);
 
   const units: Unit[] = useMemo(() => {
@@ -238,7 +242,8 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
           orgName: f.orgName,
           teamLabel: f.teamLabel,
           teamGender: f.gender,
-          teamBirthYear: Number(f.birthYear),
+          teamBirthYear: parseTeamYears(f.birthYear)?.from,
+          teamBirthYearTo: parseTeamYears(f.birthYear)?.to,
           teamLevel: f.level,
           teamPlayers: f.players ? Number(f.players) : null,
           contactName: f.contactName,
@@ -286,6 +291,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
           teamLabel: form.teamLabel,
           teamGender: team.gender,
           teamBirthYear: team.birthYear,
+          teamBirthYearTo: team.birthYearTo ?? team.birthYear,
           contactName: form.contactName,
           contactEmail: form.contactEmail,
           contactPhone: form.contactPhone,
@@ -357,7 +363,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
               <>
                 <p style={{ fontSize: "0.85rem", color: "#c3c2c8", margin: "0.3rem 0 0", lineHeight: 1.6 }}>
                   <strong style={{ color: "#fff" }}>{form.orgName}</strong> — {form.teamLabel}
-                  <br />{GENDERS.find((g) => g.value === team.gender)?.label} · nés en {team.birthYear} · niveau {form.level.toLowerCase()}{form.players ? ` · ${form.players} joueurs` : ""}
+                  <br />{GENDERS.find((g) => g.value === team.gender)?.label} · {teamYearsLabel(team)} · niveau {form.level.toLowerCase()}{form.players ? ` · ${form.players} joueurs` : ""}
                   <br />{form.contactName} · {form.contactEmail} · {form.contactPhone}
                 </p>
                 <button
@@ -401,8 +407,16 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                       </select>
                     </label>
                     <label className="insc-field">
-                      <span>Année de naissance des joueurs *</span>
-                      <input className="insc-input" inputMode="numeric" placeholder="ex. 2014" maxLength={4} value={form.birthYear} onChange={(e) => setForm({ ...form, birthYear: e.target.value.replace(/\D/g, "") })} />
+                      <span>Année de naissance (ou groupe) *</span>
+                      <select className="insc-input" value={form.birthYear} onChange={(e) => setForm({ ...form, birthYear: e.target.value })}>
+                        <option value="">Choisir…</option>
+                        <optgroup label="Une année">
+                          {YEAR_SINGLE.map((y) => <option key={y} value={y}>Nés en {y}</option>)}
+                        </optgroup>
+                        <optgroup label="Groupe de deux années">
+                          {YEAR_GROUPS.map((y) => <option key={y} value={y}>Groupe {y}</option>)}
+                        </optgroup>
+                      </select>
                     </label>
                   </div>
                   <div className="nv27-grid2">
@@ -438,7 +452,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             <div style={{ ...card, borderColor: matching.length > 0 ? "#2f5a3b" : "#5a2f2f" }}>
               <p style={{ margin: 0, fontSize: "0.85rem", color: "#e5e4ea", lineHeight: 1.55 }}>
                 {matching.length > 0 ? (
-                  <>✓ <strong>{matchingSlotCount} plage{matchingSlotCount > 1 ? "s" : ""}</strong> correspond{matchingSlotCount > 1 ? "ent" : ""} à votre équipe ({GENDERS.find((g) => g.value === team.gender)?.label.toLowerCase()}, nés en {team.birthYear}){matchingDoubles > 0 ? `, dont ${matchingDoubles} double${matchingDoubles > 1 ? "s" : ""} cédule${matchingDoubles > 1 ? "s" : ""}` : ""}.</>
+                  <>✓ <strong>{matchingSlotCount} plage{matchingSlotCount > 1 ? "s" : ""}</strong> correspond{matchingSlotCount > 1 ? "ent" : ""} à votre équipe ({GENDERS.find((g) => g.value === team.gender)?.label.toLowerCase()}, {teamYearsLabel(team)}){matchingDoubles > 0 ? `, dont ${matchingDoubles} double${matchingDoubles > 1 ? "s" : ""} cédule${matchingDoubles > 1 ? "s" : ""}` : ""}.</>
                 ) : (
                   <>Aucune plage ne correspond à votre catégorie pour le moment. Écrivez-nous à info@newvalkyria.com : nous pourrons peut-être ajouter un match pour votre équipe.</>
                 )}
@@ -503,7 +517,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                           <strong style={{ color: disabled ? "#5d5a66" : "#fff" }}>{isDouble ? `Match ${i + 1} · ` : ""}{s.start} – {s.end}</strong>
                           <br />Format : {s.format ?? "à confirmer"}
                           <br />Adversaire : {s.opponent ?? "New Valkyria — équipe à confirmer"}
-                          <br />Lieu : {commonLocation ? (s.field ?? "Complexe sportif de Terrebonne") : `${s.field ? `${s.field} · ` : ""}${s.location}`}
+                          <br />Terrain : {commonLocation ? (s.field ?? "Complexe sportif de Terrebonne") : `${s.field ? `${s.field} · ` : ""}${s.location}`}
                           {s.restriction && (
                             <>
                               <br /><span style={{ color: disabled ? "#7a5a5a" : "#f0c878", fontWeight: 600 }}>Admissibilité : {s.restriction}</span>

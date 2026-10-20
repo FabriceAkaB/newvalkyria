@@ -61,6 +61,7 @@ const schema = z.object({
   orgName: z.string().trim().min(2, "Nom de l'académie ou du club requis"),
   teamGender: z.enum(["filles", "garcons", "mixte"], { message: "Genre de l'équipe requis" }),
   teamBirthYear: z.number().int().min(2000, "Année de naissance invalide").max(2026, "Année de naissance invalide"),
+  teamBirthYearTo: z.number().int().min(2000).max(2026).nullable().optional(),
   teamLabel: z.string().trim().min(1, "Nom ou catégorie de l'équipe requis"),
   contactName: z.string().trim().min(2, "Nom du responsable requis"),
   contactEmail: z.string().trim().email("Courriel invalide"),
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
       contactPhone: payload.contactPhone,
       teamGender: payload.teamGender,
       teamBirthYear: payload.teamBirthYear,
+      teamBirthYearTo: payload.teamBirthYearTo ?? payload.teamBirthYear,
       profileId: payload.profileId,
       notes: payload.notes?.trim() || null
     });

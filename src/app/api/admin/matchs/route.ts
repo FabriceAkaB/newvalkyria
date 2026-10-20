@@ -50,7 +50,7 @@ function slotPatch(body: Record<string, any>): Record<string, unknown> {
       const lo = year(c.birthYearMin);
       const hi = year(c.birthYearMax);
       if (lo != null && hi != null && lo > hi) throw new Error("Dans une catégorie, l'année la plus ancienne doit être inférieure ou égale à la plus récente.");
-      return { gender: c.gender, birthYearMin: lo, birthYearMax: hi };
+      return { gender: c.gender, birthYearMin: lo, birthYearMax: hi, ...(c.exact && lo != null && hi != null && lo !== hi ? { exact: true } : {}) };
     });
     patch.allowed_categories = cats.length > 0 ? cats : null;
   }

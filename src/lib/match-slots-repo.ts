@@ -53,6 +53,7 @@ export interface MatchBooking {
   balance_paid_at: string | null;
   team_gender: TeamGender | null;
   team_birth_year: number | null;
+  team_birth_year_to: number | null;
   team_level: string | null;
   team_players: number | null;
   team_profile_id: string | null;
@@ -73,6 +74,8 @@ export interface MatchTeamProfile {
   team_label: string;
   team_gender: TeamGender;
   team_birth_year: number;
+  /** Groupe de deux années (ex. 2014-2015) : année la plus récente ; nul = une seule année. */
+  team_birth_year_to: number | null;
   team_level: string;
   team_players: number | null;
   contact_name: string;
@@ -89,6 +92,7 @@ export interface TeamProfileInput {
   teamLabel: string;
   teamGender: TeamGender;
   teamBirthYear: number;
+  teamBirthYearTo: number | null;
   teamLevel: string;
   teamPlayers: number | null;
   contactName: string;
@@ -109,6 +113,7 @@ export async function saveTeamProfile(input: TeamProfileInput): Promise<MatchTea
     .eq("org_key", key)
     .eq("team_gender", input.teamGender)
     .eq("team_birth_year", input.teamBirthYear)
+    .eq("team_birth_year_to", input.teamBirthYearTo ?? input.teamBirthYear)
     .ilike("team_label", input.teamLabel.trim())
     .maybeSingle();
   const row = {
@@ -117,6 +122,7 @@ export async function saveTeamProfile(input: TeamProfileInput): Promise<MatchTea
     team_label: input.teamLabel,
     team_gender: input.teamGender,
     team_birth_year: input.teamBirthYear,
+    team_birth_year_to: input.teamBirthYearTo ?? input.teamBirthYear,
     team_level: input.teamLevel,
     team_players: input.teamPlayers,
     contact_name: input.contactName,
@@ -204,6 +210,7 @@ export interface ReserveInput {
   contactPhone: string;
   teamGender: TeamGender;
   teamBirthYear: number;
+  teamBirthYearTo?: number | null;
   /** Formulaire « Votre équipe » rempli au préalable (obligatoire). */
   profileId: string;
   notes: string | null;
@@ -222,6 +229,7 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
     !profile ||
     profile.team_gender !== input.teamGender ||
     profile.team_birth_year !== input.teamBirthYear ||
+    (profile.team_birth_year_to ?? profile.team_birth_year) !== (input.teamBirthYearTo ?? input.teamBirthYear) ||
     profile.contact_email.trim().toLowerCase() !== input.contactEmail.trim().toLowerCase()
   ) {
     throw new MatchConflictError("Remplissez d'abord le formulaire de votre équipe avant de choisir une plage.");
@@ -256,7 +264,7 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
   if ((slots ?? []).length !== slotIds.length) throw new MatchConflictError("Une des plages n'existe plus.");
   for (const s of slots as MatchSlot[]) {
     if (!s.active || s.slot_date < today) throw new MatchConflictError("Une des plages n'est plus offerte.");
-    const elig = checkEligibility(s, { gender: input.teamGender, birthYear: input.teamBirthYear });
+    const elig = checkEligibility(s, { gender: input.teamGender, birthYear: input.teamBirthYear, birthYearTo: input.teamBirthYearTo ?? input.teamBirthYear });
     if (!elig.ok) throw new MatchConflictError(`${new Date(s.slot_date + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}, ${s.start_time} : ${elig.reason}`);
   }
 
@@ -279,6 +287,7 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
         balance_due_cents: s.balance_due_cents,
         team_gender: input.teamGender,
         team_birth_year: input.teamBirthYear,
+        team_birth_year_to: input.teamBirthYearTo ?? input.teamBirthYear,
         team_level: profile.team_level,
         team_players: profile.team_players,
         team_profile_id: profile.id,

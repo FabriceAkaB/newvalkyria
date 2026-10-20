@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { areConsecutive, checkEligibility, expandDoubles, restrictionLabel, totalsFor, type SlotRules } from "./match-slots-core";
+import { areConsecutive, checkEligibility, expandDoubles, parseTeamYears, restrictionLabel, teamYearsLabel, totalsFor, type SlotRules } from "./match-slots-core";
 
 const open: SlotRules = { allowed_gender: "tous", birth_year_min: null, birth_year_max: null, restriction_note: null };
 
@@ -62,6 +62,39 @@ describe("catégories admises multiples", () => {
     const r: SlotRules = { ...open, allowed_categories: [{ gender: "tous", birthYearMin: 2016, birthYearMax: 2017 }] };
     expect(checkEligibility(r, { gender: "mixte", birthYear: 2016 }).ok).toBe(true);
     expect(checkEligibility(r, { gender: "filles", birthYear: 2015 }).ok).toBe(false);
+  });
+});
+
+describe("groupes de deux années (ex. 2014-2015)", () => {
+  // Contre notre équipe 2015 avancé : filles 2014, ou groupes filles 2014-2015 — jamais un groupe 2015 seul.
+  const rules: SlotRules = {
+    ...open,
+    allowed_categories: [
+      { gender: "filles", birthYearMin: 2014, birthYearMax: 2014 },
+      { gender: "filles", birthYearMin: 2014, birthYearMax: 2015, exact: true }
+    ]
+  };
+  it("libellé", () => {
+    expect(restrictionLabel(rules)).toBe("Filles nées en 2014 · Groupes filles 2014-2015");
+  });
+  it("admissibilité", () => {
+    expect(checkEligibility(rules, { gender: "filles", birthYear: 2014 }).ok).toBe(true);
+    expect(checkEligibility(rules, { gender: "filles", birthYear: 2014, birthYearTo: 2015 }).ok).toBe(true);
+    expect(checkEligibility(rules, { gender: "filles", birthYear: 2015 }).ok).toBe(false);
+    expect(checkEligibility(rules, { gender: "filles", birthYear: 2013, birthYearTo: 2014 }).ok).toBe(false);
+    expect(checkEligibility(rules, { gender: "garcons", birthYear: 2014 }).ok).toBe(false);
+  });
+  it("un groupe d'années doit être entièrement dans une fourchette non exacte", () => {
+    const r: SlotRules = { ...open, allowed_categories: [{ gender: "tous", birthYearMin: 2014, birthYearMax: 2016 }] };
+    expect(checkEligibility(r, { gender: "mixte", birthYear: 2015, birthYearTo: 2016 }).ok).toBe(true);
+    expect(checkEligibility(r, { gender: "mixte", birthYear: 2016, birthYearTo: 2017 }).ok).toBe(false);
+  });
+  it("lecture et affichage", () => {
+    expect(parseTeamYears("2014-2015")).toEqual({ from: 2014, to: 2015 });
+    expect(parseTeamYears("2014")).toEqual({ from: 2014, to: 2014 });
+    expect(parseTeamYears("2015-2014")).toBeNull();
+    expect(teamYearsLabel({ birthYear: 2014, birthYearTo: 2015 })).toBe("groupe 2014-2015");
+    expect(teamYearsLabel({ birthYear: 2014 })).toBe("nés en 2014");
   });
 });
 

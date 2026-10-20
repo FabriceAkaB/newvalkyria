@@ -17,6 +17,8 @@ interface CategoryDraft {
   gender: SlotGender;
   min: string;
   max: string;
+  /** Groupe exact (ex. 2014-2015) : l'équipe doit couvrir exactement ces années. */
+  exact?: boolean;
 }
 
 interface Draft {
@@ -47,7 +49,7 @@ function draftOf(s: MatchSlot): Draft {
   return {
     format: s.match_format ?? "",
     opponent: s.opponent ?? "",
-    categories: cats.map((c) => ({ gender: c.gender, min: c.birthYearMin?.toString() ?? "", max: c.birthYearMax?.toString() ?? "" })),
+    categories: cats.map((c) => ({ gender: c.gender, min: c.birthYearMin?.toString() ?? "", max: c.birthYearMax?.toString() ?? "", exact: Boolean(c.exact) })),
     preferred: s.preferred_note ?? "",
     restrictionNote: s.restriction_note ?? "",
     notes: s.notes ?? "",
@@ -66,7 +68,7 @@ function payload(d: Draft, only?: Set<keyof Draft>): Record<string, unknown> {
     opponent: { opponent: d.opponent },
     // Les catégories remplacent entièrement les anciennes colonnes simples (genre + années).
     categories: {
-      allowedCategories: d.categories.map((c) => ({ gender: c.gender, birthYearMin: c.min, birthYearMax: c.max })),
+      allowedCategories: d.categories.map((c) => ({ gender: c.gender, birthYearMin: c.min, birthYearMax: c.max, exact: Boolean(c.exact) })),
       allowedGender: "tous",
       birthYearMin: "",
       birthYearMax: ""
@@ -171,6 +173,10 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                 <input className="admin-input" style={{ width: "64px" }} inputMode="numeric" placeholder="de 2014" title="Année de naissance la plus ancienne admise" value={c.min} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, min: e.target.value.replace(/\D/g, "").slice(0, 4) } : x)) }); }} />
                 <span style={{ fontSize: "0.7rem" }}>à</span>
                 <input className="admin-input" style={{ width: "64px" }} inputMode="numeric" placeholder="à 2015" title="Année de naissance la plus récente admise" value={c.max} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, max: e.target.value.replace(/\D/g, "").slice(0, 4) } : x)) }); }} />
+                <label style={{ fontSize: "0.66rem", color: "#9d9da0", display: "flex", alignItems: "center", gap: "0.2rem" }} title="Seulement les équipes qui sont un groupe de ces années exactes (ex. groupe 2014-2015)">
+                  <input type="checkbox" checked={Boolean(c.exact)} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, exact: e.target.checked } : x)) }); }} />
+                  groupe exact
+                </label>
                 <button type="button" className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} onClick={() => { touch("categories"); set({ ...d, categories: d.categories.filter((_, j) => j !== i) }); }}>Retirer</button>
               </div>
             ))}
@@ -231,7 +237,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                     return (
                       <tr key={p.id}>
                         <td style={cell}><strong style={{ color: "#fff" }}>{p.org_name}</strong><br />{p.team_label}{p.notes ? <><br /><em>{p.notes}</em></> : null}</td>
-                        <td style={cell}>{GENDER_LABEL[p.team_gender]} · nés en {p.team_birth_year}</td>
+                        <td style={cell}>{GENDER_LABEL[p.team_gender]} · {p.team_birth_year_to && p.team_birth_year_to !== p.team_birth_year ? `groupe ${p.team_birth_year}-${p.team_birth_year_to}` : `nés en ${p.team_birth_year}`}</td>
                         <td style={cell}>{p.team_level}{p.team_players ? <><br />{p.team_players} joueurs</> : null}</td>
                         <td style={cell}>{p.contact_name}<br />{p.contact_email}<br />{p.contact_phone}</td>
                         <td style={cell}>{booked > 0 ? <span style={{ color: "#8fce9f", fontWeight: 700 }}>{booked} plage{booked > 1 ? "s" : ""}</span> : <span style={{ color: "#f0c878" }}>Aucune — à relancer</span>}</td>
@@ -261,7 +267,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                       <td style={cell}>{b.slot.slot_date}<br />{b.slot.start_time} – {b.slot.end_time}{b.slot.double_group ? <><br /><span style={{ color: "#c4a4e4" }}>Double cédule</span></> : null}</td>
                       <td style={cell}>
                         <strong style={{ color: "#fff" }}>{b.org_name}</strong><br />{b.team_label}
-                        {b.team_gender ? <><br />{GENDER_LABEL[b.team_gender]}{b.team_birth_year ? ` · nés en ${b.team_birth_year}` : ""}{b.team_level ? ` · ${b.team_level}` : ""}</> : null}
+                        {b.team_gender ? <><br />{GENDER_LABEL[b.team_gender]}{b.team_birth_year ? (b.team_birth_year_to && b.team_birth_year_to !== b.team_birth_year ? ` · groupe ${b.team_birth_year}-${b.team_birth_year_to}` : ` · nés en ${b.team_birth_year}`) : ""}{b.team_level ? ` · ${b.team_level}` : ""}</> : null}
                         {b.notes ? <><br /><em>{b.notes}</em></> : null}
                       </td>
                       <td style={cell}>{b.contact_name}<br />{b.contact_email}<br />{b.contact_phone}</td>
