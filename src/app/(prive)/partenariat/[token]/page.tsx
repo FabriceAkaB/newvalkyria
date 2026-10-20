@@ -38,8 +38,8 @@ export default async function PartnershipOfferPage({ params }: { params: Promise
     : { data: [] };
   const slotAvailable = (key: string) => (slots ?? []).find((s: any) => s.slot_key === key)?.status === "available";
 
-  const packages = offer.options.filter((o) => !o.slot_key);
-  const jersey = offer.options.filter((o) => o.slot_key);
+  const packages = offer.options.filter((o) => o.kind !== "chandail");
+  const jersey = offer.options.filter((o) => o.kind === "chandail" && o.status !== "closed");
   const anyPaid = offer.options.some((o) => o.status === "paid");
   const respondBy = fmtDate(offer.respond_by);
   const payUrl = (o: PartnershipOption) => (o.payment_link_url ? `${o.payment_link_url}?prefilled_email=${encodeURIComponent(offer.contact_email)}` : null);
@@ -87,6 +87,8 @@ export default async function PartnershipOfferPage({ params }: { params: Promise
                   </ul>
                   {o.status === "paid" ? (
                     <p style={{ margin: 0, color: "#8fce9f", fontWeight: 700 }}>✓ Option confirmée — merci !</p>
+                  ) : o.status === "unavailable" || (o.slot_key && !slotAvailable(o.slot_key)) ? (
+                    <p style={{ margin: 0, color: "#ffb464", fontSize: "0.85rem" }}>Cette option n&apos;est plus disponible : l&apos;emplacement sur le chandail a été réservé.</p>
                   ) : o.status === "closed" || anyPaid ? (
                     <p style={{ margin: 0, color: "#6d6b71", fontSize: "0.82rem" }}>Option non retenue.</p>
                   ) : url ? (

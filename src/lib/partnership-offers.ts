@@ -18,6 +18,8 @@ export interface PartnershipOption {
   catalog_price_cents: number | null;
   benefits: string[];
   slot_key: string | null;
+  /** « formule » : forfait (une seule par entreprise, peut inclure un emplacement du chandail) ; « chandail » : emplacement seul. */
+  kind: "formule" | "chandail";
   sort_order: number;
   status: "open" | "paid" | "unavailable" | "closed";
   payment_link_id: string | null;
@@ -140,10 +142,10 @@ export async function onPartnershipOptionPaid(input: { offerId: string; optionId
   await supabase.from("partnership_offer_options").update({ status: "paid", paid_at: now }).eq("id", option.id);
   // L'entreprise a choisi sa formule : les autres formules de SA proposition se ferment. L'option chandail
   // reste ouverte (elle s'ajoute à une formule), et payer l'option chandail ne ferme pas les formules.
-  if (!option.slot_key) {
-    const { data: siblings } = await supabase.from("partnership_offer_options").select("id, payment_link_id, slot_key").eq("offer_id", offer.id).eq("status", "open").neq("id", option.id);
+  if (option.kind !== "chandail") {
+    const { data: siblings } = await supabase.from("partnership_offer_options").select("id, payment_link_id, kind").eq("offer_id", offer.id).eq("status", "open").neq("id", option.id);
     for (const s of siblings ?? []) {
-      if (s.slot_key) continue;
+      if (s.kind === "chandail") continue;
       await setLinkActive(s.payment_link_id, false);
       await supabase.from("partnership_offer_options").update({ status: "closed" }).eq("id", s.id);
     }
