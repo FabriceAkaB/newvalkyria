@@ -51,10 +51,26 @@ function realResend(): Resend | null {
  *  Si une boîte Gmail / Google Workspace est configurée (variables d'environnement
  *  ou réglage enregistré depuis l'admin), TOUS les courriels (confirmations,
  *  reçus, campagne…) partent de cette boîte ; sinon Resend. */
+/** Signature ajoutée à TOUS les courriels envoyés par le site (Annie Tremblay, responsable administratif). */
+const SIGNATURE_HTML = `
+<div style="margin-top:28px;padding-top:14px;border-top:1px solid #e6e1ee;max-width:620px">
+  <a href="https://www.newvalkyria.com" style="text-decoration:none"><img src="https://www.newvalkyria.com/brand/signature-annie.png" width="560" alt="Annie Tremblay · Responsable administratif · New Valkyria · newvalkyria.com" style="display:block;width:100%;max-width:560px;height:auto;border:0" /></a>
+</div>`;
+const SIGNATURE_TEXT = "\n\n--\nAnnie Tremblay\nResponsable administratif\nNew Valkyria · www.newvalkyria.com";
+
+export function withSignature(payload: MailPayload): MailPayload {
+  return {
+    ...payload,
+    html: payload.html ? `${payload.html}${SIGNATURE_HTML}` : payload.html,
+    text: payload.text ? `${payload.text}${SIGNATURE_TEXT}` : payload.text
+  };
+}
+
 export function getResendClient(): Resend {
   const smart = {
     emails: {
-      async send(payload: MailPayload) {
+      async send(raw: MailPayload) {
+        const payload = withSignature(raw);
         const cfg = await getMailConfig();
         if (cfg) return sendViaGmail(cfg, payload);
         const real = realResend();
