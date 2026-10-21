@@ -38,11 +38,13 @@ export async function getTrialSessions(slug: string): Promise<TrialSession[]> {
   const supabase = db();
   const today = new Date().toISOString().slice(0, 10);
   const [{ data: program }, { data: dates }] = await Promise.all([
-    supabase.from("session_programs").select("trial_capacity").eq("slug", slug).maybeSingle(),
+    supabase.from("session_programs").select("trial_capacity, presentation").eq("slug", slug).maybeSingle(),
     supabase.from("session_program_dates").select("*").eq("program_slug", slug).gte("session_date", today).order("session_date")
   ]);
   const capacity = program?.trial_capacity ?? 3;
-  const tuesdays = (dates ?? []).filter((d: any) => isTuesday(d.session_date));
+  // Dates d'essai précises (ex. un seul mardi) si le programme les fixe ; sinon tous les mardis à venir.
+  const trialDates: string[] | undefined = (program?.presentation as { trialDates?: string[] } | null)?.trialDates;
+  const tuesdays = (dates ?? []).filter((d: any) => isTuesday(d.session_date) && (!trialDates?.length || trialDates.includes(d.session_date)));
   if (tuesdays.length === 0) return [];
   const { data: trials } = await supabase.from("boys_trials").select("date_id").in("date_id", tuesdays.map((d: any) => d.id)).in("status", ["confirmed", "attended"]);
   const count = new Map<string, number>();

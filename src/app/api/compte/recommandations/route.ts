@@ -27,8 +27,8 @@ export async function GET() {
     origin: env.publicSiteUrl,
     programs: programs
       .filter((p) => {
-        const pres = (p.presentation ?? {}) as { brand?: string; waitlistOnly?: boolean };
-        return p.active && p.published && pres.brand !== "atlantic" && !pres.waitlistOnly && p.referral_discount_cents > 0;
+        const pres = (p.presentation ?? {}) as { brand?: string; waitlistOnly?: boolean; trialOnly?: boolean };
+        return p.active && p.published && pres.brand !== "atlantic" && !pres.waitlistOnly && !pres.trialOnly && p.referral_discount_cents > 0;
       })
       .map((p) => ({
         slug: p.slug,

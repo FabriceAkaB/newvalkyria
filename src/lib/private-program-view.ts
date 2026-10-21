@@ -16,6 +16,11 @@ export function isWaitlistOnly(program: Pick<PrivateProgram, "presentation">): b
   return Boolean((program.presentation as { waitlistOnly?: boolean } | null)?.waitlistOnly);
 }
 
+/** Programme « essai gratuit seulement » : la page n'offre que la réservation d'un essai (ex. 2018). */
+export function isTrialOnly(program: Pick<PrivateProgram, "presentation">): boolean {
+  return Boolean((program.presentation as { trialOnly?: boolean } | null)?.trialOnly);
+}
+
 export async function buildPrivateProgramView(program: PrivateProgram, live: boolean): Promise<PrivateProgramView> {
   const [dates, held] = await Promise.all([getProgramDates(program.slug as never), countHeldPlaces(program.slug)]);
   const remaining = Math.max(0, program.max_capacity - held);
@@ -45,6 +50,7 @@ export async function buildPrivateProgramView(program: PrivateProgram, live: boo
     presentation,
     origin: env.publicSiteUrl,
     brand: programBrand(program),
-    waitlistOnly
+    waitlistOnly,
+    trialOnly: isTrialOnly(program)
   };
 }

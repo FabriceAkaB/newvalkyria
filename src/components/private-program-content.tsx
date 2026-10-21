@@ -50,6 +50,8 @@ export interface PrivateProgramView {
   brand?: "nv" | "atlantic";
   /** Programme en attente : seulement l'inscription à la liste d'attente (ni dates, ni prix). */
   waitlistOnly?: boolean;
+  /** Essai gratuit seulement : la page ne propose que la réservation d'un essai. */
+  trialOnly?: boolean;
 }
 
 /** Nombre de pratiques visibles avant « Voir tout le calendrier » (section trop longue sur téléphone). */
@@ -242,6 +244,31 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
   const waitlistOnly = Boolean(program.waitlistOnly);
   // Le référencement n'est proposé que pour les programmes qui offrent un rabais de recommandation.
   const showReferral = !atlantic && !waitlistOnly && program.referralDiscountCents > 0;
+
+  // Essai gratuit seulement (ex. garçons 2018) : la page se limite à la réservation de l'essai.
+  if (program.trialOnly) {
+    return (
+      <>
+        <section className="insc-hero se-hero">
+          <Container>
+            <div className="insc-hero-inner" style={{ textAlign: "center" }}>
+              <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">{program.genderLabel} en {program.birthYearsLabel}</p>
+              <h1 className="insc-hero-title">Essai gratuit</h1>
+              <p className="insc-hero-sub">Votre garçon peut venir essayer une pratique de soccer, gratuitement et sans engagement. Places limitées : réservez sa place ci-dessous.</p>
+            </div>
+          </Container>
+        </section>
+        <section className="section-band">
+          <Container className="max-w-2xl">
+            <BoysTrialSection slug={program.slug} eligibleYears={program.eligibleBirthYears} />
+            <p style={{ fontSize: "0.82rem", color: "#9d9da0", textAlign: "center", margin: 0 }}>
+              Une question ? <a href="mailto:info@newvalkyria.com" style={{ color: "#c4a4e4" }}>info@newvalkyria.com</a>
+            </p>
+          </Container>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
