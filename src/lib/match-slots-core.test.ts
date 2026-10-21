@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { areConsecutive, checkEligibility, expandDoubles, parseTeamYears, restrictionLabel, teamYearsLabel, totalsFor, type SlotRules } from "./match-slots-core";
+import { areConsecutive, checkEligibility, expandDoubles, NV_OPPONENT_PRESETS, parseTeamYears, restrictionLabel, teamYearsLabel, totalsFor, type SlotRules } from "./match-slots-core";
 
 const open: SlotRules = { allowed_gender: "tous", birth_year_min: null, birth_year_max: null, restriction_note: null };
 
@@ -95,6 +95,38 @@ describe("groupes de deux années (ex. 2014-2015)", () => {
     expect(parseTeamYears("2015-2014")).toBeNull();
     expect(teamYearsLabel({ birthYear: 2014, birthYearTo: 2015 })).toBe("groupe 2014-2015");
     expect(teamYearsLabel({ birthYear: 2014 })).toBe("nés en 2014");
+  });
+});
+
+describe("calibre exigé et groupes de chez nous", () => {
+  it("2016-2017 avancé : 2015, ou 2016 de calibre P1 seulement", () => {
+    const p = NV_OPPONENT_PRESETS.find((x) => x.key === "2016-2017-av")!;
+    const r: SlotRules = { ...open, allowed_categories: p.categories };
+    expect(checkEligibility(r, { gender: "filles", birthYear: 2015 }).ok).toBe(true);
+    expect(checkEligibility(r, { gender: "garcons", birthYear: 2016, level: "P1" }).ok).toBe(true);
+    expect(checkEligibility(r, { gender: "filles", birthYear: 2016, level: "AA" }).ok).toBe(false);
+    expect(restrictionLabel(r)).toContain("calibre P1");
+  });
+  it("2015 avancé : filles 2014, groupes 2014-2015, garçons 2014 et 2015 ; filles 2015 = demande", () => {
+    const p = NV_OPPONENT_PRESETS.find((x) => x.key === "2015-av")!;
+    const r: SlotRules = { ...open, allowed_categories: p.categories };
+    expect(checkEligibility(r, { gender: "garcons", birthYear: 2015 }).ok).toBe(true);
+    expect(checkEligibility(r, { gender: "garcons", birthYear: 2014 }).ok).toBe(true);
+    expect(checkEligibility(r, { gender: "filles", birthYear: 2015 }).ok).toBe(false);
+    expect(p.allowRequests).toBe(true);
+  });
+  it("2015 intermédiaire : tout 2014-2015, garçons 2016", () => {
+    const r: SlotRules = { ...open, allowed_categories: NV_OPPONENT_PRESETS.find((x) => x.key === "2015-int")!.categories };
+    expect(checkEligibility(r, { gender: "filles", birthYear: 2014, birthYearTo: 2015 }).ok).toBe(true);
+    expect(checkEligibility(r, { gender: "garcons", birthYear: 2016 }).ok).toBe(true);
+    expect(checkEligibility(r, { gender: "filles", birthYear: 2016 }).ok).toBe(false);
+  });
+  it("2016-2017 intermédiaire : filles 2016 seulement, pas de demande", () => {
+    const p = NV_OPPONENT_PRESETS.find((x) => x.key === "2016-2017-int")!;
+    const r: SlotRules = { ...open, allowed_categories: p.categories };
+    expect(checkEligibility(r, { gender: "filles", birthYear: 2016 }).ok).toBe(true);
+    expect(checkEligibility(r, { gender: "garcons", birthYear: 2016 }).ok).toBe(false);
+    expect(p.allowRequests).toBe(false);
   });
 });
 

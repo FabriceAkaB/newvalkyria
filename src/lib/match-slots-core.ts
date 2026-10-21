@@ -12,6 +12,8 @@ export interface CategoryRule {
   birthYearMax: number | null;
   /** Groupe exact : l'équipe doit couvrir exactement ces années (ex. un groupe 2014-2015). */
   exact?: boolean;
+  /** Calibres exigés (ex. ["P1"]) ; vide = tous les calibres. */
+  levels?: string[];
 }
 
 export interface SlotRules {
@@ -23,6 +25,8 @@ export interface SlotRules {
   allowed_categories?: CategoryRule[] | null;
   /** Précision positive affichée aux équipes (p. ex. « Équipe 2014 recherchée »). */
   preferred_note?: string | null;
+  /** Les équipes non admissibles d'office peuvent faire une demande (approuvée ou non par l'académie). */
+  allow_requests?: boolean;
 }
 
 export interface TeamCategory {
@@ -31,7 +35,12 @@ export interface TeamCategory {
   birthYear: number;
   /** Groupe de plusieurs années (ex. 2014-2015) : la plus récente ; absent = une seule année. */
   birthYearTo?: number | null;
+  /** Calibre de l'équipe (ex. « P1 »). */
+  level?: string | null;
 }
+
+/** Calibres proposés aux équipes à la création du compte. */
+export const TEAM_LEVELS = ["Récréatif", "Intermédiaire", "Compétitif", "AA", "AAA", "P1", "Élite"] as const;
 
 /** « 2014 » ou « 2014-2015 ». */
 export function teamYearsValue(team: Pick<TeamCategory, "birthYear" | "birthYearTo">): string {
@@ -79,11 +88,12 @@ export function categoryLabel(c: CategoryRule): string {
   const feminine = c.gender === "filles";
   if (c.exact && c.birthYearMin != null && c.birthYearMax != null && c.birthYearMin !== c.birthYearMax) {
     const who = c.gender === "tous" ? "Groupes" : c.gender === "filles" ? "Groupes filles" : "Groupes garçons";
-    return `${who} ${c.birthYearMin}-${c.birthYearMax}`;
+    return `${who} ${c.birthYearMin}-${c.birthYearMax}${c.levels?.length ? ` (calibre ${c.levels.join(" ou ")})` : ""}`;
   }
   const years = yearsLabel(c.birthYearMin, c.birthYearMax, feminine);
   const who = c.gender === "tous" ? "Tous genres" : c.gender === "filles" ? "Filles" : "Garçons";
-  return years ? `${who} ${years}` : who;
+  const base = years ? `${who} ${years}` : who;
+  return c.levels?.length ? `${base} (calibre ${c.levels.join(" ou ")})` : base;
 }
 
 /** Texte clair des restrictions d'une plage, ou null si aucune (ouverte à tous). */
@@ -114,7 +124,7 @@ export function checkEligibility(rules: SlotRules, team: TeamCategory | null): {
   const from = team.birthYear;
   const to = team.birthYearTo ?? team.birthYear;
   const matches = cats.some((c) => {
-    const genderOk = c.gender === "tous" || c.gender === team.gender;
+    const genderOk = (c.gender === "tous" || c.gender === team.gender) && (!c.levels?.length || (team.level != null && c.levels.includes(team.level)));
     if (c.exact) return genderOk && from === c.birthYearMin && to === c.birthYearMax;
     // L'équipe (une année ou un groupe d'années) doit être entièrement dans la fourchette admise.
     const minOk = c.birthYearMin == null || from >= c.birthYearMin;
@@ -163,3 +173,46 @@ export function totalsFor(slots: { price_cents: number; balance_due_cents: numbe
   const balanceCents = slots.reduce((n, s) => n + s.balance_due_cents, 0);
   return { depositCents, balanceCents, totalCents: depositCents + balanceCents };
 }
+
+/** Équipes de chez nous : règles d'admissibilité préparées pour chaque groupe adversaire.
+ *  Toute autre équipe peut faire une demande (sauf si allowRequests = false). */
+export const NV_OPPONENT_PRESETS: { key: string; opponent: string; categories: CategoryRule[]; allowRequests: boolean; note: string }[] = [
+  {
+    key: "2015-av",
+    opponent: "New Valkyria — Équipe 2015 avancé (filles)",
+    categories: [
+      { gender: "filles", birthYearMin: 2014, birthYearMax: 2014 },
+      { gender: "filles", birthYearMin: 2014, birthYearMax: 2015, exact: true },
+      { gender: "garcons", birthYearMin: 2014, birthYearMax: 2015 }
+    ],
+    allowRequests: true,
+    note: "Filles 2015 : sur demande seulement."
+  },
+  {
+    key: "2016-2017-av",
+    opponent: "New Valkyria — Équipe 2016-2017 avancé (filles)",
+    categories: [
+      { gender: "tous", birthYearMin: 2015, birthYearMax: 2015 },
+      { gender: "tous", birthYearMin: 2016, birthYearMax: 2016, levels: ["P1"] }
+    ],
+    allowRequests: true,
+    note: "Équipes 2016 : calibre P1 obligatoire."
+  },
+  {
+    key: "2015-int",
+    opponent: "New Valkyria — Équipe 2015 intermédiaire (filles)",
+    categories: [
+      { gender: "tous", birthYearMin: 2014, birthYearMax: 2015 },
+      { gender: "garcons", birthYearMin: 2016, birthYearMax: 2016 }
+    ],
+    allowRequests: true,
+    note: ""
+  },
+  {
+    key: "2016-2017-int",
+    opponent: "New Valkyria — Équipe 2016-2017 intermédiaire (filles)",
+    categories: [{ gender: "filles", birthYearMin: 2016, birthYearMax: 2016 }],
+    allowRequests: false,
+    note: "Seulement des équipes filles 2016."
+  }
+];

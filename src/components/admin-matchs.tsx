@@ -5,7 +5,8 @@ import { Fragment, useMemo, useState } from "react";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { effectiveCategories, restrictionLabel, totalsFor, type SlotGender } from "@/lib/match-slots-core";
 import { formatMoney } from "@/lib/private-programs";
-import type { MatchBooking, MatchSlot, MatchTeamProfile } from "@/lib/match-slots-repo";
+import type { MatchBooking, MatchSlot, MatchSlotRequest, MatchTeamProfile } from "@/lib/match-slots-repo";
+import { NV_OPPONENT_PRESETS } from "@/lib/match-slots-core";
 
 type Slot = MatchSlot & { available: boolean };
 type Booking = MatchBooking & { slot: MatchSlot };
@@ -17,6 +18,8 @@ interface CategoryDraft {
   gender: SlotGender;
   min: string;
   max: string;
+  /** Calibres exigés, séparés par des virgules (ex. « P1 »). */
+  levels?: string;
   /** Groupe exact (ex. 2014-2015) : l'équipe doit couvrir exactement ces années. */
   exact?: boolean;
 }
@@ -26,6 +29,8 @@ interface Draft {
   opponent: string;
   /** Catégories d'équipes admises (une ligne = genre + années). Vide = aucune restriction. */
   categories: CategoryDraft[];
+  /** Les autres équipes peuvent faire une demande à approuver. */
+  allowRequests: boolean;
   preferred: string;
   restrictionNote: string;
   notes: string;
@@ -35,21 +40,13 @@ interface Draft {
   field: string;
 }
 
-/** Équipes de chez nous, pour annoncer clairement l'adversaire (menu rapide). */
-const NV_TEAMS = [
-  "Équipe 2015 AV (filles)",
-  "Équipe 2016-2017 AV (filles)",
-  "Équipe 2015 INT (filles)",
-  "Équipe 2016-2017 INT (filles)",
-  "Équipe 2013-2014 INT (filles)"
-];
-
 function draftOf(s: MatchSlot): Draft {
   const cats = effectiveCategories(s) ?? [];
   return {
     format: s.match_format ?? "",
     opponent: s.opponent ?? "",
-    categories: cats.map((c) => ({ gender: c.gender, min: c.birthYearMin?.toString() ?? "", max: c.birthYearMax?.toString() ?? "", exact: Boolean(c.exact) })),
+    categories: cats.map((c) => ({ gender: c.gender, min: c.birthYearMin?.toString() ?? "", max: c.birthYearMax?.toString() ?? "", exact: Boolean(c.exact), levels: (c.levels ?? []).join(", ") })),
+    allowRequests: s.allow_requests !== false,
     preferred: s.preferred_note ?? "",
     restrictionNote: s.restriction_note ?? "",
     notes: s.notes ?? "",
@@ -68,11 +65,13 @@ function payload(d: Draft, only?: Set<keyof Draft>): Record<string, unknown> {
     opponent: { opponent: d.opponent },
     // Les catégories remplacent entièrement les anciennes colonnes simples (genre + années).
     categories: {
-      allowedCategories: d.categories.map((c) => ({ gender: c.gender, birthYearMin: c.min, birthYearMax: c.max, exact: Boolean(c.exact) })),
+      allowedCategories: d.categories.map((c) => ({ gender: c.gender, birthYearMin: c.min, birthYearMax: c.max, exact: Boolean(c.exact), levels: c.levels ?? "" })),
+      allowRequests: d.allowRequests,
       allowedGender: "tous",
       birthYearMin: "",
       birthYearMax: ""
     },
+    allowRequests: { allowRequests: d.allowRequests },
     preferred: { preferredNote: d.preferred },
     restrictionNote: { restrictionNote: d.restrictionNote },
     notes: { notes: d.notes },
@@ -85,9 +84,9 @@ function payload(d: Draft, only?: Set<keyof Draft>): Record<string, unknown> {
   return Object.assign({}, ...keys.map((k) => all[k]));
 }
 
-const EMPTY_BULK: Draft = { format: "", opponent: "", categories: [], preferred: "", restrictionNote: "", notes: "", deposit: "", balance: "", location: "", field: "" };
+const EMPTY_BULK: Draft = { format: "", opponent: "", categories: [], allowRequests: true, preferred: "", restrictionNote: "", notes: "", deposit: "", balance: "", location: "", field: "" };
 
-export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; bookings: Booking[]; profiles: MatchTeamProfile[] }; origin: string }) {
+export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; bookings: Booking[]; profiles: MatchTeamProfile[]; requests: (MatchSlotRequest & { slot: MatchSlot; profile: MatchTeamProfile })[] }; origin: string }) {
   const [data, setData] = useState(initial);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -153,9 +152,26 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
         {wrap("format", "Format du match", <input className="admin-input" placeholder="ex. 7 contre 7" value={d.format} onChange={(e) => { touch("format"); set({ ...d, format: e.target.value }); }} />)}
         {wrap("opponent", "Adversaire (équipe de chez nous)", (
           <>
-            <select className="admin-input" value="" onChange={(e) => { if (e.target.value) { touch("opponent"); set({ ...d, opponent: `New Valkyria — ${e.target.value}` }); } }}>
-              <option value="">Choisir une équipe…</option>
-              {NV_TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
+            <select
+              className="admin-input"
+              value=""
+              onChange={(e) => {
+                const p = NV_OPPONENT_PRESETS.find((x) => x.key === e.target.value);
+                if (!p) return;
+                // L'équipe de chez nous remplit aussi les règles d'admissibilité prévues pour elle.
+                touch("opponent");
+                touch("categories");
+                touch("allowRequests");
+                set({
+                  ...d,
+                  opponent: p.opponent,
+                  allowRequests: p.allowRequests,
+                  categories: p.categories.map((c) => ({ gender: c.gender, min: c.birthYearMin?.toString() ?? "", max: c.birthYearMax?.toString() ?? "", exact: Boolean(c.exact), levels: (c.levels ?? []).join(", ") }))
+                });
+              }}
+            >
+              <option value="">Choisir notre équipe (règles automatiques)…</option>
+              {NV_OPPONENT_PRESETS.map((p) => <option key={p.key} value={p.key}>{p.opponent.replace("New Valkyria — ", "")}</option>)}
             </select>
             <input className="admin-input" placeholder="ou écrire : New Valkyria — Équipe 2015 AV" value={d.opponent} onChange={(e) => { touch("opponent"); set({ ...d, opponent: e.target.value }); }} />
           </>
@@ -173,6 +189,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                 <input className="admin-input" style={{ width: "64px" }} inputMode="numeric" placeholder="de 2014" title="Année de naissance la plus ancienne admise" value={c.min} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, min: e.target.value.replace(/\D/g, "").slice(0, 4) } : x)) }); }} />
                 <span style={{ fontSize: "0.7rem" }}>à</span>
                 <input className="admin-input" style={{ width: "64px" }} inputMode="numeric" placeholder="à 2015" title="Année de naissance la plus récente admise" value={c.max} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, max: e.target.value.replace(/\D/g, "").slice(0, 4) } : x)) }); }} />
+                <input className="admin-input" style={{ width: "70px" }} placeholder="calibre" title="Calibre exigé (ex. P1) — vide = tous" value={c.levels ?? ""} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, levels: e.target.value } : x)) }); }} />
                 <label style={{ fontSize: "0.66rem", color: "#9d9da0", display: "flex", alignItems: "center", gap: "0.2rem" }} title="Seulement les équipes qui sont un groupe de ces années exactes (ex. groupe 2014-2015)">
                   <input type="checkbox" checked={Boolean(c.exact)} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, exact: e.target.checked } : x)) }); }} />
                   groupe exact
@@ -182,6 +199,10 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             ))}
             <button type="button" className="admin-btn-ghost" style={{ fontSize: "0.7rem", alignSelf: "flex-start" }} onClick={() => { touch("categories"); set({ ...d, categories: [...d.categories, { gender: "garcons", min: "", max: "" }] }); }}>+ Ajouter une catégorie admise</button>
             <span style={{ fontSize: "0.66rem", color: "#6d6b71" }}>Ex. : « Garçons de 2014 à 2014 » + « Filles de 2014 à 2015 ». L&apos;équipe doit correspondre à au moins une ligne.</span>
+            <label style={{ fontSize: "0.7rem", color: "#c3c2c8", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+              <input type="checkbox" checked={d.allowRequests} onChange={(e) => { touch("allowRequests"); set({ ...d, allowRequests: e.target.checked }); }} />
+              Les autres équipes peuvent faire une demande (à approuver)
+            </label>
           </div>
         ))}
         {wrap("preferred", "Équipe recherchée (message positif)", <input className="admin-input" placeholder="ex. Équipe 2014 recherchée" value={d.preferred} onChange={(e) => { touch("preferred"); set({ ...d, preferred: e.target.value }); }} />)}
@@ -223,6 +244,41 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
           <p style={{ fontSize: "0.76rem", color: "#9d9da0", margin: "-0.6rem 0 1.2rem" }}>
             Potentiel : {upcoming.length} plage{upcoming.length > 1 ? "s" : ""} = {formatMoney(potential.depositCents)} d&apos;acomptes + {formatMoney(potential.balanceCents)} de soldes le jour du match.
           </p>
+
+          {/* ── Demandes de match à approuver ── */}
+          <div style={card}>
+            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>
+              Demandes de match ({data.requests.filter((r) => r.status === "pending").length} à traiter)
+            </p>
+            <p style={{ fontSize: "0.74rem", color: "#6d6b71", margin: "0 0 0.6rem" }}>Équipes qui voient une plage sans y être admissibles d&apos;office. Approuvée : elle peut payer la plage (premier arrivé, premier servi). Un courriel lui est envoyé dans les deux cas.</p>
+            {data.requests.length === 0 ? (
+              <p className="admin-empty-text">Aucune demande pour l&apos;instant.</p>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
+                  <thead><tr>{["Plage", "Équipe", "Contact", "Message", "Statut", ""].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+                  <tbody>
+                    {data.requests.map((r) => (
+                      <tr key={r.id}>
+                        <td style={cell}>{r.slot.slot_date}<br />{r.slot.start_time} – {r.slot.end_time}<br /><span style={{ color: "#6d6b71" }}>{r.slot.opponent ?? ""}</span></td>
+                        <td style={cell}>
+                          <strong style={{ color: "#fff" }}>{r.profile.org_name}</strong><br />{r.profile.team_label}
+                          <br />{GENDER_LABEL[r.profile.team_gender]} · {r.profile.team_birth_year_to && r.profile.team_birth_year_to !== r.profile.team_birth_year ? `groupe ${r.profile.team_birth_year}-${r.profile.team_birth_year_to}` : `nés en ${r.profile.team_birth_year}`} · {r.profile.team_level}
+                        </td>
+                        <td style={cell}>{r.profile.contact_name}<br />{r.profile.contact_email}<br />{r.profile.contact_phone}</td>
+                        <td style={cell}>{r.message ?? "—"}</td>
+                        <td style={cell}><span style={{ color: r.status === "approved" ? "#8fce9f" : r.status === "declined" ? "#ff9999" : "#f0c878", fontWeight: 700 }}>{r.status === "approved" ? "Approuvée" : r.status === "declined" ? "Refusée" : "À traiter"}</span></td>
+                        <td style={cell}>
+                          {r.status !== "approved" && <button className="admin-btn-primary" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "request_approve", requestId: r.id }, "Demande approuvée : l'équipe est avisée et peut payer.")}>Approuver</button>}{" "}
+                          {r.status !== "declined" && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm("Refuser cette demande ? L'équipe sera avisée.") && call({ action: "request_decline", requestId: r.id }, "Demande refusée : l'équipe est avisée.")}>Refuser</button>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
 
           {/* ── Équipes ayant rempli le formulaire ── */}
           <div style={card}>

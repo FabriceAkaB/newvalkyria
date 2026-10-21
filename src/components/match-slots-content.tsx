@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Container } from "@/components/container";
 import { checkEligibility, parseTeamYears, teamYearsLabel, teamYearsValue, type SlotRules, type TeamCategory, type TeamGender } from "@/lib/match-slots-core";
 
-const TEAM_LEVELS = ["Récréatif", "Intermédiaire", "Compétitif", "Élite"] as const;
+import { TEAM_LEVELS } from "@/lib/match-slots-core";
 const TEAM_TOKEN_KEY = "nv_match_team";
 
 /** Choix d'année : une seule année, ou un groupe de deux années (ex. 2014-2015). */
@@ -28,6 +28,10 @@ interface Slot {
   restriction: string | null;
   preferred: string | null;
   doubleGroup: string | null;
+  /** Les équipes non admissibles d'office peuvent faire une demande. */
+  allowRequests: boolean;
+  /** Demande de MON équipe pour cette plage (si elle en a fait une). */
+  request: "pending" | "approved" | "declined" | null;
   notes: string | null;
   available: boolean;
 }
@@ -86,19 +90,19 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(cancelled ? "Le paiement a été annulé. Vos plages ne sont pas réservées." : null);
 
+  const [teamToken, setTeamToken] = useState<string | null>(null);
   const load = useCallback(async () => {
-    const res = await fetch("/api/prive/matchs");
+    const res = await fetch(`/api/prive/matchs${teamToken ? `?equipe=${encodeURIComponent(teamToken)}` : ""}`);
     const json = await res.json();
     setSlots(json.slots ?? []);
     setMax(json.maxPerTeam ?? 2);
-  }, []);
+  }, [teamToken]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   // Équipe déjà enregistrée : lien personnel (?equipe=…) ou ce navigateur s'en souvient → pas de formulaire à refaire.
-  const [teamToken, setTeamToken] = useState<string | null>(null);
   const applyProfile = (p: any) => {
     setForm({
       orgName: p.orgName ?? "",
@@ -143,8 +147,8 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
     if (!profileId) return null;
     const years = parseTeamYears(form.birthYear);
     if (!form.gender || !years || years.from < 2000 || years.to > 2026) return null;
-    return { gender: form.gender, birthYear: years.from, birthYearTo: years.to };
-  }, [profileId, form.gender, form.birthYear]);
+    return { gender: form.gender, birthYear: years.from, birthYearTo: years.to, level: form.level || null };
+  }, [profileId, form.gender, form.birthYear, form.level]);
 
   const units: Unit[] = useMemo(() => {
     const out: Unit[] = [];
@@ -162,23 +166,45 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
     return out;
   }, [slots]);
 
-  const unitState = (u: Unit): { available: boolean; reason: string | null } => {
+  type UnitState = { available: boolean; reason: string | null; requestable?: boolean; request?: Slot["request"] };
+  const unitState = (u: Unit): UnitState => {
     if (u.slots.some((s) => !s.available)) return { available: false, reason: "Réservée" };
     const restricted = u.slots.some((s) => s.restriction);
     if (restricted && !team) return { available: true, reason: null };
-    for (const s of u.slots) {
-      const elig = checkEligibility(s.rules, team);
-      if (!elig.ok) return { available: false, reason: elig.reason };
+    // Admissible d'office, ou demande approuvée par l'académie pour cette plage.
+    if (u.slots.every((s) => checkEligibility(s.rules, team).ok || s.request === "approved")) return { available: true, reason: null };
+    if (u.slots.every((s) => s.allowRequests)) {
+      const request = u.slots.find((s) => s.request)?.request ?? null;
+      return { available: false, requestable: true, request, reason: null };
     }
-    return { available: true, reason: null };
+    const failing = u.slots.map((s) => checkEligibility(s.rules, team)).find((e) => !e.ok);
+    return { available: false, reason: failing && !failing.ok ? failing.reason : "Non admissible" };
   };
 
-  // Dès que la catégorie est connue, on ne montre d'abord que les plages qui lui conviennent.
+  // Dès que la catégorie est connue, on montre les plages qui lui conviennent… et celles « sur demande ».
   const stateOf = new Map(units.map((u) => [u.key, unitState(u)]));
-  const fits = (u: Unit) => stateOf.get(u.key)?.available === true;
+  const fits = (u: Unit) => stateOf.get(u.key)?.available === true || stateOf.get(u.key)?.requestable === true;
+
+  const [requesting, setRequesting] = useState<string | null>(null);
+  const requestUnit = async (u: Unit) => {
+    if (!teamToken) return setError("Remplissez d'abord le formulaire de votre équipe.");
+    setError(null);
+    setRequesting(u.key);
+    try {
+      const res = await fetch("/api/prive/matchs/demande", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: teamToken, slotIds: u.slots.map((s) => s.id) }) });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error ?? "Demande impossible");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setRequesting(null);
+    }
+  };
   const matching = team ? units.filter(fits) : units;
   const hiddenCount = team ? units.length - matching.length : 0;
-  const matchingSlotCount = matching.reduce((n, u) => n + u.slots.length, 0);
+  const matchingSlotCount = matching.filter((u) => stateOf.get(u.key)?.available).reduce((n, u) => n + u.slots.length, 0);
+  const onRequestCount = matching.filter((u) => stateOf.get(u.key)?.requestable).reduce((n, u) => n + u.slots.length, 0);
   const matchingDoubles = matching.filter((u) => u.slots.length > 1).length;
   const shownUnits = team && !showAll ? matching : units;
   const byMonth = (() => {
@@ -451,8 +477,10 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
           {team && slots !== null && slots.length > 0 && (
             <div style={{ ...card, borderColor: matching.length > 0 ? "#2f5a3b" : "#5a2f2f" }}>
               <p style={{ margin: 0, fontSize: "0.85rem", color: "#e5e4ea", lineHeight: 1.55 }}>
-                {matching.length > 0 ? (
-                  <>✓ <strong>{matchingSlotCount} plage{matchingSlotCount > 1 ? "s" : ""}</strong> correspond{matchingSlotCount > 1 ? "ent" : ""} à votre équipe ({GENDERS.find((g) => g.value === team.gender)?.label.toLowerCase()}, {teamYearsLabel(team)}){matchingDoubles > 0 ? `, dont ${matchingDoubles} double${matchingDoubles > 1 ? "s" : ""} cédule${matchingDoubles > 1 ? "s" : ""}` : ""}.</>
+                {matchingSlotCount === 0 && onRequestCount > 0 ? (
+                  <>Aucune plage n&apos;est ouverte d&apos;office à votre équipe ({GENDERS.find((g) => g.value === team.gender)?.label.toLowerCase()}, {teamYearsLabel(team)}), mais <strong>{onRequestCount} plage{onRequestCount > 1 ? "s sont possibles" : " est possible"} sur demande</strong> : cliquez « Faire une demande » sur le match qui vous intéresse, nous vous répondrons par courriel.</>
+                ) : matching.length > 0 ? (
+                  <>✓ <strong>{matchingSlotCount} plage{matchingSlotCount > 1 ? "s" : ""}</strong> correspond{matchingSlotCount > 1 ? "ent" : ""} à votre équipe ({GENDERS.find((g) => g.value === team.gender)?.label.toLowerCase()}, {teamYearsLabel(team)}){matchingDoubles > 0 ? `, dont ${matchingDoubles} double${matchingDoubles > 1 ? "s" : ""} cédule${matchingDoubles > 1 ? "s" : ""}` : ""}.{onRequestCount > 0 ? ` ${onRequestCount} autre${onRequestCount > 1 ? "s" : ""} plage${onRequestCount > 1 ? "s" : ""} possible${onRequestCount > 1 ? "s" : ""} sur demande.` : ""}</>
                 ) : (
                   <>Aucune plage ne correspond à votre catégorie pour le moment. Écrivez-nous à info@newvalkyria.com : nous pourrons peut-être ajouter un match pour votre équipe.</>
                 )}
@@ -480,17 +508,19 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                 {list.map((u) => {
                   const state = unitState(u);
                   const active = u.slots.every((s) => selectedIds.has(s.id));
-                  const disabled = !state.available;
+                  const disabled = !state.available && !state.requestable;
                   const isDouble = u.slots.length > 1;
                   const unitDeposit = u.slots.reduce((n, s) => n + s.depositCents, 0);
                   const unitBalance = u.slots.reduce((n, s) => n + s.balanceDueCents, 0);
                   const muted = disabled ? "#5d5a66" : "#c3c2c8";
                   return (
-                    <button
+                    <div
                       key={u.key}
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => toggle(u)}
+                      role="button"
+                      tabIndex={state.available ? 0 : -1}
+                      aria-disabled={!state.available}
+                      onClick={() => state.available && toggle(u)}
+                      onKeyDown={(e) => { if (state.available && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggle(u); } }}
                       aria-pressed={active}
                       style={{
                         textAlign: "left",
@@ -499,8 +529,9 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                         border: active ? "2px solid #c4a4e4" : isDouble ? "1px solid #5a4575" : "1px solid #302e36",
                         background: disabled ? "#0d0b13" : active ? "#2a1f3a" : "#17151e",
                         color: disabled ? "#5d5a66" : "#fff",
-                        cursor: disabled ? "not-allowed" : "pointer",
-                        width: "100%"
+                        cursor: state.available ? "pointer" : "default",
+                        width: "100%",
+                        boxSizing: "border-box"
                       }}
                     >
                       <span style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", alignItems: "baseline", flexWrap: "wrap" }}>
@@ -532,14 +563,36 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                         </span>
                       ))}
 
-                      <span style={{ display: "block", fontSize: "0.76rem", marginTop: "0.6rem", color: disabled ? "#7a5a5a" : "#8fce9f" }}>
-                        {state.reason
-                          ? state.reason
-                          : active
-                            ? `✓ Sélectionnée · acompte ${formatMoney(unitDeposit)} · solde ${formatMoney(unitBalance)} le jour du match`
-                            : `Acompte ${formatMoney(unitDeposit)} pour réserver · solde ${formatMoney(unitBalance)} le jour du match`}
-                      </span>
-                    </button>
+                      {state.requestable ? (
+                        <span style={{ display: "block", marginTop: "0.6rem", fontSize: "0.78rem", color: "#f0c878" }}>
+                          {state.request === "pending" ? (
+                            "⏳ Demande envoyée — en attente d'approbation. Vous recevrez un courriel."
+                          ) : state.request === "declined" ? (
+                            <span style={{ color: "#ff9999" }}>Demande refusée pour cette plage.</span>
+                          ) : (
+                            <>
+                              Sur demande : votre catégorie n&apos;est pas admise d&apos;office pour ce match.{" "}
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); requestUnit(u); }}
+                                disabled={requesting === u.key}
+                                style={{ marginLeft: "0.3rem", background: "#3d2c57", color: "#e9d7ff", border: "1px solid #5a4575", borderRadius: "999px", padding: "0.3rem 0.8rem", fontSize: "0.76rem", fontWeight: 700, cursor: "pointer" }}
+                              >
+                                {requesting === u.key ? "..." : "Faire une demande"}
+                              </button>
+                            </>
+                          )}
+                        </span>
+                      ) : (
+                        <span style={{ display: "block", fontSize: "0.76rem", marginTop: "0.6rem", color: disabled ? "#7a5a5a" : "#8fce9f" }}>
+                          {state.reason
+                            ? state.reason
+                            : active
+                              ? `✓ Sélectionnée · acompte ${formatMoney(unitDeposit)} · solde ${formatMoney(unitBalance)} le jour du match`
+                              : `Acompte ${formatMoney(unitDeposit)} pour réserver · solde ${formatMoney(unitBalance)} le jour du match`}
+                        </span>
+                      )}
+                    </div>
                   );
                 })}
               </div>

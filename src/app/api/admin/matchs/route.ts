@@ -3,10 +3,11 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { getCurrentAdminRole, isAdminRequest } from "@/lib/admin-auth";
-import { sendMatchSlotsConfirmationEmail } from "@/lib/email";
+import { sendMatchRequestDecisionEmail, sendMatchSlotsConfirmationEmail } from "@/lib/email";
+import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
 import { areConsecutive } from "@/lib/match-slots-core";
-import { cancelBookings, getAllBookings, getAllTeamProfiles, getBookingsByIds, getSlotsWithAvailability, toEmailSlots } from "@/lib/match-slots-repo";
+import { cancelBookings, decideSlotRequest, getAllBookings, getAllSlotRequests, getAllTeamProfiles, getBookingsByIds, getSlotsWithAvailability, toEmailSlots } from "@/lib/match-slots-repo";
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -16,8 +17,8 @@ function db() {
 
 export async function GET() {
   if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
-  const [slots, bookings, profiles] = await Promise.all([getSlotsWithAvailability({ includeInactive: true, includePast: true }), getAllBookings(), getAllTeamProfiles()]);
-  return NextResponse.json({ slots, bookings, profiles });
+  const [slots, bookings, profiles, requests] = await Promise.all([getSlotsWithAvailability({ includeInactive: true, includePast: true }), getAllBookings(), getAllTeamProfiles(), getAllSlotRequests()]);
+  return NextResponse.json({ slots, bookings, profiles, requests });
 }
 
 /** Convertit les champs d'édition d'une plage (corps de requête) en colonnes — seulement ceux fournis. */
@@ -42,6 +43,7 @@ function slotPatch(body: Record<string, any>): Record<string, unknown> {
   if (body.birthYearMin !== undefined) patch.birth_year_min = year(body.birthYearMin);
   if (body.birthYearMax !== undefined) patch.birth_year_max = year(body.birthYearMax);
   if (body.restrictionNote !== undefined) patch.restriction_note = text(body.restrictionNote);
+  if (typeof body.allowRequests === "boolean") patch.allow_requests = body.allowRequests;
   if (body.preferredNote !== undefined) patch.preferred_note = text(body.preferredNote);
   if (body.allowedCategories !== undefined) {
     const list = Array.isArray(body.allowedCategories) ? body.allowedCategories : [];
@@ -50,7 +52,8 @@ function slotPatch(body: Record<string, any>): Record<string, unknown> {
       const lo = year(c.birthYearMin);
       const hi = year(c.birthYearMax);
       if (lo != null && hi != null && lo > hi) throw new Error("Dans une catégorie, l'année la plus ancienne doit être inférieure ou égale à la plus récente.");
-      return { gender: c.gender, birthYearMin: lo, birthYearMax: hi, ...(c.exact && lo != null && hi != null && lo !== hi ? { exact: true } : {}) };
+      const levels = Array.isArray(c.levels) ? c.levels.map((l: unknown) => String(l).trim()).filter(Boolean) : typeof c.levels === "string" ? c.levels.split(/[,;]/).map((l: string) => l.trim()).filter(Boolean) : [];
+      return { gender: c.gender, birthYearMin: lo, birthYearMax: hi, ...(c.exact && lo != null && hi != null && lo !== hi ? { exact: true } : {}), ...(levels.length ? { levels } : {}) };
     });
     patch.allowed_categories = cats.length > 0 ? cats : null;
   }
@@ -161,6 +164,23 @@ export async function POST(request: Request) {
         }
         await cancelBookings([booking.id], body.reason || (refunded ? "Annulée et remboursée par l'administrateur" : "Annulée par l'administrateur"));
         return NextResponse.json({ ok: true, refunded });
+      }
+      case "request_approve":
+      case "request_decline": {
+        const approved = body.action === "request_approve";
+        const decided = await decideSlotRequest(String(body.requestId), approved ? "approved" : "declined");
+        const first = decided[0];
+        if (first?.profile) {
+          await sendMatchRequestDecisionEmail({
+            to: first.profile.contact_email,
+            contactName: first.profile.contact_name,
+            orgName: first.profile.org_name,
+            approved,
+            link: `${env.publicSiteUrl}/prive/matchs?equipe=${first.profile.access_token}`,
+            slots: decided.map((d) => d.slot)
+          }).catch((e) => console.error("Unable to send match request decision", e));
+        }
+        break;
       }
       case "booking_mark_paid": {
         await db().from("match_slot_bookings").update({ status: "paid", reservation_expires_at: null, updated_at: new Date().toISOString() }).eq("id", body.bookingId).eq("status", "pending");

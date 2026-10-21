@@ -31,6 +31,8 @@ export interface MatchSlot {
   allowed_categories: CategoryRule[] | null;
   /** Précision positive (p. ex. « Équipe 2014 recherchée »). */
   preferred_note: string | null;
+  /** Les équipes non admissibles d'office peuvent faire une demande à approuver. */
+  allow_requests: boolean;
   /** Deux plages (ou plus) partageant ce code forment une double cédule, réservée en bloc. */
   double_group: string | null;
   active: boolean;
@@ -65,7 +67,7 @@ export interface MatchBooking {
   created_at: string;
 }
 
-export const TEAM_LEVELS = ["Récréatif", "Intermédiaire", "Compétitif", "Élite"] as const;
+export { TEAM_LEVELS } from "@/lib/match-slots-core";
 
 export interface MatchTeamProfile {
   id: string;
@@ -258,13 +260,17 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
     );
   }
 
+  const { data: approvedReqs } = await db().from("match_slot_requests").select("slot_id").eq("profile_id", profile.id).eq("status", "approved");
+  const approvedSlotIds = new Set<string>((approvedReqs ?? []).map((r: any) => r.slot_id));
   const { data: slots, error } = await db().from("match_slots").select("*").in("id", slotIds);
   if (error) throw new Error(error.message);
   const today = new Date().toISOString().slice(0, 10);
   if ((slots ?? []).length !== slotIds.length) throw new MatchConflictError("Une des plages n'existe plus.");
   for (const s of slots as MatchSlot[]) {
     if (!s.active || s.slot_date < today) throw new MatchConflictError("Une des plages n'est plus offerte.");
-    const elig = checkEligibility(s, { gender: input.teamGender, birthYear: input.teamBirthYear, birthYearTo: input.teamBirthYearTo ?? input.teamBirthYear });
+    const elig = checkEligibility(s, { gender: input.teamGender, birthYear: input.teamBirthYear, birthYearTo: input.teamBirthYearTo ?? input.teamBirthYear, level: profile.team_level });
+    // Une équipe non admissible d'office peut réserver si sa demande pour cette plage a été approuvée.
+    if (!elig.ok && approvedSlotIds.has(s.id)) continue;
     if (!elig.ok) throw new MatchConflictError(`${new Date(s.slot_date + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}, ${s.start_time} : ${elig.reason}`);
   }
 
@@ -372,4 +378,68 @@ export function toEmailSlots(bookings: (MatchBooking & { slot: MatchSlot })[]) {
     depositCents: b.price_cents,
     balanceCents: b.balance_due_cents
   }));
+}
+
+/* ── Demandes de match (équipes non admissibles d'office) ── */
+
+export interface MatchSlotRequest {
+  id: string;
+  slot_id: string;
+  profile_id: string;
+  status: "pending" | "approved" | "declined";
+  message: string | null;
+  decided_at: string | null;
+  created_at: string;
+}
+
+export async function getRequestsForProfile(profileId: string): Promise<MatchSlotRequest[]> {
+  const { data } = await db().from("match_slot_requests").select("*").eq("profile_id", profileId);
+  return (data ?? []) as MatchSlotRequest[];
+}
+
+/** Crée (ou relance) la demande d'une équipe pour une plage — une double cédule = toutes ses plages. */
+export async function createSlotRequests(profileId: string, slotIds: string[], message: string | null): Promise<MatchSlot[]> {
+  const { data: picked } = await db().from("match_slots").select("*").in("id", slotIds);
+  const groups = Array.from(new Set((picked ?? []).map((p: any) => p.double_group).filter(Boolean)));
+  let all = (picked ?? []) as MatchSlot[];
+  if (groups.length) {
+    const { data: siblings } = await db().from("match_slots").select("*").in("double_group", groups);
+    all = [...all, ...((siblings ?? []) as MatchSlot[])];
+  }
+  const unique = Array.from(new Map(all.map((s) => [s.id, s])).values());
+  for (const s of unique) {
+    if (!s.active) throw new MatchConflictError("Une des plages n'est plus offerte.");
+    if (!s.allow_requests) throw new MatchConflictError("Cette plage n'accepte pas de demande : elle est réservée à une catégorie précise.");
+  }
+  for (const s of unique) {
+    const { data: existing } = await db().from("match_slot_requests").select("id, status").eq("slot_id", s.id).eq("profile_id", profileId).maybeSingle();
+    if (existing?.status === "approved") continue;
+    if (existing) await db().from("match_slot_requests").update({ status: "pending", message, decided_at: null, created_at: new Date().toISOString() }).eq("id", existing.id);
+    else await db().from("match_slot_requests").insert({ slot_id: s.id, profile_id: profileId, message });
+  }
+  return unique;
+}
+
+export async function getAllSlotRequests(): Promise<(MatchSlotRequest & { slot: MatchSlot; profile: MatchTeamProfile })[]> {
+  const { data, error } = await db().from("match_slot_requests").select("*, slot:match_slots(*), profile:match_team_profiles(*)").order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as (MatchSlotRequest & { slot: MatchSlot; profile: MatchTeamProfile })[];
+}
+
+/** Approuve ou refuse une demande (toutes les plages d'une même double cédule ensemble). */
+export async function decideSlotRequest(requestId: string, status: "approved" | "declined"): Promise<(MatchSlotRequest & { slot: MatchSlot; profile: MatchTeamProfile })[]> {
+  const { data: req } = await db().from("match_slot_requests").select("*, slot:match_slots(*)").eq("id", requestId).maybeSingle();
+  if (!req) throw new Error("Demande introuvable.");
+  let slotIds = [req.slot_id];
+  if (req.slot?.double_group) {
+    const { data: siblings } = await db().from("match_slots").select("id").eq("double_group", req.slot.double_group);
+    slotIds = (siblings ?? []).map((s: any) => s.id);
+  }
+  const { data } = await db()
+    .from("match_slot_requests")
+    .update({ status, decided_at: new Date().toISOString() })
+    .eq("profile_id", req.profile_id)
+    .in("slot_id", slotIds)
+    .select("*, slot:match_slots(*), profile:match_team_profiles(*)");
+  return (data ?? []) as (MatchSlotRequest & { slot: MatchSlot; profile: MatchTeamProfile })[];
 }

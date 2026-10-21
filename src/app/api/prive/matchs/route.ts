@@ -8,7 +8,9 @@ import { isValidPhone } from "@/lib/form-validation";
 import { restrictionLabel } from "@/lib/match-slots-core";
 import {
   cancelBookings,
+  getRequestsForProfile,
   getSlotsWithAvailability,
+  getTeamProfileByToken,
   MatchConflictError,
   MATCH_RESERVATION_MINUTES,
   MAX_SLOTS_PER_TEAM,
@@ -18,7 +20,10 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const token = new URL(request.url).searchParams.get("equipe");
+  const profile = token ? await getTeamProfileByToken(token) : null;
+  const requests = profile ? await getRequestsForProfile(profile.id) : [];
   const all = await getSlotsWithAvailability();
   // Une plage réservée (ou une double cédule dont une moitié l'est) disparaît de la page publique.
   const blockedGroups = new Set(all.filter((s) => !s.available && s.double_group).map((s) => s.double_group));
@@ -49,6 +54,8 @@ export async function GET() {
         allowed_categories: s.allowed_categories
       },
       doubleGroup: s.double_group,
+      allowRequests: s.allow_requests,
+      request: requests.find((r) => r.slot_id === s.id)?.status ?? null,
       notes: s.notes,
       available: s.available
     }))

@@ -714,3 +714,52 @@ export async function sendMatchTeamLinkEmail(input: { to: string; contactName: s
       </div>`
   });
 }
+
+function matchSlotsText(slots: { slot_date: string; start_time: string; end_time: string; opponent?: string | null }[]) {
+  return slots
+    .map((s) => `${new Date(s.slot_date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })}, ${s.start_time} – ${s.end_time}${s.opponent ? ` (contre ${s.opponent})` : ""}`)
+    .join("<br/>");
+}
+
+/** Avis interne : une équipe demande une plage pour laquelle elle n'est pas admissible d'office. */
+export async function sendMatchRequestNotification(input: { orgName: string; teamLabel: string; category: string; level: string; contactName: string; contactEmail: string; contactPhone: string; message: string | null; slots: { slot_date: string; start_time: string; end_time: string; opponent?: string | null }[] }) {
+  const resend = getResendClient();
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: "info@newvalkyria.com",
+    subject: `Demande de match à approuver — ${input.orgName} (${input.category})`,
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+      <h1 style="font-size:19px">Demande de match à approuver</h1>
+      <p><strong>${escapeHtml(input.orgName)}</strong> — ${escapeHtml(input.teamLabel)} · ${escapeHtml(input.category)} · calibre ${escapeHtml(input.level)}</p>
+      <p>${escapeHtml(input.contactName)} · ${escapeHtml(input.contactEmail)} · ${escapeHtml(input.contactPhone)}</p>
+      <p><strong>Plage demandée :</strong><br/>${matchSlotsText(input.slots)}</p>
+      ${input.message ? `<p><strong>Message :</strong> ${escapeHtml(input.message)}</p>` : ""}
+      <p>Approuvez ou refusez dans l'admin : Vente de matchs → Demandes de match.</p>
+    </div>`
+  });
+}
+
+/** Réponse à une équipe : demande approuvée (elle peut payer) ou refusée. */
+export async function sendMatchRequestDecisionEmail(input: { to: string; contactName: string; orgName: string; approved: boolean; link: string; slots: { slot_date: string; start_time: string; end_time: string; opponent?: string | null }[] }) {
+  const resend = getResendClient();
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    bcc: "info@newvalkyria.com",
+    subject: input.approved ? "New Valkyria — Votre demande de match est approuvée" : "New Valkyria — Votre demande de match",
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+      <p>Bonjour ${escapeHtml(input.contactName)},</p>
+      ${
+        input.approved
+          ? `<p>Bonne nouvelle : votre demande pour <strong>${escapeHtml(input.orgName)}</strong> est <strong>approuvée</strong>. Vous pouvez maintenant réserver et payer la plage suivante :</p>
+             <p>${matchSlotsText(input.slots)}</p>
+             <p style="margin:18px 0"><a href="${escapeHtml(input.link)}" style="display:inline-block;background:#72499a;color:#fff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px">Réserver la plage</a></p>
+             <p style="font-size:13px;color:#6d6880">Premier arrivé, premier servi : la plage est confirmée au paiement de l'acompte.</p>`
+          : `<p>Merci pour votre intérêt. Malheureusement, nous ne pouvons pas accepter votre demande pour la plage suivante, la catégorie de votre équipe ne correspondant pas à notre groupe :</p>
+             <p>${matchSlotsText(input.slots)}</p>
+             <p>D'autres plages conviennent peut-être à votre équipe : <a href="${escapeHtml(input.link)}" style="color:#72499a;font-weight:bold">voir les plages</a>.</p>`
+      }
+      <p style="margin-top:22px">L'équipe New Valkyria<br/>info@newvalkyria.com</p>
+    </div>`
+  });
+}
