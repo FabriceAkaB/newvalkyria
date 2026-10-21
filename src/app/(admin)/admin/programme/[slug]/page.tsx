@@ -5,7 +5,14 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { getAllBoysRegistrations } from "@/lib/boys-registrations";
 import { env } from "@/lib/env";
 import { isWaitlistOnly, programBrand } from "@/lib/private-program-view";
-import { countHeldPlaces, countPaidPlaces, getPrivateProgram, getWaitlistCount } from "@/lib/private-programs-repo";
+import { countHeldPlaces, countPaidPlaces, getWaitlistCount, type PrivateProgram } from "@/lib/private-programs-repo";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+
+/** Tous les programmes garçons (privés comme le 2014, ou publics comme le Programme intensif 2015). */
+async function getBoysProgram(slug: string): Promise<PrivateProgram | null> {
+  const { data } = await (getSupabaseAdminClient() as any).from("session_programs").select("*").eq("slug", slug).maybeSingle();
+  return (data as PrivateProgram | null) ?? null;
+}
 import { getProgramDates } from "@/lib/session-programs-repo";
 
 export const metadata = { title: "Programme garçons — Admin New Valkyria", robots: "noindex" };
@@ -15,7 +22,7 @@ export const dynamic = "force-dynamic";
 const BOYS_PROGRAM_SECTIONS = ["garcons-2014", "intensif-garcons", "garcons-2018"] as const;
 
 async function stats(slug: string) {
-  const [program, held, paid, waitlist] = await Promise.all([getPrivateProgram(slug), countHeldPlaces(slug), countPaidPlaces(slug), getWaitlistCount(slug)]);
+  const [program, held, paid, waitlist] = await Promise.all([getBoysProgram(slug), countHeldPlaces(slug), countPaidPlaces(slug), getWaitlistCount(slug)]);
   return { program, held, paid, waitlist };
 }
 
