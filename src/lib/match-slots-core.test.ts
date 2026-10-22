@@ -152,9 +152,9 @@ describe("doubles cédules", () => {
 });
 
 describe("totaux", () => {
-  it("200 $ au total par plage : 50 $ d'acompte + 150 $ le jour du match", () => {
-    const one = { price_cents: 5000, balance_due_cents: 15000 };
-    expect(totalsFor([one])).toEqual({ depositCents: 5000, balanceCents: 15000, totalCents: 20000 });
-    expect(totalsFor([one, one])).toEqual({ depositCents: 10000, balanceCents: 30000, totalCents: 40000 });
+  it("150 $ au total par plage : 50 $ d'acompte + 100 $ le jour du match", () => {
+    const one = { price_cents: 5000, balance_due_cents: 10000 };
+    expect(totalsFor([one])).toEqual({ depositCents: 5000, balanceCents: 10000, totalCents: 15000 });
+    expect(totalsFor([one, one])).toEqual({ depositCents: 10000, balanceCents: 20000, totalCents: 30000 });
   });
 });

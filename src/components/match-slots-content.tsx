@@ -335,7 +335,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   const commonLocation = slots && slots.length > 0 && slots.every((s) => s.location === slots[0].location) ? slots[0].location : null;
   const commonField = slots && slots.length > 0 && slots.every((s) => s.field === slots[0].field) ? slots[0].field : null;
   const depositEach = slots?.[0]?.depositCents ?? 5000;
-  const balanceEach = slots?.[0]?.balanceDueCents ?? 15000;
+  const balanceEach = slots?.[0]?.balanceDueCents ?? 10000;
   const step = !profileId ? 1 : chosen.length === 0 ? 2 : 3;
   const payRef = useRef<HTMLDivElement | null>(null);
 
