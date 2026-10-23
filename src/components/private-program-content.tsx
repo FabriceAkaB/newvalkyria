@@ -303,7 +303,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
                 ]
               : [
                   [String(program.practices), "pratiques"],
-                  ["2", "pratiques par semaine"],
+                  [String(Math.max(1, new Set(program.dates.map((d) => new Date(`${d.session_date}T12:00:00`).getDay())).size)), new Set(program.dates.map((d) => new Date(`${d.session_date}T12:00:00`).getDay())).size > 1 ? "pratiques par semaine" : "pratique par semaine"],
                   [capacityLabel(program.minCapacity, program.capacity), program.minCapacity ? "joueurs par groupe" : "places seulement"]
                 ]
             ).map(([n, l]) => (
