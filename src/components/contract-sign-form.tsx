@@ -123,7 +123,7 @@ async function compressImage(file: File): Promise<File> {
 
 /** Styles du formulaire : fond blanc, cases bien visibles, gros texte (lisible au téléphone). */
 const CSS = `
-.nvc-card{background:#fff;color:#1d1730;border-radius:16px;padding:1.3rem 1.2rem;margin-top:1rem;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.nvc-card{background:#fff;color:#1d1730;border-radius:16px;padding:1.3rem 1.2rem;margin-top:1rem;border:1px solid #e6e0ee;box-shadow:0 1px 3px rgba(29,23,48,.06)}
 .nvc-head{display:flex;gap:.75rem;align-items:flex-start;margin-bottom:1rem}
 .nvc-num{flex:0 0 2rem;height:2rem;border-radius:50%;background:#5b2a86;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
 .nvc-num.ok{background:#2f9e5b}
@@ -340,9 +340,9 @@ export function ContractSignForm({
   return (
     <>
       <style>{CSS}</style>
-      <p style={{ fontSize: "0.75rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "#c4a4e4", margin: "0 0 0.4rem" }}>Contrat d&apos;embauche</p>
-      <h1 style={{ fontSize: "1.7rem", fontWeight: 700, color: "#fff", margin: "0 0 0.4rem" }}>{employeeName}</h1>
-      <p style={{ color: "#d6d3dd", margin: 0, lineHeight: 1.6, fontSize: "1rem" }}>{title}</p>
+      <p style={{ fontSize: "0.8rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "#5b2a86", fontWeight: 700, margin: "0 0 0.4rem" }}>Contrat d&apos;embauche</p>
+      <h1 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#1d1730", margin: "0 0 0.3rem" }}>{employeeName}</h1>
+      <p style={{ color: "#5d566b", margin: 0, lineHeight: 1.6, fontSize: "1rem" }}>{title}</p>
 
       {/* Mode d'emploi */}
       <div className="nvc-card">
