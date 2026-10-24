@@ -868,7 +868,8 @@ function contractPayTable(rows: ContractPayRow[]): string {
   </table>`;
 }
 
-/** Copie du contrat signé envoyée à l'employée (NAS masqué). */
+/** Copie du contrat signé envoyée à l'employée (NAS masqué), de la part d'Annie Tremblay,
+ *  responsable administratif : c'est elle qui s'occupe des paies. */
 export async function sendContractCopyToEmployee(input: {
   to: string;
   firstName: string;
@@ -878,21 +879,25 @@ export async function sendContractCopyToEmployee(input: {
   schedule: ContractPayRow[];
 }) {
   const resend = getResendClient();
+  const intro = input.countersigned
+    ? "<p>Voici la copie finale de votre contrat, signée par vous et par l'Académie (en pièce jointe).</p>"
+    : `<p>Je me présente : Annie Tremblay, responsable administratif à l'Académie New Valkyria. Merci d'avoir rempli et signé votre contrat ! Vous trouverez votre copie en pièce jointe.</p>
+        <p>C'est moi qui m'occupe de <strong>vos paies</strong> : chaque paie est versée par dépôt direct, aux deux semaines, le jeudi. Si vous avez une question ou un problème avec une paie (montant, heures, dépôt non reçu, changement de compte bancaire), écrivez-moi directement à <a href="mailto:info@newvalkyria.com">info@newvalkyria.com</a> : je m'en charge.</p>
+        <p>Une copie contresignée par l'Académie vous sera envoyée dès qu'elle sera signée.</p>`;
   const result = await resend.emails.send({
     from: env.resendFrom,
     to: input.to,
-    subject: input.countersigned ? "Votre contrat New Valkyria — copie finale signée" : "Votre contrat New Valkyria — copie signée",
+    subject: input.countersigned ? "Votre contrat New Valkyria — copie finale signée" : "Bienvenue chez New Valkyria — votre contrat signé et vos paies",
     html: `
       <div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#161419;max-width:620px">
         <p>Bonjour ${escapeHtml(input.firstName)},</p>
-        <p>${input.countersigned ? "Voici la copie finale de votre contrat, signée par vous et par l'Académie." : "Merci ! Votre contrat est bien signé. Vous trouverez votre copie en pièce jointe."}</p>
+        ${intro}
         <p><strong>${escapeHtml(input.title)}</strong></p>
-        ${input.countersigned ? "" : "<p>Une copie contresignée par l'Académie vous sera envoyée dès qu'elle sera signée.</p>"}
         <p style="margin-top:18px"><strong>Votre calendrier de paie prévu</strong> (dépôt direct, montants bruts selon l'horaire actuel ; la paie réelle suit les heures travaillées) :</p>
         ${contractPayTable(input.schedule)}
         <p style="font-size:13px;color:#666;margin-top:14px">Pour votre sécurité, votre numéro d'assurance sociale est masqué dans cette copie.</p>
         <p>Bienvenue dans l'équipe !</p>
-        <p>JP<br/>New Valkyria</p>
+        <p>Annie</p>
       </div>`,
     attachments: [{ filename: "Contrat_New_Valkyria.pdf", content: Buffer.from(input.pdf) }]
   } as never);
