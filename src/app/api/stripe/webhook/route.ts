@@ -34,6 +34,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { markBookingsPaid, releaseBySession as releaseMatchBySession, toEmailSlots } from "@/lib/match-slots-repo";
 import { closeOtherOffersForSlot, onPartnershipOptionPaid } from "@/lib/partnership-offers";
 import { markRentalPaid, releaseRentalBySession } from "@/lib/terrain-rentals-repo";
+import { getOfferByToken, markOfferPaid } from "@/lib/special-offers";
 
 export async function POST(request: Request) {
   if (!env.stripeWebhookSecret) {
@@ -267,6 +268,61 @@ export async function POST(request: Request) {
           }
         } catch (error) {
           console.error("Unable to convert trial registration", error);
+        }
+      }
+      return NextResponse.json({ received: true });
+    }
+
+    // ── Offre spéciale (ex. 2 pour 1 pour deux sœurs) : un seul paiement inscrit toutes
+    // les joueuses de l'offre, chacune dans son groupe. ──
+    if (checkoutType === "special-offer") {
+      const token = session.metadata?.offerToken;
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : null;
+      const offer = token ? await getOfferByToken(token) : null;
+      if (offer && !offer.paid_at) {
+        const supabase = getSupabaseAdminClient() as any;
+        let first: any = null;
+        for (const [i, item] of offer.registrations.entries()) {
+          try {
+            const { data: registration } = await supabase
+              .from("registrations")
+              .update({
+                status: "paid",
+                is_trial: false,
+                program_id: item.programId,
+                time_slot_template_id: item.timeSlotTemplateId,
+                // La session Stripe n'est rattachée qu'à la 1re inscription ; le paiement est partagé.
+                stripe_checkout_session_id: i === 0 ? session.id : null,
+                stripe_payment_intent_id: paymentIntentId,
+                updated_at: new Date().toISOString()
+              })
+              .eq("id", item.registrationId)
+              .select("*")
+              .maybeSingle();
+            await logAudit({
+              actorRole: "system",
+              actorLabel: "Paiement Stripe",
+              action: "special_offer_paid",
+              entityType: "registration",
+              entityId: item.registrationId,
+              entityLabel: item.playerName,
+              before: null,
+              after: { status: "paid", program_id: item.programId, offer: offer.title, amount_cents: session.amount_total }
+            });
+            if (registration) {
+              first ??= registration;
+              await notifyPaidRegistration(PROGRAMS[item.programId as ProgramCode]?.name ?? item.programId, registration, session, `${offer.title} · ${item.groupLabel}`);
+            }
+          } catch (error) {
+            console.error("Unable to apply special offer registration", error);
+          }
+        }
+        await markOfferPaid(offer.token, session.id, paymentIntentId);
+        if (first) {
+          const programName = PROGRAMS[offer.registrations[0].programId as ProgramCode]?.name;
+          await sendConfirmationEmail({ to: first.parent_email, parentName: first.parent_name, programName }).catch((error) =>
+            console.error("Unable to send special offer confirmation", error)
+          );
         }
       }
       return NextResponse.json({ received: true });
