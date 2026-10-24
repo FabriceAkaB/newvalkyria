@@ -129,6 +129,7 @@ const ENTRAINEURS_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/exercices", label: "Exercices", icon: "flask" },
   { href: "/admin/themes", label: "Thèmes", icon: "tag" },
   { href: "/admin/entraineurs/paie", label: "Paie", icon: "chart" },
+  { href: "/admin/contrats", label: "Contrats", icon: "list" },
   { href: "/admin/entraineurs/statistiques", label: "Statistiques", icon: "gauge" },
 ];
 

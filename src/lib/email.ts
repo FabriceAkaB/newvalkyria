@@ -852,3 +852,77 @@ export async function sendMatchRequestDecisionEmail(input: { to: string; contact
     </div>`
   });
 }
+
+interface ContractPayRow {
+  period: string;
+  payDate: string;
+  amountCents: number;
+}
+
+function contractPayTable(rows: ContractPayRow[]): string {
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  const date = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+  return `<table style="border-collapse:collapse;font-size:13px;width:100%;background:#f7f4fb">
+    <tr><th style="text-align:left;padding:6px 10px">Paie (jeudi)</th><th style="text-align:left;padding:6px 10px">Période travaillée</th><th style="text-align:right;padding:6px 10px">Brut prévu</th></tr>
+    ${rows.map((r) => `<tr><td style="padding:5px 10px">${date(r.payDate)}</td><td style="padding:5px 10px">${escapeHtml(r.period)}</td><td style="padding:5px 10px;text-align:right">${fmt(r.amountCents)}</td></tr>`).join("")}
+  </table>`;
+}
+
+/** Copie du contrat signé envoyée à l'employée (NAS masqué). */
+export async function sendContractCopyToEmployee(input: {
+  to: string;
+  firstName: string;
+  title: string;
+  pdf: Uint8Array;
+  countersigned: boolean;
+  schedule: ContractPayRow[];
+}) {
+  const resend = getResendClient();
+  const result = await resend.emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    subject: input.countersigned ? "Votre contrat New Valkyria — copie finale signée" : "Votre contrat New Valkyria — copie signée",
+    html: `
+      <div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#161419;max-width:620px">
+        <p>Bonjour ${escapeHtml(input.firstName)},</p>
+        <p>${input.countersigned ? "Voici la copie finale de votre contrat, signée par vous et par l'Académie." : "Merci ! Votre contrat est bien signé. Vous trouverez votre copie en pièce jointe."}</p>
+        <p><strong>${escapeHtml(input.title)}</strong></p>
+        ${input.countersigned ? "" : "<p>Une copie contresignée par l'Académie vous sera envoyée dès qu'elle sera signée.</p>"}
+        <p style="margin-top:18px"><strong>Votre calendrier de paie prévu</strong> (dépôt direct, montants bruts selon l'horaire actuel ; la paie réelle suit les heures travaillées) :</p>
+        ${contractPayTable(input.schedule)}
+        <p style="font-size:13px;color:#666;margin-top:14px">Pour votre sécurité, votre numéro d'assurance sociale est masqué dans cette copie.</p>
+        <p>Bienvenue dans l'équipe !</p>
+        <p>JP<br/>New Valkyria</p>
+      </div>`,
+    attachments: [{ filename: "Contrat_New_Valkyria.pdf", content: Buffer.from(input.pdf) }]
+  } as never);
+  const error = (result as { error?: { message: string } | null }).error;
+  if (error) throw new Error(error.message);
+}
+
+/** Avis à JP : un contrat vient d'être signé (copie avec NAS masqué jointe). */
+export async function sendContractSignedNotification(input: {
+  employeeName: string;
+  title: string;
+  pdf: Uint8Array;
+  adminUrl: string;
+  nextPay: ContractPayRow | null;
+}) {
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: OWNER_NOTIFY_EMAIL,
+    cc: "info@newvalkyria.com",
+    subject: `Contrat signé — ${input.employeeName}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:20px">Contrat signé : ${escapeHtml(input.employeeName)}</h1>
+        <p>${escapeHtml(input.title)}</p>
+        ${input.nextPay ? `<p><strong>Prochaine paie :</strong> ${new Date(`${input.nextPay.payDate}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })}, environ ${fmt(input.nextPay.amountCents)} brut (période ${escapeHtml(input.nextPay.period)}).</p>` : ""}
+        <p>La copie complète (avec NAS) et le spécimen de chèque sont conservés dans l'admin :<br/><a href="${input.adminUrl}">${input.adminUrl}</a></p>
+        <p style="font-size:13px;color:#666">La copie jointe a le NAS masqué.</p>
+      </div>`,
+    attachments: [{ filename: `Contrat_${input.employeeName.replace(/\s+/g, "_")}.pdf`, content: Buffer.from(input.pdf) }]
+  } as never);
+}
