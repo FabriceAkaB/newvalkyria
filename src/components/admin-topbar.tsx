@@ -225,8 +225,13 @@ function GlobalSearchBox() {
   );
 }
 
+const ACADEMIE_LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin/historique", label: "Historique de l'académie", icon: "list" },
+];
+
 const GROUPS: Group[] = [
   { label: "Saison", dotColor: "#f0c878", links: [], isSeasonSwitcher: true },
+  { label: "Académie", dotColor: "#c3a6ff", links: ACADEMIE_LINKS, adminOnly: true },
   { label: "Programmes (Garçons)", dotColor: "#78a8f0", links: SPORT_ETUDES_LINKS },
   { label: "Commandites & sponsors", dotColor: "#e0b0d8", links: COMMANDITES_LINKS },
   { label: "Vente de matchs", dotColor: "#78d0c8", links: MATCHS_LINKS },
