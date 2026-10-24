@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { sendPaidRegistrationNotification } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { findOrCreatePlayer } from "@/lib/players-repo";
 import { getParentUserId } from "@/lib/parent-auth";
@@ -106,6 +107,7 @@ export async function POST(request: Request) {
         autoDebitConsent: false,
         package: pkg
       });
+      after(() => notifyWaitlist(program.name, payload, parentName, parentEmail));
       return NextResponse.json({ ok: true, waitlisted: true, registrationId: waitId });
     }
 
@@ -171,6 +173,7 @@ export async function POST(request: Request) {
     // Deux parents sur la dernière place : l'ordre d'arrivée décide.
     if (!(await isWithinCapacity(program.slug, registrationId, program.max_capacity))) {
       await setRegistrationStatus(registrationId, "waitlist");
+      after(() => notifyWaitlist(program.name, payload, parentName, parentEmail));
       return NextResponse.json({ ok: true, waitlisted: true, registrationId });
     }
 
@@ -266,4 +269,19 @@ export async function POST(request: Request) {
     if (error instanceof Error) return jsonError(error.message, 422);
     return jsonError("Erreur serveur", 500);
   }
+}
+
+/** Avis à JP : un parent vient de s'inscrire sur la liste d'attente d'un programme garçons. */
+function notifyWaitlist(programName: string, payload: { playerFirstName: string; playerLastName: string; birthYear: number; parentPhone: string; comments?: string | null }, parentName: string, parentEmail: string) {
+  return sendPaidRegistrationNotification({
+    kind: "waitlist",
+    programName,
+    playerName: `${payload.playerFirstName} ${payload.playerLastName}`.trim(),
+    birthYear: payload.birthYear,
+    parentName,
+    parentEmail,
+    parentPhone: payload.parentPhone,
+    amountCents: null,
+    note: payload.comments || null
+  }).catch((err) => console.error("Unable to send waitlist notification", err));
 }

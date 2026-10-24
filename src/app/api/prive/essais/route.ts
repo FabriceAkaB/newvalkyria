@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 
-import { sendBoysTrialConfirmationEmail } from "@/lib/email";
+import { sendBoysTrialConfirmationEmail, sendBoysTrialNotification } from "@/lib/email";
 import { createTrial, getTrialSessions, TrialError } from "@/lib/boys-trials-repo";
 import { isValidPhone } from "@/lib/form-validation";
 import { jsonError } from "@/lib/http";
@@ -51,6 +51,25 @@ export async function POST(request: Request) {
       end: session.end.slice(0, 5),
       location: session.location
     }).catch((err) => console.error("Unable to send trial confirmation email", err));
+    // Avis à JP, envoyé après la réponse au parent (after() garde la fonction active).
+    after(async () => {
+      const current = (await getTrialSessions(p.slug)).find((s) => s.dateId === p.dateId);
+      await sendBoysTrialNotification({
+        parentName: p.parentName,
+        parentEmail: p.parentEmail,
+        parentPhone: p.parentPhone,
+        playerName: `${p.playerFirstName} ${p.playerLastName}`.trim(),
+        birthYear: p.birthYear,
+        notes: p.notes?.trim() || null,
+        programName,
+        date: session.date,
+        start: session.start.slice(0, 5),
+        end: session.end.slice(0, 5),
+        location: session.location,
+        taken: current?.taken ?? 0,
+        capacity: current?.capacity ?? 0
+      }).catch((err) => console.error("Unable to send trial notification email", err));
+    });
     return NextResponse.json({ ok: true, id: trial.id, date: session.date, start: session.start, end: session.end, location: session.location });
   } catch (error) {
     if (error instanceof ZodError) return jsonError(error.issues[0]?.message ?? "Données invalides", 422);

@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-import { sendConfirmationEmail, sendMatchSlotsConfirmationEmail, sendSponsorshipPaidNotification, sendShopOrderConfirmationEmail, sendTerrainRentalConfirmationEmail } from "@/lib/email";
+import { programEmailLabel, sendConfirmationEmail, sendMatchSlotsConfirmationEmail, sendPaidRegistrationNotification, sendSponsorshipPaidNotification, sendShopOrderConfirmationEmail, sendTerrainRentalConfirmationEmail } from "@/lib/email";
 import { logAudit } from "@/lib/audit-repo";
 import { env } from "@/lib/env";
 import { markLeadPaidInSheet } from "@/lib/google-sheets";
@@ -101,6 +101,8 @@ export async function POST(request: Request) {
         } catch (error) {
           console.error("Unable to send season confirmation email", error);
         }
+        const seasonProgram = registration.program_id ? PROGRAMS[registration.program_id as ProgramCode]?.name : undefined;
+        await notifyPaidRegistration(seasonProgram ?? "Saison New Valkyria", registration as any, session, session.metadata?.paymentPlanId ? "Paiement en versements" : undefined);
       }
 
       // Paiement échelonné — enregistre la carte (client + méthode) sur le
@@ -261,6 +263,7 @@ export async function POST(request: Request) {
             await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name, programName }).catch((error) =>
               console.error("Unable to send trial conversion confirmation", error)
             );
+            await notifyPaidRegistration(programName ?? "Saison New Valkyria", registration, session, "Essai converti en inscription");
           }
         } catch (error) {
           console.error("Unable to convert trial registration", error);
@@ -288,6 +291,7 @@ export async function POST(request: Request) {
             before: before ? { is_half_season: before.is_half_season, half_season_ends_on: before.half_season_ends_on } : null,
             after: { is_half_season: false, half_season_ends_on: null, amount_cents: session.amount_total }
           });
+          await notifyPaidRegistration("Complément de saison (2e moitié)", before, session);
         } catch (error) {
           console.error("Unable to complete half-season registration", error);
         }
@@ -333,6 +337,7 @@ export async function POST(request: Request) {
         } catch (error) {
           console.error("Unable to send Sport-Études confirmation email", error);
         }
+        await notifyPaidRegistration("Programme Sport-Études", registration as any, session, session.metadata?.paymentPlanId ? "Paiement en 2 versements" : undefined);
       }
 
       // Paiement échelonné (2 versements) — enregistre la carte pour le
@@ -400,6 +405,11 @@ export async function POST(request: Request) {
         } catch (error) {
           console.error("Unable to finalize private program registration", error);
         }
+      }
+      if (registration) {
+        const pkg = (registration as any).package === "samedi" ? "Forfait samedi" : null;
+        const plan = session.metadata?.paymentPlanId ? "Paiement en versements" : null;
+        await notifyPaidRegistration(await sessionProgramName(registration.program_slug), registration as any, session, [pkg, plan].filter(Boolean).join(" · ") || undefined);
       }
 
       return NextResponse.json({ received: true });
@@ -550,4 +560,36 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ received: true });
+}
+
+/** Avis à JP pour chaque inscription payée — ne bloque jamais le webhook. */
+async function notifyPaidRegistration(
+  programName: string,
+  reg: Record<string, any> | null,
+  session: Stripe.Checkout.Session,
+  note?: string
+) {
+  try {
+    const parentName = reg?.parent_name ?? ([reg?.parent_first_name, reg?.parent_last_name].filter(Boolean).join(" ") || session.customer_details?.name || null);
+    const playerName = reg ? [reg.player_first_name, reg.player_last_name].map((v) => (v ?? "").trim()).filter(Boolean).join(" ") || null : null;
+    await sendPaidRegistrationNotification({
+      programName,
+      playerName,
+      birthYear: reg?.birth_year ?? reg?.player_birth_year ?? (reg?.player_dob ? String(reg.player_dob).slice(0, 4) : null),
+      parentName,
+      parentEmail: reg?.parent_email ?? session.customer_details?.email ?? null,
+      parentPhone: reg?.parent_phone ?? session.customer_details?.phone ?? null,
+      amountCents: session.amount_total ?? null,
+      note: note ?? null
+    });
+  } catch (error) {
+    console.error("Unable to send paid-registration notification", error);
+  }
+}
+
+async function sessionProgramName(slug: string): Promise<string> {
+  const label = programEmailLabel(slug);
+  if (label !== "programme New Valkyria") return label;
+  const { data } = await (getSupabaseAdminClient() as any).from("session_programs").select("name").eq("slug", slug).maybeSingle();
+  return data?.name ?? slug;
 }

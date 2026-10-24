@@ -17,6 +17,9 @@ interface TrialEmailInput {
   trialYear: string;
 }
 
+/** Courriel personnel de JP : avisé de chaque essai, liste d'attente et inscription payée. */
+export const OWNER_NOTIFY_EMAIL = "jpaka06@gmail.com";
+
 export async function sendLeadNotificationEmail(lead: LeadFormPayload) {
   if (!isEmailConfigured()) return;
 
@@ -25,6 +28,7 @@ export async function sendLeadNotificationEmail(lead: LeadFormPayload) {
   await resend.emails.send({
     from: env.resendFrom,
     to: "info@newvalkyria.com",
+    cc: OWNER_NOTIFY_EMAIL,
     subject: `Nouvelle inscription — ${lead.parent_name}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.6;color:#1a1a2e;max-width:600px">
@@ -601,6 +605,90 @@ export async function sendBoysTrialConfirmationEmail(input: BoysTrialEmailInput)
   });
 }
 
+interface BoysTrialNotificationInput extends Omit<BoysTrialEmailInput, "to"> {
+  parentEmail: string;
+  parentPhone: string;
+  birthYear: number;
+  notes: string | null;
+  taken: number;
+  capacity: number;
+}
+
+/** Avis à JP : un parent vient de réserver un essai gratuit garçons. */
+export async function sendBoysTrialNotification(input: BoysTrialNotificationInput) {
+  const resend = getResendClient();
+  const label = new Date(input.date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" });
+  const row = (name: string, value: string | null) =>
+    value ? `<tr><td style="padding:6px 10px;font-weight:bold;white-space:nowrap">${name}</td><td style="padding:6px 10px">${escapeHtml(value)}</td></tr>` : "";
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: OWNER_NOTIFY_EMAIL,
+    cc: "info@newvalkyria.com",
+    replyTo: input.parentEmail,
+    subject: `Nouvel essai gratuit — ${input.playerName} (${input.birthYear}), ${label}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:20px">Nouvelle réservation d'essai gratuit</h1>
+        <p><strong>${escapeHtml(input.programName)}</strong> · ${label}, ${input.start} – ${input.end}<br/>
+        <strong>${input.taken} place(s) réservée(s) sur ${input.capacity}</strong></p>
+        <table style="border-collapse:collapse;font-size:14px;background:#f7f4fb;width:100%">
+          ${row("Enfant", input.playerName)}
+          ${row("Année de naissance", String(input.birthYear))}
+          ${row("Parent", input.parentName)}
+          ${row("Courriel", input.parentEmail)}
+          ${row("Téléphone", input.parentPhone)}
+          ${row("Lieu", input.location)}
+          ${row("Commentaires", input.notes)}
+        </table>
+        <p style="margin-top:16px">Le parent a reçu sa confirmation. Répondez à ce courriel pour lui écrire directement.</p>
+      </div>`
+  });
+}
+
+interface PaidRegistrationNotificationInput {
+  programName: string;
+  playerName: string | null;
+  birthYear: string | number | null;
+  parentName: string | null;
+  parentEmail: string | null;
+  parentPhone: string | null;
+  amountCents: number | null;
+  note?: string | null;
+  /** « waitlist » : inscription sur la liste d'attente (aucun paiement). */
+  kind?: "paid" | "waitlist";
+}
+
+/** Avis à JP : une inscription vient d'être payée, ou ajoutée à une liste d'attente (n'importe quel programme). */
+export async function sendPaidRegistrationNotification(input: PaidRegistrationNotificationInput) {
+  const resend = getResendClient();
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  const row = (name: string, value: string | null | undefined) =>
+    value ? `<tr><td style="padding:6px 10px;font-weight:bold;white-space:nowrap">${name}</td><td style="padding:6px 10px">${escapeHtml(value)}</td></tr>` : "";
+  const who = input.playerName || input.parentName || "nouvelle inscription";
+  const title = input.kind === "waitlist" ? "Nouvelle inscription sur la liste d'attente" : "Nouvelle inscription payée";
+  await resend.emails.send({
+    from: env.resendFrom,
+    to: OWNER_NOTIFY_EMAIL,
+    cc: "info@newvalkyria.com",
+    ...(input.parentEmail ? { replyTo: input.parentEmail } : {}),
+    subject: `${title} — ${who} (${input.programName})`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
+        <h1 style="font-size:20px">${title}</h1>
+        <p><strong>${escapeHtml(input.programName)}</strong>${input.amountCents ? ` · ${fmt(input.amountCents)} payé` : ""}</p>
+        <table style="border-collapse:collapse;font-size:14px;background:#f7f4fb;width:100%">
+          ${row("Enfant", input.playerName)}
+          ${row("Année de naissance", input.birthYear ? String(input.birthYear) : null)}
+          ${row("Parent", input.parentName)}
+          ${row("Courriel", input.parentEmail)}
+          ${row("Téléphone", input.parentPhone)}
+          ${row("Note", input.note)}
+        </table>
+        <p style="margin-top:16px">Répondez à ce courriel pour écrire directement au parent.</p>
+      </div>`
+  });
+}
+
 interface SponsorshipPaidEmailInput {
   company: string;
   contactName: string | null;
@@ -640,7 +728,8 @@ export async function sendSponsorshipPaidNotification(input: SponsorshipPaidEmai
 }
 
 const PROGRAM_EMAIL_LABEL: Record<string, string> = {
-  "intensif-garcons": "Programme Intensif garçons",
+  "intensif-garcons": "Programme intensif garçons 2015",
+  "garcons-2014": "Programme intensif spécial garçons 2014",
   "garcons-2018": "Programme de développement garçons 2018",
   "garcons-2014-2015": "Programme de développement garçons 2014–2015"
 };
