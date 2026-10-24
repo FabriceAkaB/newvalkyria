@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { sendLeadNotificationEmail } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { getInstallmentPlan } from "@/lib/payment-plan";
@@ -216,18 +215,7 @@ export async function POST(request: Request) {
       await setRegistrationCheckoutSession(registrationId, session.id);
       if (boutiqueOrderId) await setOrderCheckoutSession(boutiqueOrderId, session.id);
 
-      void sendLeadNotificationEmail({
-        parent_name: payload.parentName,
-        email: payload.parentEmail,
-        phone: payload.parentPhone,
-        player_age: payload.year,
-        player_level: "Intermédiaire",
-        city: payload.city,
-        goal: `Programme ${program.name} — Automne/Hiver 2026`,
-        availability: payload.slotId ?? "Flexible",
-        consent: true,
-        player_name: `${payload.playerFirstName} ${payload.playerLastName}`.trim()
-      }).catch((err) => console.error("Registration admin notification email error:", err));
+      // Pas d'avis à l'ouverture du paiement : JP reçoit un seul courriel, une fois l'inscription payée (webhook).
 
       return NextResponse.json({ checkoutUrl: session.url });
     } catch (stripeError) {

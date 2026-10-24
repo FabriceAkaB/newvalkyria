@@ -27,8 +27,7 @@ export async function sendLeadNotificationEmail(lead: LeadFormPayload) {
 
   await resend.emails.send({
     from: env.resendFrom,
-    to: "info@newvalkyria.com",
-    cc: OWNER_NOTIFY_EMAIL,
+    to: OWNER_NOTIFY_EMAIL,
     subject: `Nouvelle inscription — ${lead.parent_name}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.6;color:#1a1a2e;max-width:600px">
@@ -581,14 +580,13 @@ interface BoysTrialEmailInput {
   location: string;
 }
 
-/** Confirmation d'un essai gratuit (mardi) — copie à l'académie. */
+/** Confirmation d'un essai gratuit (mardi) au parent ; JP reçoit un avis séparé (un seul courriel). */
 export async function sendBoysTrialConfirmationEmail(input: BoysTrialEmailInput) {
   const resend = getResendClient();
   const label = new Date(input.date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   await resend.emails.send({
     from: env.resendFrom,
     to: input.to,
-    bcc: "info@newvalkyria.com",
     subject: `New Valkyria — Essai gratuit confirmé : ${input.playerName}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
@@ -623,7 +621,6 @@ export async function sendBoysTrialNotification(input: BoysTrialNotificationInpu
   await resend.emails.send({
     from: env.resendFrom,
     to: OWNER_NOTIFY_EMAIL,
-    cc: "info@newvalkyria.com",
     replyTo: input.parentEmail,
     subject: `Nouvel essai gratuit — ${input.playerName} (${input.birthYear}), ${label}`,
     html: `
@@ -669,7 +666,6 @@ export async function sendPaidRegistrationNotification(input: PaidRegistrationNo
   await resend.emails.send({
     from: env.resendFrom,
     to: OWNER_NOTIFY_EMAIL,
-    cc: "info@newvalkyria.com",
     ...(input.parentEmail ? { replyTo: input.parentEmail } : {}),
     subject: `${title} — ${who} (${input.programName})`,
     html: `
@@ -918,7 +914,6 @@ export async function sendContractSignedNotification(input: {
   await resend.emails.send({
     from: env.resendFrom,
     to: OWNER_NOTIFY_EMAIL,
-    cc: "info@newvalkyria.com",
     subject: `Contrat signé — ${input.employeeName}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
