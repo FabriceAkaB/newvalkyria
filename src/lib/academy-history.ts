@@ -144,6 +144,37 @@ export interface ProgramLine {
   capacity?: number | null;
 }
 
+/** Hypothèse de coût d'encadrement : JP cédule toujours 2 entraîneurs à 40 $/h sur chaque heure de terrain. */
+export const COACHES_PER_HOUR = 2;
+export const COACH_RATE_CENTS = 4000;
+
+export interface VenueRental {
+  season_key: string;
+  venue: string;
+  space: string | null;
+  period: string;
+  schedule: string;
+  hours: number;
+  total_cents: number;
+  tax_included: boolean;
+  payments: string | null;
+  notes: string | null;
+}
+
+export interface SeasonMargin {
+  key: string;
+  label: string;
+  revenueCents: number;
+  revenueNote: string | null;
+  hours: number;
+  terrainCents: number;
+  coachCents: number;
+  otherCents: number;
+  marginCents: number;
+  marginPct: number | null;
+  venues: VenueRental[];
+}
+
 export interface TimelineItem {
   date: string;
   text: string;
@@ -162,6 +193,7 @@ export interface AcademySnapshot {
     siblingFamilies: number;
     families: number;
   };
+  margins: SeasonMargin[];
   revenue: { seasons: { label: string; totalCents: number; expenseCents: number; profitCents: number; goalCents: number }[]; months: { month: string; revenueCents: number; expenseCents: number }[]; grandTotalCents: number; grandExpenseCents: number } | null;
   team: { name: string; role: string; status: string; contract?: string }[];
   partners: { name: string; status: string; detail: string }[];
@@ -197,7 +229,9 @@ export async function buildAcademySnapshot(): Promise<AcademySnapshot> {
     installments,
     specialOffers,
     audit,
-    children
+    children,
+    venues,
+    expenseRows
   ] = await Promise.all([
     rows(db().from("seasons").select("*")),
     rows(db().from("registrations").select("id, season_id, program_id, category_id, status, is_trial, city, parent_email, time_slot_template_id, created_at, updated_at, player_first_name")),
@@ -227,7 +261,9 @@ export async function buildAcademySnapshot(): Promise<AcademySnapshot> {
         .order("created_at", { ascending: false })
         .limit(40)
     ),
-    rows(db().from("children").select("club"))
+    rows(db().from("children").select("club")),
+    rows(db().from("venue_rentals").select("*").order("created_at")),
+    rows(db().from("revenue_expenses").select("season_key, category, amount_cents"))
   ]);
 
   const activeSeason = seasons.find((s: any) => s.is_active)?.id ?? "automne-hiver-2026";
@@ -240,8 +276,10 @@ export async function buildAcademySnapshot(): Promise<AcademySnapshot> {
 
   // ── Revenus (même calcul que la section Revenus) ──
   let revenue: AcademySnapshot["revenue"] = null;
+  let seasonCards: { key: string; label: string; totalCents: number }[] = [];
   try {
     const summary = await computeRevenueSummary();
+    seasonCards = summary.seasons.map((c) => ({ key: c.key, label: c.label, totalCents: c.totalCents }));
     revenue = {
       seasons: summary.seasons.map((s) => ({ label: s.label, totalCents: s.totalCents, expenseCents: s.expenseCents, profitCents: s.profitCents, goalCents: s.goalCents })),
       months: summary.months.map((m) => ({ month: m.month, revenueCents: m.revenueCents, expenseCents: m.expenseCents })),
@@ -414,7 +452,38 @@ export async function buildAcademySnapshot(): Promise<AcademySnapshot> {
   }
   timeline.sort((a, b) => a.date.localeCompare(b.date));
 
+  // ── Marges par saison : revenus − terrains − entraîneurs (2 × 40 $/h) − autres dépenses ──
+  const sportEtudesCard = seasonCards.find((c) => /sport/i.test(c.key) || /sport/i.test(c.label));
+  const margins: SeasonMargin[] = [...new Set(venues.map((v: any) => v.season_key as string))].map((key) => {
+    const seasonVenues = venues.filter((v: any) => v.season_key === key).map((v: any) => ({ ...v, hours: Number(v.hours) })) as VenueRental[];
+    const card = seasonCards.find((c) => c.key === key);
+    // Le Sport-Études se déroule pendant la saison Automne/Hiver : ses revenus y sont ajoutés.
+    const addSportEtudes = key === activeSeason && sportEtudesCard ? sportEtudesCard.totalCents : 0;
+    const revenueCents = (card?.totalCents ?? 0) + addSportEtudes;
+    const hours = seasonVenues.reduce((t, v) => t + v.hours, 0);
+    const terrainCents = seasonVenues.reduce((t, v) => t + v.total_cents, 0);
+    const coachCents = Math.round(hours * COACHES_PER_HOUR * COACH_RATE_CENTS);
+    const otherCents = expenseRows
+      .filter((e: any) => e.season_key === key && e.category !== "Location / Terrain" && e.category !== "Salaires / Contractants")
+      .reduce((t: number, e: any) => t + (e.amount_cents ?? 0), 0);
+    const marginCents = revenueCents - terrainCents - coachCents - otherCents;
+    return {
+      key,
+      label: card?.label ?? seasons.find((x: any) => x.id === key)?.label ?? key,
+      revenueCents,
+      revenueNote: addSportEtudes ? `dont Sport-Études ${money(addSportEtudes)}` : null,
+      hours,
+      terrainCents,
+      coachCents,
+      otherCents,
+      marginCents,
+      marginPct: revenueCents > 0 ? Math.round((marginCents / revenueCents) * 1000) / 10 : null,
+      venues: seasonVenues
+    };
+  });
+
   return {
+    margins,
     generatedAt: new Date().toISOString(),
     keyFigures,
     programs: { girls: girlsPrograms, boys: boysPrograms, other },

@@ -1,5 +1,5 @@
 import { AdminTopbar } from "@/components/admin-topbar";
-import { buildAcademySnapshot, NARRATIVE, NARRATIVE_REVISED_ON, type Count } from "@/lib/academy-history";
+import { buildAcademySnapshot, COACH_RATE_CENTS, COACHES_PER_HOUR, NARRATIVE, NARRATIVE_REVISED_ON, type Count } from "@/lib/academy-history";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export const metadata = { title: "Historique de l'académie — Admin New Valkyria", robots: "noindex" };
@@ -199,6 +199,60 @@ export default async function AcademyHistoryPage() {
                   <Bars items={s.revenue.months.map((m) => ({ label: `${monthFr(m.month)} · ${money(m.revenueCents)}`, count: Math.round(m.revenueCents / 100) }))} />
                 </>
               )}
+            </div>
+          )}
+
+          {/* Marges */}
+          {s.margins.length > 0 && (
+            <div style={card}>
+              <p style={h2}>Marges par saison</p>
+              <p style={p}>
+                Revenus encaissés moins les terrains et gymnases loués, l&apos;encadrement ({COACHES_PER_HOUR} entraîneurs à {money(COACH_RATE_CENTS)}/h sur chaque heure de terrain) et les autres dépenses (équipement, assurance…). Se recalcule à chaque nouveau paiement.
+              </p>
+              {s.margins.map((m) => (
+                <div key={m.key} style={{ marginBottom: "1.3rem" }}>
+                  <p style={{ fontSize: "0.9rem", color: "#fff", fontWeight: 700, margin: "0 0 0.5rem" }}>
+                    {m.label}{" "}
+                    <span style={{ color: m.marginCents >= 0 ? "#8fce9f" : "#ff9999" }}>
+                      · marge {money(m.marginCents)}
+                      {m.marginPct != null ? ` (${m.marginPct.toLocaleString("fr-CA")} %)` : ""}
+                    </span>
+                  </p>
+                  <div className="admin-table-wrap">
+                    <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 520 }}>
+                      <tbody>
+                        {[
+                          ["Revenus encaissés", m.revenueCents, m.revenueNote],
+                          [`Terrains et gymnases (${m.hours.toLocaleString("fr-CA")} h)`, -m.terrainCents, m.hours ? `${money(Math.round(m.terrainCents / m.hours))}/h en moyenne` : null],
+                          [`Entraîneurs (${COACHES_PER_HOUR} × ${m.hours.toLocaleString("fr-CA")} h × ${money(COACH_RATE_CENTS)})`, -m.coachCents, "estimation selon l'horaire réservé"],
+                          ["Autres dépenses", -m.otherCents, null],
+                          ["Marge", m.marginCents, m.hours ? `coût total ${money(Math.round((m.terrainCents + m.coachCents) / m.hours))} par heure de terrain` : null]
+                        ].map(([label, cents, note]) => (
+                          <tr key={label as string}>
+                            <td style={{ ...cell, color: label === "Marge" ? "#fff" : cell.color, fontWeight: label === "Marge" ? 700 : 400 }}>
+                              {label as string}
+                              {note ? <span style={{ display: "block", color: "#6d6b71", fontSize: "0.75rem" }}>{note as string}</span> : null}
+                            </td>
+                            <td style={{ ...cell, textAlign: "right", color: (cents as number) < 0 ? "#ff9999" : label === "Marge" ? "#8fce9f" : "#fff", fontWeight: label === "Marge" ? 700 : 400 }}>
+                              {money(cents as number)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{ marginTop: "0.6rem", display: "flex", flexDirection: "column", gap: 4 }}>
+                    {m.venues.map((v) => (
+                      <p key={v.venue} style={{ fontSize: "0.78rem", color: "#8a8791", margin: 0 }}>
+                        <strong style={{ color: "#c9c6d0" }}>{v.venue}</strong>
+                        {v.space ? ` (${v.space})` : ""} · {v.period} · {v.schedule} · {v.hours.toLocaleString("fr-CA")} h · {money(v.total_cents)}
+                        {v.tax_included ? " taxes incluses" : ""}
+                        {v.payments ? ` · ${v.payments}` : ""}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
