@@ -227,6 +227,7 @@ function GlobalSearchBox() {
 
 const ACADEMIE_LINKS: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/historique", label: "Historique de l'académie", icon: "list" },
+  { href: "/admin/relances", label: "Relances et suivi", icon: "users" },
 ];
 
 const GROUPS: Group[] = [
