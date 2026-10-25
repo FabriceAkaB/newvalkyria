@@ -15,6 +15,8 @@ interface MailPayload {
   cc?: string | string[];
   replyTo?: string | string[];
   reply_to?: string | string[];
+  /** En-têtes supplémentaires (ex. In-Reply-To pour répondre dans le fil d'un courriel). */
+  headers?: Record<string, string>;
   /** Pièces jointes (ex. PDF de proposition). */
   attachments?: { filename: string; path?: string; content?: Buffer | string }[];
 }
@@ -32,7 +34,8 @@ async function sendViaGmail(cfg: MailConfig, payload: MailPayload) {
       html: payload.html,
       text: payload.text,
       replyTo: payload.replyTo ?? payload.reply_to ?? cfg.user,
-      attachments: payload.attachments
+      attachments: payload.attachments,
+      headers: payload.headers
     });
     return { data: { id: info.messageId }, error: null };
   } catch (err) {
