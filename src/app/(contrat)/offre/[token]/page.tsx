@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { SpecialOfferPay } from "@/components/special-offer-pay";
-import { getOfferByToken, isOfferExpired } from "@/lib/special-offers";
+import { fullGroupsForOffer, getOfferByToken, isOfferExpired } from "@/lib/special-offers";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +39,7 @@ export default async function SpecialOfferPage({ params, searchParams }: { param
   }
 
   const expired = isOfferExpired(offer);
+  const fullGroups = expired ? [] : await fullGroupsForOffer(offer);
   const deadline = new Date(offer.expires_at).toLocaleString("fr-CA", { timeZone: "America/Toronto", weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
 
   return (
@@ -67,7 +68,12 @@ export default async function SpecialOfferPage({ params, searchParams }: { param
       </div>
 
       <div style={card}>
-        {expired ? (
+        {fullGroups.length > 0 && !expired ? (
+          <>
+            <p style={{ fontWeight: 800, fontSize: "1.1rem", margin: 0 }}>Ce groupe est maintenant complet</p>
+            <p style={{ color: "#5d566b", lineHeight: 1.6 }}>Les dernières places ont été prises. Écrivez-nous à info@newvalkyria.com : nous vous proposerons une autre option.</p>
+          </>
+        ) : expired ? (
           <>
             <p style={{ fontWeight: 800, fontSize: "1.1rem", margin: 0 }}>Cette offre est expirée</p>
             <p style={{ color: "#5d566b", lineHeight: 1.6 }}>Elle était valide jusqu&apos;au {deadline}. Écrivez-nous à info@newvalkyria.com si vous souhaitez tout de même inscrire vos filles.</p>

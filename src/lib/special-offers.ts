@@ -42,3 +42,33 @@ export async function markOfferPaid(token: string, sessionId: string, paymentInt
     .update({ paid_at: new Date().toISOString(), stripe_checkout_session_id: sessionId, stripe_payment_intent_id: paymentIntentId })
     .eq("token", token);
 }
+
+/** Groupes de l'offre qui n'ont plus assez de places (inscriptions payées seulement),
+ *  pour ne jamais vendre plus de places qu'un groupe en contient. */
+export async function fullGroupsForOffer(offer: Pick<SpecialOffer, "registrations">): Promise<string[]> {
+  const needed = new Map<string, { count: number; label: string }>();
+  for (const r of offer.registrations) {
+    if (!r.timeSlotTemplateId) continue;
+    const cur = needed.get(r.timeSlotTemplateId) ?? { count: 0, label: r.groupLabel };
+    cur.count += 1;
+    needed.set(r.timeSlotTemplateId, cur);
+  }
+  if (needed.size === 0) return [];
+  const ids = [...needed.keys()];
+  const [{ data: slots }, { data: taken }] = await Promise.all([
+    db().from("time_slot_templates").select("id, max_places").in("id", ids),
+    db()
+      .from("registrations")
+      .select("id, time_slot_template_id")
+      .in("time_slot_template_id", ids)
+      .eq("status", "paid")
+      .not("id", "in", `(${offer.registrations.map((r) => r.registrationId).join(",")})`)
+  ]);
+  const full: string[] = [];
+  for (const [slotId, need] of needed) {
+    const max = (slots ?? []).find((x: any) => x.id === slotId)?.max_places ?? 0;
+    const used = (taken ?? []).filter((x: any) => x.time_slot_template_id === slotId).length;
+    if (used + need.count > max) full.push(need.label);
+  }
+  return full;
+}
