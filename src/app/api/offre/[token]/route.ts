@@ -33,7 +33,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
         price_data: {
           currency: "cad",
           unit_amount: offer.amount_cents,
-          product_data: { name: offer.title, description: offer.registrations.map((r) => `${r.playerName} : ${r.groupLabel}`).join(" · ") }
+          product_data: {
+            name: offer.title,
+            description: [offer.registrations.map((r) => `${r.playerName} : ${r.groupLabel}`).join(" · "), offer.bonus ? `Bonus : ${offer.bonus}` : null].filter(Boolean).join(" · ")
+          }
         }
       }
     ],

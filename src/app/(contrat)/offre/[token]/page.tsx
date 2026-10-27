@@ -58,6 +58,11 @@ export default async function SpecialOfferPage({ params, searchParams }: { param
             </div>
           ))}
         </div>
+        {offer.bonus && (
+          <div style={{ marginTop: ".8rem", border: "1px solid #c7e8d3", background: "#f1fbf5", color: "#1f7a45", borderRadius: 12, padding: ".75rem 1rem", fontWeight: 600 }}>
+            🎁 Bonus : {offer.bonus}
+          </div>
+        )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: "1.2rem", flexWrap: "wrap", gap: ".5rem" }}>
           <span style={{ color: "#5d566b" }}>Total à payer</span>
           <span>

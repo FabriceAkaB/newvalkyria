@@ -95,7 +95,9 @@ export async function getOutreachSummary(): Promise<OutreachSummary> {
     const relances = entries.filter((e) => e.kind === "relance" || e.kind === "reponse");
     const excuses = entries.filter((e) => e.kind === "excuse");
     const errors = entries.filter((e) => e.kind === "erreur");
-    const refusal = [...entries].reverse().find((e) => e.kind === "refus" || e.kind === "plus-tard");
+    // Un refus ne compte que s'il est la dernière nouvelle : une offre envoyée après le relance.
+    const lastExchange = [...entries].reverse().find((e) => ["refus", "plus-tard", "relance", "reponse"].includes(e.kind));
+    const refusal = lastExchange && (lastExchange.kind === "refus" || lastExchange.kind === "plus-tard") ? lastExchange : null;
     const last = entries[entries.length - 1];
     const lastOffer = [...entries].reverse().map((e) => (e.offer_token ? offerByToken.get(e.offer_token) : null)).find(Boolean);
     const regId = [...entries].reverse().map((e) => e.registration_id).find(Boolean);

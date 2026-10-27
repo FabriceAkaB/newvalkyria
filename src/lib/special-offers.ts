@@ -21,6 +21,10 @@ export interface SpecialOffer {
   registrations: OfferRegistration[];
   expires_at: string;
   paid_at: string | null;
+  /** Bonus affiché sur l'offre (ex. « Sac à dos New Valkyria offert »). */
+  bonus: string | null;
+  /** Produit remis gratuitement au paiement (commande à 0 $ à remettre). */
+  bonus_product_id: string | null;
 }
 
 function db() {

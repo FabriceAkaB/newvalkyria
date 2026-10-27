@@ -17,7 +17,7 @@ import {
   setRegistrationCheckoutSession,
   updatePaymentPlanCard
 } from "@/lib/season-admin-repo";
-import { markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
+import { createOrder, decrementProductInventory, markOrderPaidByCheckoutSession } from "@/lib/shop-repo";
 import {
   activatePaymentPlan as activateSessionProgramPaymentPlan,
   enrollInAllDates,
@@ -318,6 +318,30 @@ export async function POST(request: Request) {
           }
         }
         await markOfferPaid(offer.token, session.id, paymentIntentId);
+        // Bonus (ex. sac à dos offert) : commande gratuite payée, à remettre avec l'uniforme.
+        if (offer.bonus_product_id && first) {
+          try {
+            const supabase2 = getSupabaseAdminClient() as any;
+            const { data: product } = await supabase2.from("products").select("id, name").eq("id", offer.bonus_product_id).maybeSingle();
+            if (product) {
+              const { orderId } = await createOrder({
+                customerName: first.parent_name,
+                customerEmail: first.parent_email,
+                customerPhone: first.parent_phone ?? null,
+                shippingAddress: null,
+                shippingCity: null,
+                shippingPostalCode: null,
+                items: [{ productId: product.id, variantId: null, productName: `${product.name} (offert)`, variantLabel: null, unitPriceCents: 0, quantity: 1 }],
+                registrationId: first.id,
+                seasonKey: first.season_id ?? null
+              });
+              await supabase2.from("shop_orders").update({ status: "paid", notes: `Bonus de l'offre « ${offer.title} »`, updated_at: new Date().toISOString() }).eq("id", orderId);
+              await decrementProductInventory(product.id, 1);
+            }
+          } catch (error) {
+            console.error("Unable to create special offer bonus order", error);
+          }
+        }
         if (first) {
           const programName = PROGRAMS[offer.registrations[0].programId as ProgramCode]?.name;
           await sendConfirmationEmail({ to: first.parent_email, parentName: first.parent_name, programName }).catch((error) =>
