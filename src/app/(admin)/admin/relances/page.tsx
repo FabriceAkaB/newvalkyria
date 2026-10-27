@@ -12,7 +12,9 @@ const CHIP: Record<OutreachStatus, { label: string; color: string; bg: string }>
   "offre-ouverte": { label: "Offre ouverte", color: "#f0c878", bg: "rgba(240,200,120,0.12)" },
   "en-attente": { label: "Pas inscrite", color: "#a0c8ff", bg: "rgba(160,200,255,0.12)" },
   "offre-expiree": { label: "Offre expirée", color: "#ff9999", bg: "rgba(255,153,153,0.12)" },
-  "deja-inscrite": { label: "Erreur (déjà inscrite)", color: "#9d9da0", bg: "rgba(157,157,160,0.12)" }
+  "deja-inscrite": { label: "Erreur (déjà inscrite)", color: "#9d9da0", bg: "rgba(157,157,160,0.12)" },
+  refus: { label: "A refusé", color: "#ff9999", bg: "rgba(255,153,153,0.12)" },
+  "plus-tard": { label: "Plus tard (à rappeler)", color: "#c3a6ff", bg: "rgba(195,166,255,0.12)" }
 };
 const cell: React.CSSProperties = { padding: "0.55rem 0.5rem", borderBottom: "1px solid #1f1d25", fontSize: "0.8rem", color: "#c3c2c8", verticalAlign: "top", textAlign: "left" };
 const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: 12, padding: "1rem", marginBottom: "1.25rem" };
@@ -67,7 +69,7 @@ export default async function OutreachPage() {
                         <td style={cell}>{day(p.lastAt)}</td>
                         <td style={cell}>
                           {p.history.map((h, i) => (
-                            <span key={i} style={{ display: "block" }}>{day(h.at)} · {h.campaign}{h.kind === "excuse" ? " (excuse)" : h.kind === "reponse" ? " (réponse)" : ""}</span>
+                            <span key={i} style={{ display: "block" }}>{day(h.at)} · {h.campaign}{h.kind === "excuse" ? " (excuse)" : h.kind === "reponse" ? " (réponse)" : h.kind === "refus" ? " (refus)" : h.kind === "plus-tard" ? " (plus tard)" : ""}</span>
                           ))}
                         </td>
                         <td style={cell}>

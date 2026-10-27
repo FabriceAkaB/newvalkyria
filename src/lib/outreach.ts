@@ -8,7 +8,7 @@ function db() {
   return getSupabaseAdminClient() as any;
 }
 
-export type OutreachKind = "relance" | "reponse" | "excuse" | "erreur";
+export type OutreachKind = "relance" | "reponse" | "excuse" | "erreur" | "refus" | "plus-tard";
 
 export async function logOutreach(entry: {
   parentEmail: string;
@@ -46,7 +46,7 @@ const norm = (s: string | null | undefined) =>
     .replace(/\s+/g, " ")
     .trim();
 
-export type OutreachStatus = "inscrite" | "offre-ouverte" | "offre-expiree" | "deja-inscrite" | "en-attente";
+export type OutreachStatus = "inscrite" | "offre-ouverte" | "offre-expiree" | "deja-inscrite" | "en-attente" | "refus" | "plus-tard";
 
 export interface OutreachPerson {
   key: string;
@@ -95,6 +95,7 @@ export async function getOutreachSummary(): Promise<OutreachSummary> {
     const relances = entries.filter((e) => e.kind === "relance" || e.kind === "reponse");
     const excuses = entries.filter((e) => e.kind === "excuse");
     const errors = entries.filter((e) => e.kind === "erreur");
+    const refusal = [...entries].reverse().find((e) => e.kind === "refus" || e.kind === "plus-tard");
     const last = entries[entries.length - 1];
     const lastOffer = [...entries].reverse().map((e) => (e.offer_token ? offerByToken.get(e.offer_token) : null)).find(Boolean);
     const regId = [...entries].reverse().map((e) => e.registration_id).find(Boolean);
@@ -107,6 +108,9 @@ export async function getOutreachSummary(): Promise<OutreachSummary> {
     if (errors.length || excuses.length) {
       status = "deja-inscrite";
       statusDetail = "Déjà inscrite : relancée par erreur (excuses envoyées)";
+    } else if (refusal) {
+      status = refusal.kind === "refus" ? "refus" : "plus-tard";
+      statusDetail = refusal.notes ?? (refusal.kind === "refus" ? "A refusé" : "Intéressée plus tard");
     } else if (paidOffer || paidReg || nameMatch !== undefined) {
       status = "inscrite";
       statusDetail = `Inscrite${paidReg?.program_id ? ` (${paidReg.program_id})` : nameMatch ? ` (${nameMatch})` : ""}`;
@@ -137,7 +141,7 @@ export async function getOutreachSummary(): Promise<OutreachSummary> {
       revenueCents: paidOffer?.amount_cents ?? 0
     });
   }
-  const order: Record<OutreachStatus, number> = { "offre-ouverte": 0, "en-attente": 1, inscrite: 2, "offre-expiree": 3, "deja-inscrite": 4 };
+  const order: Record<OutreachStatus, number> = { "plus-tard": 0, "offre-ouverte": 1, "en-attente": 2, inscrite: 3, "offre-expiree": 4, refus: 5, "deja-inscrite": 6 };
   people.sort((a, b) => order[a.status] - order[b.status] || b.lastAt.localeCompare(a.lastAt));
 
   const real = people.filter((p) => p.status !== "deja-inscrite");
@@ -145,7 +149,7 @@ export async function getOutreachSummary(): Promise<OutreachSummary> {
   const campaigns = new Map<string, { relances: number; people: Set<string>; inscrites: Set<string> }>();
   for (const p of people) {
     for (const h of p.history) {
-      if (h.kind === "excuse" || h.kind === "erreur") continue;
+      if (h.kind !== "relance" && h.kind !== "reponse") continue;
       const c = campaigns.get(h.campaign) ?? { relances: 0, people: new Set(), inscrites: new Set() };
       c.relances += 1;
       c.people.add(p.key);
