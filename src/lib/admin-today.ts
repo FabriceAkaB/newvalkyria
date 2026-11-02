@@ -1,5 +1,4 @@
 import type { AdminRole } from "@/lib/admin-auth";
-import { unpaidStartedRegistrations } from "@/lib/academy-history";
 import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
 import { getFamiliesToCall } from "@/lib/surveys-repo";
@@ -51,14 +50,6 @@ const shortDay = (d: string) => new Date(d).toLocaleDateString("fr-CA", { weekda
 const dayTime = (d: string) => new Date(d).toLocaleString("fr-CA", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: TZ });
 const money = (c: number) => (c / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
 const fullName = (r: { player_first_name?: string | null; player_last_name?: string | null }) => `${r.player_first_name ?? ""} ${r.player_last_name ?? ""}`.replace(/\s+/g, " ").trim() || "—";
-const norm = (s: string | null | undefined) =>
-  String(s ?? "")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
-
 const MAX_ITEMS = 12;
 function section(s: Omit<TodaySection, "count" | "more"> & { count?: number }): TodaySection {
   return { ...s, count: s.count ?? s.items.length, items: s.items.slice(0, MAX_ITEMS), more: Math.max(0, s.items.length - MAX_ITEMS) };
@@ -90,10 +81,9 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
       isAdmin ? loadUnpaidInstallments() : Promise.resolve([]),
       isAdmin ? rows(db().from("session_program_registrations").select("id, status, stripe_payment_intent_id, player_first_name, player_last_name, updated_at")) : Promise.resolve([]),
       isAdmin ? rows(db().from("sport_etudes_registrations").select("id, status, stripe_payment_intent_id, player_first_name, player_last_name, updated_at")) : Promise.resolve([]),
-      isAdmin ? rows(db().from("audit_log").select("entity_id").in("action", ["full_refund", "partial_refund"])) : Promise.resolve([])
+      isAdmin ? rows(db().from("audit_log").select("entity_id").in("action", ["full_refund", "partial_refund", "refund_not_needed"])) : Promise.resolve([])
     ]);
 
-  const activeSeason = seasons.find((s: any) => s.is_active)?.id ?? "automne-hiver-2026";
   const sections: TodaySection[] = [];
 
   // ── Réponses des familles (outreach_log) ──
@@ -193,30 +183,8 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
     );
   }
 
-  // ── Inscriptions commencées non payées (saison en cours) ──
-  {
-    const relancees = new Map<string, string>();
-    for (const p of outreach?.people ?? []) if (p.playerName) relancees.set(norm(p.playerName), p.lastAt);
-    const pending = unpaidStartedRegistrations(regs, activeSeason).sort((a: any, b: any) => b.created_at.localeCompare(a.created_at));
-    sections.push(
-      section({
-        key: "non-payees",
-        title: "Inscriptions commencées non payées",
-        level: pending.length ? "orange" : "info",
-        emptyText: "Toutes les inscriptions commencées sont payées.",
-        href: `/admin/saison/${activeSeason}/inscriptions`,
-        hrefLabel: "Inscriptions de la saison",
-        items: pending.map((r: any) => {
-          const lastRelance = relancees.get(norm(fullName(r)));
-          return {
-            title: fullName(r),
-            detail: r.parent_name,
-            meta: `Commencée le ${shortDay(r.created_at)}${lastRelance ? ` · relancée le ${shortDay(lastRelance)}` : ""}`
-          };
-        })
-      })
-    );
-  }
+  // Les inscriptions commencées non payées ne sont pas ici (JP, 2 nov. 2026) : ces familles n'ont pas été
+  // approchées ; elles sont listées dans Relances et suivi (/admin/relances), à relancer quand on le décide.
 
   // ── Essais des 7 prochains jours ──
   {

@@ -393,7 +393,7 @@ export function ContractSignForm({
 
       {/* 1 */}
       <div className="nvc-card">
-        {head(1, "Vos informations", "Pour votre dossier d'employée et votre paie.")}
+        {head(1, "Vos informations", "Pour votre dossier d'employé(e) et votre paie.")}
         <div className="nvc-grid">
           {input("firstName", "Prénom", { props: { autoComplete: "given-name" } })}
           {input("lastName", "Nom de famille", { props: { autoComplete: "family-name" } })}

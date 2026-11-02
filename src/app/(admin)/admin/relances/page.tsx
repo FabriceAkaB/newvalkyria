@@ -1,6 +1,8 @@
 import { AdminTopbar } from "@/components/admin-topbar";
+import { unpaidStartedRegistrations } from "@/lib/academy-history";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getOutreachSummary, type OutreachStatus } from "@/lib/outreach";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const metadata = { title: "Relances — Admin New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -22,6 +24,18 @@ const card: React.CSSProperties = { background: "var(--adm-surface)", border: "1
 export default async function OutreachPage() {
   await requireAdmin({ roles: ["admin"] });
   const s = await getOutreachSummary();
+  // Inscriptions commencées non payées, pas encore approchées : rangées ici plutôt que dans « Aujourd'hui » (JP, 2 nov. 2026).
+  const db = getSupabaseAdminClient() as any;
+  const [{ data: seasons }, { data: regs }] = await Promise.all([
+    db.from("seasons").select("id, is_active"),
+    db.from("registrations").select("id, season_id, status, is_trial, parent_name, parent_email, player_first_name, player_last_name, created_at")
+  ]);
+  const activeSeason = (seasons ?? []).find((x: any) => x.is_active)?.id ?? "automne-hiver-2026";
+  const relanced = new Set(s.people.map((p) => String(p.playerName ?? "").toLowerCase().trim()));
+  const unpaid = unpaidStartedRegistrations(regs ?? [], activeSeason)
+    .map((r: any) => ({ ...r, name: `${r.player_first_name ?? ""} ${r.player_last_name ?? ""}`.replace(/\s+/g, " ").trim() }))
+    .sort((a: any, b: any) => b.created_at.localeCompare(a.created_at));
+  const notApproached = unpaid.filter((r: any) => !relanced.has(r.name.toLowerCase()));
   return (
     <>
       <AdminTopbar />
@@ -84,6 +98,25 @@ export default async function OutreachPage() {
               </table>
             </div>
           </div>
+          <details style={card}>
+            <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--adm-text)" }}>
+              Inscriptions commencées non payées, pas encore approchées · {notApproached.length}
+              <span style={{ display: "block", fontWeight: 400, fontSize: "0.78rem", color: "var(--adm-text-3)", marginTop: 4 }}>
+                Familles qui ont commencé une inscription sans payer ({unpaid.length} au total, dont {unpaid.length - notApproached.length} déjà relancées ci-dessus). À relancer seulement quand on le décide (skill relance : vérifier le nom de la joueuse avant).
+              </span>
+            </summary>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "0.8rem" }}>
+              <tbody>
+                {notApproached.map((r: any) => (
+                  <tr key={r.id}>
+                    <td style={{ ...cell, color: "var(--adm-text)", fontWeight: 600 }}>{r.name || "—"}</td>
+                    <td style={cell}>{r.parent_name}<span style={{ display: "block", color: "var(--adm-text-3)" }}>{r.parent_email}</span></td>
+                    <td style={cell}>Commencée le {day(r.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </details>
         </div>
       </div>
     </>
