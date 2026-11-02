@@ -260,6 +260,16 @@ export const ADMIN_NAV: AdminNavSection[] = [
         ]
       },
       {
+        key: "methode",
+        label: "Méthode Valkyria",
+        icon: "list",
+        description: "La méthode écrite : structure de séance, principes de la pédagogie Valkyria et bibliothèque des gestes par niveau du passeport.",
+        tabs: [
+          { href: "/admin/coaching/methode", label: "Séance et principes", adminOnly: true },
+          { href: "/admin/coaching/gestes", label: "Gestes", adminOnly: true }
+        ]
+      },
+      {
         key: "exercices",
         label: "Banque d'exercices",
         icon: "flask",

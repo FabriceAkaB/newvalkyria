@@ -10,7 +10,8 @@ interface Props {
 
 const LINKS = [
   { href: "/entraineur/dashboard", label: "Mes pratiques" },
-  { href: "/entraineur/joueuses", label: "Joueuses" }
+  { href: "/entraineur/joueuses", label: "Joueuses" },
+  { href: "/entraineur/methode", label: "Méthode" }
 ];
 
 export function CoachTopbar({ coachName }: Props) {

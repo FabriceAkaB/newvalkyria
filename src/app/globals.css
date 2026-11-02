@@ -11231,3 +11231,17 @@ img { max-width: 100%; height: auto; }
   .ct-row { grid-template-columns: minmax(0, 1fr) 110px minmax(0, 1.4fr); }
   .ct-video { grid-column: auto; }
 }
+
+/* ── Espace coaching : méthode Valkyria (structure de séance, principes, gestes) ── */
+.cm-blocks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cm-block { display: grid; gap: 8px; padding: 12px; background: var(--adm-surface-2); border-radius: var(--adm-radius-sm); min-width: 0; }
+.cm-block .admin-input, .cm-block textarea { width: 100%; min-width: 0; box-sizing: border-box; }
+.cm-block-head { display: grid; grid-template-columns: minmax(0, 1fr) 88px; gap: 8px; align-items: center; }
+.cm-place { grid-column: 1 / -1; font-size: 0.75rem; font-weight: 600; color: var(--adm-accent); }
+.cm-minutes { display: flex; align-items: center; gap: 4px; }
+.cm-minutes span { font-size: 0.8rem; color: var(--adm-text-3); }
+.cm-minutes .admin-input { text-align: center; font-variant-numeric: tabular-nums; }
+.cm-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.cm-gesture-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 44px; background: none; border: none; padding: 0; color: var(--adm-text); font: inherit; text-align: left; cursor: pointer; }
+.cm-gesture-head strong { display: block; }
+.cm-meta { display: block; font-size: 0.78rem; color: var(--adm-text-3); margin: 0; }
