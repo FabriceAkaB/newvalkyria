@@ -77,10 +77,10 @@ function SessionRow({ session, onSaved }: { session: SportEtudesSession; onSaved
   };
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.7rem 0.9rem", marginBottom: "0.5rem" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.7rem 0.9rem", marginBottom: "0.5rem" }}>
       {session.admin_warning && (
-        <div style={{ background: "rgba(240,200,120,0.1)", border: "1px solid rgba(240,200,120,0.3)", borderRadius: "6px", padding: "0.5rem 0.7rem", marginBottom: "0.6rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem" }}>
-          <span style={{ fontSize: "0.72rem", color: "#f0c878" }}>⚠ {session.admin_warning}</span>
+        <div style={{ background: "var(--adm-warn-soft)", border: "1px solid rgba(240,200,120,0.3)", borderRadius: "6px", padding: "0.5rem 0.7rem", marginBottom: "0.6rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem" }}>
+          <span style={{ fontSize: "0.72rem", color: "var(--adm-warn)" }}>⚠ {session.admin_warning}</span>
           <button onClick={confirmWarning} disabled={saving} className="admin-btn-ghost" style={{ fontSize: "0.68rem", padding: "0.25rem 0.6rem", flexShrink: 0 }}>Confirmé</button>
         </div>
       )}
@@ -132,7 +132,7 @@ function TechnicalNotesEditor({ registrationId, existing }: { registrationId: st
   };
 
   return (
-    <div style={{ marginTop: "0.75rem", background: "#17151e", border: "1px solid #251f30", borderRadius: "8px", padding: "0.75rem" }}>
+    <div style={{ marginTop: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "8px", padding: "0.75rem" }}>
       <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.6rem" }}>
         <button onClick={() => switchPhase("initial")} className={phase === "initial" ? "admin-btn-primary" : "admin-btn-ghost"} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>Diagnostic initial</button>
         <button onClick={() => switchPhase("final")} className={phase === "final" ? "admin-btn-primary" : "admin-btn-ghost"} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>Diagnostic final</button>
@@ -140,7 +140,7 @@ function TechnicalNotesEditor({ registrationId, existing }: { registrationId: st
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(9rem, 1fr))", gap: "0.4rem", marginBottom: "0.6rem" }}>
         {RATING_FIELDS.map((f) => (
           <label key={f.key} style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
-            <span style={{ fontSize: "0.65rem", color: "#9d9da0" }}>{f.label}</span>
+            <span style={{ fontSize: "0.65rem", color: "var(--adm-text-2)" }}>{f.label}</span>
             <select
               className="admin-input"
               value={ratings[f.key] ?? ""}
@@ -153,15 +153,15 @@ function TechnicalNotesEditor({ registrationId, existing }: { registrationId: st
         ))}
       </div>
       <label style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginBottom: "0.4rem" }}>
-        <span style={{ fontSize: "0.65rem", color: "#9d9da0" }}>Points forts</span>
+        <span style={{ fontSize: "0.65rem", color: "var(--adm-text-2)" }}>Points forts</span>
         <input className="admin-input" value={strengths} onChange={(e) => setStrengths(e.target.value)} />
       </label>
       <label style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginBottom: "0.4rem" }}>
-        <span style={{ fontSize: "0.65rem", color: "#9d9da0" }}>Points à améliorer</span>
+        <span style={{ fontSize: "0.65rem", color: "var(--adm-text-2)" }}>Points à améliorer</span>
         <input className="admin-input" value={areasToImprove} onChange={(e) => setAreasToImprove(e.target.value)} />
       </label>
       <label style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginBottom: "0.6rem" }}>
-        <span style={{ fontSize: "0.65rem", color: "#9d9da0" }}>Notes de l&apos;entraîneur</span>
+        <span style={{ fontSize: "0.65rem", color: "var(--adm-text-2)" }}>Notes de l&apos;entraîneur</span>
         <input className="admin-input" value={coachNotes} onChange={(e) => setCoachNotes(e.target.value)} />
       </label>
       <button onClick={save} disabled={saving} className="admin-btn-primary" style={{ fontSize: "0.72rem", padding: "0.35rem 0.7rem" }}>
@@ -183,8 +183,8 @@ function FormField({ label, value }: { label: string; value: string | null | und
   if (!value) return null;
   return (
     <div style={{ marginBottom: "0.35rem" }}>
-      <span style={{ fontSize: "0.65rem", color: "#9d9da0" }}>{label} : </span>
-      <span style={{ fontSize: "0.75rem", color: "#c3c2c8" }}>{value}</span>
+      <span style={{ fontSize: "0.65rem", color: "var(--adm-text-2)" }}>{label} : </span>
+      <span style={{ fontSize: "0.75rem", color: "var(--adm-text-2)" }}>{value}</span>
     </div>
   );
 }
@@ -267,16 +267,16 @@ function RegistrationRow({
   };
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.7rem 0.9rem", marginBottom: "0.5rem" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.7rem 0.9rem", marginBottom: "0.5rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
         <div>
           <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: 0 }}>
             {registration.player_first_name} {registration.player_last_name}
-            <span style={{ fontSize: "0.7rem", color: "#6d6b71", marginLeft: "0.5rem" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", marginLeft: "0.5rem" }}>
               {registration.option_chosen === "full_program" ? "Programme complet" : "Diagnostic seulement"}
             </span>
           </p>
-          <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.15rem 0 0" }}>
+          <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.15rem 0 0" }}>
             {registration.parent_first_name} {registration.parent_last_name} · {registration.parent_email}
           </p>
         </div>
@@ -289,7 +289,7 @@ function RegistrationRow({
       {open && (
         <div style={{ marginTop: "0.6rem" }}>
           <div style={{ marginBottom: "0.6rem" }}>
-            <p style={{ fontSize: "0.68rem", color: "#9f85ba", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Changer le statut</p>
+            <p style={{ fontSize: "0.68rem", color: "var(--adm-accent)", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Changer le statut</p>
             <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
               {REGISTRATION_STATUSES.map((s) => (
                 <button
@@ -305,8 +305,8 @@ function RegistrationRow({
             </div>
           </div>
 
-          <div style={{ marginBottom: "0.6rem", background: "#17151e", border: "1px solid #251f30", borderRadius: "8px", padding: "0.7rem" }}>
-            <p style={{ fontSize: "0.68rem", color: "#9f85ba", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Formulaire</p>
+          <div style={{ marginBottom: "0.6rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "8px", padding: "0.7rem" }}>
+            <p style={{ fontSize: "0.68rem", color: "var(--adm-accent)", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Formulaire</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(13rem, 1fr))", gap: "0 1rem" }}>
               <FormField label="Date de naissance" value={registration.player_dob} />
               <FormField label="Niveau de jeu" value={registration.player_level} />
@@ -331,12 +331,12 @@ function RegistrationRow({
 
           {registration.enrollments.length > 0 && (
             <div style={{ marginBottom: "0.5rem" }}>
-              <p style={{ fontSize: "0.68rem", color: "#9f85ba", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Présence</p>
+              <p style={{ fontSize: "0.68rem", color: "var(--adm-accent)", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Présence</p>
               {registration.enrollments
                 .sort((a, b) => a.session.display_order - b.session.display_order)
                 .map((e) => (
                   <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", padding: "0.3rem 0" }}>
-                    <span style={{ fontSize: "0.75rem", color: "#c3c2c8" }}>{e.session.label} — {e.session.session_date}</span>
+                    <span style={{ fontSize: "0.75rem", color: "var(--adm-text-2)" }}>{e.session.label} — {e.session.session_date}</span>
                     <select
                       className="admin-input"
                       value={attendance[e.id] ?? "to_confirm"}
@@ -354,14 +354,14 @@ function RegistrationRow({
           <button
             onClick={transfer}
             disabled={transferring}
-            style={{ marginTop: "0.75rem", marginRight: "0.5rem", fontSize: "0.7rem", color: "#9ec9ff", background: "none", border: "1px solid rgba(158,201,255,0.35)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
+            style={{ marginTop: "0.75rem", marginRight: "0.5rem", fontSize: "0.7rem", color: "var(--adm-info)", background: "none", border: "1px solid rgba(158,201,255,0.35)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
           >
             {transferring ? "Transfert…" : "Transférer vers le Programme Intensif"}
           </button>
           <button
             onClick={remove}
             disabled={deleting}
-            style={{ marginTop: "0.75rem", fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
+            style={{ marginTop: "0.75rem", fontSize: "0.7rem", color: "var(--adm-bad)", background: "none", border: "1px solid var(--adm-bad-soft)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
           >
             {deleting ? "..." : "Supprimer définitivement"}
           </button>
@@ -487,7 +487,7 @@ export function AdminSportEtudes({
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Programme Sport-Études</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Programme technique de préparation aux évaluations du Sport-Études — indépendant des programmes féminins réguliers.
           </p>
 
@@ -523,16 +523,16 @@ export function AdminSportEtudes({
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
-            <span style={{ fontSize: "0.78rem", color: "#9d9da0" }}>Capacité maximale (programme complet) :</span>
+            <span style={{ fontSize: "0.78rem", color: "var(--adm-text-2)" }}>Capacité maximale (programme complet) :</span>
             <input type="number" min={1} className="admin-input" value={maxCapacity} onChange={(e) => setMaxCapacity(Number(e.target.value))} style={{ width: "5rem" }} />
             <button onClick={saveCapacity} disabled={savingCapacity} className="admin-btn-primary" style={{ fontSize: "0.72rem", padding: "0.35rem 0.7rem" }}>
               {savingCapacity ? "..." : "Enregistrer"}
             </button>
-            <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>{fullCount} / {maxCapacity} places prises</span>
+            <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>{fullCount} / {maxCapacity} places prises</span>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
-            <span style={{ fontSize: "0.78rem", color: "#9d9da0" }}>Places comblées manuellement (sans inscription réelle) :</span>
+            <span style={{ fontSize: "0.78rem", color: "var(--adm-text-2)" }}>Places comblées manuellement (sans inscription réelle) :</span>
             <input
               type="number"
               min={0}
@@ -560,11 +560,11 @@ export function AdminSportEtudes({
               </button>
             </div>
           </div>
-          {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
+          {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "var(--adm-good)", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
 
           {waitlisted.length > 0 && (
             <div style={{ marginBottom: "1.25rem" }}>
-              <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#f0c878", marginBottom: "0.6rem" }}>Liste d&apos;attente ({waitlisted.length})</p>
+              <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--adm-warn)", marginBottom: "0.6rem" }}>Liste d&apos;attente ({waitlisted.length})</p>
               {waitlisted.map((r) => (
                 <RegistrationRow
                   key={r.id}

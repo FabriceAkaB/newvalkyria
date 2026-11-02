@@ -166,7 +166,7 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Calendrier des essais</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Toutes les joueuses à l&apos;essai, peu importe la saison, regroupées par journée — pour repérer d&apos;un coup d&apos;œil les journées trop chargées.
           </p>
 
@@ -177,7 +177,7 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
               <button className="admin-btn-ghost" style={{ padding: "0.35rem 0.7rem" }} onClick={goToNextMonth}>→</button>
             </div>
             <button className="admin-export-btn" onClick={() => openForm(selectedDate)}>+ Ajouter un essai</button>
-            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", color: "#9d9da0" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", color: "var(--adm-text-2)" }}>
               Seuil d&apos;alerte par jour
               <input
                 type="number"
@@ -191,7 +191,7 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
           </div>
 
           {showForm && (
-            <div style={{ background: "#100e17", border: "1px solid #3a3550", borderRadius: "10px", padding: "1rem", marginBottom: "1.25rem" }}>
+            <div style={{ background: "var(--adm-surface)", border: "1px solid #3a3550", borderRadius: "10px", padding: "1rem", marginBottom: "1.25rem" }}>
               <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Ajouter une joueuse à l&apos;essai</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.5rem" }}>
                 <input className="admin-input" placeholder="Prénom de la joueuse *" value={form.playerFirstName} onChange={(e) => setForm({ ...form, playerFirstName: e.target.value })} />
@@ -209,7 +209,7 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
                   {(slotsByDate.get(form.date) ?? []).map((sl) => <option key={sl.id} value={sl.id}>{slotLabel(sl)} — {sl.max} places</option>)}
                 </select>
               </div>
-              {formError && <p style={{ color: "#ff9999", fontSize: "0.75rem", margin: "0.6rem 0 0" }}>{formError}</p>}
+              {formError && <p style={{ color: "var(--adm-bad)", fontSize: "0.75rem", margin: "0.6rem 0 0" }}>{formError}</p>}
               <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
                 <button className="admin-export-btn" onClick={submitForm} disabled={saving}>{saving ? "Ajout…" : "Ajouter l'essai"}</button>
                 <button className="admin-btn-ghost" onClick={() => setShowForm(false)}>Annuler</button>
@@ -217,11 +217,11 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
             </div>
           )}
 
-          <p style={{ fontSize: "0.72rem", color: "#6d6b71", marginBottom: "0.75rem" }}>{monthTotal} essai(s) planifié(s) ce mois-ci</p>
+          <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", marginBottom: "0.75rem" }}>{monthTotal} essai(s) planifié(s) ce mois-ci</p>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.4rem", marginBottom: "0.4rem" }}>
             {WEEKDAY_LABELS.map((d) => (
-              <div key={d} style={{ fontSize: "0.65rem", color: "#6d6b71", textAlign: "center", fontWeight: 600 }}>{d}</div>
+              <div key={d} style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textAlign: "center", fontWeight: 600 }}>{d}</div>
             ))}
           </div>
 
@@ -239,13 +239,13 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
                   const over = count > threshold;
                   const atThreshold = count === threshold && count > 0;
 
-                  let background = "#100e17";
-                  let borderColor = "#1f1d25";
+                  let background = "var(--adm-surface)";
+                  let borderColor = "var(--adm-line)";
                   if (over) { background = "rgba(255, 100, 100, 0.15)"; borderColor = "rgba(255, 100, 100, 0.5)"; }
                   else if (atThreshold) { background = "rgba(255, 180, 100, 0.15)"; borderColor = "rgba(255, 180, 100, 0.5)"; }
                   else if (count > 0) { background = "rgba(136, 192, 208, 0.1)"; borderColor = "rgba(136, 192, 208, 0.4)"; }
                   else if (daySlots.length > 0) { background = "rgba(143, 206, 159, 0.07)"; borderColor = "rgba(143, 206, 159, 0.35)"; }
-                  if (isSelected) borderColor = "#8d76a5";
+                  if (isSelected) borderColor = "var(--adm-accent)";
 
                   return (
                     <button
@@ -263,17 +263,17 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
                         outline: isToday ? "1px solid rgba(255,255,255,0.3)" : "none"
                       }}
                     >
-                      <p style={{ fontSize: "0.7rem", color: "#9d9da0", margin: 0 }}>{day}</p>
+                      <p style={{ fontSize: "0.7rem", color: "var(--adm-text-2)", margin: 0 }}>{day}</p>
                       {count > 0 && (
-                        <p style={{ fontSize: "0.85rem", fontWeight: 700, color: over ? "#ff9999" : atThreshold ? "#ffb464" : "#88c0d0", margin: "0.2rem 0 0.15rem" }}>
+                        <p style={{ fontSize: "0.85rem", fontWeight: 700, color: over ? "var(--adm-bad)" : atThreshold ? "var(--adm-warn)" : "var(--adm-info)", margin: "0.2rem 0 0.15rem" }}>
                           {count}
                         </p>
                       )}
                       {dayEntries.slice(0, 4).map((e) => (
                         <p key={e.id} style={{ fontSize: "0.62rem", color: "#d8d8e0", margin: 0, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.playerName}</p>
                       ))}
-                      {dayEntries.length > 4 && <p style={{ fontSize: "0.6rem", color: "#9d9da0", margin: 0 }}>+{dayEntries.length - 4} autres</p>}
-                      {count === 0 && daySlots.length > 0 && <p style={{ fontSize: "0.6rem", color: "#8fce9f", margin: "0.2rem 0 0" }}>Plage ouverte · 0/{daySlots.reduce((n, sl) => n + sl.max, 0)}</p>}
+                      {dayEntries.length > 4 && <p style={{ fontSize: "0.6rem", color: "var(--adm-text-2)", margin: 0 }}>+{dayEntries.length - 4} autres</p>}
+                      {count === 0 && daySlots.length > 0 && <p style={{ fontSize: "0.6rem", color: "var(--adm-good)", margin: "0.2rem 0 0" }}>Plage ouverte · 0/{daySlots.reduce((n, sl) => n + sl.max, 0)}</p>}
                     </button>
                   );
                 })}
@@ -294,7 +294,7 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
                   {selectedSlots.map((sl) => {
                     const n = selectedEntries.filter((e) => e.slotId === sl.id).length;
                     return (
-                      <p key={sl.id} style={{ fontSize: "0.72rem", color: n >= sl.max ? "#ffb464" : "#8fce9f", margin: 0 }}>
+                      <p key={sl.id} style={{ fontSize: "0.72rem", color: n >= sl.max ? "var(--adm-warn)" : "var(--adm-good)", margin: 0 }}>
                         Plage {slotLabel(sl)} — {n}/{sl.max} place(s){sl.active ? "" : " (inactive)"}
                       </p>
                     );
@@ -307,13 +307,13 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
                   <Link
                     key={e.id}
                     href={e.detailHref}
-                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.9rem", textDecoration: "none" }}
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.9rem", textDecoration: "none" }}
                   >
                     <div>
                       <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#fff", margin: 0 }}>{e.playerName}</p>
                       <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", margin: "0.1rem 0 0" }}>{e.parentName} · {e.parentPhone}{e.slotId && slotById.get(e.slotId) ? ` · ${slotById.get(e.slotId)!.start}–${slotById.get(e.slotId)!.end}` : ""}</p>
                     </div>
-                    <span style={{ fontSize: "0.6rem", color: "#88c0d0", background: "rgba(136,192,208,0.1)", padding: "0.15rem 0.5rem", borderRadius: "4px", whiteSpace: "nowrap" }}>{e.seasonLabel}</span>
+                    <span style={{ fontSize: "0.6rem", color: "var(--adm-info)", background: "var(--adm-info-soft)", padding: "0.15rem 0.5rem", borderRadius: "4px", whiteSpace: "nowrap" }}>{e.seasonLabel}</span>
                   </Link>
                 ))}
               </div>
@@ -326,7 +326,7 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
             {undated.map((e) => (
               <div
                 key={e.id}
-                style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.9rem" }}
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.9rem" }}
               >
                 <Link href={e.detailHref} style={{ textDecoration: "none" }}>
                   <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#fff", margin: 0 }}>{e.playerName}</p>
@@ -336,7 +336,7 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
                   {e.seasonId && (
                     <input type="date" className="admin-input" style={{ width: "150px" }} title="Choisir la date d'essai" onChange={(ev) => setEntryDate(e, ev.target.value)} />
                   )}
-                  <span style={{ fontSize: "0.6rem", color: "#88c0d0", background: "rgba(136,192,208,0.1)", padding: "0.15rem 0.5rem", borderRadius: "4px", whiteSpace: "nowrap" }}>{e.seasonLabel}</span>
+                  <span style={{ fontSize: "0.6rem", color: "var(--adm-info)", background: "var(--adm-info-soft)", padding: "0.15rem 0.5rem", borderRadius: "4px", whiteSpace: "nowrap" }}>{e.seasonLabel}</span>
                 </div>
               </div>
             ))}

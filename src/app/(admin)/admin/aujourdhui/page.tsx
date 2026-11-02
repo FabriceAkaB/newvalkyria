@@ -7,88 +7,119 @@ import { getTodayActions, type TodaySection } from "@/lib/admin-today";
 export const metadata = { title: "Aujourd'hui — Admin New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
 
-const LEVEL: Record<TodaySection["level"], { color: string; bg: string; border: string }> = {
-  rouge: { color: "#ff9999", bg: "rgba(255,153,153,0.12)", border: "#4a2626" },
-  orange: { color: "#f0c878", bg: "rgba(240,200,120,0.12)", border: "#4a3c22" },
-  info: { color: "#a0c8ff", bg: "rgba(160,200,255,0.12)", border: "#251f30" }
+/** Couleur d'un état : rouge = urgent, orange = à surveiller, info = à traiter quand possible. */
+const LEVEL: Record<TodaySection["level"], { color: string; soft: string; label: string; order: number }> = {
+  rouge: { color: "var(--adm-bad)", soft: "var(--adm-bad-soft)", label: "Urgent", order: 0 },
+  orange: { color: "var(--adm-warn)", soft: "var(--adm-warn-soft)", label: "À surveiller", order: 1 },
+  info: { color: "var(--adm-info)", soft: "var(--adm-info-soft)", label: "À traiter", order: 2 }
 };
-const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: 12, padding: "1rem", marginBottom: "1rem" };
-const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", gap: "0.75rem", padding: "0.55rem 0", borderTop: "1px solid #1f1d25", fontSize: "0.8rem" };
 
 export default async function AdminTodayPage() {
   const role = await requireAdmin();
   const sections = await getTodayActions(role);
-  const todo = sections.filter((s) => s.items.length > 0);
+  const todo = sections.filter((s) => s.items.length > 0).sort((a, b) => LEVEL[a.level].order - LEVEL[b.level].order);
   const done = sections.filter((s) => s.items.length === 0);
-  const dateLabel = new Date().toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Toronto" });
+  const urgent = todo.filter((s) => s.level !== "info").length;
+  const rawDate = new Date().toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Toronto" });
+  const dateLabel = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
 
   return (
     <>
       <AdminTopbar />
       <div className="admin-content">
-        <div className="admin-section">
-          <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Aujourd&apos;hui · {dateLabel}</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1rem" }}>
-            Ce qui demande une action, recalculé à chaque visite. Une fois la tâche faite dans sa section, elle disparaît d&apos;ici.
+        <div className="admin-section" style={{ maxWidth: 880 }}>
+          {/* Héros : la réponse à « qu'est-ce que je dois faire aujourd'hui ? » */}
+          <p style={{ fontSize: "0.9rem", color: "var(--adm-text-3)", margin: 0 }}>{dateLabel}</p>
+          <h1 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.02em", margin: "0.2rem 0 0.4rem", color: "var(--adm-text)" }}>
+            {todo.length === 0 ? "Tout est à jour." : `${todo.length} sujet${todo.length > 1 ? "s" : ""} demande${todo.length > 1 ? "nt" : ""} ton attention`}
+          </h1>
+          <p style={{ fontSize: "0.95rem", color: "var(--adm-text-2)", margin: "0 0 1.4rem" }}>
+            {todo.length === 0
+              ? "Rien à faire pour l'instant. Cette page se met à jour toute seule."
+              : urgent > 0
+                ? `Commence par ${urgent === 1 ? "le sujet marqué" : `les ${urgent} sujets marqués`} en couleur. Une fois une tâche faite dans sa section, elle disparaît d'ici.`
+                : "Rien d'urgent. Une fois une tâche faite dans sa section, elle disparaît d'ici."}
           </p>
 
-          <div className="admin-stats" style={{ marginBottom: "1.2rem" }}>
-            {todo.map((s) => (
-              <a key={s.key} href={`#${s.key}`} className={`admin-stat-card${s.level === "rouge" || s.level === "orange" ? " admin-stat-card-warn" : ""}`} style={{ textDecoration: "none" }}>
-                <p className="admin-stat-value" style={{ color: LEVEL[s.level].color }}>{s.count}</p>
-                <p className="admin-stat-label">{s.title}</p>
-              </a>
-            ))}
-            {todo.length === 0 && (
-              <div className="admin-stat-card admin-stat-card-accent"><p className="admin-stat-value">✓</p><p className="admin-stat-label">Rien à faire aujourd&apos;hui</p></div>
-            )}
+          {/* Sommaire : une pastille par sujet */}
+          {todo.length > 0 && (
+            <nav aria-label="Sommaire" style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.6rem" }}>
+              {todo.map((s) => (
+                <a
+                  key={s.key}
+                  href={`#${s.key}`}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.45rem 0.8rem", borderRadius: 999, background: "var(--adm-surface)", border: "1px solid var(--adm-line)", color: "var(--adm-text)", fontSize: "0.85rem", textDecoration: "none" }}
+                >
+                  <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: LEVEL[s.level].color }} />
+                  {s.title}
+                  <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", color: LEVEL[s.level].color }}>{s.count}</span>
+                </a>
+              ))}
+            </nav>
+          )}
+
+          {/* Un bloc par sujet, du plus urgent au moins urgent */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {todo.map((s) => {
+              const lvl = LEVEL[s.level];
+              return (
+                <section
+                  key={s.key}
+                  id={s.key}
+                  style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: 14, overflow: "hidden", scrollMarginTop: "1rem" }}
+                >
+                  <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", padding: "0.95rem 1.1rem", borderBottom: "1px solid var(--adm-line)", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", minWidth: 0 }}>
+                      <span style={{ fontSize: "0.72rem", fontWeight: 600, color: lvl.color, background: lvl.soft, padding: "0.2rem 0.55rem", borderRadius: 999, whiteSpace: "nowrap", flexShrink: 0 }}>{lvl.label}</span>
+                      <h2 style={{ fontSize: "1.02rem", fontWeight: 600, margin: 0, color: "var(--adm-text)" }}>
+                        {s.title} <span style={{ color: "var(--adm-text-3)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>· {s.count}</span>
+                      </h2>
+                    </div>
+                    <Link href={s.href} className="admin-btn-ghost" style={{ fontSize: "0.8rem", padding: "0.35rem 0.75rem", textDecoration: "none" }}>
+                      {s.hrefLabel}
+                    </Link>
+                  </header>
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                    {s.items.map((item, i) => (
+                      <li key={i} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", padding: "0.75rem 1.1rem", borderTop: i === 0 ? "none" : "1px solid var(--adm-line)" }}>
+                        <div style={{ minWidth: 0 }}>
+                          {item.href ? (
+                            <Link href={item.href} style={{ color: "var(--adm-text)", fontWeight: 600, fontSize: "0.92rem", textDecoration: "none" }}>{item.title}</Link>
+                          ) : (
+                            <span style={{ color: "var(--adm-text)", fontWeight: 600, fontSize: "0.92rem" }}>{item.title}</span>
+                          )}
+                          {item.detail ? <span style={{ display: "block", color: "var(--adm-text-2)", fontSize: "0.84rem", marginTop: 2 }}>{item.detail}</span> : null}
+                        </div>
+                        {item.meta ? <span style={{ color: "var(--adm-text-3)", fontSize: "0.82rem", whiteSpace: "nowrap", flexShrink: 0, textAlign: "right" }}>{item.meta}</span> : null}
+                      </li>
+                    ))}
+                  </ul>
+                  {s.more ? (
+                    <p style={{ fontSize: "0.82rem", color: "var(--adm-text-3)", margin: 0, padding: "0.65rem 1.1rem", borderTop: "1px solid var(--adm-line)" }}>
+                      Et {s.more} autre{s.more > 1 ? "s" : ""} ·{" "}
+                      <Link href={s.href} style={{ color: "var(--adm-accent)", textDecoration: "none" }}>tout voir</Link>
+                    </p>
+                  ) : null}
+                </section>
+              );
+            })}
           </div>
 
-          {todo.map((s) => {
-            const lvl = LEVEL[s.level];
-            return (
-              <div key={s.key} id={s.key} style={{ ...card, borderColor: lvl.border, scrollMarginTop: "1rem" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
-                  <p style={{ fontWeight: 700, color: "#fff", margin: 0 }}>
-                    {s.title}{" "}
-                    <span style={{ display: "inline-block", padding: "0.1rem 0.5rem", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700, color: lvl.color, background: lvl.bg }}>{s.count}</span>
-                  </p>
-                  <Link href={s.href} className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.7rem", textDecoration: "none" }}>
-                    {s.hrefLabel} →
-                  </Link>
-                </div>
-                {s.items.map((item, i) => (
-                  <div key={i} style={row}>
-                    <div style={{ minWidth: 0 }}>
-                      {item.href ? (
-                        <Link href={item.href} style={{ color: "#fff", fontWeight: 600, textDecoration: "none" }}>{item.title}</Link>
-                      ) : (
-                        <span style={{ color: "#fff", fontWeight: 600 }}>{item.title}</span>
-                      )}
-                      {item.detail ? <span style={{ display: "block", color: "#9d9da0", marginTop: 2 }}>{item.detail}</span> : null}
-                    </div>
-                    {item.meta ? <span style={{ color: "#6d6b71", whiteSpace: "nowrap", flexShrink: 0, textAlign: "right" }}>{item.meta}</span> : null}
-                  </div>
-                ))}
-                {s.more ? (
-                  <p style={{ fontSize: "0.75rem", color: "#6d6b71", margin: "0.5rem 0 0" }}>
-                    + {s.more} autre(s) — <Link href={s.href} style={{ color: "#c3a6ff" }}>tout voir</Link>
-                  </p>
-                ) : null}
-              </div>
-            );
-          })}
-
+          {/* Ce qui est à jour : discret */}
           {done.length > 0 && (
-            <div style={{ ...card, background: "transparent" }}>
-              <p style={{ fontWeight: 700, color: "#8a8791", margin: "0 0 0.4rem", fontSize: "0.8rem" }}>À jour</p>
-              {done.map((s) => (
-                <p key={s.key} style={{ fontSize: "0.78rem", color: "#6d6b71", margin: "0.25rem 0" }}>
-                  <span style={{ color: "#8fce9f" }}>✓</span> {s.emptyText}{" "}
-                  <Link href={s.href} style={{ color: "#8a8791" }}>{s.hrefLabel}</Link>
-                </p>
-              ))}
-            </div>
+            <details style={{ marginTop: "1.6rem" }}>
+              <summary style={{ cursor: "pointer", color: "var(--adm-text-3)", fontSize: "0.88rem" }}>
+                <span style={{ color: "var(--adm-good)" }}>✓</span> {done.length} sujet{done.length > 1 ? "s" : ""} à jour
+              </summary>
+              <ul style={{ listStyle: "none", margin: "0.6rem 0 0", padding: 0, display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                {done.map((s) => (
+                  <li key={s.key} style={{ fontSize: "0.85rem", color: "var(--adm-text-2)" }}>
+                    {s.emptyText}{" "}
+                    <Link href={s.href} style={{ color: "var(--adm-text-3)" }}>{s.hrefLabel}</Link>
+                  </li>
+                ))}
+              </ul>
+            </details>
           )}
         </div>
       </div>

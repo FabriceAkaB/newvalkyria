@@ -88,14 +88,14 @@ function RegistrationLinker({ order, onLinked }: { order: OrderWithDistribution;
         onChange={(e) => setQuery(e.target.value)}
         style={{ marginBottom: "0.5rem" }}
       />
-      {searching && <p style={{ fontSize: "0.72rem", color: "#6d6b71" }}>Recherche...</p>}
+      {searching && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>Recherche...</p>}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
         {results.map((r) => (
           <button
             key={r.id}
             onClick={() => link(r.id)}
             disabled={linking === r.id}
-            style={{ textAlign: "left", background: "#17151e", border: "1px solid #302e36", borderRadius: "6px", padding: "0.5rem 0.7rem", fontSize: "0.78rem", color: "#c3c2c8", cursor: "pointer" }}
+            style={{ textAlign: "left", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", padding: "0.5rem 0.7rem", fontSize: "0.78rem", color: "var(--adm-text-2)", cursor: "pointer" }}
           >
             {r.player_first_name} {r.player_last_name} ({r.category_id}) — parent : {r.parent_name}
           </button>
@@ -209,7 +209,7 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.25rem" }}>
             <div>
               <p className="admin-section-title" style={{ margin: 0, fontSize: "1.1rem", textTransform: "none", letterSpacing: 0, color: "#fff" }}>Commande #{order.id.slice(0, 8)}</p>
-              <p style={{ fontSize: "0.78rem", color: "#6d6b71", margin: "0.2rem 0 0" }}>
+              <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", margin: "0.2rem 0 0" }}>
                 {new Date(order.created_at).toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}
                 {seasonLabel && ` · ${seasonLabel}`}
               </p>
@@ -226,32 +226,32 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
-            <div style={{ flex: "1 1 320px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+            <div style={{ flex: "1 1 320px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
               <p className="admin-drawer-section-title">Joueuse</p>
               {order.registration ? (
                 <div>
                   <p style={{ fontSize: "0.9rem", color: "#fff", margin: "0 0 0.2rem" }}>
                     {order.registration.playerFirstName} {order.registration.playerLastName}
                   </p>
-                  <p style={{ fontSize: "0.75rem", color: "#9d9da0", margin: 0 }}>
+                  <p style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", margin: 0 }}>
                     {order.registration.categoryId}{order.registration.advancedGroup ? " · Avancé" : ""}
                   </p>
-                  <p style={{ fontSize: "0.75rem", color: "#9d9da0", margin: "0.4rem 0 0" }}>
+                  <p style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", margin: "0.4rem 0 0" }}>
                     Parent : {order.registration.parentName} · {order.registration.parentPhone}
                   </p>
                 </div>
               ) : (
                 <div>
-                  <p style={{ fontSize: "0.78rem", color: "#c3c2c8", margin: "0 0 0.5rem" }}>{order.customer_name} · {order.customer_email}{order.customer_phone ? ` · ${order.customer_phone}` : ""}</p>
+                  <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 0.5rem" }}>{order.customer_name} · {order.customer_email}{order.customer_phone ? ` · ${order.customer_phone}` : ""}</p>
                   <RegistrationLinker order={order} onLinked={() => window.location.reload()} />
                 </div>
               )}
             </div>
 
             {!order.registration && (
-              <div style={{ flex: "1 1 220px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+              <div style={{ flex: "1 1 220px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
                 <p className="admin-drawer-section-title">Saison</p>
-                <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.5rem" }}>Commande sans joueuse reliée — assignez sa saison manuellement.</p>
+                <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0 0 0.5rem" }}>Commande sans joueuse reliée — assignez sa saison manuellement.</p>
                 <div style={{ display: "flex", gap: "0.4rem" }}>
                   <select className="admin-input" value={seasonSelect} onChange={(e) => setSeasonSelect(e.target.value)}>
                     <option value="">—</option>
@@ -280,7 +280,7 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
                     <td>{item.product_name}</td>
                     <td>{item.variant_label ?? "—"}</td>
                     <td>{item.quantity}</td>
-                    <td style={{ color: item.delivered_quantity >= item.quantity ? "#7fd88f" : item.delivered_quantity > 0 ? "#ffb464" : "#6d6b71" }}>
+                    <td style={{ color: item.delivered_quantity >= item.quantity ? "var(--adm-good)" : item.delivered_quantity > 0 ? "var(--adm-warn)" : "var(--adm-text-3)" }}>
                       {item.delivered_quantity}/{item.quantity}
                     </td>
                     {showPrices && <td>{formatPrice(item.unit_price_cents * item.quantity)}</td>}
@@ -290,15 +290,15 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
             </table>
           </div>
           {showPrices && (
-            <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#9ec99e", marginBottom: "1.5rem" }}>Total : {formatPrice(order.total_cents)}</p>
+            <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--adm-good)", marginBottom: "1.5rem" }}>Total : {formatPrice(order.total_cents)}</p>
           )}
 
           {order.distribution_status !== "remis" && (
-            <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem", marginBottom: "1.5rem" }}>
+            <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem", marginBottom: "1.5rem" }}>
               <p className="admin-drawer-section-title">Confirmer la remise</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "0.75rem" }}>
                 {order.items.map((item) => (
-                  <label key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "#c3c2c8" }}>
+                  <label key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "var(--adm-text-2)" }}>
                     <span>{item.product_name}{item.variant_label ? ` — ${item.variant_label}` : ""}</span>
                     <input
                       type="number" min={0} max={item.quantity}
@@ -311,7 +311,7 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
                 ))}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.75rem", color: "#9d9da0", cursor: "pointer" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.75rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
                   <input type="checkbox" checked={parentConfirmed} onChange={(e) => setParentConfirmed(e.target.checked)} />
                   Parent a confirmé la réception
                 </label>
@@ -323,18 +323,18 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
           )}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
-            <div style={{ flex: "1 1 320px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+            <div style={{ flex: "1 1 320px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
               <p className="admin-drawer-section-title">Problèmes ({problems.filter((p) => p.status === "ouvert").length} ouvert(s))</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "0.75rem" }}>
                 {problems.map((p) => (
-                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: p.status === "resolu" ? "#6d6b71" : "#c3c2c8" }}>
+                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: p.status === "resolu" ? "var(--adm-text-3)" : "var(--adm-text-2)" }}>
                     <span>{p.status === "resolu" ? "✓ " : "🔴 "}{PROBLEM_TYPE_LABELS[p.problem_type]}{p.description ? ` — ${p.description}` : ""}</span>
                     {p.status === "ouvert" && (
-                      <button onClick={() => resolveProblem(p.id)} style={{ background: "none", border: "none", color: "#7fd88f", cursor: "pointer", fontSize: "0.7rem", textDecoration: "underline" }}>Résoudre</button>
+                      <button onClick={() => resolveProblem(p.id)} style={{ background: "none", border: "none", color: "var(--adm-good)", cursor: "pointer", fontSize: "0.7rem", textDecoration: "underline" }}>Résoudre</button>
                     )}
                   </div>
                 ))}
-                {problems.length === 0 && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Aucun problème signalé.</p>}
+                {problems.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Aucun problème signalé.</p>}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
                 <select className="admin-input" value={problemType} onChange={(e) => setProblemType(e.target.value as ProblemType)} style={{ fontSize: "0.72rem" }}>
@@ -345,7 +345,7 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
               </div>
             </div>
 
-            <div style={{ flex: "1 1 220px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+            <div style={{ flex: "1 1 220px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
               <p className="admin-drawer-section-title">Notes</p>
               <textarea className="admin-input" rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={saveNotes} />
             </div>
@@ -354,12 +354,12 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Historique</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
             {events.map((e) => (
-              <p key={e.id} style={{ fontSize: "0.75rem", color: "#9d9da0", margin: 0 }}>
+              <p key={e.id} style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", margin: 0 }}>
                 {new Date(e.created_at).toLocaleDateString("fr-CA", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })} — {e.detail ?? e.event}
-                {e.performed_by && <span style={{ color: "#6d6b71" }}> (par {e.performed_by})</span>}
+                {e.performed_by && <span style={{ color: "var(--adm-text-3)" }}> (par {e.performed_by})</span>}
               </p>
             ))}
-            {events.length === 0 && <p style={{ fontSize: "0.75rem", color: "#6d6b71" }}>Aucun historique pour le moment.</p>}
+            {events.length === 0 && <p style={{ fontSize: "0.75rem", color: "var(--adm-text-3)" }}>Aucun historique pour le moment.</p>}
           </div>
         </div>
       </div>

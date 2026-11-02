@@ -49,18 +49,18 @@ export function AdminBoysProgram({
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>
             {program.name}
-            {program.brand === "atlantic" && <span style={{ marginLeft: "0.6rem", fontSize: "0.7rem", color: "#78a8f0" }}>FC Atlantic</span>}
-            {program.waitlistOnly && <span style={{ marginLeft: "0.6rem", fontSize: "0.7rem", color: "#f0c878" }}>En attente — liste d&apos;attente seulement</span>}
+            {program.brand === "atlantic" && <span style={{ marginLeft: "0.6rem", fontSize: "0.7rem", color: "var(--adm-info)" }}>FC Atlantic</span>}
+            {program.waitlistOnly && <span style={{ marginLeft: "0.6rem", fontSize: "0.7rem", color: "var(--adm-warn)" }}>En attente — liste d&apos;attente seulement</span>}
           </p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", margin: "0 0 0.8rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", margin: "0 0 0.8rem" }}>
             {program.waitlistOnly
               ? "Programme en préparation : les familles s'inscrivent seulement sur la liste d'attente."
               : `${formatMoney(program.priceCents)}${program.installmentFeeCents ? ` (ou 2 versements, +${formatMoney(program.installmentFeeCents)})` : ""} · ${program.practices} pratiques${program.matches ? ` + ${program.matches} matchs` : ""} · du ${fmtDate(program.firstDate)} au ${fmtDate(program.lastDate)}`}
           </p>
-          <p style={{ fontSize: "0.78rem", color: "#9d9da0", margin: "0 0 1rem" }}>
-            Lien d&apos;inscription : <a href={link} target="_blank" rel="noreferrer" style={{ color: "#c4a4e4" }}>{link}</a>{" "}
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 1rem" }}>
+            Lien d&apos;inscription : <a href={link} target="_blank" rel="noreferrer" style={{ color: "var(--adm-accent)" }}>{link}</a>{" "}
             <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => navigator.clipboard.writeText(link).then(() => { setMsg("Lien copié."); setTimeout(() => setMsg(null), 3000); })}>Copier</button>
-            {msg && <span style={{ color: "#8fce9f", marginLeft: "0.5rem" }}>{msg}</span>}
+            {msg && <span style={{ color: "var(--adm-good)", marginLeft: "0.5rem" }}>{msg}</span>}
           </p>
 
           <div className="admin-stats" style={{ marginBottom: "1.2rem" }}>
@@ -72,7 +72,7 @@ export function AdminBoysProgram({
           </div>
 
           {/* ── Comparaison des 3 programmes : lequel promouvoir ── */}
-          <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem", marginBottom: "1.4rem" }}>
+          <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1rem", marginBottom: "1.4rem" }}>
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem", fontSize: "0.85rem" }}>Comparaison des programmes garçons</p>
             <div style={{ display: "grid", gap: "0.55rem" }}>
               {comparison.map((c) => {
@@ -80,22 +80,22 @@ export function AdminBoysProgram({
                 const pct = c.capacity ? Math.min(100, Math.round((c.held / c.capacity) * 100)) : 0;
                 return (
                   <Link key={c.slug} href={`/admin/programme/${c.slug}`} style={{ textDecoration: "none", display: "block", padding: "0.45rem 0.55rem", borderRadius: "8px", background: c.slug === program.slug ? "#1d1728" : "transparent" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", fontSize: "0.78rem", color: "#c3c2c8", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", fontSize: "0.78rem", color: "var(--adm-text-2)", flexWrap: "wrap" }}>
                       <span style={{ color: "#fff", fontWeight: 600 }}>{c.name}</span>
                       <span>
                         {c.waitlistOnly ? `En attente · ${c.waitlist} sur la liste d'attente` : `${c.paid} payé${c.paid > 1 ? "s" : ""} · ${left} place${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""} sur ${c.capacity}${c.waitlist ? ` · ${c.waitlist} en attente` : ""}`}
                       </span>
                     </div>
                     {!c.waitlistOnly && (
-                      <div style={{ height: "6px", background: "#1f1d25", borderRadius: "999px", marginTop: "0.35rem", overflow: "hidden" }}>
-                        <div style={{ width: `${pct}%`, height: "100%", background: pct >= 85 ? "#ff9999" : pct >= 50 ? "#f0c878" : "#8fce9f" }} />
+                      <div style={{ height: "6px", background: "var(--adm-line)", borderRadius: "999px", marginTop: "0.35rem", overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", background: pct >= 85 ? "var(--adm-bad)" : pct >= 50 ? "var(--adm-warn)" : "var(--adm-good)" }} />
                       </div>
                     )}
                   </Link>
                 );
               })}
             </div>
-            <p style={{ fontSize: "0.7rem", color: "#6d6b71", margin: "0.6rem 0 0" }}>Plus la barre est courte, plus il reste de places : c&apos;est le programme à promouvoir en priorité.</p>
+            <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: "0.6rem 0 0" }}>Plus la barre est courte, plus il reste de places : c&apos;est le programme à promouvoir en priorité.</p>
           </div>
 
           {dates.length > 0 && (
@@ -103,7 +103,7 @@ export function AdminBoysProgram({
               <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: "0.6rem" }}>Séances ({dates.length})</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "1.5rem" }}>
                 {dates.map((d) => (
-                  <span key={d.id} style={{ fontSize: "0.68rem", color: "#9d9da0", background: "#17151e", border: "1px solid #251f30", borderRadius: "6px", padding: "0.3rem 0.55rem" }}>
+                  <span key={d.id} style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", padding: "0.3rem 0.55rem" }}>
                     {new Date(`${d.session_date}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "short", month: "short", day: "numeric" })} · {d.start_time.slice(0, 5)}–{d.end_time.slice(0, 5)}
                     {d.location ? ` · ${d.location}` : ""}
                   </span>

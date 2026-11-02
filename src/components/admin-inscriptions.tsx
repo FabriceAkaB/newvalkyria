@@ -71,15 +71,15 @@ function StatusBadge({ lead, isNew }: { lead: AdminLead; isNew: boolean }) {
       ) : lead.status === "paid" ? (
         <span className="admin-badge admin-badge-paid">✓ Payée</span>
       ) : lead.status === "confirmed" ? (
-        <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "#9ec9ff", borderColor: "#465671" }}>✓ Confirmée</span>
+        <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "var(--adm-info)", borderColor: "#465671" }}>✓ Confirmée</span>
       ) : lead.status === "essai" ? (
         lead.trial_date ? (
-          <span className="admin-badge admin-badge-pending" style={{ background: "rgba(150, 100, 255, 0.18)", color: "#c3a6ff", borderColor: "rgba(150, 100, 255, 0.4)" }}>À l&apos;essai</span>
+          <span className="admin-badge admin-badge-pending" style={{ background: "rgba(150, 100, 255, 0.18)", color: "var(--adm-accent)", borderColor: "rgba(150, 100, 255, 0.4)" }}>À l&apos;essai</span>
         ) : (
-          <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255, 150, 50, 0.2)", color: "#ffb464", borderColor: "rgba(255, 150, 50, 0.5)" }} title="Aucune date d'essai fixée">⚠ À l&apos;essai — sans date</span>
+          <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255, 150, 50, 0.2)", color: "var(--adm-warn)", borderColor: "rgba(255, 150, 50, 0.5)" }} title="Aucune date d'essai fixée">⚠ À l&apos;essai — sans date</span>
         )
       ) : lead.status === "cancelled" ? (
-        <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255, 100, 100, 0.18)", color: "#ff9999" }}>Annulée</span>
+        <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255, 100, 100, 0.18)", color: "var(--adm-bad)" }}>Annulée</span>
       ) : (
         <span className="admin-badge admin-badge-pending">En attente</span>
       )}
@@ -177,13 +177,13 @@ function TransferModal({
     <div className="admin-modal-overlay">
       <div className="admin-modal-box" style={{ maxWidth: "560px", textAlign: "left" }}>
         <p className="admin-modal-title">Transférer vers une autre saison</p>
-        <p style={{ fontSize: "0.78rem", color: "#9d9da0", marginBottom: "1rem" }}>
+        <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", marginBottom: "1rem" }}>
           Crée une nouvelle inscription dans la saison choisie, pour le programme de votre choix. L&apos;inscription Été 2026 d&apos;origine reste inchangée.
         </p>
         {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
 
         {seasons.length === 0 ? (
-          <p style={{ fontSize: "0.8rem", color: "#ffb464" }}>Aucune autre saison disponible.</p>
+          <p style={{ fontSize: "0.8rem", color: "var(--adm-warn)" }}>Aucune autre saison disponible.</p>
         ) : (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", marginBottom: "0.6rem" }}>
@@ -222,7 +222,7 @@ function TransferModal({
               <label className="admin-field"><span>Prénom joueuse</span><input className="admin-input" value={playerFirstName} onChange={(e) => setPlayerFirstName(e.target.value)} /></label>
               <label className="admin-field"><span>Nom joueuse</span><input className="admin-input" value={playerLastName} onChange={(e) => setPlayerLastName(e.target.value)} /></label>
               <label className="admin-field"><span>Date de naissance</span><input type="date" className="admin-input" value={playerDob} onChange={(e) => setPlayerDob(e.target.value)} /></label>
-              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", color: "#c3c2c8", marginTop: "1.4rem" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", color: "var(--adm-text-2)", marginTop: "1.4rem" }}>
                 <input type="checkbox" checked={advancedGroup} onChange={(e) => setAdvancedGroup(e.target.checked)} /> Groupe avancé
               </label>
             </div>
@@ -306,7 +306,7 @@ function TransferToSportEtudesModal({ lead, onClose, onTransferred }: { lead: Ad
     <div className="admin-modal-overlay">
       <div className="admin-modal-box" style={{ maxWidth: "560px", textAlign: "left" }}>
         <p className="admin-modal-title">Transférer vers Sport-Études (Garçons)</p>
-        <p style={{ fontSize: "0.78rem", color: "#9d9da0", marginBottom: "1rem" }}>
+        <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", marginBottom: "1rem" }}>
           Crée une nouvelle inscription dans le programme Sport-Études. L&apos;inscription Été 2026 d&apos;origine reste inchangée.
         </p>
         {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
@@ -509,9 +509,9 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
                         padding: "0.35rem 0.7rem",
                         fontSize: "0.72rem",
                         borderRadius: "6px",
-                        border: isActive ? "1px solid #8d76a5" : "1px solid #302e36",
+                        border: isActive ? "1px solid var(--adm-accent)" : "1px solid var(--adm-border)",
                         background: isActive ? "#30283c" : "transparent",
-                        color: isActive ? "#fff" : "#9d9da0",
+                        color: isActive ? "#fff" : "var(--adm-text-2)",
                         cursor: isActive ? "default" : "pointer",
                         fontWeight: isActive ? 600 : 400,
                       }}
@@ -591,10 +591,10 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                  <span style={{ color: "#48474d", fontStyle: "italic", fontSize: "0.8rem" }}>Non renseigné</span>
+                  <span style={{ color: "var(--adm-text-3)", fontStyle: "italic", fontSize: "0.8rem" }}>Non renseigné</span>
                   <button
                     onClick={() => setEditingName(true)}
-                    style={{ fontSize: "0.7rem", color: "#8d76a5", background: "none", border: "1px solid #433751", borderRadius: "4px", padding: "0.2rem 0.5rem", cursor: "pointer" }}
+                    style={{ fontSize: "0.7rem", color: "var(--adm-accent)", background: "none", border: "1px solid #433751", borderRadius: "4px", padding: "0.2rem 0.5rem", cursor: "pointer" }}
                   >
                     + Ajouter
                   </button>
@@ -610,7 +610,7 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
                   {CATEGORY_SUBLABELS[lead.player_age as keyof typeof CATEGORY_SUBLABELS] && (
                     <span
                       style={{
-                        color: "#545359",
+                        color: "var(--adm-text-3)",
                         fontSize: "0.75rem",
                         marginLeft: "0.4rem",
                       }}
@@ -648,7 +648,7 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
             {lead.time_slot && (
               <div className="admin-drawer-field">
                 <p className="admin-drawer-label">Créneau horaire</p>
-                <p className="admin-drawer-value" style={{ fontWeight: 600, color: "#9ec9ff" }}>{lead.time_slot}</p>
+                <p className="admin-drawer-value" style={{ fontWeight: 600, color: "var(--adm-info)" }}>{lead.time_slot}</p>
               </div>
             )}
             {parsed.referredBy && parsed.referredBy !== "Non spécifié" && (
@@ -671,7 +671,7 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
                     style={{
                       fontSize: "0.72rem",
                       wordBreak: "break-all",
-                      color: "#6d6b71",
+                      color: "var(--adm-text-3)",
                     }}
                   >
                     {lead.stripe_checkout_session_id}
@@ -686,7 +686,7 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
                     style={{
                       fontSize: "0.72rem",
                       wordBreak: "break-all",
-                      color: "#6d6b71",
+                      color: "var(--adm-text-3)",
                     }}
                   >
                     {lead.stripe_payment_intent_id}
@@ -710,7 +710,7 @@ function LeadDrawer({ lead, isNew, transferSeasons, onClose, onDeleted, onUpdate
                 style={{
                   fontSize: "0.68rem",
                   wordBreak: "break-all",
-                  color: "#48474d",
+                  color: "var(--adm-text-3)",
                 }}
               >
                 {lead.id}
@@ -1104,7 +1104,7 @@ export function AdminInscriptions({ leads: initialLeads, transferSeasons }: Prop
             <span
               style={{
                 fontSize: "0.62rem",
-                color: "#3c3a41",
+                color: "var(--adm-border)",
                 marginLeft: "auto",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
@@ -1177,7 +1177,7 @@ export function AdminInscriptions({ leads: initialLeads, transferSeasons }: Prop
                   padding: "0.4rem 0.7rem",
                   fontSize: "0.7rem",
                   background: "transparent",
-                  border: "1px solid rgba(255,100,100,0.3)",
+                  border: "1px solid var(--adm-bad-soft)",
                   color: "rgba(255,150,150,0.8)",
                   borderRadius: "6px",
                   cursor: "pointer",
@@ -1232,7 +1232,7 @@ export function AdminInscriptions({ leads: initialLeads, transferSeasons }: Prop
                             lead.player_age as keyof typeof CATEGORY_LABELS
                           ] ?? lead.player_age}
                         </td>
-                        <td style={{ fontSize: "0.75rem", color: "#858489" }}>{lead.time_slot || "—"}</td>
+                        <td style={{ fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{lead.time_slot || "—"}</td>
                         <td>{lead.player_level}</td>
                         <td>
                           <StatusBadge lead={lead} isNew={_isNew} />
@@ -1249,7 +1249,7 @@ export function AdminInscriptions({ leads: initialLeads, transferSeasons }: Prop
             <p
               style={{
                 fontSize: "0.72rem",
-                color: "#48474d",
+                color: "var(--adm-text-3)",
                 marginTop: "0.75rem",
                 textAlign: "center",
               }}

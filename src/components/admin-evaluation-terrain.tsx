@@ -36,7 +36,7 @@ type LocalScores = Record<string, CriterionScoreInput>;
 function FicheField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-      <span style={{ fontSize: "0.62rem", fontWeight: 700, color: "#9d9da0", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</span>
+      <span style={{ fontSize: "0.62rem", fontWeight: 700, color: "var(--adm-text-2)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</span>
       {children}
     </label>
   );
@@ -52,9 +52,9 @@ function scoreButton(value: number, current: number | undefined, onClick: () => 
         minWidth: "44px",
         minHeight: "44px",
         borderRadius: "8px",
-        border: active ? "2px solid #c4a4e4" : "1px solid #302e36",
-        background: active ? "#342b40" : "#17151e",
-        color: active ? "#fff" : "#9d9da0",
+        border: active ? "2px solid var(--adm-accent)" : "1px solid var(--adm-border)",
+        background: active ? "#342b40" : "var(--adm-surface-2)",
+        color: active ? "#fff" : "var(--adm-text-2)",
         fontWeight: active ? 700 : 500,
         fontSize: "0.85rem",
         cursor: "pointer"
@@ -326,13 +326,13 @@ export function AdminEvaluationTerrain({
 
   if (!evaluatorId) {
     return (
-      <div style={{ minHeight: "100vh", background: "#0b0a10", padding: "1.5rem" }}>
-        <Link href={`/admin/evaluations/${event.id}`} style={{ color: "#9d9da0", fontSize: "0.78rem", textDecoration: "none" }}>← Retour</Link>
+      <div style={{ minHeight: "100vh", background: "var(--adm-bg)", padding: "1.5rem" }}>
+        <Link href={`/admin/evaluations/${event.id}`} style={{ color: "var(--adm-text-2)", fontSize: "0.78rem", textDecoration: "none" }}>← Retour</Link>
         <p style={{ fontSize: "1rem", color: "#fff", fontWeight: 700, margin: "1rem 0" }}>Qui évalue sur cet appareil ?</p>
         {evaluators.length === 0 && (
-          <p style={{ fontSize: "0.85rem", color: "#9d9da0" }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--adm-text-2)" }}>
             Aucun évaluateur assigné à cet événement. Ajoute-en un depuis la page{" "}
-            <Link href={`/admin/evaluations/${event.id}`} style={{ color: "#c4a4e4" }}>gérer l&apos;événement</Link>.
+            <Link href={`/admin/evaluations/${event.id}`} style={{ color: "var(--adm-accent)" }}>gérer l&apos;événement</Link>.
           </p>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "320px" }}>
@@ -352,21 +352,21 @@ export function AdminEvaluationTerrain({
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0b0a10", paddingBottom: "3rem" }}>
+    <div style={{ minHeight: "100vh", background: "var(--adm-bg)", paddingBottom: "3rem" }}>
       {/* ── Bandeau supérieur ── */}
-      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "#0b0a10", borderBottom: "1px solid #1f1d25", padding: "0.6rem 0.9rem" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--adm-bg)", borderBottom: "1px solid var(--adm-line)", padding: "0.6rem 0.9rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
-          <Link href={`/admin/evaluations/${event.id}`} style={{ color: "#9d9da0", fontSize: "0.72rem", textDecoration: "none" }}>← {event.name}</Link>
-          <span style={{ fontSize: "0.68rem", color: "#6d6b71" }}>
+          <Link href={`/admin/evaluations/${event.id}`} style={{ color: "var(--adm-text-2)", fontSize: "0.72rem", textDecoration: "none" }}>← {event.name}</Link>
+          <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)" }}>
             {saving ? "Sauvegarde..." : `Synchronisé il y a ${lastSyncedAgo}s`} · {currentEvaluator?.guest_name ?? currentEvaluator?.coach_first_name}
-            <button onClick={() => setEvaluatorId("")} style={{ marginLeft: "0.5rem", background: "none", border: "none", color: "#c4a4e4", fontSize: "0.68rem", cursor: "pointer" }}>changer</button>
+            <button onClick={() => setEvaluatorId("")} style={{ marginLeft: "0.5rem", background: "none", border: "none", color: "var(--adm-accent)", fontSize: "0.68rem", cursor: "pointer" }}>changer</button>
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <div style={{ flex: 1, height: "6px", background: "#1f1d25", borderRadius: "999px", overflow: "hidden" }}>
-            <div style={{ width: `${progressPct}%`, height: "100%", background: "#8fce9f" }} />
+          <div style={{ flex: 1, height: "6px", background: "var(--adm-line)", borderRadius: "999px", overflow: "hidden" }}>
+            <div style={{ width: `${progressPct}%`, height: "100%", background: "var(--adm-good)" }} />
           </div>
-          <span style={{ fontSize: "0.7rem", color: "#9d9da0", flexShrink: 0 }}>{totalCompleted} / {visibleParticipants.length} évaluées</span>
+          <span style={{ fontSize: "0.7rem", color: "var(--adm-text-2)", flexShrink: 0 }}>{totalCompleted} / {visibleParticipants.length} évaluées</span>
         </div>
       </div>
 
@@ -385,8 +385,8 @@ export function AdminEvaluationTerrain({
                     minHeight: "36px",
                     padding: "0.3rem 0.7rem",
                     borderRadius: "999px",
-                    border: active ? `2px solid ${t.color_hex}` : "1px solid #302e36",
-                    background: active ? t.color_hex + "33" : "#17151e",
+                    border: active ? `2px solid ${t.color_hex}` : "1px solid var(--adm-border)",
+                    background: active ? t.color_hex + "33" : "var(--adm-surface-2)",
                     color: "#fff",
                     fontSize: "0.72rem",
                     cursor: "pointer",
@@ -429,14 +429,14 @@ export function AdminEvaluationTerrain({
               const scoredCount = myEval ? Object.keys(myEval.criteria_scores ?? {}).length : 0;
               const isDone = Boolean(myEval?.completed_at);
               const isStarted = scoredCount > 0 && !isDone;
-              const borderColor = isDone ? "#8fce9f" : isStarted ? "#f0c878" : "#302e36";
+              const borderColor = isDone ? "var(--adm-good)" : isStarted ? "var(--adm-warn)" : "var(--adm-border)";
               const isNew = p.attendance_status === "en_retard";
               return (
                 <button
                   key={p.id}
                   onClick={() => setSelectedId(p.id)}
                   style={{
-                    background: "#100e17",
+                    background: "var(--adm-surface)",
                     border: `2px solid ${borderColor}`,
                     borderRadius: "10px",
                     padding: "0.7rem",
@@ -449,13 +449,13 @@ export function AdminEvaluationTerrain({
                     minHeight: "48px"
                   }}
                 >
-                  {isNew && <span style={{ position: "absolute", top: "4px", right: "4px", fontSize: "0.6rem", background: "#78a8f0", color: "#0b0a10", borderRadius: "4px", padding: "0.1rem 0.3rem" }}>Nouveau</span>}
+                  {isNew && <span style={{ position: "absolute", top: "4px", right: "4px", fontSize: "0.6rem", background: "var(--adm-info)", color: "var(--adm-bg)", borderRadius: "4px", padding: "0.1rem 0.3rem" }}>Nouveau</span>}
                   {p.primary_position_observed === "GK" && (
-                    <span style={{ position: "absolute", top: "4px", left: "4px", fontSize: "0.6rem", background: "#f0c878", color: "#0b0a10", borderRadius: "4px", padding: "0.1rem 0.3rem", fontWeight: 700 }}>🧤 GK</span>
+                    <span style={{ position: "absolute", top: "4px", left: "4px", fontSize: "0.6rem", background: "var(--adm-warn)", color: "var(--adm-bg)", borderRadius: "4px", padding: "0.1rem 0.3rem", fontWeight: 700 }}>🧤 GK</span>
                   )}
                   <Avatar firstName={p.player_first_name} lastName={p.player_last_name} photoUrl={p.player_photo_url} colorHex={team?.color_hex} size={48} />
                   <p style={{ fontSize: "0.78rem", color: "#fff", margin: 0, textAlign: "center" }}>{p.player_first_name} {p.player_last_name}</p>
-                  <p style={{ fontSize: "0.7rem", color: "#9d9da0", margin: 0 }}>#{p.bib_number ?? "—"} {isDone ? "✓" : isStarted ? `${scoredCount}/${config.criteria.length}` : ""}</p>
+                  <p style={{ fontSize: "0.7rem", color: "var(--adm-text-2)", margin: 0 }}>#{p.bib_number ?? "—"} {isDone ? "✓" : isStarted ? `${scoredCount}/${config.criteria.length}` : ""}</p>
                 </button>
               );
             })}
@@ -467,41 +467,41 @@ export function AdminEvaluationTerrain({
           <button onClick={() => setSelectedId(null)} className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.7rem", marginBottom: "0.7rem" }}>← Liste des athlètes</button>
 
           {/* ── En-tête permanent ── */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.8rem", marginBottom: "0.8rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.8rem", marginBottom: "0.8rem" }}>
             <Avatar firstName={selected.player_first_name} lastName={selected.player_last_name} photoUrl={selected.player_photo_url} colorHex={teams.find((t) => t.id === selected.team_id)?.color_hex} size={72} />
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fff", margin: 0 }}>{selected.player_first_name} {selected.player_last_name}</p>
-              <p style={{ fontSize: "0.78rem", color: "#9d9da0", margin: "0.2rem 0 0" }}>{birthYear(selected.player_dob)}{selected.primary_position_observed ? ` · ${selected.primary_position_observed}` : ""}</p>
+              <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0.2rem 0 0" }}>{birthYear(selected.player_dob)}{selected.primary_position_observed ? ` · ${selected.primary_position_observed}` : ""}</p>
               <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.3rem" }}>
-                <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "#c4a4e4" }}>#{selected.bib_number ?? "—"}</span>
+                <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--adm-accent)" }}>#{selected.bib_number ?? "—"}</span>
                 {teams.find((t) => t.id === selected.team_id) && (
                   <span style={{ width: "12px", height: "12px", borderRadius: "50%", background: teams.find((t) => t.id === selected.team_id)!.color_hex, display: "inline-block" }} />
                 )}
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", margin: 0 }}>{verdict.total.toFixed(1)}<span style={{ fontSize: "0.8rem", color: "#6d6b71" }}>/{config.criteria.length * 5}</span></p>
+              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", margin: 0 }}>{verdict.total.toFixed(1)}<span style={{ fontSize: "0.8rem", color: "var(--adm-text-3)" }}>/{config.criteria.length * 5}</span></p>
               {completedCriteriaCount >= config.criteria.length ? (
-                <p style={{ fontSize: "0.68rem", color: VERDICT_COLORS[verdict.verdict] ?? "#9d9da0", margin: 0, fontWeight: 700 }}>{verdict.verdictLabel}</p>
+                <p style={{ fontSize: "0.68rem", color: VERDICT_COLORS[verdict.verdict] ?? "var(--adm-text-2)", margin: 0, fontWeight: 700 }}>{verdict.verdictLabel}</p>
               ) : (
-                <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: 0 }}>Fiche incomplète</p>
+                <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: 0 }}>Fiche incomplète</p>
               )}
             </div>
           </div>
 
           {completedCriteriaCount >= config.criteria.length && verdict.maturationAlert && (
-            <div style={{ background: "rgba(240,200,120,0.1)", border: "1px solid rgba(240,200,120,0.3)", borderRadius: "8px", padding: "0.6rem 0.8rem", marginBottom: "0.8rem" }}>
-              <p style={{ fontSize: "0.75rem", color: "#f0c878", margin: 0 }}>
+            <div style={{ background: "var(--adm-warn-soft)", border: "1px solid rgba(240,200,120,0.3)", borderRadius: "8px", padding: "0.6rem 0.8rem", marginBottom: "0.8rem" }}>
+              <p style={{ fontSize: "0.75rem", color: "var(--adm-warn)", margin: 0 }}>
                 ⚠ Profil physiquement dominant, techniquement en retard — vérifier l&apos;âge relatif et la maturation avant de conclure.
               </p>
             </div>
           )}
 
-          <p style={{ fontSize: "0.72rem", color: "#9d9da0", marginBottom: "0.8rem" }}>{completedCriteriaCount} / {config.criteria.length} critères remplis</p>
+          <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", marginBottom: "0.8rem" }}>{completedCriteriaCount} / {config.criteria.length} critères remplis</p>
 
           {/* ── FICHE D'ÉVALUATION DE L'ATHLÈTE — en-tête ── */}
-          <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
-            <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#c4a4e4", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.7rem" }}>Fiche d&apos;évaluation de l&apos;athlète</p>
+          <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
+            <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--adm-accent)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.7rem" }}>Fiche d&apos;évaluation de l&apos;athlète</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "0.6rem" }}>
               <FicheField label="Nom complet"><input className="admin-input" readOnly value={`${selected.player_first_name} ${selected.player_last_name}`.trim()} style={{ width: "100%", opacity: 0.8 }} /></FicheField>
               <FicheField label="Position jouée"><input className="admin-input" key={`pj-${selected.id}`} defaultValue={selected.primary_position_observed ?? ""} onBlur={(e) => saveHeaderField({ primaryPositionObserved: e.target.value.trim() || null }, { primary_position_observed: e.target.value.trim() || null })} placeholder="ex. Milieu" style={{ width: "100%" }} /></FicheField>
@@ -532,19 +532,19 @@ export function AdminEvaluationTerrain({
           {FICHE_SECTIONS.map(({ block, title }) => {
             const summary = sectionSummaries.find((x) => x.block === block);
             return (
-              <div key={block} style={{ marginBottom: "1.1rem", background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.8rem" }}>
+              <div key={block} style={{ marginBottom: "1.1rem", background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.8rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.5rem" }}>
-                  <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#c4a4e4", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>{title}</p>
-                  <span style={{ fontSize: "0.68rem", color: "#9d9da0" }}>
+                  <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--adm-accent)", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>{title}</p>
+                  <span style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>
                     {summary?.rated ?? 0}/{summary?.total ?? 0}
-                    {summary?.average != null && <> · moy. {summary.average.toFixed(1)}/5 · <strong style={{ color: summary.band === "B" ? "#8fce9f" : summary.band === "M" ? "#f0c878" : "#e6394a" }}>{summary.band} ({RATING_BAND_LABELS[summary.band!]})</strong></>}
+                    {summary?.average != null && <> · moy. {summary.average.toFixed(1)}/5 · <strong style={{ color: summary.band === "B" ? "var(--adm-good)" : summary.band === "M" ? "var(--adm-warn)" : "#e6394a" }}>{summary.band} ({RATING_BAND_LABELS[summary.band!]})</strong></>}
                   </span>
                 </div>
                 {!config.doubleScoringEnabled && (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr repeat(5, 44px)", gap: "0.3rem", alignItems: "end", marginBottom: "0.2rem" }}>
                     <span />
                     {RATING_VALUES.map((v) => (
-                      <span key={v} style={{ textAlign: "center", fontSize: "0.65rem", fontWeight: 700, color: "#6d6b71" }}>{ratingBand(v)}</span>
+                      <span key={v} style={{ textAlign: "center", fontSize: "0.65rem", fontWeight: 700, color: "var(--adm-text-3)" }}>{ratingBand(v)}</span>
                     ))}
                   </div>
                 )}
@@ -553,11 +553,11 @@ export function AdminEvaluationTerrain({
                   return config.doubleScoringEnabled ? (
                     <div key={c.id} style={{ marginBottom: "0.8rem" }}>
                       <p style={{ fontSize: "0.8rem", color: "#fff", margin: "0 0 0.3rem" }}>{c.label}</p>
-                      <p style={{ fontSize: "0.65rem", color: "#6d6b71", margin: "0 0 0.2rem" }}>Isolé</p>
+                      <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", margin: "0 0 0.2rem" }}>Isolé</p>
                       <div style={{ display: "flex", gap: "0.3rem", marginBottom: "0.4rem" }}>
                         {RATING_VALUES.map((v) => scoreButton(v, raw && "isole" in raw ? raw.isole : undefined, () => setScore(c.id, "isole", v), `${c.id}-isole-${v}`))}
                       </div>
-                      <p style={{ fontSize: "0.65rem", color: "#6d6b71", margin: "0 0 0.2rem" }}>Match</p>
+                      <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", margin: "0 0 0.2rem" }}>Match</p>
                       <div style={{ display: "flex", gap: "0.3rem" }}>
                         {RATING_VALUES.map((v) => scoreButton(v, raw && "match" in raw ? raw.match : undefined, () => setScore(c.id, "match", v), `${c.id}-match-${v}`))}
                       </div>
@@ -569,7 +569,7 @@ export function AdminEvaluationTerrain({
                     </div>
                   );
                 })}
-                <p style={{ fontSize: "0.68rem", fontWeight: 700, color: "#9d9da0", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0.7rem 0 0.3rem" }}>Remarques — {title}</p>
+                <p style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--adm-text-2)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0.7rem 0 0.3rem" }}>Remarques — {title}</p>
                 <textarea
                   className="admin-input"
                   value={remarks[block] ?? ""}
@@ -587,8 +587,8 @@ export function AdminEvaluationTerrain({
           })}
 
           {/* ── ÉVALUATION : commentaires généraux, évaluateur, date ── */}
-          <div style={{ marginBottom: "1rem", background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.8rem" }}>
-            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#c4a4e4", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.5rem" }}>Évaluation — commentaires généraux</p>
+          <div style={{ marginBottom: "1rem", background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.8rem" }}>
+            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--adm-accent)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.5rem" }}>Évaluation — commentaires généraux</p>
             <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
               {quickComments.map((qc) => (
                 <button
@@ -610,7 +610,7 @@ export function AdminEvaluationTerrain({
               style={{ width: "100%", resize: "vertical" }}
               placeholder="Commentaires généraux…"
             />
-            <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.4rem", fontSize: "0.75rem", color: "#9d9da0" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)" }}>
               <input type="checkbox" checked={commentInternal} onChange={(e) => { setCommentInternal(e.target.checked); saveCommentField({ commentInternal: e.target.checked }); }} />
               Commentaire interne — ne pas partager avec le parent
             </label>
@@ -620,7 +620,7 @@ export function AdminEvaluationTerrain({
             </div>
             {selected && evaluatorId && (
               <p style={{ margin: "0.6rem 0 0", fontSize: "0.7rem" }}>
-                <a href={`/admin/evaluations/${event.id}/fiche/${selected.id}`} target="_blank" rel="noreferrer" style={{ color: "#c4a4e4" }}>Voir / imprimer la fiche →</a>
+                <a href={`/admin/evaluations/${event.id}/fiche/${selected.id}`} target="_blank" rel="noreferrer" style={{ color: "var(--adm-accent)" }}>Voir / imprimer la fiche →</a>
               </p>
             )}
           </div>

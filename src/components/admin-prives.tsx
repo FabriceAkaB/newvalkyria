@@ -7,7 +7,7 @@ import { formatMoney, privateProgramUrl } from "@/lib/private-programs";
 import type { PrivateProgram, PrivateRegistrationRow } from "@/lib/private-programs-repo";
 
 const STATUS_LABELS: Record<string, string> = { pending: "En attente", paid: "Payée", confirmed: "Confirmée", waitlist: "Liste d'attente", cancelled: "Annulée" };
-const STATUS_COLORS: Record<string, string> = { pending: "#f0c878", paid: "#8fce9f", confirmed: "#9ec9ff", waitlist: "#c4a4e4", cancelled: "#ff9999" };
+const STATUS_COLORS: Record<string, string> = { pending: "var(--adm-warn)", paid: "var(--adm-good)", confirmed: "var(--adm-info)", waitlist: "var(--adm-accent)", cancelled: "var(--adm-bad)" };
 
 interface ProgramStats {
   held: number;
@@ -148,33 +148,33 @@ export function AdminPrives({
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Programmes garçons privés</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.2rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.2rem" }}>
             Pages non répertoriées : jamais dans le catalogue, les menus ou les moteurs de recherche. Seules les personnes qui reçoivent le lien y accèdent (et peuvent le partager).
           </p>
-          {message && <p style={{ fontSize: "0.78rem", color: "#8fce9f", marginBottom: "0.8rem" }}>{message}</p>}
+          {message && <p style={{ fontSize: "0.78rem", color: "var(--adm-good)", marginBottom: "0.8rem" }}>{message}</p>}
 
           {/* ── Nouveau programme juvénile semi-privé ── */}
           <div style={{ marginBottom: "1.5rem" }}>
             <button className="admin-btn-ghost" style={{ fontSize: "0.76rem" }} onClick={() => setShowNew((v) => !v)}>{showNew ? "Fermer" : "+ Nouveau programme juvénile semi-privé (gabarit)"}</button>
             {showNew && (
-              <div style={{ background: "#100e17", border: "1px solid #3a3550", borderRadius: "12px", padding: "1rem", marginTop: "0.7rem" }}>
-                <p style={{ fontSize: "0.74rem", color: "#9d9da0", margin: "0 0 0.7rem" }}>Maximum 6 joueurs, séances techniques semi-privées. Le programme est créé en <strong>brouillon</strong> : rien n&apos;est publié avant votre validation.</p>
+              <div style={{ background: "var(--adm-surface)", border: "1px solid #3a3550", borderRadius: "12px", padding: "1rem", marginTop: "0.7rem" }}>
+                <p style={{ fontSize: "0.74rem", color: "var(--adm-text-2)", margin: "0 0 0.7rem" }}>Maximum 6 joueurs, séances techniques semi-privées. Le programme est créé en <strong>brouillon</strong> : rien n&apos;est publié avant votre validation.</p>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "0.6rem" }}>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Nom *<input className="admin-input" style={{ width: "100%" }} value={np.name} onChange={(e) => setNp({ ...np, name: e.target.value })} /></label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Public
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Nom *<input className="admin-input" style={{ width: "100%" }} value={np.name} onChange={(e) => setNp({ ...np, name: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Public
                     <select className="admin-group-select" style={{ width: "100%" }} value={np.gender} onChange={(e) => setNp({ ...np, gender: e.target.value })}>
                       <option value="mixte">Mixte</option><option value="filles">Filles</option><option value="garcons">Garçons</option>
                     </select>
                   </label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Années de naissance * (séparées par des virgules)<input className="admin-input" style={{ width: "100%" }} placeholder="2016, 2017" value={np.years} onChange={(e) => setNp({ ...np, years: e.target.value })} /></label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Prix ($)<input className="admin-input" style={{ width: "100%" }} value={np.price} onChange={(e) => setNp({ ...np, price: e.target.value })} /></label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Places (max 6)<input type="number" min={1} max={6} className="admin-input" style={{ width: "100%" }} value={np.capacity} onChange={(e) => setNp({ ...np, capacity: e.target.value })} /></label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Supplément 2 versements ($)<input className="admin-input" style={{ width: "100%" }} value={np.fee} onChange={(e) => setNp({ ...np, fee: e.target.value })} /></label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Rabais référencement ($)<input className="admin-input" style={{ width: "100%" }} value={np.discount} onChange={(e) => setNp({ ...np, discount: e.target.value })} /></label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Nombre de séances<input type="number" className="admin-input" style={{ width: "100%" }} value={np.practices} onChange={(e) => setNp({ ...np, practices: e.target.value })} /></label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Matchs inclus<input type="number" className="admin-input" style={{ width: "100%" }} value={np.matches} onChange={(e) => setNp({ ...np, matches: e.target.value })} /></label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Coût par séance ($)<input className="admin-input" style={{ width: "100%" }} value={np.costPerSession} onChange={(e) => setNp({ ...np, costPerSession: e.target.value })} /></label>
-                  <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Frais fixes ($)<input className="admin-input" style={{ width: "100%" }} value={np.fixedCosts} onChange={(e) => setNp({ ...np, fixedCosts: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Années de naissance * (séparées par des virgules)<input className="admin-input" style={{ width: "100%" }} placeholder="2016, 2017" value={np.years} onChange={(e) => setNp({ ...np, years: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Prix ($)<input className="admin-input" style={{ width: "100%" }} value={np.price} onChange={(e) => setNp({ ...np, price: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Places (max 6)<input type="number" min={1} max={6} className="admin-input" style={{ width: "100%" }} value={np.capacity} onChange={(e) => setNp({ ...np, capacity: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Supplément 2 versements ($)<input className="admin-input" style={{ width: "100%" }} value={np.fee} onChange={(e) => setNp({ ...np, fee: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Rabais référencement ($)<input className="admin-input" style={{ width: "100%" }} value={np.discount} onChange={(e) => setNp({ ...np, discount: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Nombre de séances<input type="number" className="admin-input" style={{ width: "100%" }} value={np.practices} onChange={(e) => setNp({ ...np, practices: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Matchs inclus<input type="number" className="admin-input" style={{ width: "100%" }} value={np.matches} onChange={(e) => setNp({ ...np, matches: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Coût par séance ($)<input className="admin-input" style={{ width: "100%" }} value={np.costPerSession} onChange={(e) => setNp({ ...np, costPerSession: e.target.value })} /></label>
+                  <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Frais fixes ($)<input className="admin-input" style={{ width: "100%" }} value={np.fixedCosts} onChange={(e) => setNp({ ...np, fixedCosts: e.target.value })} /></label>
                 </div>
                 <button
                   className="admin-btn-primary"
@@ -217,9 +217,9 @@ export function AdminPrives({
               const link = (p.presentation as { brand?: string } | null)?.brand === "atlantic" ? `${origin.replace(/\/$/, "")}/programme/${p.slug}` : privateProgramUrl(origin, p.slug);
               const update = (patch: Partial<PrivateProgram>) => setPrograms((prev) => prev.map((x) => (x.slug === p.slug ? { ...x, ...patch } : x)));
               return (
-                <div key={p.slug} style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem" }}>
+                <div key={p.slug} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1rem" }}>
                   <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>{p.name}</p>
-                  <p style={{ fontSize: "0.72rem", color: "#9d9da0", margin: "0 0 0.7rem" }}>
+                  <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.7rem" }}>
                     {s.paid} payée{s.paid !== 1 ? "s" : ""} · {s.held} place{s.held !== 1 ? "s" : ""} prise{s.held !== 1 ? "s" : ""} sur {p.max_capacity} · {s.waitlist} en attente
                   </p>
                   <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.8rem" }}>
@@ -227,22 +227,22 @@ export function AdminPrives({
                     <button className="admin-btn-primary" style={{ fontSize: "0.72rem", padding: "0.4rem 0.7rem" }} onClick={() => copy(link)}>Copier</button>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
-                    <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Capacité max. (limite des inscriptions)
+                    <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Capacité max. (limite des inscriptions)
                       <input type="number" min={0} className="admin-input" style={input} value={p.max_capacity} onChange={(e) => update({ max_capacity: Math.max(0, parseInt(e.target.value, 10) || 0) })} />
                     </label>
-                    <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Taille min. affichée (« 12 à 14 »)
+                    <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Taille min. affichée (« 12 à 14 »)
                       <input type="number" min={0} className="admin-input" style={input} value={p.min_capacity ?? ""} onChange={(e) => update({ min_capacity: e.target.value === "" ? null : Math.max(0, parseInt(e.target.value, 10) || 0) })} />
                     </label>
-                    <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Prix ($)
+                    <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Prix ($)
                       <input type="number" min={0} step="0.01" className="admin-input" style={input} value={(p.price_cents / 100).toString()} onChange={(e) => update({ price_cents: Math.round((parseFloat(e.target.value) || 0) * 100) })} />
                     </label>
-                    <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Supplément 2 versements ($)
+                    <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Supplément 2 versements ($)
                       <input type="number" min={0} step="0.01" className="admin-input" style={input} value={(p.installment_fee_cents / 100).toString()} onChange={(e) => update({ installment_fee_cents: Math.round((parseFloat(e.target.value) || 0) * 100) })} />
                     </label>
-                    <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Rabais référencement ($)
+                    <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Rabais référencement ($)
                       <input type="number" min={0} step="0.01" className="admin-input" style={input} value={(p.referral_discount_cents / 100).toString()} onChange={(e) => update({ referral_discount_cents: Math.round((parseFloat(e.target.value) || 0) * 100) })} />
                     </label>
-                    <label style={{ fontSize: "0.68rem", color: "#9d9da0", gridColumn: "1 / -1" }}>Date du 2ᵉ versement (à valider — vide = 30 jours après l&apos;inscription)
+                    <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", gridColumn: "1 / -1" }}>Date du 2ᵉ versement (à valider — vide = 30 jours après l&apos;inscription)
                       <input type="date" className="admin-input" style={{ width: "160px" }} value={p.second_installment_date ?? ""} onChange={(e) => update({ second_installment_date: e.target.value || null })} />
                     </label>
                   </div>
@@ -264,7 +264,7 @@ export function AdminPrives({
                     >
                       {busy === p.slug ? "..." : "Enregistrer les réglages"}
                     </button>
-                    <label style={{ fontSize: "0.72rem", color: "#9d9da0", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                    <label style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
                       <input
                         type="checkbox"
                         checked={p.active}
@@ -277,15 +277,15 @@ export function AdminPrives({
                     </label>
                   </div>
                   {p.program_kind === "semi_prive_juvenile" && (
-                    <div style={{ marginTop: "0.8rem", borderTop: "1px solid #251f30", paddingTop: "0.7rem" }}>
-                      <p style={{ fontSize: "0.7rem", color: p.published ? "#8fce9f" : "#f0c878", margin: "0 0 0.5rem", fontWeight: 700 }}>
+                    <div style={{ marginTop: "0.8rem", borderTop: "1px solid var(--adm-border)", paddingTop: "0.7rem" }}>
+                      <p style={{ fontSize: "0.7rem", color: p.published ? "var(--adm-good)" : "var(--adm-warn)", margin: "0 0 0.5rem", fontWeight: 700 }}>
                         {p.published && p.active ? "Publié" : "Brouillon — non publié"}
                       </p>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.6rem" }}>
-                        <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Coût par séance ($)
+                        <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Coût par séance ($)
                           <input type="number" min={0} step="0.01" className="admin-input" style={input} value={(p.cost_per_session_cents / 100).toString()} onChange={(e) => update({ cost_per_session_cents: Math.round((parseFloat(e.target.value) || 0) * 100) })} />
                         </label>
-                        <label style={{ fontSize: "0.68rem", color: "#9d9da0" }}>Frais fixes ($)
+                        <label style={{ fontSize: "0.68rem", color: "var(--adm-text-2)" }}>Frais fixes ($)
                           <input type="number" min={0} step="0.01" className="admin-input" style={input} value={(p.fixed_costs_cents / 100).toString()} onChange={(e) => update({ fixed_costs_cents: Math.round((parseFloat(e.target.value) || 0) * 100) })} />
                         </label>
                       </div>
@@ -322,14 +322,14 @@ export function AdminPrives({
                   )}
 
                   {/* Calendrier configurable */}
-                  <div style={{ marginTop: "0.8rem", borderTop: "1px solid #251f30", paddingTop: "0.7rem" }}>
-                    <p style={{ fontSize: "0.72rem", color: "#9d9da0", margin: "0 0 0.4rem", fontWeight: 700 }}>Calendrier ({(dates[p.slug] ?? []).length} séance{(dates[p.slug] ?? []).length !== 1 ? "s" : ""})</p>
+                  <div style={{ marginTop: "0.8rem", borderTop: "1px solid var(--adm-border)", paddingTop: "0.7rem" }}>
+                    <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.4rem", fontWeight: 700 }}>Calendrier ({(dates[p.slug] ?? []).length} séance{(dates[p.slug] ?? []).length !== 1 ? "s" : ""})</p>
                     {(dates[p.slug] ?? []).map((d) => (
-                      <div key={d.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#c3c2c8", padding: "0.15rem 0" }}>
+                      <div key={d.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "var(--adm-text-2)", padding: "0.15rem 0" }}>
                         <span>{d.session_date} · {d.start_time}–{d.end_time} · {d.location}</span>
                         <button
                           className="admin-btn-ghost"
-                          style={{ fontSize: "0.62rem", color: "#ff9999" }}
+                          style={{ fontSize: "0.62rem", color: "var(--adm-bad)" }}
                           onClick={async () => {
                             await fetch(`/api/admin/prives/dates?id=${d.id}`, { method: "DELETE" });
                             setDates((prev) => ({ ...prev, [p.slug]: (prev[p.slug] ?? []).filter((x) => x.id !== d.id) }));
@@ -379,12 +379,12 @@ export function AdminPrives({
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.74rem", minWidth: "760px" }}>
                 <tbody>
                   {(trials ?? []).map((t) => (
-                    <tr key={t.id} style={{ borderBottom: "1px solid #1f1d25", opacity: t.status === "cancelled" ? 0.5 : 1 }}>
-                      <td style={{ padding: "0.4rem 0.5rem", color: "#c3c2c8" }}>{t.trial_date}</td>
-                      <td style={{ padding: "0.4rem 0.5rem", color: "#fff", fontWeight: 600 }}>{t.player_first_name} {t.player_last_name} <span style={{ color: "#6d6b71", fontWeight: 400 }}>({t.birth_year})</span></td>
-                      <td style={{ padding: "0.4rem 0.5rem", color: "#c3c2c8" }}>{t.program?.name ?? t.program_slug}</td>
-                      <td style={{ padding: "0.4rem 0.5rem", color: "#c3c2c8" }}>{t.parent_name} · {t.parent_phone} · {t.parent_email}</td>
-                      <td style={{ padding: "0.4rem 0.5rem", color: "#c3c2c8" }}>{t.status === "confirmed" ? "Confirmé" : t.status === "attended" ? "Présent" : t.status === "absent" ? "Absent" : "Annulé"}</td>
+                    <tr key={t.id} style={{ borderBottom: "1px solid var(--adm-line)", opacity: t.status === "cancelled" ? 0.5 : 1 }}>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "var(--adm-text-2)" }}>{t.trial_date}</td>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "#fff", fontWeight: 600 }}>{t.player_first_name} {t.player_last_name} <span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}>({t.birth_year})</span></td>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "var(--adm-text-2)" }}>{t.program?.name ?? t.program_slug}</td>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "var(--adm-text-2)" }}>{t.parent_name} · {t.parent_phone} · {t.parent_email}</td>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "var(--adm-text-2)" }}>{t.status === "confirmed" ? "Confirmé" : t.status === "attended" ? "Présent" : t.status === "absent" ? "Absent" : "Annulé"}</td>
                       <td style={{ padding: "0.4rem 0.5rem" }}>
                         {t.status === "confirmed" && (
                           <>
@@ -429,9 +429,9 @@ export function AdminPrives({
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.74rem", minWidth: "980px" }}>
               <thead>
-                <tr style={{ textAlign: "left", color: "#9d9da0" }}>
+                <tr style={{ textAlign: "left", color: "var(--adm-text-2)" }}>
                   {["Joueur", "Naiss.", "Programme", "Parent / contact", "Prix", "Rabais", "Paiement", "Payé", "Restant", "Statut", "Référent"].map((h) => (
-                    <th key={h} style={{ padding: "0.45rem 0.5rem", borderBottom: "1px solid #251f30", fontWeight: 600 }}>{h}</th>
+                    <th key={h} style={{ padding: "0.45rem 0.5rem", borderBottom: "1px solid var(--adm-border)", fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -442,23 +442,23 @@ export function AdminPrives({
                   const open = openId === r.id;
                   return (
                     <>
-                      <tr key={r.id} onClick={() => setOpenId(open ? null : r.id)} style={{ cursor: "pointer", borderBottom: "1px solid #1f1d25", opacity: r.status === "cancelled" ? 0.5 : 1 }}>
+                      <tr key={r.id} onClick={() => setOpenId(open ? null : r.id)} style={{ cursor: "pointer", borderBottom: "1px solid var(--adm-line)", opacity: r.status === "cancelled" ? 0.5 : 1 }}>
                         <td style={{ padding: "0.45rem 0.5rem", color: "#fff", fontWeight: 600 }}>{r.player_first_name} {r.player_last_name}</td>
-                        <td style={{ padding: "0.45rem 0.5rem", color: "#c3c2c8" }}>{r.birth_year ?? "—"}</td>
-                        <td style={{ padding: "0.45rem 0.5rem", color: "#c3c2c8" }}>{programName.get(r.program_slug) ?? r.program_slug}</td>
-                        <td style={{ padding: "0.45rem 0.5rem", color: "#c3c2c8" }}>{r.parent_name}<br /><span style={{ color: "#6d6b71" }}>{r.parent_email} · {r.parent_phone}</span></td>
-                        <td style={{ padding: "0.45rem 0.5rem", color: "#c3c2c8" }}>{formatMoney(r.list_price_cents ?? 0)}</td>
-                        <td style={{ padding: "0.45rem 0.5rem", color: "#8fce9f" }}>{r.referral_discount_cents + r.credit_applied_cents > 0 ? `− ${formatMoney(r.referral_discount_cents + r.credit_applied_cents)}` : "—"}</td>
-                        <td style={{ padding: "0.45rem 0.5rem", color: "#c3c2c8" }}>{r.payment_option === "two_installments" ? "2 versements" : "Complet"}</td>
-                        <td style={{ padding: "0.45rem 0.5rem", color: "#c3c2c8" }}>{formatMoney(r.paid_cents)}</td>
-                        <td style={{ padding: "0.45rem 0.5rem", color: remaining > 0 ? "#ffb464" : "#c3c2c8" }}>{formatMoney(remaining)}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{r.birth_year ?? "—"}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{programName.get(r.program_slug) ?? r.program_slug}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{r.parent_name}<br /><span style={{ color: "var(--adm-text-3)" }}>{r.parent_email} · {r.parent_phone}</span></td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{formatMoney(r.list_price_cents ?? 0)}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-good)" }}>{r.referral_discount_cents + r.credit_applied_cents > 0 ? `− ${formatMoney(r.referral_discount_cents + r.credit_applied_cents)}` : "—"}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{r.payment_option === "two_installments" ? "2 versements" : "Complet"}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{formatMoney(r.paid_cents)}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: remaining > 0 ? "var(--adm-warn)" : "var(--adm-text-2)" }}>{formatMoney(remaining)}</td>
                         <td style={{ padding: "0.45rem 0.5rem" }}><span style={{ color: STATUS_COLORS[r.status], fontWeight: 700 }}>{STATUS_LABELS[r.status] ?? r.status}</span></td>
-                        <td style={{ padding: "0.45rem 0.5rem", color: "#c3c2c8" }}>{r.referral?.referrer_name ?? "—"}{r.referral && r.referral.status === "a_verifier" ? " ⚠" : ""}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{r.referral?.referrer_name ?? "—"}{r.referral && r.referral.status === "a_verifier" ? " ⚠" : ""}</td>
                       </tr>
                       {open && (
-                        <tr key={r.id + "-detail"} style={{ background: "#0d0b13" }}>
+                        <tr key={r.id + "-detail"} style={{ background: "var(--adm-surface)" }}>
                           <td colSpan={11} style={{ padding: "0.7rem 0.8rem" }}>
-                            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", marginBottom: "0.6rem", fontSize: "0.74rem", color: "#c3c2c8" }}>
+                            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", marginBottom: "0.6rem", fontSize: "0.74rem", color: "var(--adm-text-2)" }}>
                               <span>Échéancier : {r.installments.length === 0 ? "paiement unique" : r.installments.map((i) => `${i.sequence_no}. ${formatMoney(i.amount_cents)} (${i.due_date}) — ${i.status === "paid" ? "payé" : i.status === "pending" ? "à venir" : "échoué"}`).join(" · ")}</span>
                               {r.auto_debit_consent && <span>✓ Prélèvement automatique autorisé</span>}
                               {r.comments && <span>Commentaire : {r.comments}</span>}
@@ -469,9 +469,9 @@ export function AdminPrives({
                               )}
                               {r.status !== "cancelled" && (
                                 <>
-                                  <button className="admin-btn-ghost" style={{ fontSize: "0.7rem", color: "#ff9999" }} disabled={busy === r.id} onClick={() => confirm("Annuler cette inscription ? La place est libérée et les versements à venir sont annulés.") && act(r.id, "cancel", { refund: false })}>Annuler</button>
+                                  <button className="admin-btn-ghost" style={{ fontSize: "0.7rem", color: "var(--adm-bad)" }} disabled={busy === r.id} onClick={() => confirm("Annuler cette inscription ? La place est libérée et les versements à venir sont annulés.") && act(r.id, "cancel", { refund: false })}>Annuler</button>
                                   {r.paid_cents > 0 && (
-                                    <button className="admin-btn-ghost" style={{ fontSize: "0.7rem", color: "#ff9999" }} disabled={busy === r.id} onClick={() => confirm(`Annuler ET rembourser ${formatMoney(r.paid_cents)} sur la carte via Stripe ?`) && act(r.id, "cancel", { refund: true })}>Annuler + rembourser</button>
+                                    <button className="admin-btn-ghost" style={{ fontSize: "0.7rem", color: "var(--adm-bad)" }} disabled={busy === r.id} onClick={() => confirm(`Annuler ET rembourser ${formatMoney(r.paid_cents)} sur la carte via Stripe ?`) && act(r.id, "cancel", { refund: true })}>Annuler + rembourser</button>
                                   )}
                                 </>
                               )}

@@ -133,14 +133,14 @@ export function AdminCommunications({ seasonOptions, history: initialHistory }: 
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Communications</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Diffusez un message par courriel à un segment précis — un aperçu du nombre de destinataires est toujours affiché avant l&apos;envoi.
           </p>
 
           {error && <p className="admin-error" style={{ marginBottom: "1rem" }}>{error}</p>}
-          {result && <p style={{ color: "#7fd88f", fontSize: "0.82rem", marginBottom: "1rem" }}>{result}</p>}
+          {result && <p style={{ color: "var(--adm-good)", fontSize: "0.82rem", marginBottom: "1rem" }}>{result}</p>}
 
-          <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem", marginBottom: "1.5rem" }}>
+          <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.6rem" }}>
               {(Object.keys(TARGET_LABELS) as TargetType[]).map((t) => (
                 <button
@@ -195,10 +195,10 @@ export function AdminCommunications({ seasonOptions, history: initialHistory }: 
             </button>
 
             {preview && (
-              <div style={{ marginTop: "0.6rem", fontSize: "0.78rem", color: "#c3c2c8" }}>
-                <p style={{ margin: "0 0 0.3rem", fontWeight: 700, color: preview.count > 0 ? "#7fd88f" : "#ff9999" }}>{preview.count} destinataire(s)</p>
+              <div style={{ marginTop: "0.6rem", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
+                <p style={{ margin: "0 0 0.3rem", fontWeight: 700, color: preview.count > 0 ? "var(--adm-good)" : "var(--adm-bad)" }}>{preview.count} destinataire(s)</p>
                 {preview.sample.length > 0 && (
-                  <p style={{ margin: 0, color: "#6d6b71" }}>
+                  <p style={{ margin: 0, color: "var(--adm-text-3)" }}>
                     {preview.sample.map((r) => r.name).join(", ")}{preview.count > preview.sample.length ? "…" : ""}
                   </p>
                 )}
@@ -219,9 +219,9 @@ export function AdminCommunications({ seasonOptions, history: initialHistory }: 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
             {history.length === 0 && <p className="admin-empty-text">Aucune communication envoyée pour l&apos;instant.</p>}
             {history.map((h) => (
-              <div key={h.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
+              <div key={h.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
                 <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#fff", margin: "0 0 0.15rem" }}>{h.subject}</p>
-                <p style={{ fontSize: "0.7rem", color: "#6d6b71", margin: 0 }}>
+                <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: 0 }}>
                   {h.target_label} · {h.recipient_count} destinataire(s) · {new Date(h.sent_at).toLocaleString("fr-CA")}
                 </p>
               </div>

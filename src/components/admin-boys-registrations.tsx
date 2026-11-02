@@ -29,15 +29,15 @@ function formatTrialDate(iso: string) {
 function StatusBadge({ row }: { row: BoysRegistrationRow }) {
   if (row.status === "trial") {
     return (
-      <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,150,50,0.2)", color: "#ffb464", borderColor: "rgba(255,150,50,0.5)" }}>
+      <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,150,50,0.2)", color: "var(--adm-warn)", borderColor: "rgba(255,150,50,0.5)" }}>
         {row.statusDetail ?? "Essai gratuit"}{row.trialDate ? ` · ${formatTrialDate(row.trialDate)}` : ""}
       </span>
     );
   }
   if (row.status === "waitlist") return <span className="admin-badge admin-badge-waitlist">Liste d&apos;attente</span>;
   if (row.status === "paid") return <span className="admin-badge admin-badge-paid">✓ Payée</span>;
-  if (row.status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "#9ec9ff", borderColor: "#465671" }}>✓ Confirmée</span>;
-  if (row.status === "cancelled") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,100,100,0.18)", color: "#ff9999" }}>{row.statusDetail ?? "Annulée"}</span>;
+  if (row.status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "var(--adm-info)", borderColor: "#465671" }}>✓ Confirmée</span>;
+  if (row.status === "cancelled") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,100,100,0.18)", color: "var(--adm-bad)" }}>{row.statusDetail ?? "Annulée"}</span>;
   return <span className="admin-badge admin-badge-pending">En attente</span>;
 }
 
@@ -85,8 +85,8 @@ function Drawer({ row, onClose, onStatus, onDeleted }: { row: BoysRegistrationRo
 
   const line = (label: string, value: React.ReactNode) =>
     value ? (
-      <p style={{ fontSize: "0.8rem", color: "#c3c2c8", margin: "0 0 0.35rem" }}>
-        <span style={{ color: "#6d6b71" }}>{label} : </span>{value}
+      <p style={{ fontSize: "0.8rem", color: "var(--adm-text-2)", margin: "0 0 0.35rem" }}>
+        <span style={{ color: "var(--adm-text-3)" }}>{label} : </span>{value}
       </p>
     ) : null;
 
@@ -123,11 +123,11 @@ function Drawer({ row, onClose, onStatus, onDeleted }: { row: BoysRegistrationRo
                 </div>
               </div>
             ) : (
-              <p style={{ fontSize: "0.74rem", color: "#6d6b71", margin: "0.6rem 0 0" }}>
+              <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: "0.6rem 0 0" }}>
                 Essai gratuit : il se gère depuis la page du programme. Une famille qui veut s&apos;inscrire paie ensuite depuis la page du programme et apparaît ici comme inscription.
               </p>
             )}
-            {error && <p style={{ fontSize: "0.74rem", color: "#ff9999", margin: "0.5rem 0 0" }}>{error}</p>}
+            {error && <p style={{ fontSize: "0.74rem", color: "var(--adm-bad)", margin: "0.5rem 0 0" }}>{error}</p>}
           </div>
 
           <div className="admin-drawer-section">
@@ -150,12 +150,12 @@ function Drawer({ row, onClose, onStatus, onDeleted }: { row: BoysRegistrationRo
             <div className="admin-drawer-section">
               {confirmingDelete ? (
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "0.78rem", color: "#ff9999" }}>Supprimer définitivement ?</span>
-                  <button onClick={remove} disabled={saving} className="admin-btn-ghost" style={{ fontSize: "0.7rem", color: "#ff9999" }}>Oui, supprimer</button>
+                  <span style={{ fontSize: "0.78rem", color: "var(--adm-bad)" }}>Supprimer définitivement ?</span>
+                  <button onClick={remove} disabled={saving} className="admin-btn-ghost" style={{ fontSize: "0.7rem", color: "var(--adm-bad)" }}>Oui, supprimer</button>
                   <button onClick={() => setConfirmingDelete(false)} className="admin-btn-ghost" style={{ fontSize: "0.7rem" }}>Annuler</button>
                 </div>
               ) : (
-                <button onClick={() => setConfirmingDelete(true)} className="admin-btn-ghost" style={{ fontSize: "0.7rem", color: "#ff9999" }}>Supprimer l&apos;inscription</button>
+                <button onClick={() => setConfirmingDelete(true)} className="admin-btn-ghost" style={{ fontSize: "0.7rem", color: "var(--adm-bad)" }}>Supprimer l&apos;inscription</button>
               )}
             </div>
           )}
@@ -262,7 +262,7 @@ export function BoysRegistrationsTable({
           <button onClick={exportCsv} className="admin-export-btn" title="Exporter la sélection en CSV">↓ Exporter CSV</button>
         </div>
       </div>
-      {copyMsg && <p style={{ fontSize: "0.72rem", color: "#8fce9f", margin: "-0.5rem 0 1rem" }}>{copyMsg}</p>}
+      {copyMsg && <p style={{ fontSize: "0.72rem", color: "var(--adm-good)", margin: "-0.5rem 0 1rem" }}>{copyMsg}</p>}
 
       <div className="admin-filters-row">
         <div className="admin-filters">
@@ -291,7 +291,7 @@ export function BoysRegistrationsTable({
           <option value="parent_asc">A→Z Nom parent</option>
           <option value="child_asc">A→Z Nom joueur</option>
         </select>
-        <span style={{ fontSize: "0.62rem", color: "#3c3a41", marginLeft: "auto", letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: "0.62rem", color: "var(--adm-border)", marginLeft: "auto", letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
           {filtered.length} résultat{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>
@@ -322,7 +322,7 @@ export function BoysRegistrationsTable({
                   <td className="admin-td-email">{r.parentEmail}</td>
                   <td className="admin-td-phone">{r.parentPhone}</td>
                   <td className="admin-td-cat">{r.birthYear ?? "—"}</td>
-                  <td style={{ fontSize: "0.75rem", color: "#858489" }}>{r.programLabel}{r.package === "samedi" ? " · Forfait samedi" : ""}</td>
+                  <td style={{ fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{r.programLabel}{r.package === "samedi" ? " · Forfait samedi" : ""}</td>
                   <td><StatusBadge row={r} /></td>
                 </tr>
               ))

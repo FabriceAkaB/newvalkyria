@@ -65,7 +65,7 @@ export function AdminEntraineursPaie({ rows, coaches }: Props) {
             <p className="admin-section-title" style={{ margin: 0 }}>Paie</p>
             <Link href="/admin/entraineurs" className="admin-btn-ghost" style={{ textDecoration: "none" }}>← Entraîneurs</Link>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Tableau de paie filtrable — heures, taux, salaire, payé et reste à payer par entraîneur.
           </p>
 
@@ -127,7 +127,7 @@ export function AdminEntraineursPaie({ rows, coaches }: Props) {
                     <td>{formatCAD(r.avgRateCents / 100)}</td>
                     <td>{formatCAD(r.payCents / 100)}</td>
                     <td>{formatCAD(r.paidCents / 100)}</td>
-                    <td style={{ color: r.remainingCents > 0 ? "#ffb464" : "#7fd88f", fontWeight: 600 }}>{formatCAD(r.remainingCents / 100)}</td>
+                    <td style={{ color: r.remainingCents > 0 ? "var(--adm-warn)" : "var(--adm-good)", fontWeight: 600 }}>{formatCAD(r.remainingCents / 100)}</td>
                   </tr>
                 ))}
                 {payrollRows.length === 0 && (
@@ -142,7 +142,7 @@ export function AdminEntraineursPaie({ rows, coaches }: Props) {
                     <td>—</td>
                     <td>{formatCAD(totalPay / 100)}</td>
                     <td>{formatCAD(totalPaid / 100)}</td>
-                    <td style={{ color: totalRemaining > 0 ? "#ffb464" : "#7fd88f" }}>{formatCAD(totalRemaining / 100)}</td>
+                    <td style={{ color: totalRemaining > 0 ? "var(--adm-warn)" : "var(--adm-good)" }}>{formatCAD(totalRemaining / 100)}</td>
                   </tr>
                 </tfoot>
               )}

@@ -51,7 +51,7 @@ function RowActions({ row, deliveredByName, onChanged }: { row: UniformKitRow; d
 
   if (row.delivered) {
     return (
-      <button onClick={undoDelivered} disabled={saving} style={{ fontSize: "0.68rem", color: "#6d6b71", background: "none", border: "1px solid #302e36", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer" }}>
+      <button onClick={undoDelivered} disabled={saving} style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", background: "none", border: "1px solid var(--adm-border)", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer" }}>
         Annuler
       </button>
     );
@@ -102,7 +102,7 @@ export function AdminUniformesKitInscription({ initialRows, initialSeasonFilter 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Kit d&apos;inscription</p>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Chandail + short + bas inclus avec chaque inscription payée (+ sac pour les 30 premières payantes en Automne/Hiver et saisons suivantes) —
             {" "}<strong style={{ color: "#fff" }}>{delivered} / {total}</strong> remis sur la sélection actuelle.
           </p>
@@ -146,7 +146,7 @@ export function AdminUniformesKitInscription({ initialRows, initialSeasonFilter 
                     <td>{r.parentName}</td>
                     <td>{r.parentPhone}</td>
                     <td>{r.items.join(", ")}</td>
-                    <td style={{ color: r.delivered ? "#7fd88f" : "#ffb464" }}>
+                    <td style={{ color: r.delivered ? "var(--adm-good)" : "var(--adm-warn)" }}>
                       {r.delivered ? `✓ Remis${r.deliveredBy ? ` (${r.deliveredBy})` : ""}` : "À remettre"}
                     </td>
                     <td><RowActions row={r} deliveredByName={deliveredByName} onChanged={(patch) => handleChanged(r, patch)} /></td>

@@ -156,7 +156,7 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
               {showForm ? "Annuler" : "+ Nouveau groupe"}
             </button>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Rotation de groupes pour les 5 séances individuelles incluses dans Solo Valkyria / SVA — chaque joueuse vient 1 fois aux 2 semaines.
             Assignez les inscriptions SV/SVA à un groupe puis ajoutez les dates réelles du calendrier.
           </p>
@@ -164,18 +164,18 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
           {error && <p className="admin-error" style={{ marginBottom: "1rem" }}>{error}</p>}
 
           {unassigned.length > 0 && (
-            <div style={{ padding: "0.85rem 1.1rem", background: "#151115", border: "1px solid #30261e", borderRadius: "10px", marginBottom: "1.5rem" }}>
-              <p style={{ fontSize: "0.78rem", color: "#f0c878", fontWeight: 700, marginBottom: "0.4rem" }}>
+            <div style={{ padding: "0.85rem 1.1rem", background: "var(--adm-surface)", border: "1px solid #30261e", borderRadius: "10px", marginBottom: "1.5rem" }}>
+              <p style={{ fontSize: "0.78rem", color: "var(--adm-warn)", fontWeight: 700, marginBottom: "0.4rem" }}>
                 {unassigned.length} inscription{unassigned.length > 1 ? "s" : ""} SV/SVA non assignée{unassigned.length > 1 ? "s" : ""} à un groupe
               </p>
-              <p style={{ fontSize: "0.72rem", color: "#9d9da0" }}>
+              <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)" }}>
                 {unassigned.map(playerName).join(", ")}
               </p>
             </div>
           )}
 
           {showForm && (
-            <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "0.75rem" }}>
                 <label className="admin-field">
                   <span>Étiquette</span>
@@ -215,11 +215,11 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
               const dates = datesByGroup[group.id] ?? [];
               const members = membersByGroup[group.id] ?? [];
               return (
-                <div key={group.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "12px", padding: "1rem 1.2rem" }}>
+                <div key={group.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "12px", padding: "1rem 1.2rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem" }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: "0.92rem", color: "#fff", margin: 0 }}>{group.label}</p>
-                      <p style={{ fontSize: "0.78rem", color: "#9f85ba", margin: "0.2rem 0 0" }}>
+                      <p style={{ fontSize: "0.78rem", color: "var(--adm-accent)", margin: "0.2rem 0 0" }}>
                         {group.day} {group.start_time}–{group.end_time} · {group.location} · {members.length}/{group.max_places} places
                       </p>
                     </div>
@@ -229,13 +229,13 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
                   </div>
 
                   {/* Membres */}
-                  <div style={{ marginTop: "0.85rem", paddingTop: "0.75rem", borderTop: "1px solid #1a1820" }}>
-                    <p style={{ fontSize: "0.65rem", color: "#7a7982", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Joueuses</p>
+                  <div style={{ marginTop: "0.85rem", paddingTop: "0.75rem", borderTop: "1px solid var(--adm-surface-2)" }}>
+                    <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Joueuses</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginBottom: "0.6rem" }}>
                       {members.map((m) => {
                         const reg = registrationById.get(m.registration_id);
                         return (
-                          <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "#c3c2c8" }}>
+                          <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
                             <span>{reg ? playerName(reg) : m.registration_id}</span>
                             <button onClick={() => handleRemoveMember(group.id, m.id, m.registration_id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.6)", cursor: "pointer", fontSize: "0.72rem" }}>
                               Retirer
@@ -243,14 +243,14 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
                           </div>
                         );
                       })}
-                      {members.length === 0 && <p style={{ fontSize: "0.72rem", color: "#3c3a41", fontStyle: "italic" }}>Aucune joueuse assignée</p>}
+                      {members.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-border)", fontStyle: "italic" }}>Aucune joueuse assignée</p>}
                     </div>
                     {unassigned.length > 0 && (
                       <div style={{ display: "flex", gap: "0.5rem" }}>
                         <select
                           value={assignSelect[group.id] ?? ""}
                           onChange={(e) => setAssignSelect((prev) => ({ ...prev, [group.id]: e.target.value }))}
-                          style={{ flex: 1, padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff" }}
+                          style={{ flex: 1, padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff" }}
                         >
                           <option value="">Assigner une joueuse…</option>
                           {unassigned.map((r) => <option key={r.id} value={r.id}>{playerName(r)}</option>)}
@@ -263,16 +263,16 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
                   </div>
 
                   {/* Dates */}
-                  <div style={{ marginTop: "0.85rem", paddingTop: "0.75rem", borderTop: "1px solid #1a1820" }}>
-                    <p style={{ fontSize: "0.65rem", color: "#7a7982", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>
+                  <div style={{ marginTop: "0.85rem", paddingTop: "0.75rem", borderTop: "1px solid var(--adm-surface-2)" }}>
+                    <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>
                       Dates ({dates.length})
                     </p>
                     {dates.length === 0 ? (
-                      <p style={{ fontSize: "0.72rem", color: "#3c3a41", fontStyle: "italic", marginBottom: "0.6rem" }}>Aucune date ajoutée.</p>
+                      <p style={{ fontSize: "0.72rem", color: "var(--adm-border)", fontStyle: "italic", marginBottom: "0.6rem" }}>Aucune date ajoutée.</p>
                     ) : (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.6rem" }}>
                         {dates.map((d) => (
-                          <span key={d.id} style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#c3c2c8", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "999px", padding: "0.3rem 0.6rem" }}>
+                          <span key={d.id} style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "999px", padding: "0.3rem 0.6rem" }}>
                             {new Date(d.occurs_on + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short" })}
                             <button onClick={() => handleRemoveDate(group.id, d.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.6)", cursor: "pointer", fontSize: "0.85rem", padding: 0, lineHeight: 1 }}>×</button>
                           </span>
@@ -284,7 +284,7 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
                         type="date"
                         value={newDateInput[group.id] ?? ""}
                         onChange={(e) => setNewDateInput((prev) => ({ ...prev, [group.id]: e.target.value }))}
-                        style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "6px", color: "#fff" }}
+                        style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", color: "#fff" }}
                       />
                       <button onClick={() => handleAddDate(group.id)} className="admin-btn-ghost" style={{ padding: "0.35rem 0.75rem", fontSize: "0.72rem" }}>
                         Ajouter la date

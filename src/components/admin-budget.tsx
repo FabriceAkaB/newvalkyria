@@ -17,7 +17,7 @@ function BudgetRow({ row, onSaved }: { row: BudgetVsActual; onSaved: (category: 
   const [saving, setSaving] = useState(false);
 
   const pct = row.budgetCents > 0 ? Math.round((row.actualCents / row.budgetCents) * 100) : null;
-  const barColor = pct === null ? "#8d76a5" : pct > 100 ? "#ff9999" : pct >= 80 ? "#ffb464" : "#7fd88f";
+  const barColor = pct === null ? "var(--adm-accent)" : pct > 100 ? "var(--adm-bad)" : pct >= 80 ? "var(--adm-warn)" : "var(--adm-good)";
 
   const save = async () => {
     const dollars = parseFloat(value.replace(",", "."));
@@ -36,7 +36,7 @@ function BudgetRow({ row, onSaved }: { row: BudgetVsActual; onSaved: (category: 
   };
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
         <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: 0 }}>{row.category}</p>
         {editing ? (
@@ -50,22 +50,22 @@ function BudgetRow({ row, onSaved }: { row: BudgetVsActual; onSaved: (category: 
             <button onClick={() => setEditing(false)} className="admin-btn-ghost" style={{ padding: "0.3rem 0.6rem", fontSize: "0.68rem" }}>Annuler</button>
           </span>
         ) : (
-          <span style={{ fontSize: "0.75rem", color: "#9d9da0" }}>
-            Budget : <strong style={{ color: "#c3c2c8" }}>{formatCAD(row.budgetCents / 100)}</strong>
-            <button onClick={() => { setValue(String(row.budgetCents / 100)); setEditing(true); }} style={{ marginLeft: "0.5rem", color: "#8d76a5", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>
+          <span style={{ fontSize: "0.75rem", color: "var(--adm-text-2)" }}>
+            Budget : <strong style={{ color: "var(--adm-text-2)" }}>{formatCAD(row.budgetCents / 100)}</strong>
+            <button onClick={() => { setValue(String(row.budgetCents / 100)); setEditing(true); }} style={{ marginLeft: "0.5rem", color: "var(--adm-accent)", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>
               {row.budgetCents > 0 ? "modifier" : "fixer"}
             </button>
           </span>
         )}
       </div>
 
-      <div style={{ height: "6px", borderRadius: "3px", background: "#1f1d25", overflow: "hidden", marginBottom: "0.4rem" }}>
+      <div style={{ height: "6px", borderRadius: "3px", background: "var(--adm-line)", overflow: "hidden", marginBottom: "0.4rem" }}>
         <div style={{ height: "100%", width: `${pct === null ? 0 : Math.min(100, pct)}%`, background: barColor, borderRadius: "3px" }} />
       </div>
-      <p style={{ fontSize: "0.72rem", color: "#9d9da0", margin: 0 }}>
+      <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: 0 }}>
         Dépensé : {formatCAD(row.actualCents / 100)}
         {pct !== null && <span style={{ color: barColor }}> ({pct}% du budget)</span>}
-        {pct !== null && pct > 100 && <span style={{ color: "#ff9999" }}> — dépassé de {formatCAD((row.actualCents - row.budgetCents) / 100)}</span>}
+        {pct !== null && pct > 100 && <span style={{ color: "var(--adm-bad)" }}> — dépassé de {formatCAD((row.actualCents - row.budgetCents) / 100)}</span>}
       </p>
     </div>
   );
@@ -94,17 +94,17 @@ export function AdminBudget({ initialRows }: Props) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Budget annuel</p>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Fixez un budget annuel par catégorie de charge — comparé automatiquement aux dépenses réelles (payées et à payer), toutes saisons confondues.
           </p>
 
-          <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem" }}>
-            <p style={{ fontSize: "0.72rem", color: "#9d9da0", margin: "0 0 0.3rem", textTransform: "uppercase" }}>Total</p>
+          <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem" }}>
+            <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.3rem", textTransform: "uppercase" }}>Total</p>
             <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>
-              {formatCAD(totalActual / 100)} {totalBudget > 0 && <span style={{ fontSize: "0.9rem", color: "#9d9da0" }}>/ {formatCAD(totalBudget / 100)}</span>}
+              {formatCAD(totalActual / 100)} {totalBudget > 0 && <span style={{ fontSize: "0.9rem", color: "var(--adm-text-2)" }}>/ {formatCAD(totalBudget / 100)}</span>}
             </p>
             {totalPct !== null && (
-              <p style={{ fontSize: "0.78rem", color: totalPct > 100 ? "#ff9999" : "#7fd88f", margin: 0 }}>{totalPct}% du budget annuel utilisé</p>
+              <p style={{ fontSize: "0.78rem", color: totalPct > 100 ? "var(--adm-bad)" : "var(--adm-good)", margin: 0 }}>{totalPct}% du budget annuel utilisé</p>
             )}
           </div>
 

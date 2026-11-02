@@ -296,14 +296,14 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
               {showAddForm ? "Annuler" : "+ Nouveau produit"}
             </button>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Photos, prix, stock, variantes (taille/couleur) — tout ce qui est actif s&apos;affiche automatiquement sur la boutique publique.
           </p>
 
           {error && <p className="admin-error" style={{ marginBottom: "1rem" }}>{error}</p>}
 
           {showAddForm && (
-            <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem" }}>
+            <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem" }}>
               <div className="nv27-form-fields">
                 <label className="admin-field">
                   <span>Nom</span>
@@ -337,30 +337,30 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
               const vForm = variantFormFor(product.id);
               const hasVariants = product.variants.length > 0;
               return (
-                <div key={product.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "12px", padding: "1.1rem 1.25rem", opacity: busy === product.id ? 0.6 : 1 }}>
+                <div key={product.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "12px", padding: "1.1rem 1.25rem", opacity: busy === product.id ? 0.6 : 1 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "#fff", margin: 0 }}>{product.name}</p>
-                      <p style={{ fontSize: "0.8rem", color: "#9f85ba", margin: "2px 0 0" }}>{formatPrice(product.price_cents)}</p>
-                      {product.description && <p style={{ fontSize: "0.72rem", color: "#605f65", margin: "2px 0 0", maxWidth: "26rem" }}>{product.description}</p>}
+                      <p style={{ fontSize: "0.8rem", color: "var(--adm-accent)", margin: "2px 0 0" }}>{formatPrice(product.price_cents)}</p>
+                      {product.description && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "2px 0 0", maxWidth: "26rem" }}>{product.description}</p>}
                       {product.is_signup_bonus && (
-                        <span style={{ display: "inline-block", marginTop: "0.4rem", fontSize: "0.62rem", color: "#f0c878", background: "rgba(240,200,120,0.1)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>
+                        <span style={{ display: "inline-block", marginTop: "0.4rem", fontSize: "0.62rem", color: "var(--adm-warn)", background: "var(--adm-warn-soft)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>
                           🎁 Cadeau des 30 premiers clients
                         </span>
                       )}
                       {product.uniform_bundle_role && (
-                        <span style={{ display: "inline-block", marginTop: "0.4rem", marginLeft: "0.4rem", fontSize: "0.62rem", color: "#88c0d0", background: "rgba(136,192,208,0.1)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>
+                        <span style={{ display: "inline-block", marginTop: "0.4rem", marginLeft: "0.4rem", fontSize: "0.62rem", color: "var(--adm-info)", background: "var(--adm-info-soft)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>
                           👕 Bundle 2e uniforme — {product.uniform_bundle_role === "jersey" ? "Chandail" : product.uniform_bundle_role === "short" ? "Short" : "Bas"}
                         </span>
                       )}
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-                      <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.72rem", color: "#c3c2c8" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.72rem", color: "var(--adm-text-2)" }}>
                         <span>Bundle 2e uniforme</span>
                         <select
                           value={product.uniform_bundle_role ?? ""}
                           onChange={(e) => handleSetBundleRole(product.id, e.target.value as "" | "jersey" | "short" | "socks")}
-                          style={{ padding: "0.25rem 0.4rem", fontSize: "0.72rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff" }}
+                          style={{ padding: "0.25rem 0.4rem", fontSize: "0.72rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff" }}
                         >
                           <option value="">Aucun</option>
                           <option value="jersey">Chandail</option>
@@ -368,15 +368,15 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
                           <option value="socks">Bas</option>
                         </select>
                       </label>
-                      <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.72rem", color: "#c3c2c8", cursor: "pointer" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.72rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
                         <input type="checkbox" checked={product.is_signup_bonus} onChange={(e) => handleToggleSignupBonus(product.id, e.target.checked)} />
                         Cadeau lancement
                       </label>
-                      <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.72rem", color: "#c3c2c8", cursor: "pointer" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.72rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
                         <input type="checkbox" checked={product.active} onChange={(e) => handleToggleActive(product.id, e.target.checked)} />
                         Actif
                       </label>
-                      <button onClick={() => handleDeleteProduct(product.id)} className="admin-btn-ghost" style={{ padding: "0.35rem 0.7rem", fontSize: "0.72rem", color: "#f87171" }}>
+                      <button onClick={() => handleDeleteProduct(product.id)} className="admin-btn-ghost" style={{ padding: "0.35rem 0.7rem", fontSize: "0.72rem", color: "var(--adm-bad)" }}>
                         Supprimer
                       </button>
                     </div>
@@ -384,16 +384,16 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
 
                   {/* ── Galerie de photos ── */}
                   <div style={{ marginTop: "0.85rem" }}>
-                    <p style={{ fontSize: "0.68rem", color: "#7a7982", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>
+                    <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>
                       Photos ({product.photos.length})
                     </p>
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                       {product.photos.map((photo) => (
-                        <div key={photo.id} style={{ position: "relative", width: "4.2rem", height: "4.2rem", borderRadius: "8px", overflow: "hidden", background: "#1f1d25" }}>
+                        <div key={photo.id} style={{ position: "relative", width: "4.2rem", height: "4.2rem", borderRadius: "8px", overflow: "hidden", background: "var(--adm-line)" }}>
                           <Image src={photo.url} alt={product.name} fill sizes="4.2rem" style={{ objectFit: "cover" }} />
                           <button
                             onClick={() => handleDeletePhoto(product.id, photo.id)}
-                            style={{ position: "absolute", top: 2, right: 2, width: "1.2rem", height: "1.2rem", borderRadius: "50%", background: "rgba(0,0,0,0.7)", color: "#f87171", border: "none", cursor: "pointer", fontSize: "0.7rem", lineHeight: 1 }}
+                            style={{ position: "absolute", top: 2, right: 2, width: "1.2rem", height: "1.2rem", borderRadius: "50%", background: "rgba(0,0,0,0.7)", color: "var(--adm-bad)", border: "none", cursor: "pointer", fontSize: "0.7rem", lineHeight: 1 }}
                             title="Retirer cette photo"
                           >
                             ×
@@ -402,7 +402,7 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
                       ))}
                       <button
                         onClick={() => fileInputs.current[product.id]?.click()}
-                        style={{ width: "4.2rem", height: "4.2rem", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.2)", background: "transparent", color: "#605f65", cursor: "pointer", fontSize: "0.65rem" }}
+                        style={{ width: "4.2rem", height: "4.2rem", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.2)", background: "transparent", color: "var(--adm-text-3)", cursor: "pointer", fontSize: "0.65rem" }}
                       >
                         + Ajouter
                       </button>
@@ -418,39 +418,39 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
 
                   {/* ── Stock du produit (utilisé seulement s'il n'y a aucune variante) ── */}
                   <div style={{ marginTop: "0.85rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#c3c2c8" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)" }}>
                       <span>Stock du produit</span>
                       <input
                         type="number"
                         min={0}
                         value={product.inventory_count}
                         onChange={(e) => handleProductInventoryChange(product.id, Math.max(0, parseInt(e.target.value, 10) || 0))}
-                        style={{ width: "4rem", padding: "0.25rem 0.4rem", fontSize: "0.78rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff", textAlign: "center" }}
+                        style={{ width: "4rem", padding: "0.25rem 0.4rem", fontSize: "0.78rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", textAlign: "center" }}
                       />
                     </label>
                     {hasVariants && (
-                      <span style={{ fontSize: "0.65rem", color: "#605f65", fontStyle: "italic" }}>
+                      <span style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", fontStyle: "italic" }}>
                         ignoré tant qu&apos;il y a des variantes — le stock par variante ci-dessous s&apos;applique
                       </span>
                     )}
                   </div>
 
-                  <div style={{ marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid #1a1820" }}>
-                    <p style={{ fontSize: "0.68rem", color: "#7a7982", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.6rem" }}>
+                  <div style={{ marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid var(--adm-surface-2)" }}>
+                    <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.6rem" }}>
                       Variantes ({product.variants.length})
                     </p>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.75rem" }}>
                       {product.variants.map((v) => (
-                        <div key={v.id} style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap", fontSize: "0.78rem", color: "#c3c2c8" }}>
+                        <div key={v.id} style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
                           <span style={{ minWidth: "8rem" }}>{v.label}{v.size ? ` · ${v.size}` : ""}{v.color ? ` · ${v.color}` : ""}</span>
                           <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                            <span style={{ fontSize: "0.65rem", color: "#605f65" }}>Inventaire</span>
+                            <span style={{ fontSize: "0.65rem", color: "var(--adm-text-3)" }}>Inventaire</span>
                             <input
                               type="number"
                               min={0}
                               value={v.inventory_count}
                               onChange={(e) => handleVariantInventoryChange(product.id, v.id, Math.max(0, parseInt(e.target.value, 10) || 0))}
-                              style={{ width: "3.6rem", padding: "0.2rem 0.4rem", fontSize: "0.75rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff", textAlign: "center" }}
+                              style={{ width: "3.6rem", padding: "0.2rem 0.4rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", textAlign: "center" }}
                             />
                           </label>
                           <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
@@ -462,14 +462,14 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
                           </button>
                         </div>
                       ))}
-                      {product.variants.length === 0 && <p style={{ fontSize: "0.72rem", color: "#3c3a41", fontStyle: "italic" }}>Aucune variante — le produit se vend tel quel.</p>}
+                      {product.variants.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-border)", fontStyle: "italic" }}>Aucune variante — le produit se vend tel quel.</p>}
                     </div>
 
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-                      <input placeholder="Étiquette (ex. Petit)" value={vForm.label} onChange={(e) => setVariantField(product.id, "label", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff", width: "9rem" }} />
-                      <input placeholder="Taille" value={vForm.size} onChange={(e) => setVariantField(product.id, "size", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff", width: "6rem" }} />
-                      <input placeholder="Couleur" value={vForm.color} onChange={(e) => setVariantField(product.id, "color", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff", width: "6rem" }} />
-                      <input placeholder="Inventaire" type="number" min={0} value={vForm.inventoryCount} onChange={(e) => setVariantField(product.id, "inventoryCount", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff", width: "5.5rem" }} />
+                      <input placeholder="Étiquette (ex. Petit)" value={vForm.label} onChange={(e) => setVariantField(product.id, "label", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", width: "9rem" }} />
+                      <input placeholder="Taille" value={vForm.size} onChange={(e) => setVariantField(product.id, "size", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", width: "6rem" }} />
+                      <input placeholder="Couleur" value={vForm.color} onChange={(e) => setVariantField(product.id, "color", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", width: "6rem" }} />
+                      <input placeholder="Inventaire" type="number" min={0} value={vForm.inventoryCount} onChange={(e) => setVariantField(product.id, "inventoryCount", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", width: "5.5rem" }} />
                       <button onClick={() => handleAddVariant(product.id)} disabled={busy === `variant-${product.id}`} className="admin-btn-ghost" style={{ padding: "0.35rem 0.7rem", fontSize: "0.72rem" }}>
                         + Ajouter
                       </button>

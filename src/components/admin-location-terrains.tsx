@@ -16,7 +16,7 @@ interface Data {
 }
 
 const WEEKDAYS = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-const STATUS: Record<string, [string, string]> = { pending: ["En attente", "#f0c878"], paid: ["Payée", "#8fce9f"], cancelled: ["Annulée", "#ff9999"] };
+const STATUS: Record<string, [string, string]> = { pending: ["En attente", "var(--adm-warn)"], paid: ["Payée", "var(--adm-good)"], cancelled: ["Annulée", "var(--adm-bad)"] };
 
 export function AdminLocationTerrains({ initial, origin }: { initial: Data; origin: string }) {
   const [data, setData] = useState(initial);
@@ -48,8 +48,8 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
   };
 
   const terrainName = (id: string) => data.terrains.find((t) => t.id === id)?.name ?? "—";
-  const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" };
-  const cell: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid #1f1d25", color: "#c3c2c8", verticalAlign: "top", fontSize: "0.76rem" };
+  const card: React.CSSProperties = { background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" };
+  const cell: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid var(--adm-line)", color: "var(--adm-text-2)", verticalAlign: "top", fontSize: "0.76rem" };
   const paidTotal = data.rentals.filter((r) => r.status === "paid").reduce((s, r) => s + r.price_cents, 0);
   const upcoming = data.rentals.filter((r) => r.status === "paid" && r.rental_date >= new Date().toISOString().slice(0, 10)).length;
 
@@ -59,10 +59,10 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Location de terrains</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1rem" }}>
-            Page publique : <a href={`${origin}/location-terrains`} target="_blank" rel="noreferrer" style={{ color: "#c4a4e4" }}>{origin}/location-terrains</a>. Les tarifs, plages et dates ci-dessous sont à valider — rien n&apos;est offert tant qu&apos;un terrain n&apos;est pas marqué « à louer » avec au moins une plage.
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1rem" }}>
+            Page publique : <a href={`${origin}/location-terrains`} target="_blank" rel="noreferrer" style={{ color: "var(--adm-accent)" }}>{origin}/location-terrains</a>. Les tarifs, plages et dates ci-dessous sont à valider — rien n&apos;est offert tant qu&apos;un terrain n&apos;est pas marqué « à louer » avec au moins une plage.
           </p>
-          {message && <p style={{ fontSize: "0.78rem", color: "#8fce9f" }}>{message}</p>}
+          {message && <p style={{ fontSize: "0.78rem", color: "var(--adm-good)" }}>{message}</p>}
 
           <div className="admin-stats" style={{ marginBottom: "1.25rem" }}>
             <div className="admin-stat-card"><p className="admin-stat-value">{formatMoney(paidTotal)}</p><p className="admin-stat-label">Encaissé (locations)</p></div>
@@ -75,10 +75,10 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.7rem" }}>Terrains</p>
             {data.terrains.length === 0 && <p className="admin-empty-text">Aucun terrain. Ajoutez-en dans la section Calendrier → Terrains.</p>}
             {data.terrains.map((t) => (
-              <div key={t.id} style={{ borderBottom: "1px solid #1f1d25", padding: "0.6rem 0" }}>
+              <div key={t.id} style={{ borderBottom: "1px solid var(--adm-line)", padding: "0.6rem 0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ color: "#fff", fontWeight: 600 }}>{t.name}<span style={{ color: "#6d6b71", fontWeight: 400 }}>{t.address ? ` — ${t.address}` : ""}</span></span>
-                  <label style={{ fontSize: "0.76rem", color: "#c3c2c8", display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                  <span style={{ color: "#fff", fontWeight: 600 }}>{t.name}<span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}>{t.address ? ` — ${t.address}` : ""}</span></span>
+                  <label style={{ fontSize: "0.76rem", color: "var(--adm-text-2)", display: "flex", gap: "0.4rem", alignItems: "center" }}>
                     <input type="checkbox" checked={t.rentable} disabled={busy} onChange={(e) => call({ action: "terrain_update", terrainId: t.id, rentable: e.target.checked }, e.target.checked ? "Terrain offert à la location." : "Terrain retiré de la location.")} />
                     À louer
                   </label>
@@ -95,32 +95,32 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
           <div style={card}>
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.7rem" }}>Plages horaires offertes</p>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end", marginBottom: "0.9rem" }}>
-              <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>Terrain
+              <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>Terrain
                 <select className="admin-group-select" value={win.terrainId} onChange={(e) => setWin({ ...win, terrainId: e.target.value })}>
                   {data.terrains.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
               </label>
-              <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>Type
+              <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>Type
                 <select className="admin-group-select" value={win.kind} onChange={(e) => setWin({ ...win, kind: e.target.value })}>
                   <option value="weekly">Chaque semaine</option>
                   <option value="date">Date précise</option>
                 </select>
               </label>
               {win.kind === "weekly" ? (
-                <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>Jour
+                <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>Jour
                   <select className="admin-group-select" value={win.weekday} onChange={(e) => setWin({ ...win, weekday: e.target.value })}>
                     {WEEKDAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
                   </select>
                 </label>
               ) : (
-                <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>Date<input type="date" className="admin-input" value={win.specificDate} onChange={(e) => setWin({ ...win, specificDate: e.target.value })} /></label>
+                <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>Date<input type="date" className="admin-input" value={win.specificDate} onChange={(e) => setWin({ ...win, specificDate: e.target.value })} /></label>
               )}
-              <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>De<input type="time" className="admin-input" value={win.startTime} onChange={(e) => setWin({ ...win, startTime: e.target.value })} /></label>
-              <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>À<input type="time" className="admin-input" value={win.endTime} onChange={(e) => setWin({ ...win, endTime: e.target.value })} /></label>
-              <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>Durée d&apos;un créneau (min)<input type="number" className="admin-input" style={{ width: "90px" }} value={win.slotMinutes} onChange={(e) => setWin({ ...win, slotMinutes: e.target.value })} /></label>
-              <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>Prix par créneau ($)<input type="number" step="0.01" className="admin-input" style={{ width: "110px" }} value={win.price} onChange={(e) => setWin({ ...win, price: e.target.value })} /></label>
-              <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>Valide du<input type="date" className="admin-input" value={win.validFrom} onChange={(e) => setWin({ ...win, validFrom: e.target.value })} /></label>
-              <label style={{ fontSize: "0.66rem", color: "#9d9da0" }}>au<input type="date" className="admin-input" value={win.validUntil} onChange={(e) => setWin({ ...win, validUntil: e.target.value })} /></label>
+              <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>De<input type="time" className="admin-input" value={win.startTime} onChange={(e) => setWin({ ...win, startTime: e.target.value })} /></label>
+              <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>À<input type="time" className="admin-input" value={win.endTime} onChange={(e) => setWin({ ...win, endTime: e.target.value })} /></label>
+              <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>Durée d&apos;un créneau (min)<input type="number" className="admin-input" style={{ width: "90px" }} value={win.slotMinutes} onChange={(e) => setWin({ ...win, slotMinutes: e.target.value })} /></label>
+              <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>Prix par créneau ($)<input type="number" step="0.01" className="admin-input" style={{ width: "110px" }} value={win.price} onChange={(e) => setWin({ ...win, price: e.target.value })} /></label>
+              <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>Valide du<input type="date" className="admin-input" value={win.validFrom} onChange={(e) => setWin({ ...win, validFrom: e.target.value })} /></label>
+              <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>au<input type="date" className="admin-input" value={win.validUntil} onChange={(e) => setWin({ ...win, validUntil: e.target.value })} /></label>
               <button
                 className="admin-btn-primary"
                 style={{ fontSize: "0.74rem" }}
@@ -150,7 +150,7 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
                     <td style={cell}>{formatMoney(w.price_cents)} / créneau</td>
                     <td style={cell}>
                       <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "window_update", windowId: w.id, active: !w.active }, w.active ? "Plage désactivée." : "Plage activée.")}>{w.active ? "Désactiver" : "Activer"}</button>{" "}
-                      <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm("Supprimer cette plage ?") && call({ action: "window_delete", windowId: w.id }, "Plage supprimée.")}>Supprimer</button>
+                      <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm("Supprimer cette plage ?") && call({ action: "window_delete", windowId: w.id }, "Plage supprimée.")}>Supprimer</button>
                     </td>
                   </tr>
                 ))}
@@ -173,9 +173,9 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
               <button className="admin-btn-primary" style={{ fontSize: "0.74rem" }} disabled={busy || !block.blockDate} onClick={() => call({ action: "block_create", ...block }, "Date bloquée.")}>Bloquer</button>
             </div>
             {data.blocks.map((b) => (
-              <div key={b.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.76rem", color: "#c3c2c8", padding: "0.25rem 0", borderBottom: "1px solid #1f1d25" }}>
+              <div key={b.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.76rem", color: "var(--adm-text-2)", padding: "0.25rem 0", borderBottom: "1px solid var(--adm-line)" }}>
                 <span>{terrainName(b.terrain_id)} · {b.block_date}{b.start_time ? ` ${b.start_time}–${b.end_time}` : " (journée complète)"}{b.reason ? ` — ${b.reason}` : ""}</span>
-                <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} disabled={busy} onClick={() => call({ action: "block_delete", blockId: b.id }, "Blocage retiré.")}>Retirer</button>
+                <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => call({ action: "block_delete", blockId: b.id }, "Blocage retiré.")}>Retirer</button>
               </div>
             ))}
           </div>
@@ -185,7 +185,7 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.7rem" }}>Réservations et paiements ({data.rentals.length})</p>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "820px" }}>
-                <thead><tr>{["Date", "Terrain", "Organisation / contact", "Montant", "Statut", ""].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", fontWeight: 600, textAlign: "left" }}>{h}</th>)}</tr></thead>
+                <thead><tr>{["Date", "Terrain", "Organisation / contact", "Montant", "Statut", ""].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", fontWeight: 600, textAlign: "left" }}>{h}</th>)}</tr></thead>
                 <tbody>
                   {data.rentals.map((r) => (
                     <tr key={r.id} style={{ opacity: r.status === "cancelled" ? 0.5 : 1 }}>
@@ -193,16 +193,16 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
                       <td style={cell}>{r.terrain_name}</td>
                       <td style={cell}><strong style={{ color: "#fff" }}>{r.organization_name}</strong><br />{r.contact_name} · {r.contact_email} · {r.contact_phone}{r.notes ? <><br /><em>{r.notes}</em></> : null}</td>
                       <td style={cell}>{formatMoney(r.price_cents)}</td>
-                      <td style={cell}><span style={{ color: STATUS[r.status][1], fontWeight: 700 }}>{STATUS[r.status][0]}</span>{r.cancelled_reason ? <><br /><span style={{ color: "#6d6b71" }}>{r.cancelled_reason}</span></> : null}</td>
+                      <td style={cell}><span style={{ color: STATUS[r.status][1], fontWeight: 700 }}>{STATUS[r.status][0]}</span>{r.cancelled_reason ? <><br /><span style={{ color: "var(--adm-text-3)" }}>{r.cancelled_reason}</span></> : null}</td>
                       <td style={cell}>
                         {r.status === "paid" && (
                           <>
                             <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "rental_resend", rentalId: r.id }, "Confirmation renvoyée.")}>Renvoyer la confirmation</button>{" "}
-                            <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm(`Annuler et rembourser ${formatMoney(r.price_cents)} ?`) && call({ action: "rental_cancel", rentalId: r.id, refund: true }, "Réservation annulée")}>Annuler + rembourser</button>
+                            <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm(`Annuler et rembourser ${formatMoney(r.price_cents)} ?`) && call({ action: "rental_cancel", rentalId: r.id, refund: true }, "Réservation annulée")}>Annuler + rembourser</button>
                           </>
                         )}
                         {r.status === "pending" && (
-                          <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm("Libérer ce créneau ?") && call({ action: "rental_cancel", rentalId: r.id, refund: false }, "Créneau libéré.")}>Libérer</button>
+                          <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm("Libérer ce créneau ?") && call({ action: "rental_cancel", rentalId: r.id, refund: false }, "Créneau libéré.")}>Libérer</button>
                         )}
                       </td>
                     </tr>

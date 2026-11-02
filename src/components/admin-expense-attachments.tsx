@@ -68,21 +68,21 @@ export function ExpenseAttachments({ expenseId }: { expenseId: string }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-      <p style={{ fontSize: "0.68rem", color: "#6d6b71", textTransform: "uppercase", margin: 0 }}>Pièces jointes</p>
+      <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", textTransform: "uppercase", margin: 0 }}>Pièces jointes</p>
       {error && <p className="admin-error" style={{ fontSize: "0.7rem" }}>{error}</p>}
       {loading ? (
-        <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Chargement...</p>
+        <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Chargement...</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
           {(documents ?? []).map((d) => (
-            <div key={d.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem", color: "#c3c2c8" }}>
-              <button onClick={() => download(d.id)} style={{ background: "none", border: "none", color: "#8d76a5", cursor: "pointer", textDecoration: "underline", padding: 0, textAlign: "left" }}>
+            <div key={d.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem", color: "var(--adm-text-2)" }}>
+              <button onClick={() => download(d.id)} style={{ background: "none", border: "none", color: "var(--adm-accent)", cursor: "pointer", textDecoration: "underline", padding: 0, textAlign: "left" }}>
                 📎 {d.file_name}
               </button>
-              <button onClick={() => remove(d.id)} style={{ background: "none", border: "none", color: "#6d6b71", cursor: "pointer", fontSize: "0.9rem", padding: 0 }} aria-label="Supprimer">×</button>
+              <button onClick={() => remove(d.id)} style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer", fontSize: "0.9rem", padding: 0 }} aria-label="Supprimer">×</button>
             </div>
           ))}
-          {(documents ?? []).length === 0 && <p style={{ fontSize: "0.72rem", color: "#3c3a41", fontStyle: "italic", margin: 0 }}>Aucune pièce jointe.</p>}
+          {(documents ?? []).length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-border)", fontStyle: "italic", margin: 0 }}>Aucune pièce jointe.</p>}
         </div>
       )}
       <label className="admin-btn-ghost" style={{ fontSize: "0.7rem", padding: "0.35rem 0.6rem", textAlign: "center", cursor: "pointer", width: "fit-content" }}>

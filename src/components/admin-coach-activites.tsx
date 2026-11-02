@@ -65,7 +65,7 @@ function NewActivityForm({ terrains, onCreated }: { terrains: Terrain[]; onCreat
   if (!open) return <button className="admin-btn-primary" onClick={() => setOpen(true)}>+ Nouvelle activité</button>;
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
         <input className="admin-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         <input className="admin-input" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
@@ -106,7 +106,7 @@ export function AdminCoachActivites({ activities: initial, terrains }: Props) {
               ← Entraîneurs
             </Link>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Pratiques, matchs, tournois, camps et toute autre activité — assignez les entraîneurs présents sur chacune.
           </p>
 

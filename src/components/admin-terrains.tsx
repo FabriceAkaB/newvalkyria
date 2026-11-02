@@ -58,7 +58,7 @@ export function AdminTerrains({ initialTerrains }: { initialTerrains: Terrain[] 
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Terrains</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Configurez les terrains utilisés par l&apos;académie — une activité reliée à un terrain est vérifiée automatiquement pour éviter les doubles réservations.
           </p>
 
@@ -76,16 +76,16 @@ export function AdminTerrains({ initialTerrains }: { initialTerrains: Terrain[] 
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {terrains.map((t) => (
-              <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.7rem 0.9rem", opacity: t.active ? 1 : 0.5 }}>
+              <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.7rem 0.9rem", opacity: t.active ? 1 : 0.5 }}>
                 <div>
                   <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: 0 }}>{t.name}</p>
-                  {t.address && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.15rem 0 0" }}>{t.address}</p>}
+                  {t.address && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.15rem 0 0" }}>{t.address}</p>}
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
                   <button onClick={() => toggleActive(t)} className="admin-btn-ghost" style={{ fontSize: "0.7rem", padding: "0.35rem 0.7rem" }}>
                     {t.active ? "Désactiver" : "Réactiver"}
                   </button>
-                  <button onClick={() => remove(t.id)} style={{ fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}>
+                  <button onClick={() => remove(t.id)} style={{ fontSize: "0.7rem", color: "var(--adm-bad)", background: "none", border: "1px solid var(--adm-bad-soft)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}>
                     Supprimer
                   </button>
                 </div>

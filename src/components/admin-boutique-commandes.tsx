@@ -74,7 +74,7 @@ export function AdminBoutiqueCommandes({ initialOrders, showPrices }: { initialO
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Commandes de la boutique</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Les commandes payées apparaissent ici automatiquement — l&apos;inventaire est déjà décrémenté.
           </p>
 
@@ -93,7 +93,7 @@ export function AdminBoutiqueCommandes({ initialOrders, showPrices }: { initialO
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
             {filtered.map((order) => (
-              <div key={order.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem", opacity: saving === order.id ? 0.6 : 1 }}>
+              <div key={order.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", opacity: saving === order.id ? 0.6 : 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.6rem" }}>
                   <div>
                     <p style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff", margin: 0 }}>{order.customer_name}</p>
@@ -115,7 +115,7 @@ export function AdminBoutiqueCommandes({ initialOrders, showPrices }: { initialO
                     </select>
                     <button
                       onClick={() => setConfirmDelete(order)}
-                      style={{ fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.4rem 0.6rem", cursor: "pointer" }}
+                      style={{ fontSize: "0.7rem", color: "var(--adm-bad)", background: "none", border: "1px solid var(--adm-bad-soft)", borderRadius: "6px", padding: "0.4rem 0.6rem", cursor: "pointer" }}
                     >
                       Supprimer
                     </button>
@@ -123,12 +123,12 @@ export function AdminBoutiqueCommandes({ initialOrders, showPrices }: { initialO
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", marginBottom: "0.5rem" }}>
                   {order.items.map((item) => (
-                    <p key={item.id} style={{ fontSize: "0.78rem", color: "#c3c2c8", margin: 0 }}>
+                    <p key={item.id} style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: 0 }}>
                       {item.product_name}{item.variant_label ? ` — ${item.variant_label}` : ""} × {item.quantity}{showPrices ? ` — ${formatPrice(item.unit_price_cents * item.quantity)}` : ""}
                     </p>
                   ))}
                 </div>
-                {showPrices && <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#9ec99e", margin: 0 }}>Total : {formatPrice(order.total_cents)}</p>}
+                {showPrices && <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--adm-good)", margin: 0 }}>Total : {formatPrice(order.total_cents)}</p>}
               </div>
             ))}
           </div>

@@ -9,23 +9,23 @@ import type { SponsorSlotRow } from "@/app/api/admin/sponsors-2027/route";
 import type { PartnershipOffer } from "@/lib/partnership-offers";
 
 const OFFER_STATUS: Record<string, [string, string]> = {
-  draft: ["Brouillon (non envoyée)", "#9d9da0"],
-  sent: ["Envoyée", "#f0c878"],
-  accepted: ["Acceptée", "#8fce9f"],
-  declined: ["Refusée", "#ff9999"],
-  expired: ["Expirée", "#6d6b71"]
+  draft: ["Brouillon (non envoyée)", "var(--adm-text-2)"],
+  sent: ["Envoyée", "var(--adm-warn)"],
+  accepted: ["Acceptée", "var(--adm-good)"],
+  declined: ["Refusée", "var(--adm-bad)"],
+  expired: ["Expirée", "var(--adm-text-3)"]
 };
 const OPTION_STATUS: Record<string, [string, string]> = {
-  open: ["Ouverte", "#c3c2c8"],
-  paid: ["Payée", "#8fce9f"],
-  unavailable: ["Emplacement plus disponible", "#ffb464"],
-  closed: ["Non retenue", "#6d6b71"]
+  open: ["Ouverte", "var(--adm-text-2)"],
+  paid: ["Payée", "var(--adm-good)"],
+  unavailable: ["Emplacement plus disponible", "var(--adm-warn)"],
+  closed: ["Non retenue", "var(--adm-text-3)"]
 };
 
 const STATUS_STYLE: Record<string, { label: string; color: string }> = {
-  available: { label: "Disponible", color: "#8fce9f" },
-  reserved: { label: "Réservé", color: "#f0c878" },
-  sold: { label: "Vendu", color: "#c4a4e4" }
+  available: { label: "Disponible", color: "var(--adm-good)" },
+  reserved: { label: "Réservé", color: "var(--adm-warn)" },
+  sold: { label: "Vendu", color: "var(--adm-accent)" }
 };
 
 export function AdminSponsors2027({ initialSlots, role, initialOffers = [], origin = "" }: { initialSlots: SponsorSlotRow[]; role: "admin" | "gerante"; initialOffers?: PartnershipOffer[]; origin?: string }) {
@@ -83,8 +83,8 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
   const count = (st: string) => slots.filter((s) => s.status === st).length;
 
   const tiers = Array.from(new Map(slots.map((s) => [s.tier, s.tier_label])).entries());
-  const cell: React.CSSProperties = { padding: "0.55rem 0.5rem", borderBottom: "1px solid #1f1d25", fontSize: "0.78rem", color: "#c3c2c8", verticalAlign: "top" };
-  const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" };
+  const cell: React.CSSProperties = { padding: "0.55rem 0.5rem", borderBottom: "1px solid var(--adm-line)", fontSize: "0.78rem", color: "var(--adm-text-2)", verticalAlign: "top" };
+  const card: React.CSSProperties = { background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" };
 
   return (
     <>
@@ -92,10 +92,10 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Sponsors 2027</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1rem" }}>
             Programme de partenariat : 13 emplacements, chacun avec son lien de paiement Stripe à usage unique. Un paiement marque l&apos;emplacement « Vendu » automatiquement et crée le commanditaire dans « Commandites ».
           </p>
-          {msg && <p style={{ fontSize: "0.78rem", color: "#8fce9f" }}>{msg}</p>}
+          {msg && <p style={{ fontSize: "0.78rem", color: "var(--adm-good)" }}>{msg}</p>}
 
           <div className="admin-stats" style={{ marginBottom: "1.2rem" }}>
             <div className="admin-stat-card admin-stat-card-accent"><p className="admin-stat-value">{formatMoney(soldCents)}</p><p className="admin-stat-label">Vendu ({count("sold")} emplacement{count("sold") > 1 ? "s" : ""})</p></div>
@@ -107,7 +107,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
           <div style={card}>
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Par forfait</p>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr>{["Forfait", "Tarif", "Places", "Vendues", "Disponibles"].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+              <thead><tr>{["Forfait", "Tarif", "Places", "Vendues", "Disponibles"].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
               <tbody>
                 {tiers.map(([tier, label]) => {
                   const list = slots.filter((s) => s.tier === tier);
@@ -129,7 +129,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Emplacements ({slots.length})</p>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "820px" }}>
-                <thead><tr>{["Emplacement", "Tarif", "Statut", "Commanditaire", "Lien de paiement", ""].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+                <thead><tr>{["Emplacement", "Tarif", "Statut", "Commanditaire", "Lien de paiement", ""].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
                 <tbody>
                   {slots.map((s) => {
                     const st = STATUS_STYLE[s.status];
@@ -138,16 +138,16 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
                         <td style={cell}>
                           <strong style={{ color: "#fff" }}>{s.tier_label}</strong>
                           <br />{s.placement}
-                          <br /><span style={{ color: "#6d6b71" }}>{s.slot_key}</span>
+                          <br /><span style={{ color: "var(--adm-text-3)" }}>{s.slot_key}</span>
                         </td>
                         <td style={cell}>
                           {formatMoney(s.price_cents)}
-                          {s.list_price_cents != null && s.list_price_cents !== s.price_cents ? <><br /><span style={{ color: "#f0c878" }}>Prix négocié</span><br /><span style={{ color: "#6d6b71", textDecoration: "line-through" }}>{formatMoney(s.list_price_cents)}</span></> : null}
+                          {s.list_price_cents != null && s.list_price_cents !== s.price_cents ? <><br /><span style={{ color: "var(--adm-warn)" }}>Prix négocié</span><br /><span style={{ color: "var(--adm-text-3)", textDecoration: "line-through" }}>{formatMoney(s.list_price_cents)}</span></> : null}
                         </td>
                         <td style={cell}>
                           <span style={{ color: st.color, fontWeight: 700 }}>{st.label}</span>
                           {s.status === "available" && offeredOn(s.slot_key).length > 0 && (
-                            <><br /><span style={{ color: "#78a8f0", fontSize: "0.7rem" }}>Proposé à : {offeredOn(s.slot_key).join(", ")}</span></>
+                            <><br /><span style={{ color: "var(--adm-info)", fontSize: "0.7rem" }}>Proposé à : {offeredOn(s.slot_key).join(", ")}</span></>
                           )}
                         </td>
                         <td style={cell}>
@@ -157,18 +157,18 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
                               {s.contact_name ? <><br />{s.contact_name}</> : null}
                               {s.contact_email ? <><br />{s.contact_email}</> : null}
                             </>
-                          ) : <span style={{ color: "#6d6b71" }}>—</span>}
+                          ) : <span style={{ color: "var(--adm-text-3)" }}>—</span>}
                         </td>
                         <td style={cell}>
                           {s.status === "available" && s.payment_link_url ? (
                             <>
                               <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => navigator.clipboard.writeText(s.payment_link_url!).then(() => flash(`Lien copié : ${s.tier_label} — ${s.placement}`))}>Copier le lien</button>{" "}
-                              <a href={s.payment_link_url} target="_blank" rel="noreferrer" style={{ color: "#c4a4e4", fontSize: "0.68rem" }}>Ouvrir</a>
+                              <a href={s.payment_link_url} target="_blank" rel="noreferrer" style={{ color: "var(--adm-accent)", fontSize: "0.68rem" }}>Ouvrir</a>
                             </>
                           ) : s.status === "available" ? (
                             <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} disabled={busy} onClick={() => call({ action: "new_link", slotKey: s.slot_key }, "Lien créé.")}>Créer le lien</button>
                           ) : (
-                            <span style={{ color: "#6d6b71" }}>Lien désactivé</span>
+                            <span style={{ color: "var(--adm-text-3)" }}>Lien désactivé</span>
                           )}
                         </td>
                         <td style={cell}>
@@ -189,7 +189,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
                           {s.status !== "available" && (
                             <>
                               <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} disabled={busy} onClick={() => setOpen(open === s.slot_key ? null : s.slot_key)}>Modifier l&apos;entreprise</button>{" "}
-                              {isAdmin && <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm("Remettre cet emplacement disponible ? Le lien de paiement sera réactivé.") && call({ action: "release", slotKey: s.slot_key }, "Emplacement remis disponible.")}>Remettre disponible</button>}
+                              {isAdmin && <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm("Remettre cet emplacement disponible ? Le lien de paiement sera réactivé.") && call({ action: "release", slotKey: s.slot_key }, "Emplacement remis disponible.")}>Remettre disponible</button>}
                             </>
                           )}
                           {open === s.slot_key && (
@@ -219,21 +219,21 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
           {/* ── Propositions personnalisées ── */}
           <div style={card}>
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Propositions personnalisées ({offers.length})</p>
-            <p style={{ fontSize: "0.74rem", color: "#6d6b71", margin: "0 0 0.8rem" }}>
+            <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: "0 0 0.8rem" }}>
               Chaque entreprise a sa page privée avec ses options et un bouton de paiement par option. Une option chandail est liée à un emplacement : dès que l&apos;emplacement est vendu (à elle ou à quelqu&apos;un d&apos;autre), toutes les autres offres sur cet emplacement se ferment automatiquement.
             </p>
             {offers.length === 0 && <p className="admin-empty-text">Aucune proposition pour l&apos;instant.</p>}
             {offers.map((o) => {
               const page = `${origin}/partenariat/${o.token}`;
-              const [label, color] = OFFER_STATUS[o.status] ?? [o.status, "#c3c2c8"];
+              const [label, color] = OFFER_STATUS[o.status] ?? [o.status, "var(--adm-text-2)"];
               return (
-                <div key={o.id} style={{ borderTop: "1px solid #1f1d25", padding: "0.8rem 0" }}>
+                <div key={o.id} style={{ borderTop: "1px solid var(--adm-line)", padding: "0.8rem 0" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", flexWrap: "wrap" }}>
                     <div>
                       <strong style={{ color: "#fff" }}>{o.company_name}</strong>
                       <span style={{ color, fontWeight: 700, fontSize: "0.74rem", marginLeft: "0.5rem" }}>{label}</span>
                       <br />
-                      <span style={{ fontSize: "0.74rem", color: "#9d9da0" }}>
+                      <span style={{ fontSize: "0.74rem", color: "var(--adm-text-2)" }}>
                         {o.contact_name} · {o.contact_email}
                         {o.respond_by ? ` · réponse attendue le ${new Date(`${o.respond_by}T12:00:00`).toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}` : ""}
                       </span>
@@ -242,15 +242,15 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
                       <a href={page} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ fontSize: "0.68rem" }}>Voir sa page</a>
                       <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => navigator.clipboard.writeText(page).then(() => flash("Lien de la proposition copié."))}>Copier le lien</button>
                       {isAdmin && o.status === "sent" && (
-                        <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "#ff9999" }} onClick={() => confirm("Marquer cette proposition comme refusée ?") && offerCall({ action: "set_status", offerId: o.id, status: "declined" }, "Proposition marquée refusée.")}>Refusée</button>
+                        <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "var(--adm-bad)" }} onClick={() => confirm("Marquer cette proposition comme refusée ?") && offerCall({ action: "set_status", offerId: o.id, status: "declined" }, "Proposition marquée refusée.")}>Refusée</button>
                       )}
                     </div>
                   </div>
                   <div style={{ display: "grid", gap: "0.3rem", marginTop: "0.5rem" }}>
                     {o.options.map((x) => {
-                      const [ol, oc] = OPTION_STATUS[x.status] ?? [x.status, "#c3c2c8"];
+                      const [ol, oc] = OPTION_STATUS[x.status] ?? [x.status, "var(--adm-text-2)"];
                       return (
-                        <div key={x.id} style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap", fontSize: "0.78rem", color: "#c3c2c8" }}>
+                        <div key={x.id} style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
                           <span style={{ minWidth: "230px" }}>{x.slot_key ? `Chandail (${x.slot_key}) — ` : ""}{x.label}</span>
                           <strong style={{ color: "#fff" }}>{x.price_cents != null ? formatMoney(x.price_cents) : "à convenir"}</strong>
                           <span style={{ color: oc, fontWeight: 600 }}>{ol}</span>
@@ -278,13 +278,13 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Ce qui est offert par forfait</p>
             {tiers.map(([tier, label]) => (
               <div key={tier} style={{ marginBottom: "0.8rem" }}>
-                <p style={{ margin: "0 0 0.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#c4a4e4" }}>{label}</p>
-                <ul style={{ margin: 0, paddingLeft: "1.1rem", fontSize: "0.76rem", color: "#c3c2c8", lineHeight: 1.55 }}>
+                <p style={{ margin: "0 0 0.25rem", fontSize: "0.8rem", fontWeight: 700, color: "var(--adm-accent)" }}>{label}</p>
+                <ul style={{ margin: 0, paddingLeft: "1.1rem", fontSize: "0.76rem", color: "var(--adm-text-2)", lineHeight: 1.55 }}>
                   {TIER_BENEFITS[tier as keyof typeof TIER_BENEFITS].map((b) => <li key={b}>{b}</li>)}
                 </ul>
               </div>
             ))}
-            <p style={{ fontSize: "0.74rem", color: "#6d6b71", margin: 0 }}>Partenaire en nature : valeur variable, places illimitées — à négocier au cas par cas (aucun lien de paiement).</p>
+            <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: 0 }}>Partenaire en nature : valeur variable, places illimitées — à négocier au cas par cas (aucun lien de paiement).</p>
           </div>
         </div>
       </div>

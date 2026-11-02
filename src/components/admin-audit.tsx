@@ -37,7 +37,7 @@ export function AdminAudit({ initialEntries }: { initialEntries: AuditLogEntry[]
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Journal d&apos;audit</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Qui a fait quoi, et quand — pour les actions les plus sensibles (suppressions, changements de statut d&apos;inscription).
           </p>
 
@@ -55,22 +55,22 @@ export function AdminAudit({ initialEntries }: { initialEntries: AuditLogEntry[]
             ))}
           </div>
 
-          {loading && <p style={{ fontSize: "0.75rem", color: "#6d6b71" }}>Chargement...</p>}
+          {loading && <p style={{ fontSize: "0.75rem", color: "var(--adm-text-3)" }}>Chargement...</p>}
           {!loading && entries.length === 0 && <p className="admin-empty-text">Aucune entrée dans le journal.</p>}
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
             {!loading && entries.map((e) => (
-              <div key={e.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.65rem 0.9rem" }}>
+              <div key={e.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.65rem 0.9rem" }}>
                 <p style={{ fontSize: "0.8rem", color: "#fff", margin: "0 0 0.2rem" }}>
                   <strong>{e.actor_label}</strong> — {ACTION_LABELS[e.action] ?? e.action} · {ENTITY_LABELS[e.entity_type] ?? e.entity_type}
                   {e.entity_label ? ` — ${e.entity_label}` : ""}
                 </p>
                 {(e.before || e.after) && (
-                  <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.2rem" }}>
+                  <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0 0 0.2rem" }}>
                     {e.before && `Avant : ${formatValue(e.before)}`}{e.before && e.after ? " → " : ""}{e.after && `Après : ${formatValue(e.after)}`}
                   </p>
                 )}
-                <p style={{ fontSize: "0.68rem", color: "#48474d", margin: 0 }}>{new Date(e.created_at).toLocaleString("fr-CA")}</p>
+                <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: 0 }}>{new Date(e.created_at).toLocaleString("fr-CA")}</p>
               </div>
             ))}
           </div>

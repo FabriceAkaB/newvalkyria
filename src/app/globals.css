@@ -10749,3 +10749,165 @@ img { max-width: 100%; height: auto; }
   .nv27-tab { flex: 1; text-align: center; padding: 0.55rem 0.6rem; }
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════
+   ADMIN — Système de design v2 (nov. 2026)
+   Inspiré du mode sombre d'Apple : une police système lisible, des surfaces
+   à peine plus claires que le fond, des séparateurs fins, du texte en casse
+   normale, une seule couleur d'accent (mauve New Valkyria) et des couleurs
+   d'état réservées aux états. Les composants utilisent ces jetons (var(--adm-…))
+   au lieu de couleurs écrites à la main. Voir le skill design-interface.
+   ══════════════════════════════════════════════════════════════════════ */
+.admin-shell,
+.admin-login-shell {
+  --adm-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --adm-bg: #0b0a0f;
+  --adm-surface: #16141c;
+  --adm-surface-2: #1d1a25;
+  --adm-surface-3: #262230;
+  --adm-line: rgba(255, 255, 255, 0.07);
+  --adm-border: rgba(255, 255, 255, 0.1);
+  --adm-text: #f5f5f7;
+  --adm-text-2: rgba(235, 235, 245, 0.72);
+  --adm-text-3: rgba(235, 235, 245, 0.5);
+  --adm-accent: #b49bf2;
+  --adm-accent-strong: #8b5cf6;
+  --adm-accent-soft: rgba(180, 155, 242, 0.14);
+  --adm-good: #5fd38a;
+  --adm-good-soft: rgba(95, 211, 138, 0.13);
+  --adm-warn: #f2c14e;
+  --adm-warn-soft: rgba(242, 193, 78, 0.13);
+  --adm-bad: #ff7b7b;
+  --adm-bad-soft: rgba(255, 123, 123, 0.13);
+  --adm-info: #7cb8ff;
+  --adm-info-soft: rgba(124, 184, 255, 0.13);
+  --adm-radius: 12px;
+  --adm-radius-sm: 8px;
+  background: var(--adm-bg);
+  color: var(--adm-text);
+  font-family: var(--adm-font);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 0;
+}
+
+/* Une seule police dans l'admin (plus de police de titre condensée ni de majuscules espacées). */
+.admin-shell *,
+.admin-login-shell * { font-family: var(--adm-font) !important; }
+.admin-content *,
+.admin-hub *,
+.admin-shell .admin-section-title,
+.admin-shell .admin-stat-label,
+.admin-shell .admin-stat-value {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+/* En-tête de section (hub) */
+.admin-shell .admin-hub { background: var(--adm-bg); border-bottom: 1px solid var(--adm-line); }
+.admin-shell .admin-page-header-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; color: var(--adm-text); }
+.admin-shell .admin-page-header-desc { font-size: 0.95rem; color: var(--adm-text-2); margin-top: 0.25rem; }
+
+/* Onglets façon contrôle segmenté */
+.admin-shell .admin-tabs { gap: 0.25rem; border-bottom: none; padding: 0.25rem 0 0.5rem; }
+.admin-shell .admin-tab {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--adm-text-2);
+}
+.admin-shell .admin-tab:hover { color: var(--adm-text); background: var(--adm-surface-2); }
+.admin-shell .admin-tab[data-active="true"] { color: var(--adm-text); background: var(--adm-surface-3); border-bottom-color: transparent; }
+
+/* Titres de section */
+.admin-shell .admin-section-title { font-size: 1.05rem; font-weight: 600; color: var(--adm-text); margin: 0 0 0.75rem; }
+
+/* Indicateurs */
+.admin-shell .admin-stat-card {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  padding: 1.1rem 1.2rem;
+}
+.admin-shell .admin-stat-card-accent { background: var(--adm-surface); border-color: var(--adm-line); box-shadow: inset 3px 0 0 var(--adm-accent); }
+.admin-shell .admin-stat-card-warn { background: var(--adm-surface); border-color: var(--adm-line); box-shadow: inset 3px 0 0 var(--adm-warn); }
+.admin-shell .admin-stat-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--adm-text);
+  font-variant-numeric: tabular-nums;
+}
+.admin-shell .admin-stat-label { font-size: 0.82rem; font-weight: 400; color: var(--adm-text-2); margin-top: 0.35rem; line-height: 1.35; }
+
+/* Tableaux */
+.admin-shell .admin-table-wrap { border: 1px solid var(--adm-line); border-radius: var(--adm-radius); background: var(--adm-surface); }
+.admin-shell .admin-table th {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--adm-text-3);
+  text-transform: none;
+  letter-spacing: normal;
+  background: transparent;
+  border-bottom: 1px solid var(--adm-line);
+  padding: 0.7rem 0.85rem;
+}
+.admin-shell .admin-table td { font-size: 0.88rem; color: var(--adm-text); border-bottom: 1px solid var(--adm-line); padding: 0.7rem 0.85rem; font-variant-numeric: tabular-nums; }
+.admin-shell .admin-table tr:hover td,
+.admin-shell .admin-table tr.admin-tr-clickable:hover td { background: var(--adm-surface-2); }
+
+/* Boutons et champs */
+.admin-shell .admin-btn-primary {
+  background: var(--adm-accent-strong);
+  color: #fff;
+  border: none;
+  border-radius: var(--adm-radius-sm);
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.admin-shell .admin-btn-primary:hover { filter: brightness(1.1); }
+.admin-shell .admin-btn-ghost {
+  background: var(--adm-surface-2);
+  color: var(--adm-text);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.admin-shell .admin-btn-ghost:hover { background: var(--adm-surface-3); }
+.admin-shell .admin-input,
+.admin-shell .admin-search-input,
+.admin-shell .admin-group-select {
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-sm);
+  color: var(--adm-text);
+  font-size: 0.9rem;
+}
+.admin-shell .admin-input:focus,
+.admin-shell .admin-search-input:focus { outline: none; border-color: var(--adm-accent); box-shadow: 0 0 0 3px var(--adm-accent-soft); }
+.admin-shell .admin-filter-btn { text-transform: none; letter-spacing: normal; font-size: 0.82rem; border-radius: 999px; }
+.admin-shell .admin-filter-btn[data-active="true"] { background: var(--adm-accent-soft); color: var(--adm-text); border-color: transparent; }
+
+/* Menu latéral */
+.admin-shell .admin-sidebar { background: #0e0d13; border-right: 1px solid var(--adm-line); }
+.admin-shell .admin-sidebar-brand-title { letter-spacing: 0.02em; font-weight: 700; text-transform: none; font-size: 1.05rem; }
+.admin-shell .admin-sidebar-menu-btn { text-transform: none; letter-spacing: normal; font-weight: 600; border-radius: 999px; }
+.admin-shell .admin-sidebar-brand-sub { text-transform: none; letter-spacing: normal; color: var(--adm-text-3); font-size: 0.78rem; }
+.admin-shell .admin-sidebar-group-label { text-transform: none; letter-spacing: normal; font-size: 0.76rem; font-weight: 600; color: var(--adm-text-3); }
+.admin-shell .admin-sidebar-link { font-size: 0.9rem; font-weight: 500; color: var(--adm-text-2); border-radius: var(--adm-radius-sm); margin: 1px 0.5rem; }
+.admin-shell .admin-sidebar-link:hover { background: var(--adm-surface-2); color: var(--adm-text); }
+.admin-shell .admin-sidebar-link[data-active="true"] { background: var(--adm-accent-soft); color: var(--adm-text); box-shadow: none; border-left-color: transparent; }
+
+/* Pastilles d'état */
+.admin-shell .admin-badge { text-transform: none; letter-spacing: normal; border-radius: 999px; font-weight: 600; }
+
+/* Contenu */
+.admin-shell .admin-content { color: var(--adm-text); }
+.admin-shell .admin-empty-text { color: var(--adm-text-3); }

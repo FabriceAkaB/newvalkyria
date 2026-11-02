@@ -10,7 +10,7 @@ import { NV_OPPONENT_PRESETS } from "@/lib/match-slots-core";
 
 type Slot = MatchSlot & { available: boolean };
 type Booking = MatchBooking & { slot: MatchSlot };
-const STATUS: Record<string, [string, string]> = { pending: ["En attente", "#f0c878"], paid: ["Payée", "#8fce9f"], cancelled: ["Annulée", "#ff9999"] };
+const STATUS: Record<string, [string, string]> = { pending: ["En attente", "var(--adm-warn)"], paid: ["Payée", "var(--adm-good)"], cancelled: ["Annulée", "var(--adm-bad)"] };
 const GENDER_LABEL: Record<string, string> = { filles: "Filles", garcons: "Garçons", mixte: "Mixte" };
 
 /** Valeurs du formulaire d'édition d'une plage (tout en texte, converti à l'envoi). */
@@ -132,9 +132,9 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
   const balanceExpected = sold.filter((b) => !b.balance_paid_at).reduce((n, b) => n + b.balance_due_cents, 0);
   const doublesCount = new Set(upcoming.filter((s) => s.double_group).map((s) => s.double_group)).size;
 
-  const cell: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid #1f1d25", fontSize: "0.76rem", color: "#c3c2c8", verticalAlign: "top" };
-  const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" };
-  const lbl: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.2rem", fontSize: "0.7rem", color: "#9d9da0" };
+  const cell: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid var(--adm-line)", fontSize: "0.76rem", color: "var(--adm-text-2)", verticalAlign: "top" };
+  const card: React.CSSProperties = { background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" };
+  const lbl: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.2rem", fontSize: "0.7rem", color: "var(--adm-text-2)" };
 
   const fields = (d: Draft, set: (n: Draft) => void, bulkMode = false) => {
     const wrap = (key: keyof Draft, label: string, node: React.ReactNode) => (
@@ -178,7 +178,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
         ))}
         {wrap("categories", "Équipes admises (catégories)", (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            {d.categories.length === 0 && <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>Aucune restriction : toutes les équipes sont admises.</span>}
+            {d.categories.length === 0 && <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>Aucune restriction : toutes les équipes sont admises.</span>}
             {d.categories.map((c, i) => (
               <div key={i} style={{ display: "flex", gap: "0.3rem", alignItems: "center", flexWrap: "wrap" }}>
                 <select className="admin-input" value={c.gender} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, gender: e.target.value as SlotGender } : x)) }); }}>
@@ -190,16 +190,16 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                 <span style={{ fontSize: "0.7rem" }}>à</span>
                 <input className="admin-input" style={{ width: "64px" }} inputMode="numeric" placeholder="à 2015" title="Année de naissance la plus récente admise" value={c.max} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, max: e.target.value.replace(/\D/g, "").slice(0, 4) } : x)) }); }} />
                 <input className="admin-input" style={{ width: "70px" }} placeholder="calibre" title="Calibre exigé (ex. P1) — vide = tous" value={c.levels ?? ""} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, levels: e.target.value } : x)) }); }} />
-                <label style={{ fontSize: "0.66rem", color: "#9d9da0", display: "flex", alignItems: "center", gap: "0.2rem" }} title="Seulement les équipes qui sont un groupe de ces années exactes (ex. groupe 2014-2015)">
+                <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)", display: "flex", alignItems: "center", gap: "0.2rem" }} title="Seulement les équipes qui sont un groupe de ces années exactes (ex. groupe 2014-2015)">
                   <input type="checkbox" checked={Boolean(c.exact)} onChange={(e) => { touch("categories"); set({ ...d, categories: d.categories.map((x, j) => (j === i ? { ...x, exact: e.target.checked } : x)) }); }} />
                   groupe exact
                 </label>
-                <button type="button" className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} onClick={() => { touch("categories"); set({ ...d, categories: d.categories.filter((_, j) => j !== i) }); }}>Retirer</button>
+                <button type="button" className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} onClick={() => { touch("categories"); set({ ...d, categories: d.categories.filter((_, j) => j !== i) }); }}>Retirer</button>
               </div>
             ))}
             <button type="button" className="admin-btn-ghost" style={{ fontSize: "0.7rem", alignSelf: "flex-start" }} onClick={() => { touch("categories"); set({ ...d, categories: [...d.categories, { gender: "garcons", min: "", max: "" }] }); }}>+ Ajouter une catégorie admise</button>
-            <span style={{ fontSize: "0.66rem", color: "#6d6b71" }}>Ex. : « Garçons de 2014 à 2014 » + « Filles de 2014 à 2015 ». L&apos;équipe doit correspondre à au moins une ligne.</span>
-            <label style={{ fontSize: "0.7rem", color: "#c3c2c8", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+            <span style={{ fontSize: "0.66rem", color: "var(--adm-text-3)" }}>Ex. : « Garçons de 2014 à 2014 » + « Filles de 2014 à 2015 ». L&apos;équipe doit correspondre à au moins une ligne.</span>
+            <label style={{ fontSize: "0.7rem", color: "var(--adm-text-2)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
               <input type="checkbox" checked={d.allowRequests} onChange={(e) => { touch("allowRequests"); set({ ...d, allowRequests: e.target.checked }); }} />
               Les autres équipes peuvent faire une demande (à approuver)
             </label>
@@ -225,13 +225,13 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Matchs vendus aux académies</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1rem" }}>
             Page de réservation à envoyer aux équipes extérieures :{" "}
-            <a href={link} target="_blank" rel="noreferrer" style={{ color: "#c4a4e4" }}>{link}</a>{" "}
+            <a href={link} target="_blank" rel="noreferrer" style={{ color: "var(--adm-accent)" }}>{link}</a>{" "}
             <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => navigator.clipboard.writeText(link).then(() => flash("Lien copié."))}>Copier</button>
             <br />Règles automatiques : acompte en ligne pour réserver (50 $ par plage par défaut), solde payable le jour du match (100 $ par plage par défaut, pour un total de 150 $ par plage), 2 plages maximum par équipe, doubles cédules réservées en bloc, restrictions vérifiées côté serveur.
           </p>
-          {msg && <p style={{ fontSize: "0.78rem", color: "#8fce9f" }}>{msg}</p>}
+          {msg && <p style={{ fontSize: "0.78rem", color: "var(--adm-good)" }}>{msg}</p>}
 
           <div className="admin-stats" style={{ marginBottom: "1.2rem" }}>
             <div className="admin-stat-card"><p className="admin-stat-value">{upcoming.length}</p><p className="admin-stat-label">Plages à venir{doublesCount ? ` (dont ${doublesCount} doubles)` : ""}</p></div>
@@ -241,7 +241,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             <div className="admin-stat-card"><p className="admin-stat-value">{formatMoney(balanceExpected)}</p><p className="admin-stat-label">Soldes à recevoir (jour du match)</p></div>
             <div className="admin-stat-card"><p className="admin-stat-value">{formatMoney(balanceReceived)}</p><p className="admin-stat-label">Soldes reçus</p></div>
           </div>
-          <p style={{ fontSize: "0.76rem", color: "#9d9da0", margin: "-0.6rem 0 1.2rem" }}>
+          <p style={{ fontSize: "0.76rem", color: "var(--adm-text-2)", margin: "-0.6rem 0 1.2rem" }}>
             Potentiel : {upcoming.length} plage{upcoming.length > 1 ? "s" : ""} = {formatMoney(potential.depositCents)} d&apos;acomptes + {formatMoney(potential.balanceCents)} de soldes le jour du match.
           </p>
 
@@ -250,27 +250,27 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>
               Demandes de match ({data.requests.filter((r) => r.status === "pending").length} à traiter)
             </p>
-            <p style={{ fontSize: "0.74rem", color: "#6d6b71", margin: "0 0 0.6rem" }}>Équipes qui voient une plage sans y être admissibles d&apos;office. Approuvée : elle peut payer la plage (premier arrivé, premier servi). Un courriel lui est envoyé dans les deux cas.</p>
+            <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: "0 0 0.6rem" }}>Équipes qui voient une plage sans y être admissibles d&apos;office. Approuvée : elle peut payer la plage (premier arrivé, premier servi). Un courriel lui est envoyé dans les deux cas.</p>
             {data.requests.length === 0 ? (
               <p className="admin-empty-text">Aucune demande pour l&apos;instant.</p>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
-                  <thead><tr>{["Plage", "Équipe", "Contact", "Message", "Statut", ""].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+                  <thead><tr>{["Plage", "Équipe", "Contact", "Message", "Statut", ""].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
                   <tbody>
                     {data.requests.map((r) => (
                       <tr key={r.id}>
-                        <td style={cell}>{r.slot.slot_date}<br />{r.slot.start_time} – {r.slot.end_time}<br /><span style={{ color: "#6d6b71" }}>{r.slot.opponent ?? ""}</span></td>
+                        <td style={cell}>{r.slot.slot_date}<br />{r.slot.start_time} – {r.slot.end_time}<br /><span style={{ color: "var(--adm-text-3)" }}>{r.slot.opponent ?? ""}</span></td>
                         <td style={cell}>
                           <strong style={{ color: "#fff" }}>{r.profile.org_name}</strong><br />{r.profile.team_label}
                           <br />{GENDER_LABEL[r.profile.team_gender]} · {r.profile.team_birth_year_to && r.profile.team_birth_year_to !== r.profile.team_birth_year ? `groupe ${r.profile.team_birth_year}-${r.profile.team_birth_year_to}` : `nés en ${r.profile.team_birth_year}`} · {r.profile.team_level}
                         </td>
                         <td style={cell}>{r.profile.contact_name}<br />{r.profile.contact_email}<br />{r.profile.contact_phone}</td>
                         <td style={cell}>{r.message ?? "—"}</td>
-                        <td style={cell}><span style={{ color: r.status === "approved" ? "#8fce9f" : r.status === "declined" ? "#ff9999" : "#f0c878", fontWeight: 700 }}>{r.status === "approved" ? "Approuvée" : r.status === "declined" ? "Refusée" : "À traiter"}</span></td>
+                        <td style={cell}><span style={{ color: r.status === "approved" ? "var(--adm-good)" : r.status === "declined" ? "var(--adm-bad)" : "var(--adm-warn)", fontWeight: 700 }}>{r.status === "approved" ? "Approuvée" : r.status === "declined" ? "Refusée" : "À traiter"}</span></td>
                         <td style={cell}>
                           {r.status !== "approved" && <button className="admin-btn-primary" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "request_approve", requestId: r.id }, "Demande approuvée : l'équipe est avisée et peut payer.")}>Approuver</button>}{" "}
-                          {r.status !== "declined" && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm("Refuser cette demande ? L'équipe sera avisée.") && call({ action: "request_decline", requestId: r.id }, "Demande refusée : l'équipe est avisée.")}>Refuser</button>}
+                          {r.status !== "declined" && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm("Refuser cette demande ? L'équipe sera avisée.") && call({ action: "request_decline", requestId: r.id }, "Demande refusée : l'équipe est avisée.")}>Refuser</button>}
                         </td>
                       </tr>
                     ))}
@@ -283,10 +283,10 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
           {/* ── Équipes ayant rempli le formulaire ── */}
           <div style={card}>
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Équipes ayant rempli le formulaire ({data.profiles.length})</p>
-            <p style={{ fontSize: "0.74rem", color: "#6d6b71", margin: "0 0 0.6rem" }}>Une équipe doit remplir ce formulaire avant de pouvoir choisir une plage. Utile pour relancer celles qui n&apos;ont pas réservé.</p>
+            <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: "0 0 0.6rem" }}>Une équipe doit remplir ce formulaire avant de pouvoir choisir une plage. Utile pour relancer celles qui n&apos;ont pas réservé.</p>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
-                <thead><tr>{["Académie / équipe", "Catégorie", "Niveau", "Contact", "Réservation", "Reçu le"].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+                <thead><tr>{["Académie / équipe", "Catégorie", "Niveau", "Contact", "Réservation", "Reçu le"].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
                 <tbody>
                   {data.profiles.map((p) => {
                     const booked = data.bookings.filter((b) => b.team_profile_id === p.id && b.status !== "cancelled").length;
@@ -296,7 +296,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                         <td style={cell}>{GENDER_LABEL[p.team_gender]} · {p.team_birth_year_to && p.team_birth_year_to !== p.team_birth_year ? `groupe ${p.team_birth_year}-${p.team_birth_year_to}` : `nés en ${p.team_birth_year}`}</td>
                         <td style={cell}>{p.team_level}{p.team_players ? <><br />{p.team_players} joueurs</> : null}</td>
                         <td style={cell}>{p.contact_name}<br />{p.contact_email}<br />{p.contact_phone}</td>
-                        <td style={cell}>{booked > 0 ? <span style={{ color: "#8fce9f", fontWeight: 700 }}>{booked} plage{booked > 1 ? "s" : ""}</span> : <span style={{ color: "#f0c878" }}>Aucune — à relancer</span>}</td>
+                        <td style={cell}>{booked > 0 ? <span style={{ color: "var(--adm-good)", fontWeight: 700 }}>{booked} plage{booked > 1 ? "s" : ""}</span> : <span style={{ color: "var(--adm-warn)" }}>Aucune — à relancer</span>}</td>
                         <td style={cell}>
                           {new Date(p.created_at).toLocaleDateString("fr-CA")}
                           <br />
@@ -316,11 +316,11 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Réservations ({data.bookings.length})</p>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
-                <thead><tr>{["Match", "Académie / équipe", "Contact", "Acompte", "Solde jour du match", "Statut", ""].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+                <thead><tr>{["Match", "Académie / équipe", "Contact", "Acompte", "Solde jour du match", "Statut", ""].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
                 <tbody>
                   {data.bookings.map((b) => (
                     <tr key={b.id} style={{ opacity: b.status === "cancelled" ? 0.5 : 1 }}>
-                      <td style={cell}>{b.slot.slot_date}<br />{b.slot.start_time} – {b.slot.end_time}{b.slot.double_group ? <><br /><span style={{ color: "#c4a4e4" }}>Double cédule</span></> : null}</td>
+                      <td style={cell}>{b.slot.slot_date}<br />{b.slot.start_time} – {b.slot.end_time}{b.slot.double_group ? <><br /><span style={{ color: "var(--adm-accent)" }}>Double cédule</span></> : null}</td>
                       <td style={cell}>
                         <strong style={{ color: "#fff" }}>{b.org_name}</strong><br />{b.team_label}
                         {b.team_gender ? <><br />{GENDER_LABEL[b.team_gender]}{b.team_birth_year ? (b.team_birth_year_to && b.team_birth_year_to !== b.team_birth_year ? ` · groupe ${b.team_birth_year}-${b.team_birth_year_to}` : ` · nés en ${b.team_birth_year}`) : ""}{b.team_level ? ` · ${b.team_level}` : ""}</> : null}
@@ -333,16 +333,16 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                         {b.status === "paid" && (
                           <><br />
                             {b.balance_paid_at
-                              ? <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#8fce9f" }} disabled={busy} onClick={() => call({ action: "booking_balance_paid", bookingId: b.id, paid: false }, "Solde remis à recevoir.")}>✓ Solde reçu</button>
+                              ? <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-good)" }} disabled={busy} onClick={() => call({ action: "booking_balance_paid", bookingId: b.id, paid: false }, "Solde remis à recevoir.")}>✓ Solde reçu</button>
                               : <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "booking_balance_paid", bookingId: b.id, paid: true }, "Solde marqué reçu.")}>Marquer le solde reçu</button>}
                           </>
                         )}
                       </td>
-                      <td style={cell}><span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{STATUS[b.status][0]}</span>{b.cancelled_reason ? <><br /><span style={{ color: "#6d6b71" }}>{b.cancelled_reason}</span></> : null}</td>
+                      <td style={cell}><span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{STATUS[b.status][0]}</span>{b.cancelled_reason ? <><br /><span style={{ color: "var(--adm-text-3)" }}>{b.cancelled_reason}</span></> : null}</td>
                       <td style={cell}>
                         {b.status === "pending" && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => confirm("Marquer comme payée (paiement reçu hors ligne) ?") && call({ action: "booking_mark_paid", bookingId: b.id }, "Marquée payée.")}>Marquer payée</button>}{" "}
                         {b.status === "paid" && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "booking_resend", bookingId: b.id }, "Confirmation renvoyée.")}>Renvoyer la confirmation</button>}{" "}
-                        {b.status !== "cancelled" && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm(b.status === "paid" ? `Annuler et rembourser l'acompte de ${formatMoney(b.price_cents)} ?` : "Libérer cette plage ?") && call({ action: "booking_cancel", bookingId: b.id, refund: b.status === "paid" }, "Annulée")}>{b.status === "paid" ? "Annuler + rembourser" : "Libérer"}</button>}
+                        {b.status !== "cancelled" && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm(b.status === "paid" ? `Annuler et rembourser l'acompte de ${formatMoney(b.price_cents)} ?` : "Libérer cette plage ?") && call({ action: "booking_cancel", bookingId: b.id, refund: b.status === "paid" }, "Annulée")}>{b.status === "paid" ? "Annuler + rembourser" : "Libérer"}</button>}
                       </td>
                     </tr>
                   ))}
@@ -356,7 +356,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
           <div style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.7rem" }}>
               <p style={{ fontWeight: 700, color: "#fff", margin: 0 }}>Plages de match ({slots.length})</p>
-              <label style={{ fontSize: "0.72rem", color: "#9d9da0" }}><input type="checkbox" checked={showPast} onChange={(e) => setShowPast(e.target.checked)} /> Afficher les plages passées</label>
+              <label style={{ fontSize: "0.72rem", color: "var(--adm-text-2)" }}><input type="checkbox" checked={showPast} onChange={(e) => setShowPast(e.target.checked)} /> Afficher les plages passées</label>
             </div>
 
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: "0.9rem" }}>
@@ -409,21 +409,21 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                           <td style={cell}>
                             {new Date(s.slot_date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
                             <br />{s.start_time} – {s.end_time}
-                            {s.double_group && <><br /><span style={{ color: "#c4a4e4", fontWeight: 700 }}>Double cédule</span></>}
+                            {s.double_group && <><br /><span style={{ color: "var(--adm-accent)", fontWeight: 700 }}>Double cédule</span></>}
                           </td>
                           <td style={cell}>
                             <strong style={{ color: "#fff" }}>{s.match_format ?? "Format à préciser"}</strong>
-                            <br />Adversaire : {s.opponent ?? <em style={{ color: "#f0c878" }}>à préciser</em>}
+                            <br />Adversaire : {s.opponent ?? <em style={{ color: "var(--adm-warn)" }}>à préciser</em>}
                             <br />{s.field_label ?? s.location.split("–")[0]}
                           </td>
-                          <td style={cell}>{restr ?? <span style={{ color: "#6d6b71" }}>Aucune restriction</span>}{s.preferred_note ? <><br /><span style={{ color: "#8fce9f" }}>{s.preferred_note}</span></> : null}</td>
+                          <td style={cell}>{restr ?? <span style={{ color: "var(--adm-text-3)" }}>Aucune restriction</span>}{s.preferred_note ? <><br /><span style={{ color: "var(--adm-good)" }}>{s.preferred_note}</span></> : null}</td>
                           <td style={cell}>Acompte {formatMoney(s.price_cents)}<br />Solde {formatMoney(s.balance_due_cents)}</td>
-                          <td style={cell}>{b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : <span style={{ color: "#8fce9f" }}>Libre</span>}</td>
+                          <td style={cell}>{b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : <span style={{ color: "var(--adm-good)" }}>Libre</span>}</td>
                           <td style={cell}>
                             <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => { if (open) { setEditing(null); setDraft(null); } else { setEditing(s.id); setDraft(draftOf(s)); } }}>{open ? "Fermer" : "Modifier"}</button>{" "}
                             <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "slot_update", slotId: s.id, active: !s.active }, s.active ? "Plage masquée." : "Plage affichée.")}>{s.active ? "Masquer" : "Afficher"}</button>{" "}
                             {s.double_group && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => confirm("Dissocier cette double cédule ? Les deux plages redeviennent indépendantes.") && call({ action: "slot_unlink_double", slotId: s.id }, "Double cédule dissociée.")}>Dissocier</button>}{" "}
-                            {!b && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm("Supprimer cette plage ?") && call({ action: "slot_delete", slotId: s.id }, "Plage supprimée.")}>Supprimer</button>}
+                            {!b && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm("Supprimer cette plage ?") && call({ action: "slot_delete", slotId: s.id }, "Plage supprimée.")}>Supprimer</button>}
                           </td>
                         </tr>
                         {open && draft && (

@@ -47,8 +47,8 @@ export function CalendarWeekGrid({
         const iso = isoDate(d);
         const dayEvents = (byDate.get(iso) ?? []).sort((a, b) => (a.startTime ?? "").localeCompare(b.startTime ?? ""));
         return (
-          <div key={iso} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem", minHeight: "8rem" }}>
-            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#c3a6ff", textTransform: "capitalize", marginBottom: "0.5rem" }}>
+          <div key={iso} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem", minHeight: "8rem" }}>
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--adm-accent)", textTransform: "capitalize", marginBottom: "0.5rem" }}>
               {d.toLocaleDateString("fr-CA", { weekday: "short", day: "numeric" })}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
@@ -57,7 +57,7 @@ export function CalendarWeekGrid({
                   <span style={{ width: "0.4rem", height: "0.4rem", borderRadius: "50%", background: dotColor(e), flexShrink: 0, marginTop: "0.25rem" }} />
                   <div>
                     <p style={{ fontSize: "0.68rem", color: "#fff", margin: 0, lineHeight: 1.3 }}>{e.title}</p>
-                    <p style={{ fontSize: "0.62rem", color: "#6d6b71", margin: 0 }}>
+                    <p style={{ fontSize: "0.62rem", color: "var(--adm-text-3)", margin: 0 }}>
                       {e.startTime ? `${e.startTime.slice(0, 5)}–${e.endTime?.slice(0, 5) ?? ""}` : e.kind === "essai" ? "Essai" : "Heure à confirmer"}
                       {(terrainName(e.terrainId) || e.location) ? ` · ${terrainName(e.terrainId) ?? e.location}` : ""}
                     </p>

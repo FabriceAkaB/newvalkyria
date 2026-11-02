@@ -33,22 +33,22 @@ export function AdminUniformesProblemes({ problems: initialProblems, seasonLabel
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Problèmes à régler ({problems.length})</p>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Toutes saisons confondues — mauvaise taille, article manquant, échange demandé, etc.
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
             {problems.map((p) => (
-              <div key={p.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.6rem" }}>
+              <div key={p.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.6rem" }}>
                 <div>
                   <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>
                     🔴 {PROBLEM_TYPE_LABELS[p.problem_type]}
                   </p>
-                  <p style={{ fontSize: "0.75rem", color: "#9d9da0", margin: 0 }}>
+                  <p style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", margin: 0 }}>
                     {p.order.customer_name}{p.order.season_key ? ` · ${seasonLabelByKey[p.order.season_key] ?? p.order.season_key}` : ""}
                     {p.description ? ` — ${p.description}` : ""}
                   </p>
-                  <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: "0.2rem 0 0" }}>
+                  <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: "0.2rem 0 0" }}>
                     Signalé le {new Date(p.created_at).toLocaleDateString("fr-CA", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
                 </div>

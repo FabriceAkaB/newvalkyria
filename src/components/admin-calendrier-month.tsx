@@ -46,7 +46,7 @@ export function CalendarMonthGrid({
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.4rem", marginBottom: "0.3rem" }}>
         {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((label) => (
-          <p key={label} style={{ fontSize: "0.65rem", color: "#6d6b71", textAlign: "center", margin: 0 }}>{label}</p>
+          <p key={label} style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textAlign: "center", margin: 0 }}>{label}</p>
         ))}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.4rem" }}>
@@ -61,15 +61,15 @@ export function CalendarMonthGrid({
             <div
               key={iso}
               style={{
-                background: "#100e17",
-                border: "1px solid #1f1d25",
+                background: "var(--adm-surface)",
+                border: "1px solid var(--adm-line)",
                 borderRadius: "8px",
                 padding: "0.4rem",
                 minHeight: "5.5rem",
                 opacity: inMonth ? 1 : 0.35
               }}
             >
-              <p style={{ fontSize: "0.65rem", color: "#9d9da0", margin: "0 0 0.3rem" }}>{d.getDate()}</p>
+              <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", margin: "0 0 0.3rem" }}>{d.getDate()}</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                 {(expanded ? dayEvents : visible).map((e) => (
                   <div key={`${e.kind}-${e.id}`} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
@@ -80,7 +80,7 @@ export function CalendarMonthGrid({
                 {!expanded && overflow > 0 && (
                   <button
                     onClick={() => setOpenDay(iso)}
-                    style={{ fontSize: "0.6rem", color: "#c3a6ff", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
+                    style={{ fontSize: "0.6rem", color: "var(--adm-accent)", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
                   >
                     +{overflow} de plus
                   </button>
@@ -88,7 +88,7 @@ export function CalendarMonthGrid({
                 {expanded && dayEvents.length > 3 && (
                   <button
                     onClick={() => setOpenDay(null)}
-                    style={{ fontSize: "0.6rem", color: "#6d6b71", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
+                    style={{ fontSize: "0.6rem", color: "var(--adm-text-3)", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
                   >
                     Réduire
                   </button>

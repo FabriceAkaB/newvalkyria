@@ -60,14 +60,14 @@ function CertificationsSection({ coachId, certifications: initial }: { coachId: 
   };
 
   return (
-    <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1.1rem" }}>
-      <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.6rem" }}>Certifications</p>
+    <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1.1rem" }}>
+      <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.6rem" }}>Certifications</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.6rem" }}>
-        {certifications.length === 0 && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Aucune certification enregistrée.</p>}
+        {certifications.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Aucune certification enregistrée.</p>}
         {certifications.map((c) => {
           const expired = c.expiry_date && c.expiry_date < todayISO;
           return (
-            <div key={c.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: expired ? "#ff9999" : "#c3c2c8" }}>
+            <div key={c.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: expired ? "var(--adm-bad)" : "var(--adm-text-2)" }}>
               <span style={{ flex: 1 }}>
                 {c.name}{c.expiry_date ? ` · expire le ${new Date(c.expiry_date + "T00:00:00").toLocaleDateString("fr-CA")}${expired ? " (expirée)" : ""}` : ""}
               </span>
@@ -79,7 +79,7 @@ function CertificationsSection({ coachId, certifications: initial }: { coachId: 
                   <input ref={(el) => { fileInputs.current[c.id] = el; }} type="file" accept="application/pdf,image/jpeg,image/png" style={{ display: "none" }} onChange={(e) => uploadDocument(c.id, e.target.files?.[0])} />
                 </>
               )}
-              <button onClick={() => remove(c.id)} style={{ fontSize: "0.68rem", color: "#ff9999", background: "none", border: "none", cursor: "pointer" }}>×</button>
+              <button onClick={() => remove(c.id)} style={{ fontSize: "0.68rem", color: "var(--adm-bad)", background: "none", border: "none", cursor: "pointer" }}>×</button>
             </div>
           );
         })}
@@ -149,15 +149,15 @@ function TypeRatesSection({ coachId, rates: initial }: { coachId: string; rates:
       <p className="admin-drawer-section-title">Taux par type d&apos;activité</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.6rem" }}>
         {rates.map((r) => (
-          <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "#c3c2c8" }}>
+          <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
             <span>{r.activity_type}</span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               {formatCAD(r.hourly_rate_cents / 100)}/h
-              <button onClick={() => remove(r.id)} style={{ background: "none", border: "none", color: "#6d6b71", cursor: "pointer" }}>×</button>
+              <button onClick={() => remove(r.id)} style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer" }}>×</button>
             </span>
           </div>
         ))}
-        {rates.length === 0 && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Aucune surcharge — le taux par défaut s&apos;applique partout.</p>}
+        {rates.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Aucune surcharge — le taux par défaut s&apos;applique partout.</p>}
       </div>
       <div style={{ display: "flex", gap: "0.4rem" }}>
         <select className="admin-input" value={type} onChange={(e) => setType(e.target.value)} style={{ fontSize: "0.75rem" }}>
@@ -204,9 +204,9 @@ function CredentialsSection({ coachId, username: initialUsername }: { coachId: s
   };
 
   return (
-    <div className="admin-drawer-section" style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+    <div className="admin-drawer-section" style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
       <p className="admin-drawer-section-title">Accès Espace Entraîneur</p>
-      <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.6rem" }}>
+      <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0 0 0.6rem" }}>
         {initialUsername ? "Cet entraîneur a déjà un accès. Vous pouvez changer son mot de passe ci-dessous." : "Aucun accès configuré — l'entraîneur ne peut pas encore se connecter à /entraineur."}
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -221,7 +221,7 @@ function CredentialsSection({ coachId, username: initialUsername }: { coachId: s
         <button className="admin-btn-ghost" onClick={save} disabled={saving || !username || !password} style={{ fontSize: "0.75rem", alignSelf: "flex-start" }}>
           {saving ? "Enregistrement..." : "Enregistrer les identifiants"}
         </button>
-        {message && <p style={{ fontSize: "0.72rem", color: msgError ? "#ff8a8a" : "#7fd88f", margin: 0 }}>{message}</p>}
+        {message && <p style={{ fontSize: "0.72rem", color: msgError ? "#ff8a8a" : "var(--adm-good)", margin: 0 }}>{message}</p>}
       </div>
     </div>
   );
@@ -304,7 +304,7 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
           {error && <p className="admin-error">{error}</p>}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
-            <div className="admin-drawer-section" style={{ flex: "1 1 320px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+            <div className="admin-drawer-section" style={{ flex: "1 1 320px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
               <p className="admin-drawer-section-title">Profil</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "0.6rem" }}>
                 <ProfileField label="Prénom">
@@ -353,23 +353,23 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
                   onBlur={(e) => e.target.value !== (coach.notes ?? "") && patch({ notes: e.target.value || null }, { notes: e.target.value || null })}
                 />
               </label>
-              {saving && <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: "0.4rem 0 0" }}>Sauvegarde...</p>}
+              {saving && <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: "0.4rem 0 0" }}>Sauvegarde...</p>}
             </div>
 
             <div style={{ flex: "1 1 260px", display: "flex", flexDirection: "column", gap: "1rem" }}>
               <TypeRatesSection coachId={coach.id} rates={initialTypeRates} />
               <CredentialsSection coachId={coach.id} username={coach.username} />
               <CertificationsSection coachId={coach.id} certifications={initialCertifications} />
-              <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1.1rem" }}>
+              <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1.1rem" }}>
                 <EntityDocuments entityType="coach" entityId={coach.id} />
               </div>
 
-              <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1.1rem" }}>
-                <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Solde</p>
-                <p style={{ fontSize: "0.78rem", color: "#c3c2c8", margin: "0 0 0.25rem" }}>Heures totales : <strong style={{ color: "#fff" }}>{formatHours(totalHours)}</strong></p>
-                <p style={{ fontSize: "0.78rem", color: "#c3c2c8", margin: "0 0 0.25rem" }}>Montant gagné : <strong style={{ color: "#fff" }}>{formatCAD(totalEarned / 100)}</strong></p>
-                <p style={{ fontSize: "0.78rem", color: "#c3c2c8", margin: "0 0 0.25rem" }}>Montant payé : <strong style={{ color: "#7fd88f" }}>{formatCAD(totalPaid / 100)}</strong></p>
-                <p style={{ fontSize: "0.85rem", color: "#c3c2c8", margin: 0 }}>Reste à payer : <strong style={{ color: totalOwed > 0 ? "#ffb464" : "#fff" }}>{formatCAD(totalOwed / 100)}</strong></p>
+              <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1.1rem" }}>
+                <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Solde</p>
+                <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 0.25rem" }}>Heures totales : <strong style={{ color: "#fff" }}>{formatHours(totalHours)}</strong></p>
+                <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 0.25rem" }}>Montant gagné : <strong style={{ color: "#fff" }}>{formatCAD(totalEarned / 100)}</strong></p>
+                <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 0.25rem" }}>Montant payé : <strong style={{ color: "var(--adm-good)" }}>{formatCAD(totalPaid / 100)}</strong></p>
+                <p style={{ fontSize: "0.85rem", color: "var(--adm-text-2)", margin: 0 }}>Reste à payer : <strong style={{ color: totalOwed > 0 ? "var(--adm-warn)" : "#fff" }}>{formatCAD(totalOwed / 100)}</strong></p>
               </div>
             </div>
           </div>
@@ -397,7 +397,7 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
                     <td>{formatHours(computed.hours)}</td>
                     <td>{formatCAD(computed.rateCents / 100)}/h</td>
                     <td>{formatCAD(computed.payCents / 100)}</td>
-                    <td style={{ color: assignment.paid ? "#7fd88f" : "#ffb464" }}>{assignment.paid ? "✓ Payé" : "Non payé"}</td>
+                    <td style={{ color: assignment.paid ? "var(--adm-good)" : "var(--adm-warn)" }}>{assignment.paid ? "✓ Payé" : "Non payé"}</td>
                   </tr>
                 ))}
                 {rows.length === 0 && (

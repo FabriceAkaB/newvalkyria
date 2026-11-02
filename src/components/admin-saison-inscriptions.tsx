@@ -48,10 +48,10 @@ function StatusBadge({ status, isTrial, trialDate }: { status: RegistrationStatu
   if (status === "unavailable") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(150,150,170,0.18)", color: "#b4b4c8", borderColor: "rgba(150,150,170,0.45)" }}>Indisponible cette saison</span>;
   if (status === "waitlist") return <span className="admin-badge admin-badge-waitlist">Liste d&apos;attente</span>;
   if (status === "paid") return <span className="admin-badge admin-badge-paid">✓ Payée</span>;
-  if (status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "#9ec9ff", borderColor: "#465671" }}>✓ Confirmée</span>;
-  if (status === "cancelled") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,100,100,0.18)", color: "#ff9999" }}>Annulée</span>;
+  if (status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "var(--adm-info)", borderColor: "#465671" }}>✓ Confirmée</span>;
+  if (status === "cancelled") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,100,100,0.18)", color: "var(--adm-bad)" }}>Annulée</span>;
   if (isTrial && !trialDate) {
-    return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,150,50,0.2)", color: "#ffb464", borderColor: "rgba(255,150,50,0.5)" }} title="Aucune date d'essai fixée">⚠ Essai — sans date</span>;
+    return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,150,50,0.2)", color: "var(--adm-warn)", borderColor: "rgba(255,150,50,0.5)" }} title="Aucune date d'essai fixée">⚠ Essai — sans date</span>;
   }
   return <span className="admin-badge admin-badge-pending">En attente</span>;
 }
@@ -119,7 +119,7 @@ function TransferToEteModal({ registration: r, seasonId, onClose, onTransferred 
     <div className="admin-modal-overlay">
       <div className="admin-modal-box" style={{ maxWidth: "560px", textAlign: "left" }}>
         <p className="admin-modal-title">Transférer vers Été 2026</p>
-        <p style={{ fontSize: "0.78rem", color: "#9d9da0", marginBottom: "1rem" }}>
+        <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", marginBottom: "1rem" }}>
           Crée une nouvelle inscription (lead) dans Été 2026. Cette inscription reste inchangée dans sa saison d&apos;origine.
         </p>
         {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
@@ -204,7 +204,7 @@ function TransferToSportEtudesModal({ registration: r, seasonId, onClose, onTran
     <div className="admin-modal-overlay">
       <div className="admin-modal-box" style={{ maxWidth: "560px", textAlign: "left" }}>
         <p className="admin-modal-title">Transférer vers Sport-Études (Garçons)</p>
-        <p style={{ fontSize: "0.78rem", color: "#9d9da0", marginBottom: "1rem" }}>
+        <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", marginBottom: "1rem" }}>
           Crée une nouvelle inscription dans le programme Sport-Études. Cette inscription reste inchangée dans sa saison d&apos;origine.
         </p>
         {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
@@ -341,9 +341,9 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                         padding: "0.35rem 0.7rem",
                         fontSize: "0.72rem",
                         borderRadius: "6px",
-                        border: isActive ? "1px solid #8d76a5" : "1px solid #302e36",
+                        border: isActive ? "1px solid var(--adm-accent)" : "1px solid var(--adm-border)",
                         background: isActive ? "#30283c" : "transparent",
-                        color: isActive ? "#fff" : "#9d9da0",
+                        color: isActive ? "#fff" : "var(--adm-text-2)",
                         cursor: isActive ? "default" : "pointer",
                         fontWeight: isActive ? 600 : 400
                       }}
@@ -353,7 +353,7 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                   );
                 })}
               </div>
-              {statusSavedLabel && <p style={{ fontSize: "0.72rem", color: "#7fd88f", margin: "0.5rem 0 0" }}>✓ Statut changé pour « {statusSavedLabel} ».</p>}
+              {statusSavedLabel && <p style={{ fontSize: "0.72rem", color: "var(--adm-good)", margin: "0.5rem 0 0" }}>✓ Statut changé pour « {statusSavedLabel} ».</p>}
             </div>
           </div>
 
@@ -407,7 +407,7 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                   title="Ajouter une photo"
                   style={{
                     position: "absolute", bottom: "-2px", right: "-2px", width: "22px", height: "22px", borderRadius: "50%",
-                    background: "#251f30", border: "1px solid #17151e", display: "flex", alignItems: "center", justifyContent: "center",
+                    background: "var(--adm-border)", border: "1px solid var(--adm-surface-2)", display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", fontSize: "0.68rem"
                   }}
                 >
@@ -415,7 +415,7 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                   <input id="drawer-photo-upload" type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => uploadPhoto(e.target.files?.[0])} />
                 </label>
               </div>
-              <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>
+              <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>
                 Photo liée à la fiche joueuse — changée ici, elle se met à jour partout (Évaluation, Inscriptions). Aucune photo n&apos;est jamais demandée au parent.
               </p>
             </div>
@@ -474,15 +474,15 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
               </select>
             </label>
             <div style={{ display: "flex", gap: "1.25rem", marginTop: "0.7rem", flexWrap: "wrap" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#c3c2c8", cursor: "pointer" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
                 <input type="checkbox" checked={r.advanced_group} onChange={(e) => patch({ advancedGroup: e.target.checked }, { advanced_group: e.target.checked })} />
                 Groupe avancé
               </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#c3c2c8", cursor: "pointer" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
                 <input type="checkbox" checked={r.is_trial} onChange={(e) => patch({ isTrial: e.target.checked }, { is_trial: e.target.checked })} />
                 À l&apos;essai
               </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#c3c2c8", cursor: "pointer" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
                 <input
                   type="checkbox"
                   checked={r.is_half_season}
@@ -494,13 +494,13 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                 Demi-saison
               </label>
               {r.is_half_season && (
-                <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#c3c2c8" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)" }}>
                   Fin le
                   <input
                     type="date"
                     value={r.half_season_ends_on ?? ""}
                     onChange={(e) => patch({ halfSeasonEndsOn: e.target.value || null }, { half_season_ends_on: e.target.value || null })}
-                    style={{ padding: "0.2rem 0.4rem", fontSize: "0.72rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff" }}
+                    style={{ padding: "0.2rem 0.4rem", fontSize: "0.72rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff" }}
                   />
                 </label>
               )}
@@ -513,13 +513,13 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
               {r.stripe_checkout_session_id && (
                 <div className="admin-drawer-field">
                   <p className="admin-drawer-label">Session Checkout</p>
-                  <p className="admin-drawer-value" style={{ fontSize: "0.72rem", wordBreak: "break-all", color: "#6d6b71" }}>{r.stripe_checkout_session_id}</p>
+                  <p className="admin-drawer-value" style={{ fontSize: "0.72rem", wordBreak: "break-all", color: "var(--adm-text-3)" }}>{r.stripe_checkout_session_id}</p>
                 </div>
               )}
               {r.stripe_payment_intent_id && (
                 <div className="admin-drawer-field">
                   <p className="admin-drawer-label">Payment Intent</p>
-                  <p className="admin-drawer-value" style={{ fontSize: "0.72rem", wordBreak: "break-all", color: "#6d6b71" }}>{r.stripe_payment_intent_id}</p>
+                  <p className="admin-drawer-value" style={{ fontSize: "0.72rem", wordBreak: "break-all", color: "var(--adm-text-3)" }}>{r.stripe_payment_intent_id}</p>
                 </div>
               )}
             </div>
@@ -533,14 +533,14 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
             <p className="admin-drawer-section-title">Transfert</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", alignItems: "flex-start" }}>
               {transferredToEte ? (
-                <p style={{ fontSize: "0.78rem", color: "#7fd88f", margin: 0 }}>✓ Transférée vers Été 2026.</p>
+                <p style={{ fontSize: "0.78rem", color: "var(--adm-good)", margin: 0 }}>✓ Transférée vers Été 2026.</p>
               ) : (
                 <button className="admin-btn-ghost" onClick={() => setShowTransferToEte(true)} style={{ fontSize: "0.78rem" }}>
                   Transférer vers Été 2026
                 </button>
               )}
               {transferredToSportEtudes ? (
-                <p style={{ fontSize: "0.78rem", color: "#7fd88f", margin: 0 }}>✓ Transférée vers Sport-Études.</p>
+                <p style={{ fontSize: "0.78rem", color: "var(--adm-good)", margin: 0 }}>✓ Transférée vers Sport-Études.</p>
               ) : (
                 <button className="admin-btn-ghost" onClick={() => setShowTransferToSportEtudes(true)} style={{ fontSize: "0.78rem" }}>
                   Transférer vers Sport-Études (Garçons)
@@ -553,7 +553,7 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
             <p className="admin-drawer-section-title">Référence</p>
             <div className="admin-drawer-field">
               <p className="admin-drawer-label">ID inscription</p>
-              <p className="admin-drawer-value" style={{ fontSize: "0.68rem", wordBreak: "break-all", color: "#48474d" }}>{r.id}</p>
+              <p className="admin-drawer-value" style={{ fontSize: "0.68rem", wordBreak: "break-all", color: "var(--adm-text-3)" }}>{r.id}</p>
             </div>
           </div>
 
@@ -746,7 +746,7 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
               <button onClick={handleExportCSV} className="admin-export-btn" title="Exporter la sélection en CSV">↓ Exporter CSV</button>
             </div>
           </div>
-          {copyEmailsMessage && <p style={{ fontSize: "0.72rem", color: "#8fce9f", margin: "-0.75rem 0 1rem" }}>{copyEmailsMessage}</p>}
+          {copyEmailsMessage && <p style={{ fontSize: "0.72rem", color: "var(--adm-good)", margin: "-0.75rem 0 1rem" }}>{copyEmailsMessage}</p>}
 
           <div className="admin-filters-row">
             <div className="admin-filters">
@@ -777,7 +777,7 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
               <option value="parent_asc">A→Z Nom parent</option>
               <option value="child_asc">A→Z Nom joueuse</option>
             </select>
-            <span style={{ fontSize: "0.62rem", color: "#3c3a41", marginLeft: "auto", letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: "0.62rem", color: "var(--adm-border)", marginLeft: "auto", letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
               {filtered.length} résultat{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
@@ -814,8 +814,8 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
                       <td className="admin-td-email">{r.parent_email}</td>
                       <td className="admin-td-phone">{r.parent_phone}</td>
                       <td className="admin-td-cat">{categoryLabel(r.category_id)}</td>
-                      <td style={{ fontSize: "0.75rem", color: "#858489" }}>{programName(r.program_id)}</td>
-                      <td style={{ fontSize: "0.75rem", color: "#858489" }}>{slotLabel(r.time_slot_template_id)}</td>
+                      <td style={{ fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{programName(r.program_id)}</td>
+                      <td style={{ fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{slotLabel(r.time_slot_template_id)}</td>
                       <td><StatusBadge status={r.status} isTrial={r.is_trial} trialDate={r.trial_date} /></td>
                     </tr>
                   ))

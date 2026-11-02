@@ -27,7 +27,7 @@ function ChargeNowButton({ installmentId, onCharged }: { installmentId: string; 
       <button className="admin-btn-ghost" style={{ fontSize: "0.62rem", padding: "0.2rem 0.5rem" }} onClick={charge} disabled={state === "loading"}>
         {state === "loading" ? "..." : "💰 Prélever maintenant (carte au dossier)"}
       </button>
-      {result && <p style={{ fontSize: "0.65rem", color: result.startsWith("✓") ? "#7fd88f" : "#ff9999", margin: "0.2rem 0 0" }}>{result}</p>}
+      {result && <p style={{ fontSize: "0.65rem", color: result.startsWith("✓") ? "var(--adm-good)" : "var(--adm-bad)", margin: "0.2rem 0 0" }}>{result}</p>}
     </div>
   );
 }
@@ -135,7 +135,7 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Paiements échelonnés</p>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Familles ayant choisi de payer en plusieurs versements — {plans.length} plan(s) au total.
           </p>
 
@@ -193,19 +193,19 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
                         <td>{seasonLabelById[p.seasonId] ?? p.seasonId}{p.programId ? ` — ${programNameById[p.programId] ?? p.programId}` : ""}</td>
                         <td>{formatCAD(p.totalAmountCents / 100)}</td>
                         <td>{paidCount}/{p.installmentCount}</td>
-                        <td style={{ color: remaining > 0 ? "#ffb464" : "#7fd88f" }}>{formatCAD(remaining / 100)}</td>
+                        <td style={{ color: remaining > 0 ? "var(--adm-warn)" : "var(--adm-good)" }}>{formatCAD(remaining / 100)}</td>
                         <td>{next ? `${formatCAD(next.amountCents / 100)} — ${new Date(next.dueDate + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short" })}` : "—"}</td>
                         <td><span className={`admin-badge ${status.className}`}>{status.label}</span></td>
                       </tr>
                       {expanded && (
                         <tr>
-                          <td colSpan={8} style={{ background: "#100e17", padding: "0.75rem 1rem" }}>
-                            <p style={{ fontSize: "0.7rem", color: "#6d6b71", textTransform: "uppercase", margin: "0 0 0.5rem" }}>{p.parentEmail}</p>
+                          <td colSpan={8} style={{ background: "var(--adm-surface)", padding: "0.75rem 1rem" }}>
+                            <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", textTransform: "uppercase", margin: "0 0 0.5rem" }}>{p.parentEmail}</p>
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                               {p.installments.map((i) => (
-                                <div key={i.sequenceNo} style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "8px", padding: "0.5rem 0.75rem", fontSize: "0.75rem" }}>
+                                <div key={i.sequenceNo} style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "8px", padding: "0.5rem 0.75rem", fontSize: "0.75rem" }}>
                                   <p style={{ margin: 0, color: "#fff" }}>Versement {i.sequenceNo}/{p.installmentCount} — {formatCAD(i.amountCents / 100)}</p>
-                                  <p style={{ margin: "0.2rem 0 0", color: "#9d9da0" }}>
+                                  <p style={{ margin: "0.2rem 0 0", color: "var(--adm-text-2)" }}>
                                     Dû le {new Date(i.dueDate + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short", year: "numeric" })}
                                     {" · "}{INSTALLMENT_STATUS_LABELS[i.status] ?? i.status}
                                     {i.paidAt && ` (${new Date(i.paidAt).toLocaleDateString("fr-CA", { day: "numeric", month: "short" })})`}
@@ -233,24 +233,24 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1.25rem" }}>
-            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Plans (sélection)</p>
+            <div style={{ flex: "1 1 160px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Plans (sélection)</p>
               <p style={{ fontSize: "1.1rem", color: "#fff", margin: 0, fontWeight: 700 }}>{filtered.length}</p>
             </div>
-            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Total des plans</p>
+            <div style={{ flex: "1 1 160px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Total des plans</p>
               <p style={{ fontSize: "1.1rem", color: "#fff", margin: 0, fontWeight: 700 }}>{formatCAD(totalPlanned / 100)}</p>
             </div>
-            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Déjà encaissé</p>
-              <p style={{ fontSize: "1.1rem", color: "#7fd88f", margin: 0, fontWeight: 700 }}>{formatCAD(totalCollected / 100)}</p>
+            <div style={{ flex: "1 1 160px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Déjà encaissé</p>
+              <p style={{ fontSize: "1.1rem", color: "var(--adm-good)", margin: 0, fontWeight: 700 }}>{formatCAD(totalCollected / 100)}</p>
             </div>
-            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Encore à recevoir</p>
-              <p style={{ fontSize: "1.1rem", color: "#ffb464", margin: 0, fontWeight: 700 }}>{formatCAD(totalToCollect / 100)}</p>
+            <div style={{ flex: "1 1 160px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Encore à recevoir</p>
+              <p style={{ fontSize: "1.1rem", color: "var(--adm-warn)", margin: 0, fontWeight: 700 }}>{formatCAD(totalToCollect / 100)}</p>
             </div>
-            <div style={{ flex: "1 1 160px", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-              <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Versements en attente</p>
+            <div style={{ flex: "1 1 160px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Versements en attente</p>
               <p style={{ fontSize: "1.1rem", color: "#fff", margin: 0, fontWeight: 700 }}>{totalInstallmentsDue}</p>
             </div>
           </div>

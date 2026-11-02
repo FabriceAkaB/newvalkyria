@@ -94,7 +94,7 @@ export function AdminEssais() {
       <>
         <AdminTopbar />
         <div className="admin-content">
-          <p style={{ color: "#858489" }}>Chargement...</p>
+          <p style={{ color: "var(--adm-text-3)" }}>Chargement...</p>
         </div>
       </>
     );
@@ -120,7 +120,7 @@ export function AdminEssais() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <p className="admin-section-title" style={{ margin: 0 }}>Dates d&apos;essai gratuit</p>
-            <p style={{ fontSize: "0.75rem", color: "#545359", margin: "0.3rem 0 0" }}>
+            <p style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", margin: "0.3rem 0 0" }}>
               Modifiez les dates, horaires et lieu des essais gratuits en temps réel
             </p>
           </div>
@@ -217,7 +217,7 @@ export function AdminEssais() {
             ))}
 
             {(!config.groups[cat] || config.groups[cat].length === 0) && (
-              <p style={{ fontSize: "0.78rem", color: "#48474d", fontStyle: "italic" }}>
+              <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", fontStyle: "italic" }}>
                 Aucun groupe configuré pour cette catégorie
               </p>
             )}

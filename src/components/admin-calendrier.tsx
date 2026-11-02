@@ -41,15 +41,15 @@ function CalendarSubscription() {
   };
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem", marginBottom: "1.5rem" }}>
-      <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Abonnement calendrier (Google Calendar, Apple Calendar, Outlook)</p>
-      <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.6rem" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", marginBottom: "1.5rem" }}>
+      <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Abonnement calendrier (Google Calendar, Apple Calendar, Outlook)</p>
+      <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0 0 0.6rem" }}>
         Ajoutez ce lien comme calendrier &laquo; par URL &raquo; dans votre application préférée — les activités et essais se mettent à jour automatiquement.
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-        <input className="admin-input" readOnly value={url ?? "Chargement..."} style={{ flex: "1 1 320px", fontSize: "0.72rem", color: "#9d9da0" }} onFocus={(e) => e.target.select()} />
+        <input className="admin-input" readOnly value={url ?? "Chargement..."} style={{ flex: "1 1 320px", fontSize: "0.72rem", color: "var(--adm-text-2)" }} onFocus={(e) => e.target.select()} />
         <button onClick={copy} disabled={!url} className="admin-btn-ghost" style={{ fontSize: "0.72rem" }}>{copied ? "Copié !" : "Copier"}</button>
-        <button onClick={regenerate} disabled={regenerating || !token} className="admin-btn-ghost" style={{ fontSize: "0.72rem", color: "#ff9999" }}>
+        <button onClick={regenerate} disabled={regenerating || !token} className="admin-btn-ghost" style={{ fontSize: "0.72rem", color: "var(--adm-bad)" }}>
           {regenerating ? "..." : "Régénérer"}
         </button>
       </div>
@@ -58,25 +58,25 @@ function CalendarSubscription() {
 }
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  Pratique: "#7fd88f",
-  Match: "#ff9999",
-  Tournoi: "#f0c878",
-  Camp: "#88c0d0",
-  Évaluation: "#c3a6ff",
+  Pratique: "var(--adm-good)",
+  Match: "var(--adm-bad)",
+  Tournoi: "var(--adm-warn)",
+  Camp: "var(--adm-info)",
+  Évaluation: "var(--adm-accent)",
   "Activité privée": "#e0b0d8",
-  Réunion: "#9d9da0",
-  Autre: "#9d9da0"
+  Réunion: "var(--adm-text-2)",
+  Autre: "var(--adm-text-2)"
 };
 
 const KIND_COLORS: Record<string, string> = {
-  essai: "#88c0d0",
+  essai: "var(--adm-info)",
   seance_privee: "#f0a8c0",
-  sport_etudes: "#78a8f0"
+  sport_etudes: "var(--adm-info)"
 };
 
 function eventDotColor(e: CalendarEvent): string {
-  if (e.kind === "activite") return ACTIVITY_COLORS[e.activityType ?? ""] ?? "#9d9da0";
-  return KIND_COLORS[e.kind] ?? "#9d9da0";
+  if (e.kind === "activite") return ACTIVITY_COLORS[e.activityType ?? ""] ?? "var(--adm-text-2)";
+  return KIND_COLORS[e.kind] ?? "var(--adm-text-2)";
 }
 
 const KIND_LABELS: Record<string, string> = {
@@ -152,7 +152,7 @@ export function AdminCalendrier({
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Calendrier</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Toutes les activités (pratiques, matchs, tournois...) et tous les essais, saisons confondues, en un seul endroit.
           </p>
 
@@ -160,7 +160,7 @@ export function AdminCalendrier({
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem", alignItems: "center" }}>
             <input type="date" className="admin-input" value={fromInput} onChange={(e) => setFromInput(e.target.value)} style={{ width: "auto" }} />
-            <span style={{ color: "#6d6b71", fontSize: "0.78rem" }}>→</span>
+            <span style={{ color: "var(--adm-text-3)", fontSize: "0.78rem" }}>→</span>
             <input type="date" className="admin-input" value={toInput} onChange={(e) => setToInput(e.target.value)} style={{ width: "auto" }} />
             <button onClick={navigate} className="admin-btn-ghost" style={{ fontSize: "0.78rem" }}>Appliquer</button>
 
@@ -211,7 +211,7 @@ export function AdminCalendrier({
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               {byDate.map(([date, dayEvents]) => (
                 <div key={date}>
-                  <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#c3a6ff", textTransform: "capitalize", marginBottom: "0.5rem" }}>
+                  <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--adm-accent)", textTransform: "capitalize", marginBottom: "0.5rem" }}>
                     {formatDateHeading(date)}
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
@@ -222,20 +222,20 @@ export function AdminCalendrier({
                           key={`${e.kind}-${e.id}`}
                           onClick={clickable ? () => router.push(`/admin/entraineurs/activites/${e.id}`) : undefined}
                           style={{
-                            display: "flex", alignItems: "center", gap: "0.6rem", background: "#100e17", border: "1px solid #1f1d25",
+                            display: "flex", alignItems: "center", gap: "0.6rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)",
                             borderRadius: "8px", padding: "0.55rem 0.85rem", cursor: clickable ? "pointer" : "default"
                           }}
                         >
                           <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "50%", background: eventDotColor(e), flexShrink: 0 }} />
-                          <span style={{ fontSize: "0.75rem", color: "#9d9da0", minWidth: "5.5rem" }}>
+                          <span style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", minWidth: "5.5rem" }}>
                             {e.startTime ? `${e.startTime.slice(0, 5)}–${e.endTime?.slice(0, 5) ?? ""}` : e.kind === "essai" ? "Essai" : "Heure à confirmer"}
                           </span>
                           <span style={{ fontSize: "0.82rem", color: "#fff", flex: 1 }}>{e.title}</span>
-                          {e.coachNames && <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>{e.coachNames}</span>}
+                          {e.coachNames && <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>{e.coachNames}</span>}
                           {(terrainName(e.terrainId) || e.location) && (
-                            <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>{terrainName(e.terrainId) ?? e.location}</span>
+                            <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>{terrainName(e.terrainId) ?? e.location}</span>
                           )}
-                          {clickable && <span style={{ fontSize: "0.7rem", color: "#9f85ba" }}>→</span>}
+                          {clickable && <span style={{ fontSize: "0.7rem", color: "var(--adm-accent)" }}>→</span>}
                         </div>
                       );
                     })}

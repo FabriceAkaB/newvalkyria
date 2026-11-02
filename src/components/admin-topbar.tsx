@@ -91,11 +91,11 @@ function GlobalSearchBox() {
         style={{ fontSize: "0.75rem", width: "100%" }}
       />
       {open && hasQuery && (
-        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "#17151e", border: "1px solid #302e36", borderRadius: "8px", marginTop: "0.3rem", maxHeight: "320px", overflowY: "auto", padding: "0.4rem" }}>
-          {loading && <p style={{ fontSize: "0.72rem", color: "#6d6b71", padding: "0.4rem" }}>Recherche...</p>}
-          {!loading && !hasResults && <p style={{ fontSize: "0.72rem", color: "#6d6b71", padding: "0.4rem" }}>Aucun résultat.</p>}
+        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "8px", marginTop: "0.3rem", maxHeight: "320px", overflowY: "auto", padding: "0.4rem" }}>
+          {loading && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", padding: "0.4rem" }}>Recherche...</p>}
+          {!loading && !hasResults && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", padding: "0.4rem" }}>Aucun résultat.</p>}
           {!loading && results?.players.map((p) => (
-            <div key={p.playerId} style={{ padding: "0.4rem", borderBottom: "1px solid #1f1d25" }}>
+            <div key={p.playerId} style={{ padding: "0.4rem", borderBottom: "1px solid var(--adm-line)" }}>
               <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 600, margin: "0 0 0.2rem" }}>{p.firstName} {p.lastName}</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
                 {p.registrations.map((r) => (
@@ -112,8 +112,8 @@ function GlobalSearchBox() {
             </div>
           ))}
           {!loading && results?.coaches.map((c) => (
-            <Link key={c.id} href={`/admin/entraineurs/${c.id}`} style={{ display: "block", padding: "0.4rem", textDecoration: "none", borderBottom: "1px solid #1f1d25" }}>
-              <p style={{ fontSize: "0.75rem", color: "#a0c8ff", margin: 0 }}>🧑‍🏫 {c.firstName} {c.lastName}</p>
+            <Link key={c.id} href={`/admin/entraineurs/${c.id}`} style={{ display: "block", padding: "0.4rem", textDecoration: "none", borderBottom: "1px solid var(--adm-line)" }}>
+              <p style={{ fontSize: "0.75rem", color: "var(--adm-info)", margin: 0 }}>🧑‍🏫 {c.firstName} {c.lastName}</p>
             </Link>
           ))}
         </div>

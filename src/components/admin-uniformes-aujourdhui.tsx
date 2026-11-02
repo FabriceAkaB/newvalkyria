@@ -38,7 +38,7 @@ export function AdminUniformesAujourdhui({ orders, seasonKeys, seasonLabelByKey,
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Distribution aujourd&apos;hui</p>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Commandes prêtes à remettre ou partiellement remises, groupées par groupe — total : <strong style={{ color: "#fff" }}>{orders.length}</strong>.
           </p>
 
@@ -58,17 +58,17 @@ export function AdminUniformesAujourdhui({ orders, seasonKeys, seasonLabelByKey,
             {sortedGroups.map(([group, list]) => (
               <div key={group}>
                 <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", marginBottom: "0.5rem" }}>
-                  {group} <span style={{ color: "#9d9da0", fontWeight: 400 }}>({list.length} joueuse{list.length > 1 ? "s" : ""})</span>
+                  {group} <span style={{ color: "var(--adm-text-2)", fontWeight: 400 }}>({list.length} joueuse{list.length > 1 ? "s" : ""})</span>
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
                   {list.map((o) => (
                     <Link
                       key={o.id}
                       href={`/admin/uniformes/commande/${o.id}`}
-                      style={{ display: "flex", justifyContent: "space-between", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.9rem", textDecoration: "none", color: "#c3c2c8", fontSize: "0.8rem" }}
+                      style={{ display: "flex", justifyContent: "space-between", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.9rem", textDecoration: "none", color: "var(--adm-text-2)", fontSize: "0.8rem" }}
                     >
                       <span>{o.registration ? `${o.registration.playerFirstName ?? ""} ${o.registration.playerLastName ?? ""}`.trim() : o.customer_name}</span>
-                      <span style={{ color: o.distribution_status === "partiellement_remis" ? "#ffb464" : "#7fd88f" }}>
+                      <span style={{ color: o.distribution_status === "partiellement_remis" ? "var(--adm-warn)" : "var(--adm-good)" }}>
                         {o.distribution_status === "partiellement_remis" ? "Partiel" : "Prêt"}
                       </span>
                     </Link>

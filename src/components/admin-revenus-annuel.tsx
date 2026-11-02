@@ -50,25 +50,25 @@ function ExpenseDetailList({ expenses }: { expenses: RevenueExpense[] }) {
           <div
             key={e.id}
             style={{
-              background: due ? "rgba(255,200,80,0.08)" : "#100e17",
-              border: due ? "1px solid rgba(255,200,80,0.35)" : "1px solid #1f1d25",
+              background: due ? "rgba(255,200,80,0.08)" : "var(--adm-surface)",
+              border: due ? "1px solid rgba(255,200,80,0.35)" : "1px solid var(--adm-line)",
               borderRadius: "8px",
               padding: "0.6rem 0.9rem"
             }}
           >
             <button
               onClick={() => setExpandedId(expanded ? null : e.id)}
-              style={{ background: "none", border: "none", color: "#c3c2c8", cursor: "pointer", padding: 0, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}
+              style={{ background: "none", border: "none", color: "var(--adm-text-2)", cursor: "pointer", padding: 0, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}
             >
               <span>
-                {expanded ? "▾ " : "▸ "}{e.label} <span style={{ color: "#6d6b71" }}>· {e.category} · {e.expense_date}</span>
-                {due && <span style={{ color: "#f0c878", fontWeight: 600 }}> · 🟡 À venir{e.due_date ? ` (échéance ${e.due_date})` : ""}</span>}
+                {expanded ? "▾ " : "▸ "}{e.label} <span style={{ color: "var(--adm-text-3)" }}>· {e.category} · {e.expense_date}</span>
+                {due && <span style={{ color: "var(--adm-warn)", fontWeight: 600 }}> · 🟡 À venir{e.due_date ? ` (échéance ${e.due_date})` : ""}</span>}
               </span>
-              <span style={{ color: due ? "#f0c878" : "#ff9999", fontWeight: 600 }}>-{formatCAD(e.amount_cents / 100)}</span>
+              <span style={{ color: due ? "var(--adm-warn)" : "var(--adm-bad)", fontWeight: 600 }}>-{formatCAD(e.amount_cents / 100)}</span>
             </button>
             {expanded && (
-              <div style={{ marginTop: "0.6rem", paddingTop: "0.6rem", borderTop: "1px solid #1a1820", display: "flex", flexWrap: "wrap", gap: "1.5rem" }}>
-                <div style={{ fontSize: "0.75rem", color: "#9d9da0", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+              <div style={{ marginTop: "0.6rem", paddingTop: "0.6rem", borderTop: "1px solid var(--adm-surface-2)", display: "flex", flexWrap: "wrap", gap: "1.5rem" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                   <span>Payé avec : {e.paid_with}</span>
                   {e.tax_rate > 0 && <span>Taxe : {(e.tax_rate * 100).toFixed(2)}%</span>}
                   {e.is_recurring && <span>🔁 Charge récurrente{e.recurrence_end_date ? ` jusqu'au ${e.recurrence_end_date}` : ""}</span>}
@@ -98,16 +98,16 @@ function IncomeDetailList({ income }: { income: RevenueIncome[] }) {
       {income.map((i) => {
         const expanded = expandedId === i.id;
         return (
-          <div key={i.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
+          <div key={i.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
             <button
               onClick={() => setExpandedId(expanded ? null : i.id)}
-              style={{ background: "none", border: "none", color: "#c3c2c8", cursor: "pointer", padding: 0, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}
+              style={{ background: "none", border: "none", color: "var(--adm-text-2)", cursor: "pointer", padding: 0, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}
             >
-              <span>{expanded ? "▾ " : "▸ "}{i.label} <span style={{ color: "#6d6b71" }}>· {i.category} · {i.income_date}</span></span>
-              <span style={{ color: "#7fd88f", fontWeight: 600 }}>+{formatCAD(i.amount_cents / 100)}</span>
+              <span>{expanded ? "▾ " : "▸ "}{i.label} <span style={{ color: "var(--adm-text-3)" }}>· {i.category} · {i.income_date}</span></span>
+              <span style={{ color: "var(--adm-good)", fontWeight: 600 }}>+{formatCAD(i.amount_cents / 100)}</span>
             </button>
             {expanded && (
-              <div style={{ marginTop: "0.6rem", paddingTop: "0.6rem", borderTop: "1px solid #1a1820", fontSize: "0.75rem", color: "#9d9da0", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+              <div style={{ marginTop: "0.6rem", paddingTop: "0.6rem", borderTop: "1px solid var(--adm-surface-2)", fontSize: "0.75rem", color: "var(--adm-text-2)", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                 <span>Reçu avec : {i.paid_with}</span>
                 {i.tax_rate > 0 && <span>Taxe : {(i.tax_rate * 100).toFixed(2)}%</span>}
                 {i.notes && <span>Notes : {i.notes}</span>}
@@ -213,7 +213,7 @@ function QuickAddForm({
   }
 
   return (
-    <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1.1rem", marginBottom: "1.75rem" }}>
+    <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1.1rem", marginBottom: "1.75rem" }}>
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.9rem" }}>
         <button
           onClick={() => changeKind("expense")}
@@ -253,10 +253,10 @@ function QuickAddForm({
 
       {kind === "expense" && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center", marginBottom: "0.75rem" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.72rem", color: "#9d9da0", cursor: "pointer" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.72rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
             <input type="radio" checked={status === "paid"} onChange={() => setStatus("paid")} /> Payée maintenant
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.72rem", color: "#9d9da0", cursor: "pointer" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.72rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
             <input type="radio" checked={status === "due"} onChange={() => setStatus("due")} /> À payer plus tard (🟡 à venir)
           </label>
           {status === "due" && (
@@ -300,7 +300,7 @@ function CategoryGrid({ title, rows, totalByMonth, monthLabels, color }: {
               <tr key={r.category}>
                 <td>{r.category}</td>
                 {r.monthlyCents.map((c, i) => (
-                  <td key={i} style={{ textAlign: "right", color: c > 0 ? color : "#3c3a41" }}>{c > 0 ? formatCAD(c / 100) : "—"}</td>
+                  <td key={i} style={{ textAlign: "right", color: c > 0 ? color : "var(--adm-border)" }}>{c > 0 ? formatCAD(c / 100) : "—"}</td>
                 ))}
                 <td style={{ textAlign: "right", fontWeight: 600 }}>{formatCAD(r.totalCents / 100)}</td>
               </tr>
@@ -354,7 +354,7 @@ export function AdminRevenusAnnuel({ breakdown, expenses: initialExpenses, incom
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Vue annuelle</p>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Revenus et dépenses par catégorie, mois par mois — pour voir d&apos;un coup d&apos;œil que tout fonctionne bien.
           </p>
 
@@ -379,31 +379,31 @@ export function AdminRevenusAnnuel({ breakdown, expenses: initialExpenses, incom
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.75rem" }}>
-            <div style={{ flex: "1 1 200px", background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-              <p style={{ fontSize: "0.65rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Revenus {breakdown.year}</p>
+            <div style={{ flex: "1 1 200px", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Revenus {breakdown.year}</p>
               <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatCAD(breakdown.annualIncomeCents / 100)}</p>
             </div>
-            <div style={{ flex: "1 1 200px", background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-              <p style={{ fontSize: "0.65rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Dépenses {breakdown.year}</p>
-              <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ff9999", margin: 0 }}>{formatCAD(breakdown.annualExpenseCents / 100)}</p>
+            <div style={{ flex: "1 1 200px", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Dépenses {breakdown.year}</p>
+              <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--adm-bad)", margin: 0 }}>{formatCAD(breakdown.annualExpenseCents / 100)}</p>
             </div>
-            <div style={{ flex: "1 1 200px", background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-              <p style={{ fontSize: "0.65rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Bénéfice engendré {breakdown.year}</p>
-              <p style={{ fontSize: "1.25rem", fontWeight: 700, color: breakdown.annualProfitCents < 0 ? "#ff9999" : "#7fd88f", margin: 0 }}>{formatCAD(breakdown.annualProfitCents / 100)}</p>
+            <div style={{ flex: "1 1 200px", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+              <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Bénéfice engendré {breakdown.year}</p>
+              <p style={{ fontSize: "1.25rem", fontWeight: 700, color: breakdown.annualProfitCents < 0 ? "var(--adm-bad)" : "var(--adm-good)", margin: 0 }}>{formatCAD(breakdown.annualProfitCents / 100)}</p>
             </div>
             {breakdown.annualGoalCents > 0 && (
-              <div style={{ flex: "1 1 200px", background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-                <p style={{ fontSize: "0.65rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.3rem" }}>% de l&apos;objectif annuel</p>
-                <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "#c3a6ff", margin: 0 }}>
+              <div style={{ flex: "1 1 200px", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+                <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.3rem" }}>% de l&apos;objectif annuel</p>
+                <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--adm-accent)", margin: 0 }}>
                   {Math.round((breakdown.annualProfitCents / breakdown.annualGoalCents) * 100)}%
-                  <span style={{ fontSize: "0.7rem", color: "#6d6b71", fontWeight: 400 }}> de {formatCAD(breakdown.annualGoalCents / 100)}</span>
+                  <span style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", fontWeight: 400 }}> de {formatCAD(breakdown.annualGoalCents / 100)}</span>
                 </p>
               </div>
             )}
           </div>
 
-          <CategoryGrid title="Revenus par catégorie" rows={breakdown.income} totalByMonth={breakdown.incomeTotalByMonth} monthLabels={breakdown.monthLabels} color="#7fd88f" />
-          <CategoryGrid title="Dépenses par catégorie" rows={breakdown.expense} totalByMonth={breakdown.expenseTotalByMonth} monthLabels={breakdown.monthLabels} color="#ff9999" />
+          <CategoryGrid title="Revenus par catégorie" rows={breakdown.income} totalByMonth={breakdown.incomeTotalByMonth} monthLabels={breakdown.monthLabels} color="var(--adm-good)" />
+          <CategoryGrid title="Dépenses par catégorie" rows={breakdown.expense} totalByMonth={breakdown.expenseTotalByMonth} monthLabels={breakdown.monthLabels} color="var(--adm-bad)" />
 
           <QuickAddForm
             seasonOptions={seasonOptions}
@@ -413,7 +413,7 @@ export function AdminRevenusAnnuel({ breakdown, expenses: initialExpenses, incom
           />
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.4rem" }}>Détail des dépenses ({expenses.length})</p>
-          <p style={{ fontSize: "0.72rem", color: "#6d6b71", marginBottom: "0.75rem" }}>
+          <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", marginBottom: "0.75rem" }}>
             Cliquez sur une dépense pour voir ses détails et ses pièces jointes (factures, reçus, photos). Les charges 🟡 à venir remontent en premier.
           </p>
           <div style={{ marginBottom: "1.75rem" }}>
@@ -421,7 +421,7 @@ export function AdminRevenusAnnuel({ breakdown, expenses: initialExpenses, incom
           </div>
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.4rem" }}>Détail des revenus ({income.length})</p>
-          <p style={{ fontSize: "0.72rem", color: "#6d6b71", marginBottom: "0.75rem" }}>
+          <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", marginBottom: "0.75rem" }}>
             Commandites, subventions, dons, camps et autres revenus saisis manuellement.
           </p>
           <div style={{ marginBottom: "1.75rem" }}>
@@ -444,32 +444,32 @@ export function AdminRevenusAnnuel({ breakdown, expenses: initialExpenses, incom
                 </tr>
                 <tr>
                   <td>Dépenses totales</td>
-                  {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", color: c.expenseCents > 0 ? "#ff9999" : undefined }}>{formatCAD(c.expenseCents / 100)}</td>)}
+                  {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", color: c.expenseCents > 0 ? "var(--adm-bad)" : undefined }}>{formatCAD(c.expenseCents / 100)}</td>)}
                 </tr>
                 <tr>
                   <td style={{ fontWeight: 600, color: "#fff" }}>Profit du mois</td>
-                  {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", fontWeight: 600, color: c.profitCents < 0 ? "#ff9999" : "#7fd88f" }}>{formatCAD(c.profitCents / 100)}</td>)}
+                  {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", fontWeight: 600, color: c.profitCents < 0 ? "var(--adm-bad)" : "var(--adm-good)" }}>{formatCAD(c.profitCents / 100)}</td>)}
                 </tr>
                 <tr>
                   <td>Objectif du mois</td>
-                  {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", color: "#9d9da0" }}>{c.goalCents > 0 ? formatCAD(c.goalCents / 100) : "—"}</td>)}
+                  {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", color: "var(--adm-text-2)" }}>{c.goalCents > 0 ? formatCAD(c.goalCents / 100) : "—"}</td>)}
                 </tr>
                 <tr>
                   <td>% objectif atteint</td>
                   {breakdown.cashFlow.map((c) => (
-                    <td key={c.month} style={{ textAlign: "right", color: c.goalProgressPct === null ? "#3c3a41" : c.goalProgressPct >= 100 ? "#7fd88f" : "#f0c878" }}>
+                    <td key={c.month} style={{ textAlign: "right", color: c.goalProgressPct === null ? "var(--adm-border)" : c.goalProgressPct >= 100 ? "var(--adm-good)" : "var(--adm-warn)" }}>
                       {c.goalProgressPct === null ? "—" : `${c.goalProgressPct}%`}
                     </td>
                   ))}
                 </tr>
                 <tr>
                   <td style={{ fontWeight: 600, color: "#fff" }}>Profit cumulé (YTD)</td>
-                  {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", fontWeight: 600, color: c.ytdProfitCents < 0 ? "#ff9999" : "#7fd88f" }}>{formatCAD(c.ytdProfitCents / 100)}</td>)}
+                  {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", fontWeight: 600, color: c.ytdProfitCents < 0 ? "var(--adm-bad)" : "var(--adm-good)" }}>{formatCAD(c.ytdProfitCents / 100)}</td>)}
                 </tr>
                 <tr>
                   <td>% objectif annuel cumulé</td>
                   {breakdown.cashFlow.map((c) => (
-                    <td key={c.month} style={{ textAlign: "right", color: c.yearGoalProgressPct === null ? "#3c3a41" : c.yearGoalProgressPct >= 100 ? "#7fd88f" : "#f0c878" }}>
+                    <td key={c.month} style={{ textAlign: "right", color: c.yearGoalProgressPct === null ? "var(--adm-border)" : c.yearGoalProgressPct >= 100 ? "var(--adm-good)" : "var(--adm-warn)" }}>
                       {c.yearGoalProgressPct === null ? "—" : `${c.yearGoalProgressPct}%`}
                     </td>
                   ))}

@@ -179,7 +179,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
         <AdminTopbar />
         <div className="admin-content">
           <div className="admin-section">
-            <p style={{ color: "#6d6b71" }}>Chargement...</p>
+            <p style={{ color: "var(--adm-text-3)" }}>Chargement...</p>
           </div>
         </div>
       </>
@@ -202,7 +202,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                   Mis à jour {lastRefreshed.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                 </span>
               )}
-              {saveOk && <span style={{ color: "#9ec99e", fontSize: "0.75rem" }}>✓ Sauvegardé</span>}
+              {saveOk && <span style={{ color: "var(--adm-good)", fontSize: "0.75rem" }}>✓ Sauvegardé</span>}
               <button
                 onClick={() => { void refreshLeads(false); }}
                 disabled={refreshing}
@@ -218,7 +218,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
             </div>
           </div>
 
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Gérez les joueuses par plage horaire. Déplacez-les entre créneaux et ajustez la capacité de chaque groupe.
           </p>
 
@@ -233,10 +233,10 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                 <div
                   key={slot.id}
                   style={{
-                    background: "#100e17",
+                    background: "var(--adm-surface)",
                     border: isFull
-                      ? "1px solid rgba(255,100,100,0.3)"
-                      : "1px solid #1f1d25",
+                      ? "1px solid var(--adm-bad-soft)"
+                      : "1px solid var(--adm-line)",
                     borderRadius: "12px",
                     padding: "1rem 1.2rem",
                   }}
@@ -245,20 +245,20 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "#fff", margin: 0 }}>{slot.day}</p>
-                      <p style={{ fontSize: "0.8rem", color: "#9f85ba", margin: "2px 0 0 0" }}>{slot.horaire}</p>
-                      <p style={{ fontSize: "0.7rem", color: "#605f65", margin: "2px 0 0 0" }}>{slot.category} · {slot.practices} pratiques</p>
+                      <p style={{ fontSize: "0.8rem", color: "var(--adm-accent)", margin: "2px 0 0 0" }}>{slot.horaire}</p>
+                      <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: "2px 0 0 0" }}>{slot.category} · {slot.practices} pratiques</p>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <p style={{
                         fontSize: "1.3rem",
                         fontWeight: 800,
-                        color: isFull ? "#ff9999" : "#9ec99e",
+                        color: isFull ? "var(--adm-bad)" : "var(--adm-good)",
                         margin: 0,
                       }}>
                         {slotLeads.length}/{slot.maxPlaces}
                       </p>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", marginTop: "0.3rem" }}>
-                        <label style={{ fontSize: "0.6rem", color: "#605f65", textTransform: "uppercase" }}>Max</label>
+                        <label style={{ fontSize: "0.6rem", color: "var(--adm-text-3)", textTransform: "uppercase" }}>Max</label>
                         <input
                           type="number"
                           min={1}
@@ -269,8 +269,8 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                             width: "3rem",
                             padding: "0.2rem 0.4rem",
                             fontSize: "0.8rem",
-                            background: "#17151e",
-                            border: "1px solid #302e36",
+                            background: "var(--adm-surface-2)",
+                            border: "1px solid var(--adm-border)",
                             borderRadius: "4px",
                             color: "#fff",
                             textAlign: "center",
@@ -283,7 +283,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                   {/* Players list */}
                   <div style={{ minHeight: "2rem" }}>
                     {slotLeads.length === 0 ? (
-                      <p style={{ fontSize: "0.75rem", color: "#3c3a41", fontStyle: "italic", padding: "0.5rem 0" }}>
+                      <p style={{ fontSize: "0.75rem", color: "var(--adm-border)", fontStyle: "italic", padding: "0.5rem 0" }}>
                         Aucune joueuse assignée
                       </p>
                     ) : (
@@ -301,7 +301,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                               marginBottom: "0.3rem",
                               background: "#121019",
                               borderRadius: "6px",
-                              border: "1px solid #1a1820",
+                              border: "1px solid var(--adm-surface-2)",
                               opacity: isMoving ? 0.5 : 1,
                             }}
                           >
@@ -363,8 +363,8 @@ export function AdminPlages({ leads: initialLeads }: Props) {
 
           {/* Unassigned players */}
           {unassigned.length > 0 && (
-            <div style={{ padding: "1rem 1.2rem", background: "#151115", border: "1px solid #30261e", borderRadius: "10px" }}>
-              <p style={{ fontSize: "0.85rem", color: "#f0c878", marginBottom: "0.6rem", fontWeight: 700 }}>
+            <div style={{ padding: "1rem 1.2rem", background: "var(--adm-surface)", border: "1px solid #30261e", borderRadius: "10px" }}>
+              <p style={{ fontSize: "0.85rem", color: "var(--adm-warn)", marginBottom: "0.6rem", fontWeight: 700 }}>
                 ⚠ Joueuses non assignées ({unassigned.length})
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>

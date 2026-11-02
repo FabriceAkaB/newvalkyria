@@ -79,13 +79,13 @@ export function RegistrationRow({
   };
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.7rem 0.9rem", marginBottom: "0.5rem" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.7rem 0.9rem", marginBottom: "0.5rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
         <div>
           <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: 0 }}>
             {registration.player_first_name} {registration.player_last_name}
           </p>
-          <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.15rem 0 0" }}>
+          <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.15rem 0 0" }}>
             {registration.parent_name} · {registration.parent_email} · {registration.parent_phone}
           </p>
         </div>
@@ -97,7 +97,7 @@ export function RegistrationRow({
 
       {open && (
         <div style={{ marginTop: "0.6rem" }}>
-          <p style={{ fontSize: "0.68rem", color: "#9f85ba", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Changer le statut</p>
+          <p style={{ fontSize: "0.68rem", color: "var(--adm-accent)", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Changer le statut</p>
           <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", marginBottom: "0.6rem" }}>
             {REGISTRATION_STATUSES.map((s) => (
               <button
@@ -111,16 +111,16 @@ export function RegistrationRow({
               </button>
             ))}
           </div>
-          {registration.player_dob && <p style={{ fontSize: "0.72rem", color: "#c3c2c8", margin: "0 0 0.3rem" }}>Date de naissance : {registration.player_dob}</p>}
-          {registration.city && <p style={{ fontSize: "0.72rem", color: "#c3c2c8", margin: "0 0 0.3rem" }}>Ville : {registration.city}</p>}
-          {registration.comments && <p style={{ fontSize: "0.72rem", color: "#c3c2c8", margin: "0 0 0.3rem" }}>Commentaires : {registration.comments}</p>}
-          {registration.price_cents != null && <p style={{ fontSize: "0.72rem", color: "#c3c2c8", margin: "0 0 0.3rem" }}>Prix : {(registration.price_cents / 100).toFixed(2)} $</p>}
+          {registration.player_dob && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.3rem" }}>Date de naissance : {registration.player_dob}</p>}
+          {registration.city && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.3rem" }}>Ville : {registration.city}</p>}
+          {registration.comments && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.3rem" }}>Commentaires : {registration.comments}</p>}
+          {registration.price_cents != null && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.3rem" }}>Prix : {(registration.price_cents / 100).toFixed(2)} $</p>}
 
 {slug === "intensif-garcons" && (
           <button
             onClick={transfer}
             disabled={transferring}
-            style={{ marginTop: "0.5rem", marginRight: "0.5rem", fontSize: "0.7rem", color: "#9ec9ff", background: "none", border: "1px solid rgba(158,201,255,0.35)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
+            style={{ marginTop: "0.5rem", marginRight: "0.5rem", fontSize: "0.7rem", color: "var(--adm-info)", background: "none", border: "1px solid rgba(158,201,255,0.35)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
           >
             {transferring ? "Transfert…" : "Transférer vers Sport-Études"}
           </button>
@@ -128,7 +128,7 @@ export function RegistrationRow({
           <button
             onClick={remove}
             disabled={deleting}
-            style={{ marginTop: "0.5rem", fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
+            style={{ marginTop: "0.5rem", fontSize: "0.7rem", color: "var(--adm-bad)", background: "none", border: "1px solid var(--adm-bad-soft)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}
           >
             {deleting ? "..." : "Supprimer définitivement"}
           </button>
@@ -213,7 +213,7 @@ export function AdminSessionProgram({
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>{program.name}</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             {program.description} — {program.birth_years} ({program.gender === "filles" ? "filles" : "garçons"}) · {(program.price_cents / 100).toFixed(2)} $
           </p>
 
@@ -228,7 +228,7 @@ export function AdminSessionProgram({
           <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: "0.6rem" }}>Séances ({initialDates.length})</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "1.5rem" }}>
             {initialDates.map((d) => (
-              <span key={d.id} style={{ fontSize: "0.68rem", color: "#9d9da0", background: "#17151e", border: "1px solid #251f30", borderRadius: "6px", padding: "0.3rem 0.55rem" }}>
+              <span key={d.id} style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", padding: "0.3rem 0.55rem" }}>
                 {formatDate(d.session_date)} · {d.start_time}–{d.end_time}
               </span>
             ))}
@@ -251,11 +251,11 @@ export function AdminSessionProgram({
               </button>
             </div>
           </div>
-          {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
+          {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "var(--adm-good)", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
 
           {waitlisted.length > 0 && (
             <div style={{ marginBottom: "1.25rem" }}>
-              <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#f0c878", marginBottom: "0.6rem" }}>Liste d&apos;attente ({waitlisted.length})</p>
+              <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--adm-warn)", marginBottom: "0.6rem" }}>Liste d&apos;attente ({waitlisted.length})</p>
               {waitlisted.map((r) => (
                 <RegistrationRow
                   key={r.id}

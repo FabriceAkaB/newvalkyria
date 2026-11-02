@@ -7,7 +7,7 @@ import { EntityDocuments } from "@/components/admin-entity-documents";
 import { formatMoney } from "@/lib/private-programs";
 import { SPONSOR_CATEGORIES, SPONSOR_STATUSES, type Sponsor, type SponsorPayment } from "@/lib/sponsors-repo";
 
-const STATUS_COLOR: Record<string, string> = { prospect: "#9d9da0", contacte: "#9ec9ff", negociation: "#f0c878", confirme: "#c4a4e4", paye: "#8fce9f", refuse: "#ff9999", termine: "#6d6b71" };
+const STATUS_COLOR: Record<string, string> = { prospect: "var(--adm-text-2)", contacte: "var(--adm-info)", negociation: "var(--adm-warn)", confirme: "var(--adm-accent)", paye: "var(--adm-good)", refuse: "var(--adm-bad)", termine: "var(--adm-text-3)" };
 const label = (list: readonly { value: string; label: string }[], v: string) => list.find((x) => x.value === v)?.label ?? v;
 
 const EMPTY = { companyName: "", contactName: "", contactEmail: "", contactPhone: "", category: "equipement", partnershipType: "", amount: "", status: "prospect", lastContactAt: "", lastContactNote: "", followUpDate: "", notes: "" };
@@ -62,8 +62,8 @@ export function AdminCommandites({ initial }: { initial: { sponsors: Sponsor[]; 
 
   const list = data.sponsors.filter((s) => (filter === "all" ? true : filter === "relance" ? totals.relances.some((r) => r.id === s.id) : s.status === filter || s.category === filter));
 
-  const cell: React.CSSProperties = { padding: "0.5rem", borderBottom: "1px solid #1f1d25", fontSize: "0.76rem", color: "#c3c2c8", verticalAlign: "top" };
-  const field: React.CSSProperties = { fontSize: "0.66rem", color: "#9d9da0" };
+  const cell: React.CSSProperties = { padding: "0.5rem", borderBottom: "1px solid var(--adm-line)", fontSize: "0.76rem", color: "var(--adm-text-2)", verticalAlign: "top" };
+  const field: React.CSSProperties = { fontSize: "0.66rem", color: "var(--adm-text-2)" };
 
   const submitNew = async () => {
     if (!form.companyName.trim()) {
@@ -106,18 +106,18 @@ export function AdminCommandites({ initial }: { initial: { sponsors: Sponsor[]; 
             <p className="admin-section-title" style={{ margin: 0 }}>Commandites et partenaires</p>
             <button className="admin-btn-primary" style={{ fontSize: "0.76rem" }} onClick={() => setShowForm((v) => !v)}>{showForm ? "Fermer" : "+ Ajouter un commanditaire"}</button>
           </div>
-          {message && <p style={{ fontSize: "0.78rem", color: "#8fce9f" }}>{message}</p>}
+          {message && <p style={{ fontSize: "0.78rem", color: "var(--adm-good)" }}>{message}</p>}
 
           <div className="admin-stats" style={{ marginBottom: "1.2rem" }}>
             <div className="admin-stat-card"><p className="admin-stat-value">{formatMoney(totals.pipeline)}</p><p className="admin-stat-label">Montants proposés</p></div>
             <div className="admin-stat-card"><p className="admin-stat-value">{formatMoney(totals.confirmed)}</p><p className="admin-stat-label">Confirmés</p></div>
             <div className="admin-stat-card"><p className="admin-stat-value">{formatMoney(totals.paid)}</p><p className="admin-stat-label">Encaissés</p></div>
             <div className="admin-stat-card"><p className="admin-stat-value">{formatMoney(totals.due)}</p><p className="admin-stat-label">À encaisser</p></div>
-            <div className="admin-stat-card"><p className="admin-stat-value" style={{ color: totals.relances.length ? "#ffb464" : undefined }}>{totals.relances.length}</p><p className="admin-stat-label">Relances à faire</p></div>
+            <div className="admin-stat-card"><p className="admin-stat-value" style={{ color: totals.relances.length ? "var(--adm-warn)" : undefined }}>{totals.relances.length}</p><p className="admin-stat-label">Relances à faire</p></div>
           </div>
 
           {showForm && (
-            <div style={{ background: "#100e17", border: "1px solid #3a3550", borderRadius: "12px", padding: "1rem", marginBottom: "1.2rem" }}>
+            <div style={{ background: "var(--adm-surface)", border: "1px solid #3a3550", borderRadius: "12px", padding: "1rem", marginBottom: "1.2rem" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "0.6rem" }}>
                 <label style={field}>Entreprise *<input className="admin-input" style={{ width: "100%" }} value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} /></label>
                 <label style={field}>Contact<input className="admin-input" style={{ width: "100%" }} value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></label>
@@ -152,7 +152,7 @@ export function AdminCommandites({ initial }: { initial: { sponsors: Sponsor[]; 
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
               <thead>
-                <tr>{["Entreprise", "Catégorie / partenariat", "Montant", "Statut", "Dernière communication", "Relance", "Payé / dû"].map((h) => <th key={h} style={{ ...cell, color: "#9d9da0", fontWeight: 600, textAlign: "left" }}>{h}</th>)}</tr>
+                <tr>{["Entreprise", "Catégorie / partenariat", "Montant", "Statut", "Dernière communication", "Relance", "Payé / dû"].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", fontWeight: 600, textAlign: "left" }}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {list.map((s) => {
@@ -164,17 +164,17 @@ export function AdminCommandites({ initial }: { initial: { sponsors: Sponsor[]; 
                   return (
                     <Fragment key={s.id}>
                       <tr onClick={() => setOpenId(open ? null : s.id)} style={{ cursor: "pointer" }}>
-                        <td style={cell}><strong style={{ color: "#fff" }}>{s.company_name}</strong><br /><span style={{ color: "#6d6b71" }}>{[s.contact_name, s.contact_phone, s.contact_email].filter(Boolean).join(" · ")}</span></td>
-                        <td style={cell}>{label(SPONSOR_CATEGORIES, s.category)}<br /><span style={{ color: "#6d6b71" }}>{s.partnership_type ?? ""}</span></td>
+                        <td style={cell}><strong style={{ color: "#fff" }}>{s.company_name}</strong><br /><span style={{ color: "var(--adm-text-3)" }}>{[s.contact_name, s.contact_phone, s.contact_email].filter(Boolean).join(" · ")}</span></td>
+                        <td style={cell}>{label(SPONSOR_CATEGORIES, s.category)}<br /><span style={{ color: "var(--adm-text-3)" }}>{s.partnership_type ?? ""}</span></td>
                         <td style={cell}>{formatMoney(s.proposed_amount_cents)}</td>
                         <td style={cell}><span style={{ color: STATUS_COLOR[s.status], fontWeight: 700 }}>{label(SPONSOR_STATUSES, s.status)}</span></td>
-                        <td style={cell}>{s.last_contact_at ?? "—"}<br /><span style={{ color: "#6d6b71" }}>{s.last_contact_note ?? ""}</span></td>
-                        <td style={{ ...cell, color: lateFollow ? "#ffb464" : "#c3c2c8", fontWeight: lateFollow ? 700 : 400 }}>{s.follow_up_date ?? "—"}{lateFollow ? " ⚠" : ""}</td>
+                        <td style={cell}>{s.last_contact_at ?? "—"}<br /><span style={{ color: "var(--adm-text-3)" }}>{s.last_contact_note ?? ""}</span></td>
+                        <td style={{ ...cell, color: lateFollow ? "var(--adm-warn)" : "var(--adm-text-2)", fontWeight: lateFollow ? 700 : 400 }}>{s.follow_up_date ?? "—"}{lateFollow ? " ⚠" : ""}</td>
                         <td style={cell}>{formatMoney(paid)} / {formatMoney(due)}</td>
                       </tr>
                       {open && (
                         <tr>
-                          <td colSpan={7} style={{ ...cell, background: "#0d0b13" }}>
+                          <td colSpan={7} style={{ ...cell, background: "var(--adm-surface)" }}>
                             <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "0.8rem" }}>
                               <label style={field}>Statut
                                 <select className="admin-group-select" value={s.status} disabled={busy} onChange={(e) => call({ action: "update", id: s.id, sponsor: { status: e.target.value } }, "Statut mis à jour.")}>
@@ -189,11 +189,11 @@ export function AdminCommandites({ initial }: { initial: { sponsors: Sponsor[]; 
 
                             <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.4rem", fontSize: "0.78rem" }}>Paiements</p>
                             {pays.map((p) => (
-                              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", padding: "0.25rem 0", borderBottom: "1px solid #1f1d25" }}>
+                              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", padding: "0.25rem 0", borderBottom: "1px solid var(--adm-line)" }}>
                                 <span>{formatMoney(p.amount_cents)}{p.due_date ? ` · dû le ${p.due_date}` : ""}{p.method ? ` · ${p.method}` : ""}{p.note ? ` — ${p.note}` : ""}</span>
                                 <span>
-                                  {p.paid_at ? <span style={{ color: "#8fce9f" }}>✓ Payé le {p.paid_at}</span> : <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "payment_update", id: p.id, paidAt: today }, "Paiement reçu.")}>Marquer payé</button>}{" "}
-                                  <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm("Supprimer ce paiement ?") && call({ action: "payment_delete", id: p.id }, "Paiement supprimé.")}>×</button>
+                                  {p.paid_at ? <span style={{ color: "var(--adm-good)" }}>✓ Payé le {p.paid_at}</span> : <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "payment_update", id: p.id, paidAt: today }, "Paiement reçu.")}>Marquer payé</button>}{" "}
+                                  <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm("Supprimer ce paiement ?") && call({ action: "payment_delete", id: p.id }, "Paiement supprimé.")}>×</button>
                                 </span>
                               </div>
                             ))}
@@ -220,7 +220,7 @@ export function AdminCommandites({ initial }: { initial: { sponsors: Sponsor[]; 
                             <EntityDocuments entityType="sponsor" entityId={s.id} />
 
                             <p style={{ margin: "0.8rem 0 0" }}>
-                              <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "#ff9999" }} disabled={busy} onClick={() => confirm(`Supprimer définitivement ${s.company_name} ?`) && call({ action: "delete", id: s.id }, "Commanditaire supprimé.")}>Supprimer ce commanditaire</button>
+                              <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm(`Supprimer définitivement ${s.company_name} ?`) && call({ action: "delete", id: s.id }, "Commanditaire supprimé.")}>Supprimer ce commanditaire</button>
                             </p>
                           </td>
                         </tr>

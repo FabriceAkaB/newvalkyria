@@ -77,7 +77,7 @@ export function AdminJoueuses({ leads }: Props) {
             <p
               style={{
                 fontSize: "0.75rem",
-                color: "#545359",
+                color: "var(--adm-text-3)",
                 margin: "0.3rem 0 0",
               }}
             >
@@ -123,7 +123,7 @@ export function AdminJoueuses({ leads }: Props) {
                 <p
                   style={{
                     fontSize: "0.75rem",
-                    color: "#3c3a41",
+                    color: "var(--adm-border)",
                     padding: "0.75rem 0 1.5rem",
                   }}
                 >
@@ -158,7 +158,7 @@ export function AdminJoueuses({ leads }: Props) {
 
         {paidLeads.length === 0 && (
           <div style={{ textAlign: "center", padding: "5rem 0" }}>
-            <p style={{ fontSize: "0.85rem", color: "#3c3a41" }}>
+            <p style={{ fontSize: "0.85rem", color: "var(--adm-border)" }}>
               Aucune joueuse confirmée pour l&apos;instant.
             </p>
           </div>

@@ -17,8 +17,8 @@ interface Props {
 
 function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem", flex: "1 1 200px" }}>
-      <p style={{ fontSize: "0.65rem", color: "#6d6b71", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.3rem" }}>{label}</p>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", flex: "1 1 200px" }}>
+      <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.3rem" }}>{label}</p>
       <p style={{ fontSize: "1.3rem", fontWeight: 700, color: color ?? "#fff", margin: 0 }}>{value}</p>
     </div>
   );
@@ -42,7 +42,7 @@ export function AdminEntraineursStatistiques({
             <p className="admin-section-title" style={{ margin: 0 }}>Statistiques</p>
             <Link href="/admin/entraineurs" className="admin-btn-ghost" style={{ textDecoration: "none" }}>← Entraîneurs</Link>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Masse salariale, nombre d&apos;activités et coûts — toutes activités confondues.
           </p>
 

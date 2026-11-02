@@ -29,8 +29,8 @@ interface ContractRow {
 const money = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
 const day = (iso: string) => new Date(iso.length === 10 ? `${iso}T12:00:00` : iso).toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
 
-const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" };
-const cell: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid #1f1d25", fontSize: "0.8rem", color: "#c3c2c8" };
+const card: React.CSSProperties = { background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem" };
+const cell: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid var(--adm-line)", fontSize: "0.8rem", color: "var(--adm-text-2)" };
 
 function ContractCard({ c, origin }: { c: ContractRow; origin: string }) {
   const [msg, setMsg] = useState<string | null>(null);
@@ -61,17 +61,17 @@ function ContractCard({ c, origin }: { c: ContractRow; origin: string }) {
 
   const status =
     c.status === "signed"
-      ? { label: `Signé le ${day(c.signedAt!)}`, color: "#8fce9f" }
+      ? { label: `Signé le ${day(c.signedAt!)}`, color: "var(--adm-good)" }
       : c.status === "cancelled"
-        ? { label: "Lien annulé", color: "#ff9999" }
-        : { label: "En attente de sa signature", color: "#f0c878" };
+        ? { label: "Lien annulé", color: "var(--adm-bad)" }
+        : { label: "En attente de sa signature", color: "var(--adm-warn)" };
 
   return (
     <div style={card}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", alignItems: "baseline" }}>
         <div>
           <p style={{ fontWeight: 700, color: "#fff", margin: 0, fontSize: "1.05rem" }}>{c.employeeName}</p>
-          <p style={{ color: "#8a8791", margin: "0.15rem 0 0", fontSize: "0.8rem" }}>{c.title}</p>
+          <p style={{ color: "var(--adm-text-3)", margin: "0.15rem 0 0", fontSize: "0.8rem" }}>{c.title}</p>
         </div>
         <span style={{ fontSize: "0.75rem", fontWeight: 700, color: status.color }}>
           {status.label}
@@ -109,7 +109,7 @@ function ContractCard({ c, origin }: { c: ContractRow; origin: string }) {
 
       {signing && (
         <div style={{ marginTop: "0.9rem", maxWidth: 520 }}>
-          <p style={{ fontSize: "0.8rem", color: "#c3c2c8", margin: "0 0 0.4rem" }}>
+          <p style={{ fontSize: "0.8rem", color: "var(--adm-text-2)", margin: "0 0 0.4rem" }}>
             Votre signature sera apposée à « Signature du représentant » (lettre d&apos;offre).{c.status === "signed" ? " La copie finale sera renvoyée à l'employée." : " Elle sera incluse quand l'employée signera."}
           </p>
           <SignaturePad onChange={setSig} />
@@ -132,10 +132,10 @@ function ContractCard({ c, origin }: { c: ContractRow; origin: string }) {
         </div>
       )}
 
-      {msg && <p style={{ fontSize: "0.8rem", color: "#8fce9f", margin: "0.7rem 0 0" }}>{msg}</p>}
+      {msg && <p style={{ fontSize: "0.8rem", color: "var(--adm-good)", margin: "0.7rem 0 0" }}>{msg}</p>}
 
       {c.contact && (
-        <p style={{ fontSize: "0.8rem", color: "#8a8791", margin: "0.9rem 0 0" }}>
+        <p style={{ fontSize: "0.8rem", color: "var(--adm-text-3)", margin: "0.9rem 0 0" }}>
           {c.contact.email} · {c.contact.mobile} · {c.contact.address}
         </p>
       )}
@@ -162,7 +162,7 @@ function ContractCard({ c, origin }: { c: ContractRow; origin: string }) {
               <thead>
                 <tr>
                   {["Payer le (jeudi, minuit)", "Période travaillée", "Heures", "Montant brut"].map((h) => (
-                    <th key={h} style={{ ...cell, color: "#8a8791", textAlign: "left", fontWeight: 600 }}>{h}</th>
+                    <th key={h} style={{ ...cell, color: "var(--adm-text-3)", textAlign: "left", fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -185,7 +185,7 @@ function ContractCard({ c, origin }: { c: ContractRow; origin: string }) {
               </tbody>
             </table>
           </div>
-          <p style={{ fontSize: "0.75rem", color: "#6d6b71", margin: "0.5rem 0 0" }}>
+          <p style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", margin: "0.5rem 0 0" }}>
             Montants bruts prévus au contrat, avant déductions. La paie réelle suit les heures travaillées. Indemnité de vacances de 4 % à verser avec la dernière paie.
           </p>
         </div>
@@ -201,7 +201,7 @@ export function AdminContracts({ contracts, origin }: { contracts: ContractRow[]
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Contrats des entraîneurs</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1rem" }}>
             Envoyez le lien à l&apos;employée : elle remplit ses informations, joint son spécimen de chèque et signe en ligne. Elle reçoit sa copie par courriel (NAS masqué) et vous êtes avisé. Le contrat complet et le chèque sont conservés ici, en accès privé.
           </p>
           {contracts.length === 0 && <p className="admin-empty-text">Aucun contrat pour l&apos;instant.</p>}

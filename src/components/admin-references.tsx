@@ -9,7 +9,7 @@ import type { CodeRow, CreditFamilyRow, FinancialSummary, ReferralAdminRow } fro
 type Tab = "references" | "credits" | "codes" | "finances" | "campagne";
 
 const STATUS_LABELS: Record<string, string> = { a_verifier: "À vérifier", confirme: "Confirmée", valide: "Validée", rejete: "Refusée", annule: "Annulée" };
-const STATUS_COLORS: Record<string, string> = { a_verifier: "#f0c878", confirme: "#9ec9ff", valide: "#8fce9f", rejete: "#ff9999", annule: "#ff9999" };
+const STATUS_COLORS: Record<string, string> = { a_verifier: "var(--adm-warn)", confirme: "var(--adm-info)", valide: "var(--adm-good)", rejete: "var(--adm-bad)", annule: "var(--adm-bad)" };
 const REWARD_LABELS: Record<string, string> = {
   aucune: "—",
   a_choisir: "À choisir par le parent",
@@ -87,8 +87,8 @@ export function AdminReferences({
     </button>
   );
 
-  const cell: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid #1f1d25", color: "#c3c2c8", verticalAlign: "top" };
-  const head: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid #251f30", color: "#9d9da0", fontWeight: 600, textAlign: "left" };
+  const cell: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid var(--adm-line)", color: "var(--adm-text-2)", verticalAlign: "top" };
+  const head: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid var(--adm-border)", color: "var(--adm-text-2)", fontWeight: 600, textAlign: "left" };
   const f = data.financials;
 
   /* ── Campagne « Partagez New Valkyria » ── */
@@ -168,10 +168,10 @@ export function AdminReferences({
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Références, crédits et finances</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1rem" }}>
             Programmes garçons privés : recommandations entre familles, récompenses (sac ou crédit de 50 $), registre de crédits et tableau financier.
           </p>
-          {message && <p style={{ fontSize: "0.78rem", color: "#8fce9f", marginBottom: "0.8rem" }}>{message}</p>}
+          {message && <p style={{ fontSize: "0.78rem", color: "var(--adm-good)", marginBottom: "0.8rem" }}>{message}</p>}
 
           <div className="admin-filters" style={{ marginBottom: "1rem" }}>
             {tabBtn("references", "Références", data.referrals.length)}
@@ -205,15 +205,15 @@ export function AdminReferences({
                         <tr>
                           <td style={cell}>
                             <strong style={{ color: "#fff" }}>{r.referrer_name ?? r.claimed_referrer_name ?? "—"}</strong>
-                            <br /><span style={{ color: "#6d6b71" }}>{r.referrer_email ?? "non identifié"}{r.referrer_code ? ` · ${r.referrer_code}` : ""}</span>
-                            <br /><span style={{ color: "#6d6b71" }}>Reconnu par : {MATCH_LABELS[r.match_method] ?? r.match_method}</span>
+                            <br /><span style={{ color: "var(--adm-text-3)" }}>{r.referrer_email ?? "non identifié"}{r.referrer_code ? ` · ${r.referrer_code}` : ""}</span>
+                            <br /><span style={{ color: "var(--adm-text-3)" }}>Reconnu par : {MATCH_LABELS[r.match_method] ?? r.match_method}</span>
                           </td>
-                          <td style={cell}>{r.new_family_name}<br /><span style={{ color: "#6d6b71" }}>{r.new_family_email}</span></td>
+                          <td style={cell}>{r.new_family_name}<br /><span style={{ color: "var(--adm-text-3)" }}>{r.new_family_email}</span></td>
                           <td style={cell}>{r.player_name}</td>
                           <td style={cell}>{r.program_name}</td>
                           <td style={cell}>{r.created_at.slice(0, 10)}</td>
                           <td style={cell}>{r.discount_cents > 0 ? formatMoney(r.discount_cents) : "—"}</td>
-                          <td style={cell}>{r.registration_status === "paid" || r.registration_status === "confirmed" ? <span style={{ color: "#8fce9f" }}>Payé</span> : r.registration_status === "pending" ? <span style={{ color: "#f0c878" }}>En attente</span> : r.registration_status}</td>
+                          <td style={cell}>{r.registration_status === "paid" || r.registration_status === "confirmed" ? <span style={{ color: "var(--adm-good)" }}>Payé</span> : r.registration_status === "pending" ? <span style={{ color: "var(--adm-warn)" }}>En attente</span> : r.registration_status}</td>
                           <td style={cell}><span style={{ color: STATUS_COLORS[r.status], fontWeight: 700 }}>{STATUS_LABELS[r.status] ?? r.status}</span></td>
                           <td style={cell}>
                             {REWARD_LABELS[r.reward_status] ?? r.reward_status}
@@ -228,9 +228,9 @@ export function AdminReferences({
                         </tr>
                         {(r.status === "a_verifier" || r.status === "confirme") && (
                           <tr>
-                            <td colSpan={10} style={{ ...cell, background: "#0d0b13" }}>
+                            <td colSpan={10} style={{ ...cell, background: "var(--adm-surface)" }}>
                               <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-                                <span style={{ color: "#f0c878" }}>
+                                <span style={{ color: "var(--adm-warn)" }}>
                                   {r.status === "a_verifier"
                                     ? `Déclaré : « ${r.claimed_referrer_name ?? "—"} »${r.claimed_player_name ? ` (joueur : ${r.claimed_player_name})` : ""}${r.claimed_contact ? ` · contact : ${r.claimed_contact}` : ""} — à vérifier.`
                                     : "Confirmée — la récompense sera créée dès que le paiement est reçu."}
@@ -248,11 +248,11 @@ export function AdminReferences({
                                     </button>
                                   </>
                                 )}
-                                <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "#ff9999" }} disabled={busy === r.id} onClick={() => confirm("Refuser cette recommandation ?") && post(`/api/admin/references/${r.id}`, { action: "reject" }, "Recommandation refusée.", r.id)}>
+                                <button className="admin-btn-ghost" style={{ fontSize: "0.68rem", color: "var(--adm-bad)" }} disabled={busy === r.id} onClick={() => confirm("Refuser cette recommandation ?") && post(`/api/admin/references/${r.id}`, { action: "reject" }, "Recommandation refusée.", r.id)}>
                                   Refuser
                                 </button>
                               </div>
-                              {r.notes && <p style={{ margin: "0.4rem 0 0", color: "#6d6b71" }}>Notes : {r.notes}</p>}
+                              {r.notes && <p style={{ margin: "0.4rem 0 0", color: "var(--adm-text-3)" }}>Notes : {r.notes}</p>}
                             </td>
                           </tr>
                         )}
@@ -268,7 +268,7 @@ export function AdminReferences({
           {/* ─────────── Crédits ─────────── */}
           {tab === "credits" && (
             <>
-              <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
+              <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
                 <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>Corriger un crédit</p>
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                   <input className="admin-input" placeholder="Courriel de la famille" style={{ width: "230px" }} value={adjust.email} onChange={(e) => setAdjust({ ...adjust, email: e.target.value })} />
@@ -298,20 +298,20 @@ export function AdminReferences({
                   {data.credits.map((c) => (
                     <Fragment key={c.email}>
                       <tr>
-                        <td style={cell}><strong style={{ color: "#fff" }}>{c.name ?? c.email}</strong><br /><span style={{ color: "#6d6b71" }}>{c.email}</span></td>
+                        <td style={cell}><strong style={{ color: "#fff" }}>{c.name ?? c.email}</strong><br /><span style={{ color: "var(--adm-text-3)" }}>{c.email}</span></td>
                         <td style={cell}>{c.code ?? "—"}</td>
                         <td style={cell}>{formatMoney(c.grantedCents)}</td>
                         <td style={cell}>{formatMoney(c.usedCents)}</td>
-                        <td style={{ ...cell, color: c.balanceCents > 0 ? "#8fce9f" : "#c3c2c8", fontWeight: 700 }}>{formatMoney(c.balanceCents)}</td>
+                        <td style={{ ...cell, color: c.balanceCents > 0 ? "var(--adm-good)" : "var(--adm-text-2)", fontWeight: 700 }}>{formatMoney(c.balanceCents)}</td>
                         <td style={cell}><button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => setOpenCredit(openCredit === c.email ? null : c.email)}>{openCredit === c.email ? "Masquer" : "Historique"}</button></td>
                       </tr>
                       {openCredit === c.email && (
                         <tr>
-                          <td colSpan={6} style={{ ...cell, background: "#0d0b13" }}>
+                          <td colSpan={6} style={{ ...cell, background: "var(--adm-surface)" }}>
                             {c.entries.map((e) => (
                               <div key={e.id} style={{ display: "flex", justifyContent: "space-between", gap: "1rem", padding: "0.2rem 0" }}>
                                 <span>{new Date(e.createdAt).toLocaleString("fr-CA")} · {KIND_LABELS[e.kind] ?? e.kind}{e.note ? ` — ${e.note}` : ""}{e.createdBy ? ` (${e.createdBy})` : ""}</span>
-                                <span style={{ color: e.deltaCents >= 0 ? "#8fce9f" : "#ffb464", fontWeight: 700 }}>{e.deltaCents >= 0 ? "+" : "−"} {formatMoney(Math.abs(e.deltaCents))}</span>
+                                <span style={{ color: e.deltaCents >= 0 ? "var(--adm-good)" : "var(--adm-warn)", fontWeight: 700 }}>{e.deltaCents >= 0 ? "+" : "−"} {formatMoney(Math.abs(e.deltaCents))}</span>
                               </div>
                             ))}
                           </td>
@@ -332,14 +332,14 @@ export function AdminReferences({
                 <button className="admin-btn-primary" style={{ fontSize: "0.76rem" }} disabled={busy === "codes"} onClick={() => post("/api/admin/references/codes", {}, "Codes générés.", "codes")}>
                   {busy === "codes" ? "..." : "Générer les codes de toutes les familles"}
                 </button>
-                <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>Un code est aussi créé automatiquement quand un parent ouvre « Mes recommandations ».</span>
+                <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>Un code est aussi créé automatiquement quand un parent ouvre « Mes recommandations ».</span>
               </div>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.76rem" }}>
                 <thead><tr>{["Code", "Famille", "Courriel", "Recommandations", "Créé le"].map((h) => <th key={h} style={head}>{h}</th>)}</tr></thead>
                 <tbody>
                   {data.codes.map((c) => (
                     <tr key={c.code}>
-                      <td style={{ ...cell, color: "#c4a4e4", fontWeight: 700, letterSpacing: "0.08em" }}>{c.code}</td>
+                      <td style={{ ...cell, color: "var(--adm-accent)", fontWeight: 700, letterSpacing: "0.08em" }}>{c.code}</td>
                       <td style={cell}>{c.family_name ?? "—"}</td>
                       <td style={cell}>{c.family_email}</td>
                       <td style={cell}>{c.referralsCount}</td>
@@ -355,14 +355,14 @@ export function AdminReferences({
           {/* ─────────── Campagne de partage ─────────── */}
           {tab === "campagne" && (
             <>
-              <p style={{ fontSize: "0.8rem", color: "#c3c2c8", margin: "0 0 0.9rem" }}>
+              <p style={{ fontSize: "0.8rem", color: "var(--adm-text-2)", margin: "0 0 0.9rem" }}>
                 Chaque famille reçoit <strong>son propre code et ses liens</strong>, avec des boutons prêts à l&apos;emploi (WhatsApp, courriel, SMS). Seuls les programmes <em>publiés</em> sont promus.
               </p>
               {!camp ? (
-                <p style={{ color: "#9d9da0" }}>Chargement…</p>
+                <p style={{ color: "var(--adm-text-2)" }}>Chargement…</p>
               ) : (
                 <>
-                  <div style={{ background: "#1c1408", border: "1px solid #5a4410", borderRadius: "10px", padding: "0.8rem 1rem", marginBottom: "1rem", fontSize: "0.76rem", color: "#f0c878" }}>
+                  <div style={{ background: "#1c1408", border: "1px solid #5a4410", borderRadius: "10px", padding: "0.8rem 1rem", marginBottom: "1rem", fontSize: "0.76rem", color: "var(--adm-warn)" }}>
                     {camp.via === "gmail" ? (
                       <>Envoi depuis votre boîte courriel : <strong>{camp.from}</strong> — chaque famille reçoit un courriel personnalisé, les réponses arrivent dans votre boîte.</>
                     ) : (
@@ -371,7 +371,7 @@ export function AdminReferences({
                   </div>
 
                   <details style={{ marginBottom: "1rem" }}>
-                    <summary style={{ fontSize: "0.76rem", color: "#9d9da0", cursor: "pointer" }}>Changer la boîte d&apos;envoi (adresse + mot de passe d&apos;application Google)</summary>
+                    <summary style={{ fontSize: "0.76rem", color: "var(--adm-text-2)", cursor: "pointer" }}>Changer la boîte d&apos;envoi (adresse + mot de passe d&apos;application Google)</summary>
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.6rem" }}>
                       <input className="admin-input" placeholder="info@newvalkyria.com" style={{ width: "230px" }} value={mailUser} onChange={(e) => setMailUser(e.target.value)} />
                       <input className="admin-input" type="password" autoComplete="new-password" placeholder="Mot de passe d'application (16 lettres)" style={{ width: "280px" }} value={mailPass} onChange={(e) => setMailPass(e.target.value)} />
@@ -411,31 +411,31 @@ export function AdminReferences({
                     <button className="admin-filter-btn" data-active={String(audienceKind === "former")} onClick={() => setAudienceKind("former")}>Anciennes familles — rabais seulement, sans sac ({camp.audienceFormer})</button>
                   </div>
 
-                  <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
+                  <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
                     <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>1. Recevoir un courriel de test</p>
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                       <input className="admin-input" placeholder="Votre courriel" style={{ width: "260px" }} value={testTo} onChange={(e) => setTestTo(e.target.value)} />
                       <button className="admin-btn-primary" style={{ fontSize: "0.74rem" }} disabled={campBusy || !testTo.includes("@")} onClick={sendTest}>Envoyer le test</button>
                     </div>
-                    <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.5rem 0 0" }}>Objet : {camp.preview.subject}</p>
+                    <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.5rem 0 0" }}>Objet : {camp.preview.subject}</p>
                   </div>
 
-                  <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
+                  <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
                     <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem", fontSize: "0.82rem" }}>Aperçu (exemple avec une famille)</p>
-                    <iframe title="Aperçu du courriel" srcDoc={camp.preview.html} style={{ width: "100%", height: "640px", border: "1px solid #302e36", borderRadius: "8px", background: "#fff" }} />
+                    <iframe title="Aperçu du courriel" srcDoc={camp.preview.html} style={{ width: "100%", height: "640px", border: "1px solid var(--adm-border)", borderRadius: "8px", background: "#fff" }} />
                   </div>
 
-                  <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
+                  <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
                     <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>2. Envoyer à toutes les familles</p>
                     <button className="admin-btn-primary" style={{ fontSize: "0.76rem" }} disabled={campBusy} onClick={sendAll}>
                       {campBusy ? "Envoi…" : `Envoyer à ${(includePast ? camp.audienceAll : camp.audienceCurrent) - camp.alreadySent} famille(s)`}
                     </button>
-                    <span style={{ fontSize: "0.72rem", color: "#6d6b71", marginLeft: "0.6rem" }}>Une famille ne reçoit jamais deux fois ce courriel.</span>
+                    <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", marginLeft: "0.6rem" }}>Une famille ne reçoit jamais deux fois ce courriel.</span>
                   </div>
 
-                  {campMsg && <p style={{ fontSize: "0.8rem", color: campMsg.startsWith("✗") ? "#ff9999" : "#8fce9f", margin: "0 0 1rem" }}>{campMsg}</p>}
+                  {campMsg && <p style={{ fontSize: "0.8rem", color: campMsg.startsWith("✗") ? "var(--adm-bad)" : "var(--adm-good)", margin: "0 0 1rem" }}>{campMsg}</p>}
 
-                  <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "0.9rem" }}>
+                  <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", flexWrap: "wrap", marginBottom: "0.6rem", alignItems: "center" }}>
                       <p style={{ fontWeight: 700, color: "#fff", margin: 0, fontSize: "0.82rem" }}>Envoi direct par WhatsApp / SMS (un clic par famille)</p>
                       <a className="admin-export-btn" href={`/api/admin/references/campagne?format=csv&includePast=${includePast ? 1 : 0}`}>↓ Exporter CSV (liens + messages)</a>
@@ -445,10 +445,10 @@ export function AdminReferences({
                       {camp.families
                         .filter((x) => !famSearch.trim() || `${x.name} ${x.email}`.toLowerCase().includes(famSearch.trim().toLowerCase()))
                         .map((x) => (
-                          <div key={x.email} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", alignItems: "center", padding: "0.4rem 0", borderBottom: "1px solid #1f1d25", fontSize: "0.76rem", flexWrap: "wrap" }}>
+                          <div key={x.email} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", alignItems: "center", padding: "0.4rem 0", borderBottom: "1px solid var(--adm-line)", fontSize: "0.76rem", flexWrap: "wrap" }}>
                             <span style={{ color: "#fff" }}>
-                              {x.name || x.email} <span style={{ color: "#6d6b71" }}>· {x.code}{x.phone ? ` · ${x.phone}` : ""}</span>
-                              {x.sent && <span style={{ color: "#8fce9f" }}> ✓ courriel envoyé</span>}
+                              {x.name || x.email} <span style={{ color: "var(--adm-text-3)" }}>· {x.code}{x.phone ? ` · ${x.phone}` : ""}</span>
+                              {x.sent && <span style={{ color: "var(--adm-good)" }}> ✓ courriel envoyé</span>}
                             </span>
                             <span style={{ display: "flex", gap: "0.35rem" }}>
                               {x.whatsapp && <a className="admin-btn-ghost" style={{ fontSize: "0.66rem", textDecoration: "none" }} href={x.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>}
@@ -512,11 +512,11 @@ export function AdminReferences({
                       <td style={cell}>{formatMoney(p.referralDiscountCents)}</td>
                       <td style={cell}>{formatMoney(p.creditUsedCents)}</td>
                       <td style={cell}>{formatMoney(p.feesCents)}</td>
-                      <td style={{ ...cell, color: "#8fce9f", fontWeight: 700 }}>{formatMoney(p.collectedCents)}</td>
+                      <td style={{ ...cell, color: "var(--adm-good)", fontWeight: 700 }}>{formatMoney(p.collectedCents)}</td>
                       <td style={cell}>{formatMoney(p.upcomingCents)}</td>
-                      <td style={{ ...cell, color: p.failedCents > 0 ? "#ff9999" : "#c3c2c8" }}>{formatMoney(p.failedCents)}</td>
+                      <td style={{ ...cell, color: p.failedCents > 0 ? "var(--adm-bad)" : "var(--adm-text-2)" }}>{formatMoney(p.failedCents)}</td>
                       <td style={cell}>{p.costCents > 0 ? formatMoney(p.costCents) : "—"}</td>
-                      <td style={{ ...cell, color: p.costCents > 0 ? (p.marginCents >= 0 ? "#8fce9f" : "#ff9999") : "#c3c2c8", fontWeight: 700 }}>{p.costCents > 0 ? formatMoney(p.marginCents) : "—"}</td>
+                      <td style={{ ...cell, color: p.costCents > 0 ? (p.marginCents >= 0 ? "var(--adm-good)" : "var(--adm-bad)") : "var(--adm-text-2)", fontWeight: 700 }}>{p.costCents > 0 ? formatMoney(p.marginCents) : "—"}</td>
                     </tr>
                   ))}
                 </tbody>

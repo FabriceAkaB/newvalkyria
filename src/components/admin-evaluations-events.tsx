@@ -14,10 +14,10 @@ const STATUS_LABELS: Record<TryoutEventStatus, string> = {
 };
 
 const STATUS_COLORS: Record<TryoutEventStatus, string> = {
-  brouillon: "#9d9da0",
-  en_cours: "#8fce9f",
-  termine: "#78a8f0",
-  archive: "#6d6b71"
+  brouillon: "var(--adm-text-2)",
+  en_cours: "var(--adm-good)",
+  termine: "var(--adm-info)",
+  archive: "var(--adm-text-3)"
 };
 
 export function AdminEvaluationsEvents({
@@ -104,12 +104,12 @@ export function AdminEvaluationsEvents({
               {showCreate ? "Annuler" : "+ Nouvel événement"}
             </button>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Chaque événement est isolé : ses athlètes, ses notes, ses équipes ne se mélangent jamais avec un autre événement.
           </p>
 
           {showCreate && (
-            <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+            <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
               <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
                 <input className="admin-input" placeholder="Nom de l'événement" value={name} onChange={(e) => setName(e.target.value)} style={{ flex: 2, minWidth: "200px" }} />
                 <input type="date" className="admin-input" value={eventDate} onChange={(e) => setEventDate(e.target.value)} style={{ width: "auto" }} />
@@ -129,13 +129,13 @@ export function AdminEvaluationsEvents({
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
             {events.map((ev) => (
-              <div key={ev.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.6rem" }}>
+              <div key={ev.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.6rem" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: STATUS_COLORS[ev.status], display: "inline-block" }} />
                     <Link href={`/admin/evaluations/${ev.id}`} style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fff", textDecoration: "none" }}>{ev.name}</Link>
                   </div>
-                  <p style={{ fontSize: "0.72rem", color: "#9d9da0", margin: "0.3rem 0 0" }}>
+                  <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0.3rem 0 0" }}>
                     {new Date(ev.event_date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                     {ev.location ? ` · ${ev.location}` : ""} · {STATUS_LABELS[ev.status]} · {counts[ev.id] ?? 0} athlète{(counts[ev.id] ?? 0) > 1 ? "s" : ""}
                   </p>

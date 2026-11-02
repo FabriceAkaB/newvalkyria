@@ -261,7 +261,7 @@ export function AdminEvaluationEventDetail({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.6rem", marginBottom: "0.3rem" }}>
             <div>
               <p className="admin-section-title" style={{ margin: 0 }}>{event.name}</p>
-              <p style={{ fontSize: "0.78rem", color: "#6d6b71", margin: "0.2rem 0 0" }}>
+              <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", margin: "0.2rem 0 0" }}>
                 {new Date(event.event_date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                 {event.location ? ` · ${event.location}` : ""}
               </p>
@@ -284,7 +284,7 @@ export function AdminEvaluationEventDetail({
           </p>
 
           {/* ── Recherche universelle ── */}
-          <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
+          <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
             <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Ajouter une athlète</p>
             <input
               className="admin-input"
@@ -293,25 +293,25 @@ export function AdminEvaluationEventDetail({
               onChange={(e) => setQuery(e.target.value)}
               style={{ width: "100%", marginBottom: "0.5rem" }}
             />
-            {searching && <p style={{ fontSize: "0.72rem", color: "#6d6b71" }}>Recherche...</p>}
+            {searching && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>Recherche...</p>}
             {results.map((r) => (
-              <div key={r.playerId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.4rem 0", borderBottom: "1px solid #1f1d25", gap: "0.5rem" }}>
+              <div key={r.playerId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.4rem 0", borderBottom: "1px solid var(--adm-line)", gap: "0.5rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                   <Avatar firstName={r.firstName} lastName={r.lastName} photoUrl={r.photoUrl} />
                   <div>
-                    <p style={{ fontSize: "0.8rem", color: "#fff", margin: 0 }}>{r.firstName} {r.lastName} <span style={{ color: "#6d6b71" }}>({birthYear(r.dob)})</span></p>
-                    <p style={{ fontSize: "0.68rem", color: "#9d9da0", margin: 0 }}>{r.currentProgram ?? "Aucun programme actuel"}</p>
+                    <p style={{ fontSize: "0.8rem", color: "#fff", margin: 0 }}>{r.firstName} {r.lastName} <span style={{ color: "var(--adm-text-3)" }}>({birthYear(r.dob)})</span></p>
+                    <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", margin: 0 }}>{r.currentProgram ?? "Aucun programme actuel"}</p>
                   </div>
                 </div>
                 {r.alreadyAdded ? (
-                  <span style={{ fontSize: "0.68rem", color: "#8fce9f" }}>✓ Déjà ajoutée</span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--adm-good)" }}>✓ Déjà ajoutée</span>
                 ) : (
                   <button className="admin-btn-ghost" onClick={() => addPlayer(r.playerId)} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>Ajouter</button>
                 )}
               </div>
             ))}
 
-            <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: "0.9rem 0 0.4rem" }}>
+            <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: "0.9rem 0 0.4rem" }}>
               Transférer des inscriptions existantes — peu importe la saison :
             </p>
             <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", alignItems: "center" }}>
@@ -329,10 +329,10 @@ export function AdminEvaluationEventDetail({
                 {showExternal ? "Annuler" : "+ Athlète externe / essai"}
               </button>
             </div>
-            {bulkMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", marginTop: "0.4rem" }}>{bulkMessage}</p>}
+            {bulkMessage && <p style={{ fontSize: "0.7rem", color: "var(--adm-good)", marginTop: "0.4rem" }}>{bulkMessage}</p>}
 
             {showExternal && (
-              <div style={{ marginTop: "0.8rem", padding: "0.8rem", background: "#17151e", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div style={{ marginTop: "0.8rem", padding: "0.8rem", background: "var(--adm-surface-2)", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                   <input className="admin-input" placeholder="Prénom *" value={ext.firstName} onChange={(e) => setExt({ ...ext, firstName: e.target.value })} style={{ flex: 1, minWidth: "140px" }} />
                   <input className="admin-input" placeholder="Nom *" value={ext.lastName} onChange={(e) => setExt({ ...ext, lastName: e.target.value })} style={{ flex: 1, minWidth: "140px" }} />
@@ -366,19 +366,19 @@ export function AdminEvaluationEventDetail({
           </div>
 
           {/* ── Équipes / couleurs de dossard ── */}
-          <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
+          <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
             <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Équipes / couleurs de dossard</p>
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: "0.6rem" }}>
               {teams.map((t) => (
-                <span key={t.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "#fff", background: "#251f30", borderRadius: "999px", padding: "0.25rem 0.5rem 0.25rem 0.7rem" }}>
+                <span key={t.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "#fff", background: "var(--adm-border)", borderRadius: "999px", padding: "0.25rem 0.5rem 0.25rem 0.7rem" }}>
                   <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: t.color_hex, display: "inline-block" }} />
                   {t.name}
-                  <button onClick={() => removeTeam(t.id)} style={{ background: "none", border: "none", color: "#9d9da0", cursor: "pointer", fontSize: "0.75rem", padding: "0 0.2rem" }}>✕</button>
+                  <button onClick={() => removeTeam(t.id)} style={{ background: "none", border: "none", color: "var(--adm-text-2)", cursor: "pointer", fontSize: "0.75rem", padding: "0 0.2rem" }}>✕</button>
                 </span>
               ))}
-              {teams.length === 0 && <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>Aucune couleur pour l&apos;instant.</span>}
+              {teams.length === 0 && <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>Aucune couleur pour l&apos;instant.</span>}
             </div>
-            <p style={{ fontSize: "0.68rem", color: "#6d6b71", margin: "0 0 0.4rem" }}>Ajouter depuis la palette :</p>
+            <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: "0 0 0.4rem" }}>Ajouter depuis la palette :</p>
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
               {DEFAULT_TEAM_PALETTE.filter((c) => !teams.some((t) => t.name === c.name)).map((c) => (
                 <button
@@ -395,15 +395,15 @@ export function AdminEvaluationEventDetail({
           </div>
 
           {/* ── Évaluateurs ── */}
-          <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
+          <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
             <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Évaluateurs assignés</p>
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: "0.6rem" }}>
               {evaluators.map((e) => (
-                <span key={e.id} style={{ fontSize: "0.72rem", color: "#fff", background: "#251f30", borderRadius: "999px", padding: "0.25rem 0.7rem" }}>
+                <span key={e.id} style={{ fontSize: "0.72rem", color: "#fff", background: "var(--adm-border)", borderRadius: "999px", padding: "0.25rem 0.7rem" }}>
                   {e.guest_name ?? `${e.coach_first_name ?? ""} ${e.coach_last_name ?? ""}`.trim()}
                 </span>
               ))}
-              {evaluators.length === 0 && <span style={{ fontSize: "0.72rem", color: "#6d6b71" }}>Aucun évaluateur pour l&apos;instant.</span>}
+              {evaluators.length === 0 && <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>Aucun évaluateur pour l&apos;instant.</span>}
             </div>
             <div style={{ display: "flex", gap: "0.4rem" }}>
               <input className="admin-input" placeholder="Nom de l'évaluateur" value={newEvaluatorName} onChange={(e) => setNewEvaluatorName(e.target.value)} style={{ width: "auto", fontSize: "0.75rem" }} />
@@ -418,13 +418,13 @@ export function AdminEvaluationEventDetail({
               {copyingEmails ? "..." : "📋 Copier tous les courriels"}
             </button>
           </div>
-          {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "#8fce9f", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
+          {copyEmailsMessage && <p style={{ fontSize: "0.7rem", color: "var(--adm-good)", margin: "-0.3rem 0 0.6rem" }}>{copyEmailsMessage}</p>}
           {participants.length === 0 && <p className="admin-empty-text">Aucune athlète ajoutée pour l&apos;instant.</p>}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
             {participants.map((p) => {
               const team = teams.find((t) => t.id === p.team_id);
               return (
-                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "0.7rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.5rem 0.8rem", flexWrap: "wrap" }}>
+                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "0.7rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.5rem 0.8rem", flexWrap: "wrap" }}>
                   <div style={{ position: "relative", flexShrink: 0 }}>
                     <Avatar firstName={p.player_first_name} lastName={p.player_last_name} photoUrl={p.player_photo_url} colorHex={team?.color_hex} />
                     <label
@@ -437,8 +437,8 @@ export function AdminEvaluationEventDetail({
                         width: "18px",
                         height: "18px",
                         borderRadius: "50%",
-                        background: "#251f30",
-                        border: "1px solid #17151e",
+                        background: "var(--adm-border)",
+                        border: "1px solid var(--adm-surface-2)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -458,7 +458,7 @@ export function AdminEvaluationEventDetail({
                   </div>
                   <div style={{ minWidth: "160px" }}>
                     <p style={{ fontSize: "0.8rem", color: "#fff", margin: 0 }}>{p.player_first_name} {p.player_last_name}</p>
-                    <p style={{ fontSize: "0.68rem", color: "#9d9da0", margin: 0 }}>{birthYear(p.player_dob)}{p.is_trial ? " · Essai" : ""}</p>
+                    <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", margin: 0 }}>{birthYear(p.player_dob)}{p.is_trial ? " · Essai" : ""}</p>
                   </div>
                   <input
                     type="number"

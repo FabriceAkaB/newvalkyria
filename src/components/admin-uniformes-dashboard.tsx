@@ -26,18 +26,18 @@ function seasonHealth(s: UniformStats): { emoji: string; label: string } {
 function SeasonCard({ season }: { season: SeasonStat }) {
   const health = seasonHealth(season.stats);
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "12px", padding: "1.1rem 1.25rem", flex: "1 1 300px" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "12px", padding: "1.1rem 1.25rem", flex: "1 1 300px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
         <p style={{ fontSize: "0.95rem", fontWeight: 700, color: "#fff", margin: 0 }}>{season.label}</p>
         <span style={{ fontSize: "0.78rem" }}>{health.emoji} {health.label}</span>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", marginBottom: "0.9rem" }}>
-        <span style={{ fontSize: "0.75rem", color: "#7fd88f" }}>🟢 {season.stats.distributed} remise(s)</span>
-        <span style={{ fontSize: "0.75rem", color: "#f0c878" }}>🟡 {season.stats.toDistribute} à remettre</span>
-        <span style={{ fontSize: "0.75rem", color: "#ffb464" }}>🟠 {season.stats.incomplete} incomplète(s)</span>
-        <span style={{ fontSize: "0.75rem", color: "#ff9999" }}>🔴 {season.stats.problems} problème(s)</span>
+        <span style={{ fontSize: "0.75rem", color: "var(--adm-good)" }}>🟢 {season.stats.distributed} remise(s)</span>
+        <span style={{ fontSize: "0.75rem", color: "var(--adm-warn)" }}>🟡 {season.stats.toDistribute} à remettre</span>
+        <span style={{ fontSize: "0.75rem", color: "var(--adm-warn)" }}>🟠 {season.stats.incomplete} incomplète(s)</span>
+        <span style={{ fontSize: "0.75rem", color: "var(--adm-bad)" }}>🔴 {season.stats.problems} problème(s)</span>
       </div>
-      <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.9rem" }}>
+      <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0 0 0.9rem" }}>
         {season.stats.distributedItems} / {season.stats.totalItems} article(s) remis · {season.stats.totalOrders} commande(s) au total
       </p>
       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -59,7 +59,7 @@ export function AdminUniformesDashboard({ seasonStats, unassignedCount }: Props)
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Uniformes</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Distribution des uniformes, séparée par saison — reliée directement aux commandes de la boutique.
           </p>
 
@@ -67,7 +67,7 @@ export function AdminUniformesDashboard({ seasonStats, unassignedCount }: Props)
             <Link
               href="/admin/uniformes/a-remettre"
               style={{
-                display: "block", fontSize: "0.78rem", color: "#ffb464", background: "rgba(255,180,100,0.1)",
+                display: "block", fontSize: "0.78rem", color: "var(--adm-warn)", background: "var(--adm-warn-soft)",
                 border: "1px solid rgba(255,180,100,0.3)", borderRadius: "8px", padding: "0.6rem 0.9rem", marginBottom: "1.25rem", textDecoration: "none"
               }}
             >

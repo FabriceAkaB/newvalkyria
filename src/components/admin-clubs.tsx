@@ -97,7 +97,7 @@ export function AdminClubs({ allRawClubs }: Props) {
         <AdminTopbar />
         <div className="admin-content">
           <div className="admin-section">
-            <p style={{ color: "#6d6b71" }}>Chargement...</p>
+            <p style={{ color: "var(--adm-text-3)" }}>Chargement...</p>
           </div>
         </div>
       </>
@@ -114,7 +114,7 @@ export function AdminClubs({ allRawClubs }: Props) {
               Regroupement des clubs
             </p>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-              {saveOk && <span style={{ color: "#9ec99e", fontSize: "0.75rem" }}>✓ Sauvegardé</span>}
+              {saveOk && <span style={{ color: "var(--adm-good)", fontSize: "0.75rem" }}>✓ Sauvegardé</span>}
               <button onClick={handleAddGroup} className="admin-btn-ghost" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem" }}>
                 + Nouveau groupe
               </button>
@@ -124,7 +124,7 @@ export function AdminClubs({ allRawClubs }: Props) {
             </div>
           </div>
 
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem", lineHeight: 1.55 }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem", lineHeight: 1.55 }}>
             Regroupez les différentes orthographes d&apos;un même club. Par exemple : « FC Laval », « fc laval », « f.c. laval » → un seul groupe canonique « FC Laval ».
             Les filtres et l&apos;export utiliseront automatiquement le nom canonique.
           </p>
@@ -133,7 +133,7 @@ export function AdminClubs({ allRawClubs }: Props) {
 
           {/* Groups list */}
           {groups.length === 0 && (
-            <div style={{ padding: "1.5rem", border: "1px dashed #23222a", borderRadius: "8px", textAlign: "center", color: "#605f65", fontSize: "0.85rem" }}>
+            <div style={{ padding: "1.5rem", border: "1px dashed var(--adm-surface-3)", borderRadius: "8px", textAlign: "center", color: "var(--adm-text-3)", fontSize: "0.85rem" }}>
               Aucun groupe créé. Cliquez sur « + Nouveau groupe » pour commencer.
             </div>
           )}
@@ -142,8 +142,8 @@ export function AdminClubs({ allRawClubs }: Props) {
             <div
               key={idx}
               style={{
-                background: "#100e17",
-                border: "1px solid #1f1d25",
+                background: "var(--adm-surface)",
+                border: "1px solid var(--adm-line)",
                 borderRadius: "10px",
                 padding: "1rem 1.2rem",
                 marginBottom: "0.85rem",
@@ -163,7 +163,7 @@ export function AdminClubs({ allRawClubs }: Props) {
                   style={{
                     padding: "0.45rem 0.7rem",
                     background: "transparent",
-                    border: "1px solid rgba(255,100,100,0.3)",
+                    border: "1px solid var(--adm-bad-soft)",
                     color: "rgba(255,150,150,0.8)",
                     borderRadius: "6px",
                     cursor: "pointer",
@@ -177,12 +177,12 @@ export function AdminClubs({ allRawClubs }: Props) {
 
               {/* Existing aliases */}
               <div style={{ marginBottom: "0.6rem" }}>
-                <p style={{ fontSize: "0.68rem", color: "#6d6b71", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>
+                <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>
                   Variantes ({group.aliases.length})
                 </p>
                 <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
                   {group.aliases.length === 0 && (
-                    <span style={{ fontSize: "0.75rem", color: "#48474d", fontStyle: "italic" }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", fontStyle: "italic" }}>
                       Aucune variante
                     </span>
                   )}
@@ -204,7 +204,7 @@ export function AdminClubs({ allRawClubs }: Props) {
                       {alias}
                       <button
                         onClick={() => handleRemoveAlias(idx, ai)}
-                        style={{ background: "none", border: "none", color: "#858489", cursor: "pointer", fontSize: "0.85rem", padding: 0 }}
+                        style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer", fontSize: "0.85rem", padding: 0 }}
                         title="Retirer cette variante"
                       >
                         ×
@@ -217,7 +217,7 @@ export function AdminClubs({ allRawClubs }: Props) {
               {/* Quick add from ungrouped clubs */}
               {ungroupedClubs.length > 0 && (
                 <details style={{ marginTop: "0.6rem" }}>
-                  <summary style={{ fontSize: "0.7rem", color: "#8d76a5", cursor: "pointer", padding: "0.3rem 0" }}>
+                  <summary style={{ fontSize: "0.7rem", color: "var(--adm-accent)", cursor: "pointer", padding: "0.3rem 0" }}>
                     + Ajouter depuis les clubs non assignés ({ungroupedClubs.length})
                   </summary>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.5rem", maxHeight: "180px", overflowY: "auto" }}>
@@ -228,10 +228,10 @@ export function AdminClubs({ allRawClubs }: Props) {
                         style={{
                           padding: "0.25rem 0.55rem",
                           background: "#15131b",
-                          border: "1px solid #23222a",
+                          border: "1px solid var(--adm-surface-3)",
                           borderRadius: "12px",
                           fontSize: "0.7rem",
-                          color: "#9d9da0",
+                          color: "var(--adm-text-2)",
                           cursor: "pointer",
                         }}
                       >
@@ -246,11 +246,11 @@ export function AdminClubs({ allRawClubs }: Props) {
 
           {/* Ungrouped clubs section */}
           {ungroupedClubs.length > 0 && (
-            <div style={{ marginTop: "2rem", padding: "1rem 1.2rem", background: "#151115", border: "1px solid #30261e", borderRadius: "8px" }}>
-              <p style={{ fontSize: "0.78rem", color: "#f0c878", marginBottom: "0.5rem", fontWeight: 600 }}>
+            <div style={{ marginTop: "2rem", padding: "1rem 1.2rem", background: "var(--adm-surface)", border: "1px solid #30261e", borderRadius: "8px" }}>
+              <p style={{ fontSize: "0.78rem", color: "var(--adm-warn)", marginBottom: "0.5rem", fontWeight: 600 }}>
                 ⚠ Clubs non assignés ({ungroupedClubs.length})
               </p>
-              <p style={{ fontSize: "0.7rem", color: "#6d6b71", marginBottom: "0.6rem" }}>
+              <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", marginBottom: "0.6rem" }}>
                 Ces clubs apparaissent dans les inscriptions mais ne sont assignés à aucun groupe.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
@@ -260,7 +260,7 @@ export function AdminClubs({ allRawClubs }: Props) {
                     style={{
                       padding: "0.25rem 0.55rem",
                       background: "#15131b",
-                      border: "1px solid #23222a",
+                      border: "1px solid var(--adm-surface-3)",
                       borderRadius: "12px",
                       fontSize: "0.72rem",
                       color: "#919094",

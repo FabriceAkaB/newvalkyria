@@ -68,7 +68,7 @@ export function AdminSaisonCapacite({ season, categories, programs, programCateg
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Capacité par programme et catégorie</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Modifiez le nombre maximal de places pour chaque combinaison programme × catégorie d&apos;âge — public ou avancé.
           </p>
 
@@ -81,9 +81,9 @@ export function AdminSaisonCapacite({ season, categories, programs, programCateg
               <div key={program.id} style={{ marginBottom: "2rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.85rem" }}>
                   <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fff", margin: 0 }}>{program.name}</p>
-                  <span style={{ fontSize: "0.62rem", color: "#9f85ba", background: "rgba(159,133,186,0.1)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>{program.id}</span>
+                  <span style={{ fontSize: "0.62rem", color: "var(--adm-accent)", background: "rgba(159,133,186,0.1)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>{program.id}</span>
                   {program.invitation && (
-                    <span style={{ fontSize: "0.6rem", color: "#f0c878", background: "rgba(240,200,120,0.1)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>Sur invitation</span>
+                    <span style={{ fontSize: "0.6rem", color: "var(--adm-warn)", background: "var(--adm-warn-soft)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>Sur invitation</span>
                   )}
                 </div>
                 <div className="admin-cap-v2-grid">
@@ -108,7 +108,7 @@ export function AdminSaisonCapacite({ season, categories, programs, programCateg
                           <div className="admin-cap-v2-bar-track">
                             <div
                               className="admin-cap-v2-bar-fill"
-                              style={{ width: `${pct}%`, background: isFull ? "rgba(248,113,113,0.7)" : pct > 70 ? "rgba(251,191,36,0.7)" : "#8d76a5" }}
+                              style={{ width: `${pct}%`, background: isFull ? "rgba(248,113,113,0.7)" : pct > 70 ? "rgba(251,191,36,0.7)" : "var(--adm-accent)" }}
                             />
                           </div>
                         </div>

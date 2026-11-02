@@ -12,10 +12,10 @@ function DocumentViewerModal({ fileName, signedUrl, onClose }: { fileName: strin
     <div className="admin-modal-overlay" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: "92vw", height: "88vh", maxWidth: "1100px", background: "#100e17", border: "1px solid #302e36", borderRadius: "10px", display: "flex", flexDirection: "column", overflow: "hidden" }}
+        style={{ width: "92vw", height: "88vh", maxWidth: "1100px", background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", display: "flex", flexDirection: "column", overflow: "hidden" }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0.9rem", borderBottom: "1px solid #1f1d25" }}>
-          <span style={{ fontSize: "0.8rem", color: "#c3c2c8" }}>📄 {fileName}</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0.9rem", borderBottom: "1px solid var(--adm-line)" }}>
+          <span style={{ fontSize: "0.8rem", color: "var(--adm-text-2)" }}>📄 {fileName}</span>
           <button onClick={onClose} className="admin-drawer-close" aria-label="Fermer">×</button>
         </div>
         <iframe src={signedUrl} title={fileName} style={{ flex: 1, border: "none", background: "#fff" }} />
@@ -72,17 +72,17 @@ export function EntityDocuments({ entityType, entityId, apiBase = "/api/admin/do
 
   return (
     <div>
-      <p style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Documents</p>
+      <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Documents</p>
       {error && <p className="admin-error" style={{ fontSize: "0.72rem", marginBottom: "0.4rem" }}>{error}</p>}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginBottom: "0.5rem" }}>
-        {documents === null && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Chargement...</p>}
-        {documents?.length === 0 && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Aucun document.</p>}
+        {documents === null && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Chargement...</p>}
+        {documents?.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Aucun document.</p>}
         {documents?.map((d) => (
-          <div key={d.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#c3c2c8" }}>
-            <button onClick={() => view(d)} style={{ background: "none", border: "none", color: "#88c0d0", cursor: "pointer", padding: 0, textAlign: "left", flex: 1 }}>
-              📄 {d.file_name} <span style={{ color: "#6d6b71" }}>· {d.category}</span>
+          <div key={d.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)" }}>
+            <button onClick={() => view(d)} style={{ background: "none", border: "none", color: "var(--adm-info)", cursor: "pointer", padding: 0, textAlign: "left", flex: 1 }}>
+              📄 {d.file_name} <span style={{ color: "var(--adm-text-3)" }}>· {d.category}</span>
             </button>
-            {!readOnly && <button onClick={() => remove(d.id)} style={{ fontSize: "0.68rem", color: "#ff9999", background: "none", border: "none", cursor: "pointer" }}>×</button>}
+            {!readOnly && <button onClick={() => remove(d.id)} style={{ fontSize: "0.68rem", color: "var(--adm-bad)", background: "none", border: "none", cursor: "pointer" }}>×</button>}
           </div>
         ))}
       </div>

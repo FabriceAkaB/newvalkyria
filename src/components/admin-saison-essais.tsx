@@ -85,13 +85,13 @@ export function AdminSaisonEssais({ season, categories, programs, slots, initial
     const c = conversionFor(r);
     const availableSlots = c.categoryId ? slots.filter((s) => s.category_ids.includes(c.categoryId)) : slots;
     return (
-      <div key={r.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem", opacity: isSaving ? 0.6 : 1 }}>
+      <div key={r.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", opacity: isSaving ? 0.6 : 1 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.65rem" }}>
           <div>
             <p style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff", margin: 0 }}>{playerName(r)}</p>
             <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: "0.15rem 0 0" }}>{r.parent_name} · {r.parent_email} · {r.parent_phone}</p>
           </div>
-          <span style={{ fontSize: "0.6rem", color: "#88c0d0", background: "rgba(136,192,208,0.1)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>Essai</span>
+          <span style={{ fontSize: "0.6rem", color: "var(--adm-info)", background: "var(--adm-info-soft)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>Essai</span>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "0.6rem", marginBottom: "0.85rem" }}>
@@ -137,7 +137,7 @@ export function AdminSaisonEssais({ season, categories, programs, slots, initial
           Convertir en inscription officielle →
         </button>
         {(!c.programId || !c.categoryId) && (
-          <p style={{ fontSize: "0.68rem", color: "#ffb464", margin: "0.4rem 0 0" }}>
+          <p style={{ fontSize: "0.68rem", color: "var(--adm-warn)", margin: "0.4rem 0 0" }}>
             Choisissez une catégorie et un programme ci-dessus pour activer la conversion.
           </p>
         )}
@@ -151,7 +151,7 @@ export function AdminSaisonEssais({ season, categories, programs, slots, initial
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Essais gratuits</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Joueuses à l&apos;essai pour {season.label} — planifiez la date, indiquez le groupe visé, puis convertissez en inscription officielle une fois le paiement reçu.
           </p>
 

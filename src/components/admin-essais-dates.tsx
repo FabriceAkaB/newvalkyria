@@ -123,41 +123,41 @@ export function AdminEssaisDates({ initialSlots }: { initialSlots: TrialSlot[] }
               {showForm ? "Annuler" : "+ Ajouter une date"}
             </button>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Les dates proposées aux familles dans le formulaire d&apos;essai gratuit (Automne/Hiver), selon l&apos;année
             de naissance et le niveau. Ajoute ou retire des dates ici pour ajuster les transitions entre périodes.
           </p>
 
           {showForm && (
-            <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+            <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
               <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
                 <label className="admin-field" style={{ gap: "0.25rem" }}>
-                  <span style={{ fontSize: "0.68rem", color: "#7a7982" }}>Date</span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)" }}>Date</span>
                   <input type="date" className="admin-input" value={form.slotDate} onChange={(e) => setForm({ ...form, slotDate: e.target.value })} />
                 </label>
                 <label className="admin-field" style={{ gap: "0.25rem" }}>
-                  <span style={{ fontSize: "0.68rem", color: "#7a7982" }}>Heure début</span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)" }}>Heure début</span>
                   <input className="admin-input" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} style={{ width: "6rem" }} />
                 </label>
                 <label className="admin-field" style={{ gap: "0.25rem" }}>
-                  <span style={{ fontSize: "0.68rem", color: "#7a7982" }}>Heure fin</span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)" }}>Heure fin</span>
                   <input className="admin-input" value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} style={{ width: "6rem" }} />
                 </label>
                 <label className="admin-field" style={{ gap: "0.25rem" }}>
-                  <span style={{ fontSize: "0.68rem", color: "#7a7982" }}>Places max</span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)" }}>Places max</span>
                   <input type="number" min={1} className="admin-input" value={form.maxPlaces} onChange={(e) => setForm({ ...form, maxPlaces: Number(e.target.value) })} style={{ width: "5rem" }} />
                 </label>
               </div>
               <label className="admin-field" style={{ gap: "0.25rem" }}>
-                <span style={{ fontSize: "0.68rem", color: "#7a7982" }}>Lieu</span>
+                <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)" }}>Lieu</span>
                 <input className="admin-input" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="École Hubert-Maisonneuve, Rosemère" />
               </label>
               <label className="admin-field" style={{ gap: "0.25rem" }}>
-                <span style={{ fontSize: "0.68rem", color: "#7a7982" }}>Années de naissance admissibles (séparées par une virgule)</span>
+                <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)" }}>Années de naissance admissibles (séparées par une virgule)</span>
                 <input className="admin-input" value={form.eligibleBirthYears} onChange={(e) => setForm({ ...form, eligibleBirthYears: e.target.value })} placeholder="2016, 2017" />
               </label>
               <div>
-                <span style={{ fontSize: "0.68rem", color: "#7a7982", display: "block", marginBottom: "0.4rem" }}>Niveaux admissibles</span>
+                <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", display: "block", marginBottom: "0.4rem" }}>Niveaux admissibles</span>
                 <label style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", color: "#fff", marginRight: "1rem" }}>
                   <input type="checkbox" checked={form.allLevels} onChange={(e) => setForm({ ...form, allLevels: e.target.checked })} />
                   Tous niveaux
@@ -188,18 +188,18 @@ export function AdminEssaisDates({ initialSlots }: { initialSlots: TrialSlot[] }
           {slots.length === 0 && <p className="admin-empty-text">Aucune date d&apos;essai pour l&apos;instant.</p>}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {slots.map((s) => (
-              <div key={s.id} style={{ background: "#100e17", border: `1px solid ${s.active ? "#251f30" : "#1a1a1a"}`, borderRadius: "8px", padding: "0.7rem 1rem", opacity: s.active ? 1 : 0.5 }}>
+              <div key={s.id} style={{ background: "var(--adm-surface)", border: `1px solid ${s.active ? "var(--adm-border)" : "#1a1a1a"}`, borderRadius: "8px", padding: "0.7rem 1rem", opacity: s.active ? 1 : 0.5 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
                   <div>
                     <p style={{ fontSize: "0.85rem", color: "#fff", fontWeight: 600, margin: 0, textTransform: "capitalize" }}>
                       {formatDate(s.slot_date)} · {s.start_time}–{s.end_time}
                     </p>
-                    <p style={{ fontSize: "0.72rem", color: "#9d9da0", margin: "0.2rem 0 0" }}>
+                    <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0.2rem 0 0" }}>
                       {s.location} · Années {s.eligible_birth_years.join(", ")} · Niveaux {s.eligible_levels ? s.eligible_levels.join(", ") : "tous"}
                     </p>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                    <span style={{ fontSize: "0.75rem", color: s.isFull ? "#f0c878" : "#8fce9f" }}>{s.taken}/{s.max_places} places</span>
+                    <span style={{ fontSize: "0.75rem", color: s.isFull ? "var(--adm-warn)" : "var(--adm-good)" }}>{s.taken}/{s.max_places} places</span>
                     <input
                       type="number"
                       min={s.taken}

@@ -59,7 +59,7 @@ export function AdminThemes({ seasons, currentSeason, themes: initialThemes }: {
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Thèmes saisonniers</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Planifiez le thème pédagogique de chaque semaine — les entraîneurs le voient sur leur tableau de bord.
           </p>
 
@@ -77,12 +77,12 @@ export function AdminThemes({ seasons, currentSeason, themes: initialThemes }: {
               const existing = themeByWeek.get(week);
               const weekLabel = new Date(week + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" });
               return (
-                <div key={week} style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
-                  <span style={{ fontSize: "0.75rem", color: "#6d6b71", minWidth: "7rem" }}>Sem. du {weekLabel}</span>
+                <div key={week} style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", minWidth: "7rem" }}>Sem. du {weekLabel}</span>
                   {existing ? (
                     <>
                       <span style={{ fontSize: "0.85rem", color: "#fff", flex: 1 }}>{existing.theme}</span>
-                      <button onClick={() => remove(existing.id)} style={{ fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer" }}>×</button>
+                      <button onClick={() => remove(existing.id)} style={{ fontSize: "0.7rem", color: "var(--adm-bad)", background: "none", border: "1px solid var(--adm-bad-soft)", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer" }}>×</button>
                     </>
                   ) : (
                     <>

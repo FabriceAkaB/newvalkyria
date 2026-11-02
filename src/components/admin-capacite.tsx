@@ -91,7 +91,7 @@ export function AdminCapacite({ capacity }: Props) {
             <p
               style={{
                 fontSize: "0.75rem",
-                color: "#545359",
+                color: "var(--adm-text-3)",
                 margin: "0.3rem 0 0",
               }}
             >
@@ -146,7 +146,7 @@ export function AdminCapacite({ capacity }: Props) {
                           ? "rgba(248,113,113,0.7)"
                           : pct > 70
                             ? "rgba(251,191,36,0.7)"
-                            : "#8d76a5",
+                            : "var(--adm-accent)",
                       }}
                     />
                   </div>
@@ -259,7 +259,7 @@ export function AdminCapacite({ capacity }: Props) {
           <p
             style={{
               fontSize: "0.8rem",
-              color: "#605f65",
+              color: "var(--adm-text-3)",
               margin: 0,
               lineHeight: 1.6,
             }}

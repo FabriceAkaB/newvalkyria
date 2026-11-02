@@ -74,7 +74,7 @@ function ExerciseForm({ initial, onSubmit, onCancel, saving, isCreating }: { ini
   return (
     <div
       className={isCreating ? "exercise-create-panel" : undefined}
-      style={isCreating ? { marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" } : { background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}
+      style={isCreating ? { marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" } : { background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}
     >
       {isCreating && <p className="exercise-create-panel__title">Créer un exercice</p>}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
@@ -182,17 +182,17 @@ function ExerciseCard({ exercise, canEdit, onUpdated, onDeleted }: { exercise: E
   }
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
       <button onClick={() => setExpanded(!expanded)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0, width: "100%", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: "0.88rem", fontWeight: 700 }}>
           {expanded ? "▾" : "▸"} {exercise.title}
-          {exercise.category && <span style={{ color: "#9f85ba", fontWeight: 400 }}> · {exercise.category}</span>}
-          {exercise.level && <span style={{ color: "#6d6b71", fontWeight: 400 }}> · {exercise.level}</span>}
+          {exercise.category && <span style={{ color: "var(--adm-accent)", fontWeight: 400 }}> · {exercise.category}</span>}
+          {exercise.level && <span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}> · {exercise.level}</span>}
         </span>
-        {exercise.duration_minutes && <span style={{ fontSize: "0.75rem", color: "#6d6b71" }}>{exercise.duration_minutes} min</span>}
+        {exercise.duration_minutes && <span style={{ fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{exercise.duration_minutes} min</span>}
       </button>
       {expanded && (
-        <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid #1a1820", display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.78rem", color: "#c3c2c8" }}>
+        <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid var(--adm-surface-2)", display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
           {exercise.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={exercise.image_url} alt={exercise.title} style={{ maxWidth: "280px", borderRadius: "8px" }} />
@@ -205,7 +205,7 @@ function ExerciseCard({ exercise, canEdit, onUpdated, onDeleted }: { exercise: E
           {exercise.variants && <p style={{ margin: 0 }}><strong>Variantes :</strong> {exercise.variants}</p>}
           {exercise.coaching_points && <p style={{ margin: 0 }}><strong>Points de coaching :</strong> {exercise.coaching_points}</p>}
           {exercise.common_mistakes && <p style={{ margin: 0 }}><strong>Erreurs fréquentes :</strong> {exercise.common_mistakes}</p>}
-          {exercise.video_url && <p style={{ margin: 0 }}><a href={exercise.video_url} target="_blank" rel="noreferrer" style={{ color: "#88c0d0" }}>Voir la vidéo →</a></p>}
+          {exercise.video_url && <p style={{ margin: 0 }}><a href={exercise.video_url} target="_blank" rel="noreferrer" style={{ color: "var(--adm-info)" }}>Voir la vidéo →</a></p>}
 
           {exercise.diagram_data && !editingDiagram && <ExerciseDiagramView diagram={exercise.diagram_data} />}
 
@@ -220,7 +220,7 @@ function ExerciseCard({ exercise, canEdit, onUpdated, onDeleted }: { exercise: E
               <button className="admin-btn-ghost" style={{ fontSize: "0.72rem", padding: "0.3rem 0.6rem" }} onClick={() => setEditingDiagram((v) => !v)}>
                 {editingDiagram ? "Fermer le schéma" : exercise.diagram_data ? "Modifier le schéma" : "+ Schéma visuel"}
               </button>
-              <button onClick={remove} style={{ fontSize: "0.72rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer" }}>Supprimer</button>
+              <button onClick={remove} style={{ fontSize: "0.72rem", color: "var(--adm-bad)", background: "none", border: "1px solid var(--adm-bad-soft)", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer" }}>Supprimer</button>
               <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={(e) => uploadImage(e.target.files?.[0])} />
             </div>
           )}
@@ -262,7 +262,7 @@ export function AdminExercices({ initialExercises, canEdit }: { initialExercises
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Bibliothèque d&apos;exercices</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Cataloguez vos exercices pour les réutiliser directement dans la planification de séance de chaque activité.
           </p>
 

@@ -175,7 +175,7 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
               {showForm ? "Annuler" : "+ Nouvelle plage"}
             </button>
           </div>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Créez les plages hebdomadaires (lieu, heure, catégorie, places) puis ajoutez les dates réelles du calendrier pour chacune.
           </p>
 
@@ -183,7 +183,7 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
 
           {/* New slot form */}
           {showForm && (
-            <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1.25rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.9rem" }}>
+            <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1.25rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "0.9rem" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "0.75rem" }}>
                 <label className="admin-field">
                   <span>Jour</span>
@@ -210,7 +210,7 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
               </label>
 
               <div>
-                <p style={{ fontSize: "0.68rem", color: "#7a7982", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Catégories desservies</p>
+                <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Catégories desservies</p>
                 <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                   {categories.map((c) => (
                     <button
@@ -223,7 +223,7 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
                         borderRadius: "999px",
                         border: form.categoryIds.includes(c.id) ? "1px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.12)",
                         background: form.categoryIds.includes(c.id) ? "rgba(196,164,228,0.15)" : "transparent",
-                        color: form.categoryIds.includes(c.id) ? "#fff" : "#9d9da0",
+                        color: form.categoryIds.includes(c.id) ? "#fff" : "var(--adm-text-2)",
                         cursor: "pointer"
                       }}
                     >
@@ -234,7 +234,7 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
               </div>
 
               <div>
-                <p style={{ fontSize: "0.68rem", color: "#7a7982", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Programmes desservis</p>
+                <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Programmes desservis</p>
                 <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                   {programs.map((p) => (
                     <button
@@ -247,7 +247,7 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
                         borderRadius: "999px",
                         border: form.programIds.includes(p.id) ? "1px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.12)",
                         background: form.programIds.includes(p.id) ? "rgba(196,164,228,0.15)" : "transparent",
-                        color: form.programIds.includes(p.id) ? "#fff" : "#9d9da0",
+                        color: form.programIds.includes(p.id) ? "#fff" : "var(--adm-text-2)",
                         cursor: "pointer"
                       }}
                     >
@@ -258,11 +258,11 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
               </div>
 
               <div style={{ display: "flex", gap: "1.25rem" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", color: "#c3c2c8", cursor: "pointer" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
                   <input type="checkbox" checked={form.recommendedForAdvanced} onChange={(e) => setForm((p) => ({ ...p, recommendedForAdvanced: e.target.checked }))} />
                   ⭐ Recommandée pour avancées
                 </label>
-                <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", color: "#c3c2c8", cursor: "pointer" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", color: "var(--adm-text-2)", cursor: "pointer" }}>
                   <input type="checkbox" checked={form.advancedOnly} onChange={(e) => setForm((p) => ({ ...p, advancedOnly: e.target.checked }))} />
                   Réservée aux groupes avancés (cachée du public)
                 </label>
@@ -280,28 +280,28 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
               const dates = datesBySlot[slot.id] ?? [];
               const isExpanded = expandedDates === slot.id;
               return (
-                <div key={slot.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "12px", padding: "1rem 1.2rem" }}>
+                <div key={slot.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "12px", padding: "1rem 1.2rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem" }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: "0.92rem", color: "#fff", margin: 0 }}>
                         {slot.day} {slot.start_time} – {slot.end_time}
-                        {slot.recommended_for_advanced && <span style={{ color: "#f0c878", marginLeft: "0.4rem" }}>⭐</span>}
-                        {slot.advanced_only && <span style={{ fontSize: "0.6rem", color: "#f0c878", background: "rgba(240,200,120,0.1)", padding: "0.1rem 0.4rem", borderRadius: "4px", marginLeft: "0.5rem" }}>Avancé uniquement</span>}
+                        {slot.recommended_for_advanced && <span style={{ color: "var(--adm-warn)", marginLeft: "0.4rem" }}>⭐</span>}
+                        {slot.advanced_only && <span style={{ fontSize: "0.6rem", color: "var(--adm-warn)", background: "var(--adm-warn-soft)", padding: "0.1rem 0.4rem", borderRadius: "4px", marginLeft: "0.5rem" }}>Avancé uniquement</span>}
                       </p>
-                      <p style={{ fontSize: "0.78rem", color: "#9f85ba", margin: "0.2rem 0 0" }}>{slot.location}</p>
-                      <p style={{ fontSize: "0.68rem", color: "#605f65", margin: "0.2rem 0 0" }}>
+                      <p style={{ fontSize: "0.78rem", color: "var(--adm-accent)", margin: "0.2rem 0 0" }}>{slot.location}</p>
+                      <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: "0.2rem 0 0" }}>
                         {slot.category_ids.join(", ")} · {slot.program_ids.join(", ")}
                       </p>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                       <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                        <span style={{ fontSize: "0.62rem", color: "#605f65", textTransform: "uppercase" }}>Places</span>
+                        <span style={{ fontSize: "0.62rem", color: "var(--adm-text-3)", textTransform: "uppercase" }}>Places</span>
                         <input
                           type="number"
                           min={1}
                           value={slot.max_places}
                           onChange={(e) => handleMaxPlacesChange(slot.id, parseInt(e.target.value) || 1)}
-                          style={{ width: "3.2rem", padding: "0.25rem 0.4rem", fontSize: "0.8rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "4px", color: "#fff", textAlign: "center" }}
+                          style={{ width: "3.2rem", padding: "0.25rem 0.4rem", fontSize: "0.8rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", textAlign: "center" }}
                         />
                       </label>
                       <button onClick={() => setExpandedDates(isExpanded ? null : slot.id)} className="admin-btn-ghost" style={{ padding: "0.4rem 0.75rem", fontSize: "0.72rem" }}>
@@ -314,26 +314,26 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
                   </div>
 
                   {isExpanded && (
-                    <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #1a1820" }}>
+                    <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid var(--adm-surface-2)" }}>
                       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
                         <input
                           type="date"
                           value={newDateInput[slot.id] ?? ""}
                           onChange={(e) => setNewDateInput((prev) => ({ ...prev, [slot.id]: e.target.value }))}
-                          style={{ padding: "0.4rem 0.6rem", fontSize: "0.78rem", background: "#17151e", border: "1px solid #302e36", borderRadius: "6px", color: "#fff" }}
+                          style={{ padding: "0.4rem 0.6rem", fontSize: "0.78rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", color: "#fff" }}
                         />
                         <button onClick={() => handleAddDate(slot.id)} className="admin-btn-primary" style={{ padding: "0.4rem 0.9rem", fontSize: "0.75rem" }}>
                           Ajouter la date
                         </button>
                       </div>
                       {dates.length === 0 ? (
-                        <p style={{ fontSize: "0.75rem", color: "#3c3a41", fontStyle: "italic" }}>Aucune date ajoutée pour cette plage.</p>
+                        <p style={{ fontSize: "0.75rem", color: "var(--adm-border)", fontStyle: "italic" }}>Aucune date ajoutée pour cette plage.</p>
                       ) : (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
                           {dates.map((d) => (
                             <span
                               key={d.id}
-                              style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#c3c2c8", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "999px", padding: "0.3rem 0.6rem" }}
+                              style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "999px", padding: "0.3rem 0.6rem" }}
                             >
                               {new Date(d.occurs_on + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short" })}
                               <button onClick={() => handleRemoveDate(slot.id, d.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.6)", cursor: "pointer", fontSize: "0.85rem", padding: 0, lineHeight: 1 }}>×</button>

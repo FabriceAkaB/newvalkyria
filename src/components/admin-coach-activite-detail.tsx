@@ -74,19 +74,19 @@ function SessionPlanEditor({ activityId, initialBlocks, exercises }: { activityI
   return (
     <div style={{ marginBottom: "1.5rem" }}>
       <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>
-        Plan de séance {blocks.length > 0 && <span style={{ color: "#6d6b71", fontWeight: 400 }}>· {totalMinutes} min au total</span>}
+        Plan de séance {blocks.length > 0 && <span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}>· {totalMinutes} min au total</span>}
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.75rem" }}>
         {blocks.map((b, i) => (
-          <div key={b.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.5rem 0.8rem" }}>
-            <span style={{ fontSize: "0.78rem", color: "#c3c2c8", flex: 1 }}>
-              {i + 1}. <span style={{ color: "#9f85ba" }}>{b.block_type}</span>
+          <div key={b.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.5rem 0.8rem" }}>
+            <span style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", flex: 1 }}>
+              {i + 1}. <span style={{ color: "var(--adm-accent)" }}>{b.block_type}</span>
               {(b.custom_title || exercises.find((e) => e.id === b.exercise_id)?.title) && ` — ${b.custom_title || exercises.find((e) => e.id === b.exercise_id)?.title}`}
-              {" "}<span style={{ color: "#6d6b71" }}>({b.duration_minutes} min)</span>
+              {" "}<span style={{ color: "var(--adm-text-3)" }}>({b.duration_minutes} min)</span>
             </span>
             <button onClick={() => move(b.id, "up")} disabled={i === 0} className="admin-btn-ghost" style={{ padding: "0.2rem 0.5rem", fontSize: "0.7rem" }}>↑</button>
             <button onClick={() => move(b.id, "down")} disabled={i === blocks.length - 1} className="admin-btn-ghost" style={{ padding: "0.2rem 0.5rem", fontSize: "0.7rem" }}>↓</button>
-            <button onClick={() => remove(b.id)} style={{ fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.2rem 0.5rem", cursor: "pointer" }}>×</button>
+            <button onClick={() => remove(b.id)} style={{ fontSize: "0.7rem", color: "var(--adm-bad)", background: "none", border: "1px solid var(--adm-bad-soft)", borderRadius: "6px", padding: "0.2rem 0.5rem", cursor: "pointer" }}>×</button>
           </div>
         ))}
         {blocks.length === 0 && <p className="admin-empty-text">Aucun bloc de séance planifié.</p>}
@@ -225,11 +225,11 @@ function AssignmentRow({
   });
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem", opacity: saving ? 0.6 : 1 }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", opacity: saving ? 0.6 : 1 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.6rem" }}>
         <div>
           <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", margin: 0 }}>{assignment.coach.first_name} {assignment.coach.last_name}</p>
-          <p style={{ fontSize: "0.7rem", color: "#6d6b71", margin: "0.1rem 0 0" }}>{assignment.coach.role}</p>
+          <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: "0.1rem 0 0" }}>{assignment.coach.role}</p>
         </div>
         <button onClick={() => onRemove(assignment.id)} className="admin-btn-danger" style={{ padding: "0.25rem 0.5rem", fontSize: "0.65rem" }}>Retirer</button>
       </div>
@@ -269,14 +269,14 @@ function AssignmentRow({
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.6rem" }}>
-        <p style={{ fontSize: "0.78rem", color: "#c3c2c8", margin: 0 }}>
+        <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: 0 }}>
           {formatHours(computed.hours)} × {formatCAD(computed.rateCents / 100)} = <strong style={{ color: "#fff" }}>{formatCAD(computed.payCents / 100)}</strong>
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
           <button
             onClick={() => patch({ confirmed: !assignment.confirmed }, { confirmed: !assignment.confirmed })}
             className="admin-btn-ghost"
-            style={{ padding: "0.3rem 0.6rem", fontSize: "0.68rem", color: assignment.confirmed ? "#7fd88f" : undefined }}
+            style={{ padding: "0.3rem 0.6rem", fontSize: "0.68rem", color: assignment.confirmed ? "var(--adm-good)" : undefined }}
           >
             {assignment.confirmed ? "✓ Présence confirmée" : "Confirmer la présence"}
           </button>
@@ -396,7 +396,7 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
               <p className="admin-section-title" style={{ margin: 0 }}>
                 {activity.title ? `${activity.activity_type} — ${activity.title}` : activity.activity_type}
               </p>
-              <p style={{ fontSize: "0.85rem", color: "#c3c2c8", margin: "0.3rem 0 0" }}>
+              <p style={{ fontSize: "0.85rem", color: "var(--adm-text-2)", margin: "0.3rem 0 0" }}>
                 {new Date(activity.activity_date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                 {" · "}{activity.start_time.slice(0, 5)}–{activity.end_time.slice(0, 5)}
                 {" · "}{formatHours(computeHours(activity.start_time, activity.end_time))}
@@ -410,20 +410,20 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
           {error && <p className="admin-error">{error}</p>}
 
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", margin: "1.25rem 0" }}>
-            <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "0.8rem 1.1rem" }}>
-              <p style={{ fontSize: "0.65rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.2rem" }}>Total heures assignées</p>
+            <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.8rem 1.1rem" }}>
+              <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.2rem" }}>Total heures assignées</p>
               <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatHours(totals.hours)}</p>
             </div>
-            <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "0.8rem 1.1rem" }}>
-              <p style={{ fontSize: "0.65rem", color: "#9d9da0", textTransform: "uppercase", margin: "0 0 0.2rem" }}>Total à payer</p>
+            <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.8rem 1.1rem" }}>
+              <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.2rem" }}>Total à payer</p>
               <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatCAD(totals.payCents / 100)}</p>
             </div>
           </div>
 
-          <div style={{ background: "#17151e", border: "1px solid #302e36", borderRadius: "10px", padding: "1rem 1.1rem", marginBottom: "1.5rem" }}>
+          <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1rem 1.1rem", marginBottom: "1.5rem" }}>
             <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.6rem" }}>Ressources</p>
             <label className="admin-field" style={{ gap: "0.3rem", marginBottom: "0.8rem" }}>
-              <span style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase" }}>Lien Google Sheet / Drive</span>
+              <span style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase" }}>Lien Google Sheet / Drive</span>
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <input
                   className="admin-input"
@@ -439,11 +439,11 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
                   </a>
                 )}
               </div>
-              {savingLink && <span style={{ fontSize: "0.65rem", color: "#6d6b71" }}>Enregistrement...</span>}
+              {savingLink && <span style={{ fontSize: "0.65rem", color: "var(--adm-text-3)" }}>Enregistrement...</span>}
             </label>
 
             <label className="admin-field" style={{ gap: "0.3rem", marginBottom: "0.8rem" }}>
-              <span style={{ fontSize: "0.68rem", color: "#9d9da0", textTransform: "uppercase" }}>Lien vidéo (film de séance/match)</span>
+              <span style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase" }}>Lien vidéo (film de séance/match)</span>
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <input
                   className="admin-input"
@@ -459,7 +459,7 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
                   </a>
                 )}
               </div>
-              {savingVideoLink && <span style={{ fontSize: "0.65rem", color: "#6d6b71" }}>Enregistrement...</span>}
+              {savingVideoLink && <span style={{ fontSize: "0.65rem", color: "var(--adm-text-3)" }}>Enregistrement...</span>}
             </label>
 
             <EntityDocuments entityType="coach_activity" entityId={activity.id} />
