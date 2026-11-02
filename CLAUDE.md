@@ -89,4 +89,4 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
 
 ## Skills du projet (`.claude/skills/`)
 
-`relance` · `courriel-familles` · `nouveau-programme` · `paiement` · `admin-page` · `finances` · `fin-de-mois` · `automatisation` · `rapport` · `mise-en-ligne`
+`relance` · `courriel-familles` · `nouveau-programme` · `paiement` · `admin-page` · `finances` · `fin-de-mois` · `automatisation` · `rapport` · `mise-en-ligne` · `design-interface`
