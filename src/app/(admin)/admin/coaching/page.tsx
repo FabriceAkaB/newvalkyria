@@ -94,13 +94,13 @@ export default async function CoachingWeekPage() {
               <p className="mda-num" style={{ color: w.reportsMissing.length ? "var(--adm-warn)" : undefined }}>{w.reportsMissing.length}</p>
               <p className="mda-label">Rapports d&apos;éducateurs à compléter</p>
             </div>
-            <div className="mda-card">
-              <p className="mda-num">
-                {w.bank.approuve}
-                <span style={{ fontSize: "0.9rem", color: "var(--adm-text-3)" }}>/{w.bank.total}</span>
+            <Link href="/admin/coaching/tests" className="mda-card" style={{ textDecoration: "none" }}>
+              <p className="mda-num" style={{ color: w.jour1.percent === 100 ? "var(--adm-good)" : undefined }}>
+                {w.jour1.filmed}
+                <span style={{ fontSize: "0.9rem", color: "var(--adm-text-3)" }}>/{w.jour1.total}</span>
               </p>
-              <p className="mda-label">Exercices approuvés{w.bank.aValider ? ` · ${w.bank.aValider} à valider` : ""}</p>
-            </div>
+              <p className="mda-label">Joueuses avec leur test du jour 1 filmé</p>
+            </Link>
           </section>
 
           <section className="mda-card-flush">
@@ -177,9 +177,9 @@ export default async function CoachingWeekPage() {
             )}
           </section>
 
-          {(w.bank.aTester > 0 || w.bank.aChanger > 0 || w.bank.aValider > 0) && (
+          {w.bank.total > 0 && (
             <section className="mda-card">
-              <h2 className="mda-h2" style={{ marginBottom: 8 }}>Banque d&apos;exercices</h2>
+              <h2 className="mda-h2" style={{ marginBottom: 8 }}>Banque d&apos;exercices · {w.bank.approuve}/{w.bank.total} approuvés</h2>
               <p className="mda-lead" style={{ margin: 0 }}>
                 {[w.bank.aTester ? `${w.bank.aTester} à tester en séance` : null, w.bank.aValider ? `${w.bank.aValider} à valider par JP` : null, w.bank.aChanger ? `${w.bank.aChanger} à changer (note sous 8)` : null]
                   .filter(Boolean)

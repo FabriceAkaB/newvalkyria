@@ -281,6 +281,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         description: "Ce que les évaluations après chaque pratique disent de chaque fille : moyennes, évolution, note des pratiques et fatigue.",
         tabs: [
           { href: "/admin/coaching/joueuses", label: "Progression" },
+          { href: "/admin/coaching/tests", label: "Tests et passeport" },
           { href: "/admin/photos", label: "Photos des joueuses" },
           { href: "/admin/evaluations", label: "Journées d'évaluation" }
         ]

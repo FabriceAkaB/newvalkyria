@@ -11211,3 +11211,23 @@ img { max-width: 100%; height: auto; }
   .admin-sidebar[data-menu-open="false"] > .admin-space-switch { display: grid; margin-bottom: 12px; }
   .admin-space-switch a { min-height: 44px; }
 }
+
+/* ── Espace coaching : saisie des tests au bord du terrain (une colonne au téléphone, cibles de 44 px) ── */
+.ct-field { display: grid; gap: 4px; }
+.ct-field > span { font-size: 0.75rem; font-weight: 600; color: var(--adm-text-3); }
+.ct-field { min-width: 0; }
+.ct-field .admin-input { min-height: 40px; width: 100%; min-width: 0; box-sizing: border-box; }
+.ct-row .admin-input { width: 100%; min-width: 0; box-sizing: border-box; }
+.ct-protocol { margin: 12px 0 0; padding: 12px 14px; background: var(--adm-surface-2); border-radius: var(--adm-radius-sm); font-size: 0.85rem; color: var(--adm-text-2); line-height: 1.45; }
+.ct-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.ct-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; align-items: center; padding: 12px; background: var(--adm-surface-2); border-radius: var(--adm-radius-sm); }
+.ct-who { display: grid; gap: 2px; min-width: 0; }
+.ct-who strong { color: var(--adm-text); font-size: 0.92rem; }
+.ct-who span { color: var(--adm-text-3); font-size: 0.75rem; }
+.ct-score { min-height: 44px; font-size: 1.05rem; text-align: center; font-variant-numeric: tabular-nums; }
+.ct-video { grid-column: 1 / -1; min-height: 40px; }
+.ct-filename { grid-column: 1 / -1; font-size: 0.72rem; color: var(--adm-text-3); word-break: break-all; }
+@media (min-width: 900px) {
+  .ct-row { grid-template-columns: minmax(0, 1fr) 110px minmax(0, 1.4fr); }
+  .ct-video { grid-column: auto; }
+}

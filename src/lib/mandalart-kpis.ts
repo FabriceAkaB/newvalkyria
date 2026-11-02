@@ -1,6 +1,8 @@
 import { CLUB_ID } from "@/lib/club";
 import { getBank } from "@/lib/exercises-repo";
 import { getFeedbackWeeks } from "@/lib/coach-portal-repo";
+import { jour1Coverage } from "@/lib/skill-tests";
+import { getResults, getSeasonPlayers } from "@/lib/skill-tests-repo";
 import { kpiProgress, parseKpiNumber, type ParsedNumber } from "@/lib/mandalart-core";
 import { PLAN, type PlanKpi } from "@/lib/mandalart-plan";
 import { computeRevenueSummary } from "@/lib/revenue-calc";
@@ -177,6 +179,15 @@ export async function computeRealFigures(today = new Date().toLocaleDateString("
     }
   } catch {
     /* routine de fin pas encore utilisée */
+  }
+
+  // joueuses_filmees_jour1 : feuille de suivi des tests (Coaching → Tests et passeport)
+  try {
+    const players = await getSeasonPlayers();
+    const cov = jour1Coverage(players.map((p) => p.registrationId), await getResults(players.map((p) => p.registrationId)));
+    if (cov.total) auto.joueuses_filmees_jour1 = { value: cov.percent, note: `${cov.filmed} joueuses sur ${cov.total} ont leur test du jour 1 filmé (${cov.tested} testées).` };
+  } catch {
+    /* tests pas encore utilisés */
   }
 
   // Sondages (module Voix des familles)

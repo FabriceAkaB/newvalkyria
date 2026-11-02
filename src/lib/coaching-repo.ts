@@ -3,6 +3,8 @@ import { getFeedbackWeeks } from "@/lib/coach-portal-repo";
 import { PARTICIPATED, QUICK_CRITERIA, watchReasons, type FeedbackWeek } from "@/lib/coach-report";
 import { getBank } from "@/lib/exercises-repo";
 import { listPractices, type Practice } from "@/lib/practices-repo";
+import { jour1Coverage } from "@/lib/skill-tests";
+import { getResults, getSeasonPlayers } from "@/lib/skill-tests-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 /** Espace coaching de l'admin : seulement le foot (pratiques, exercices, progression des joueuses, rapports des
@@ -94,17 +96,21 @@ export interface CoachingWeek {
   reportsMissing: { coach: string; date: string; start: string; label: string; detail: string; activityId: string }[];
   bank: { approuve: number; aValider: number; aTester: number; aChanger: number; total: number };
   toWatch: PlayerProgress[];
+  jour1: { filmed: number; total: number; percent: number | null };
 }
 
 export async function getCoachingWeek(): Promise<CoachingWeek> {
   const today = todayIso();
-  const [practices, weeks, rows, bank, players] = await Promise.all([
+  const seasonPlayers = await getSeasonPlayers().catch(() => []);
+  const [practices, weeks, rows, bank, players, testResults] = await Promise.all([
     listPractices({ from: today, to: addDays(today, 7) }).catch(() => []),
     getFeedbackWeeks().catch(() => []),
     getPayrollRows().catch(() => []),
     getBank().catch(() => ({ entries: [], ratings: [] })),
-    getPlayersProgress().catch(() => [])
+    getPlayersProgress().catch(() => []),
+    getResults(seasonPlayers.map((p) => p.registrationId)).catch(() => [])
   ]);
+  const cov = jour1Coverage(seasonPlayers.map((p) => p.registrationId), testResults);
   const count = (s: string) => bank.entries.filter((e) => e.bank.status === s).length;
   return {
     practices,
@@ -120,6 +126,7 @@ export async function getCoachingWeek(): Promise<CoachingWeek> {
       activityId: r.activityId
     })),
     bank: { approuve: count("approuve"), aValider: count("a-valider"), aTester: count("a-tester"), aChanger: count("a-changer"), total: bank.entries.filter((e) => e.bank.status !== "retire").length },
-    toWatch: players.filter((p) => p.watch.length > 0)
+    toWatch: players.filter((p) => p.watch.length > 0),
+    jour1: { filmed: cov.filmed, total: cov.total, percent: cov.percent }
   };
 }
