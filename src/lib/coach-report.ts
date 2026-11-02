@@ -290,3 +290,36 @@ export function defaultStepFor(date: string, startTime: string, endTime: string,
 
 /** L'activité a-t-elle commencé ? (heure de Montréal) */
 export const hasStarted = (date: string, startTime: string, now: number = Date.now()) => activityEndMs(date, startTime) <= now;
+
+/* ── Espace coaching : joueuses à surveiller ────────────────────────── */
+
+export interface WatchInput {
+  /** Évaluations rapides, de la plus ancienne à la plus récente. */
+  evaluations: { date: string; ratings: Record<string, number> | null }[];
+  /** Routine de fin, de la plus ancienne à la plus récente. */
+  feedback: { date: string; practice_rating: number | null; fatigue: number | null }[];
+}
+
+/** Pourquoi suivre une joueuse de près (dernières pratiques) : attitude ou prestation basses, fatigue élevée,
+ *  pratique mal notée par elle-même, ou une échelle en baisse nette. Liste vide = rien à signaler. */
+export function watchReasons({ evaluations, feedback }: WatchInput): string[] {
+  const reasons: string[] = [];
+  const recent = evaluations.slice(-3);
+  const avg = (vals: number[]) => (vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null);
+  const avgOf = (list: typeof evaluations, c: string) => avg(list.map((e) => Number(e.ratings?.[c])).filter((v) => v >= 1 && v <= 5));
+  for (const c of ["Attitude", "Prestation"]) {
+    const a = avgOf(recent, c);
+    if (recent.length >= 2 && a !== null && a <= 2) reasons.push(`${c} basse aux dernières pratiques (${a.toLocaleString("fr-CA", { maximumFractionDigits: 1 })}/5)`);
+  }
+  if (evaluations.length >= 6) {
+    for (const c of QUICK_CRITERIA) {
+      const before = avgOf(evaluations.slice(-6, -3), c);
+      const now = avgOf(recent, c);
+      if (before !== null && now !== null && before - now >= 1) reasons.push(`${c} en baisse (${before.toFixed(1)} → ${now.toFixed(1)})`.replace(/\./g, ","));
+    }
+  }
+  const lastFb = feedback.filter((f) => f.practice_rating != null || f.fatigue != null).slice(-2);
+  if (lastFb.length && lastFb.every((f) => (f.fatigue ?? 0) >= 8)) reasons.push(`Très fatiguée (${lastFb.map((f) => f.fatigue).join(", ")}/10)`);
+  if (lastFb.length && lastFb.every((f) => f.practice_rating != null && f.practice_rating <= 5)) reasons.push(`N'aime pas les pratiques en ce moment (${lastFb.map((f) => f.practice_rating).join(", ")}/10)`);
+  return reasons;
+}

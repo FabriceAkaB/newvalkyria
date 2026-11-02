@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AdminPageHeader, AdminTabs } from "@/components/admin-page-header";
-import { ADMIN_NAV, TODAY_HUB, findActive, resolveHref, seasonFromPath, visibleTabs, type AdminHub, type AdminNavIcon } from "@/lib/admin-nav";
+import { ADMIN_NAV, SPACE_HOME, TODAY_HUB, findActive, resolveHref, seasonFromPath, spaceOfHub, visibleTabs, type AdminHub, type AdminNavIcon, type AdminSpace } from "@/lib/admin-nav";
 
 type IconName = AdminNavIcon;
 
@@ -127,6 +127,8 @@ function GlobalSearchBox() {
  * clignotent à chaque changement de page. Au premier chargement il vaut null,
  * côté serveur comme à l'hydratation. */
 let rememberedRole: "admin" | "gerante" | null = null;
+/* Dernier espace affiché (Académie ou Coaching), pour une page qui n'appartient à aucun hub. */
+let rememberedSpace: AdminSpace = "academie";
 
 /** Menu de gauche (un lien par hub) + en-tête de la section affichée avec ses
  *  onglets. Rendu juste avant `.admin-content` par chaque page admin. */
@@ -152,6 +154,11 @@ export function AdminTopbar() {
   // Repérage sur tous les onglets : une page réservée à l'admin garde son en-tête
   // même avant que le rôle soit connu (la gérante, elle, est redirigée côté serveur).
   const active = findActive(pathname, "admin");
+  // Deux espaces : l'Académie (le business) et le Coaching (seulement le foot). L'espace suit la page affichée.
+  const space: AdminSpace = active ? spaceOfHub(active.hub.key) : rememberedSpace;
+  useEffect(() => {
+    rememberedSpace = space;
+  }, [space]);
   const hubEntry = (hub: AdminHub) => {
     const first = visibleTabs(hub, role)[0];
     return first ? resolveHref(first.href, seasonId) : null;
@@ -184,19 +191,28 @@ export function AdminTopbar() {
         <div className="admin-sidebar-brand">
           <div>
             <p className="admin-sidebar-brand-title">New Valkyria</p>
-            <p className="admin-sidebar-brand-sub">Administration{role === "gerante" ? " — Gérante" : ""}</p>
+            <p className="admin-sidebar-brand-sub">{space === "coaching" ? "Espace coaching" : "Administration"}{role === "gerante" ? " — Gérante" : ""}</p>
           </div>
           <button type="button" className="admin-sidebar-menu-btn" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? "Fermer" : "Menu"}
           </button>
         </div>
 
+        <nav className="admin-space-switch" aria-label="Espace">
+          <Link href={SPACE_HOME.academie} data-active={String(space === "academie")} aria-current={space === "academie" ? "page" : undefined}>
+            Académie
+          </Link>
+          <Link href={SPACE_HOME.coaching} data-active={String(space === "coaching")} aria-current={space === "coaching" ? "page" : undefined}>
+            Coaching
+          </Link>
+        </nav>
+
         <GlobalSearchBox />
 
         <nav className="admin-sidebar-nav">
-          <div className="admin-sidebar-group">{renderHubLink(TODAY_HUB)}</div>
+          {space === "academie" && <div className="admin-sidebar-group">{renderHubLink(TODAY_HUB)}</div>}
 
-          {ADMIN_NAV.map((section) => {
+          {ADMIN_NAV.filter((section) => (section.space ?? "academie") === space).map((section) => {
             const hubs = section.hubs.filter((h) => hubEntry(h));
             if (hubs.length === 0) return null;
             const containsActive = hubs.some((h) => h.key === active?.hub.key);

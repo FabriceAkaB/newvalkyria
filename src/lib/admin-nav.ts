@@ -32,7 +32,14 @@ export interface AdminNavSection {
   hubs: AdminHub[];
   /** Section repliée par défaut (dépliée d'office quand on y est). */
   collapsible?: boolean;
+  /** Espace de l'admin : « academie » (le business, par défaut) ou « coaching » (seulement le foot). */
+  space?: AdminSpace;
 }
+
+export type AdminSpace = "academie" | "coaching";
+
+/** Page d'entrée de chaque espace (le sélecteur en haut du menu y mène). */
+export const SPACE_HOME: Record<AdminSpace, string> = { academie: "/admin/aujourdhui", coaching: "/admin/coaching" };
 
 export const TODAY_HUB: AdminHub = {
   key: "aujourdhui",
@@ -141,23 +148,6 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/location-terrains", label: "Location de terrains" },
           { href: "/admin/seances-privees", label: "Séances privées" }
         ]
-      },
-      {
-        key: "pratiques",
-        label: "Pratiques",
-        icon: "flask",
-        description: "Chaque pratique préparée 2 semaines d'avance : vert, jaune, rouge. Aussi les pratiques que JP donne hors de l'Académie.",
-        tabs: [
-          { href: "/admin/pratiques", label: "À préparer" },
-          { href: "/admin/photos", label: "Photos des joueuses" }
-        ]
-      },
-      {
-        key: "evaluations",
-        label: "Évaluations",
-        icon: "chart",
-        description: "Événements d'évaluation des joueuses.",
-        tabs: [{ href: "/admin/evaluations", label: "Événements" }]
       }
     ]
   },
@@ -215,15 +205,11 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "equipe",
         label: "Équipe",
         icon: "users",
-        description: "Entraîneurs, entraînements, contenu technique, paie et contrats d'embauche.",
+        description: "Les éducateurs côté employeur : fiches, paie, contrats d'embauche et statistiques. Le terrain est dans l'espace Coaching.",
         tabs: [
           { href: "/admin/entraineurs", label: "Entraîneurs", adminOnly: true },
-          { href: "/admin/entraineurs/activites", label: "Entraînements", adminOnly: true },
-          { href: "/admin/exercices", label: "Exercices", adminOnly: true },
-          { href: "/admin/themes", label: "Thèmes", adminOnly: true },
           { href: "/admin/entraineurs/paie", label: "Paie", adminOnly: true },
           { href: "/admin/contrats", label: "Contrats", adminOnly: true },
-          { href: "/admin/entraineurs/suivi", label: "Suivi des éducateurs", adminOnly: true },
           { href: "/admin/entraineurs/statistiques", label: "Statistiques", adminOnly: true }
         ]
       },
@@ -246,6 +232,73 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/matchs", label: "Vente de matchs" },
           { href: "/admin/arbitres", label: "Arbitres et bilan", adminOnly: true }
         ]
+      }
+    ]
+  },
+  {
+    key: "terrain",
+    label: "Sur le terrain",
+    dotColor: "#5fd38a",
+    space: "coaching",
+    hubs: [
+      {
+        key: "coaching",
+        label: "Cette semaine",
+        icon: "sun",
+        description: "Les pratiques de la semaine, la note des joueuses, les rapports des éducateurs et les joueuses à suivre.",
+        tabs: [{ href: "/admin/coaching", label: "Cette semaine" }]
+      },
+      {
+        key: "pratiques",
+        label: "Pratiques",
+        icon: "calendar",
+        description: "Chaque pratique préparée 2 semaines d'avance (pratique du jour bloc par bloc), le calendrier des entraînements et le thème de chaque semaine.",
+        tabs: [
+          { href: "/admin/pratiques", label: "À préparer" },
+          { href: "/admin/entraineurs/activites", label: "Entraînements", adminOnly: true },
+          { href: "/admin/themes", label: "Thèmes", adminOnly: true }
+        ]
+      },
+      {
+        key: "exercices",
+        label: "Banque d'exercices",
+        icon: "flask",
+        description: "Les exercices Valkyria, leur fiche, la note des éducateurs et leur statut (à tester, approuvé, à changer).",
+        tabs: [{ href: "/admin/exercices", label: "Exercices", adminOnly: true }]
+      }
+    ]
+  },
+  {
+    key: "joueuses",
+    label: "Joueuses",
+    dotColor: "#7cb8ff",
+    space: "coaching",
+    hubs: [
+      {
+        key: "progression",
+        label: "Progression",
+        icon: "chart",
+        description: "Ce que les évaluations après chaque pratique disent de chaque fille : moyennes, évolution, note des pratiques et fatigue.",
+        tabs: [
+          { href: "/admin/coaching/joueuses", label: "Progression" },
+          { href: "/admin/photos", label: "Photos des joueuses" },
+          { href: "/admin/evaluations", label: "Journées d'évaluation" }
+        ]
+      }
+    ]
+  },
+  {
+    key: "educateurs",
+    label: "Éducateurs",
+    dotColor: "#f2c14e",
+    space: "coaching",
+    hubs: [
+      {
+        key: "suivi-educateurs",
+        label: "Suivi des éducateurs",
+        icon: "users",
+        description: "Accès au portail et rapports de chaque pratique : présences, évaluations, routine de fin.",
+        tabs: [{ href: "/admin/entraineurs/suivi", label: "Suivi des éducateurs", adminOnly: true }]
       }
     ]
   },
@@ -324,4 +377,10 @@ export function findActive(pathname: string, role: string | null): { hub: AdminH
     }
   }
   return best;
+}
+
+/** Espace d'une page : celui de la section de son hub (Aujourd'hui et tout le reste = Académie). */
+export function spaceOfHub(hubKey: string | null | undefined): AdminSpace {
+  const section = ADMIN_NAV.find((sec) => sec.hubs.some((h) => h.key === hubKey));
+  return section?.space ?? "academie";
 }

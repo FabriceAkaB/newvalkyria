@@ -11184,3 +11184,30 @@ img { max-width: 100%; height: auto; }
   .admin-shell .agd-week { grid-template-columns: 1fr; }
   .admin-shell .agd-day { min-height: 0; }
 }
+
+/* ── Sélecteur d'espace de l'admin : Académie (business) | Coaching (foot) ── */
+.admin-space-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 12px 16px 4px;
+  padding: 4px;
+  background: var(--adm-surface, #16141c);
+  border-radius: 10px;
+}
+.admin-space-switch a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--adm-text-2, #c3c2c8);
+  text-decoration: none;
+}
+.admin-space-switch a[data-active="true"] { background: var(--adm-accent-strong, #8b5cf6); color: #fff; }
+@media (max-width: 899px) {
+  .admin-sidebar[data-menu-open="false"] > .admin-space-switch { display: grid; margin-bottom: 12px; }
+  .admin-space-switch a { min-height: 44px; }
+}

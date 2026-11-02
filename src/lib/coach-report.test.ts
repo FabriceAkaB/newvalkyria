@@ -157,3 +157,26 @@ describe("feedbackByWeek", () => {
     ]);
   });
 });
+
+describe("watchReasons", () => {
+  const ev = (a: number, p = 4, b = 4) => ({ date: "2026-11-09", ratings: { "Ball mastery": b, Prestation: p, Attitude: a } });
+  it("ne signale rien pour une joueuse qui va bien", async () => {
+    const { watchReasons } = await import("@/lib/coach-report");
+    expect(watchReasons({ evaluations: [ev(4), ev(5), ev(4)], feedback: [{ date: "2026-11-09", practice_rating: 9, fatigue: 5 }] })).toEqual([]);
+  });
+  it("signale une attitude basse, une baisse nette, la fatigue et une pratique mal notée", async () => {
+    const { watchReasons } = await import("@/lib/coach-report");
+    const r = watchReasons({
+      evaluations: [ev(4, 4, 5), ev(4, 4, 5), ev(5, 4, 5), ev(2, 4, 3), ev(2, 4, 3), ev(1, 4, 3)],
+      feedback: [
+        { date: "2026-11-09", practice_rating: 4, fatigue: 9 },
+        { date: "2026-11-11", practice_rating: 5, fatigue: 8 }
+      ]
+    });
+    expect(r.some((x) => x.startsWith("Attitude basse"))).toBe(true);
+    expect(r.some((x) => x.startsWith("Attitude en baisse"))).toBe(true);
+    expect(r.some((x) => x.startsWith("Ball mastery en baisse"))).toBe(true);
+    expect(r.some((x) => x.startsWith("Très fatiguée"))).toBe(true);
+    expect(r.some((x) => x.startsWith("N'aime pas"))).toBe(true);
+  });
+});
