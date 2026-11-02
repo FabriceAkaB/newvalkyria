@@ -558,12 +558,17 @@ export async function sendMatchSlotsConfirmationEmail(input: MatchSlotsEmailInpu
         <p>Bonjour ${escapeHtml(input.contactName)}, les plages suivantes sont réservées pour <strong>${escapeHtml(input.orgName)}</strong> (${escapeHtml(input.teamLabel)}) :</p>
         <table style="width:100%;border-collapse:collapse;background:#f7f4fb;margin:14px 0">${rows}</table>
         ${hasDouble ? `<p style="font-size:14px">Une double cédule comprend deux matchs de suite : votre équipe joue les deux matchs, ou vous pouvez aligner deux équipes.</p>` : ""}
-        <table style="font-size:14px;margin:6px 0 14px">
+        ${
+          balance > 0
+            ? `<table style="font-size:14px;margin:6px 0 14px">
           <tr><td style="padding:3px 14px 3px 0">Acompte payé aujourd'hui</td><td><strong>${fmt(deposit)}</strong></td></tr>
           <tr><td style="padding:3px 14px 3px 0">Solde à payer le jour du match</td><td><strong>${fmt(balance)}</strong></td></tr>
           <tr><td style="padding:3px 14px 3px 0">Total</td><td><strong>${fmt(deposit + balance)}</strong></td></tr>
         </table>
-        <p>Le solde est payable sur place, le jour du match. Nous vous contacterons pour les derniers détails (arrivée, équipement).</p>
+        <p>Le solde est payable sur place, le jour du match. Nous vous contacterons pour les derniers détails (arrivée, équipement).</p>`
+            : `<p style="font-size:14px">Montant payé : <strong>${fmt(deposit)}</strong>. Le match est payé au complet : rien à payer sur place.</p>
+        <p>Nous vous contacterons pour les derniers détails (arrivée, équipement).</p>`
+        }
         <p style="margin-top:24px">New Valkyria<br/>info@newvalkyria.com</p>
       </div>`
   });
@@ -839,7 +844,7 @@ export async function sendMatchRequestDecisionEmail(input: { to: string; contact
           ? `<p>Bonne nouvelle : votre demande pour <strong>${escapeHtml(input.orgName)}</strong> est <strong>approuvée</strong>. Vous pouvez maintenant réserver et payer la plage suivante :</p>
              <p>${matchSlotsText(input.slots)}</p>
              <p style="margin:18px 0"><a href="${escapeHtml(input.link)}" style="display:inline-block;background:#72499a;color:#fff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px">Réserver la plage</a></p>
-             <p style="font-size:13px;color:#6d6880">Premier arrivé, premier servi : la plage est confirmée au paiement de l'acompte.</p>`
+             <p style="font-size:13px;color:#6d6880">Premier arrivé, premier servi : la plage est confirmée au paiement.</p>`
           : `<p>Merci pour votre intérêt. Malheureusement, nous ne pouvons pas accepter votre demande pour la plage suivante, la catégorie de votre équipe ne correspondant pas à notre groupe :</p>
              <p>${matchSlotsText(input.slots)}</p>
              <p>D'autres plages conviennent peut-être à votre équipe : <a href="${escapeHtml(input.link)}" style="color:#72499a;font-weight:bold">voir les plages</a>.</p>`

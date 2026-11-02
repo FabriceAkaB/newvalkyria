@@ -77,8 +77,9 @@ const schema = z.object({
   termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" })
 });
 
-/** Réserve 1 ou 2 plages de match (une double cédule en bloc) et ouvre le paiement Stripe
- *  de l'acompte (50 $ par plage ; le solde se paie le jour du match).
+/** Réserve 1 ou 2 plages de match (une double cédule en bloc) et ouvre le paiement Stripe.
+ *  Depuis nov. 2026 : le prix complet de la plage est payé en ligne (pas de solde) ; si une
+ *  plage a encore un solde (balance_due_cents > 0), le paiement en ligne est un acompte.
  *  Prix, admissibilité et règles (2 plages max par équipe) toujours validés côté serveur. */
 export async function POST(request: Request) {
   try {
@@ -113,8 +114,11 @@ export async function POST(request: Request) {
             price_data: {
               currency: "cad",
               product_data: {
-                name: `Acompte de réservation — match New Valkyria, ${label}, ${s.start_time}`,
-                description: `${payload.orgName} (${payload.teamLabel}) · solde de ${(b.balance_due_cents / 100).toFixed(2).replace(".", ",")} $ payable le jour du match`
+                name: `${b.balance_due_cents > 0 ? "Acompte de réservation" : "Réservation"} — match New Valkyria, ${label}, ${s.start_time}`,
+                description:
+                  b.balance_due_cents > 0
+                    ? `${payload.orgName} (${payload.teamLabel}) · solde de ${(b.balance_due_cents / 100).toFixed(2).replace(".", ",")} $ payable le jour du match`
+                    : `${payload.orgName} (${payload.teamLabel}) · match payé au complet`
               },
               unit_amount: b.price_cents
             }

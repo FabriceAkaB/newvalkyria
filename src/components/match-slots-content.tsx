@@ -334,8 +334,10 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   // Une seule adresse pour tous les matchs → affichée une fois en haut plutôt que sur chaque carte.
   const commonLocation = slots && slots.length > 0 && slots.every((s) => s.location === slots[0].location) ? slots[0].location : null;
   const commonField = slots && slots.length > 0 && slots.every((s) => s.field === slots[0].field) ? slots[0].field : null;
-  const depositEach = slots?.[0]?.depositCents ?? 5000;
-  const balanceEach = slots?.[0]?.balanceDueCents ?? 10000;
+  const depositEach = slots?.[0]?.depositCents ?? 15000;
+  const balanceEach = slots?.[0]?.balanceDueCents ?? 0;
+  // Depuis nov. 2026 : paiement complet en ligne avant le match (plus de solde sur place).
+  const fullPayment = balanceEach === 0;
   const step = !profileId ? 1 : chosen.length === 0 ? 2 : 3;
   const payRef = useRef<HTMLDivElement | null>(null);
 
@@ -377,7 +379,8 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Académies, clubs et équipes</p>
             <h1 className="insc-hero-title">Réservez un match</h1>
             <p className="insc-hero-sub">
-              Venez jouer contre New Valkyria. Réservez en 3 étapes : {formatMoney(depositEach)} maintenant, {formatMoney(balanceEach)} sur place le jour du match.
+              Venez jouer contre New Valkyria. Réservez en 3 étapes :{" "}
+              {fullPayment ? `${formatMoney(depositEach)} par match, payé en ligne à la réservation.` : `${formatMoney(depositEach)} maintenant, ${formatMoney(balanceEach)} sur place le jour du match.`}
             </p>
           </div>
         </Container>
@@ -405,7 +408,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
               <span>📍 <strong style={{ color: "#fff" }}>{commonField ? `${commonField} — ` : ""}Complexe sportif de Terrebonne</strong><br /><span style={{ color: "#9d9da0" }}>{commonLocation}</span></span>
             )}
             <span>⏱ Matchs d&apos;une heure, le dimanche · maximum {max} par équipe</span>
-            <span>💳 {formatMoney(depositEach + balanceEach)} par match : {formatMoney(depositEach)} en ligne pour réserver, {formatMoney(balanceEach)} sur place</span>
+            <span>💳 {fullPayment ? `${formatMoney(depositEach)} par match, payé au complet en ligne pour réserver` : `${formatMoney(depositEach + balanceEach)} par match : ${formatMoney(depositEach)} en ligne pour réserver, ${formatMoney(balanceEach)} sur place`}</span>
             <span>🔁 <strong style={{ color: "#c4a4e4" }}>Double cédule</strong> = 2 matchs de suite, réservés ensemble (votre équipe joue les deux, ou vous alignez deux équipes)</span>
           </div>
 
@@ -625,7 +628,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
           {/* ── Étape 3 : paiement ── */}
           {profileId && chosen.length > 0 && (
             <div ref={payRef} style={{ ...card, borderColor: "#3a2f4d", scrollMarginTop: "1rem" }}>
-              <p style={h2}>3. Confirmer et payer l&apos;acompte</p>
+              <p style={h2}>{fullPayment ? "3. Confirmer et payer" : "3. Confirmer et payer l'acompte"}</p>
               <div style={{ margin: "0.4rem 0 0.8rem", display: "grid", gap: "0.3rem" }}>
                 {units
                   .filter((u) => u.slots.every((sl) => selectedIds.has(sl.id)))
@@ -637,17 +640,21 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                   ))}
               </div>
               <div style={{ background: "#17151e", borderRadius: "10px", padding: "0.7rem 0.8rem", fontSize: "0.84rem", color: "#c3c2c8", marginBottom: "0.8rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}><span>À payer maintenant (acompte)</span><strong style={{ color: "#fff" }}>{formatMoney(deposit)}</strong></div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.2rem" }}><span>Sur place, le jour du match</span><span>{formatMoney(balance)}</span></div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}><span>{fullPayment ? "Total à payer" : "À payer maintenant (acompte)"}</span><strong style={{ color: "#fff" }}>{formatMoney(deposit)}</strong></div>
+                {balance > 0 && <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.2rem" }}><span>Sur place, le jour du match</span><span>{formatMoney(balance)}</span></div>}
               </div>
               <div className="nv27-form-fields">
                 <label className="insc-consent">
                   <div className="insc-checkbox-wrap"><input type="checkbox" className="insc-checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} /><span className="insc-checkbox-custom" aria-hidden /></div>
-                  <span>J&apos;accepte : l&apos;acompte réserve le match et n&apos;est pas remboursable après confirmation (sauf annulation par New Valkyria) ; le solde de {formatMoney(balanceEach)} par match est payable sur place.</span>
+                  <span>
+                    {fullPayment
+                      ? "J'accepte : le paiement réserve le match et n'est pas remboursable après confirmation (sauf annulation par New Valkyria)."
+                      : `J'accepte : l'acompte réserve le match et n'est pas remboursable après confirmation (sauf annulation par New Valkyria) ; le solde de ${formatMoney(balanceEach)} par match est payable sur place.`}
+                  </span>
                 </label>
                 {error && <p className="nv27-pay-error">{error}</p>}
                 <button type="button" className="nv27-btn-primary" onClick={submit} disabled={submitting} style={{ padding: "0.85rem", marginTop: "0.8rem" }}>
-                  {submitting ? "..." : `Payer l'acompte — ${formatMoney(deposit)}`}
+                  {submitting ? "..." : `${fullPayment ? "Payer" : "Payer l'acompte"} — ${formatMoney(deposit)}`}
                 </button>
                 <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.5rem 0 0" }}>Paiement sécurisé par Stripe. Vos matchs sont gardés 30 minutes le temps du paiement.</p>
               </div>
@@ -661,7 +668,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
         <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 40, background: "rgba(13,11,19,0.97)", borderTop: "1px solid #302e36", padding: "0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom))" }}>
           <div style={{ maxWidth: "42rem", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.8rem" }}>
             <span style={{ fontSize: "0.82rem", color: "#c3c2c8" }}>
-              {chosen.length === 0 ? "Choisissez un match" : <><strong style={{ color: "#fff" }}>{chosen.length} match{chosen.length > 1 ? "s" : ""}</strong> · acompte {formatMoney(deposit)}</>}
+              {chosen.length === 0 ? "Choisissez un match" : <><strong style={{ color: "#fff" }}>{chosen.length} match{chosen.length > 1 ? "s" : ""}</strong> · {fullPayment ? "" : "acompte "}{formatMoney(deposit)}</>}
               <span style={{ color: "#6d6b71" }}> (max. {max})</span>
             </span>
             <button

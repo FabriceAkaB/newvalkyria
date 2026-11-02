@@ -29,8 +29,14 @@ export default async function MatchConfirmationPage({ searchParams }: { searchPa
                   {b.slot.opponent ? ` · contre ${b.slot.opponent}` : ""}
                 </p>
               ))}
-              <p style={{ margin: "0.6rem 0 0" }}>Acompte payé : {formatMoney(bookings.reduce((n, b) => n + b.price_cents, 0))}</p>
-              <p style={{ margin: "0.2rem 0 0" }}>Solde à payer le jour du match : <strong style={{ color: "#fff" }}>{formatMoney(bookings.reduce((n, b) => n + b.balance_due_cents, 0))}</strong></p>
+              {bookings.some((b) => b.balance_due_cents > 0) ? (
+                <>
+                  <p style={{ margin: "0.6rem 0 0" }}>Acompte payé : {formatMoney(bookings.reduce((n, b) => n + b.price_cents, 0))}</p>
+                  <p style={{ margin: "0.2rem 0 0" }}>Solde à payer le jour du match : <strong style={{ color: "#fff" }}>{formatMoney(bookings.reduce((n, b) => n + b.balance_due_cents, 0))}</strong></p>
+                </>
+              ) : (
+                <p style={{ margin: "0.6rem 0 0" }}>Montant payé : <strong style={{ color: "#fff" }}>{formatMoney(bookings.reduce((n, b) => n + b.price_cents, 0))}</strong> · rien à payer sur place</p>
+              )}
             </div>
             <p style={{ fontSize: "0.82rem", color: "#9d9da0", marginTop: "1rem" }}>Une confirmation vous est envoyée par courriel.</p>
           </>

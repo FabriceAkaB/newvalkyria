@@ -348,7 +348,7 @@ export async function buildAcademySnapshot(): Promise<AcademySnapshot> {
     }));
   const other: ProgramLine[] = [
     { name: "Sport-Études", audience: "Élèves-athlètes", priceCents: sportEtudes.find((r: any) => r.price_cents)?.price_cents ?? null, enrolled: sportEtudesActive.length },
-    { name: "Plage de match vendue à un autre club", audience: "Clubs et académies", priceCents: 15000, priceNote: "acompte 50 $ + solde 100 $", enrolled: matchBookings.filter((b: any) => b.status === "paid" || b.status === "confirmed").length },
+    { name: "Plage de match vendue à un autre club", audience: "Clubs et académies", priceCents: 15000, priceNote: "payé au complet en ligne à la réservation", enrolled: matchBookings.filter((b: any) => b.status === "paid" || b.status === "confirmed").length },
     { name: "Commandites 2027", audience: "Entreprises", priceCents: null, priceNote: `${sponsorSlots.filter((s: any) => s.status === "sold").length} vendues sur ${sponsorSlots.length} emplacements`, enrolled: sponsorSlots.filter((s: any) => s.status === "sold").length },
     { name: "Boutique (sacs, équipement)", audience: "Familles", priceCents: null, priceNote: `${shopOrders.filter((o: any) => o.status !== "pending").length} commandes`, enrolled: shopOrders.filter((o: any) => o.status !== "pending").length }
   ];

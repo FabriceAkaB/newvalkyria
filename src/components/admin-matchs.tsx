@@ -96,7 +96,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
   const [checked, setChecked] = useState<string[]>([]);
   const [bulk, setBulk] = useState<Draft>(EMPTY_BULK);
   const [bulkFields, setBulkFields] = useState<Set<keyof Draft>>(new Set());
-  const [ns, setNs] = useState({ date: "", start: "17:30", end: "18:30", location: "Complexe sportif Terrebonne, Centre de soccer multifonctionnel, terrain #4 – 2475, boul. des Entreprises, Terrebonne J6X 4J9", field: "Terrain n° 4", deposit: "50", balance: "100" });
+  const [ns, setNs] = useState({ date: "", start: "17:30", end: "18:30", location: "Complexe sportif Terrebonne, Centre de soccer multifonctionnel, terrain #4 – 2475, boul. des Entreprises, Terrebonne J6X 4J9", field: "Terrain n° 4", deposit: "150", balance: "0" });
   const today = new Date().toISOString().slice(0, 10);
   const link = `${origin}/prive/matchs`;
 
@@ -207,8 +207,8 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
         ))}
         {wrap("preferred", "Équipe recherchée (message positif)", <input className="admin-input" placeholder="ex. Équipe 2014 recherchée" value={d.preferred} onChange={(e) => { touch("preferred"); set({ ...d, preferred: e.target.value }); }} />)}
         {wrap("restrictionNote", "Autre restriction (texte)", <input className="admin-input" placeholder="ex. niveau compétitif" value={d.restrictionNote} onChange={(e) => { touch("restrictionNote"); set({ ...d, restrictionNote: e.target.value }); }} />)}
-        {wrap("deposit", "Acompte pour réserver ($)", <input className="admin-input" value={d.deposit} onChange={(e) => { touch("deposit"); set({ ...d, deposit: e.target.value }); }} />)}
-        {wrap("balance", "Solde le jour du match ($)", <input className="admin-input" value={d.balance} onChange={(e) => { touch("balance"); set({ ...d, balance: e.target.value }); }} />)}
+        {wrap("deposit", "Montant payé en ligne pour réserver ($)", <input className="admin-input" value={d.deposit} onChange={(e) => { touch("deposit"); set({ ...d, deposit: e.target.value }); }} />)}
+        {wrap("balance", "Solde sur place (0 = payé au complet)", <input className="admin-input" value={d.balance} onChange={(e) => { touch("balance"); set({ ...d, balance: e.target.value }); }} />)}
         {wrap("notes", "Précisions affichées aux équipes", <input className="admin-input" placeholder="ex. arrivée 20 min avant" value={d.notes} onChange={(e) => { touch("notes"); set({ ...d, notes: e.target.value }); }} />)}
         {!bulkMode && wrap("location", "Adresse / lieu", <input className="admin-input" value={d.location} onChange={(e) => set({ ...d, location: e.target.value })} />)}
         {!bulkMode && wrap("field", "Terrain", <input className="admin-input" value={d.field} onChange={(e) => set({ ...d, field: e.target.value })} />)}
@@ -229,7 +229,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             Page de réservation à envoyer aux équipes extérieures :{" "}
             <a href={link} target="_blank" rel="noreferrer" style={{ color: "var(--adm-accent)" }}>{link}</a>{" "}
             <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => navigator.clipboard.writeText(link).then(() => flash("Lien copié."))}>Copier</button>
-            <br />Règles automatiques : acompte en ligne pour réserver (50 $ par plage par défaut), solde payable le jour du match (100 $ par plage par défaut, pour un total de 150 $ par plage), 2 plages maximum par équipe, doubles cédules réservées en bloc, restrictions vérifiées côté serveur.
+            <br />Règles automatiques : le match est payé au complet en ligne pour réserver (150 $ par plage par défaut, aucun solde sur place), 2 plages maximum par équipe, doubles cédules réservées en bloc, restrictions vérifiées côté serveur.
           </p>
           {msg && <p style={{ fontSize: "0.78rem", color: "var(--adm-good)" }}>{msg}</p>}
 
@@ -364,7 +364,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
               <input type="time" className="admin-input" value={ns.start} onChange={(e) => setNs({ ...ns, start: e.target.value })} />
               <input type="time" className="admin-input" value={ns.end} onChange={(e) => setNs({ ...ns, end: e.target.value })} />
               <input className="admin-input" style={{ flex: 1, minWidth: "180px" }} value={ns.location} onChange={(e) => setNs({ ...ns, location: e.target.value })} />
-              <input className="admin-input" style={{ width: "80px" }} title="Acompte ($)" value={ns.deposit} onChange={(e) => setNs({ ...ns, deposit: e.target.value })} />
+              <input className="admin-input" style={{ width: "80px" }} title="Payé en ligne ($)" value={ns.deposit} onChange={(e) => setNs({ ...ns, deposit: e.target.value })} />
               <input className="admin-input" style={{ width: "80px" }} title="Solde le jour du match ($)" value={ns.balance} onChange={(e) => setNs({ ...ns, balance: e.target.value })} />
               <button className="admin-btn-primary" style={{ fontSize: "0.72rem" }} disabled={busy || !ns.date} onClick={() => call({ action: "slot_create", date: ns.date, start: ns.start, end: ns.end, location: ns.location, field: ns.field, priceCents: toCents(ns.deposit), balanceDueCents: toCents(ns.balance) }, "Plage ajoutée (liée automatiquement en double cédule si elle suit une autre plage).")}>+ Ajouter une plage</button>
             </div>

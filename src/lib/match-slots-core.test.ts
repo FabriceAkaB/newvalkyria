@@ -152,7 +152,11 @@ describe("doubles cédules", () => {
 });
 
 describe("totaux", () => {
-  it("150 $ au total par plage : 50 $ d'acompte + 100 $ le jour du match", () => {
+  it("depuis nov. 2026 : 150 $ payés au complet en ligne, aucun solde sur place", () => {
+    const one = { price_cents: 15000, balance_due_cents: 0 };
+    expect(totalsFor([one, one])).toEqual({ depositCents: 30000, balanceCents: 0, totalCents: 30000 });
+  });
+  it("ancien mode (acompte) : 50 $ en ligne + 100 $ le jour du match", () => {
     const one = { price_cents: 5000, balance_due_cents: 10000 };
     expect(totalsFor([one])).toEqual({ depositCents: 5000, balanceCents: 10000, totalCents: 15000 });
     expect(totalsFor([one, one])).toEqual({ depositCents: 10000, balanceCents: 20000, totalCents: 30000 });
