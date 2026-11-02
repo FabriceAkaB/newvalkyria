@@ -21,7 +21,7 @@ export function AdminLoginForm() {
     });
 
     if (res.ok) {
-      router.push("/admin/dashboard");
+      router.push("/admin/aujourdhui");
     } else {
       const data = await res.json().catch(() => null);
       setError(data?.error ?? "Mot de passe incorrect");

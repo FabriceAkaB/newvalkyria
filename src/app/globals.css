@@ -5750,6 +5750,26 @@ body {
   color: #605f65;
 }
 
+.admin-sidebar-group-toggle {
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.admin-sidebar-group-toggle:hover .admin-sidebar-group-label { color: #9d9ca2; }
+
+.admin-sidebar-chevron {
+  margin-left: auto;
+  display: inline-flex;
+  color: #545359;
+  transition: transform 0.15s;
+}
+
+.admin-sidebar-chevron[data-open="true"] { transform: rotate(90deg); }
+
 .admin-sidebar-link {
   display: flex;
   align-items: center;

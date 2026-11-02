@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLoginPage() {
   if (await isAdminRequest()) {
-    redirect("/admin/dashboard");
+    redirect("/admin/aujourdhui");
   }
 
   return (

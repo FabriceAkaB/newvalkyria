@@ -110,6 +110,21 @@ function titleCase(s: string): string {
   return s.replace(/(^|[\s-])(\p{L})/gu, (_m, sep: string, ch: string) => sep + ch.toUpperCase());
 }
 
+/** Inscriptions commencées (ou invitations) non payées pour une saison : une seule par joueuse,
+ *  et aucune si la même joueuse (même parent, même prénom) a déjà une fiche payée. */
+export function unpaidStartedRegistrations<T extends { season_id: string; status: string; is_trial: boolean | null; parent_email: string | null; player_first_name: string | null }>(regs: T[], seasonId: string): T[] {
+  const keyOf = (r: T) => `${String(r.parent_email).toLowerCase()}|${stripAccents(String(r.player_first_name ?? "").trim().toLowerCase())}`;
+  const paidKeys = new Set(regs.filter((r) => r.status === "paid").map(keyOf));
+  const pendingKeys = new Set<string>();
+  return regs.filter((r) => {
+    if (r.season_id !== seasonId || r.status !== "pending" || r.is_trial) return false;
+    const key = keyOf(r);
+    if (paidKeys.has(key) || pendingKeys.has(key)) return false;
+    pendingKeys.add(key);
+    return true;
+  });
+}
+
 export interface Count {
   label: string;
   count: number;
@@ -298,15 +313,7 @@ export async function buildAcademySnapshot(): Promise<AcademySnapshot> {
   }
 
   // ── Chiffres clés ──
-  const paidKeys = new Set(regs.filter((r: any) => r.status === "paid").map((r: any) => `${String(r.parent_email).toLowerCase()}|${stripAccents(String(r.player_first_name ?? "").trim().toLowerCase())}`));
-  const pendingKeys = new Set<string>();
-  const pending = regs.filter((r: any) => {
-    if (r.season_id !== activeSeason || r.status !== "pending" || r.is_trial) return false;
-    const key = `${String(r.parent_email).toLowerCase()}|${stripAccents(String(r.player_first_name ?? "").trim().toLowerCase())}`;
-    if (paidKeys.has(key) || pendingKeys.has(key)) return false;
-    pendingKeys.add(key);
-    return true;
-  });
+  const pending = unpaidStartedRegistrations(regs, activeSeason);
   const keyFigures: AcademySnapshot["keyFigures"] = [
     { label: "Joueuses inscrites (saison en cours)", value: String(paidGirls.length) },
     { label: "Garçons inscrits (programmes garçons)", value: String(paidBoys.length) },

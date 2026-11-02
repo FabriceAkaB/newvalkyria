@@ -77,13 +77,13 @@ export async function getCurrentAdminRole(): Promise<AdminRole | null> {
 }
 
 /** À appeler en haut de chaque Server Component/Route admin. Redirige vers
- *  /admin si non connecté. Avec `roles`, redirige vers /admin/dashboard si
+ *  /admin si non connecté. Avec `roles`, redirige vers /admin/aujourdhui si
  *  le rôle de la session n'est pas autorisé pour cette page (ex. Revenus,
  *  réservé à "admin"). Retourne le rôle pour un usage éventuel dans la page. */
 export async function requireAdmin(options?: { roles?: AdminRole[] }): Promise<AdminRole> {
   const role = await getCurrentAdminRole();
   if (!role) redirect("/admin");
-  if (options?.roles && !options.roles.includes(role)) redirect("/admin/dashboard");
+  if (options?.roles && !options.roles.includes(role)) redirect("/admin/aujourdhui");
   return role;
 }
 
