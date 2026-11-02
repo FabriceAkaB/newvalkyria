@@ -267,7 +267,7 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         title: "Commandes à remettre",
         level: ready ? "orange" : "info",
         emptyText: "Toutes les commandes payées ont été remises.",
-        href: "/admin/uniformes/a-remettre",
+        href: "/admin/uniformes/a-remettre?saison=all",
         hrefLabel: "Uniformes à remettre",
         items: orders.map((o: any) => ({
           title: o.customer_name ?? "Commande",

@@ -7,6 +7,7 @@ import { BoysRegistrationsTable } from "@/components/admin-boys-registrations";
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { BoysRegistrationRow } from "@/lib/boys-registrations";
 import { formatMoney } from "@/lib/private-programs";
+import type { SessionProgramDate } from "@/lib/session-programs-repo";
 
 export interface ProgramComparison {
   slug: string;
@@ -27,13 +28,15 @@ export function AdminBoysProgram({
   stats,
   link,
   comparison,
-  rows
+  rows,
+  dates
 }: {
   program: { slug: string; name: string; brand: "nv" | "atlantic"; waitlistOnly: boolean; priceCents: number; installmentFeeCents: number; capacity: number; practices: number; matches: number; firstDate: string | null; lastDate: string | null };
   stats: { held: number; paid: number; waitlist: number; collectedCents: number };
   link: string;
   comparison: ProgramComparison[];
   rows: BoysRegistrationRow[];
+  dates: SessionProgramDate[];
 }) {
   const [msg, setMsg] = useState<string | null>(null);
   const remaining = Math.max(0, program.capacity - stats.held);
@@ -94,6 +97,20 @@ export function AdminBoysProgram({
             </div>
             <p style={{ fontSize: "0.7rem", color: "#6d6b71", margin: "0.6rem 0 0" }}>Plus la barre est courte, plus il reste de places : c&apos;est le programme à promouvoir en priorité.</p>
           </div>
+
+          {dates.length > 0 && (
+            <>
+              <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: "0.6rem" }}>Séances ({dates.length})</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "1.5rem" }}>
+                {dates.map((d) => (
+                  <span key={d.id} style={{ fontSize: "0.68rem", color: "#9d9da0", background: "#17151e", border: "1px solid #251f30", borderRadius: "6px", padding: "0.3rem 0.55rem" }}>
+                    {new Date(`${d.session_date}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "short", month: "short", day: "numeric" })} · {d.start_time.slice(0, 5)}–{d.end_time.slice(0, 5)}
+                    {d.location ? ` · ${d.location}` : ""}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
 
           <BoysRegistrationsTable initialRows={rows} initialProgram={program.slug} lockProgram title="Inscriptions" />
         </div>

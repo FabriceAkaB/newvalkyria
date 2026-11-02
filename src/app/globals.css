@@ -5696,6 +5696,32 @@ body {
 .admin-sidebar-brand {
   padding: 1.5rem 1.25rem 1.1rem;
   border-bottom: 1px solid #1c1a22;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-sidebar-menu-btn {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #c3c2c8;
+  background: transparent;
+  border: 1px solid #302e36;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+
+@media (min-width: 900px) {
+  .admin-sidebar-menu-btn { display: none; }
+}
+
+@media (max-width: 899px) {
+  .admin-sidebar[data-menu-open="false"] > :not(.admin-sidebar-brand) { display: none; }
+  .admin-sidebar[data-menu-open="false"] .admin-sidebar-brand { border-bottom: none; }
 }
 
 .admin-sidebar-brand-title {
@@ -5834,6 +5860,67 @@ body {
     margin-right: 0;
     padding: 2.5rem 2.5rem 4rem;
   }
+}
+
+/* ── En-tête de section + onglets (rendu par le menu, avant .admin-content) ── */
+.admin-hub {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+}
+
+@media (min-width: 900px) {
+  .admin-hub {
+    margin-left: var(--admin-sidebar-w, 252px);
+    margin-right: 0;
+    padding: 2rem 2.5rem 0;
+  }
+}
+
+.admin-hub + .admin-content { padding-top: 1.5rem; }
+
+.admin-page-header-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.admin-page-header-desc {
+  font-size: 0.78rem;
+  color: #6d6b71;
+  margin: 0.3rem 0 0;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 1rem;
+  border-bottom: 1px solid #1c1a22;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.admin-tabs::-webkit-scrollbar { display: none; }
+
+.admin-tab {
+  flex-shrink: 0;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #8b8a90;
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.admin-tab:hover { color: #fff; }
+
+.admin-tab[data-active="true"] {
+  color: #fff;
+  border-bottom-color: #b295cf;
 }
 
 .admin-section {

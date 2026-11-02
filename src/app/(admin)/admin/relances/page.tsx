@@ -20,7 +20,7 @@ const cell: React.CSSProperties = { padding: "0.55rem 0.5rem", borderBottom: "1p
 const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: 12, padding: "1rem", marginBottom: "1.25rem" };
 
 export default async function OutreachPage() {
-  await requireAdmin();
+  await requireAdmin({ roles: ["admin"] });
   const s = await getOutreachSummary();
   return (
     <>

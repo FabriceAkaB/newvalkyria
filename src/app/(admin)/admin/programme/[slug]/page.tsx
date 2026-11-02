@@ -77,6 +77,7 @@ export default async function AdminBoysProgramPage({ params }: { params: Promise
       link={link}
       comparison={comparison}
       rows={programRows}
+      dates={dates}
     />
   );
 }
