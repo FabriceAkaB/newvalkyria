@@ -44,6 +44,28 @@ export const TODAY_HUB: AdminHub = {
 
 export const ADMIN_NAV: AdminNavSection[] = [
   {
+    key: "plan",
+    label: "Plan 1,5 M$",
+    dotColor: "#b49bf2",
+    hubs: [
+      {
+        key: "mandalart",
+        label: "Mandalart 2028",
+        icon: "gauge",
+        description: "1 500 000 $ encaissés en 2028 : ce qu'il faut faire ce mois-ci, les 8 piliers, les niveaux, les chiffres et les agents.",
+        tabs: [
+          { href: "/admin/mandalart", label: "Ce mois-ci", adminOnly: true },
+          { href: "/admin/mandalart/piliers", label: "Les 8 piliers", adminOnly: true },
+          { href: "/admin/mandalart/niveaux", label: "Niveaux", adminOnly: true },
+          { href: "/admin/mandalart/trajectoire", label: "Trajectoire $", adminOnly: true },
+          { href: "/admin/mandalart/indicateurs", label: "Indicateurs", adminOnly: true },
+          { href: "/admin/mandalart/agents", label: "Agents IA", adminOnly: true },
+          { href: "/admin/mandalart/journal", label: "Journal", adminOnly: true }
+        ]
+      }
+    ]
+  },
+  {
     key: "familles",
     label: "Familles & inscriptions",
     dotColor: "#f0c878",
@@ -144,6 +166,13 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/relances", label: "Relances et suivi", adminOnly: true },
           { href: "/admin/references", label: "Références & crédits" }
         ]
+      },
+      {
+        key: "voix",
+        label: "Voix des familles",
+        icon: "chart",
+        description: "Sondages avec un lien par famille : qui a répondu quoi, satisfaction, familles à rappeler et familles intéressées par un projet.",
+        tabs: [{ href: "/admin/sondages", label: "Sondages", adminOnly: true }]
       }
     ]
   },

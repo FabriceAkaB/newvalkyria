@@ -41,6 +41,8 @@ chercher dans `src/lib/*` et `src/app/(admin)` un module qui fait déjà presque
 | Contrats d'embauche | `employee-contracts.ts`, page `/contrat/[token]` | `employee_contracts` (+ stockage privé) | `/admin/contrats` |
 | Vente de matchs (plages) | `match-slots-core.ts` (règles pures), `match-slots-repo.ts` | `match_slots`, `match_slot_bookings`, `match_team_profiles`, `match_slot_requests` | `/admin/plages`, `/admin/matchs` |
 | Commandites 2027 / partenariats | `sponsorship-2027.ts`, `partnership-offers.ts`, `sponsors-repo.ts` | `sponsor_slots_2027`, `sponsors`, `sponsor_payments`, `partnership_offers`, `partnership_offer_options` | `/admin/sponsors-2027`, `/admin/commandites` |
+| Mandalart (plan 1,5 M$ 2028) | `mandalart-plan.ts`, `mandalart-core.ts` (calculs purs), `mandalart-repo.ts`, `mandalart-kpis.ts`, `mandalart-modules.ts`, `mandalart-pedagogy.ts`, `marketing-stats.ts`, `club.ts` | `mandalart_tasks_state`, `mandalart_tasks_custom`, `mandalart_events`, `mandalart_kpi_values`, `mandalart_snapshots`, `mandalart_agent_state`, `marketing_channel_stats` | `/admin/mandalart` |
+| Sondages (Voix des familles) | `surveys-repo.ts`, page `/sondage/[token]` | `surveys`, `survey_invites`, `survey_responses` | `/admin/sondages` |
 | Historique et marges | `academy-history.ts` (récit à la main, chiffres recalculés) | `venue_rentals` (contrats de gymnases/terrains) | `/admin/historique` |
 | Boutique / uniformes | `shop-repo.ts`, `uniform-kits-repo.ts` | `products`, `shop_orders`, `registration_uniform_kits` | `/admin/boutique`, `/admin/uniformes` |
 | Location de terrains | `terrain-rentals-core.ts`, `terrain-rentals-repo.ts` | `terrains`, `terrain_rentals` | `/admin/location-terrains` |
@@ -87,6 +89,16 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
 - Un nouveau programme ou une nouvelle saison se crée d'abord **en base et par l'admin**, pas en codant une nouvelle page. Skill `nouveau-programme`.
 - Argent réel (remboursement, lien live, prélèvement) : dire à JP exactement ce qui sera fait (qui, combien) avant de le faire. Skill `paiement`.
 
+## Mandalart (objectif 1,5 M$ sur l'année civile 2028)
+
+- Plan : `data/mandalart.json` (ne pas modifier sans JP), généré depuis `docs/MANDALART_VALKYRIA.md` par `node scripts/mandalart-build.mjs`. Les ajouts de JP vont dans la section 11 du .md.
+- Module : `/admin/mandalart` (section « Plan 1,5 M$ » du menu). L'état des tâches vit dans Supabase (`mandalart_tasks_state`), clé = `club_id` + code de tâche ; réimporter le JSON ne change jamais un statut existant.
+- Chaque pilier a ses sections (`src/lib/mandalart-modules.ts`) : toute nouvelle section d'un pilier s'y branche.
+- Voix des familles (sondages) : `/admin/sondages`, `surveys-repo.ts`, page famille `/sondage/[token]`.
+- Agents et automatisations : section 5 du dossier + `/admin/mandalart/agents` ; on construit dans l'ordre des niveaux, un agent à la fois, en mode assistant d'abord.
+- Loi 25 : aucune donnée d'enfant dans les tables `mandalart_*` ; vidéos d'enfants en stockage privé seulement.
+- Duplicable pour un autre club : tout est rangé par `club_id` (`src/lib/club.ts`). Skill `mandalart`.
+
 ## Skills du projet (`.claude/skills/`)
 
-`relance` · `courriel-familles` · `nouveau-programme` · `paiement` · `admin-page` · `finances` · `fin-de-mois` · `automatisation` · `rapport` · `mise-en-ligne` · `design-interface`
+`mandalart` · `relance` · `courriel-familles` · `nouveau-programme` · `paiement` · `admin-page` · `finances` · `fin-de-mois` · `automatisation` · `rapport` · `mise-en-ligne` · `design-interface`

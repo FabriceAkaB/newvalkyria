@@ -1,0 +1,5425 @@
+{
+ "version": "1er nov",
+ "generatedFrom": "docs/MANDALART_VALKYRIA.md",
+ "center": {
+  "statement": "1 500 000 $ de chiffre d'affaires encaissés sur la même année civile, du 1er janvier au 31 décembre 2028, et au moins 400 000 $ par année pour JP.",
+  "goalCents": 150000000,
+  "milestoneCents": 100000000,
+  "year": 2028,
+  "jpYearlyCents": 40000000,
+  "notes": [
+   {
+    "indent": false,
+    "text": "Valkyria (proposition à valider) : ≈ 1 000 000 $ de CA à 50 % de marge (≈ 500 000 $ de profit). Répartition bâtie sur les chiffres du plan : saison d'hiver pleine sur 5 générations et été au scénario maximal."
+   },
+   {
+    "indent": true,
+    "text": "Camps (été, relâche, Fêtes) : environ 370 000 $"
+   },
+   {
+    "indent": true,
+    "text": "Académie (hiver + Valkyria Été) : environ 285 000 $"
+   },
+   {
+    "indent": true,
+    "text": "Parascolaire : environ 160 000 $"
+   },
+   {
+    "indent": true,
+    "text": "Commandites : environ 80 000 $"
+   },
+   {
+    "indent": true,
+    "text": "Autres (élite, kits, tournoi, fêtes, Home Lab) : environ 105 000 $"
+   },
+   {
+    "indent": false,
+    "text": "Conseil aux clubs : 500 000 $ de CA à environ 75 % de marge (25 à 35 clubs à ≈ 17 000 $) ; pilotes fin 2027, vrai départ en 2028."
+   },
+   {
+    "indent": false,
+    "text": "Salaire de JP dès février 2027 : 10 000 $ brut par mois, sans exception : 230 000 $ brut de février 2027 à décembre 2028 (2027 : 110 000 $ ; 2028 : 120 000 $)."
+   },
+   {
+    "indent": false,
+    "text": "Rémunération de JP : Environ 200 000 $ de salaire + 200 000 $ de dividendes, à valider avec Pontbriand Lamarche CPA."
+   },
+   {
+    "indent": false,
+    "text": "Palier intermédiaire : 1 000 000 $ sur l'année 2028."
+   },
+   {
+    "indent": false,
+    "text": "Valkyria est le laboratoire : chaque système documenté devient un futur produit pour les clubs."
+   }
+  ]
+ },
+ "progressRules": [
+  "Statut d'une tâche : à faire = 0 ; en cours = 0,5 ; fait = 1 ; abandonnée = exclue du calcul.",
+  "Poids : une tâche ⭐ (priorité absolue) compte double ; une tâche ➜ (progressive) compte une fois.",
+  "Objectif (une des 64 cases) = moyenne pondérée de ses tâches.",
+  "Pilier = moyenne de ses 8 objectifs. Exécution du plan = moyenne des 8 piliers.",
+  "Résultats (distance réelle à l'objectif) = pour chaque indicateur, (valeur actuelle − départ) ÷ (cible − départ), entre 0 et 100 %. La grande barre du haut = CA de l'année civile en cours ÷ 1 500 000 $, avec un repère au palier de 1 000 000 $. Elle repart à zéro chaque 1er janvier : seule l'année 2028 compte pour l'objectif. Le rythme sur 12 mois glissants (ca_12m) montre avant 2028 si on s'en approche.",
+  "Médailles (comme le passeport des joueuses) : bronze à 25 % des tâches d'un objectif, argent à 50 %, or à 100 %, mauve quand les cibles de ses indicateurs sont atteintes.",
+  "Niveau actuel = le premier niveau qui a encore des ⭐ non faites. Une tâche non faite dont l'échéance est passée est en retard (rouge).",
+  "Afficher toujours les deux barres côte à côte : *Exécution* (ce que JP a fait) et *Résultats* (ce que ça donne). Un plan bien exécuté avec des résultats qui ne bougent pas est un signal d'alarme."
+ ],
+ "kpis": [
+  {
+   "id": "ca_annee",
+   "label": "Chiffre d'affaires de l'année civile (1er janvier au 31 décembre)",
+   "start": "106 986 $ (2026, encaissé d'avril à octobre)",
+   "target": "1 500 000 $ (palier 1 000 000 $)",
+   "due": "2028-12-31",
+   "source": "auto",
+   "how": "Somme des paiements encaissés depuis le 1er janvier de l'année en cours, toutes lignes d'affaires (Stripe + autres). Repart à zéro chaque 1er janvier. L'objectif se juge sur l'année 2028 seulement. Module Revenus."
+  },
+  {
+   "id": "ca_12m",
+   "label": "Rythme annuel : CA des 12 derniers mois",
+   "start": "106 986 $ (avril à octobre 2026)",
+   "target": "1 500 000 $",
+   "due": "2028-12-31",
+   "source": "auto",
+   "how": "Somme des encaissements sur 365 jours glissants. Sert à voir avant 2028 si le rythme approche 1,5 M$."
+  },
+  {
+   "id": "ca_valkyria_annee",
+   "label": "CA Valkyria de l'année civile (académie, parascolaire, camps, commandites)",
+   "start": "112 000 $ (rythme de la 1re année)",
+   "target": "1 000 000 $",
+   "due": "2028-12-31",
+   "source": "auto",
+   "how": "Revenus Valkyria seulement (exclure garçons/JP Coach et conseil). Cible 2028 proposée, à valider."
+  },
+  {
+   "id": "marge_valkyria",
+   "label": "Marge de Valkyria",
+   "start": "27 % (automne-hiver 2026, estimation optimiste ; été 2026 : 44 %)",
+   "target": "50 %",
+   "due": "2028-12-31",
+   "source": "manuel",
+   "how": "Saisie après chaque bilan de session ; plus tard calculée à partir des coûts par programme."
+  },
+  {
+   "id": "ca_conseil_annee",
+   "label": "CA du conseil aux clubs, année civile",
+   "start": "0 $",
+   "target": "500 000 $",
+   "due": "2028-12-31",
+   "source": "manuel",
+   "how": "Entité séparée : saisie mensuelle."
+  },
+  {
+   "id": "clubs_conseil",
+   "label": "Clubs clients du conseil",
+   "start": "0 clubs",
+   "target": "30 clubs",
+   "due": "2028-12-31",
+   "source": "manuel",
+   "how": "2 à 3 pilotes fin 2027, puis 25 à 35 clubs en 2028 ; à ≈ 17 000 $ par club, 30 clubs ≈ 500 000 $."
+  },
+  {
+   "id": "remuneration_jp",
+   "label": "Rémunération annuelle de JP (salaire + dividendes)",
+   "start": "à fournir",
+   "target": "400 000 $",
+   "due": "2028-12-31",
+   "source": "manuel",
+   "how": "Environ 200 000 $ de salaire + 200 000 $ de dividendes, à valider avec Pontbriand Lamarche CPA."
+  },
+  {
+   "id": "salaire_jp",
+   "label": "Salaire de JP versé depuis février 2027 (10 000 $ brut par mois)",
+   "start": "0 $",
+   "target": "230 000 $",
+   "due": "2028-12-31",
+   "source": "auto",
+   "how": "23 mois × 10 000 $ brut, de février 2027 à décembre 2028, sans exception. Calculé à partir des mois cochés « salaire versé » (plus tard : module Paie)."
+  },
+  {
+   "id": "membres_actifs",
+   "label": "Joueuses filles actives",
+   "start": "83 joueuses",
+   "target": "200 joueuses",
+   "due": "2028-09-30",
+   "source": "auto",
+   "how": "Inscriptions filles actives de la saison en cours (académie)."
+  },
+  {
+   "id": "cohortes_2017_2019",
+   "label": "Joueuses nées en 2017, 2018 et 2019",
+   "start": "8 joueuses",
+   "target": "120 joueuses",
+   "due": "2028-09-30",
+   "source": "auto",
+   "how": "Environ 40 par génération. Protège contre le départ de la génération 2015 en U13 (2028)."
+  },
+  {
+   "id": "retour_saison",
+   "label": "Familles qui reviennent d'une saison à l'autre",
+   "start": "74 % (37 familles sur 50, de l'été à l'automne)",
+   "target": "85 %",
+   "due": "2027-12-31",
+   "source": "auto",
+   "how": "Familles actives à la saison N-1 réinscrites à la saison N (hors départs U13)."
+  },
+  {
+   "id": "remplissage",
+   "label": "Places remplies dans l'horaire filles",
+   "start": "85 % (78 places sur 92)",
+   "target": "90 %",
+   "due": "2027-12-31",
+   "source": "auto",
+   "how": "Inscrites ÷ capacité de tous les créneaux filles."
+  },
+  {
+   "id": "source_connue",
+   "label": "Inscriptions avec une source d'acquisition connue",
+   "start": "30 % (16 familles sur 54)",
+   "target": "100 %",
+   "due": "2027-01-31",
+   "source": "auto",
+   "how": "Champ « Comment nous avez-vous connus ? » rempli à l'inscription et à l'essai."
+  },
+  {
+   "id": "nouvelles_joueuses_an",
+   "label": "Nouvelles joueuses par année",
+   "start": "à mesurer",
+   "target": "80 joueuses",
+   "due": "2027-12-31",
+   "source": "auto",
+   "how": "Cible 60 à 80 par année, surtout U8-U9."
+  },
+  {
+   "id": "cac",
+   "label": "Coût d'acquisition par inscription",
+   "start": "à mesurer",
+   "target": "≤ 70 $",
+   "due": "2027-12-31",
+   "source": "manuel",
+   "how": "Dépenses d'acquisition ÷ nouvelles inscriptions, par canal. Valeur à vie ÷ CAC ≥ 3."
+  },
+  {
+   "id": "commandites_annee",
+   "label": "Commandites vendues pour l'année",
+   "start": "5 100 $ (sur 27 300 $ visés pour 2027)",
+   "target": "45 000 $ (idéal 80 000 $)",
+   "due": "2027-12-31",
+   "source": "auto",
+   "how": "Module Commandites. Cible 2028 : 80 000 $."
+  },
+  {
+   "id": "plages_matchs",
+   "label": "Plages de matchs vendues (Terrebonne)",
+   "start": "0 plages",
+   "target": "23 plages",
+   "due": "2027-03-31",
+   "source": "auto",
+   "how": "Module Vente de matchs. 23 plages = 3 450 $, 38 % du contrat."
+  },
+  {
+   "id": "benefice_ete_2027",
+   "label": "Bénéfice de l'été 2027",
+   "start": "29 700 $ (été 2026)",
+   "target": "300 000 $",
+   "due": "2027-08-31",
+   "source": "manuel",
+   "how": "Prudent 58 400 $ · ambitieux 118 800 $ · maximal 300 000 $ (dont 150 000 $ pour JP)."
+  },
+  {
+   "id": "reserve_tresorerie",
+   "label": "Réserve de trésorerie (mois de dépenses fixes)",
+   "start": "0 mois (solde Stripe sous zéro)",
+   "target": "3 mois",
+   "due": "2027-12-31",
+   "source": "manuel",
+   "how": "Compte réserve ÷ dépenses fixes mensuelles."
+  },
+  {
+   "id": "joueuses_filmees_jour1",
+   "label": "Joueuses avec test du jour 1 filmé",
+   "start": "0 %",
+   "target": "100 %",
+   "due": "2026-11-30",
+   "source": "auto",
+   "how": "Joueuses ayant au moins un test de type « jour 1 » dans la feuille de suivi."
+  },
+  {
+   "id": "entrevues_saison",
+   "label": "Entrevues avant/après filmées cette saison",
+   "start": "0 filles",
+   "target": "40 filles",
+   "due": "2027-04-30",
+   "source": "manuel",
+   "how": "Cible 30 à 40 filles par saison, chacune avec son entrevue de début et de fin."
+  },
+  {
+   "id": "videos_semaine",
+   "label": "Vidéos publiées par semaine",
+   "start": "0 vidéos",
+   "target": "3 vidéos (idéal 5 vidéos)",
+   "due": "2026-12-31",
+   "source": "manuel",
+   "how": "Instagram et Facebook. Cible 3, idéal 5."
+  },
+  {
+   "id": "exercices_approuves",
+   "label": "Exercices approuvés dans la banque",
+   "start": "0 exercices",
+   "target": "150 exercices",
+   "due": "2027-06-30",
+   "source": "auto",
+   "how": "30 par génération × 5 générations (U8 à U12). Statut calculé par la grille sur 10."
+  },
+  {
+   "id": "seances_approuvees",
+   "label": "Séances bâties avec des exercices approuvés",
+   "start": "0 %",
+   "target": "80 %",
+   "due": "2027-12-31",
+   "source": "auto",
+   "how": "Cible proposée (à confirmer par JP)."
+  },
+  {
+   "id": "familles_video_lab",
+   "label": "Familles qui envoient au moins une vidéo par mois (Valkyria Lab)",
+   "start": "0 %",
+   "target": "50 %",
+   "due": "2027-06-30",
+   "source": "auto",
+   "how": "50 % = condition pour passer à la phase 2 du Lab."
+  },
+  {
+   "id": "familles_profil",
+   "label": "Familles qui ouvrent le profil de leur enfant chaque mois",
+   "start": "0 %",
+   "target": "70 %",
+   "due": "2027-12-31",
+   "source": "auto",
+   "how": "Connexions à l'espace parent ÷ familles actives."
+  },
+  {
+   "id": "recommandation",
+   "label": "Note de recommandation des parents (sur 10)",
+   "start": "à mesurer",
+   "target": "9/10",
+   "due": "2027-12-31",
+   "source": "manuel",
+   "how": "Question une fois par saison : « Sur 10, recommanderiez-vous Valkyria ? »"
+  },
+  {
+   "id": "taux_reponse_sondages",
+   "label": "Familles qui répondent aux sondages",
+   "start": "0 %",
+   "target": "70 %",
+   "due": "2026-12-15",
+   "source": "auto",
+   "how": "Réponses ÷ familles invitées, dernier sondage envoyé. Module Sondages.",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "appreciation_joueuses",
+   "label": "Note des pratiques donnée par les joueuses (sur 10)",
+   "start": "à mesurer",
+   "target": "9/10",
+   "due": "2027-03-31",
+   "source": "manuel",
+   "how": "Moyenne des notes données par les joueuses à la fin des pratiques (routine de fin). Plus tard, saisie dans le portail entraîneur.",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "satisfaction",
+   "label": "Familles satisfaites (8 sur 10 et plus)",
+   "start": "à mesurer",
+   "target": "90 %",
+   "due": "2027-12-31",
+   "source": "auto",
+   "how": "Part des répondants qui donnent 8 sur 10 ou plus à la question de recommandation. Module Sondages.",
+   "addedOn": "2026-11-02"
+  }
+ ],
+ "levels": [
+  {
+   "id": 1,
+   "code": "N1",
+   "name": "Fondations",
+   "start": "2026-11-01",
+   "end": "2026-12-31",
+   "goal": "Poser les fondations : pilier 1 carré, preuve filmée, conformité, cash des Fêtes.",
+   "plannedTasks": 88,
+   "plannedStars": 28
+  },
+  {
+   "id": 2,
+   "code": "N2",
+   "name": "Vendre l'été d'avance",
+   "start": "2027-01-01",
+   "end": "2027-03-31",
+   "goal": "Prévente de l'été, deuxième coach, réinscriptions, écoles pour le parascolaire.",
+   "plannedTasks": 76,
+   "plannedStars": 19
+  },
+  {
+   "id": 3,
+   "code": "N3",
+   "name": "Point de contrôle",
+   "start": "2027-04-01",
+   "end": "2027-05-31",
+   "goal": "1er avril : décider du nombre de sites selon la prévente ; embaucher l'équipe d'été.",
+   "plannedTasks": 24,
+   "plannedStars": 10
+  },
+  {
+   "id": 4,
+   "code": "N4",
+   "name": "Été 2027 : le vivier de cash",
+   "start": "2027-06-01",
+   "end": "2027-08-31",
+   "goal": "Camps multisites et Valkyria Été ; chaque campeuse repart avec une invitation pour l'automne.",
+   "plannedTasks": 17,
+   "plannedStars": 5
+  },
+  {
+   "id": 5,
+   "code": "N5",
+   "name": "Élargir la base",
+   "start": "2027-09-01",
+   "end": "2027-12-31",
+   "goal": "Parascolaire lancé, hiver 2027-28 vendu, pilotes du conseil aux clubs.",
+   "plannedTasks": 28,
+   "plannedStars": 5
+  },
+  {
+   "id": 6,
+   "code": "N6",
+   "name": "1,5 M$ en 2028",
+   "start": "2028-01-01",
+   "end": "2028-12-31",
+   "goal": "1 500 000 $ encaissés du 1er janvier au 31 décembre 2028 : Valkyria ≈ 1 000 000 $ à 50 % de marge + conseil aux clubs 500 000 $ à 75 %.",
+   "plannedTasks": 18,
+   "plannedStars": 2
+  }
+ ],
+ "trajectory": {
+  "intro": [
+   "Novembre 2026 est le point de départ. Les cibles suivent les saisons réelles de Valkyria : en 2026, l'argent est arrivé en avril (dépôts de l'été, 16 500 $) et surtout en août, septembre et octobre (41 191 $, 19 740 $, 18 005 $) ; tous les versements de l'automne sont déjà payés. Un mois creux a donc une petite cible et des tâches de préparation, jamais un montant irréaliste.",
+   "- Cible : l'ambition de JP (été 2027 au scénario maximal, 1 500 000 $ en 2028).",
+   "- Plancher : le minimum acceptable (été 2027 prudent, palier de 1 000 000 $ en 2028).",
+   "- On juge au cumul de l'année et au trimestre, pas au mois isolé : un paiement qui glisse d'un mois n'est pas un échec. Signal d'alarme : cumul de l'année sous le plancher deux mois de suite.",
+   "- Montants encaissés, avant taxes. Le réel de chaque mois vient des paiements du site (module Revenus) ; en attendant, JP le saisit dans le Mandalart visuel.",
+   "- Conseil 2028 : Valkyria Club System à environ 17 000 $ par club, payé 50 % à la signature, 25 % à 3 mois et 25 % à 6 mois (règle B2B du pilier 7), plus formation d'entraîneurs et version en ligne. Clubs signés en 2028 : 30 (cible), 20 (plancher). Un club signé tard dans l'année ne paie pas tout en 2028 : il faut signer tôt."
+  ],
+  "salary": [
+   "10 000 $ brut par mois versés à JP à partir de février 2027, sans exception.",
+   "De février 2027 à décembre 2028 : 23 mois × 10 000 $ = 230 000 $ brut (2027 : 110 000 $ ; 2028 : 120 000 $).",
+   "Coût pour l'entreprise avec les charges de l'employeur : environ 253 000 $ à 257 600 $. Charges de l'employeur estimées à 10 à 12 % (à confirmer avec le CPA). En 2028, ce salaire est le plancher : le reste des 400 000 $ visés vient des dividendes, décidés avec le CPA.",
+   "Le salaire se paie aussi les mois creux (juillet, novembre, décembre) : il vient du compte rémunération rempli pendant la prévente et les inscriptions d'automne. Règle : 1 mois d'avance au 1er février 2027, 3 mois de réserve avant le 1er juillet 2027 (tâches P7.8.05 à P7.8.07).",
+   "Vérification : sur le chemin plancher, avec 40 % de marge, l'argent disponible couvre le salaire mois après mois mais manque d'environ 5 500 $ en décembre 2027 ; sur le chemin cible (50 % de marge), il en reste chaque mois. Le plancher de 2027 est donc le strict minimum pour payer le salaire sans exception, et remonter la marge (pilier 7) en est la condition."
+  ],
+  "years": [
+   {
+    "year": "2026 (nov.-déc.)",
+    "target": 20000,
+    "floor": 10000,
+    "lines": {
+     "academie": 4500,
+     "valkyriaEte": 0,
+     "camps": 9000,
+     "parascolaire": 0,
+     "commandites": 6500,
+     "autres": 0,
+     "conseil": 0
+    }
+   },
+   {
+    "year": "2027",
+    "target": 814600,
+    "floor": 284200,
+    "lines": {
+     "academie": 142000,
+     "valkyriaEte": 90000,
+     "camps": 370000,
+     "parascolaire": 30000,
+     "commandites": 45000,
+     "autres": 117500,
+     "conseil": 20000
+    }
+   },
+   {
+    "year": "2028",
+    "target": 1520900,
+    "floor": 1005800,
+    "lines": {
+     "academie": 195000,
+     "valkyriaEte": 90000,
+     "camps": 370000,
+     "parascolaire": 160000,
+     "commandites": 80000,
+     "autres": 105000,
+     "conseil": 521150
+    }
+   }
+  ],
+  "periods": [
+   {
+    "period": "S2 2026",
+    "target": 20000,
+    "floor": 10000,
+    "half": true
+   },
+   {
+    "period": "T4 2026",
+    "target": 20000,
+    "floor": 10000,
+    "half": false
+   },
+   {
+    "period": "S1 2027",
+    "target": 548200,
+    "floor": 148800,
+    "half": true
+   },
+   {
+    "period": "T1 2027",
+    "target": 261100,
+    "floor": 78200,
+    "half": false
+   },
+   {
+    "period": "T2 2027",
+    "target": 287100,
+    "floor": 70600,
+    "half": false
+   },
+   {
+    "period": "S2 2027",
+    "target": 266400,
+    "floor": 135400,
+    "half": true
+   },
+   {
+    "period": "T3 2027",
+    "target": 181400,
+    "floor": 91300,
+    "half": false
+   },
+   {
+    "period": "T4 2027",
+    "target": 85000,
+    "floor": 44100,
+    "half": false
+   },
+   {
+    "period": "S1 2028",
+    "target": 871900,
+    "floor": 570700,
+    "half": true
+   },
+   {
+    "period": "T1 2028",
+    "target": 448400,
+    "floor": 292900,
+    "half": false
+   },
+   {
+    "period": "T2 2028",
+    "target": 423500,
+    "floor": 277800,
+    "half": false
+   },
+   {
+    "period": "S2 2028",
+    "target": 649000,
+    "floor": 435100,
+    "half": true
+   },
+   {
+    "period": "T3 2028",
+    "target": 424000,
+    "floor": 286200,
+    "half": false
+   },
+   {
+    "period": "T4 2028",
+    "target": 225000,
+    "floor": 148900,
+    "half": false
+   }
+  ],
+  "months": [
+   {
+    "month": "2026-11",
+    "kind": "Mois de livraison",
+    "target": 6300,
+    "floor": 3400,
+    "cumulTarget": 6300,
+    "how": "Inscriptions fermées : peu d'argent nouveau possible. Remplir les places libres et les demi-saisons, vendre les plages de matchs et les commandites. Tout le reste du mois va au pilier 1."
+   },
+   {
+    "month": "2026-12",
+    "kind": "Prévente de Noël",
+    "target": 13700,
+    "floor": 6600,
+    "cumulTarget": 20000,
+    "how": "Cartes-cadeaux « Semaine de camp Valkyria » et camp des Fêtes : premier argent de l'été 2027."
+   },
+   {
+    "month": "2027-01",
+    "kind": "Grand mois de prévente",
+    "target": 90000,
+    "floor": 28600,
+    "cumulTarget": 90000,
+    "how": "Prévente des camps et de Valkyria Été aux familles actuelles, nouveaux groupes 2017-2019, campagne de la relâche."
+   },
+   {
+    "month": "2027-02",
+    "kind": "Prévente",
+    "target": 68900,
+    "floor": 21000,
+    "cumulTarget": 158900,
+    "how": "Relâche, suite de la prévente, recrutement de la 2e coach et de la responsable de camp."
+   },
+   {
+    "month": "2027-03",
+    "kind": "Fin des prix fidèles",
+    "target": 102200,
+    "floor": 28600,
+    "cumulTarget": 261100,
+    "how": "Date limite du 31 mars pour les prix hâtifs : grosse rentrée d'argent."
+   },
+   {
+    "month": "2027-04",
+    "kind": "Point de contrôle",
+    "target": 101000,
+    "floor": 26800,
+    "cumulTarget": 362100,
+    "how": "1er avril : nombre de sites selon la prévente ; ouverture au public ; début de la vente des commandites."
+   },
+   {
+    "month": "2027-05",
+    "kind": "Remplissage",
+    "target": 102900,
+    "floor": 26200,
+    "cumulTarget": 465000,
+    "how": "Journée Valkyria pour remplir les dernières semaines de camp ; kits d'été."
+   },
+   {
+    "month": "2027-06",
+    "kind": "Début de l'été",
+    "target": 83200,
+    "floor": 17600,
+    "cumulTarget": 548200,
+    "how": "Derniers paiements de camps ; commandites des sites ; tournoi en préparation."
+   },
+   {
+    "month": "2027-07",
+    "kind": "Livraison",
+    "target": 53000,
+    "floor": 10700,
+    "cumulTarget": 601200,
+    "how": "Camps et Valkyria Été en cours : peu de nouvelles ventes, on livre et on filme."
+   },
+   {
+    "month": "2027-08",
+    "kind": "Inscriptions d'automne",
+    "target": 75900,
+    "floor": 46900,
+    "cumulTarget": 677100,
+    "how": "Ouverture des inscriptions automne-hiver 2027-28 : le plus gros mois de l'année avec les camps qui finissent."
+   },
+   {
+    "month": "2027-09",
+    "kind": "Rentrée",
+    "target": 52500,
+    "floor": 33700,
+    "cumulTarget": 729600,
+    "how": "Suite des inscriptions, essais de septembre, lancement du parascolaire."
+   },
+   {
+    "month": "2027-10",
+    "kind": "Saison lancée",
+    "target": 42000,
+    "floor": 23000,
+    "cumulTarget": 771600,
+    "how": "Versements d'automne, parascolaire, premiers pilotes du conseil."
+   },
+   {
+    "month": "2027-11",
+    "kind": "Mois de livraison",
+    "target": 29500,
+    "floor": 15900,
+    "cumulTarget": 801100,
+    "how": "Versements et pilotes du conseil. Préparer la prévente de l'été 2028."
+   },
+   {
+    "month": "2027-12",
+    "kind": "Prévente de Noël",
+    "target": 13500,
+    "floor": 5200,
+    "cumulTarget": 814600,
+    "how": "Cartes-cadeaux de camp 2028 et camp des Fêtes ; signatures du conseil pour janvier."
+   },
+   {
+    "month": "2028-01",
+    "kind": "Départ de l'année du 1,5 M$",
+    "target": 164500,
+    "floor": 109800,
+    "cumulTarget": 164500,
+    "how": "Prévente de l'été 2028, session d'hiver du parascolaire, premières signatures du Valkyria Club System."
+   },
+   {
+    "month": "2028-02",
+    "kind": "Prévente",
+    "target": 141800,
+    "floor": 95000,
+    "cumulTarget": 306300,
+    "how": "Relâche, parascolaire, signatures du conseil."
+   },
+   {
+    "month": "2028-03",
+    "kind": "Fin des prix fidèles",
+    "target": 142100,
+    "floor": 88100,
+    "cumulTarget": 448400,
+    "how": "Date limite des prix hâtifs ; versements du conseil."
+   },
+   {
+    "month": "2028-04",
+    "kind": "Point de contrôle",
+    "target": 144600,
+    "floor": 96500,
+    "cumulTarget": 593000,
+    "how": "Ventes de commandites, ouverture au public des camps."
+   },
+   {
+    "month": "2028-05",
+    "kind": "Remplissage",
+    "target": 146200,
+    "floor": 97300,
+    "cumulTarget": 739200,
+    "how": "Derniers sites de camp, kits d'été, élite."
+   },
+   {
+    "month": "2028-06",
+    "kind": "Début de l'été",
+    "target": 132700,
+    "floor": 84000,
+    "cumulTarget": 871900,
+    "how": "Paiements des camps, versements du conseil."
+   },
+   {
+    "month": "2028-07",
+    "kind": "Livraison",
+    "target": 100300,
+    "floor": 69700,
+    "cumulTarget": 972200,
+    "how": "Camps en cours ; versements du conseil."
+   },
+   {
+    "month": "2028-08",
+    "kind": "Inscriptions d'automne",
+    "target": 161000,
+    "floor": 109800,
+    "cumulTarget": 1133200,
+    "how": "Saison 2028-29 : le plus gros mois Valkyria de l'année."
+   },
+   {
+    "month": "2028-09",
+    "kind": "Rentrée",
+    "target": 162700,
+    "floor": 106700,
+    "cumulTarget": 1295900,
+    "how": "Inscriptions, parascolaire d'automne, signatures du conseil."
+   },
+   {
+    "month": "2028-10",
+    "kind": "Saison lancée",
+    "target": 112600,
+    "floor": 73200,
+    "cumulTarget": 1408500,
+    "how": "Versements d'automne et du conseil."
+   },
+   {
+    "month": "2028-11",
+    "kind": "Dernière ligne droite",
+    "target": 72100,
+    "floor": 49500,
+    "cumulTarget": 1480600,
+    "how": "Versements, conseil, camp des Fêtes."
+   },
+   {
+    "month": "2028-12",
+    "kind": "Fin de l'année du 1,5 M$",
+    "target": 40300,
+    "floor": 26200,
+    "cumulTarget": 1520900,
+    "how": "Bilan de l'année civile 2028."
+   }
+  ]
+ },
+ "pillars": [
+  {
+   "code": "P1",
+   "name": "Excellence pédagogique",
+   "intro": "Si les filles progressent de façon visible, tout le reste devient facile : vente, réinscription, conseil aux clubs. Promesse confirmée chaque saison par les parents : leur fille est plus à l'aise avec le ballon, plus confiante, plus créative.",
+   "focus": "Chantier de JP en novembre 2026 : ce pilier doit être carré d'ici le 30 novembre.",
+   "objectives": [
+    {
+     "code": "P1.1",
+     "name": "Méthode Valkyria écrite",
+     "description": "Structure de séance, bibliothèque des gestes et curriculum U8 à U12 avec les compétences par niveau (modèle Coerver).",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P1.1.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Écrire la structure de séance Valkyria sur une page, avec la durée de chaque bloc (jeu d'entrée, ball mastery, technique, forme jouée).",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.1.02",
+       "priority": "star",
+       "level": 1,
+       "title": "Choisir les 5 gestes de base par niveau du passeport (bronze, argent, or, mauve).",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.1.03",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Classer la bibliothèque des gestes par famille : semelle, intérieur/extérieur, changements de direction, feintes, contrôles orientés.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.1.04",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Écrire la fiche de chaque geste : exécution, 3 points clés, erreurs fréquentes, lien vers la vidéo de démonstration.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.1.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Écrire la progression en 4 étapes de chaque geste : sur place, en mouvement, à vitesse, sous pression ou en jeu.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.1.06",
+       "priority": "star",
+       "level": 3,
+       "title": "Rédiger le curriculum U8 à U12 : compétences à maîtriser par génération et par niveau.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.1.07",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Valider pendant l'été le curriculum de la saison suivante (rôle de directeur technique de JP).",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P1.2",
+     "name": "Standards de progression mesurables",
+     "description": "Grille de tests par génération (touches en 30 s, conduite chronométrée, passes des deux pieds), reliée au passeport et aux vidéos avant-après.",
+     "kpis": [
+      "joueuses_filmees_jour1"
+     ],
+     "tasks": [
+      {
+       "code": "P1.2.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Fixer le test de chaque niveau : touches en 30 secondes, conduite chronométrée, passes des deux pieds.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.2.02",
+       "priority": "star",
+       "level": 1,
+       "title": "Filmer le test du jour 1 de chaque joueuse : même exercice, même angle, 30 secondes.",
+       "due": "2026-11-30",
+       "owner": "Coachs + caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.2.03",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Créer la feuille de suivi, une ligne par test : joueuse, génération, offre, date, geste, contexte, score, écart avec le test précédent, niveau, lien vidéo, note du coach.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.2.04",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Appliquer la convention de nom des vidéos : Prénom-Nom_geste_AAAA-MM-JJ_type (test, maison, démo).",
+       "due": "2026-11-30",
+       "owner": "Caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.2.05",
+       "priority": "star",
+       "level": 2,
+       "title": "Faire le test mensuel filmé et le comparer au mois précédent.",
+       "due": "2027-03-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.2.06",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Concevoir le passeport papier et les écussons bronze, argent, or et mauve.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.2.07",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Monter la vidéo de progression de chaque fille : jour 1, 1 mois, fin de saison.",
+       "due": "2027-05-31",
+       "owner": "Caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.2.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Mettre l'évaluation des joueuses dans le portail entraîneur, moins de 2 minutes par fille : photo de la joueuse, ball mastery, prestation, attitude, note d'au moins 30 caractères (sentiment, comportement).",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      },
+      {
+       "code": "P1.2.09",
+       "priority": "star",
+       "level": 1,
+       "title": "Faire remplir l'évaluation des joueuses par les éducateurs après chaque pratique.",
+       "due": "2026-12-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      },
+      {
+       "code": "P1.2.10",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Produire le résumé de saison de chaque joueuse à partir de ses évaluations, pour les bulletins et le suivi.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "A03"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      }
+     ]
+    },
+    {
+     "code": "P1.3",
+     "name": "Séances sans improvisation et banque d'exercices approuvés",
+     "description": "Chaque exercice est créé avec un gabarit unique, testé, noté sur 10, puis classé. On retrouve en quelques secondes des exercices prouvés par âge, thème ou geste. Maximum une coach pour dix filles.",
+     "kpis": [
+      "exercices_approuves",
+      "seances_approuvees"
+     ],
+     "tasks": [
+      {
+       "code": "P1.3.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Mettre en place le gabarit unique de fiche d'exercice : titre, objectif, geste ou thème, place dans la séance, âge, niveau, nombre de joueuses, espace, durée, matériel, déroulement, consignes, variantes facile, difficile et cognitive, schéma ou vidéo.",
+       "due": "2026-11-30",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.02",
+       "priority": "star",
+       "level": 1,
+       "title": "Ajouter la grille d'évaluation sur 10 au rapport des 24 heures : 5 critères de 2 points + commentaire.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [
+        "AU06"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.03",
+       "priority": "star",
+       "level": 1,
+       "title": "Faire noter par les coachs chaque exercice utilisé en novembre.",
+       "due": "2026-11-30",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.04",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Réunir dans la banque ce qui existe : bibliothèque du portail entraîneur, documents « Banque d'exercices U7/U9 » et « Création d'exercices ».",
+       "due": "2026-12-31",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.05",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Standard des 500 touches de ballon par fille par séance : un ballon par fille, aucune file d'attente, explications courtes.",
+       "due": "2026-12-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.06",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Intégrer l'échauffement FIFA 11+ Kids à chaque séance (prévention du ligament croisé).",
+       "due": "2026-12-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.07",
+       "priority": "star",
+       "level": 2,
+       "title": "Construire la banque dans l'admin : statut calculé (à tester, approuvé, à améliorer, retiré) et recherche par âge, thème, geste, place dans la séance, espace, nombre de joueuses, durée et note.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU06"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.08",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Noter aussi les pratiques complètes (les 4 blocs) ; les meilleures deviennent des pratiques modèles.",
+       "due": "2027-03-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.09",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Utiliser les petits jeux 3 contre 3 sur 4 mini-buts (Funino) dans la forme jouée.",
+       "due": "2027-03-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.10",
+       "priority": "star",
+       "level": 4,
+       "title": "Atteindre 30 exercices approuvés par génération.",
+       "due": "2027-06-30",
+       "owner": "Coach-chef",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.11",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Brancher l'agent support coaching sur la banque : il propose d'abord les exercices approuvés.",
+       "due": "2027-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A02"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.3.12",
+       "priority": "star",
+       "level": 1,
+       "title": "Classer chaque exercice par type : ball mastery, analytique (technique), jeu réduit à thème, forme jouée, physique (avec ses métriques), échauffement.",
+       "due": "2026-11-30",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      },
+      {
+       "code": "P1.3.13",
+       "priority": "star",
+       "level": 1,
+       "title": "Ajouter à la fiche la liste de vérification Valkyria : objectif, consignes, variante plus facile, plus difficile et cognitive, progression, métriques pour les exercices physiques.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      },
+      {
+       "code": "P1.3.14",
+       "priority": "star",
+       "level": 1,
+       "title": "Écrire pour chaque exercice l'organisation selon le nombre de joueuses : 5 à 7, 8 à 10, 11 à 16.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      },
+      {
+       "code": "P1.3.15",
+       "priority": "star",
+       "level": 1,
+       "title": "Appliquer la règle d'approbation : approuvé quand 2 éducateurs donnent 8 sur 10 ou plus ; une note sous 8 = on change l'exercice (nouvelle version), pas la même semaine, puis on le réévalue.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [
+        "AU06"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      },
+      {
+       "code": "P1.3.16",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Importer les documents de référence de JP (banques d'exercices, création d'exercices, liste de vérification) comme base de la banque.",
+       "due": "2026-12-15",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      },
+      {
+       "code": "P1.3.17",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Relier lieux et thèmes : gymnase = technique et ball mastery, synthétique = tactique, grand espace et prise de décision ; vérifier les acquis par thème en fin de bloc.",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      }
+     ]
+    },
+    {
+     "code": "P1.4",
+     "name": "Formation des coachs",
+     "description": "Certification interne Valkyria, observation filmée mensuelle avec rétroaction, parcours vers les licences C et B.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P1.4.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Briefing de 5 minutes avant chaque séance : fiches joueuses, moment surprise prévu.",
+       "due": "2026-12-31",
+       "owner": "Coach-chef",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.4.02",
+       "priority": "star",
+       "level": 2,
+       "title": "Écrire la certification interne Valkyria : ce qu'une coach doit maîtriser avant de diriger un groupe.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.4.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Observer et filmer une séance par coach chaque mois, avec rétroaction de JP.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.4.04",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tenir une réunion technique mensuelle.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.4.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Former à la règle du coach : parler moins de 20 % du temps, poser des questions, nommer chaque fille avec un compliment précis.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.4.06",
+       "priority": "star",
+       "level": 3,
+       "title": "Former les responsables de site et les moniteurs des camps à la méthode avant l'été.",
+       "due": "2027-05-31",
+       "owner": "JP + coach-chef",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.4.07",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Inscrire chaque coach dans un parcours vers les licences C et B.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.4.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Afficher la pratique du jour dans le portail entraîneur : thème, montage du terrain, matériel, qui fait quoi, points clés, variantes et progressions.",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A02"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      },
+      {
+       "code": "P1.4.09",
+       "priority": "star",
+       "level": 1,
+       "title": "Contrôler la qualité des rapports des éducateurs : évaluations complètes avant que les heures comptent ; copier-coller et notes trop répétitives refusés.",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU20"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      },
+      {
+       "code": "P1.4.10",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Limiter les accès des éducateurs dans le portail à ce dont ils ont besoin.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      }
+     ]
+    },
+    {
+     "code": "P1.5",
+     "name": "Pédagogie adaptée aux filles",
+     "description": "Confiance, appartenance, erreur valorisée, modèles féminins. Chaque fille est comparée à elle-même, jamais aux autres.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P1.5.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Écrire les principes de la pédagogie Valkyria : confiance, appartenance, erreur valorisée, modèles féminins.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.5.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Instaurer le « cri Valkyria » pour rebondir après une erreur.",
+       "due": "2026-12-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.5.03",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Comparer chaque fille à elle-même dans les tests et les bulletins, jamais aux autres (effet de l'âge relatif).",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.5.04",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Ajouter des capsules courtes sur le dialogue intérieur positif et la gestion de l'erreur.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.5.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Faire rencontrer aux filles une joueuse inspirante au moins une fois par saison.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.5.06",
+       "priority": "star",
+       "level": 1,
+       "title": "À la fin de chaque pratique, chaque joueuse donne sa note de la pratique sur 10 et sa fatigue sur 10 (routine de fin avec la coach) ; taux d'appréciation suivi chaque semaine.",
+       "due": "2026-12-15",
+       "owner": "Coachs + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      }
+     ]
+    },
+    {
+     "code": "P1.6",
+     "name": "Développement cognitif",
+     "description": "Prise d'information, scanning et prise de décision dans chaque séance. Les dossards bicolores sont la signature visible de la méthode.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P1.6.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Commander les dossards bicolores : corps d'une couleur, collet d'une autre (ex. corps noir, collet jaune).",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.6.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Utiliser les dossards bicolores dans tous les exercices pour forcer la prise d'information.",
+       "due": "2026-12-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.6.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Ajouter une variante cognitive à chaque fiche d'exercice (scanning, prise de décision).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.6.04",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Mettre une forme jouée avec prises de décision dans chaque séance.",
+       "due": "2027-03-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.6.05",
+       "priority": "star",
+       "level": 1,
+       "title": "Commander les échantillons des innovations Valkyria chez 2 fournisseurs : dossards bicolores, tapis de ball mastery, repères visuels.",
+       "due": "2026-11-15",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Valkyria Lab et innovations Valkyria"
+      },
+      {
+       "code": "P1.6.06",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Tester les échantillons en séance, les noter avec la grille sur 10 et choisir les modèles.",
+       "due": "2026-11-30",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Valkyria Lab et innovations Valkyria"
+      },
+      {
+       "code": "P1.6.07",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Ajouter à la feuille de suivi une mesure de la prise d'information (regards avant la réception, test filmé).",
+       "due": "2027-03-31",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Valkyria Lab et innovations Valkyria"
+      },
+      {
+       "code": "P1.6.08",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Commander les tapis et le matériel des kits d'été, 2 mois avant les camps.",
+       "due": "2027-04-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Valkyria Lab et innovations Valkyria"
+      }
+     ]
+    },
+    {
+     "code": "P1.7",
+     "name": "Suivi individuel : Valkyria Lab et profil de l'enfant",
+     "description": "Routine maison, banque de jeux, bulletins, plan de développement. Le parent voit le profil de son enfant quand JP ou le coach-chef le publie.",
+     "kpis": [
+      "familles_video_lab",
+      "familles_profil"
+     ],
+     "tasks": [
+      {
+       "code": "P1.7.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Filmer les démonstrations des gestes, moins d'une minute chacune : vitesse réelle, ralenti, 3 points clés, erreur à éviter, rôle du parent.",
+       "due": "2026-11-30",
+       "owner": "Caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.02",
+       "priority": "star",
+       "level": 1,
+       "title": "Lancer la routine maison du mois (Valkyria Lab, phase 1) : page du site, vidéos non répertoriées, bouton « Envoyer ma vidéo ».",
+       "due": "2026-11-30",
+       "owner": "JP + Claude Code",
+       "links": [
+        "AU08"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.03",
+       "priority": "star",
+       "level": 1,
+       "title": "Envoyer la banque de jeux d'hiver aux familles : jeu de la semaine et défi vidéo.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.04",
+       "priority": "star",
+       "level": 1,
+       "title": "Préparer le premier bulletin de suivi de la saison.",
+       "due": "2026-11-30",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.05",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Tourner la vidéo d'accueil de 60 secondes de JP et l'affiche frigo avec code QR.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.06",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Envoyer un texto hebdomadaire aux parents : lien direct et défi de la semaine.",
+       "due": "2026-12-31",
+       "owner": "Coordonnateur",
+       "links": [
+        "AU13"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.07",
+       "priority": "star",
+       "level": 2,
+       "title": "Ouvrir le profil de l'enfant dans l'espace parent : publication par JP ou le coach-chef, avis au parent à chaque nouvel élément.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU07"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.08",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Lancer l'Académie des parents : capsule de 2 minutes par geste, règle des 3 rôles (chrono, caméra, encouragement).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.09",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tenir un atelier parents-filles par saison, filmé pour le contenu.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.10",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Créer le plan de développement personnel : page « mon parcours », rencontre fille-parent-coach de 10 minutes.",
+       "due": "2027-05-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.11",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Envoyer la banque de jeux d'été en juin : variantes cour, parc, plage, vacances.",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.7.12",
+       "priority": "star",
+       "level": 1,
+       "title": "Mesurer le Valkyria Lab chaque mois : familles qui envoient une vidéo, et un sondage court après le premier mois.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Valkyria Lab et innovations Valkyria"
+      }
+     ]
+    },
+    {
+     "code": "P1.8",
+     "name": "Amélioration continue et preuve externe",
+     "description": "Revue annuelle de la banque, étude des meilleures académies, et nombre de joueuses acceptées en sport-études et en AAA comme statistique vedette.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P1.8.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Compter les joueuses acceptées en sport-études et en AAA : statistique vedette pour le marketing et le conseil.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.8.02",
+       "priority": "star",
+       "level": 4,
+       "title": "Faire la revue annuelle de la banque : les 20 meilleurs exercices par âge forment le curriculum suivant, les plus faibles sortent.",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.8.03",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Étudier les meilleures académies (Coerver, La Masia, académies féminines américaines).",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.8.04",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Faire le bilan « qu'est-ce qui a vraiment fait progresser les filles cette année ? ».",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P1.8.05",
+       "priority": "star",
+       "level": 1,
+       "title": "Ouvrir la section Matchs : chaque match (nous contre l'adversaire, logos), score, résumé de ce qui s'est passé, joueuses présentes et temps de jeu.",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      },
+      {
+       "code": "P1.8.06",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Déposer la vidéo de chaque match (lien YouTube non répertorié ou dépôt direct dans le stockage privé, sans alourdir le site) et en faire l'analyse.",
+       "due": "2027-03-31",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      },
+      {
+       "code": "P1.8.07",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tenir les statistiques de chaque joueuse : matchs joués, minutes, évaluations ; bilan de fin d'année.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      }
+     ]
+    }
+   ],
+   "shortObjectives": [
+    "Méthode Valkyria écrite",
+    "Standards de progression mesurables",
+    "Séances sans improvisation et banque d'exercices approuvés",
+    "Formation des coachs",
+    "Pédagogie adaptée aux filles",
+    "Développement cognitif",
+    "Suivi individuel : Valkyria Lab et profil de l'enfant",
+    "Amélioration continue et preuve externe"
+   ]
+  },
+  {
+   "code": "P2",
+   "name": "Offres et prix",
+   "intro": "L'automne-hiver est la saison phare (2 à 3 séances par semaine) ; l'été est un perfectionnement d'une séance par semaine en complément du club. Les offres ne sont pas coulées dans le béton : elles s'ajustent selon les chiffres.",
+   "focus": null,
+   "objectives": [
+    {
+     "code": "P2.1",
+     "name": "Réinscription avant la fin de saison",
+     "description": "Avantage aux fidèles qui se réinscrivent avant la dernière séance (rollover).",
+     "kpis": [
+      "retour_saison"
+     ],
+     "tasks": [
+      {
+       "code": "P2.1.01",
+       "priority": "star",
+       "level": 2,
+       "title": "Ouvrir la réinscription Valkyria Été au prix fidélité (549 $) jusqu'au 31 mars.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.1.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Offrir un bonus à la réinscription hâtive (ex. Home Lab) plutôt qu'un rabais.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.1.03",
+       "priority": "star",
+       "level": 3,
+       "title": "Ouvrir la réinscription automne-hiver 2027-28 de 3 à 4 semaines avant la fin de saison, avec avantage fidèle.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [
+        "AU09"
+       ],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P2.2",
+     "name": "Offre d'attraction : évaluation gratuite de ball mastery",
+     "description": "Évaluation filmée, kit remis, mini-rapport aux parents sous 48 h. C'est le seul point d'entrée de tous les canaux.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P2.2.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Valider le kit d'essai Valkyria (chandail, bas) remis à chaque fille à l'essai.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "fait"
+      },
+      {
+       "code": "P2.2.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Écrire le déroulé de l'évaluation gratuite filmée et le gabarit du mini-rapport envoyé sous 48 h.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.2.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Faire de l'évaluation le seul point d'entrée sur le site : un lien unique utilisé par tous les canaux.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P2.3",
+     "name": "Résultat promis et garantie",
+     "description": "« Ta fille maîtrise le ballon et arrive plus confiante dans son club. » Preuves : vidéos avant-après, bulletins, passeport.",
+     "kpis": [
+      "recommandation"
+     ],
+     "tasks": [
+      {
+       "code": "P2.3.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Écrire la promesse et les 5 promesses Valkyria (prénom dès la 1re séance, progrès montré chaque mois, réponse sous 24 h, un moment vedette par saison, aucun départ sans appel humain).",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.3.02",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Mettre en place la garantie de progression : séances privées de rattrapage si la fille, assidue, ne gagne pas de niveau dans la saison.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P2.4",
+     "name": "Échelle d'offres sur 5 générations",
+     "description": "Trio Solo, Team et New Valkyria reproduit de U8 à U12, plus les offres d'été.",
+     "kpis": [
+      "cohortes_2017_2019"
+     ],
+     "tasks": [
+      {
+       "code": "P2.4.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Trancher le rôle du Solo : les 5 places sont vendues à 1 455 $ et Privilège est complet. Ajouter des places ou une offre plus haut de gamme.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.4.02",
+       "priority": "star",
+       "level": 2,
+       "title": "Ouvrir des groupes 2017, 2018 et 2019 en janvier, selon les gymnases libres.",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.4.03",
+       "priority": "star",
+       "level": 2,
+       "title": "Mettre en vente l'été 2027 : Valkyria Été (15 séances, 595 $), Sport-Études d'août (399 $) et Solo Été.",
+       "due": "2027-01-15",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.4.04",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Reproduire le trio Solo, Team et New sur chaque génération U8 à U12.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.4.05",
+       "priority": "star",
+       "level": 1,
+       "title": "Préparer la mise en vente de l'été 2027 un mois d'avance : prix, dates, pages du site et courriel prêts.",
+       "due": "2026-12-15",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Préparations à l'avance"
+      }
+     ]
+    },
+    {
+     "code": "P2.5",
+     "name": "Prix et hausses",
+     "description": "Hausse graduelle pour les nouvelles familles, ancien prix garanti aux fidèles. Bonus plutôt que rabais.",
+     "kpis": [
+      "marge_valkyria"
+     ],
+     "tasks": [
+      {
+       "code": "P2.5.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Recalculer les prix planchers de toutes les offres avec les vrais coûts (méthode du pilier 7).",
+       "due": "2026-12-15",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.5.02",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Tester la hausse 2027-28 sur une génération (ex. Team ≈ 1 100 $ avec Home Lab pour les nouvelles familles).",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.5.03",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Écrire la lettre de hausse aux familles selon la méthode RAISE (Price Raise Playbook).",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P2.6",
+     "name": "Ventes complémentaires",
+     "description": "Privé, analyse vidéo, équipement ; élite individuelle l'été ; voyages et camps élite pour les U13 qui partent.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P2.6.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Lister les extras et leur prix : séances privées, analyse vidéo, équipement, kits.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.6.02",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Vendre l'élite individuelle d'été : 15 familles à 2 500 $ (scénario maximal).",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.6.03",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Créer une offre voyages et camps élite pour les U13 qui partent.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P2.7",
+     "name": "Paiements",
+     "description": "Paiement complet avec bonus, ou 3 versements. Paiements préautorisés.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P2.7.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Versements automatiques Stripe sur le site (cron quotidien).",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "fait"
+      },
+      {
+       "code": "P2.7.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Offrir partout le choix : paiement complet avec bonus, ou 3 versements.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.7.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Relancer automatiquement les paiements en retard ; aucune joueuse sur le terrain avec plus de 30 jours de retard sans entente.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU04"
+       ],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P2.8",
+     "name": "Offres B2B",
+     "description": "Parascolaire d'abord, puis conseil aux clubs : prix selon la valeur créée, pas selon les heures.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P2.8.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Fixer le prix du parascolaire au-dessus du plancher (155 $ si le gymnase est gratuit ; 160 $ actuel).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.8.02",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Écrire l'offre pilote du conseil : prix réduit contre un témoignage filmé et l'accès aux chiffres.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.8.03",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Fixer le prix du Valkyria Club System : environ 5 000 $ au départ + 1 000 $ par mois, garantie partielle.",
+       "due": "2028-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    }
+   ],
+   "shortObjectives": [
+    "Réinscription avant la fin de saison",
+    "Offre d'attraction : évaluation gratuite de ball mastery",
+    "Résultat promis et garantie",
+    "Échelle d'offres sur 5 générations",
+    "Prix et hausses",
+    "Ventes complémentaires",
+    "Paiements",
+    "Offres B2B"
+   ]
+  },
+  {
+   "code": "P3",
+   "name": "Acquisition et marketing",
+   "intro": "60 à 80 nouvelles joueuses par année. Chaque canal doit pouvoir en ramener 80 à lui seul. Tous les canaux mènent à l'évaluation gratuite. Base Hormozi : Core Four, Lead Getters, règle des 100.",
+   "focus": null,
+   "objectives": [
+    {
+     "code": "P3.1",
+     "name": "Parrainage",
+     "description": "« Amène ton amie » une fois par mois, l'invitée repart habillée. Seuil : 20 essais par mois.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P3.1.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Créer les 126 codes de référence des familles.",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "fait"
+      },
+      {
+       "code": "P3.1.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Lancer la séance mensuelle « Amène ton amie ».",
+       "due": "2026-11-30",
+       "owner": "Coordonnateur",
+       "links": [
+        "AU09"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.1.03",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Fixer les paliers : 1 inscription = article ; 2 = coton ouaté ; 3 = séance privée ; 5 = sac complet + mise en vedette.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.1.04",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Mesurer combien d'inscriptions sont venues des 126 codes de référence.",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.1.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Demander un parrainage aux moments clés : bulletin, vidéo portfolio, Journée Valkyria, réinscription.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P3.2",
+     "name": "Vidéos portfolio et avant-après",
+     "description": "Contenu court, accroche locale dans les 3 premières secondes, un seul appel : l'évaluation gratuite. - Les comptes qui prennent le temps de remercier leurs abonnés créent un lien fort et du bouche-à-oreille. Règle de sécurité : on remercie les parents et les comptes adultes en privé ; une joueuse mineure est remerciée seulement en public, sans message privé.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P3.2.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Publier 3 vidéos par semaine sur Instagram et Facebook.",
+       "due": "2026-12-31",
+       "owner": "Caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.2.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Concept à essayer en vrai : remercier les nouveaux abonnés. Chaque nouvel abonné reçoit un merci personnel (message ou vidéo de 10 secondes de JP ou de la coach). Mesurer pendant 4 semaines : réponses, partages, essais réservés.",
+       "due": "2026-12-31",
+       "owner": "JP + caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.2.03",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Monter les « meilleurs moments » de chaque fille 2 fois par saison et les envoyer aux parents pour repartage.",
+       "due": "2026-12-31",
+       "owner": "Caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.2.04",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Produire un CV vidéo de joueuse en fin d'année (utile pour le sport-études).",
+       "due": "2027-08-31",
+       "owner": "Caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.2.05",
+       "priority": "star",
+       "level": 1,
+       "title": "Suivre chaque publication (réseau, type : reel, vidéo, carrousel, photo, story ; organique ou payant ; vues, abonnés gagnés).",
+       "due": "2026-12-31",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A06"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      }
+     ]
+    },
+    {
+     "code": "P3.3",
+     "name": "Journées et Rencontres Valkyria",
+     "description": "Journées découverte gratuites et événements sociaux : brise-glace, atelier, pique-nique, mini-tournoi.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P3.3.01",
+       "priority": "star",
+       "level": 2,
+       "title": "Organiser la première Journée Valkyria (relâche).",
+       "due": "2027-03-15",
+       "owner": "Coordonnateur",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.3.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Organiser la première Rencontre Valkyria : cartes brise-glace, atelier, pique-nique, mini-tournoi.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.3.03",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Tenir une Journée Valkyria en mai pour remplir les dernières semaines de camp.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.3.04",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Installer le rythme de 4 journées par année : rentrée, Halloween, relâche, fin d'année scolaire.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P3.4",
+     "name": "Parascolaire comme vivier",
+     "description": "150 filles exposées par année, invitées en exclusivité à l'académie.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P3.4.01",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Remettre en fin de session une invitation exclusive et un rabais de bienvenue à l'académie.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.4.02",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Mesurer les filles exposées et converties, école par école.",
+       "due": "2027-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P3.5",
+     "name": "Camps d'été comme vivier",
+     "description": "300 campeuses et plus, une sur quatre convertie vers l'hiver.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P3.5.01",
+       "priority": "star",
+       "level": 4,
+       "title": "Faire l'évaluation ball mastery pendant le camp et remettre le rapport aux parents le dernier jour.",
+       "due": "2027-08-31",
+       "owner": "Responsable de camp",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.5.02",
+       "priority": "star",
+       "level": 4,
+       "title": "Faire l'offre de fin de camp : place d'hiver réservée + kit, et invitation à l'évaluation gratuite de l'automne.",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.5.03",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Présenter un mini-spectacle aux parents le dernier jour du camp.",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P3.6",
+     "name": "Liste chaude",
+     "description": "Une seule liste de tous les contacts ; 100 messages par jour en période d'inscription, 3 relances.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P3.6.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Bâtir la liste unique : anciennes joueuses, essais, camps passés, journées, parents.",
+       "due": "2026-12-31",
+       "owner": "Coordonnateur",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.6.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Envoyer 100 messages par jour en période d'inscription, jusqu'à 3 relances.",
+       "due": "2027-03-31",
+       "owner": "Agent administratif",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.6.03",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Atteindre 1 000 contacts dans la liste.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P3.7",
+     "name": "Clubs partenaires (hiver)",
+     "description": "72 joueuses sur une centaine viennent de FC Révolution, FC Boréal et Les Satellites. Pas de partenariat de club pour les camps en phase 1.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P3.7.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Nommer un parent relais dans FC Révolution, FC Boréal et Les Satellites.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.7.02",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Offrir une clinique gratuite aux coachs de 15 clubs contre le statut de programme d'hiver officiel.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.7.03",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Signer un grand club ou trois petits.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P3.8",
+     "name": "Publicité payante et mesure",
+     "description": "Petit budget, coût par essai d'environ 25 $, coût par inscription sous 70 $. On augmente seulement ce qui fonctionne.",
+     "kpis": [
+      "source_connue",
+      "nouvelles_joueuses_an",
+      "cac"
+     ],
+     "tasks": [
+      {
+       "code": "P3.8.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Rendre obligatoire « Comment nous avez-vous connus ? » à l'inscription et à l'essai.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [
+        "AU05"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.8.03",
+       "priority": "star",
+       "level": 2,
+       "title": "Afficher le tableau de bord marketing du lundi : essais, inscriptions et coût par inscription, par canal.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU14"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.8.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tester la pub Facebook et Instagram (rayon de 25 km, vidéos déjà prouvées) et Google Ads à forte intention.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.8.04",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Corriger tout canal sous son seuil pendant 2 mois (plus, mieux, nouveau) avant de l'abandonner.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.8.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Relier vues, essais et inscriptions par canal et par type de contenu, organique et payant ; coût par essai et par inscription.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "A06"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      }
+     ]
+    }
+   ],
+   "shortObjectives": [
+    "Parrainage",
+    "Vidéos portfolio et avant-après",
+    "Journées et Rencontres Valkyria",
+    "Parascolaire comme vivier",
+    "Camps d'été comme vivier",
+    "Liste chaude",
+    "Clubs partenaires (hiver)",
+    "Publicité payante et mesure"
+   ]
+  },
+  {
+   "code": "P4",
+   "name": "Expérience client et renouvellement",
+   "intro": "« Il est facile d'annuler un abonnement, difficile de quitter une relation. » Chaque fille doit avoir plusieurs liens : coach, amies, parents entre eux. Les départs se jouent dans les premières semaines.",
+   "focus": null,
+   "objectives": [
+    {
+     "code": "P4.1",
+     "name": "Accueil marquant",
+     "description": "Kit, message de JP, présentation du coach et du plan de saison.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P4.1.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Envoyer à chaque inscription un courriel de bienvenue avec une vidéo de JP de 60 secondes.",
+       "due": "2026-12-31",
+       "owner": "Agent administratif",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.1.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Écrire une carte à la main avec le prénom de la fille.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.1.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Envoyer le questionnaire « fiche joueuse » avant la 1re séance ; la coach le lit avant d'arriver.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.1.04",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Faire la cérémonie de remise du chandail et jumeler chaque nouvelle avec une « grande sœur ».",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.1.05",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Présenter le kit dans une belle boîte avec une lettre personnalisée.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P4.2",
+     "name": "Première victoire rapide",
+     "description": "Un geste réussi dans le premier mois, montré en vidéo aux parents.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P4.2.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Envoyer le clip « avant » de la semaine 1 au parent : « voici où elle part ».",
+       "due": "2026-12-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.2.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Filmer et envoyer au parent un geste réussi dans le premier mois.",
+       "due": "2027-03-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P4.3",
+     "name": "Progression visible",
+     "description": "Défi ball mastery mensuel, passeport, bulletins, vidéos avant-après, Home Lab.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P4.3.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Lancer le défi ball mastery mensuel : vidéo à la maison et rapport personnalisé (forces, une correction, prochain défi).",
+       "due": "2026-12-15",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.3.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Remettre le passeport et les écussons à coudre sur le sac.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.3.03",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Tester le Home Lab sur une génération (tapis, ballon, affiche frigo) et mesurer réinscription et parrainages.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P4.4",
+     "name": "Personnalisation",
+     "description": "Fiche par fille, anniversaires, moments surprises.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P4.4.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Remplir la fiche de chaque fille : joueur préféré, geste favori, objectifs.",
+       "due": "2026-12-31",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.4.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Souligner chaque anniversaire : petit cadeau et « bonne fête » d'équipe filmé.",
+       "due": "2027-03-31",
+       "owner": "Coordonnateur",
+       "links": [
+        "AU12"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.4.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Demander à chaque coach un moment surprise par semaine pour une fille.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P4.5",
+     "name": "Communication aux parents",
+     "description": "Message hebdomadaire, réponse sous 24 h, soirée parents.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P4.5.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Envoyer le message hebdomadaire aux parents : thème, photo, défi maison.",
+       "due": "2026-12-31",
+       "owner": "Coordonnateur",
+       "links": [
+        "AU13"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.5.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Garantir une réponse à toute question sous 24 h.",
+       "due": "2026-12-31",
+       "owner": "Agent administratif",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.5.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tenir une soirée parents par saison et nommer un parent ambassadeur par groupe.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P4.6",
+     "name": "Appartenance",
+     "description": "Rituels, vedette du mois, événements de membres, vie de club pro.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P4.6.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Installer les rituels : cri d'équipe, entrée sur le terrain, poignée de main Valkyria.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.6.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Nommer une vedette du mois par groupe.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.6.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tenir un événement de membres environ toutes les 6 semaines (soirée film, match pro, tournoi parents-filles).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.6.04",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Organiser la journée média : photo officielle, carte de joueuse, mur des Valkyria.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.6.05",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Tenir le gala de fin de saison avec trophées.",
+       "due": "2028-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P4.7",
+     "name": "Signes de départ",
+     "description": "Absences ou silence repérés tôt, appel humain sous 48 h, entrevue de départ.",
+     "kpis": [
+      "retour_saison"
+     ],
+     "tasks": [
+      {
+       "code": "P4.7.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Activer l'alerte de présence : une fille qui passe de 2 à 1 séance par semaine déclenche un appel du coordonnateur sous 48 h.",
+       "due": "2026-12-15",
+       "owner": "Claude Code",
+       "links": [
+        "AU03"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.7.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Noter les raisons connues du départ des 13 familles de l'été.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.7.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Rendre l'entrevue de départ obligatoire, annoncée dès l'inscription.",
+       "due": "2027-03-31",
+       "owner": "Coordonnateur",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P4.8",
+     "name": "Réinscription, satisfaction et sortie U13",
+     "description": "Satisfaction mesurée, test du « waouh », sortie digne en U13 et club des anciennes.",
+     "kpis": [
+      "recommandation"
+     ],
+     "tasks": [
+      {
+       "code": "P4.8.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Envoyer des cartes à 3, 6 et 12 mois et pour les Fêtes.",
+       "due": "2026-12-31",
+       "owner": "Coordonnateur",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.8.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Poser une fois par saison la question « Sur 10, recommanderiez-vous Valkyria ? ».",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.8.03",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Faire le test du « waouh » : JP vit le parcours complet comme un nouveau parent ; tout ce qui est sous 9 est corrigé.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.8.04",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Organiser la sortie U13 : cérémonie, CV vidéo, club des anciennes (assistante coach rémunérée).",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.8.05",
+       "priority": "star",
+       "level": 1,
+       "title": "Construire le module Sondages dans l'admin : lien personnel par famille, qui a répondu quoi, taux de réponse, note de recommandation sur 10, familles intéressées par un projet.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Écrire les questions du sondage de mi-saison : accueil, coachs, progrès de la fille, communication, bulletins, horaire et lieux, uniformes, recommandation sur 10, idées.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.07",
+       "priority": "star",
+       "level": 1,
+       "title": "Envoyer le sondage de mi-saison à toutes les familles et relancer jusqu'à 70 % de réponses.",
+       "due": "2026-12-15",
+       "owner": "JP + Claude Code",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Lire chaque réponse sous 48 h : appeler toute famille qui donne moins de 7 sur 10 et noter la décision prise.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.09",
+       "priority": "star",
+       "level": 1,
+       "title": "Envoyer le sondage d'intérêt pour l'été 2027 et les projets (camps spécialisés avec des clubs professionnels, élite, voyages, Home Lab) avant la mise en vente.",
+       "due": "2026-12-15",
+       "owner": "JP",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.10",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Envoyer le bilan « Vous avez dit, on a fait » : ce qui a changé suite au sondage, avec la question « comment vous trouvez ça ? ».",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.11",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Ajouter un sondage court après chaque bulletin : utile ou non, ce qui manque.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.12",
+       "priority": "star",
+       "level": 2,
+       "title": "Envoyer le sondage de fin de saison avant d'ouvrir la réinscription.",
+       "due": "2027-03-15",
+       "owner": "JP",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.13",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Mettre en valeur la satisfaction : taux de satisfaction et témoignages (avec accord) sur le site et dans les réseaux.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.14",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Faire passer chaque nouveau projet par un sondage d'intérêt 2 mois avant son lancement ; cibler le lancement et les offres sur les familles intéressées.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voix des familles : sondages et satisfaction"
+      }
+     ]
+    }
+   ],
+   "shortObjectives": [
+    "Accueil marquant",
+    "Première victoire rapide",
+    "Progression visible",
+    "Personnalisation",
+    "Communication aux parents",
+    "Appartenance",
+    "Signes de départ",
+    "Réinscription, satisfaction et sortie U13"
+   ]
+  },
+  {
+   "code": "P5",
+   "name": "Diversification et conseil aux clubs",
+   "intro": "Cibles 2028 proposées : camps ≈ 370 000 $, parascolaire ≈ 160 000 $ ; conseil aux clubs 500 000 $ en ligne séparée. Critères : vendre d'abord aux familles actuelles, utiliser les actifs existants, forte marge, revenus récurrents. Garçons sous une autre marque.",
+   "focus": null,
+   "objectives": [
+    {
+     "code": "P5.1",
+     "name": "Parascolaire (≈ 160 000 $ en 2028)",
+     "description": "Environ 1 000 inscriptions à 160 $ par année, une vingtaine d'écoles, sessions automne et hiver.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P5.1.01",
+       "priority": "star",
+       "level": 2,
+       "title": "Contacter les écoles pour l'automne 2027 (elles planifient au printemps) : liste de 50 écoles et services de garde, règle des 100.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "A08"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.1.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Offrir une démo gratuite d'une séance par école.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.1.03",
+       "priority": "star",
+       "level": 3,
+       "title": "Signer les ententes de parascolaire.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.1.04",
+       "priority": "star",
+       "level": 5,
+       "title": "Lancer le parascolaire.",
+       "due": "2027-10-15",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.1.05",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Atteindre environ 1 000 inscriptions par année.",
+       "due": "2028-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P5.2",
+     "name": "Camps de jour d'été 2027 (multisites)",
+     "description": "9 h à 16 h, 8 semaines du 28 juin au 20 août, 30 places par site, 339 $ la semaine (309 $ membres avant le 31 mars). Modèle Footy Elite : terrains réservés directement, sans club.",
+     "kpis": [
+      "benefice_ete_2027"
+     ],
+     "tasks": [
+      {
+       "code": "P5.2.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Lancer la carte-cadeau « Semaine de camp Valkyria » pour Noël.",
+       "due": "2026-12-05",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.2.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Trouver les terrains possibles et leurs disponibilités de jour (terrain de jour visé : environ 25 $/h).",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.2.03",
+       "priority": "star",
+       "level": 2,
+       "title": "Prévendre les camps aux familles actuelles en janvier, aux prix hâtifs.",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.2.04",
+       "priority": "star",
+       "level": 2,
+       "title": "Réserver les terrains de jour et de soir.",
+       "due": "2027-03-15",
+       "owner": "JP",
+       "links": [
+        "A09"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.2.05",
+       "priority": "star",
+       "level": 2,
+       "title": "Recruter la responsable de camp, avec vérification des antécédents.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.2.06",
+       "priority": "star",
+       "level": 3,
+       "title": "1er avril : point de contrôle. Le 2e site ouvre si 40 % du 1er est vendu ; les sites 3 et 4 si les sites 1 et 2 sont vendus à 50 %.",
+       "due": "2027-04-01",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.2.07",
+       "priority": "star",
+       "level": 3,
+       "title": "Embaucher et former les moniteurs (1 adulte pour 10 campeurs).",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.2.08",
+       "priority": "star",
+       "level": 4,
+       "title": "Tenir les camps : une semaine ouvre à 20 inscrites deux semaines avant, sinon on fusionne.",
+       "due": "2027-08-20",
+       "owner": "Responsable de camp",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.2.09",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Vendre la garde prolongée (40 $ par semaine) et le kit d'été.",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.2.10",
+       "priority": "star",
+       "level": 1,
+       "title": "Préparer la prévente des camps : page, prix hâtifs, liste des familles intéressées (sondage).",
+       "due": "2026-12-20",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Préparations à l'avance"
+      }
+     ]
+    },
+    {
+     "code": "P5.3",
+     "name": "Camps de relâche et des Fêtes",
+     "description": "Revenus d'hiver et solution de garde pour les parents.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P5.3.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Évaluer un camp des Fêtes 2026 avec la méthode du prix plancher (cash de décembre).",
+       "due": "2026-11-20",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.3.02",
+       "priority": "star",
+       "level": 2,
+       "title": "Tenir le camp de la relâche 2027 (campagne en janvier).",
+       "due": "2027-03-08",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P5.4",
+     "name": "Home Lab et analyse vidéo à distance",
+     "description": "Phase 1 maintenant (QR, affiche, défi, passeport papier), phase 2 matériel, phase 3 vente en ligne.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P5.4.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Phase 1 du Home Lab : routines par code QR, affiche à imprimer, défi mensuel, passeport papier (voir P1.7).",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.4.02",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Phase 2 : ballon, tapis personnalisé et boîte, coût validé par l'agent financier.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.4.03",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Phase 3 : vente en ligne et abonnement d'analyse vidéo à distance, vendable partout au Québec.",
+       "due": "2028-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P5.5",
+     "name": "Événements payants",
+     "description": "Fêtes d'anniversaire (rapide), tournoi Valkyria (gros revenus), ligue des mamans (fidélité).",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P5.5.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Lancer les fêtes d'anniversaire Valkyria, à partir de 300 $ ; chaque fête amène une dizaine d'amies à l'essai.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.5.02",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Préparer le tournoi Valkyria (environ 30 équipes, commanditaires, boutique sur place).",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.5.03",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Lancer la ligue des mamans.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.5.04",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Réserver le lieu et la date du tournoi Valkyria, 4 mois avant.",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Préparations à l'avance"
+      }
+     ]
+    },
+    {
+     "code": "P5.6",
+     "name": "Projets pour les plus vieilles",
+     "description": "Sport-Études d'août, préparation au recrutement, voyages, camps élite, école de gardiennes.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P5.6.01",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Tenir le Sport-Études d'août : diagnostic + 10 séances avec simulation d'évaluation, 399 $.",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.6.02",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Offrir la préparation au recrutement (sport-études, bourses universitaires américaines).",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.6.03",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Lancer les voyages internationaux et les camps élite U13 et plus.",
+       "due": "2028-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.6.04",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Ouvrir l'école de gardiennes, avec l'Académie des gardiens.",
+       "due": "2028-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P5.7",
+     "name": "Garçons sous une marque séparée",
+     "description": "Valkyria reste 100 % féminine. Les programmes garçons passent sous un autre nom (ex. JP Coach), avec coachs, terrains et méthode partagés en coulisses.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P5.7.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Confirmer le nom de la marque garçons et séparer ses revenus dans l'admin.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.7.02",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Tenir l'offre garçons d'été sous l'autre marque (≈ 11 100 $ au scénario ambitieux).",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P5.8",
+     "name": "Conseil aux clubs (500 000 $ en 2028)",
+     "description": "« Gym Launch du soccer » : pilotes fin 2027, puis Valkyria Club System (fait avec vous, 12 mois, ≈ 17 000 $ par club par an).",
+     "kpis": [
+      "ca_conseil_annee",
+      "clubs_conseil"
+     ],
+     "tasks": [
+      {
+       "code": "P5.8.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Documenter chaque système Valkyria comme futur produit : Valkyria est le laboratoire du conseil.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.8.02",
+       "priority": "star",
+       "level": 5,
+       "title": "Trouver le plus gros problème actuel de l'Académie des gardiens (Pascal) et de Perfo Soccer.",
+       "due": "2027-09-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.8.04",
+       "priority": "star",
+       "level": 5,
+       "title": "Démarrer 2 ou 3 pilotes « fait pour vous » : 3 à 6 mois, un problème mesuré avant et après.",
+       "due": "2027-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.8.03",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Vérifier la concurrence de Perfo Soccer dans les Laurentides ; entente de non-concurrence au besoin.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.8.05",
+       "priority": "star",
+       "level": 6,
+       "title": "Lancer le Valkyria Club System avec les études de cas des pilotes.",
+       "due": "2028-02-28",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.8.06",
+       "priority": "star",
+       "level": 6,
+       "title": "Signer 25 à 35 clubs.",
+       "due": "2028-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.8.07",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Ajouter la formation d'entraîneurs payante et la licence de la méthode (modèle Coerver).",
+       "due": "2028-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    }
+   ],
+   "shortObjectives": [
+    "Parascolaire (≈ 160 000 $ en 2028)",
+    "Camps de jour d'été 2027 (multisites)",
+    "Camps de relâche et des Fêtes",
+    "Home Lab et analyse vidéo à distance",
+    "Événements payants",
+    "Projets pour les plus vieilles",
+    "Garçons sous une marque séparée",
+    "Conseil aux clubs (500 000 $ en 2028)"
+   ]
+  },
+  {
+   "code": "P6",
+   "name": "Partenariats et commandites",
+   "intro": "Un système de commandites carré et récurrent : environ 45 000 $ en 2027 et 80 000 $ en 2028. Sans audience, pas de commandite payante.",
+   "focus": null,
+   "objectives": [
+    {
+     "code": "P6.1",
+     "name": "Audience et preuve",
+     "description": "Les réseaux du pilier 3 sont la base ; premiers partenaires = parents propriétaires d'entreprise.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P6.1.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Tenir un compteur d'audience mensuel : familles, abonnés, vues, partages.",
+       "due": "2026-12-31",
+       "owner": "Caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.1.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Ajouter « Avez-vous une entreprise ? » au formulaire d'inscription.",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P6.2",
+     "name": "Dossier de commandite",
+     "description": "Une page + une vidéo de 60 secondes ; inventaire des actifs (≈ 1 800 familles par an, réseaux, chandails, kits, journées, tournois, gala).",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P6.2.01",
+       "priority": "star",
+       "level": 2,
+       "title": "Produire le dossier de commandite d'une page et la vidéo de 60 secondes.",
+       "due": "2027-02-28",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P6.3",
+     "name": "Échelle de commandites",
+     "description": "Présentateur ≈ 15 000 $, Or ≈ 5 000 $, Communautaire ≈ 1 000 $, bourses, tables au gala, en nature.",
+     "kpis": [
+      "commandites_annee",
+      "plages_matchs"
+     ],
+     "tasks": [
+      {
+       "code": "P6.3.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Vendre les 23 plages de matchs de Terrebonne (3 450 $, 38 % du contrat).",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.3.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Fixer les paliers et les contreparties de chaque niveau.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.3.03",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Vendre la commandite des camps : maillot 2027 et bannières sur les sites (30 000 $ au scénario maximal).",
+       "due": "2027-08-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P6.4",
+     "name": "Offre irrésistible",
+     "description": "Des clients, pas des vues : code promo exclusif, exclusivité par secteur, engagement de 3 ans avec rabais.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P6.4.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Créer un code promo exclusif par commanditaire pour mesurer les ventes générées.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.4.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Offrir l'exclusivité par secteur et l'engagement de 3 ans avec rabais.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P6.5",
+     "name": "Machine de vente",
+     "description": "Liste de 100 entreprises, rencontre, offre, signature ; 100 contacts par mois d'avril à août.",
+     "kpis": [
+      "commandites_annee"
+     ],
+     "tasks": [
+      {
+       "code": "P6.5.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Bâtir la liste de 100 entreprises cibles (parents, commerces, banques, caisses, assurances).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "A08"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.5.02",
+       "priority": "star",
+       "level": 3,
+       "title": "Faire 100 contacts par mois d'avril à août.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [
+        "A08"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.5.03",
+       "priority": "star",
+       "level": 5,
+       "title": "Atteindre 45 000 $ de commandites pour 2027.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P6.6",
+     "name": "Livraison et renouvellement",
+     "description": "Rapport aux commanditaires aux 3 à 4 mois, rencontre de renouvellement 60 jours avant la fin, 80 % de renouvellement visé.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P6.6.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Remettre le rapport aux commanditaires (portée, résultats, activations, impact humain, vidéo, prochaine période).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "AU15"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.6.02",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Tenir la rencontre de renouvellement 60 jours avant la fin de chaque contrat.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [
+        "AU10"
+       ],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P6.7",
+     "name": "Partenaires non financiers",
+     "description": "Équipementier, municipalités, partenaires santé, médias locaux.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P6.7.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Négocier une entente équipementier (protège la marge de 50 %).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.7.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Faire avancer le partenariat santé (Action Sport Physio / Alowa) et les conférences aux parents.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.7.03",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Approcher les municipalités pour des terrains l'hiver.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P6.8",
+     "name": "Subventions",
+     "description": "Programmes pour le sport féminin et l'activité physique des jeunes.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P6.8.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Rechercher les programmes de subvention admissibles.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P6.8.02",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Déposer les demandes retenues.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    }
+   ],
+   "shortObjectives": [
+    "Audience et preuve",
+    "Dossier de commandite",
+    "Échelle de commandites",
+    "Offre irrésistible",
+    "Machine de vente",
+    "Livraison et renouvellement",
+    "Partenaires non financiers",
+    "Subventions"
+   ]
+  },
+  {
+   "code": "P7",
+   "name": "Finance et marges",
+   "intro": "2028 : 1 500 000 $ sur l'année civile. Valkyria ≈ 1 000 000 $ à 50 % de marge au minimum ; conseil 500 000 $ à environ 75 %. Aucun programme lancé sans calcul du prix plancher. Aucun dollar ne sort s'il n'est pas clair et prévu. Chiffres à valider avec Pontbriand Lamarche CPA.",
+   "focus": null,
+   "objectives": [
+    {
+     "code": "P7.1",
+     "name": "Conformité (urgent)",
+     "description": "TPS/TVQ, assurance de 5 M$, entente avec la gérante, politique d'annulation.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P7.1.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Signer le mandat avec Pontbriand Lamarche CPA.",
+       "due": "2026-11-15",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.1.02",
+       "priority": "star",
+       "level": 1,
+       "title": "S'inscrire à la TPS/TVQ à la date recommandée par le CPA et fixer le traitement des taxes sur les camps et les entraînements.",
+       "due": "2026-11-30",
+       "owner": "JP + CPA",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.1.03",
+       "priority": "star",
+       "level": 1,
+       "title": "Obtenir l'assurance responsabilité de 5 M$ exigée par les écoles.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.1.04",
+       "priority": "star",
+       "level": 1,
+       "title": "Écrire l'entente avec la gérante : gratuité de ses filles en échange de son travail (rémunération en nature).",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.1.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Écrire la politique d'annulation et de remboursement, acceptée à l'inscription.",
+       "due": "2027-03-31",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P7.2",
+     "name": "Méthode de lancement : prix plancher et go/no-go",
+     "description": "Prix plancher = 2 × (F ÷ N + V), N = capacité × 80 %. Go seulement si prix ≥ plancher, seuil 50 % ≤ capacité, préventes ≥ seuil de survie 2 semaines avant, scénario pessimiste sans perte.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P7.2.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Fournir les vrais coûts : gymnase de Prévost, taux et heures de Noura, rémunération d'Annie et de JP.",
+       "due": "2026-11-15",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.2.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Créer le calculateur de lancement dans l'admin : prix plancher, seuils, scénario pessimiste, verdict GO ou NO-GO.",
+       "due": "2026-12-15",
+       "owner": "Claude Code",
+       "links": [
+        "AU11"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.2.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Passer chaque programme au calculateur avant sa mise en vente, et comparer au réel en fin de session.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P7.3",
+     "name": "Marge de 50 % par programme",
+     "description": "Terrebonne ≈ 214 $/h (42 % des locations pour 10 % des heures) ; trois créneaux sous le seuil ; règle d'encadrement d'été.",
+     "kpis": [
+      "marge_valkyria",
+      "remplissage"
+     ],
+     "tasks": [
+      {
+       "code": "P7.3.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Corriger les 3 créneaux sous le seuil (lundi 19 h 30, mercredi 18 h, jeudi 18 h 30 à Prévost) : remplir, fusionner ou déplacer.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.3.02",
+       "priority": "star",
+       "level": 1,
+       "title": "Revoir le contrat de Terrebonne : vendre les plages ou renégocier pour 2027.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.3.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Appliquer la règle d'encadrement : une coach responsable à 40 $/h + une adjointe à 25 $/h (marge d'été 45 % → 59 %).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.3.04",
+       "priority": "star",
+       "level": 5,
+       "title": "Atteindre 50 % de marge sur la saison 2027-28.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P7.4",
+     "name": "Trésorerie",
+     "description": "Cash serré jusqu'en janvier : 12 251 $ de location à payer, paie de Maeva dès le 12 novembre. Comptes séparés et réserve de 3 mois.",
+     "kpis": [
+      "reserve_tresorerie"
+     ],
+     "tasks": [
+      {
+       "code": "P7.4.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Fournir le solde actuel (BMO + Stripe) et les encaissements prévus d'ici avril 2027.",
+       "due": "2026-11-10",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.4.02",
+       "priority": "star",
+       "level": 1,
+       "title": "Exécuter le plan cash de novembre-décembre : places libres, demi-saisons, plages de matchs, commandites, carte-cadeau des Fêtes.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.4.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Ouvrir les comptes séparés : profit 10 %, impôts et taxes 15 %, rémunération de JP, opérations, réserve.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.4.04",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tenir une prévision de trésorerie sur 12 mois glissants, mise à jour chaque mois.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.4.05",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Constituer la réserve de 3 mois de dépenses fixes et ouvrir une marge de crédit d'urgence.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P7.5",
+     "name": "Valeur d'une famille et coût d'acquisition",
+     "description": "Valeur à vie ≈ 3 500 $ par famille ; coût d'acquisition sous 70 $ ; ratio ≥ 3 pour 1 ; les 30 premiers jours paient l'acquisition.",
+     "kpis": [
+      "cac"
+     ],
+     "tasks": [
+      {
+       "code": "P7.5.01",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Calculer la valeur à vie réelle d'une famille à partir des données du site.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.5.02",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Suivre par canal le ratio valeur à vie ÷ coût d'acquisition (minimum 3 pour 1).",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [
+        "A06"
+       ],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P7.6",
+     "name": "Contrôle des dépenses, fournisseurs et inventaire",
+     "description": "Seuils d'approbation, 3 soumissions, registre des contrats, inventaire synchronisé, fonds de remplacement.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P7.6.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Appliquer les seuils d'approbation : sous 100 $ coordonnateur, 100 à 1 000 $ JP, plus de 1 000 $ JP avec 3 soumissions.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.6.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Créer l'inventaire du matériel (quantité, emplacement, confié à, état, durée de vie, année de remplacement).",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.6.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tenir le registre des contrats avec alerte 90 jours avant chaque échéance.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU10"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.6.04",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Faire la revue annuelle des dépenses et voter le budget (fonds d'imprévus 5 %, fonds de remplacement).",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P7.7",
+     "name": "Rentabilité par ligne et tableau de bord du lundi",
+     "description": "Chaque ligne d'affaires a son bilan ; une ligne sous 35 % deux trimestres de suite est corrigée ou retirée.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P7.7.01",
+       "priority": "star",
+       "level": 2,
+       "title": "Afficher le tableau de bord financier du lundi : CA de la semaine, encaissements à venir, marge par programme, coût d'acquisition, réinscription, réserve.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU14"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.7.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Faire le bilan de chaque programme à la fin de sa session : seuil prévu contre réel.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.7.03",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Tenir une rencontre mensuelle avec le CPA.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.7.04",
+       "priority": "star",
+       "level": 2,
+       "title": "Faire le rapprochement comptable chaque semaine : argent entré (Stripe, virements) contre inscriptions, argent sorti (paie, terrains, fournisseurs) contre budget ; tout écart est signalé.",
+       "due": "2027-01-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU18"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques"
+      },
+      {
+       "code": "P7.7.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Faire le bilan financier des matchs : coût (terrain, arbitres, éducateurs), part de l'adversaire encaissée ou non, relié au module Revenus.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      }
+     ]
+    },
+    {
+     "code": "P7.8",
+     "name": "Structure et rémunération de JP",
+     "description": "Valkyria et le conseil en entités distinctes, possiblement sous une société de gestion. 2028 : ≈ 200 000 $ de salaire + 200 000 $ de dividendes. - Février 2027 à décembre 2028 : 23 mois = 230 000 $ brut (2027 : 110 000 $ ; 2028 : 120 000 $). Coût pour l'entreprise avec les charges de l'employeur (estimation 10 à 12 %, à confirmer) : environ 253 000 à 258 000 $.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P7.8.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Valider la répartition du 1,5 M$ de 2028 (Valkyria ≈ 1 M$, conseil 500 k$) et fixer la cible de CA de 2027.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.8.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Noter les heures de JP par semaine et les tâches où elles passent.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.8.05",
+       "priority": "star",
+       "level": 2,
+       "title": "Mettre en place la paie de JP : 10 000 $ brut par mois dès février 2027, sans exception (retenues à la source et charges de l'employeur avec le CPA).",
+       "due": "2027-01-31",
+       "owner": "JP + CPA",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.8.06",
+       "priority": "star",
+       "level": 2,
+       "title": "Avoir un mois de salaire d'avance (≈ 11 000 $ avec les charges) dans le compte rémunération au 1er février 2027.",
+       "due": "2027-02-01",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.8.03",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Valider la structure avec le CPA : entités séparées, société de gestion.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.8.07",
+       "priority": "star",
+       "level": 3,
+       "title": "Avoir 3 mois de salaire en réserve (≈ 33 000 $) avant le 1er juillet 2027 : juillet, novembre et décembre sont des mois creux.",
+       "due": "2027-06-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.8.04",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Fixer le plan de rémunération 2028 avec le CPA.",
+       "due": "2027-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    }
+   ],
+   "shortObjectives": [
+    "Conformité (urgent)",
+    "Méthode de lancement : prix plancher et go/no-go",
+    "Marge de 50 % par programme",
+    "Trésorerie",
+    "Valeur d'une famille et coût d'acquisition",
+    "Contrôle des dépenses, fournisseurs et inventaire",
+    "Rentabilité par ligne et tableau de bord du lundi",
+    "Structure et rémunération de JP"
+   ]
+  },
+  {
+   "code": "P8",
+   "name": "Organisation, équipe et agents IA",
+   "intro": "Les données avant les agents ; un agent à la fois ; validation humaine pour les décisions sensibles ; journal de chaque action ; données des mineures protégées (Loi 25). Chaque dollar économisé par l'IA sert d'abord à mieux payer les coachs.",
+   "focus": null,
+   "objectives": [
+    {
+     "code": "P8.1",
+     "name": "Projet entrevues avant/après (priorité maintenant)",
+     "description": "Chaque joueuse filmée au début et à la fin de la saison : la preuve sociale la plus forte.",
+     "kpis": [
+      "entrevues_saison"
+     ],
+     "tasks": [
+      {
+       "code": "P8.1.02",
+       "priority": "star",
+       "level": 1,
+       "title": "Filmer l'entrevue de début de saison de 30 à 40 filles.",
+       "due": "2026-11-30",
+       "owner": "Caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.1.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Faire approuver le droit à l'image à l'inscription sur le site.",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "fait"
+      },
+      {
+       "code": "P8.1.03",
+       "priority": "star",
+       "level": 3,
+       "title": "Filmer l'entrevue de fin de saison et monter les avant-après.",
+       "due": "2027-04-30",
+       "owner": "Caméra",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P8.2",
+     "name": "Équipe humaine et rôles",
+     "description": "JP, coach-chef (qualité), coordonnateur, personne caméra, CPA, moniteurs à contrat.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P8.2.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Embaucher la personne caméra.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.2.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Nommer le coach-chef responsable du contrôle de la qualité.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.2.03",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Tenir le registre Loi 25 : renseignements collectés, consentements, qui a accès (JP responsable).",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.2.04",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Confier au coordonnateur les horaires, les remplacements, les cas délicats et la supervision des agents.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P8.3",
+     "name": "Recrutement et ressources humaines des coachs",
+     "description": "Deuxième coach qualifiée, équipe d'été, règle de deux, vérification des antécédents.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P8.3.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Écrire la règle de deux (jamais un adulte seul avec une mineure) et la faire signer par tous les coachs.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.3.02",
+       "priority": "star",
+       "level": 2,
+       "title": "Recruter une deuxième coach qualifiée.",
+       "due": "2027-02-28",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.3.03",
+       "priority": "star",
+       "level": 3,
+       "title": "Recruter l'équipe d'été (jusqu'à une vingtaine de personnes au scénario maximal), antécédents vérifiés.",
+       "due": "2027-04-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.3.04",
+       "priority": "star",
+       "level": 1,
+       "title": "Faire confirmer leur présence par les éducateurs à chaque activité dans le portail entraîneur ; heures et paie calculées selon leur taux.",
+       "due": "2026-12-15",
+       "owner": "Claude Code",
+       "links": [
+        "AU20"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques"
+      },
+      {
+       "code": "P8.3.05",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Relancer l'éducateur qui n'a pas confirmé sa présence 24 h après l'activité ; liste des présences manquantes avant chaque paie.",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "AU20"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques"
+      }
+     ]
+    },
+    {
+     "code": "P8.4",
+     "name": "Les données avant les agents",
+     "description": "Base de familles unique, présences exportables, comptabilité propre, bibliothèque d'exercices.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P8.4.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Plateforme de base sur newvalkyria.com : inscriptions, essais, versements, codes de référence, commandites, contrats, paie, portail entraîneur, espace parent.",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "fait"
+      },
+      {
+       "code": "P8.4.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Vérifier qu'on peut exporter les présences de MonClubSportif, ou prendre les présences dans le portail entraîneur.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.4.03",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Mettre en place un logiciel comptable propre avec le CPA.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.4.04",
+       "priority": "star",
+       "level": 1,
+       "title": "Lister toutes les tâches faites à la main dans MonClubSportif (ajouter une inscrite, la mettre dans son programme, activer son compte, courriels, retirer une remboursée, créer les activités et les matchs) avec le temps de chacune.",
+       "due": "2026-11-15",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques"
+      },
+      {
+       "code": "P8.4.05",
+       "priority": "star",
+       "level": 1,
+       "title": "Demander à MonClubSportif s'il existe une API ou une importation automatique ; sinon, choisir le robot (navigateur automatisé) qui fera ces tâches.",
+       "due": "2026-11-30",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A12"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques"
+      },
+      {
+       "code": "P8.4.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Afficher dans l'admin la liste « à faire dans MonClubSportif » produite par le site : nouvelles inscrites payées, remboursées à retirer, activités et matchs à créer.",
+       "due": "2026-12-15",
+       "owner": "Claude Code",
+       "links": [
+        "AU19"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques"
+      },
+      {
+       "code": "P8.4.07",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Synchroniser MonClubSportif sans intervention (inscription, programme, compte, retrait, activités), avec un journal de chaque action.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "A12"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques"
+      }
+     ]
+    },
+    {
+     "code": "P8.5",
+     "name": "Agent administratif (priorité 1)",
+     "description": "Inscriptions, paiements, relances, bienvenue, questions des parents sur tous les canaux. Voir la fiche A01.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P8.5.01",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Construire l'agent administratif en mode assistant (brouillons validés par un humain).",
+       "due": "2026-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.5.02",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Passer l'agent administratif en mode semi-automatique et mesurer les heures sauvées.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P8.6",
+     "name": "Agents pédagogie et familles",
+     "description": "Support coaching et suivi des familles. Voir les fiches A02 et A03.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P8.6.01",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Construire l'agent support coaching (fiche de séance prête, adaptée aux présences et au terrain).",
+       "due": "2027-05-31",
+       "owner": "Claude Code",
+       "links": [
+        "A02"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.6.02",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Construire l'agent suivi des familles (difficultés, rapports, programme maison, réinscriptions).",
+       "due": "2027-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A03"
+       ],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P8.7",
+     "name": "Agents d'affaires",
+     "description": "Financier, marketing, statistiques, veille, partenaires, opérations, RH, tableau de bord direction. Voir les fiches A04 à A11.",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P8.7.01",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Construire l'agent financier.",
+       "due": "2027-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.7.02",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Construire l'agent stratégie marketing.",
+       "due": "2028-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.7.03",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Construire l'agent statistiques.",
+       "due": "2028-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A06"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.7.04",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Construire l'agent veille commerciale.",
+       "due": "2028-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A07"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.7.05",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Construire l'agent partenaires (commandites, subventions, écoles).",
+       "due": "2028-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A08"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.7.06",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Construire l'agent opérations et logistique.",
+       "due": "2028-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A09"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.7.07",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Construire l'agent ressources humaines des coachs.",
+       "due": "2028-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A10"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.7.08",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Construire l'agent tableau de bord direction (résumé unique du lundi).",
+       "due": "2028-12-31",
+       "owner": "Claude Code",
+       "links": [
+        "A11"
+       ],
+       "initialStatus": "a_faire"
+      }
+     ]
+    },
+    {
+     "code": "P8.8",
+     "name": "Plateforme Valkyria et application",
+     "description": "Module Mandalart dans l'admin, Valkyria Lab phase 2, puis application Valkyria (à suivre).",
+     "kpis": [],
+     "tasks": [
+      {
+       "code": "P8.8.01",
+       "priority": "star",
+       "level": 1,
+       "title": "Construire le module Mandalart dans l'admin (/admin/mandalart) : niveaux, cases à cocher, barres de progression, indicateurs.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [
+        "AU01"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.8.02",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Activer le courriel du lundi à JP : niveau actuel, priorités en retard, indicateurs.",
+       "due": "2026-12-15",
+       "owner": "Claude Code",
+       "links": [
+        "AU02"
+       ],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.8.03",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Lancer la phase 2 du Valkyria Lab (espace membre) quand 50 % des familles actives l'utilisent.",
+       "due": "2028-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.8.04",
+       "priority": "progressive",
+       "level": 6,
+       "title": "Évaluer puis lancer l'application Valkyria (à suivre) : Lab, profil de l'enfant, horaires et messages, présences, boutique, programmes.",
+       "due": "2028-12-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire"
+      }
+     ]
+    }
+   ],
+   "shortObjectives": [
+    "Projet entrevues avant/après (priorité maintenant)",
+    "Équipe humaine et rôles",
+    "Recrutement et ressources humaines des coachs",
+    "Les données avant les agents",
+    "Agent administratif (priorité 1)",
+    "Agents pédagogie et familles",
+    "Agents d'affaires",
+    "Plateforme Valkyria et application"
+   ]
+  }
+ ],
+ "agentsIntro": [
+  "Deux choses différentes : les automatisations sont des règles fixes du site (cron, formulaires, alertes, pages) que Claude Code programme sans IA ; les agents IA lisent des données, rédigent et proposent, avec une validation humaine. On construit d'abord les automatisations, parce que les agents s'appuient sur leurs données."
+ ],
+ "agentRules": [
+  "Un agent à la fois : on mesure les heures sauvées avant de construire le suivant.",
+  "Chaque agent commence en mode assistant et ne monte de mode qu'après 4 semaines sans erreur importante.",
+  "Accès minimum : chaque agent lit seulement les données dont il a besoin.",
+  "Validation humaine obligatoire pour l'argent (remboursement, rabais, prix), les plaintes, la santé, la sécurité, les conflits et toute situation familiale délicate.",
+  "Aucun agent n'a accès aux vidéos ni aux photos des enfants, sauf l'agent suivi des familles, en lecture, pour les joueuses de la famille concernée.",
+  "Aucun nom d'enfant dans les contenus publiés sans consentement écrit du parent (Loi 25, consentement à l'image).",
+  "Journal de chaque action : date, agent, action, données touchées, humain qui a validé.",
+  "Les appels à l'IA se font côté serveur (route API du site), jamais depuis le navigateur ; la clé reste dans les variables d'environnement.",
+  "Un agent ne parle jamais au nom de JP sans signature claire « Équipe Valkyria » ou validation de JP."
+ ],
+ "agentModes": [
+  {
+   "name": "Assistant",
+   "text": "L'agent prépare des brouillons ; un humain lit, corrige et envoie. Aucun envoi automatique."
+  },
+  {
+   "name": "Semi-automatique",
+   "text": "L'agent envoie seul les messages de modèles approuvés (bienvenue, rappels, FAQ). Tout le reste reste en brouillon."
+  },
+  {
+   "name": "Autonome sur règles",
+   "text": "L'agent agit seul dans des règles écrites et testées ; un humain revoit le journal chaque semaine."
+  }
+ ],
+ "agents": [
+  {
+   "id": "A01",
+   "order": 1,
+   "name": "Agent administratif",
+   "level": 1,
+   "prerequisites": [
+    "Base de familles unique",
+    "FAQ écrite",
+    "Modèles de messages approuvés par JP",
+    "Politique d'annulation (P7.1)"
+   ],
+   "tasks": [
+    "P3.6.02",
+    "P4.1.01",
+    "P4.5.02",
+    "P8.5.01",
+    "P8.5.02"
+   ],
+   "objective": "P8.5",
+   "role": "Répond aux parents et gère l'administratif répétitif : inscriptions, paiements, relances, bienvenue, questions fréquentes.",
+   "triggers": [
+    "Nouvelle inscription ou nouvel essai réservé",
+    "Paiement échoué ou versement en retard (1, 7 et 14 jours)",
+    "Question reçue d'un parent (courriel, texto, Messenger, Instagram)",
+    "7 jours avant chaque séance « Amène ton amie »",
+    "Période d'inscription : liste chaude, 100 messages par jour, jusqu'à 3 relances."
+   ],
+   "reads": [
+    "Inscriptions, essais et familles",
+    "Paiements et versements (Stripe)",
+    "Horaires et créneaux",
+    "FAQ et politique d'annulation",
+    "Liste chaude",
+    "Codes de référence."
+   ],
+   "does": [
+    "Courriel de bienvenue avec la vidéo de JP",
+    "Rappels de paiement et de séance",
+    "Réponses aux questions fréquentes sous 24 h (nouveau contact : sous 5 minutes)",
+    "Invitations « Amène ton amie » et remerciements aux familles qui parrainent",
+    "Relances de la liste chaude",
+    "Transfert des cas sensibles au coordonnateur."
+   ],
+   "humanValidation": "Remboursement, rabais ou exception de prix : JP ; Plainte, santé, sécurité, conflit, situation familiale : coordonnateur.",
+   "access": "Lecture : familles, inscriptions, paiements, horaires. Écriture : brouillons et envois de modèles approuvés, notes au dossier famille. Interdit : vidéos d'enfants, paie, contrats.",
+   "metrics": "Heures sauvées par semaine ; délai de réponse moyen ; paiements à temps ; essais réservés depuis la liste chaude."
+  },
+  {
+   "id": "A02",
+   "order": 2,
+   "name": "Agent support coaching",
+   "level": 3,
+   "prerequisites": [
+    "Banque d'exercices approuvés construite (P1.3)",
+    "Présences disponibles (P8.4)"
+   ],
+   "tasks": [
+    "P1.3.11",
+    "P8.6.01"
+   ],
+   "objective": "P8.6",
+   "role": "Remet à chaque coach une fiche de séance prête à utiliser, adaptée au groupe du jour.",
+   "triggers": [
+    "48 h avant chaque séance",
+    "Présences confirmées le jour même",
+    "Rapport des 24 heures reçu après la séance."
+   ],
+   "reads": [
+    "Planification annuelle et thème de la semaine",
+    "Banque d'exercices approuvés (P1.3)",
+    "Présences et nombre de joueuses",
+    "Terrain (gymnase, synthétique, dimensions)",
+    "Format (groupe, semi-privé, privé)."
+   ],
+   "does": [
+    "Fiche de séance en 4 blocs (jeu d'entrée, ball mastery, technique, forme jouée), d'abord avec des exercices approuvés",
+    "Adaptation au nombre de joueuses, à l'espace et aux variantes cognitives",
+    "Signale les exercices encore « à tester »",
+    "Compile les notes des coachs pour la banque."
+   ],
+   "humanValidation": "Le coach peut tout changer ; JP valide les nouveaux exercices avant le statut « approuvé ».",
+   "access": "Lecture : planification, banque d'exercices, présences (prénoms et nombre seulement), terrains. Écriture : fiches de séance. Interdit : paiements, données des parents, vidéos.",
+   "metrics": "Part des séances bâties avec des exercices approuvés ; note moyenne des séances ; temps de préparation des coachs."
+  },
+  {
+   "id": "A03",
+   "order": 3,
+   "name": "Agent suivi des familles",
+   "level": 5,
+   "prerequisites": [
+    "Feuille de suivi en place (P1.2)",
+    "Profil de l'enfant dans l'espace parent (P1.7)"
+   ],
+   "tasks": [
+    "P8.6.02"
+   ],
+   "objective": "P8.6",
+   "role": "Suit la progression de chaque joueuse et prépare ce que les parents reçoivent.",
+   "triggers": [
+    "Nouveau test ou nouvelle vidéo maison dans la feuille de suivi",
+    "Fin de mois (défi mensuel)",
+    "Mi-saison et fin de saison (bulletins)",
+    "Alerte de présence (AU03)",
+    "4 semaines avant la fin de saison (réinscription)."
+   ],
+   "reads": [
+    "Feuille de suivi des tests",
+    "Vidéos de la joueuse (lecture seulement)",
+    "Notes des coachs",
+    "Présences",
+    "Passeport."
+   ],
+   "does": [
+    "Repère les difficultés, surtout en ball mastery",
+    "Prépare le rapport mensuel : forces, une correction, prochain défi",
+    "Prépare le programme maison et le jeu de la semaine adaptés au niveau",
+    "Prépare les bulletins et les données de progression pour les entrevues avant/après",
+    "Prépare la liste des familles à appeler pour la réinscription."
+   ],
+   "humanValidation": "Le coach valide chaque rapport ; JP ou le coach-chef le publie dans l'espace parent.",
+   "access": "Lecture : données de progression et vidéos des joueuses. Écriture : brouillons de rapports. Rien n'est publié au parent sans validation.",
+   "metrics": "Rapports livrés à temps ; familles qui ouvrent le profil (cible 70 %) ; réinscription."
+  },
+  {
+   "id": "A04",
+   "order": 4,
+   "name": "Agent financier",
+   "level": 5,
+   "prerequisites": [
+    "Vrais coûts fournis (P7.2)",
+    "Calculateur de lancement (AU11)",
+    "Inventaire (P7.6)"
+   ],
+   "tasks": [
+    "P7.2.03",
+    "P7.4.04",
+    "P7.7.02",
+    "P8.7.01"
+   ],
+   "objective": "P8.7",
+   "role": "Connaît tout le pilier 7 et rend un verdict viable ou non viable avant chaque projet.",
+   "triggers": [
+    "Nouveau programme ou nouvelle idée de revenu",
+    "Fin de chaque session",
+    "Chaque lundi",
+    "Contrat à 90 jours de son échéance",
+    "Dépense non prévue."
+   ],
+   "reads": [
+    "Coûts des terrains, coachs, matériel",
+    "Revenus par programme",
+    "Préventes",
+    "Inventaire",
+    "Registre des contrats et des fournisseurs."
+   ],
+   "does": [
+    "Remplit le calculateur de lancement et rend GO ou NO-GO",
+    "Bilan prévu contre réel par programme",
+    "Volet financier du tableau de bord du lundi",
+    "Signale les lignes sous 35 % de marge",
+    "Tient l'inventaire, le comparatif fournisseurs et le fonds de remplacement",
+    "Bloque toute dépense non prévue ou non approuvée."
+   ],
+   "humanValidation": "JP décide ; le CPA valide les chiffres officiels, les taxes et la structure.",
+   "access": "Lecture : revenus, coûts, contrats, inventaire. Écriture : analyses et alertes. Interdit : effectuer un paiement.",
+   "metrics": "Programmes lancés avec un GO ; marge réelle contre prévue ; dépenses hors budget."
+  },
+  {
+   "id": "A05",
+   "order": 5,
+   "name": "Agent stratégie marketing",
+   "level": 6,
+   "prerequisites": [
+    "Personne caméra embauchée (P8.2)",
+    "Source d'acquisition obligatoire (AU05)"
+   ],
+   "tasks": [
+    "P8.7.02"
+   ],
+   "objective": "P8.7",
+   "role": "Bâtit le calendrier de contenu et dit à la personne caméra où aller et quoi filmer.",
+   "triggers": [
+    "Chaque dimanche (plan de la semaine)",
+    "Nouvel événement au calendrier."
+   ],
+   "reads": [
+    "Calendrier des pratiques, matchs et événements",
+    "Statistiques des publications (A06)",
+    "Consentements à l'image."
+   ],
+   "does": [
+    "Plan de captation de la semaine, formats variés",
+    "Pilote le projet entrevues avant/après",
+    "Études des meilleurs clubs (image de marque, fidélisation)."
+   ],
+   "humanValidation": "JP approuve le calendrier ; la personne caméra exécute.",
+   "access": "Lecture : calendrier, statistiques, liste des joueuses avec consentement. Interdit : publier sans approbation.",
+   "metrics": "Vidéos publiées par semaine (cible 3 à 5) ; essais venant des vidéos."
+  },
+  {
+   "id": "A06",
+   "order": 6,
+   "name": "Agent statistiques",
+   "level": 6,
+   "prerequisites": [
+    "Champ source obligatoire (AU05)"
+   ],
+   "tasks": [
+    "P7.5.02",
+    "P8.7.03"
+   ],
+   "objective": "P8.7",
+   "role": "Repère quelles publications et quels canaux amènent de vraies inscriptions.",
+   "triggers": [
+    "Chaque lundi."
+   ],
+   "reads": [
+    "Sources d'acquisition des inscriptions et des essais",
+    "Statistiques des réseaux sociaux",
+    "Dépenses publicitaires."
+   ],
+   "does": [
+    "Essais, inscriptions et coût par inscription par canal",
+    "Ratio valeur à vie ÷ coût d'acquisition",
+    "Données du rapport aux commanditaires."
+   ],
+   "humanValidation": "Aucune décision ; il informe JP et l'agent marketing.",
+   "access": "Lecture : sources, statistiques, dépenses. Aucune donnée nominative d'enfant.",
+   "metrics": "Part des inscriptions avec source connue (cible 100 %)."
+  },
+  {
+   "id": "A07",
+   "order": 7,
+   "name": "Agent veille commerciale",
+   "level": 6,
+   "prerequisites": [
+    "Agent financier en place (A04)"
+   ],
+   "tasks": [
+    "P8.7.04"
+   ],
+   "objective": "P8.7",
+   "role": "Analyse les meilleures académies (offres, prix) et propose de nouvelles sources de revenus.",
+   "triggers": [
+    "Une fois par mois."
+   ],
+   "reads": [
+    "Sites publics des académies et clubs."
+   ],
+   "does": [
+    "Rapport mensuel des offres et prix observés",
+    "Idées de revenus, chacune envoyée à l'agent financier."
+   ],
+   "humanValidation": "JP choisit ce qui passe au calculateur.",
+   "access": "Web public seulement.",
+   "metrics": "Idées testées ; idées passées en GO."
+  },
+  {
+   "id": "A08",
+   "order": 8,
+   "name": "Agent partenaires",
+   "level": 6,
+   "prerequisites": [
+    "Dossier de commandite (P6.2)"
+   ],
+   "tasks": [
+    "P5.1.01",
+    "P6.5.01",
+    "P6.5.02",
+    "P8.7.05"
+   ],
+   "objective": "P8.7",
+   "role": "Prospection et suivi des commanditaires, des subventions et des écoles pour le parascolaire.",
+   "triggers": [
+    "Période de vente (avril à août) : 100 contacts par mois",
+    "Rapport aux commanditaires aux 3 à 4 mois",
+    "Échéance d'une demande de subvention."
+   ],
+   "reads": [
+    "Liste des 100 entreprises cibles",
+    "Liste des écoles",
+    "Registre des commandites",
+    "Données du rapport (A06)."
+   ],
+   "does": [
+    "Brouillons de messages de prospection et de relance",
+    "Prépare le rapport aux commanditaires",
+    "Suivi des demandes de subvention."
+   ],
+   "humanValidation": "JP présente et signe chaque entente.",
+   "access": "Lecture : commandites, écoles, statistiques. Écriture : brouillons.",
+   "metrics": "Contacts par mois ; rencontres ; ententes signées ; renouvellement (cible 80 %)."
+  },
+  {
+   "id": "A09",
+   "order": 9,
+   "name": "Agent opérations et logistique",
+   "level": 6,
+   "prerequisites": [
+    "Inventaire (P7.6)"
+   ],
+   "tasks": [
+    "P5.2.04",
+    "P8.7.06"
+   ],
+   "objective": "P8.7",
+   "role": "Réservations de terrains, matériel par site, conflits d'horaires (camps multisites, parascolaire).",
+   "triggers": [
+    "Nouveau créneau ou nouveau site",
+    "Conflit d'horaire détecté",
+    "Une semaine avant chaque camp."
+   ],
+   "reads": [
+    "Réservations de terrains",
+    "Inventaire par site",
+    "Horaires des coachs."
+   ],
+   "does": [
+    "Signale les conflits et les terrains manquants",
+    "Liste du matériel par site et par semaine."
+   ],
+   "humanValidation": "Le coordonnateur confirme les réservations.",
+   "access": "Lecture : horaires, réservations, inventaire.",
+   "metrics": "Conflits évités ; séances annulées faute de terrain ou de matériel."
+  },
+  {
+   "id": "A10",
+   "order": 10,
+   "name": "Agent ressources humaines des coachs",
+   "level": 6,
+   "prerequisites": [
+    "Fiches entraîneurs à jour (existe dans l'admin)"
+   ],
+   "tasks": [
+    "P8.7.07"
+   ],
+   "objective": "P8.7",
+   "role": "Recrutement, intégration, disponibilités, remplacements et évaluations des coachs et moniteurs.",
+   "triggers": [
+    "Poste à combler",
+    "Absence d'un coach",
+    "Fin de session (évaluation)."
+   ],
+   "reads": [
+    "Fiches entraîneurs",
+    "Disponibilités",
+    "Contrats",
+    "Évaluations."
+   ],
+   "does": [
+    "Brouillons d'annonces et de convocations",
+    "Propose un remplaçant disponible",
+    "Rappelle la vérification des antécédents et la règle de deux."
+   ],
+   "humanValidation": "JP embauche ; le coordonnateur confirme les remplacements.",
+   "access": "Lecture : fiches et disponibilités des coachs. Interdit : paie (lecture seule du statut).",
+   "metrics": "Séances sans coach évitées ; délai d'embauche."
+  },
+  {
+   "id": "A11",
+   "order": 11,
+   "name": "Agent tableau de bord direction",
+   "level": 6,
+   "prerequisites": [
+    "Courriel du lundi (AU02) en place"
+   ],
+   "tasks": [
+    "P8.7.08"
+   ],
+   "objective": "P8.7",
+   "role": "Chaque lundi, compile les rapports des autres agents et le Mandalart en une seule page pour JP.",
+   "triggers": [
+    "Chaque lundi, 6 h."
+   ],
+   "reads": [
+    "Mandalart (niveau, tâches en retard)",
+    "Indicateurs",
+    "Rapports des agents."
+   ],
+   "does": [
+    "Résumé d'une page : ce qui avance, ce qui bloque, les 5 priorités de la semaine."
+   ],
+   "humanValidation": "Aucune décision.",
+   "access": "Lecture seule.",
+   "metrics": "JP lit un seul résumé au lieu de onze rapports."
+  },
+  {
+   "id": "A12",
+   "order": 12,
+   "name": "Agent MonClubSportif",
+   "level": 2,
+   "prerequisites": [
+    "Liste « à faire dans MonClubSportif » (AU19)",
+    "Liste des tâches manuelles (P8.4.04)",
+    "Réponse de MonClubSportif sur l'API (P8.4.05)"
+   ],
+   "tasks": [
+    "P8.4.05",
+    "P8.4.07"
+   ],
+   "objective": "P8.4",
+   "role": "Tient MonClubSportif à jour tout seul, à partir des inscriptions, des paiements, des remboursements et du calendrier du site.",
+   "triggers": [
+    "Inscription payée",
+    "Remboursement ou annulation",
+    "Activité, match ou tournoi créé ou modifié",
+    "Chaque soir (vérification de concordance)."
+   ],
+   "reads": [
+    "Inscriptions payées et programmes",
+    "Remboursements (Stripe)",
+    "Calendrier des activités et des matchs",
+    "Liste « à faire dans MonClubSportif » (AU19)."
+   ],
+   "does": [
+    "Ajoute la joueuse et l'inscrit dans le bon programme",
+    "Active le compte et envoie l'invitation",
+    "Retire une joueuse remboursée partout",
+    "Crée les activités et les matchs",
+    "Signale tout écart entre le site et MonClubSportif."
+   ],
+   "humanValidation": "Aucune pour les cas simples une fois en mode autonome ; JP valide les retraits et les cas inhabituels.",
+   "access": "Lecture : inscriptions, paiements, calendrier. Écriture : MonClubSportif seulement (par API si elle existe, sinon navigateur automatisé avec un compte dédié dont JP garde le mot de passe). Interdit : paiements, données de santé.",
+   "metrics": "Écarts entre le site et MonClubSportif (cible 0) ; minutes de saisie sauvées par semaine.",
+   "addedOn": "2026-11-02"
+  }
+ ],
+ "automations": [
+  {
+   "id": "AU01",
+   "name": "Module Mandalart dans l'admin",
+   "type": "page",
+   "trigger": "JP ouvre /admin/mandalart",
+   "does": "Affiche les niveaux, les cases à cocher, les barres de progression et les indicateurs ; chaque changement de statut est journalisé.",
+   "forWho": "JP (admin)",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P8.8.01"
+   ],
+   "note": "Voir la section « Construire le module »."
+  },
+  {
+   "id": "AU02",
+   "name": "Courriel du lundi à JP",
+   "type": "cron",
+   "trigger": "Chaque lundi à 6 h (cron existant, 4 h quotidien, filtré sur le lundi ou nouveau cron)",
+   "does": "Envoie : niveau actuel et % des ⭐, tâches en retard, 5 prochaines priorités, indicateurs qui ont bougé.",
+   "forWho": "JP (Gmail SMTP existant)",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P8.8.02"
+   ],
+   "note": "Deviendra l'agent A11."
+  },
+  {
+   "id": "AU03",
+   "name": "Alerte de présence",
+   "type": "cron",
+   "trigger": "Chaque jour",
+   "does": "Si une joueuse passe de 2 à 1 séance par semaine, ou manque 2 séances de suite : crée une tâche « appeler la famille sous 48 h » pour le coordonnateur.",
+   "forWho": "Coordonnateur",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P4.7.01"
+   ],
+   "note": "Dépend de P8.4 (présences exportables)."
+  },
+  {
+   "id": "AU04",
+   "name": "Relance des paiements en retard",
+   "type": "cron",
+   "trigger": "Chaque jour",
+   "does": "Relance à 1, 7 et 14 jours ; à 30 jours, signale la joueuse au coordonnateur (pas de terrain sans entente).",
+   "forWho": "Parent, puis coordonnateur",
+   "state": "partiel",
+   "level": 2,
+   "tasks": [
+    "P2.7.03"
+   ],
+   "note": "Existe : versements automatiques Stripe (cron quotidien 4 h). À ajouter : relances et seuil de 30 jours."
+  },
+  {
+   "id": "AU05",
+   "name": "Source d'acquisition obligatoire",
+   "type": "formulaire",
+   "trigger": "Formulaires d'inscription et d'essai",
+   "does": "Champ obligatoire « Comment nous avez-vous connus ? » (parrainage + code, vidéo, Journée Valkyria, parascolaire, camp, liste chaude, club, pub, autre) + « Avez-vous une entreprise ? ».",
+   "forWho": "Tableau de bord marketing",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P3.8.01"
+   ],
+   "note": "Débloque A05 et A06."
+  },
+  {
+   "id": "AU06",
+   "name": "Évaluation des exercices et statut automatique",
+   "type": "evenement",
+   "trigger": "Rapport des 24 heures soumis par le coach",
+   "does": "Pour chaque exercice utilisé : note sur 10 (5 critères × 2 points) + commentaire ; recalcule le statut (voir la spécification de la banque).",
+   "forWho": "Coach-chef, JP",
+   "state": "partiel",
+   "level": 1,
+   "tasks": [
+    "P1.3.02",
+    "P1.3.07"
+   ],
+   "note": "Existe : portail entraîneur, exercices, outil d'évaluation sur le terrain. À ajouter : grille, statut calculé, recherche."
+  },
+  {
+   "id": "AU07",
+   "name": "Publication au parent et avis",
+   "type": "evenement",
+   "trigger": "JP ou le coach-chef publie un élément dans le profil de l'enfant",
+   "does": "Rend l'élément visible au parent de cette joueuse seulement et envoie un avis par courriel ou texto.",
+   "forWho": "Parent",
+   "state": "partiel",
+   "level": 2,
+   "tasks": [
+    "P1.7.07"
+   ],
+   "note": "Le plan des outils de coaching prévoit déjà « publication au parent sur décision de JP »."
+  },
+  {
+   "id": "AU08",
+   "name": "« Envoyer ma vidéo » (Valkyria Lab, phase 1)",
+   "type": "formulaire",
+   "trigger": "Le parent envoie la vidéo du défi maison",
+   "does": "Dépose la vidéo dans le dossier privé de la joueuse, la renomme (Prénom-Nom_geste_AAAA-MM-JJ_maison), ajoute une ligne à la feuille de suivi et avise le coach.",
+   "forWho": "Coach",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P1.7.02"
+   ],
+   "note": "Accès par lien de la famille ; aucune vidéo publique."
+  },
+  {
+   "id": "AU09",
+   "name": "Rappels réinscription et « Amène ton amie »",
+   "type": "cron",
+   "trigger": "7 jours avant chaque séance amie ; 4 semaines avant la fin de chaque saison",
+   "does": "Envoie l'invitation avec le lien personnel de parrainage ; ouvre la réinscription avec l'avantage fidèle.",
+   "forWho": "Parents",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P2.1.03",
+    "P3.1.02"
+   ],
+   "note": "Envoi fait par A01 quand il existera."
+  },
+  {
+   "id": "AU10",
+   "name": "Échéances des contrats",
+   "type": "cron",
+   "trigger": "Chaque lundi",
+   "does": "Alerte 90 jours avant l'échéance d'un contrat (terrains, assurances, logiciels, fournisseurs) et 60 jours avant la fin d'une commandite.",
+   "forWho": "JP",
+   "state": "à créer",
+   "level": 2,
+   "tasks": [
+    "P6.6.02",
+    "P7.6.03"
+   ],
+   "note": "Le module Contrats et Commandites existe ; ajouter la date d'échéance et le préavis."
+  },
+  {
+   "id": "AU11",
+   "name": "Calculateur de lancement (go/no-go)",
+   "type": "page",
+   "trigger": "Création ou modification d'un programme",
+   "does": "Calcule F, V, N, prix plancher, seuil de survie, seuil 50 %, scénario pessimiste ; affiche GO ou NO-GO. Deux semaines avant le début : alerte si préventes < seuil de survie.",
+   "forWho": "JP",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P7.2.02"
+   ],
+   "note": "Remplace la feuille Google prévue (Drive non connecté)."
+  },
+  {
+   "id": "AU12",
+   "name": "Anniversaires",
+   "type": "cron",
+   "trigger": "Chaque jour",
+   "does": "7 jours avant l'anniversaire d'une joueuse : tâche au coordonnateur (cadeau, « bonne fête » d'équipe filmé).",
+   "forWho": "Coordonnateur",
+   "state": "à créer",
+   "level": 2,
+   "tasks": [
+    "P4.4.02"
+   ],
+   "note": null
+  },
+  {
+   "id": "AU13",
+   "name": "Message hebdomadaire aux parents",
+   "type": "cron",
+   "trigger": "Chaque dimanche à 17 h",
+   "does": "Envoie le message de la semaine par groupe : thème, photo, défi maison, lien du Valkyria Lab.",
+   "forWho": "Parents",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P1.7.06",
+    "P4.5.01"
+   ],
+   "note": "JP ou le coordonnateur approuve le contenu le vendredi."
+  },
+  {
+   "id": "AU14",
+   "name": "Tableau de bord du lundi (finance et marketing)",
+   "type": "page",
+   "trigger": "Page de l'admin, mise à jour chaque lundi",
+   "does": "CA de la semaine, encaissements à venir, marge par programme, essais et inscriptions par canal, coût par inscription, réinscription, réserve.",
+   "forWho": "JP",
+   "state": "partiel",
+   "level": 2,
+   "tasks": [
+    "P3.8.03",
+    "P7.7.01"
+   ],
+   "note": "Le module Revenus existe ; ajouter les vues par canal et par programme."
+  },
+  {
+   "id": "AU15",
+   "name": "Rapport aux commanditaires",
+   "type": "page",
+   "trigger": "Fin automne, fin hiver, fin été",
+   "does": "Compile portée, utilisations du code promo, activations, photos ; produit le brouillon du rapport.",
+   "forWho": "JP",
+   "state": "à créer",
+   "level": 2,
+   "tasks": [
+    "P6.6.01"
+   ],
+   "note": "Deviendra le travail de A08 avec A06."
+  },
+  {
+   "id": "AU16",
+   "name": "Alerte de réponse aux parents",
+   "type": "cron",
+   "trigger": "Toutes les heures",
+   "does": "Toute question de parent sans réponse depuis 20 h déclenche une alerte au coordonnateur (promesse : réponse sous 24 h).",
+   "forWho": "Coordonnateur",
+   "state": "à créer",
+   "level": 2,
+   "tasks": [
+    "P4.5.02"
+   ],
+   "note": "Dépend de A01."
+  },
+  {
+   "id": "AU17",
+   "name": "Sondages aux familles",
+   "type": "page",
+   "trigger": "JP crée et envoie un sondage",
+   "does": "Lien personnel par famille, relances aux non-répondants, taux de réponse, note sur 10, classement par réponse, liste des familles intéressées par un projet ; une note sous 7 crée une tâche « appeler la famille ».",
+   "forWho": "JP, coordonnateur",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P4.8.05",
+    "P4.8.07",
+    "P4.8.08"
+   ],
+   "note": null,
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "AU18",
+   "name": "Rapprochement comptable de la semaine",
+   "type": "cron",
+   "trigger": "Chaque lundi",
+   "does": "Compare l'argent entré (Stripe, virements) aux inscriptions et l'argent sorti (paie, terrains, fournisseurs) au budget ; signale chaque écart à JP. Base de l'agent financier (A04).",
+   "forWho": "JP, CPA",
+   "state": "à créer",
+   "level": 2,
+   "tasks": [
+    "P7.7.04"
+   ],
+   "note": null,
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "AU19",
+   "name": "Liste « à faire dans MonClubSportif »",
+   "type": "page",
+   "trigger": "Inscription payée, remboursement, activité créée",
+   "does": "Liste dans l'admin de chaque action à faire dans MonClubSportif, cochée une fois faite ; devient la file de travail de l'agent A12.",
+   "forWho": "JP, puis A12",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P8.4.06"
+   ],
+   "note": null,
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "AU20",
+   "name": "Présences et heures des éducateurs",
+   "type": "evenement",
+   "trigger": "Fin de chaque activité",
+   "does": "L'éducateur confirme sa présence dans le portail ; heures × taux = paie ; relance à 24 h ; liste des présences manquantes avant chaque paie.",
+   "forWho": "Éducateurs, JP",
+   "state": "partiel",
+   "level": 1,
+   "tasks": [
+    "P8.3.04",
+    "P8.3.05"
+   ],
+   "note": null,
+   "addedOn": "2026-11-02"
+  }
+ ],
+ "additions": {
+  "title": "Ajouts de JP (2 nov. 2026)",
+  "rules": [
+   "Toute mise en vente, tout lancement ou tout événement a une tâche de préparation due 1 à 2 mois avant. Exemple : l'été 2027 se vend le 15 janvier, donc tout est prêt le 15 décembre.",
+   "L'écran « Ce mois-ci » montre aussi les ⭐ des 2 mois suivants qui doivent commencer maintenant.",
+   "Aucun projet n'est lancé sans sondage d'intérêt auprès des familles : la liste des familles intéressées sert au lancement et aux offres ciblées."
+  ],
+  "themes": [
+   {
+    "title": "Voix des familles : sondages et satisfaction",
+    "text": "On ne laisse rien au hasard : sondage de mi-saison, de fin de saison, après chaque bulletin, après chaque changement (« on a fait ça suite à vos réponses, comment vous trouvez ça ? ») et avant chaque nouveau projet (« seriez-vous intéressés par… ? »). On sait qui a répondu quoi, on rappelle les familles insatisfaites, on mesure le taux de satisfaction et on le met en valeur. Les familles contentes sont celles qui reviennent."
+   },
+   {
+    "title": "Valkyria Lab et innovations Valkyria",
+    "text": "Le Valkyria Lab commence cette saison et ne s'arrête plus : il s'améliore chaque mois. Les innovations (dossards bicolores, tapis de ball mastery, repères visuels, prise d'information) se commandent en échantillon, se testent en séance, puis se commandent en volume 2 mois avant d'en avoir besoin."
+   },
+   {
+    "title": "Préparations à l'avance",
+    "text": ""
+   },
+   {
+    "title": "Banque d'exercices Valkyria et évaluation des joueuses",
+    "text": "Le style de JP, écrit noir sur blanc. Chaque exercice est classé par type (ball mastery, analytique, jeu réduit à thème, forme jouée, physique, échauffement), passe la liste de vérification Valkyria (objectif, consignes, variantes, progression ; métriques pour le physique) et prévoit l'organisation selon le nombre de joueuses (5 à 7, 8 à 10, 11 à 16). Le gymnase sert surtout la technique et le ball mastery ; le synthétique, la tactique, le grand espace et la prise de décision ; les thèmes relient les deux et les acquis se vérifient en fin de bloc. Les éducateurs notent chaque exercice sur 10 : deux notes de 8 ou plus = exercice approuvé ; une note sous 8 = on change l'exercice (nouvelle version), on ne le remet pas la même semaine et on le réévalue. Ainsi, chaque saison repart d'une banque d'exercices prouvés. Les joueuses sont évaluées à chaque pratique, en moins de 2 minutes par fille (photo, ball mastery, prestation, attitude, une note d'au moins 30 caractères) : à la fin de la saison, on a un vrai portrait de chaque fille. Les documents de référence de JP (banques, création d'exercices, liste de vérification) servent de base."
+   },
+   {
+    "title": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques",
+    "text": "JP ne doit plus rien manipuler à la main. Une famille paie : la joueuse est dans MonClubSportif, dans le bon programme, son compte est activé et les courriels partent. Un remboursement : elle est retirée partout. Une activité ou un match est créé : il est aussi dans MonClubSportif. Les éducateurs confirment leur présence à chaque activité : les heures et la paie se calculent selon leur taux. L'agent financier vérifie chaque semaine que l'argent qui entre et l'argent qui sort concordent. Tout est relié : inscription, paiement, MonClubSportif, présences, paie, comptabilité."
+   },
+   {
+    "title": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses",
+    "text": "Chaque pratique est un laboratoire : rien n'est improvisé. Les matchs ont leur propre section (nous contre l'adversaire, score, résumé, vidéo, analyse, joueuses et temps de jeu) et leur bilan financier (coût, part de l'adversaire encaissée ou non). Les réseaux sociaux sont suivis publication par publication, organique et payant, pour savoir quel contenu amène des essais et des inscriptions. L'éducateur arrive et sait tout : thème, montage du terrain, matériel, qui fait quoi, points clés, variantes et progressions. Ses rapports sont complets ou ses heures ne comptent pas, et les copier-coller sont bloqués. À la fin de chaque pratique, chaque joueuse donne sa note de la pratique et sa fatigue : on suit le taux d'appréciation des joueuses."
+   }
+  ]
+ },
+ "decisions": [
+  "Répartition du 1,5 M$ de 2028 (décision de JP du 1er novembre 2026 : l'objectif est 1 500 000 $ sur l'année civile 2028). Proposition : Valkyria ≈ 1 000 000 $ (camps ≈ 370 000 $, académie ≈ 285 000 $, parascolaire ≈ 160 000 $, commandites ≈ 80 000 $, autres ≈ 105 000 $) + conseil 500 000 $. Le doc parlait avant de Valkyria 500 000 $ + conseil 500 000 $ = 1 M$. Tâche P7.8.01.",
+  "Cible de CA de 2027 : étape intermédiaire à fixer pour juger la trajectoire.",
+  "Solo Valkyria : le pilier 2 le présente comme un leurre à une place, mais les 5 places sont vendues à 1 455 $ et Privilège est complet. Tâche P2.4.01.",
+  "Cible de l'été 2027 : la feuille de route dit « jusqu'à 200 000 $ » ; le plan d'été prévoit 58 400 $ (prudent), 118 800 $ (ambitieux) et 300 000 $ de bénéfice au scénario maximal. L'indicateur benefice_ete_2027 vise 300 000 $ ; à confirmer.",
+  "Agent support coaching : placé au niveau 3, après la banque d'exercices, parce qu'il en dépend. Le document le classe 2e dans l'ordre des agents.",
+  "Cibles proposées non écrites dans le doc : seances_approuvees 80 %, cohortes_2017_2019 120 joueuses (40 par génération), recommandation 9 sur 10.",
+  "Regroupements pour tenir dans 8 cases : pilier 5 (Home Lab avec l'analyse vidéo ; tournoi, fêtes et ligue des mamans ensemble), pilier 7 (conformité, méthode de lancement et contrôle des dépenses deviennent des objectifs)."
+ ]
+}

@@ -17,9 +17,10 @@ Chaque ajout doit garder cette structure.
 | Section | Contenu |
 |---|---|
 | Aujourd'hui (`TODAY_HUB`) | Uniquement des **actions à faire** (`src/lib/admin-today.ts`, `getTodayActions`) |
+| Plan 1,5 M$ | Mandalart 2028 (`/admin/mandalart`) ; une section d'un pilier s'ajoute dans `mandalart-modules.ts` (skill `mandalart`) |
 | Familles & inscriptions | Saison en cours, essais, uniformes & boutique |
 | Programmes & horaires | Garçons & Sport-Études, calendrier & terrains, évaluations |
-| Communications | Messages aux familles, relances, références |
+| Communications | Messages aux familles, relances, références, Voix des familles (sondages) |
 | Finances | Revenus & paiements (admin seulement) |
 | Équipe & partenaires | Entraîneurs, contrats, commandites, vente de matchs |
 | Outils (replié) | Historique, audit, exports, saisons passées |

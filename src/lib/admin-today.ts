@@ -1,5 +1,8 @@
 import type { AdminRole } from "@/lib/admin-auth";
 import { unpaidStartedRegistrations } from "@/lib/academy-history";
+import { isOpen } from "@/lib/mandalart-core";
+import { getLiveTasks } from "@/lib/mandalart-repo";
+import { getFamiliesToCall } from "@/lib/surveys-repo";
 import { getOutreachSummary, type OutreachPerson } from "@/lib/outreach";
 import { DISTRIBUTION_STATUS_LABELS, PROBLEM_TYPE_LABELS, type DistributionStatus, type ProblemType } from "@/lib/shop-repo";
 import { getStripeClient } from "@/lib/stripe";
@@ -306,6 +309,49 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         href: "/admin/contrats",
         hrefLabel: "Contrats",
         items: contracts.map((k: any) => ({ title: k.employee_name, detail: k.title, meta: `Envoyé le ${shortDay(k.created_at)}` }))
+      })
+    );
+  }
+
+  // ── Mandalart : tâches en retard et ⭐ dues dans les 7 prochains jours ──
+  if (isAdmin) {
+    const tasks = await getLiveTasks(today).catch(() => []);
+    const overdue = tasks.filter((t) => t.overdue).sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""));
+    const soon = tasks.filter((t) => isOpen(t) && !t.overdue && t.priority === "star" && t.due && t.due <= inAWeek).sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""));
+    const items = [...overdue, ...soon];
+    sections.push(
+      section({
+        key: "mandalart",
+        title: "Plan 1,5 M$ : tâches à faire",
+        level: overdue.length ? "rouge" : soon.length ? "orange" : "info",
+        emptyText: "Aucune tâche du plan en retard ni due cette semaine.",
+        href: "/admin/mandalart",
+        hrefLabel: "Ce mois-ci",
+        items: items.map((t) => ({
+          title: `${t.priority === "star" ? "⭐ " : ""}${t.title}`,
+          detail: `${t.code} · ${t.objectiveName}${t.owner ? ` · ${t.owner}` : ""}`,
+          meta: t.overdue ? `En retard (${shortDay(`${t.due}T12:00:00`)})` : `Pour le ${shortDay(`${t.due}T12:00:00`)}`,
+          href: `/admin/mandalart/piliers/${t.pillar.toLowerCase()}#${t.objective}`
+        }))
+      })
+    );
+
+    // ── Sondages : familles à rappeler (note sous 7 ou demande d'appel) ──
+    const toCall = await getFamiliesToCall().catch(() => []);
+    sections.push(
+      section({
+        key: "sondages",
+        title: "Familles à rappeler (sondages)",
+        level: toCall.length ? "rouge" : "info",
+        emptyText: "Aucune famille à rappeler suite aux sondages.",
+        href: "/admin/sondages",
+        hrefLabel: "Voix des familles",
+        items: toCall.map((c) => ({
+          title: c.parentName ?? "Famille",
+          detail: `${c.playerNames ?? ""}${c.score !== null ? ` · note ${c.score}/10` : " · a demandé un appel"} · ${c.surveyTitle}`,
+          meta: `Répondu ${shortDay(c.at)}`,
+          href: `/admin/sondages/${c.surveyId}#r-${c.responseId}`
+        }))
       })
     );
   }
