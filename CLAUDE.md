@@ -1,0 +1,92 @@
+# New Valkyria : carte du projet
+
+Site de l'académie de soccer New Valkyria (newvalkyria.com), dirigée par JP (Jean-Paul Aka Boidi).
+JP écrit en français québécois familier, souvent par dictée vocale : comprendre l'intention, répondre en français.
+
+**Règle d'or : ne jamais recréer ce qui existe.** Avant d'ajouter une table, une page, une route ou un module,
+chercher dans `src/lib/*` et `src/app/(admin)` un module qui fait déjà presque la même chose et l'étendre
+(une colonne, un `checkoutType`, un onglet). Une nouvelle table ou page ne se crée que si rien d'existant ne convient.
+
+## Architecture
+
+- **Next.js 16 App Router** + TypeScript + Tailwind, tests Vitest. Node est dans `~/.local/node` : toujours
+  `export PATH="$HOME/.local/node/bin:$PATH"`. `npx tsc --noEmit` avant chaque commit.
+- **Groupes de routes** (`src/app/`) :
+  - `(main)` : site public filles (accueil, `/inscription`, `/programmes/[slug]`, `/sport-etudes`, `/boutique`, `/compte`, `/location-terrains`).
+  - `(prive)` : pages non répertoriées : `/prive/[slug]` (programmes garçons privés), `/prive/matchs` (vente de matchs à d'autres clubs), `/partenariat/[token]` (offre de partenariat).
+  - `(contrat)` : pages blanches à lien personnel : `/contrat/[token]` (contrat d'embauche), `/offre/[token]` (offre spéciale).
+  - `(admin)` : `/admin/*` (une section par module, menu dans `src/components/admin-topbar.tsx`).
+  - `(coach)` : `/entraineur/*` (portail entraîneurs). Aussi `(atlantic)` (`/programme/[slug]`, pages FC Atlantic) et `(gate)` (`/qualification`).
+- **Supabase** : côté serveur, toujours `getSupabaseAdminClient()` (`src/lib/supabase-admin.ts`, service role ; pas de types
+  générés, d'où les `as any`). Accès direct à la base pour vérifier ou corriger : node + `pg` + `SUPABASE_DB_URL` de `.env.local`.
+- **Stripe** : `getStripeClient()` (`src/lib/stripe.ts`) utilise `STRIPE_SECRET_KEY`. En local c'est une clé **test** ;
+  en production (Vercel) c'est la clé live. Pour toute opération réelle depuis cette machine (liens de paiement envoyés
+  à des familles, remboursements, solde, versements), utiliser `STRIPE_LIVE_SYNC_KEY` (clé restreinte live). Voir le skill `paiement`.
+- **Courriels** : toujours `getResendClient().emails.send({...})` (`src/lib/resend.ts`). Malgré le nom, l'envoi passe par
+  Gmail SMTP **info@newvalkyria.com** (réglage dans `email_settings`, `src/lib/mail-config.ts`), sinon Resend.
+  La signature d'Annie Tremblay (responsable administratif) est **ajoutée automatiquement** : ne jamais en écrire une.
+  `headers: { "In-Reply-To": msgid, References: msgid }` + sujet `Re: …` pour répondre dans le fil d'un courriel reçu.
+  Gabarits des courriels automatiques (confirmations, avis à JP) : `src/lib/email.ts`.
+
+## Carte des modules
+
+| Domaine | Code | Tables principales | Admin |
+|---|---|---|---|
+| Saison filles (TV, SV, NV, TVA, SVA, TVD = Demi-saison) | `season-2027.ts` (programmes, prix, plages : **statiques**), `season-2027-db-map.ts` (`SEASON_DB_ID`, `SLOT_DB_ID`), `season-admin-repo.ts`, `payment-plan.ts` | `seasons`, `programs`, `birth_categories`, `time_slot_templates` (`max_places`), `registrations`, `registration_payment_plans` | `/admin/saison/[seasonId]`, `/admin/inscriptions`, `/admin/capacite` |
+| Programmes à dates fixes + garçons privés | `session-programs-repo.ts`, `private-programs.ts` (prix pur), `private-programs-repo.ts`, `-admin.ts`, `-lifecycle.ts`, `private-program-view.ts` | `session_programs` (`is_private`, `published`, `program_kind`), `session_program_dates`, `session_program_registrations`, `session_program_payment_plans` | `/admin/garcons-prives`, `/admin/programme`, `/admin/programme-intensif`, `/admin/inscriptions-garcons` |
+| Sport-Études | `sport-etudes-repo.ts` | `sport_etudes_*` | `/admin/sport-etudes` |
+| Essais garçons | `boys-trials-repo.ts`, `boys-registrations.ts` (vue unifiée garçons) | `boys_trials` | `/admin/essais`, `/admin/inscriptions-garcons` |
+| Offres spéciales (lien personnel avec expiration, bonus produit) | `special-offers.ts`, page `/offre/[token]`, route `api/offre/[token]` | `special_offers` (`registrations` jsonb, `expires_at`, `bonus`, `bonus_product_id`) | (via skill `relance`) |
+| Relances et suivi | `outreach.ts` (`logOutreach`, `getOutreachSummary`) | `outreach_log` (kind : relance, reponse, excuse, erreur, refus, plus-tard) | `/admin/relances` |
+| Contrats d'embauche | `employee-contracts.ts`, page `/contrat/[token]` | `employee_contracts` (+ stockage privé) | `/admin/contrats` |
+| Vente de matchs (plages) | `match-slots-core.ts` (règles pures), `match-slots-repo.ts` | `match_slots`, `match_slot_bookings`, `match_team_profiles`, `match_slot_requests` | `/admin/plages`, `/admin/matchs` |
+| Commandites 2027 / partenariats | `sponsorship-2027.ts`, `partnership-offers.ts`, `sponsors-repo.ts` | `sponsor_slots_2027`, `sponsors`, `sponsor_payments`, `partnership_offers`, `partnership_offer_options` | `/admin/sponsors-2027`, `/admin/commandites` |
+| Historique et marges | `academy-history.ts` (récit à la main, chiffres recalculés) | `venue_rentals` (contrats de gymnases/terrains) | `/admin/historique` |
+| Boutique / uniformes | `shop-repo.ts`, `uniform-kits-repo.ts` | `products`, `shop_orders`, `registration_uniform_kits` | `/admin/boutique`, `/admin/uniformes` |
+| Location de terrains | `terrain-rentals-core.ts`, `terrain-rentals-repo.ts` | `terrains`, `terrain_rentals` | `/admin/location-terrains` |
+| Revenus, paie entraîneurs, audit | `revenue-repo.ts`, `coach-payroll.ts`, `audit-repo.ts` (`logAudit`) | `revenue_*`, `coach_*`, `audit_log` | `/admin/revenus`, `/admin/entraineurs`, `/admin/audit` |
+
+### Types de paiement Stripe (`metadata.checkoutType`)
+
+Tout paiement passe par `src/app/api/stripe/webhook/route.ts`, qui aiguille selon `metadata.checkoutType` :
+`season-registration` (saison filles, aussi liens directs admin `isDirectLink`), `trial-conversion` (essai → inscription,
+`registrationId` + `programId`/`timeSlotTemplateId` facultatifs), `special-offer` (`offerToken`), `season-completion`
+(demi-saison → saison complète, `registrationId`), `installment-retry` (versement échoué), `sportetudes`, `sessionprogram`
+(programmes à dates fixes et privés), `match-slot`, `terrain-rental`, `shop-order`, `sponsorship`, `partnership-offer`.
+Un nouveau type de paiement = un nouveau `checkoutType` traité dans ce webhook, jamais un deuxième webhook.
+Le webhook gère aussi `checkout.session.expired` (libère les réservations) et `charge.refunded` (programmes privés seulement).
+
+## Conventions
+
+- **Migrations** : `supabase/migrations/AAAAMMJJ_nom.sql` (date du jour, `if not exists`, RLS + politique `service_role`
+  comme les autres). Les exécuter soi-même avec node + `pg` + `SUPABASE_DB_URL` (`ssl: { rejectUnauthorized: false }`).
+- **Lire `.env.local`** dans un script : `for (const l of fs.readFileSync(".env.local","utf8").split("\n")) { const m = l.match(/^([A-Z0-9_]+)=(.*)$/); if (m) env[m[1]] = m[2].replace(/^"|"$/g, ""); }`. Ne jamais afficher une clé.
+- **Envois et opérations ponctuels** (courriels, création d'offres) : test vitest temporaire `src/lib/tmp-*.test.ts`
+  (`// @vitest-environment node`, charge `.env.local` dans `process.env`, `await import("@/lib/…")`), lancé avec
+  `npx vitest run src/lib/tmp-x.test.ts`, puis **supprimé** (`rm`) dans la même commande. Jamais commité.
+- **Commits** : `git -c user.name="Jean-paul Aka" -c user.email="jean-paulaka@mac.home" commit …` (aucune identité git configurée).
+  Messages en français, une phrase qui décrit le résultat pour JP.
+- **Déploiement** = push sur `main` (Vercel déploie). `git push` ordinaire échoue : utiliser le `GITHUB_TOKEN` de `.env.local`,
+  sans jamais l'afficher et **sans jamais demander à JP de se connecter à GitHub** :
+  `T=$(grep '^GITHUB_TOKEN=' .env.local | cut -d= -f2- | tr -d '"'); git push "https://$T@github.com/FabriceAkaB/newvalkyria.git" main 2>&1 | sed "s/$T/***/g" | tail -3`
+  (réseau : Bash sans sandbox).
+- **Serveur de dev** : `nohup node node_modules/next/dist/bin/next dev > /tmp/nv-dev.log 2>&1 &` (le preview intégré casse Turbopack).
+  Si une route répond succès sans effet en base après une édition de `src/lib`, redémarrer le serveur (cache HMR obsolète).
+- Liens dans les courriels : toujours `https://www.newvalkyria.com/…` (`env.publicSiteUrl`), jamais localhost.
+
+## Règles métier
+
+- **Avant toute relance ou offre** à une famille « non inscrite » : vérifier la joueuse par **NOM** (accents, majuscules,
+  espaces ignorés ; prénoms composés) **et** par **courriel parent** dans toutes les inscriptions payées : `registrations`,
+  `session_program_registrations`, `sport_etudes_registrations`, `special_offers` payées. L'autre parent a pu l'inscrire
+  avec un autre courriel. Montrer la liste finale des destinataires à JP **avant** un envoi de masse. Skill `relance`.
+- **Noter chaque relance, offre, réponse ou excuse** envoyée à une famille dans `outreach_log` (`logOutreach`), une ligne par joueuse.
+- **Christine Durand** (gérante, `Christinedurand.2@hotmail.com`) en copie (`cc`) des courriels aux partenaires
+  et des annonces aux familles. Skill `courriel-familles`.
+- Jamais de surréservation : une offre ou un lien de paiement vers un groupe complet est bloqué (`fullGroupsForOffer`, `time_slot_templates.max_places`).
+- Un nouveau programme ou une nouvelle saison se crée d'abord **en base et par l'admin**, pas en codant une nouvelle page. Skill `nouveau-programme`.
+- Argent réel (remboursement, lien live, prélèvement) : dire à JP exactement ce qui sera fait (qui, combien) avant de le faire. Skill `paiement`.
+
+## Skills du projet (`.claude/skills/`)
+
+`relance` · `courriel-familles` · `nouveau-programme` · `paiement`
