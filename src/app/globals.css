@@ -11245,3 +11245,22 @@ img { max-width: 100%; height: auto; }
 .cm-gesture-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 44px; background: none; border: none; padding: 0; color: var(--adm-text); font: inherit; text-align: left; cursor: pointer; }
 .cm-gesture-head strong { display: block; }
 .cm-meta { display: block; font-size: 0.78rem; color: var(--adm-text-3); margin: 0; }
+
+/* ── Espace coaching : plan de l'année (une ligne par semaine) ── */
+.sp-weeks { list-style: none; margin: 0; padding: 0 12px 12px; display: grid; gap: 6px; }
+.sp-week { background: var(--adm-surface-2); border-radius: var(--adm-radius-sm); padding: 10px 12px; }
+.sp-week[data-closed="true"] { display: flex; justify-content: space-between; gap: 8px; opacity: 0.55; }
+.sp-week[data-current="true"] { box-shadow: inset 3px 0 0 var(--adm-accent); }
+.sp-head { display: grid; gap: 4px; width: 100%; min-height: 44px; background: none; border: none; padding: 0; color: var(--adm-text); font: inherit; text-align: left; cursor: pointer; }
+.sp-date { font-size: 0.78rem; font-weight: 600; color: var(--adm-text-3); }
+.sp-theme { font-size: 0.95rem; color: var(--adm-text); }
+.sp-block { display: block; font-size: 0.75rem; font-weight: 600; color: var(--adm-accent); }
+.sp-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 0.78rem; color: var(--adm-text-3); }
+.sp-form { display: grid; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--adm-line); }
+.sp-form .admin-input { width: 100%; min-width: 0; box-sizing: border-box; }
+.sp-check { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 0.88rem; color: var(--adm-text-2); }
+.sp-check input { width: 20px; height: 20px; }
+.sp-cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+@media (min-width: 900px) {
+  .sp-head { grid-template-columns: 150px minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+}

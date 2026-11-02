@@ -76,10 +76,14 @@ export const PILLAR_MODULES: PillarModule[] = [
     title: "Planification annuelle (périodisation)",
     question: "Quel thème travaille-t-on chaque semaine, pour chaque catégorie, sur toute l'année ?",
     status: "partiel",
-    href: "/admin/themes",
+    href: "/admin/coaching/plan",
     objectives: ["P1.1", "P1.3"],
-    planned: ["Thème de la semaine (existe : Équipe → Thèmes)", "Plan annuel par catégorie : blocs de 4 à 6 semaines, tests, matchs, événements", "Lien avec la banque d'exercices pour bâtir chaque séance"],
-    next: "Entrer les thèmes de novembre et décembre dans Thèmes."
+    planned: [
+      "En place : plan de l'année semaine par semaine (Coaching → Pratiques → Plan de l'année) : thème, thème propre à une catégorie, bloc de 4 à 6 semaines, semaine du test du mois, pratiques prêtes et matchs de la semaine, semaines fermées",
+      "En place : alertes « bloc hors de 4 à 6 semaines » et « mois sans semaine de tests » ; le thème de la catégorie arrive dans le briefing et la pratique du jour des éducateurs",
+      "À venir : lien lieu et thème (gymnase = technique et ball mastery, synthétique = tactique, P1.3.17) et proposition d'exercices de la banque selon le thème"
+    ],
+    next: "Écrire les thèmes et les blocs de novembre à avril dans le Plan de l'année, avec une semaine de tests par mois."
   },
   {
     slug: "exercices",

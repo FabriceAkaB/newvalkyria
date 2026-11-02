@@ -1,9 +1,9 @@
 import { CoachDashboard, type DashboardActivity, type ToComplete } from "@/components/coach-dashboard";
 import { requireCoach } from "@/lib/coach-auth";
-import { getActivityReports, getCoachActivities, loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
+import { cleanCategory, getActivityReports, getCoachActivities, loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
 import { hasStarted, REPORT_RULE_START } from "@/lib/coach-report";
 import { getCoach } from "@/lib/coaches-repo";
-import { getSeasonThemes, mondayOfWeek } from "@/lib/season-themes-repo";
+import { getSeasonThemes, mondayOfWeek, themeFor } from "@/lib/season-themes-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -20,7 +20,7 @@ export default async function CoachDashboardPage() {
   const { data: blocks } = ids.length
     ? await (getSupabaseAdminClient() as any).from("activity_session_blocks").select("activity_id, duration_minutes").in("activity_id", ids)
     : { data: [] };
-  const themeOf = (date: string) => themes.find((t) => String(t.week_start_date).slice(0, 10) === mondayOfWeek(new Date(`${date}T12:00:00`)))?.theme ?? null;
+  const themeOf = (date: string, category: string | null) => themeFor(themes.find((t) => String(t.week_start_date).slice(0, 10) === mondayOfWeek(new Date(`${date}T12:00:00`))), cleanCategory(category));
 
   const view: DashboardActivity[] = activities.map((a) => {
     const date = String(a.activity.activity_date).slice(0, 10);
@@ -40,7 +40,7 @@ export default async function CoachDashboardPage() {
       trialCount: roster.filter((p) => p.isTrial).length,
       blocks: own.length,
       minutes: own.reduce((s, b) => s + (b.duration_minutes ?? 0), 0),
-      theme: themeOf(date)
+      theme: themeOf(date, a.activity.category)
     };
   });
 

@@ -2,13 +2,13 @@ import { notFound } from "next/navigation";
 
 import { CoachActiviteDetail } from "@/components/coach-activite-detail";
 import { requireCoach } from "@/lib/coach-auth";
-import { getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityById } from "@/lib/coach-portal-repo";
+import { cleanCategory, getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityById } from "@/lib/coach-portal-repo";
 import { defaultStepFor } from "@/lib/coach-report";
 import { getCoach } from "@/lib/coaches-repo";
 import { getExercisesForPlanning } from "@/lib/exercises-repo";
 import { getConvocations, getLineup, getMatchDetails, getMatchEvaluations, getMatchRoster, getPlaytimeSegments } from "@/lib/match-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
-import { getThemeForDate } from "@/lib/season-themes-repo";
+import { getThemeForDate, themeFor } from "@/lib/season-themes-repo";
 import { getBlocksForActivity } from "@/lib/session-plan-repo";
 
 export const metadata = { title: "Activité — Espace Technique" };
@@ -72,7 +72,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       myPresence={myPresence}
       defaultStep={defaultStep}
       briefing={briefing}
-      theme={theme ? { theme: theme.theme, notes: theme.notes } : null}
+      theme={theme ? { theme: themeFor(theme, cleanCategory(entry.activity.category)) ?? theme.theme, notes: theme.notes } : null}
       sessionBlocks={blocks}
       initialExercises={exercises}
       matchRoster={matchRoster}

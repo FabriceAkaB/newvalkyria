@@ -19,7 +19,7 @@ const daysBetween = (a: string, b: string) => Math.round((Date.parse(`${b}T12:00
 const DAY_INDEX: Record<string, number> = { Dimanche: 0, Lundi: 1, Mardi: 2, Mercredi: 3, Jeudi: 4, Vendredi: 5, Samedi: 6 };
 
 /** Pas de séances de la saison filles pendant les Fêtes ; fin de saison le 18 avril 2027. */
-const SEASON = { start: "2026-09-01", end: "2027-04-18", breaks: [["2026-12-20", "2027-01-02"]] as [string, string][] };
+export const SEASON = { start: "2026-09-01", end: "2027-04-18", breaks: [["2026-12-20", "2027-01-02"]] as [string, string][] };
 const inBreak = (d: string) => d < SEASON.start || d > SEASON.end || SEASON.breaks.some(([a, b]) => d >= a && d <= b);
 
 export type Readiness = "prete" | "rouge" | "jaune" | "vert" | "plus-tard" | "passee";

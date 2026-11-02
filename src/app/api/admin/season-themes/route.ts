@@ -16,13 +16,29 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
 
-  const body = (await request.json().catch(() => null)) as { seasonId?: string; weekStartDate?: string; theme?: string; notes?: string | null } | null;
+  const body = (await request.json().catch(() => null)) as {
+    seasonId?: string;
+    weekStartDate?: string;
+    theme?: string;
+    notes?: string | null;
+    blockLabel?: string | null;
+    testWeek?: boolean;
+    byCategory?: Record<string, string>;
+  } | null;
   if (!body?.seasonId || !body.weekStartDate || !body.theme?.trim()) {
     return jsonError("Saison, semaine et thème requis", 400);
   }
 
   try {
-    await setSeasonTheme({ seasonId: body.seasonId, weekStartDate: body.weekStartDate, theme: body.theme.trim(), notes: body.notes?.trim() || null });
+    await setSeasonTheme({
+      seasonId: body.seasonId,
+      weekStartDate: body.weekStartDate,
+      theme: body.theme.trim(),
+      notes: body.notes?.trim() || null,
+      blockLabel: body.blockLabel,
+      testWeek: typeof body.testWeek === "boolean" ? body.testWeek : undefined,
+      byCategory: body.byCategory && typeof body.byCategory === "object" ? body.byCategory : undefined
+    });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     if (error instanceof Error) return jsonError(error.message, 422);
