@@ -24,7 +24,7 @@ export default async function ParentBulletinPage({ params }: { params: Promise<{
   const owns = registration.player_id && children.some((c) => c.player_id === registration.player_id);
   if (!owns) notFound();
 
-  const [data, season] = await Promise.all([getBulletinData(registrationId), getSeason(registration.season_id)]);
+  const [data, season] = await Promise.all([getBulletinData(registrationId, "parent"), getSeason(registration.season_id)]);
   if (!data) notFound();
 
   return (

@@ -1,4 +1,6 @@
 import type { AdminRole } from "@/lib/admin-auth";
+import { getPayrollRows, holdDetail, missingBeforePayroll } from "@/lib/coach-payroll-data";
+import { activityEndMs } from "@/lib/coach-report";
 import { STATUS_LABEL, fmtScore } from "@/lib/exercise-bank";
 import { getBank } from "@/lib/exercises-repo";
 import { isOpen } from "@/lib/mandalart-core";
@@ -282,6 +284,28 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         href: "/admin/contrats",
         hrefLabel: "Contrats",
         items: contracts.map((k: any) => ({ title: k.employee_name, detail: k.title, meta: `Envoyé le ${shortDay(k.created_at)}` }))
+      })
+    );
+  }
+
+  // ── Présences et rapports des éducateurs à compléter avant la paie (P8.3.05, AU20) — données RH : admin ──
+  if (isAdmin) {
+    const missing = missingBeforePayroll(await getPayrollRows().catch(() => []), now);
+    const late = missing.filter((r) => activityEndMs(String(r.activityDate).slice(0, 10), r.activityEnd) + DAY_MS <= now);
+    sections.push(
+      section({
+        key: "presences-educateurs",
+        title: "Présences des éducateurs",
+        level: late.length ? "orange" : "info",
+        emptyText: "Chaque éducateur a confirmé sa présence et rempli ses rapports.",
+        href: "/admin/entraineurs/paie",
+        hrefLabel: "Paie",
+        items: missing.map((r) => ({
+          title: `${r.coachName} · ${shortDay(`${String(r.activityDate).slice(0, 10)}T12:00:00`)} ${r.activityStart}`,
+          detail: `${holdDetail(r)} · ${r.activityLabel}`,
+          meta: r.reminderSentAt ? `Relancé ${shortDay(r.reminderSentAt)}` : r.coachHasEmail ? "Relance à 24 h" : "Pas de courriel : appeler",
+          href: `/admin/entraineurs/activites/${r.activityId}`
+        }))
       })
     );
   }

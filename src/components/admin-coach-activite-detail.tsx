@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { AdminActivityReport } from "@/components/admin-activity-report";
+import { AdminBlockGuide } from "@/components/admin-block-guide";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { EntityDocuments } from "@/components/admin-entity-documents";
 import { MatchPanel } from "@/components/match-panel";
@@ -79,7 +81,8 @@ function SessionPlanEditor({ activityId, initialBlocks, exercises }: { activityI
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.75rem" }}>
         {blocks.map((b, i) => (
-          <div key={b.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.5rem 0.8rem" }}>
+          <div key={b.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.5rem 0.8rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", flex: 1 }}>
               {i + 1}. <span style={{ color: "var(--adm-accent)" }}>{b.block_type}</span>
               {(b.custom_title || exercises.find((e) => e.id === b.exercise_id)?.title) && ` — ${b.custom_title || exercises.find((e) => e.id === b.exercise_id)?.title}`}
@@ -88,6 +91,10 @@ function SessionPlanEditor({ activityId, initialBlocks, exercises }: { activityI
             <button onClick={() => move(b.id, "up")} disabled={i === 0} className="admin-btn-ghost" style={{ padding: "0.2rem 0.5rem", fontSize: "0.7rem" }}>↑</button>
             <button onClick={() => move(b.id, "down")} disabled={i === blocks.length - 1} className="admin-btn-ghost" style={{ padding: "0.2rem 0.5rem", fontSize: "0.7rem" }}>↓</button>
             <button onClick={() => remove(b.id)} style={{ fontSize: "0.7rem", color: "var(--adm-bad)", background: "none", border: "1px solid var(--adm-bad-soft)", borderRadius: "6px", padding: "0.2rem 0.5rem", cursor: "pointer" }}>×</button>
+          </div>
+          <div style={{ marginTop: "0.4rem" }}>
+            <AdminBlockGuide activityId={activityId} block={b} exercise={exercises.find((e) => e.id === b.exercise_id) as unknown as Record<string, unknown> | undefined} />
+          </div>
           </div>
         ))}
         {blocks.length === 0 && <p className="admin-empty-text">Aucun bloc de séance planifié.</p>}
@@ -480,6 +487,8 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
           )}
 
           <SessionPlanEditor activityId={activity.id} initialBlocks={initialBlocks} exercises={exercises} />
+
+          <AdminActivityReport activityId={activity.id} />
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Entraîneurs assignés ({assignments.length})</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1.5rem" }}>

@@ -17,6 +17,36 @@ export interface SessionBlock {
   custom_title: string | null;
   duration_minutes: number;
   notes: string | null;
+  /** Pratique du jour (P1.4.08) : ce que l'éducateur doit savoir en arrivant, pour ce bloc précis.
+   *  Vide = on affiche ce que dit la fiche de l'exercice lié. */
+  setup?: string | null;
+  material?: string | null;
+  roles?: string | null;
+  key_points?: string | null;
+  variants?: string | null;
+  progressions?: string | null;
+}
+
+/** Champs « pratique du jour » d'un bloc, dans l'ordre d'affichage, avec leur libellé. */
+export const BLOCK_GUIDE_FIELDS = [
+  { key: "setup", label: "Montage du terrain" },
+  { key: "material", label: "Matériel" },
+  { key: "roles", label: "Qui fait quoi" },
+  { key: "key_points", label: "Points clés" },
+  { key: "variants", label: "Variantes" },
+  { key: "progressions", label: "Progressions" }
+] as const;
+export type BlockGuideKey = (typeof BLOCK_GUIDE_FIELDS)[number]["key"];
+
+/** Lit les champs « pratique du jour » envoyés par un formulaire (texte, vide = null). */
+export function parseBlockGuide(body: Record<string, unknown> | null | undefined): Partial<Record<BlockGuideKey, string | null>> {
+  const out: Partial<Record<BlockGuideKey, string | null>> = {};
+  for (const f of BLOCK_GUIDE_FIELDS) {
+    const v = body?.[f.key];
+    if (v === undefined) continue;
+    out[f.key] = typeof v === "string" && v.trim() ? v.trim().slice(0, 2000) : null;
+  }
+  return out;
 }
 
 export async function getBlocksForActivity(activityId: string): Promise<SessionBlock[]> {
@@ -59,14 +89,18 @@ export async function addBlock(activityId: string, input: {
   return data.id as string;
 }
 
-export async function updateBlock(id: string, patch: Partial<{ blockType: string; exerciseId: string | null; customTitle: string | null; durationMinutes: number; notes: string | null; blockOrder: number }>): Promise<void> {
-  const columnPatch: Record<string, unknown> = {};
+export async function updateBlock(
+  id: string,
+  patch: Partial<{ blockType: string; exerciseId: string | null; customTitle: string | null; durationMinutes: number; notes: string | null; blockOrder: number; guide: Partial<Record<BlockGuideKey, string | null>> }>
+): Promise<void> {
+  const columnPatch: Record<string, unknown> = { ...(patch.guide ?? {}) };
   if (patch.blockType !== undefined) columnPatch.block_type = patch.blockType;
   if (patch.exerciseId !== undefined) columnPatch.exercise_id = patch.exerciseId;
   if (patch.customTitle !== undefined) columnPatch.custom_title = patch.customTitle;
   if (patch.durationMinutes !== undefined) columnPatch.duration_minutes = patch.durationMinutes;
   if (patch.notes !== undefined) columnPatch.notes = patch.notes;
   if (patch.blockOrder !== undefined) columnPatch.block_order = patch.blockOrder;
+  if (Object.keys(columnPatch).length === 0) return;
 
   const { error } = await db().from("activity_session_blocks").update(columnPatch).eq("id", id);
   if (error) throw new Error(error.message);

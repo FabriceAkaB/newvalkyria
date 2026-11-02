@@ -344,8 +344,8 @@
    "start": "à mesurer",
    "target": "9/10",
    "due": "2027-03-31",
-   "source": "manuel",
-   "how": "Moyenne des notes données par les joueuses à la fin des pratiques (routine de fin). Plus tard, saisie dans le portail entraîneur.",
+   "source": "auto",
+   "how": "Moyenne des notes données par les joueuses à la fin des pratiques (routine de fin), saisies par l'éducateur dans le portail entraîneur ; suivie chaque semaine.",
    "addedOn": "2026-11-02"
   },
   {
@@ -5555,7 +5555,7 @@
    "trigger": "Fin de chaque activité",
    "does": "L'éducateur confirme sa présence dans le portail ; heures × taux = paie ; relance à 24 h ; liste des présences manquantes avant chaque paie.",
    "forWho": "Éducateurs, JP",
-   "state": "partiel",
+   "state": "actif",
    "level": 1,
    "tasks": [
     "P8.3.04",

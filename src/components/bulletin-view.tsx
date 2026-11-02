@@ -5,7 +5,7 @@ const ATTENDANCE_LABELS: Record<string, string> = {
 };
 
 export function BulletinView({ data, seasonLabel }: { data: BulletinData; seasonLabel?: string }) {
-  const { player, attendanceCounts, totalActivities, criteriaAverages, evaluations, objectives } = data;
+  const { player, attendanceCounts, totalActivities, criteriaAverages, evaluations, objectives, trends, feedback, showNotes } = data;
   const activeObjectives = objectives.filter((o) => o.active);
   const presentCount = attendanceCounts.present;
   const attendanceRate = totalActivities > 0 ? Math.round((presentCount / totalActivities) * 100) : null;
@@ -61,6 +61,37 @@ export function BulletinView({ data, seasonLabel }: { data: BulletinData; season
         </div>
       )}
 
+      {(trends.length > 0 || feedback.count > 0) && (
+        <>
+          <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>Évolution de la saison</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", marginBottom: "1.5rem" }}>
+            {trends.map((t) => (
+              <div key={t.criterion} style={{ background: "var(--adm-surface, #17151e)", borderRadius: "10px", padding: "0.7rem 1rem" }}>
+                <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #9d9da0)", margin: "0 0 0.2rem" }}>{t.criterion}</p>
+                <p style={{ fontSize: "1.05rem", fontWeight: 600, color: "var(--adm-text, #fff)", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                  {t.start} → {t.recent}
+                  <span style={{ fontSize: "0.75rem", marginLeft: "0.4rem", color: (t.recent ?? 0) >= (t.start ?? 0) ? "var(--adm-good, #7fd88f)" : "var(--adm-warn, #f2c14e)" }}>
+                    {(t.recent ?? 0) >= (t.start ?? 0) ? "▲" : "▼"}
+                  </span>
+                </p>
+                <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3, #9d9da0)", margin: "0.15rem 0 0" }}>Début de saison → dernières pratiques, sur 5</p>
+              </div>
+            ))}
+            {feedback.count > 0 && (
+              <div style={{ background: "var(--adm-surface, #17151e)", borderRadius: "10px", padding: "0.7rem 1rem" }}>
+                <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #9d9da0)", margin: "0 0 0.2rem" }}>Sa note des pratiques</p>
+                <p style={{ fontSize: "1.05rem", fontWeight: 600, color: "var(--adm-text, #fff)", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                  {feedback.rating ?? "—"}/10
+                </p>
+                <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3, #9d9da0)", margin: "0.15rem 0 0" }}>
+                  Fatigue {feedback.fatigue ?? "—"}/10 · {feedback.count} pratique{feedback.count > 1 ? "s" : ""}
+                </p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       {activeObjectives.length > 0 && (
         <>
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>Objectifs individuels</p>
@@ -72,7 +103,8 @@ export function BulletinView({ data, seasonLabel }: { data: BulletinData; season
         </>
       )}
 
-      <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>Commentaires des entraîneurs</p>
+      {showNotes && <>
+      <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>Notes des éducateurs (internes)</p>
       {evaluations.filter((e) => e.comment).length === 0 ? (
         <p className="admin-empty-text">Aucun commentaire enregistré pour l&apos;instant.</p>
       ) : (
@@ -87,6 +119,7 @@ export function BulletinView({ data, seasonLabel }: { data: BulletinData; season
           ))}
         </div>
       )}
+      </>}
     </div>
   );
 }

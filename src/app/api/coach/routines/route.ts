@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentCoachId } from "@/lib/coach-auth";
-import { addPlayerRoutine } from "@/lib/coach-portal-repo";
+import { addPlayerRoutine, coachCanSeePlayer } from "@/lib/coach-portal-repo";
 import { jsonError } from "@/lib/http";
 
 export async function POST(request: Request) {
@@ -10,6 +10,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as { registrationId?: string; title?: string; notes?: string | null; exerciseIds?: string[] } | null;
   if (!body?.registrationId || !body.title?.trim()) return jsonError("Paramètres invalides", 400);
+  if (!(await coachCanSeePlayer(coachId, body.registrationId))) return jsonError("Joueuse introuvable", 404);
 
   await addPlayerRoutine(
     body.registrationId,

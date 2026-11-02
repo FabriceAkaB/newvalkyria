@@ -12,9 +12,64 @@ import { formatCAD } from "@/lib/season-2027";
 interface Props {
   rows: PayrollRow[];
   coaches: Coach[];
+  /** Activités passées dont les heures sont retenues (présence ou rapport manquant), à régler avant de payer. */
+  missing: (PayrollRow & { detail: string })[];
 }
 
-export function AdminEntraineursPaie({ rows, coaches }: Props) {
+const shortDate = (iso: string) => new Date(`${String(iso).slice(0, 10)}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short" });
+
+function MissingBeforePayroll({ missing }: { missing: Props["missing"] }) {
+  if (missing.length === 0) {
+    return (
+      <div className="admin-stat-card" style={{ marginBottom: "1.25rem" }}>
+        <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-good)" }}>Prêt pour la paie</p>
+        <p style={{ margin: "0.25rem 0 0", fontSize: "0.82rem", color: "var(--adm-text-3)" }}>Chaque éducateur a confirmé sa présence et rempli ses rapports.</p>
+      </div>
+    );
+  }
+  const heldCents = missing.reduce((s, r) => s + r.heldPayCents, 0);
+  return (
+    <div style={{ marginBottom: "1.5rem" }}>
+      <p style={{ margin: "0 0 0.25rem", fontWeight: 600, fontSize: "1rem", color: "var(--adm-text)" }}>
+        Avant de payer : {missing.length} présence{missing.length > 1 ? "s" : ""} ou rapport{missing.length > 1 ? "s" : ""} manquant{missing.length > 1 ? "s" : ""}
+      </p>
+      <p style={{ margin: "0 0 0.75rem", fontSize: "0.82rem", color: "var(--adm-text-3)" }}>
+        {formatCAD(heldCents / 100)} retenus : ces heures comptent dès que l&apos;éducateur confirme sa présence et complète son rapport dans son portail. Relance automatique 24 h après l&apos;activité.
+      </p>
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Éducateur</th>
+              <th>Activité</th>
+              <th>Ce qui manque</th>
+              <th>Relance</th>
+              <th style={{ textAlign: "right" }}>Retenu</th>
+            </tr>
+          </thead>
+          <tbody>
+            {missing.map((r) => (
+              <tr key={r.assignmentId}>
+                <td>{r.coachName}</td>
+                <td>
+                  <Link href={`/admin/entraineurs/activites/${r.activityId}`}>{shortDate(r.activityDate)} · {r.activityStart}</Link>
+                  <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{r.activityLabel}</span>
+                </td>
+                <td style={{ color: "var(--adm-warn)" }}>{r.detail}</td>
+                <td style={{ fontSize: "0.78rem", color: "var(--adm-text-3)" }}>
+                  {r.reminderSentAt ? `Envoyée ${shortDate(r.reminderSentAt)}` : r.coachHasEmail ? "À venir" : "Pas de courriel : appeler"}
+                </td>
+                <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{formatCAD(r.heldPayCents / 100)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export function AdminEntraineursPaie({ rows, coaches, missing }: Props) {
   const [month, setMonth] = useState("");
   const [category, setCategory] = useState("");
   const [activityType, setActivityType] = useState("");
@@ -66,8 +121,10 @@ export function AdminEntraineursPaie({ rows, coaches }: Props) {
             <Link href="/admin/entraineurs" className="admin-btn-ghost" style={{ textDecoration: "none" }}>← Entraîneurs</Link>
           </div>
           <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
-            Tableau de paie filtrable — heures, taux, salaire, payé et reste à payer par entraîneur.
+            Heures × taux de chaque éducateur. Les heures d’une activité comptent quand l’éducateur a confirmé sa présence et rempli son rapport (présences et évaluations des joueuses).
           </p>
+
+          <MissingBeforePayroll missing={missing} />
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.25rem" }}>
             <select className="admin-input" value={month} onChange={(e) => setMonth(e.target.value)}>
@@ -117,6 +174,7 @@ export function AdminEntraineursPaie({ rows, coaches }: Props) {
                   <th>Salaire</th>
                   <th>Payé</th>
                   <th>Reste</th>
+                  <th>Retenu</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,10 +186,13 @@ export function AdminEntraineursPaie({ rows, coaches }: Props) {
                     <td>{formatCAD(r.payCents / 100)}</td>
                     <td>{formatCAD(r.paidCents / 100)}</td>
                     <td style={{ color: r.remainingCents > 0 ? "var(--adm-warn)" : "var(--adm-good)", fontWeight: 600 }}>{formatCAD(r.remainingCents / 100)}</td>
+                    <td style={{ color: r.heldPayCents > 0 ? "var(--adm-warn)" : "var(--adm-text-3)" }}>
+                      {r.heldPayCents > 0 ? `${formatHours(r.heldHours)} · ${formatCAD(r.heldPayCents / 100)}` : "—"}
+                    </td>
                   </tr>
                 ))}
                 {payrollRows.length === 0 && (
-                  <tr><td colSpan={6} className="admin-empty-text">Aucun résultat pour ces filtres.</td></tr>
+                  <tr><td colSpan={7} className="admin-empty-text">Aucun résultat pour ces filtres.</td></tr>
                 )}
               </tbody>
               {payrollRows.length > 0 && (
@@ -143,6 +204,7 @@ export function AdminEntraineursPaie({ rows, coaches }: Props) {
                     <td>{formatCAD(totalPay / 100)}</td>
                     <td>{formatCAD(totalPaid / 100)}</td>
                     <td style={{ color: totalRemaining > 0 ? "var(--adm-warn)" : "var(--adm-good)" }}>{formatCAD(totalRemaining / 100)}</td>
+                    <td>{formatCAD(payrollRows.reduce((s, r) => s + r.heldPayCents, 0) / 100)}</td>
                   </tr>
                 </tfoot>
               )}

@@ -1,5 +1,6 @@
 import { CLUB_ID } from "@/lib/club";
 import { getBank } from "@/lib/exercises-repo";
+import { getFeedbackWeeks } from "@/lib/coach-portal-repo";
 import { kpiProgress, parseKpiNumber, type ParsedNumber } from "@/lib/mandalart-core";
 import { PLAN, type PlanKpi } from "@/lib/mandalart-plan";
 import { computeRevenueSummary } from "@/lib/revenue-calc";
@@ -159,6 +160,25 @@ export async function computeRealFigures(today = new Date().toLocaleDateString("
     auto.seances_approuvees = { value: Math.round((ok / sessions.size) * 100), note: `${ok} séance(s) sur ${sessions.size} bâties seulement avec des exercices approuvés.` };
   }
 
+  // appreciation_joueuses : routine de fin du portail entraîneur (note de la pratique sur 10 donnée par chaque
+  // joueuse) ; la semaine la plus récente qui a des notes, et les précédentes dans la note.
+  try {
+    const weeks = (await getFeedbackWeeks()).filter((w) => w.rating !== null);
+    if (weeks.length) {
+      const label = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-CA", { day: "numeric", month: "short" });
+      const fr = (n: number | null) => (n === null ? "—" : n.toLocaleString("fr-CA"));
+      auto.appreciation_joueuses = {
+        value: weeks[0].rating,
+        note: weeks
+          .slice(0, 4)
+          .map((w) => `Semaine du ${label(w.weekStart)} : ${fr(w.rating)}/10 (${w.count} joueuse${w.count > 1 ? "s" : ""}, fatigue ${fr(w.fatigue)}/10)`)
+          .join(" · ")
+      };
+    }
+  } catch {
+    /* routine de fin pas encore utilisée */
+  }
+
   // Sondages (module Voix des familles)
   try {
     const s = await getSurveyKpis();
@@ -219,7 +239,7 @@ export async function computeKpis(figures?: RealFigures): Promise<KpiView[]> {
 
 export function formatKpi(value: number | null, unit: ParsedNumber["unit"]): string {
   if (value === null) return "—";
-  const n = value.toLocaleString("fr-CA", { maximumFractionDigits: unit === "%" ? 1 : 0 });
+  const n = value.toLocaleString("fr-CA", { maximumFractionDigits: unit === "%" || unit === "/10" ? 1 : 0 });
   if (unit === "$") return `${n} $`;
   if (unit === "%") return `${n} %`;
   if (unit === "/10") return `${n}/10`;

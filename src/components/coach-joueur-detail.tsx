@@ -5,7 +5,8 @@ import { useState } from "react";
 
 import { CoachTopbar } from "@/components/coach-topbar";
 import type { CoachActivity } from "@/lib/coaches-repo";
-import type { PlayerAttendance, PlayerEvaluation, PlayerObjective, PlayerProfile, PlayerRoutine } from "@/lib/coach-portal-repo";
+import type { BulletinData, PlayerAttendance, PlayerEvaluation, PlayerObjective, PlayerProfile, PlayerRoutine } from "@/lib/coach-portal-repo";
+import { QUICK_CRITERIA } from "@/lib/coach-report";
 import type { Exercise } from "@/lib/exercises-repo";
 
 const ATTENDANCE_LABELS: Record<string, string> = {
@@ -24,6 +25,39 @@ interface Props {
   routines: PlayerRoutine[];
   exercises: Exercise[];
   attendanceHistory: (PlayerAttendance & { activity: CoachActivity })[];
+  summary: BulletinData | null;
+}
+
+/** Résumé de saison : ce que les évaluations rapides et la routine de fin disent de la joueuse jusqu'ici. */
+function SeasonSummary({ summary, attended, total }: { summary: BulletinData; attended: number; total: number }) {
+  const quick = QUICK_CRITERIA.map((c) => ({ c, avg: summary.criteriaAverages.find((x) => x.criterion === c), trend: summary.trends.find((t) => t.criterion === c) }));
+  const evaluated = summary.criteriaAverages.find((x) => x.criterion === QUICK_CRITERIA[0])?.count ?? 0;
+  return (
+    <div className="coach-card" style={{ marginBottom: "1.5rem" }}>
+      <p className="coach-card__label">Résumé de saison</p>
+      {evaluated === 0 ? (
+        <p className="coach-muted" style={{ margin: 0 }}>Pas encore d&apos;évaluation rapide : le résumé se remplit après chaque pratique.</p>
+      ) : (
+        <div className="coach-summary-grid">
+          {quick.map(({ c, avg, trend }) => (
+            <div key={c}>
+              <p className="coach-muted" style={{ margin: 0 }}>{c}</p>
+              <p className="coach-figure">{avg ? `${avg.average}` : "—"}<span>/5</span></p>
+              {trend && <p className="coach-muted" style={{ margin: 0 }}>{trend.start} → {trend.recent}</p>}
+            </div>
+          ))}
+          <div>
+            <p className="coach-muted" style={{ margin: 0 }}>Sa note des pratiques</p>
+            <p className="coach-figure">{summary.feedback.rating ?? "—"}<span>/10</span></p>
+            <p className="coach-muted" style={{ margin: 0 }}>Fatigue {summary.feedback.fatigue ?? "—"}/10</p>
+          </div>
+        </div>
+      )}
+      <p className="coach-muted" style={{ margin: "0.75rem 0 0" }}>
+        {evaluated} évaluation{evaluated > 1 ? "s" : ""} · présente {attended} fois sur {total}
+      </p>
+    </div>
+  );
 }
 
 function ObjectivesPanel({ registrationId, objectives: initial }: { registrationId: string; objectives: PlayerObjective[] }) {
@@ -162,8 +196,8 @@ function RoutinesPanel({ registrationId, routines: initial, exercises }: { regis
   );
 }
 
-export function CoachJoueurDetail({ coachName, player, evaluations, objectives, routines, exercises, attendanceHistory }: Props) {
-  const presentCount = attendanceHistory.filter((a) => a.status === "present").length;
+export function CoachJoueurDetail({ coachName, player, evaluations, objectives, routines, exercises, attendanceHistory, summary }: Props) {
+  const presentCount = attendanceHistory.filter((a) => a.status === "present" || a.status === "late" || a.status === "left_early").length;
 
   return (
     <>
@@ -179,6 +213,8 @@ export function CoachJoueurDetail({ coachName, player, evaluations, objectives, 
           <Link href={`/entraineur/joueuses/${player.registrationId}/bulletin`} className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1.5rem", fontSize: "0.75rem" }}>
             📋 Voir le bulletin de progression
           </Link>
+
+          {summary && <SeasonSummary summary={summary} attended={presentCount} total={attendanceHistory.length} />}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
             <ObjectivesPanel registrationId={player.registrationId} objectives={objectives} />

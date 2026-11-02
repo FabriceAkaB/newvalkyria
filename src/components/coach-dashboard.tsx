@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 
 import { CoachTopbar } from "@/components/coach-topbar";
@@ -17,76 +15,109 @@ export interface DashboardActivity {
   otherCoaches: string[];
   expectedCount: number;
   trialCount: number;
+  /** Plan de séance préparé : nombre de blocs et minutes. */
+  blocks: number;
+  minutes: number;
+  theme: string | null;
+}
+
+export interface ToComplete {
+  activity: DashboardActivity;
+  missing: string[];
 }
 
 interface Props {
   coachName: string;
   today: DashboardActivity[];
   upcoming: DashboardActivity[];
-  weekTheme: string | null;
+  toComplete: ToComplete[];
 }
 
-function ActivityCard({ activity }: { activity: DashboardActivity }) {
-  return (
-    <Link
-      href={`/entraineur/activites/${activity.id}`}
-      style={{
-        display: "block", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px",
-        padding: "1rem 1.1rem", textDecoration: "none", color: "inherit"
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem", marginBottom: "0.5rem" }}>
-        <div>
-          <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fff", margin: 0 }}>
-            {activity.title ? `${activity.activityType} — ${activity.title}` : activity.activityType}
-          </p>
-          <p style={{ fontSize: "0.75rem", color: "#9d9da0", margin: "0.2rem 0 0" }}>
-            {new Date(activity.date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })}
-            {" · "}{activity.startTime.slice(0, 5)}–{activity.endTime.slice(0, 5)}
-            {" · "}{formatHoursMinutes(computeHours(activity.startTime, activity.endTime))}
-          </p>
-        </div>
-        {activity.category && <span style={{ fontSize: "0.65rem", color: "#88c0d0", background: "rgba(136,192,208,0.1)", padding: "0.2rem 0.5rem", borderRadius: "4px", whiteSpace: "nowrap" }}>{activity.category}</span>}
-      </div>
+const dayLabel = (iso: string, opts: Intl.DateTimeFormatOptions = { weekday: "long", day: "numeric", month: "long" }) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString("fr-CA", opts);
+const titleOf = (a: DashboardActivity) => a.title || (a.category ? `${a.activityType} ${a.category}` : a.activityType);
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", fontSize: "0.75rem", color: "#c3c2c8" }}>
-        {activity.location && <span>📍 {activity.location}</span>}
-        <span>👥 {activity.expectedCount} inscrite(s){activity.trialCount > 0 && ` + ${activity.trialCount} essai(s)`}</span>
-        {activity.otherCoaches.length > 0 && <span>🧑‍🏫 avec {activity.otherCoaches.join(", ")}</span>}
+function TodayHero({ activity }: { activity: DashboardActivity }) {
+  return (
+    <Link href={`/entraineur/activites/${activity.id}`} className="coach-hero">
+      <p className="coach-hero__time">
+        {activity.startTime}–{activity.endTime} · {formatHoursMinutes(computeHours(activity.startTime, activity.endTime))}
+      </p>
+      <p className="coach-hero__title">{titleOf(activity)}</p>
+      {activity.theme && <p className="coach-hero__theme">Thème : {activity.theme}</p>}
+      <div className="coach-hero__meta">
+        {activity.location && <span>{activity.location}</span>}
+        <span>{activity.expectedCount} joueuse{activity.expectedCount > 1 ? "s" : ""}{activity.trialCount > 0 && ` + ${activity.trialCount} essai${activity.trialCount > 1 ? "s" : ""}`}</span>
+        {activity.otherCoaches.length > 0 && <span>Avec {activity.otherCoaches.join(", ")}</span>}
+        <span>{activity.blocks > 0 ? `Plan prêt · ${activity.blocks} bloc${activity.blocks > 1 ? "s" : ""}, ${activity.minutes} min` : "Plan pas encore prêt"}</span>
       </div>
+      <span className="coach-hero__cta">Voir la pratique du jour</span>
     </Link>
   );
 }
 
-export function CoachDashboard({ coachName, today, upcoming, weekTheme }: Props) {
+function ActivityRow({ activity, right, warning }: { activity: DashboardActivity; right?: React.ReactNode; warning?: string }) {
+  return (
+    <Link href={`/entraineur/activites/${activity.id}`} className="coach-row">
+      <div style={{ minWidth: 0 }}>
+        <p className="coach-row__title">{titleOf(activity)}</p>
+        <p className="coach-row__meta">
+          <span style={{ textTransform: "capitalize" }}>{dayLabel(activity.date, { weekday: "short", day: "numeric", month: "short" })}</span> · {activity.startTime}
+          {activity.location && ` · ${activity.location}`}
+        </p>
+        {warning && <p className="coach-row__meta" style={{ color: "var(--adm-warn)" }}>{warning}</p>}
+      </div>
+      {right}
+    </Link>
+  );
+}
+
+export function CoachDashboard({ coachName, today, upcoming, toComplete }: Props) {
+  const next = upcoming[0];
   return (
     <>
       <CoachTopbar coachName={coachName} />
       <div className="admin-content">
-        <div className="admin-section">
-          <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Bonjour, {coachName.split(" ")[0]}</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
-            Vos activités, groupes et joueuses attendues.
-          </p>
+        <div className="coach-page">
+          <h1 className="coach-title">Bonjour {coachName.split(" ")[0]}</h1>
+          <p className="coach-sub" style={{ textTransform: "capitalize" }}>{dayLabel(new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" }))}</p>
 
-          {weekTheme && (
-            <div style={{ background: "rgba(195,166,255,0.08)", border: "1px solid rgba(195,166,255,0.25)", borderRadius: "8px", padding: "0.65rem 0.9rem", marginBottom: "1.5rem" }}>
-              <p style={{ fontSize: "0.72rem", color: "#c3a6ff", margin: 0, textTransform: "uppercase" }}>Thème de la semaine</p>
-              <p style={{ fontSize: "0.9rem", color: "#fff", margin: "0.15rem 0 0", fontWeight: 600 }}>{weekTheme}</p>
-            </div>
+          {toComplete.length > 0 && (
+            <section style={{ marginTop: 24 }}>
+              <h2 className="coach-h2">À compléter ({toComplete.length})</h2>
+              <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>Tes heures comptent pour la paie quand ta présence et ton rapport sont faits.</p>
+              <div className="coach-list">
+                {toComplete.map((t) => (
+                  <ActivityRow key={t.activity.id} activity={t.activity} warning={`À faire : ${t.missing.join(", ")}`} right={<span className="coach-pill" data-tone="warn">Compléter</span>} />
+                ))}
+              </div>
+            </section>
           )}
 
-          <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Aujourd&apos;hui ({today.length})</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "2rem" }}>
-            {today.length === 0 && <p className="admin-empty-text">Aucune activité aujourd&apos;hui.</p>}
-            {today.map((a) => <ActivityCard key={a.id} activity={a} />)}
-          </div>
+          <section style={{ marginTop: 24 }}>
+            <h2 className="coach-h2">Aujourd&apos;hui</h2>
+            {today.length === 0 ? (
+              <div className="coach-card">
+                <p style={{ margin: 0, color: "var(--adm-text)" }}>Pas d&apos;activité aujourd&apos;hui.</p>
+                {next && <p className="coach-sub">Prochaine : <span style={{ textTransform: "capitalize" }}>{dayLabel(next.date)}</span> à {next.startTime}.</p>}
+              </div>
+            ) : (
+              <div className="coach-list">{today.map((a) => <TodayHero key={a.id} activity={a} />)}</div>
+            )}
+          </section>
 
-          <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>À venir ({upcoming.length})</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-            {upcoming.length === 0 && <p className="admin-empty-text">Aucune activité à venir.</p>}
-            {upcoming.slice(0, 10).map((a) => <ActivityCard key={a.id} activity={a} />)}
-          </div>
+          <section style={{ marginTop: 24 }}>
+            <h2 className="coach-h2">À venir</h2>
+            {upcoming.length === 0 ? (
+              <p className="coach-muted">Aucune activité à venir.</p>
+            ) : (
+              <div className="coach-list">
+                {upcoming.slice(0, 10).map((a) => (
+                  <ActivityRow key={a.id} activity={a} right={<span className="coach-pill" data-tone={a.blocks > 0 ? "good" : "info"}>{a.blocks > 0 ? "Plan prêt" : "Plan à venir"}</span>} />
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </>

@@ -112,15 +112,19 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P1",
     title: "Évaluation des joueuses à chaque pratique",
     question: "Comment chaque fille a-t-elle fait aujourd'hui, et qu'est-ce que ça donne sur la saison ?",
-    status: "partiel",
-    objectives: ["P1.2"],
+    status: "actif",
+    href: "/entraineur",
+    objectives: ["P1.2", "P1.5"],
+    kpis: ["appreciation_joueuses"],
     links: ["A03"],
     planned: [
-      "Dans le portail entraîneur, moins de 2 minutes par fille : photo, ball mastery, prestation, attitude",
-      "Une note d'au moins 30 caractères par joueuse (sentiment, comportement)",
-      "Résumé de saison par joueuse pour les bulletins (agent suivi des familles A03)"
+      "En place : dans le portail entraîneur (étape « Après »), moins de 2 minutes par fille : photo, ball mastery, prestation, attitude (1 à 5) et une note d'au moins 30 caractères",
+      "En place : note trop courte, répétitive, copiée d'une autre fille ou d'une séance précédente refusée avec un message clair ; copier-coller bloqué",
+      "En place : routine de fin, chaque joueuse donne sa note de la pratique et sa fatigue sur 10 ; moyenne par semaine dans l'indicateur « Note des pratiques »",
+      "En place : résumé de saison sur la fiche joueuse (moyennes, évolution début → dernières pratiques, sa note des pratiques) et dans le bulletin ; les notes restent internes (pas dans le bulletin des parents)",
+      "À venir : résumé de saison rédigé pour les bulletins (agent suivi des familles A03, P1.2.10)"
     ],
-    next: "P1.2.08 : évaluation rapide dans le portail entraîneur (30 nov.) ; P1.2.09 : les éducateurs la remplissent après chaque pratique."
+    next: "P1.2.09 : les éducateurs remplissent l'évaluation après chaque pratique (31 déc.) ; P1.2.10 : résumé de saison pour les bulletins (31 mars)."
   },
   {
     slug: "matchs-joues",
@@ -143,19 +147,20 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P1",
     title: "Portail des éducateurs",
     question: "En arrivant, l'éducateur sait-il exactement quoi faire, et ses rapports sont-ils complets ?",
-    status: "partiel",
+    status: "actif",
     href: "/entraineur",
     objectives: ["P1.4", "P1.5", "P8.3"],
     kpis: ["appreciation_joueuses"],
     links: ["A02", "AU20"],
     planned: [
-      "Pratique du jour : thème, montage du terrain, matériel, qui fait quoi, points clés, variantes et progressions",
-      "Évaluation des joueuses et note des exercices, obligatoires avant que les heures comptent",
-      "Contrôle de qualité : copier-coller et notes trop répétitives refusés",
-      "Routine de fin : chaque joueuse note la pratique sur 10 et sa fatigue sur 10",
-      "Accès limités à ce dont l'éducateur a besoin"
+      "En place : pratique du jour (étape « Avant ») : thème de la semaine, horaire de chaque bloc, montage du terrain (selon le nombre de joueuses attendues), matériel, qui fait quoi, points clés, variantes, progressions, fiche et schéma de l'exercice",
+      "En place : JP prépare ces champs bloc par bloc dans Équipe → Entraînements (bouton « Pratique du jour ») ; un champ vide reprend la fiche de l'exercice",
+      "En place : présences en un geste (« Toutes présentes »), photos des joueuses, effectif réel de la plage horaire",
+      "En place : contrôle de qualité : les heures comptent quand la présence de l'éducateur est confirmée et que présences et évaluations sont complètes",
+      "En place : accès limités : seulement ses activités et les joueuses de ses groupes ; aucun prix, paiement, taux ni donnée des parents",
+      "Note des exercices sur 10 dans le même rapport (banque d'exercices)"
     ],
-    next: "P1.4.08 : pratique du jour dans le portail (31 déc.) ; P1.5.06 : note des joueuses en fin de pratique (15 déc.)."
+    next: "Donner un identifiant à chaque éducateur (Équipe → Entraîneurs) et préparer la pratique du jour de chaque séance dans Pratiques."
   },
   { slug: "evaluations", pillar: "P1", title: "Événements d'évaluation", question: "Où sont les journées d'évaluation (essais, sélections) ?", status: "actif", href: "/admin/evaluations", objectives: ["P1.2"] },
   {
@@ -392,12 +397,17 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P8",
     title: "Présences et heures des éducateurs",
     question: "Qui a travaillé où, combien d'heures, et combien je dois payer ?",
-    status: "partiel",
+    status: "actif",
     href: "/admin/entraineurs/paie",
     objectives: ["P8.3"],
     links: ["AU20", "A10"],
-    planned: ["Confirmation de présence de l'éducateur à chaque activité (portail entraîneur)", "Heures × taux de chaque éducateur = paie", "Relance à 24 h si la présence n'est pas confirmée ; liste des manquantes avant chaque paie"],
-    next: "P8.3.04 : confirmation de présence et calcul des heures (15 déc.)."
+    planned: [
+      "En place : l'éducateur confirme sa présence et ses heures réelles à la fin de chaque activité (portail entraîneur)",
+      "En place : heures × taux = paie ; les heures restent « retenues » tant que la présence ou le rapport manque",
+      "En place : relance par courriel 24 h après l'activité (2 vérifications par jour), une seule fois par activité",
+      "En place : liste « Avant de payer » dans Paie et section « Présences des éducateurs » dans Aujourd'hui (éducateur sans courriel : à appeler)"
+    ],
+    next: "Ajouter le courriel de chaque éducateur dans sa fiche pour que la relance parte toute seule."
   },
   {
     slug: "structure",

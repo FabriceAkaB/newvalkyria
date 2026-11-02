@@ -53,6 +53,8 @@ export interface CoachActivity {
   terrain_id: string | null;
   /** Lien vers le film de la séance/du match (ex. YouTube, Hudl). */
   video_url: string | null;
+  /** Pratique donnée par JP hors de l'Académie (CF Montréal, St-Gabriel…) ; null pour l'Académie. */
+  organization?: string | null;
 }
 
 export interface CoachAssignment {
@@ -64,6 +66,11 @@ export interface CoachAssignment {
   departure_time: string | null;
   hourly_rate_cents: number | null;
   confirmed: boolean;
+  /** Quand et par qui la présence a été confirmée (l'éducateur dans son portail, ou l'admin). */
+  confirmed_at?: string | null;
+  confirmed_by?: "educateur" | "admin" | null;
+  /** Relance envoyée à l'éducateur 24 h après l'activité (présence ou rapport manquant). */
+  reminder_sent_at?: string | null;
   paid: boolean;
   paid_on: string | null;
   payment_method: string | null;
@@ -304,6 +311,7 @@ export async function updateAssignment(
     departureTime: string | null;
     hourlyRateCents: number | null;
     confirmed: boolean;
+    confirmedBy: "educateur" | "admin";
     paid: boolean;
     paidOn: string | null;
     paymentMethod: string | null;
@@ -316,7 +324,11 @@ export async function updateAssignment(
   if (patch.arrivalTime !== undefined) columnPatch.arrival_time = patch.arrivalTime;
   if (patch.departureTime !== undefined) columnPatch.departure_time = patch.departureTime;
   if (patch.hourlyRateCents !== undefined) columnPatch.hourly_rate_cents = patch.hourlyRateCents;
-  if (patch.confirmed !== undefined) columnPatch.confirmed = patch.confirmed;
+  if (patch.confirmed !== undefined) {
+    columnPatch.confirmed = patch.confirmed;
+    columnPatch.confirmed_at = patch.confirmed ? new Date().toISOString() : null;
+    columnPatch.confirmed_by = patch.confirmed ? (patch.confirmedBy ?? "admin") : null;
+  }
   if (patch.paid !== undefined) columnPatch.paid = patch.paid;
   if (patch.paidOn !== undefined) columnPatch.paid_on = patch.paidOn;
   if (patch.paymentMethod !== undefined) columnPatch.payment_method = patch.paymentMethod;

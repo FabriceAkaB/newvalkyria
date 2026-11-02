@@ -525,7 +525,8 @@ export async function computeFinancialDashboard(): Promise<FinancialDashboard> {
   const expenseMonthCents = sumWhere(expenseEvents, (d) => d.slice(0, 7) === monthKey, true);
   const expenseSeasonCents = activeSeasonCard?.expenseCents ?? 0;
 
-  const payrollDueCents = payrollRows.filter((r) => !r.paid).reduce((sum, r) => sum + r.payCents, 0);
+  // Les heures retenues (présence ou rapport manquant) seront dues aussi : la trésorerie les compte.
+  const payrollDueCents = payrollRows.filter((r) => !r.paid).reduce((sum, r) => sum + r.payCents + (r.heldPayCents ?? 0), 0);
   const billsDueCents = expenseEvents.filter((e) => e.status === "due").reduce((sum, e) => sum + e.amountCents, 0);
   const parentPaymentsDueCents = plans.reduce((sum, p) => {
     return sum + p.installments.filter((i) => i.status === "pending" || i.status === "failed").reduce((s, i) => s + i.amountCents, 0);

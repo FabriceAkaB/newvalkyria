@@ -16,6 +16,14 @@
     {
       "path": "/api/cron/pratiques",
       "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/presences-educateurs",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/presences-educateurs",
+      "schedule": "0 23 * * *"
     }
   ]
 }

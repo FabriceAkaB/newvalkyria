@@ -1,0 +1,152 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Portail des éducateurs (/entraineur) — même système que l'admin (jetons --adm-…,
+   skill design-interface), pensé d'abord pour le téléphone au bord du terrain :
+   une colonne, cibles de 44 px, une action principale par étape.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.coach-page { max-width: 760px; }
+
+.coach-title { font-size: 1.35rem; font-weight: 600; color: var(--adm-text); margin: 0; letter-spacing: -0.01em; }
+.coach-sub { font-size: 0.88rem; color: var(--adm-text-2); margin: 4px 0 0; }
+.coach-muted { font-size: 0.8rem; color: var(--adm-text-3); }
+.coach-h2 { font-size: 1.05rem; font-weight: 600; color: var(--adm-text); margin: 0 0 12px; }
+
+.coach-card {
+  background: var(--adm-surface);
+  border-radius: var(--adm-radius);
+  padding: 20px;
+}
+.coach-card + .coach-card { margin-top: 12px; }
+.coach-card__label { font-size: 0.78rem; font-weight: 600; color: var(--adm-text-3); margin: 0 0 8px; }
+
+.coach-figure { font-size: 1.6rem; font-weight: 600; color: var(--adm-text); margin: 2px 0; font-variant-numeric: tabular-nums; }
+.coach-figure span { font-size: 0.85rem; font-weight: 400; color: var(--adm-text-3); margin-left: 2px; }
+.coach-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; }
+
+/* ── Tableau de bord : la pratique du jour ── */
+.coach-hero {
+  display: block;
+  background: linear-gradient(160deg, var(--adm-accent-soft), var(--adm-surface) 70%);
+  border-radius: var(--adm-radius);
+  padding: 20px;
+  text-decoration: none;
+  color: inherit;
+}
+.coach-hero__time { font-size: 0.82rem; color: var(--adm-accent); font-weight: 600; margin: 0; }
+.coach-hero__title { font-size: 1.25rem; font-weight: 600; color: var(--adm-text); margin: 4px 0 0; }
+.coach-hero__theme { font-size: 0.95rem; color: var(--adm-text); margin: 12px 0 0; }
+.coach-hero__meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.82rem; color: var(--adm-text-2); margin-top: 12px; }
+.coach-hero__cta {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 44px; margin-top: 16px;
+  background: var(--adm-accent-strong); color: #fff; border-radius: var(--adm-radius-sm);
+  font-weight: 600; font-size: 0.92rem;
+}
+
+.coach-list { display: flex; flex-direction: column; gap: 8px; }
+.coach-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--adm-surface); border-radius: var(--adm-radius);
+  padding: 14px 16px; text-decoration: none; color: inherit; min-height: 44px;
+}
+.coach-row__title { font-size: 0.92rem; font-weight: 600; color: var(--adm-text); margin: 0; }
+.coach-row__meta { font-size: 0.78rem; color: var(--adm-text-3); margin: 2px 0 0; }
+
+.coach-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.coach-pill[data-tone="good"] { background: var(--adm-good-soft); color: var(--adm-good); }
+.coach-pill[data-tone="warn"] { background: var(--adm-warn-soft); color: var(--adm-warn); }
+.coach-pill[data-tone="bad"] { background: var(--adm-bad-soft); color: var(--adm-bad); }
+.coach-pill[data-tone="info"] { background: var(--adm-accent-soft); color: var(--adm-accent); }
+
+/* ── Page d'une activité : 3 étapes ── */
+.coach-steps {
+  position: sticky; top: 0; z-index: 10;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+  background: var(--adm-bg); padding: 8px 0; margin: 16px 0;
+}
+.coach-steps button {
+  min-height: 44px; border: none; border-radius: var(--adm-radius-sm);
+  background: var(--adm-surface); color: var(--adm-text-2);
+  font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2;
+}
+.coach-steps button small { font-size: 0.7rem; font-weight: 500; color: var(--adm-text-3); }
+.coach-steps button[data-active="true"] { background: var(--adm-accent-strong); color: #fff; }
+.coach-steps button[data-active="true"] small { color: rgba(255, 255, 255, 0.8); }
+
+.coach-checklist { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.coach-checklist li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.88rem; color: var(--adm-text-2); }
+.coach-checklist li::before {
+  content: ""; flex: 0 0 18px; height: 18px; border-radius: 999px; margin-top: 1px;
+  border: 2px solid var(--adm-border);
+}
+.coach-checklist li[data-done="true"] { color: var(--adm-text); }
+.coach-checklist li[data-done="true"]::before { background: var(--adm-good); border-color: var(--adm-good); box-shadow: inset 0 0 0 3px var(--adm-surface); }
+
+/* Blocs de la pratique du jour */
+.coach-block { background: var(--adm-surface); border-radius: var(--adm-radius); padding: 16px 20px; }
+.coach-block + .coach-block { margin-top: 8px; }
+.coach-block__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.coach-block__type { font-size: 0.75rem; font-weight: 600; color: var(--adm-accent); margin: 0; }
+.coach-block__title { font-size: 1rem; font-weight: 600; color: var(--adm-text); margin: 2px 0 0; }
+.coach-block__time { font-size: 0.8rem; color: var(--adm-text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.coach-block dl { margin: 12px 0 0; display: grid; gap: 10px; }
+.coach-block dt { font-size: 0.75rem; font-weight: 600; color: var(--adm-text-3); }
+.coach-block dd { margin: 2px 0 0; font-size: 0.88rem; color: var(--adm-text); white-space: pre-line; line-height: 1.45; }
+
+/* Joueuses */
+.coach-player { background: var(--adm-surface); border-radius: var(--adm-radius); padding: 12px 16px; }
+.coach-player + .coach-player { margin-top: 8px; }
+.coach-player__head { display: flex; align-items: center; gap: 12px; }
+.coach-player__name { font-size: 0.95rem; font-weight: 600; color: var(--adm-text); margin: 0; }
+.coach-avatar {
+  flex: 0 0 48px; width: 48px; height: 48px; border-radius: 999px; object-fit: cover;
+  background: var(--adm-surface-3); color: var(--adm-text-2);
+  display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem;
+}
+.coach-avatar--lg { flex-basis: 64px; width: 64px; height: 64px; font-size: 1.1rem; }
+
+.coach-seg { display: flex; flex-wrap: wrap; gap: 4px; }
+.coach-seg button {
+  min-height: 44px; min-width: 44px; padding: 0 12px;
+  border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm);
+  background: transparent; color: var(--adm-text-2); font: inherit; font-size: 0.85rem; cursor: pointer;
+}
+.coach-seg button[data-active="true"] { background: var(--adm-accent-soft); border-color: var(--adm-accent); color: var(--adm-text); font-weight: 600; }
+.coach-seg button[data-tone="bad"][data-active="true"] { background: var(--adm-bad-soft); border-color: var(--adm-bad); }
+.coach-seg--scale { display: grid; grid-template-columns: repeat(5, 1fr); }
+.coach-seg--ten { display: grid; grid-template-columns: repeat(6, 1fr); }
+.coach-seg button:disabled { opacity: 0.5; cursor: default; }
+
+.coach-field { margin-top: 16px; }
+.coach-field__label { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8rem; font-weight: 600; color: var(--adm-text-2); margin: 0 0 6px; }
+.coach-field__label span { font-weight: 400; color: var(--adm-text-3); }
+.coach-textarea {
+  width: 100%; min-height: 96px; resize: vertical;
+  background: var(--adm-surface-2); color: var(--adm-text); border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius-sm); padding: 12px; font: inherit; font-size: 0.92rem; line-height: 1.45;
+}
+.coach-textarea:focus { outline: none; border-color: var(--adm-accent); }
+.coach-time { min-height: 44px; background: var(--adm-surface-2); color: var(--adm-text); border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); padding: 0 12px; font: inherit; }
+
+.coach-error { background: var(--adm-bad-soft); color: var(--adm-text); border-radius: var(--adm-radius-sm); padding: 10px 12px; font-size: 0.85rem; margin-top: 12px; }
+.coach-ok { color: var(--adm-good); font-size: 0.85rem; font-weight: 600; }
+
+.coach-primary {
+  display: inline-flex; align-items: center; justify-content: center; width: 100%;
+  min-height: 48px; margin-top: 16px; border: none; border-radius: var(--adm-radius-sm);
+  background: var(--adm-accent-strong); color: #fff; font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.coach-primary:disabled { opacity: 0.5; cursor: default; }
+.coach-secondary {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 0 16px; border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm);
+  background: transparent; color: var(--adm-text); font: inherit; font-size: 0.88rem; cursor: pointer; text-decoration: none;
+}
+
+.coach-progress { height: 6px; background: var(--adm-surface-3); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+.coach-progress > div { height: 100%; background: var(--adm-good); border-radius: 999px; transition: width 0.2s; }
+
+@media (max-width: 899px) {
+  .admin-shell .admin-content:has(.coach-page) { padding: 16px 16px 64px; }
+}

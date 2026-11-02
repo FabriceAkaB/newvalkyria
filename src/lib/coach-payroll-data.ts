@@ -1,4 +1,6 @@
 import { computeAssignment } from "@/lib/coach-payroll";
+import { getActivityReports } from "@/lib/coach-portal-repo";
+import { activityEndMs, payHold, REPORT_RULE_START, type PayHold } from "@/lib/coach-report";
 import { getAllAssignments, getAllCoachTypeRates, getCoaches, type AssignmentStatus, type CoachActivity, type CoachStatus } from "@/lib/coaches-repo";
 import { formatCAD } from "@/lib/season-2027";
 
@@ -20,6 +22,17 @@ export interface PayrollRow {
   payCents: number;
   paid: boolean;
   confirmed: boolean;
+  /** Heures retenues (ne comptent pas encore pour la paie) : présence pas confirmée ou rapport incomplet. */
+  hold: PayHold | null;
+  heldHours: number;
+  heldPayCents: number;
+  activityLabel: string;
+  activityStart: string;
+  activityEnd: string;
+  /** Ce qui manque au rapport de l'activité (présences, évaluations, routine de fin), s'il est demandé. */
+  reportMissing: { attendance: number; evaluations: number; feedback: number } | null;
+  reminderSentAt: string | null;
+  coachHasEmail: boolean;
 }
 
 export interface PayrollFilters {
@@ -52,15 +65,20 @@ export interface CoachPayrollTotal {
   payCents: number;
   paidCents: number;
   remainingCents: number;
+  /** Heures et montant retenus tant que la présence ou le rapport manque. */
+  heldHours: number;
+  heldPayCents: number;
 }
 
 export function groupPayrollByCoach(rows: PayrollRow[]): CoachPayrollTotal[] {
-  const map = new Map<string, { name: string; hours: number; payCents: number; paidCents: number }>();
+  const map = new Map<string, { name: string; hours: number; payCents: number; paidCents: number; heldHours: number; heldPayCents: number }>();
   for (const r of rows) {
-    const entry = map.get(r.coachId) ?? { name: r.coachName, hours: 0, payCents: 0, paidCents: 0 };
+    const entry = map.get(r.coachId) ?? { name: r.coachName, hours: 0, payCents: 0, paidCents: 0, heldHours: 0, heldPayCents: 0 };
     entry.hours += r.hours;
     entry.payCents += r.payCents;
     if (r.paid) entry.paidCents += r.payCents;
+    entry.heldHours += r.heldHours ?? 0;
+    entry.heldPayCents += r.heldPayCents ?? 0;
     map.set(r.coachId, entry);
   }
   return Array.from(map.entries()).map(([coachId, v]) => ({
@@ -74,6 +92,8 @@ export function groupPayrollByCoach(rows: PayrollRow[]): CoachPayrollTotal[] {
 export async function getPayrollRows(): Promise<PayrollRow[]> {
   const [coaches, assignments, typeRates] = await Promise.all([getCoaches(), getAllAssignments(), getAllCoachTypeRates()]);
   const typeRateMap = new Map(typeRates.map((r) => [`${r.coach_id}:${r.activity_type}`, r.hourly_rate_cents]));
+  const activities = new Map(assignments.map((a) => [a.activity_id, a.activity]));
+  const reports = await getActivityReports([...activities.values()]).catch(() => new Map());
 
   return assignments.map((a) => {
     const computed = computeAssignment({
@@ -87,6 +107,10 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
       defaultRateCents: a.coach.default_hourly_rate_cents
     });
 
+    const report = reports.get(a.activity_id) ?? null;
+    // Une activité déjà payée reste payée ; sinon les heures attendent la présence confirmée et le rapport complet.
+    const hold = a.paid ? null : payHold({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, confirmed: a.confirmed, report });
+
     return {
       assignmentId: a.id,
       coachId: a.coach_id,
@@ -97,11 +121,22 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
       activityType: a.activity.activity_type,
       activityCategory: a.activity.category,
       attendance: a.status,
-      hours: computed.hours,
+      hours: hold ? 0 : computed.hours,
       rateCents: computed.rateCents,
-      payCents: computed.payCents,
+      payCents: hold ? 0 : computed.payCents,
       paid: a.paid,
-      confirmed: a.confirmed
+      confirmed: a.confirmed,
+      hold,
+      heldHours: hold ? computed.hours : 0,
+      heldPayCents: hold ? computed.payCents : 0,
+      activityLabel: a.activity.title || a.activity.category || a.activity.activity_type,
+      activityStart: String(a.activity.start_time).slice(0, 5),
+      activityEnd: String(a.activity.end_time).slice(0, 5),
+      reportMissing: report?.required
+        ? { attendance: report.attendanceMissing.length, evaluations: report.evaluationsMissing.length, feedback: report.feedbackMissing.length }
+        : null,
+      reminderSentAt: a.reminder_sent_at ?? null,
+      coachHasEmail: Boolean(a.coach.email)
     };
   });
 }
@@ -142,7 +177,7 @@ export function computeCoachNotifications(rows: PayrollRow[], activities: CoachA
     });
   }
 
-  const unconfirmed = rows.filter((r) => !r.confirmed && r.activityDate <= todayISO && r.attendance === "present");
+  const unconfirmed = rows.filter((r) => !r.confirmed && r.activityDate <= todayISO && r.attendance === "present" && r.activityDate >= REPORT_RULE_START);
   if (unconfirmed.length > 0) {
     notifications.push({
       type: "unconfirmed",
@@ -162,4 +197,19 @@ export function computeCoachNotifications(rows: PayrollRow[], activities: CoachA
   }
 
   return notifications;
+}
+
+/** Avant chaque paie (P8.3.05) : chaque activité terminée dont les heures sont retenues — présence de
+ *  l'éducateur pas confirmée ou rapport incomplet — de la plus ancienne à la plus récente. */
+export function missingBeforePayroll(rows: PayrollRow[], nowMs: number = Date.now()): PayrollRow[] {
+  return rows
+    .filter((r) => r.hold && activityEndMs(String(r.activityDate).slice(0, 10), r.activityEnd) <= nowMs)
+    .sort((a, b) => `${a.activityDate} ${a.activityStart}`.localeCompare(`${b.activityDate} ${b.activityStart}`));
+}
+
+export function holdDetail(r: PayrollRow): string {
+  if (r.hold === "presence") return "Présence pas confirmée";
+  const m = r.reportMissing;
+  if (!m) return "Rapport incomplet";
+  return [m.attendance ? `${m.attendance} présence(s) de joueuses` : null, m.evaluations ? `${m.evaluations} évaluation(s)` : null].filter(Boolean).join(" et ") + " à remplir";
 }
