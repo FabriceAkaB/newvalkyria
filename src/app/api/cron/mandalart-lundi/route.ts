@@ -7,6 +7,7 @@ import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
 import { isOpen, monthFocus } from "@/lib/mandalart-core";
 import { formatKpi } from "@/lib/mandalart-kpis";
+import { computeGap } from "@/lib/mandalart-levers";
 import { getMandalartOverview } from "@/lib/mandalart-repo";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
   if (!send || !isEmailConfigured()) return NextResponse.json({ ok: true, emailed: false });
 
   const level = o.levels.find((l) => l.id === o.currentLevel)!;
+  const gap = await computeGap(o.figures, o.today).catch(() => null);
   const focus = monthFocus(o.tasks, o.today);
   const next5 = o.tasks
     .filter((t) => isOpen(t) && !t.overdue && t.priority === "star")
@@ -71,6 +73,7 @@ export async function GET(request: Request) {
     <p style="margin:0 0 4px">Encaissé en ${o.results.year} : <strong>${money(o.results.caYearCents)}</strong> (${pct(o.results.progress)} de 1,5 M$) · rythme 12 mois ${money(o.results.ca12mCents)}</p>
     <p style="margin:0 0 16px">Exécution du plan : <strong>${pct(o.execution)}</strong>${prev?.execution != null ? ` (${o.execution >= Number(prev.execution) ? "+" : ""}${Math.round((o.execution - Number(prev.execution)) * 100)} pts en une semaine)` : ""} · ${level.daysLeft} jours avant la fin du niveau</p>
     ${focus.overdue.length ? `<h2 style="font-size:17px;color:#b3261e;margin:20px 0 8px">En retard · ${focus.overdue.length}</h2><ul style="padding-left:18px;margin:0">${focus.overdue.slice(0, 8).map(li).join("")}</ul>` : `<p style="color:#2e7d32">Aucune tâche en retard. 👏</p>`}
+    ${gap ? `<h2 style="font-size:17px;margin:20px 0 8px">Écart et rattrapage</h2>${gap.proposal.map((p) => `<p style="margin:0 0 6px">${esc(p)}</p>`).join("")}<ul style="padding-left:18px;margin:6px 0 0">${gap.levers.slice(0, 3).map((l) => `<li>${esc(l.title)} — jusqu'à ${money(l.potentialCents)} (${l.when})</li>`).join("")}</ul>` : ""}
     <h2 style="font-size:17px;margin:20px 0 8px">Les 5 priorités de la semaine</h2>
     <ul style="padding-left:18px;margin:0">${next5.map(li).join("")}</ul>
     ${moved.length ? `<h2 style="font-size:17px;margin:20px 0 8px">Ce qui a bougé</h2><ul style="padding-left:18px;margin:0">${moved.map((k) => `<li>${esc(k.label)} : ${formatKpi(Number(prev!.kpis[k.id]), k.targetN.unit || k.startN.unit)} → <strong>${formatKpi(k.current, k.targetN.unit || k.startN.unit)}</strong></li>`).join("")}</ul>` : ""}

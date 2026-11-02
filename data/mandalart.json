@@ -319,6 +319,26 @@
    "addedOn": "2026-11-02"
   },
   {
+   "id": "solde_bancaire",
+   "label": "Solde du compte (BMO + Stripe)",
+   "start": "0 $ (2 nov. 2026, note de JP)",
+   "target": "3 mois de dépenses fixes",
+   "due": "2027-12-31",
+   "source": "manuel",
+   "how": "Saisi par JP ; sert au calcul de la trésorerie jusqu'en avril dans « Écart et rattrapage ».",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "entrees_attendues",
+   "label": "Entrées d'argent attendues hors versements des familles",
+   "start": "10 000 $ (2 × 5 000 $, novembre 2026)",
+   "target": "à mesurer",
+   "due": "2027-04-30",
+   "source": "manuel",
+   "how": "Montant total attendu d'ici avril (ex. 5 000 $ deux vendredis de suite) ; mis à jour par JP.",
+   "addedOn": "2026-11-02"
+  },
+  {
    "id": "appreciation_joueuses",
    "label": "Note des pratiques donnée par les joueuses (sur 10)",
    "start": "à mesurer",
@@ -5636,6 +5656,10 @@
    {
     "title": "Structure de l'Académie et recrutement",
     "text": "Une vue d'ensemble de qui travaille avec nous (coachs, consultants, gérante, caméra, arbitres) : rôle, diplômes et certifications, contrat, taux, assignations. Et un plan de recrutement chiffré par saison : combien de coachs certifiés à temps plein, à temps partiel, de moniteurs, selon les groupes prévus (une coach pour dix filles). La structure doit suivre la croissance, sans s'alourdir avant les revenus."
+   },
+   {
+    "title": "Un plan qui s'ajuste et qui se joue",
+    "text": "Le Mandalart ne sert pas qu'à cocher. Chaque mois, il compare l'argent encaissé au plan (mois, trimestre), à la trésorerie jusqu'en avril et à l'argent que JP veut rattraper (ex. charges avancées), puis propose des leviers chiffrés à partir des vrais chiffres : places libres, programmes garçons, plages de matchs, commandites, préventes. Quand ça ne marche pas, il propose une autre voie. Et il se joue comme un jeu : une quête du jour de 3 petites bouchées, de l'XP (⭐ = 100, ➜ = 50), des rangs, une série de jours, et une carte des 6 mondes qui dit, au rythme réel des dernières semaines, si on arrive à temps."
    }
   ]
  },

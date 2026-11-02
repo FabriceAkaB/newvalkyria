@@ -13,6 +13,7 @@ description: Le plan de guerre de New Valkyria (1,5 M$ encaissés en 2028) et so
 - **Données réelles** : `src/lib/mandalart-kpis.ts` (`computeRealFigures` : CA de l'année, 12 mois, rétention, cohortes, remplissage, commandites, matchs, sondages). Un indicateur non branché prend la dernière saisie manuelle.
 - **Sections de chaque pilier** : `src/lib/mandalart-modules.ts` (`PILLAR_MODULES` : actif / partiel / à construire, lien vers l'écran existant, contenu prévu, prochaine étape).
 - **Écrans** : `/admin/mandalart` (Ce mois-ci), `/piliers`, `/piliers/[p]`, `/piliers/[p]/[section]`, `/niveaux`, `/trajectoire`, `/indicateurs`, `/agents`, `/journal`. Sondages : `/admin/sondages` (`src/lib/surveys-repo.ts`), page famille `/sondage/[token]`.
+- **Jeu et rattrapage** : `src/lib/mandalart-game.ts` (XP, rangs, série, quête du jour, carte des mondes et projection au rythme réel) et `src/lib/mandalart-levers.ts` (écart au plan, trésorerie jusqu'en avril, argent à rattraper `mandalart_recovery`, leviers chiffrés). Un nouveau levier = une entrée de plus dans `computeGap`, calculée à partir de vraies données.
 - **Automatismes** : courriel et instantané du lundi `api/cron/mandalart-lundi` (vercel.json, lundi 11 h UTC) ; tâches en retard et familles à rappeler dans « Aujourd'hui » (`admin-today.ts`).
 
 ## Règles

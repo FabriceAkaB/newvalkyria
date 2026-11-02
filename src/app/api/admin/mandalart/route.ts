@@ -3,6 +3,7 @@ import { z, ZodError } from "zod";
 
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { addChannelStat } from "@/lib/marketing-stats";
+import { addRecovery, resolveRecovery } from "@/lib/mandalart-levers";
 import { addCustomTask, addKpiValue, setAgentState, setTaskStatus } from "@/lib/mandalart-repo";
 import { jsonError } from "@/lib/http";
 
@@ -36,6 +37,8 @@ const schema = z.discriminatedUnion("action", [
     hoursSavedWeek: z.number().min(0).max(100).nullable().optional(),
     note: z.string().max(1000).nullable().optional()
   }),
+  z.object({ action: z.literal("recovery-add"), label: z.string().min(2).max(200), amountCents: z.number().int().positive().max(100_000_000), note: z.string().max(500).nullable().optional() }),
+  z.object({ action: z.literal("recovery-resolve"), id: z.string().uuid() }),
   z.object({
     action: z.literal("channel"),
     channel: z.enum(["instagram", "facebook", "youtube", "tiktok", "pub_meta", "pub_google", "autre"]),
@@ -69,6 +72,14 @@ export async function POST(request: Request) {
     }
     if (body.action === "agent") {
       await setAgentState(body);
+      return NextResponse.json({ ok: true });
+    }
+    if (body.action === "recovery-add") {
+      await addRecovery(body.label, body.amountCents, body.note ?? null);
+      return NextResponse.json({ ok: true });
+    }
+    if (body.action === "recovery-resolve") {
+      await resolveRecovery(body.id);
       return NextResponse.json({ ok: true });
     }
     await addChannelStat(body);

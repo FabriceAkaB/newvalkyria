@@ -1269,6 +1269,10 @@ Une vue d'ensemble de qui travaille avec nous (coachs, consultants, gérante, ca
 
 - [ ] `P8.3.06` ➜ N2 — Suivre chaque recrutement : annonce, candidats, entrevue, vérification des antécédents, formation, contrat signé. — 31 mars 2027 · JP + Claude Code · A10
 
+### Un plan qui s'ajuste et qui se joue
+
+Le Mandalart ne sert pas qu'à cocher. Chaque mois, il compare l'argent encaissé au plan (mois, trimestre), à la trésorerie jusqu'en avril et à l'argent que JP veut rattraper (ex. charges avancées), puis propose des leviers chiffrés à partir des vrais chiffres : places libres, programmes garçons, plages de matchs, commandites, préventes. Quand ça ne marche pas, il propose une autre voie. Et il se joue comme un jeu : une quête du jour de 3 petites bouchées, de l'XP (⭐ = 100, ➜ = 50), des rangs, une série de jours, et une carte des 6 mondes qui dit, au rythme réel des dernières semaines, si on arrive à temps.
+
 ### Agents ajoutés
 
 | Ordre | Agent | Niveau de construction | Prérequis | Tâches du Mandalart |
@@ -1291,6 +1295,8 @@ Une vue d'ensemble de qui travaille avec nous (coachs, consultants, gérante, ca
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |
 | --- | --- | --- | --- | --- | --- | --- |
 | `taux_reponse_sondages` | Familles qui répondent aux sondages | 0 % | 70 % | 15 déc. 2026 | auto | Réponses ÷ familles invitées, dernier sondage envoyé. Module Sondages. |
+| `solde_bancaire` | Solde du compte (BMO + Stripe) | 0 $ (2 nov. 2026, note de JP) | 3 mois de dépenses fixes | 31 déc. 2027 | manuel | Saisi par JP ; sert au calcul de la trésorerie jusqu'en avril dans « Écart et rattrapage ». |
+| `entrees_attendues` | Entrées d'argent attendues hors versements des familles | 10 000 $ (2 × 5 000 $, novembre 2026) | à mesurer | 30 avr. 2027 | manuel | Montant total attendu d'ici avril (ex. 5 000 $ deux vendredis de suite) ; mis à jour par JP. |
 | `appreciation_joueuses` | Note des pratiques donnée par les joueuses (sur 10) | à mesurer | 9/10 | 31 mars 2027 | manuel | Moyenne des notes données par les joueuses à la fin des pratiques (routine de fin). Plus tard, saisie dans le portail entraîneur. |
 | `satisfaction` | Familles satisfaites (8 sur 10 et plus) | à mesurer | 90 % | 31 déc. 2027 | auto | Part des répondants qui donnent 8 sur 10 ou plus à la question de recommandation. Module Sondages. |
 

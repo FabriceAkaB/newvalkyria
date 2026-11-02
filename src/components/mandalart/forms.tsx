@@ -202,3 +202,38 @@ export function ChannelStatForm() {
     </form>
   );
 }
+
+/** Argent à rattraper (ex. « charges avancées par JP ») : s'ajoute à l'écart du plan. */
+export function RecoveryForm() {
+  const [label, setLabel] = useState("");
+  const [amount, setAmount] = useState("");
+  const { busy, msg, run } = useSubmit();
+  return (
+    <form
+      style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const cents = Math.round(Number(amount.replace(/\s|\$/g, "").replace(",", ".")) * 100);
+        if (!cents) return;
+        run({ action: "recovery-add", label, amountCents: cents }, "Ajouté : le plan en tient compte.", () => {
+          setLabel("");
+          setAmount("");
+        });
+      }}
+    >
+      <input className="admin-input" style={{ flex: "1 1 240px" }} placeholder="Ex. 3 mois de charges avancés par JP" value={label} onChange={(e) => setLabel(e.target.value)} required minLength={2} />
+      <input className="admin-input" style={{ width: 130 }} inputMode="decimal" placeholder="Montant ($)" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+      <button className="admin-btn-ghost" disabled={busy}>Ajouter</button>
+      <Msg msg={msg} />
+    </form>
+  );
+}
+
+export function ResolveRecoveryButton({ id }: { id: string }) {
+  const { busy, run } = useSubmit();
+  return (
+    <button type="button" className="mda-task-more" disabled={busy} onClick={() => confirm("Marquer cet argent comme rattrapé ?") && run({ action: "recovery-resolve", id }, "Rattrapé.")}>
+      Rattrapé ✓
+    </button>
+  );
+}

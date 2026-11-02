@@ -11014,3 +11014,33 @@ img { max-width: 100%; height: auto; }
   .admin-shell .mda-levels { grid-template-columns: 1fr 1fr; }
   .admin-shell .mda-task { padding: 12px 16px; }
 }
+
+/* Mandalart en jeu : rang, XP, série, carte du voyage */
+.admin-shell .mda-game { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.6fr); gap: 16px; }
+.admin-shell .mda-rank { background: linear-gradient(150deg, rgba(139,92,246,0.28), rgba(139,92,246,0.06)); border: 1px solid rgba(180,155,242,0.35); border-radius: var(--adm-radius); padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.admin-shell .mda-rank-icon { font-size: 2.2rem; line-height: 1; }
+.admin-shell .mda-xpbar { height: 12px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.admin-shell .mda-xpbar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #8b5cf6, #f2c14e); }
+.admin-shell .mda-streak { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.9rem; color: var(--adm-warn); }
+.admin-shell .mda-quest-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 16px 20px 6px; }
+.admin-shell .mda-journey { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; position: relative; padding: 8px 4px 4px; }
+.admin-shell .mda-stop { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; position: relative; padding: 0 4px; }
+.admin-shell .mda-stop::before { content: ""; position: absolute; top: 22px; left: -50%; right: 50%; height: 4px; background: var(--adm-surface-3); z-index: 0; }
+.admin-shell .mda-stop:first-child::before { display: none; }
+.admin-shell .mda-stop[data-state="fait"]::before, .admin-shell .mda-stop[data-state="en_cours"]::before { background: var(--adm-accent); }
+.admin-shell .mda-node { position: relative; z-index: 1; width: 46px; height: 46px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; background: var(--adm-surface-3); border: 3px solid var(--adm-surface-3); }
+.admin-shell .mda-stop[data-state="fait"] .mda-node { background: var(--adm-good); border-color: var(--adm-good); color: #0b0a0f; }
+.admin-shell .mda-stop[data-state="en_cours"] .mda-node { background: var(--adm-accent-strong); border-color: #f2c14e; box-shadow: 0 0 0 6px rgba(139,92,246,0.25); }
+.admin-shell .mda-stop-name { font-size: 0.8rem; font-weight: 600; color: var(--adm-text); line-height: 1.25; }
+.admin-shell .mda-stop-sub { font-size: 0.72rem; color: var(--adm-text-3); line-height: 1.3; }
+.admin-shell .mda-lever { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 14px 20px; border-top: 1px solid var(--adm-line); }
+.admin-shell .mda-lever-amt { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--adm-good); text-align: right; white-space: nowrap; }
+@media (max-width: 860px) {
+  .admin-shell .mda-game { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .admin-shell .mda-journey { grid-template-columns: 1fr; gap: 10px; }
+  .admin-shell .mda-stop { flex-direction: row; text-align: left; align-items: center; }
+  .admin-shell .mda-stop::before { display: none; }
+  .admin-shell .mda-node { width: 40px; height: 40px; flex-shrink: 0; }
+}

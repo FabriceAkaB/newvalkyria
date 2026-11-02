@@ -121,3 +121,19 @@ describe("indicateurs", () => {
     expect(kpiProgress(0, 10, null)).toBeNull();
   });
 });
+
+describe("jeu", () => {
+  it("donne l'XP, le rang et la série", async () => {
+    const { xpOf, rankOf, streakOf, dailyQuest } = await import("@/lib/mandalart-game");
+    const tasks = buildLiveTasks(PLAN, [{ code: "P1.1.01", status: "fait", note: null, evidence_url: null, done_at: "2026-11-02T15:00:00Z" }], [], TODAY);
+    expect(xpOf(tasks)).toBeGreaterThanOrEqual(100);
+    expect(rankOf(0).name).toBe("Recrue");
+    expect(rankOf(600).name).toBe("Titulaire");
+    expect(streakOf(["2026-11-02", "2026-11-01", "2026-10-30"], "2026-11-02")).toBe(2);
+    expect(streakOf(["2026-11-01"], "2026-11-02")).toBe(1);
+    expect(streakOf([], "2026-11-02")).toBe(0);
+    const q = dailyQuest(tasks, 1);
+    expect(q).toHaveLength(3);
+    expect(q.every((t) => t.status !== "fait")).toBe(true);
+  });
+});

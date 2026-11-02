@@ -16,7 +16,7 @@ export default async function MandalartKpisPage() {
   const met = o.kpis.filter((k) => k.met).length;
   const measured = o.kpis.filter((k) => k.current !== null).length;
   const groups: { title: string; ids: string[] }[] = [
-    { title: "Argent", ids: ["ca_annee", "ca_12m", "ca_valkyria_annee", "marge_valkyria", "ca_conseil_annee", "clubs_conseil", "commandites_annee", "plages_matchs", "benefice_ete_2027", "reserve_tresorerie", "remuneration_jp", "salaire_jp"] },
+    { title: "Argent", ids: ["solde_bancaire", "entrees_attendues", "ca_annee", "ca_12m", "ca_valkyria_annee", "marge_valkyria", "ca_conseil_annee", "clubs_conseil", "commandites_annee", "plages_matchs", "benefice_ete_2027", "reserve_tresorerie", "remuneration_jp", "salaire_jp"] },
     { title: "Familles et joueuses", ids: ["membres_actifs", "cohortes_2017_2019", "retour_saison", "remplissage", "nouvelles_joueuses_an", "source_connue", "cac"] },
     { title: "Satisfaction", ids: ["recommandation", "satisfaction", "taux_reponse_sondages", "appreciation_joueuses", "familles_profil", "familles_video_lab"] },
     { title: "Pédagogie et preuve", ids: ["joueuses_filmees_jour1", "exercices_approuves", "seances_approuvees", "entrevues_saison", "videos_semaine"] }
