@@ -267,10 +267,13 @@ export const ADMIN_NAV: AdminNavSection[] = [
       },
       {
         key: "exports",
-        label: "Exports MonClubSportif",
+        label: "MonClubSportif",
         icon: "list",
-        description: "Fichiers d'export pour MonClubSportif.",
-        tabs: [{ href: "/admin/exports", label: "Exports", adminOnly: true }]
+        description: "Ce qui manque dans MonClubSportif (nouvelles inscrites, activités, retraits) et les fichiers d'export complets.",
+        tabs: [
+          { href: "/admin/monclubsportif", label: "À faire dans MonClubSportif", adminOnly: true },
+          { href: "/admin/exports", label: "Exports complets", adminOnly: true }
+        ]
       },
       {
         key: "ete-2026",

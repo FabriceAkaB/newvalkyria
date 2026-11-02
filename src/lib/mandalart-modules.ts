@@ -374,7 +374,8 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P8",
     title: "MonClubSportif automatique",
     question: "Qu'est-ce qui reste à faire à la main dans MonClubSportif, et comment s'en débarrasser ?",
-    status: "a-construire",
+    status: "partiel",
+    href: "/admin/monclubsportif",
     objectives: ["P8.4"],
     links: ["AU19", "A12"],
     planned: [

@@ -1,6 +1,7 @@
 import type { AdminRole } from "@/lib/admin-auth";
 import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
+import { getMcsStatus } from "@/lib/mcs-sync";
 import { listPractices } from "@/lib/practices-repo";
 import { dateLong, getRefereesToPay, listMatches } from "@/lib/referees-repo";
 import { getFamiliesToCall } from "@/lib/surveys-repo";
@@ -350,6 +351,17 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         ]
       })
     );
+
+    // ── MonClubSportif : nouveautés à importer, joueuses à retirer ──
+    const mcs = await getMcsStatus().catch(() => null);
+    if (mcs && (mcs.syncedMembers || mcs.syncedEvents)) {
+      const items = [
+        ...(mcs.newMembers.length ? [{ title: `${mcs.newMembers.length} nouvelle(s) inscrite(s) à importer`, detail: "Télécharger le fichier, l'importer, toucher « Importé »", href: "/admin/monclubsportif" }] : []),
+        ...(mcs.newEvents.length ? [{ title: `${mcs.newEvents.length} activité(s) à importer`, detail: "Pratiques, matchs et événements à venir", href: "/admin/monclubsportif" }] : []),
+        ...mcs.toRemove.map((r) => ({ title: `Retirer ${r.label}`, detail: "N'est plus inscrite", href: "/admin/monclubsportif" }))
+      ];
+      sections.push(section({ key: "monclubsportif", title: "MonClubSportif", level: items.length ? "orange" : "info", emptyText: "MonClubSportif est à jour.", href: "/admin/monclubsportif", hrefLabel: "À faire dans MonClubSportif", items }));
+    }
 
     // ── Sondages : familles à rappeler (note sous 7 ou demande d'appel) ──
     const toCall = await getFamiliesToCall().catch(() => []);

@@ -42,6 +42,9 @@ chercher dans `src/lib/*` et `src/app/(admin)` un module qui fait déjà presque
 | Vente de matchs (plages) | `match-slots-core.ts` (règles pures), `match-slots-repo.ts` | `match_slots`, `match_slot_bookings`, `match_team_profiles`, `match_slot_requests` | `/admin/plages`, `/admin/matchs` |
 | Commandites 2027 / partenariats | `sponsorship-2027.ts`, `partnership-offers.ts`, `sponsors-repo.ts` | `sponsor_slots_2027`, `sponsors`, `sponsor_payments`, `partnership_offers`, `partnership_offer_options` | `/admin/sponsors-2027`, `/admin/commandites` |
 | Mandalart (plan 1,5 M$ 2028) | `mandalart-plan.ts`, `mandalart-core.ts` (calculs purs), `mandalart-repo.ts`, `mandalart-kpis.ts`, `mandalart-modules.ts`, `mandalart-pedagogy.ts`, `marketing-stats.ts`, `club.ts` | `mandalart_tasks_state`, `mandalart_tasks_custom`, `mandalart_events`, `mandalart_kpi_values`, `mandalart_snapshots`, `mandalart_agent_state`, `marketing_channel_stats` | `/admin/mandalart` |
+| Arbitres et bilan des matchs | `referees-repo.ts` (postes, réservation, paie → dépense « à payer », `matchFinance`), pages `/arbitres/[token]`, `/arbitres/inscription` | `referees`, `referee_assignments`, colonnes de coûts sur `match_slots` | `/admin/arbitres` |
+| Pratiques préparées d'avance | `practices-repo.ts` (horaire réel + activités, vert/jaune/rouge), cron `api/cron/pratiques` (2 fois par jour) | `coach_activities.organization` (pratiques de JP hors Académie) | `/admin/pratiques` |
+| MonClubSportif (nouveautés à importer) | `mcs-sync.ts` (sur les exports de `monclubsportif-export.ts`) | `mcs_sync_items` | `/admin/monclubsportif` |
 | Sondages (Voix des familles) | `surveys-repo.ts`, page `/sondage/[token]` | `surveys`, `survey_invites`, `survey_responses` | `/admin/sondages` |
 | Historique et marges | `academy-history.ts` (récit à la main, chiffres recalculés) | `venue_rentals` (contrats de gymnases/terrains) | `/admin/historique` |
 | Boutique / uniformes | `shop-repo.ts`, `uniform-kits-repo.ts` | `products`, `shop_orders`, `registration_uniform_kits` | `/admin/boutique`, `/admin/uniformes` |
@@ -97,6 +100,7 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
 - Voix des familles (sondages) : `/admin/sondages`, `surveys-repo.ts`, page famille `/sondage/[token]`.
 - Agents et automatisations : section 5 du dossier + `/admin/mandalart/agents` ; on construit dans l'ordre des niveaux, un agent à la fois, en mode assistant d'abord.
 - Loi 25 : aucune donnée d'enfant dans les tables `mandalart_*` ; vidéos d'enfants en stockage privé seulement.
+- « Ce mois-ci » se joue (`mandalart-game.ts` : quête du jour, XP, série, carte des mondes) et s'ajuste (`mandalart-levers.ts` : écart au plan, trésorerie jusqu'en avril, argent à rattraper, leviers chiffrés).
 - Duplicable pour un autre club : tout est rangé par `club_id` (`src/lib/club.ts`). Skill `mandalart`.
 
 ## Skills du projet (`.claude/skills/`)
