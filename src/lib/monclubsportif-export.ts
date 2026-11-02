@@ -320,7 +320,8 @@ export async function getAllEventsForExport(): Promise<(string | null)[][]> {
   //    planifiées depuis coach_activities, peu importe la catégorie/le groupe ──
   const { data: activities, error: activitiesError } = await supabase
     .from("coach_activities")
-    .select("id, activity_date, start_time, end_time, location, category, activity_type, title");
+    .select("id, activity_date, start_time, end_time, location, category, activity_type, title")
+    .is("organization", null); // les pratiques de JP hors Académie ne vont pas dans MonClubSportif
   if (activitiesError) throw new Error(activitiesError.message);
 
   const matchIds = (activities ?? []).filter((a: any) => a.activity_type === "Match").map((a: any) => a.id);

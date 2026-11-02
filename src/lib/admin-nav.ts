@@ -143,6 +143,13 @@ export const ADMIN_NAV: AdminNavSection[] = [
         ]
       },
       {
+        key: "pratiques",
+        label: "Pratiques",
+        icon: "flask",
+        description: "Chaque pratique préparée 2 semaines d'avance : vert, jaune, rouge. Aussi les pratiques que JP donne hors de l'Académie.",
+        tabs: [{ href: "/admin/pratiques", label: "À préparer" }]
+      },
+      {
         key: "evaluations",
         label: "Évaluations",
         icon: "chart",

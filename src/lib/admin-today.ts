@@ -1,6 +1,7 @@
 import type { AdminRole } from "@/lib/admin-auth";
 import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
+import { listPractices } from "@/lib/practices-repo";
 import { dateLong, getRefereesToPay, listMatches } from "@/lib/referees-repo";
 import { getFamiliesToCall } from "@/lib/surveys-repo";
 import { getOutreachSummary, type OutreachPerson } from "@/lib/outreach";
@@ -278,6 +279,28 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         href: "/admin/contrats",
         hrefLabel: "Contrats",
         items: contracts.map((k: any) => ({ title: k.employee_name, detail: k.title, meta: `Envoyé le ${shortDay(k.created_at)}` }))
+      })
+    );
+  }
+
+  // ── Pratiques à préparer (rouge ≤ 3 jours, jaune ≤ 7, vert ≤ 14) — admin et gérante ──
+  {
+    const practices = (await listPractices().catch(() => [])).filter((p) => ["rouge", "jaune", "vert"].includes(p.readiness));
+    const dot = { rouge: "🔴", jaune: "🟡", vert: "🟢" } as Record<string, string>;
+    sections.push(
+      section({
+        key: "pratiques",
+        title: "Pratiques à préparer",
+        level: practices.some((p) => p.readiness === "rouge") ? "rouge" : practices.some((p) => p.readiness === "jaune") ? "orange" : "info",
+        emptyText: "Toutes les pratiques des 2 prochaines semaines sont prêtes.",
+        href: "/admin/pratiques",
+        hrefLabel: "Pratiques",
+        items: practices.map((p) => ({
+          title: `${dot[p.readiness]} ${p.group}${p.organization ? ` (${p.organization})` : ""}`,
+          detail: `${shortDay(`${p.date}T12:00:00`)} · ${p.start} · ${p.location}`,
+          meta: p.daysLeft === 0 ? "Aujourd'hui" : `Dans ${p.daysLeft} jour${p.daysLeft > 1 ? "s" : ""}`,
+          href: p.activityId ? `/admin/entraineurs/activites/${p.activityId}` : "/admin/pratiques"
+        }))
       })
     );
   }
