@@ -15,7 +15,7 @@ chercher dans `src/lib/*` et `src/app/(admin)` un module qui fait déjà presque
   - `(main)` : site public filles (accueil, `/inscription`, `/programmes/[slug]`, `/sport-etudes`, `/boutique`, `/compte`, `/location-terrains`).
   - `(prive)` : pages non répertoriées : `/prive/[slug]` (programmes garçons privés), `/prive/matchs` (vente de matchs à d'autres clubs), `/partenariat/[token]` (offre de partenariat).
   - `(contrat)` : pages blanches à lien personnel : `/contrat/[token]` (contrat d'embauche), `/offre/[token]` (offre spéciale).
-  - `(admin)` : `/admin/*` (une section par module, menu dans `src/components/admin-topbar.tsx`).
+  - `(admin)` : `/admin/*`. Menu et onglets décrits dans **`src/lib/admin-nav.ts`** (6 sections + Outils, un lien par hub, onglets en en-tête) ; l'admin s'ouvre sur `/admin/aujourdhui` (`src/lib/admin-today.ts`). Toute modification de l'admin suit le skill `admin-page`.
   - `(coach)` : `/entraineur/*` (portail entraîneurs). Aussi `(atlantic)` (`/programme/[slug]`, pages FC Atlantic) et `(gate)` (`/qualification`).
 - **Supabase** : côté serveur, toujours `getSupabaseAdminClient()` (`src/lib/supabase-admin.ts`, service role ; pas de types
   générés, d'où les `as any`). Accès direct à la base pour vérifier ou corriger : node + `pg` + `SUPABASE_DB_URL` de `.env.local`.
@@ -89,4 +89,4 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
 
 ## Skills du projet (`.claude/skills/`)
 
-`relance` · `courriel-familles` · `nouveau-programme` · `paiement`
+`relance` · `courriel-familles` · `nouveau-programme` · `paiement` · `admin-page` · `finances` · `fin-de-mois` · `automatisation` · `rapport` · `mise-en-ligne`
