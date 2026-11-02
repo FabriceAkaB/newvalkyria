@@ -98,10 +98,10 @@ export function AdminExercices({ entries, weekTheme }: { entries: BankEntry[]; w
       <div className="admin-content">
         <div className="admin-section mda">
           <header>
-            <p className="mda-eyebrow">Banque d'exercices Valkyria · approuvé = 2 éducateurs à 8/10 ou plus, puis ta validation</p>
+            <p className="mda-eyebrow">Banque d’exercices Valkyria · approuvé = 2 éducateurs à 8/10 ou plus, puis ta validation</p>
             <h1 className="mda-h1">{counts.approuve ? `${counts.approuve} exercice${counts.approuve > 1 ? "s" : ""} approuvé${counts.approuve > 1 ? "s" : ""}` : "Aucun exercice approuvé pour l'instant"}</h1>
             <p className="mda-lead">
-              Objectif : 30 par génération (U8 à U12) d'ici le 30 juin 2027, 150 en tout
+              Objectif : 30 par génération (U8 à U12) d’ici le 30 juin 2027, 150 en tout
               {approvedByAge.size ? ` · ${["U8", "U9", "U10", "U11", "U12"].map((a) => `${a} ${approvedByAge.get(a) ?? 0}`).join(" · ")}` : ""}. Les éducateurs notent chaque exercice sur 10 après la séance, dans le portail entraîneur.
             </p>
           </header>
@@ -175,7 +175,7 @@ export function AdminExercices({ entries, weekTheme }: { entries: BankEntry[]; w
                 <h2 className="mda-h2" style={{ margin: 0 }}>
                   {list.length} exercice{list.length > 1 ? "s" : ""}
                 </h2>
-                <p className="mda-sub" style={{ margin: 0 }}>Top exercices d'abord : approuvés, puis par note moyenne.</p>
+                <p className="mda-sub" style={{ margin: 0 }}>Top exercices d’abord : approuvés, puis par note moyenne.</p>
               </div>
               <Link href="/admin/exercices/nouveau" className="admin-btn-primary" style={{ textDecoration: "none", whiteSpace: "nowrap" }}>
                 Nouvel exercice
@@ -196,7 +196,7 @@ export function AdminExercices({ entries, weekTheme }: { entries: BankEntry[]; w
           </section>
 
           <p className="mda-sub" style={{ margin: 0 }}>
-            Une note sous 8 met l'exercice « à changer » : fais-en une nouvelle version (les notes repartent à zéro) ; il ne revient pas dans une séance la même semaine. Retiré si la moyenne de ses 2 dernières notes reste sous 6. Gymnase : technique et ball mastery ; synthétique : tactique, grand espace et prise de décision.
+            Une note sous 8 met l’exercice « à changer » : fais-en une nouvelle version (les notes repartent à zéro) ; il ne revient pas dans une séance la même semaine. Retiré si la moyenne de ses 2 dernières notes reste sous 6. Gymnase : technique et ball mastery ; synthétique : tactique, grand espace et prise de décision.
           </p>
         </div>
       </div>

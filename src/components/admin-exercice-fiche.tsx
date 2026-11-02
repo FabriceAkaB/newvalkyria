@@ -194,7 +194,7 @@ function ExerciseForm({ entry, onDone, startAsNewVersion }: { entry: BankEntry |
           <label className="xb-toggle">
             <input type="checkbox" checked={newVersion} onChange={(e) => setNewVersion(e.target.checked)} />
             <span>
-              <strong>C'est une nouvelle version de l'exercice (version {entry.version + 1})</strong>
+              <strong>C’est une nouvelle version de l’exercice (version {entry.version + 1})</strong>
               <br />
               <span className="mda-muted">
                 {hasRatings ? `Les ${entry.bank.count} note(s) de la version ${entry.version} restent dans l'historique ; le compteur repart à zéro.` : "Le compteur de notes repart à zéro."} Décocher pour une petite correction.
@@ -208,7 +208,7 @@ function ExerciseForm({ entry, onDone, startAsNewVersion }: { entry: BankEntry |
             </div>
           ) : null}
       <section className="mda-card">
-        <h2 className="mda-h2">L'essentiel</h2>
+        <h2 className="mda-h2">L’essentiel</h2>
         <div className="xb-grid" style={{ marginTop: 12 }}>
           <Field label="Titre" wide>
             <input className="admin-input" value={f.title} onChange={set("title")} placeholder="Ex. : Rondo 4 contre 2 avec changement de zone" autoFocus={!entry} />
@@ -311,7 +311,7 @@ function ExerciseForm({ entry, onDone, startAsNewVersion }: { entry: BankEntry |
 
       <section className="mda-card">
         <h2 className="mda-h2">Organisation selon le nombre de joueuses</h2>
-        <p className="mda-sub">Un ballon par fille, aucune file d'attente : comment on monte l'exercice avec 5 à 7, 8 à 10 ou 11 à 16 joueuses.</p>
+        <p className="mda-sub">Un ballon par fille, aucune file d’attente : comment on monte l’exercice avec 5 à 7, 8 à 10 ou 11 à 16 joueuses.</p>
         <div className="xb-grid">
           {SIZE_BANDS.map((b) => {
             const needed = bands.some((x) => x.key === b.key);
@@ -695,7 +695,7 @@ export function AdminExerciceFiche({ entry, ratings }: { entry: BankEntry | null
                 </ul>
               ) : (
                 <p className="mda-sub" style={{ padding: 20, margin: 0 }}>
-                  Pas encore de note. Mets l'exercice dans le plan d'une séance ; les éducateurs le noteront après la pratique.
+                  Pas encore de note. Mets l’exercice dans le plan d’une séance ; les éducateurs le noteront après la pratique.
                 </p>
               )}
             </section>

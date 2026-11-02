@@ -153,7 +153,7 @@ function ExerciseRow({ item, activityId, canRate, open, onToggle, onSaved }: { i
           <div className="xb-rate-foot">
             <span className="xb-rate-total" data-low={low || undefined}>
               {complete ? `${total}/10` : `${RATING_CRITERIA.filter((c) => scores[c.key] !== undefined).length}/5 critères`}
-              {low ? <small> · l'exercice passera « à changer »</small> : null}
+              {low ? <small> · l’exercice passera « à changer »</small> : null}
             </span>
             <button type="button" className="admin-btn-primary" onClick={save} disabled={saving || !complete || needsComment}>
               {saving ? "Enregistrement…" : item.myRating ? "Mettre à jour" : "Enregistrer la note"}
