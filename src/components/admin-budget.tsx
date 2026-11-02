@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
@@ -94,7 +93,6 @@ export function AdminBudget({ initialRows }: Props) {
         <div className="admin-section">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Budget annuel</p>
-            <Link href="/admin/revenus" className="admin-btn-ghost" style={{ textDecoration: "none" }}>← Revenus</Link>
           </div>
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
             Fixez un budget annuel par catégorie de charge — comparé automatiquement aux dépenses réelles (payées et à payer), toutes saisons confondues.

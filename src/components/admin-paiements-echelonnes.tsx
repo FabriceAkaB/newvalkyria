@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Fragment, useMemo, useState } from "react";
 
 function ChargeNowButton({ installmentId, onCharged }: { installmentId: string; onCharged: () => void }) {
@@ -135,7 +134,6 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
         <div className="admin-section">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Paiements échelonnés</p>
-            <Link href="/admin/revenus" className="admin-btn-ghost" style={{ textDecoration: "none" }}>← Revenus</Link>
           </div>
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
             Familles ayant choisi de payer en plusieurs versements — {plans.length} plan(s) au total.

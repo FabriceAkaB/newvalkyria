@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { CashMovement, FinancialDashboard, UpcomingMovements } from "@/lib/revenue-calc";
@@ -36,7 +35,6 @@ export function AdminTresorerie({ dashboard, movements }: Props) {
         <div className="admin-section">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Trésorerie</p>
-            <Link href="/admin/revenus" className="admin-btn-ghost" style={{ textDecoration: "none" }}>← Revenus</Link>
           </div>
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
             Encaisse actuelle et projection selon les versements de parents attendus et les factures à payer déjà enregistrées.

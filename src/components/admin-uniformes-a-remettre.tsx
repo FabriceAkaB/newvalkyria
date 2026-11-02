@@ -75,7 +75,6 @@ export function AdminUniformesARemettre({ orders, unassignedOrders, seasonKeys, 
         <div className="admin-section">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "0.3rem" }}>
             <p className="admin-section-title" style={{ margin: 0 }}>Uniformes à remettre</p>
-            <Link href="/admin/uniformes" className="admin-btn-ghost" style={{ textDecoration: "none" }}>← Uniformes</Link>
           </div>
           <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
             Triées par priorité : problèmes ouverts, puis prêtes à remettre, puis les plus anciennes.
