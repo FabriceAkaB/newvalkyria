@@ -59,10 +59,16 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P1",
     title: "Méthode Valkyria et curriculum",
     question: "Comment se déroule une séance Valkyria et qu'est-ce qu'une fille doit maîtriser à chaque âge ?",
-    status: "a-construire",
-    objectives: ["P1.1", "P1.5"],
-    planned: ["Structure de séance en 4 blocs avec leur durée", "Bibliothèque des gestes par famille, avec fiche et vidéo", "Progression en 4 étapes de chaque geste", "Curriculum U8 à U12 par génération et par niveau"],
-    next: "P1.1.01 et P1.1.02 : écrire la structure de séance et choisir les 5 gestes par niveau (30 nov.)."
+    status: "partiel",
+    href: "/admin/coaching/methode",
+    objectives: ["P1.1", "P1.5", "P1.6"],
+    planned: [
+      "En place : structure de séance en 4 blocs (jeu d'entrée, ball mastery, technique, forme jouée) avec durées et règles, proposition tirée du plan à valider par JP",
+      "En place : principes de la pédagogie Valkyria (repris du plan) et page Méthode dans le portail des éducateurs",
+      "En place : bibliothèque des gestes par famille et niveau du passeport (fiche, 3 points clés, erreurs, vidéo, progression en 4 étapes), compteur des 5 gestes de base par niveau",
+      "À venir : curriculum U8 à U12 par génération et par niveau (P1.1.06)"
+    ],
+    next: "P1.1.01 et P1.1.02 : JP valide la structure de séance et entre les 5 gestes de base par niveau dans Coaching → Méthode → Gestes (30 nov.)."
   },
   {
     slug: "periodisation",
@@ -101,11 +107,17 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P1",
     title: "Passeport et tests de progression",
     question: "Comment je prouve qu'une fille a progressé ?",
-    status: "a-construire",
-    objectives: ["P1.2"],
+    status: "partiel",
+    href: "/admin/coaching/tests",
+    objectives: ["P1.2", "P1.5"],
     kpis: ["joueuses_filmees_jour1"],
-    planned: ["Test de chaque niveau (bronze, argent, or, mauve)", "Feuille de suivi des tests (jour 1, mensuels)", "Vidéos avant-après dans le stockage privé"],
-    next: "P1.2.01 et P1.2.02 : fixer les tests et filmer le jour 1 de chaque joueuse (30 nov.)."
+    planned: [
+      "En place : tests du passeport (touches en 30 s, conduite chronométrée, passes des deux pieds) proposés, protocole et seuils bronze, argent, or, mauve à valider par JP",
+      "En place : saisie au bord du terrain par groupe, feuille de suivi (écart avec le test précédent et le jour 1, niveau, lien vidéo, note), chaque fille comparée à elle-même",
+      "En place : nom de chaque vidéo selon la convention Prénom-Nom_geste_AAAA-MM-JJ_type ; indicateur « jour 1 filmé »",
+      "À venir : test mensuel comparé au mois précédent (P1.2.05), passeport papier et écussons (P1.2.06), vidéo de progression de chaque fille (P1.2.07)"
+    ],
+    next: "P1.2.01 : valider les tests et leurs seuils ; P1.2.02 : filmer le test du jour 1 de chaque joueuse (30 nov.)."
   },
   {
     slug: "evaluation-joueuses",
@@ -190,9 +202,16 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P1",
     title: "Formation des coachs",
     question: "Est-ce que chaque coach applique la méthode ?",
-    status: "a-construire",
+    status: "partiel",
+    href: "/admin/entraineurs/suivi",
     objectives: ["P1.4"],
-    planned: ["Parcours d'intégration", "Observations de séance et rétroaction", "Certifications (existe : fiches entraîneurs)"]
+    planned: [
+      "En place : briefing de 5 minutes en tête de chaque pratique dans le portail (filles à suivre, objectifs, essais, absentes, moment surprise prévu)",
+      "En place : méthode et règle du coach dans le portail (page Méthode) ; rapports de chaque pratique dans Suivi des éducateurs",
+      "À venir : certification interne Valkyria (P1.4.02), observation filmée mensuelle avec rétroaction (P1.4.03), réunion technique mensuelle (P1.4.04)",
+      "Certifications des coachs (existe : fiches entraîneurs)"
+    ],
+    next: "P1.4.01 : faire le briefing de 5 minutes avant chaque séance avec la page « Avant » du portail (31 déc.)."
   },
 
   // ── P2 Offres et prix ──

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AdminActivityReport } from "@/components/admin-activity-report";
 import { AdminBlockGuide } from "@/components/admin-block-guide";
 import { AdminTopbar } from "@/components/admin-topbar";
+import { SurpriseMomentEditor } from "@/components/surprise-moment";
 import { EntityDocuments } from "@/components/admin-entity-documents";
 import { MatchPanel } from "@/components/match-panel";
 import { computeAssignment, computeHours, formatHours } from "@/lib/coach-payroll";
@@ -487,6 +488,13 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
           )}
 
           <SessionPlanEditor activityId={activity.id} initialBlocks={initialBlocks} exercises={exercises} />
+
+          {activity.activity_type !== "Match" && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>Moment surprise prévu (briefing de 5 minutes)</p>
+              <SurpriseMomentEditor apiUrl={`/api/admin/coach-activities/${activity.id}/surprise`} initial={activity.surprise_moment ?? null} inputClass="admin-input" buttonClass="admin-btn-primary" />
+            </div>
+          )}
 
           <AdminActivityReport activityId={activity.id} />
 

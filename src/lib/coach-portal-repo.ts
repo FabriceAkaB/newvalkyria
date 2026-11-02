@@ -1,4 +1,4 @@
-import { cleanNote, computeReport, feedbackByWeek, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
+import { cleanNote, computeReport, feedbackByWeek, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, watchReasons, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
 import type { CoachActivity, CoachAssignment } from "@/lib/coaches-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -615,4 +615,55 @@ export async function getFeedbackWeeks(sinceISO?: string): Promise<FeedbackWeek[
       .filter((r) => PARTICIPATED.includes(r.status) && r.activity?.activity_date)
       .map((r) => ({ date: String(r.activity.activity_date).slice(0, 10), practice_rating: r.practice_rating, fatigue: r.fatigue }))
   );
+}
+
+/* ── Briefing de 5 minutes avant la séance (P1.4.01) ─────────────────
+ *  Les fiches joueuses à connaître avant de commencer : filles à suivre (attitude, fatigue, baisse),
+ *  objectifs individuels, essais du jour, absentes la dernière fois. */
+
+export interface BriefingPlayer {
+  registrationId: string;
+  name: string;
+  isTrial: boolean;
+  objectives: string[];
+  watch: string[];
+  absentLastTime: boolean;
+}
+
+export async function getBriefing(activity: { id: string; activity_date: string }, roster: RosterPlayer[]): Promise<BriefingPlayer[]> {
+  const ids = roster.map((p) => p.registrationId);
+  if (!ids.length) return [];
+  const date = String(activity.activity_date).slice(0, 10);
+  const [{ data: objectives }, { data: evals }, { data: att }] = await Promise.all([
+    db().from("player_objectives").select("registration_id, objective").in("registration_id", ids).eq("active", true),
+    db().from("player_evaluations").select("registration_id, ratings, activity:coach_activities(activity_date)").in("registration_id", ids),
+    db().from("activity_player_attendance").select("registration_id, status, practice_rating, fatigue, activity_id, activity:coach_activities(activity_date)").in("registration_id", ids)
+  ]);
+  const before = (r: any) => {
+    const d = String(r.activity?.activity_date ?? "").slice(0, 10);
+    return d && d < date ? d : null;
+  };
+  return roster
+    .map((p) => {
+      const ev = ((evals ?? []) as any[]).filter((e) => e.registration_id === p.registrationId && before(e)).sort((a, b) => before(a)!.localeCompare(before(b)!));
+      const at = ((att ?? []) as any[]).filter((a) => a.registration_id === p.registrationId && before(a) && a.activity_id !== activity.id).sort((a, b) => before(a)!.localeCompare(before(b)!));
+      return {
+        registrationId: p.registrationId,
+        name: `${p.firstName} ${p.lastName}`.trim(),
+        isTrial: p.isTrial,
+        objectives: ((objectives ?? []) as any[]).filter((o) => o.registration_id === p.registrationId).map((o) => String(o.objective)),
+        watch: watchReasons({
+          evaluations: ev.map((e) => ({ date: before(e)!, ratings: e.ratings })),
+          feedback: at.filter((a) => a.practice_rating != null || a.fatigue != null).map((a) => ({ date: before(a)!, practice_rating: a.practice_rating, fatigue: a.fatigue }))
+        }),
+        absentLastTime: at.length > 0 && at[at.length - 1].status === "absent"
+      };
+    })
+    .filter((p) => p.isTrial || p.objectives.length || p.watch.length || p.absentLastTime)
+    .sort((a, b) => b.watch.length - a.watch.length || Number(b.isTrial) - Number(a.isTrial) || a.name.localeCompare(b.name, "fr"));
+}
+
+export async function setSurpriseMoment(activityId: string, text: string | null): Promise<void> {
+  const { error } = await db().from("coach_activities").update({ surprise_moment: text?.trim().slice(0, 1000) || null, updated_at: new Date().toISOString() }).eq("id", activityId);
+  if (error) throw new Error(error.message);
 }

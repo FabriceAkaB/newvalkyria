@@ -7,11 +7,12 @@ import { EntityDocuments } from "@/components/admin-entity-documents";
 import { exerciseGuideFallback } from "@/components/admin-block-guide";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { CoachTopbar } from "@/components/coach-topbar";
+import { SurpriseMomentEditor } from "@/components/surprise-moment";
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
 import { MatchPanel } from "@/components/match-panel";
 import { computeHours, formatHoursMinutes, timeToMinutes } from "@/lib/coach-payroll";
 import { planningLabel } from "@/lib/exercise-bank";
-import type { PlayerAttendance, PlayerAttendanceStatus, PlayerEvaluation, RosterPlayer } from "@/lib/coach-portal-repo";
+import type { BriefingPlayer, PlayerAttendance, PlayerAttendanceStatus, PlayerEvaluation, RosterPlayer } from "@/lib/coach-portal-repo";
 import { cleanNote, isQuickEvaluationComplete, NOTE_MIN_CHARS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START } from "@/lib/coach-report";
 import type { AssignmentStatus, CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
@@ -336,6 +337,33 @@ function PracticeOfTheDay({ activity, theme, blocks, exercises, players }: { act
   );
 }
 
+/* ── Avant : le briefing de 5 minutes (P1.4.01) ──────────────────── */
+
+function BriefingCard({ activity, players, expected }: { activity: CoachActivity; players: BriefingPlayer[]; expected: number }) {
+  return (
+    <div className="coach-card" style={{ marginBottom: 12 }}>
+      <p className="coach-card__label">Briefing de 5 minutes · {expected} joueuse{expected > 1 ? "s" : ""} attendue{expected > 1 ? "s" : ""}</p>
+      {players.length === 0 ? (
+        <p className="coach-sub" style={{ marginTop: 0 }}>Rien de particulier à signaler sur les filles aujourd&apos;hui.</p>
+      ) : (
+        <ul className="coach-brief">
+          {players.map((p) => (
+            <li key={p.registrationId}>
+              <strong>{p.name}</strong>
+              {p.isTrial && <span className="coach-pill" data-tone="info">Essai : bien l&apos;accueillir</span>}
+              {p.watch.map((w) => <span key={w} className="coach-brief__line" style={{ color: "var(--adm-warn)" }}>{w}</span>)}
+              {p.absentLastTime && <span className="coach-brief__line">Absente la dernière fois</span>}
+              {p.objectives.map((o) => <span key={o} className="coach-brief__line">Objectif : {o}</span>)}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="coach-card__label" style={{ marginTop: 16 }}>Moment surprise prévu</p>
+      <SurpriseMomentEditor apiUrl={`/api/coach/activities/${activity.id}/surprise`} initial={activity.surprise_moment ?? null} inputClass="coach-textarea" buttonClass="coach-secondary" />
+    </div>
+  );
+}
+
 /* ── Pendant : les présences ─────────────────────────────────────── */
 
 function AttendanceStep({
@@ -641,13 +669,14 @@ export function CoachActiviteDetail({
   sessionBlocks,
   initialExercises,
   defaultStep,
+  briefing,
   matchRoster,
   initialMatchDetails,
   initialMatchConvocations,
   initialMatchLineup,
   initialMatchPlaytime,
   initialMatchEvaluations
-}: Props & { defaultStep: Step }) {
+}: Props & { defaultStep: Step; briefing: BriefingPlayer[] }) {
   const [step, setStep] = useState<Step>(defaultStep);
   const [showEditor, setShowEditor] = useState(false);
   const [attendance, setAttendance] = useState<Record<string, PlayerAttendanceStatus>>(Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status])));
@@ -736,6 +765,7 @@ export function CoachActiviteDetail({
                   />
                 </div>
               )}
+              {activity.activity_type !== "Match" && <BriefingCard activity={activity} players={briefing} expected={roster.length} />}
               <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} />
 
               {(activity.notes || activity.video_url) && (

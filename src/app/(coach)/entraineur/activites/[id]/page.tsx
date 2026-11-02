@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { CoachActiviteDetail } from "@/components/coach-activite-detail";
 import { requireCoach } from "@/lib/coach-auth";
-import { getActivityAttendance, getActivityEvaluations, getActivityRoster, getCoachActivityById } from "@/lib/coach-portal-repo";
+import { getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityById } from "@/lib/coach-portal-repo";
 import { defaultStepFor } from "@/lib/coach-report";
 import { getCoach } from "@/lib/coaches-repo";
 import { getExercisesForPlanning } from "@/lib/exercises-repo";
@@ -41,6 +41,8 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
     isMatch ? getMatchEvaluations(id) : Promise.resolve([])
   ]);
 
+  const briefing = await getBriefing(entry.activity, roster).catch(() => []);
+
   // Accès limité : la présence de l'éducateur sans son taux ni les champs de paiement.
   const { assignment } = entry;
   const myPresence = {
@@ -69,6 +71,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       coachNames={coachNames}
       myPresence={myPresence}
       defaultStep={defaultStep}
+      briefing={briefing}
       theme={theme ? { theme: theme.theme, notes: theme.notes } : null}
       sessionBlocks={blocks}
       initialExercises={exercises}

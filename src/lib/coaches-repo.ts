@@ -55,6 +55,8 @@ export interface CoachActivity {
   video_url: string | null;
   /** Pratique donnée par JP hors de l'Académie (CF Montréal, St-Gabriel…) ; null pour l'Académie. */
   organization?: string | null;
+  /** Moment surprise prévu pour la pratique (briefing de 5 minutes, P1.4.01). */
+  surprise_moment?: string | null;
 }
 
 export interface CoachAssignment {
