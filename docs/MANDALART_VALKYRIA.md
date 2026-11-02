@@ -1227,6 +1227,48 @@ Chaque pratique est un laboratoire : rien n'est improvisé. Les matchs ont leur 
 
 - [ ] `P7.7.05` ➜ N2 — Faire le bilan financier des matchs : coût (terrain, arbitres, éducateurs), part de l'adversaire encaissée ou non, relié au module Revenus. — 31 mars 2027 · Claude Code
 
+### Matchs, arbitres et bilan de chaque match
+
+Les arbitres réservent eux-mêmes les postes de nos matchs vendus (50 $ par arbitre, 2 par match), reçoivent les informations par courriel et sont payés par virement après le match ; la paie s'ajoute aux dépenses à payer. Chaque match a son bilan : ce que l'adversaire paie, moins le terrain, les arbitres et les éducateurs. Les matchs ne sont pas là pour faire 50 % de marge, mais un match ne doit jamais nous coûter : au moins faire ses frais. Même logique pour chaque cadeau ou avantage donné (sacs, chandails, rabais) : il est compté comme une dépense de son programme.
+
+#### P7.7 Rentabilité par ligne et tableau de bord du lundi
+
+- [x] `P7.7.06` ⭐ N1 — Ouvrir la section Arbitres : réservation des postes de nos matchs vendus par les arbitres (lien personnel), paie ajoutée aux dépenses à payer, bilan de chaque match. — 15 nov. 2026 · Claude Code · AU22
+- [ ] `P7.7.07` ➜ N1 — Appliquer la règle des matchs : chaque match fait au moins ses frais ; sinon revoir le prix de la plage, le coût du terrain ou le nombre d'arbitres. — 31 déc. 2026 · JP · A04
+- [ ] `P7.7.08` ➜ N2 — Compter chaque cadeau ou avantage donné (sacs, chandails, rabais) comme une dépense de son programme. — 31 mars 2027 · JP · A04
+
+#### P7.6 Contrôle des dépenses, fournisseurs et inventaire
+
+- [ ] `P7.6.05` ➜ N2 — Payer automatiquement les arbitres et contractuels après l'activité (virement, ou dossier de paiement prêt à envoyer). — 31 mars 2027 · Claude Code · A04
+
+### Pratiques préparées 2 semaines d'avance
+
+Chaque pratique (Académie, et celles que JP donne ailleurs : CF Montréal, St-Gabriel…) a son plan prêt d'avance : vert quand elle est prête 2 semaines avant, jaune à 1 semaine, rouge à 3 jours. « Aujourd'hui » montre les pratiques à préparer et JP reçoit un rappel 2 fois par jour tant qu'une pratique est en rouge. Le calendrier de l'admin et celui de MonClubSportif restent identiques dans les deux sens.
+
+#### P1.3 Séances sans improvisation et banque d'exercices approuvés
+
+- [ ] `P1.3.18` ⭐ N1 — Ouvrir la section Pratiques : chaque pratique à venir montre si son plan est prêt (vert 2 semaines d'avance, jaune 1 semaine, rouge 3 jours) ; « Aujourd'hui » l'affiche. — 30 nov. 2026 · Claude Code · AU21
+- [ ] `P1.3.19` ⭐ N1 — Envoyer un rappel 2 fois par jour à JP tant qu'une pratique est en rouge. — 30 nov. 2026 · Claude Code · AU21
+- [ ] `P1.3.20` ➜ N1 — Ajouter les pratiques que JP donne hors de l'Académie (CF Montréal, St-Gabriel…) dans une section à part, avec le même plan de séance. — 15 déc. 2026 · Claude Code
+
+#### P8.4 Les données avant les agents
+
+- [ ] `P8.4.08` ⭐ N1 — Lire le calendrier de MonClubSportif (exportation iCal, ou accès automatisé) et garder le calendrier de l'admin à jour. — 15 déc. 2026 · Claude Code · A12
+- [ ] `P8.4.09` ➜ N2 — Créer dans MonClubSportif chaque pratique ou match ajouté dans l'admin. — 31 mars 2027 · Claude Code · A12
+
+### Structure de l'Académie et recrutement
+
+Une vue d'ensemble de qui travaille avec nous (coachs, consultants, gérante, caméra, arbitres) : rôle, diplômes et certifications, contrat, taux, assignations. Et un plan de recrutement chiffré par saison : combien de coachs certifiés à temps plein, à temps partiel, de moniteurs, selon les groupes prévus (une coach pour dix filles). La structure doit suivre la croissance, sans s'alourdir avant les revenus.
+
+#### P8.2 Équipe humaine et rôles
+
+- [ ] `P8.2.05` ⭐ N1 — Ouvrir le dossier Structure : chaque personne, son rôle, ses diplômes et certifications, son contrat, son taux et ses assignations. — 15 déc. 2026 · Claude Code · A10
+- [ ] `P8.2.06` ➜ N2 — Écrire le plan de recrutement de chaque saison : coachs certifiés à temps plein, à temps partiel, moniteurs, selon les groupes prévus (1 coach pour 10 filles) et la marge. — 31 janv. 2027 · JP · A10
+
+#### P8.3 Recrutement et ressources humaines des coachs
+
+- [ ] `P8.3.06` ➜ N2 — Suivre chaque recrutement : annonce, candidats, entrevue, vérification des antécédents, formation, contrat signé. — 31 mars 2027 · JP + Claude Code · A10
+
 ### Agents ajoutés
 
 | Ordre | Agent | Niveau de construction | Prérequis | Tâches du Mandalart |
@@ -1260,3 +1302,6 @@ Chaque pratique est un laboratoire : rien n'est improvisé. Les matchs ont leur 
 | AU18 | Rapprochement comptable de la semaine | cron | Chaque lundi | Compare l'argent entré (Stripe, virements) aux inscriptions et l'argent sorti (paie, terrains, fournisseurs) au budget ; signale chaque écart à JP. Base de l'agent financier (A04). | JP, CPA | à créer | N2 | P7.7.04 |
 | AU19 | Liste « à faire dans MonClubSportif » | page | Inscription payée, remboursement, activité créée | Liste dans l'admin de chaque action à faire dans MonClubSportif, cochée une fois faite ; devient la file de travail de l'agent A12. | JP, puis A12 | à créer | N1 | P8.4.06 |
 | AU20 | Présences et heures des éducateurs | evenement | Fin de chaque activité | L'éducateur confirme sa présence dans le portail ; heures × taux = paie ; relance à 24 h ; liste des présences manquantes avant chaque paie. | Éducateurs, JP | partiel | N1 | P8.3.04, P8.3.05 |
+| AU21 | Pratiques préparées d'avance | cron | Deux fois par jour (8 h et 16 h) | Vérifie le plan de chaque pratique à venir : vert si prête 2 semaines avant, jaune à 1 semaine, rouge à 3 jours ; « Aujourd'hui » l'affiche et JP reçoit un rappel tant qu'une pratique est en rouge. | JP, éducateurs | à créer | N1 | P1.3.18, P1.3.19 |
+| AU22 | Arbitres et bilan des matchs | page | Plage de match vendue, réservation d'un arbitre, match passé | Ouvre les postes d'arbitre des matchs vendus, envoie la liste aux arbitres, confirme les réservations, ajoute leur paie aux dépenses à payer et calcule le bilan de chaque match. | JP, arbitres | actif | N1 | P7.7.06 |
+| AU23 | Dossier Structure et recrutement | page | JP ouvre l'admin, chaque début de saison | Qui travaille avec nous (rôle, diplômes, contrat, taux, assignations) et besoins de recrutement par saison selon les groupes prévus. | JP | à créer | N1 | P8.2.05, P8.2.06, P8.3.06 |

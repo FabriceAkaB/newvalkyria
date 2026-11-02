@@ -1,6 +1,7 @@
 import type { AdminRole } from "@/lib/admin-auth";
 import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
+import { dateLong, getRefereesToPay, listMatches } from "@/lib/referees-repo";
 import { getFamiliesToCall } from "@/lib/surveys-repo";
 import { getOutreachSummary, type OutreachPerson } from "@/lib/outreach";
 import { DISTRIBUTION_STATUS_LABELS, PROBLEM_TYPE_LABELS, type DistributionStatus, type ProblemType } from "@/lib/shop-repo";
@@ -301,6 +302,29 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
           meta: t.overdue ? `En retard (${shortDay(`${t.due}T12:00:00`)})` : `Pour le ${shortDay(`${t.due}T12:00:00`)}`,
           href: `/admin/mandalart/piliers/${t.pillar.toLowerCase()}#${t.objective}`
         }))
+      })
+    );
+
+    // ── Arbitres : à payer, et matchs des 7 prochains jours sans arbitres ──
+    const [toPay, soonMatches] = await Promise.all([getRefereesToPay().catch(() => []), listMatches({ from: today, to: inAWeek }).catch(() => [])]);
+    const uncovered = soonMatches.filter((m) => m.bookingStatus === "paid" && m.assignments.filter((a) => a.status === "reserve").length < m.refereesNeeded);
+    sections.push(
+      section({
+        key: "arbitres",
+        title: "Arbitres",
+        level: uncovered.length ? "rouge" : toPay.length ? "orange" : "info",
+        emptyText: "Aucun arbitre à payer ni match de la semaine sans arbitre.",
+        href: "/admin/arbitres",
+        hrefLabel: "Arbitres et bilan",
+        items: [
+          ...uncovered.map((m) => ({
+            title: `Match sans arbitre : ${dateLong(m.date)} ${m.start}`,
+            detail: `${m.opponent ?? "Adversaire"} · ${m.assignments.filter((a) => a.status === "reserve").length}/${m.refereesNeeded} arbitre(s)`,
+            meta: "Envoyer la liste aux arbitres",
+            href: "/admin/arbitres"
+          })),
+          ...toPay.map((p) => ({ title: `Payer ${p.name} : ${money(p.feeCents)}`, detail: `Match du ${dateLong(p.date)} · Interac ${p.interac ?? "—"}`, meta: "Virement à faire", href: "/admin/arbitres" }))
+        ]
       })
     );
 

@@ -1159,6 +1159,46 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Banque d'exercices Valkyria et évaluation des joueuses"
+      },
+      {
+       "code": "P1.3.18",
+       "priority": "star",
+       "level": 1,
+       "title": "Ouvrir la section Pratiques : chaque pratique à venir montre si son plan est prêt (vert 2 semaines d'avance, jaune 1 semaine, rouge 3 jours) ; « Aujourd'hui » l'affiche.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [
+        "AU21"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Pratiques préparées 2 semaines d'avance"
+      },
+      {
+       "code": "P1.3.19",
+       "priority": "star",
+       "level": 1,
+       "title": "Envoyer un rappel 2 fois par jour à JP tant qu'une pratique est en rouge.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [
+        "AU21"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Pratiques préparées 2 semaines d'avance"
+      },
+      {
+       "code": "P1.3.20",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Ajouter les pratiques que JP donne hors de l'Académie (CF Montréal, St-Gabriel…) dans une section à part, avec le même plan de séance.",
+       "due": "2026-12-15",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Pratiques préparées 2 semaines d'avance"
       }
      ]
     },
@@ -3983,6 +4023,20 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.6.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Payer automatiquement les arbitres et contractuels après l'activité (virement, ou dossier de paiement prêt à envoyer).",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, arbitres et bilan de chaque match"
       }
      ]
     },
@@ -4051,6 +4105,48 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      },
+      {
+       "code": "P7.7.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Ouvrir la section Arbitres : réservation des postes de nos matchs vendus par les arbitres (lien personnel), paie ajoutée aux dépenses à payer, bilan de chaque match.",
+       "due": "2026-11-15",
+       "owner": "Claude Code",
+       "links": [
+        "AU22"
+       ],
+       "initialStatus": "fait",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, arbitres et bilan de chaque match"
+      },
+      {
+       "code": "P7.7.07",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Appliquer la règle des matchs : chaque match fait au moins ses frais ; sinon revoir le prix de la plage, le coût du terrain ou le nombre d'arbitres.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, arbitres et bilan de chaque match"
+      },
+      {
+       "code": "P7.7.08",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Compter chaque cadeau ou avantage donné (sacs, chandails, rabais) comme une dépense de son programme.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Matchs, arbitres et bilan de chaque match"
       }
      ]
     },
@@ -4235,6 +4331,34 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.2.05",
+       "priority": "star",
+       "level": 1,
+       "title": "Ouvrir le dossier Structure : chaque personne, son rôle, ses diplômes et certifications, son contrat, son taux et ses assignations.",
+       "due": "2026-12-15",
+       "owner": "Claude Code",
+       "links": [
+        "A10"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Structure de l'Académie et recrutement"
+      },
+      {
+       "code": "P8.2.06",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Écrire le plan de recrutement de chaque saison : coachs certifiés à temps plein, à temps partiel, moniteurs, selon les groupes prévus (1 coach pour 10 filles) et la marge.",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [
+        "A10"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Structure de l'Académie et recrutement"
       }
      ]
     },
@@ -4301,6 +4425,20 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques"
+      },
+      {
+       "code": "P8.3.06",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Suivre chaque recrutement : annonce, candidats, entrevue, vérification des antécédents, formation, contrat signé.",
+       "due": "2027-03-31",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A10"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Structure de l'Académie et recrutement"
       }
      ]
     },
@@ -4393,6 +4531,34 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "MonClubSportif, présences des éducateurs et contrôle comptable automatiques"
+      },
+      {
+       "code": "P8.4.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Lire le calendrier de MonClubSportif (exportation iCal, ou accès automatisé) et garder le calendrier de l'admin à jour.",
+       "due": "2026-12-15",
+       "owner": "Claude Code",
+       "links": [
+        "A12"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Pratiques préparées 2 semaines d'avance"
+      },
+      {
+       "code": "P8.4.09",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Créer dans MonClubSportif chaque pratique ou match ajouté dans l'admin.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "A12"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Pratiques préparées 2 semaines d'avance"
       }
      ]
     },
@@ -5377,6 +5543,54 @@
    ],
    "note": null,
    "addedOn": "2026-11-02"
+  },
+  {
+   "id": "AU21",
+   "name": "Pratiques préparées d'avance",
+   "type": "cron",
+   "trigger": "Deux fois par jour (8 h et 16 h)",
+   "does": "Vérifie le plan de chaque pratique à venir : vert si prête 2 semaines avant, jaune à 1 semaine, rouge à 3 jours ; « Aujourd'hui » l'affiche et JP reçoit un rappel tant qu'une pratique est en rouge.",
+   "forWho": "JP, éducateurs",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P1.3.18",
+    "P1.3.19"
+   ],
+   "note": null,
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "AU22",
+   "name": "Arbitres et bilan des matchs",
+   "type": "page",
+   "trigger": "Plage de match vendue, réservation d'un arbitre, match passé",
+   "does": "Ouvre les postes d'arbitre des matchs vendus, envoie la liste aux arbitres, confirme les réservations, ajoute leur paie aux dépenses à payer et calcule le bilan de chaque match.",
+   "forWho": "JP, arbitres",
+   "state": "actif",
+   "level": 1,
+   "tasks": [
+    "P7.7.06"
+   ],
+   "note": null,
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "AU23",
+   "name": "Dossier Structure et recrutement",
+   "type": "page",
+   "trigger": "JP ouvre l'admin, chaque début de saison",
+   "does": "Qui travaille avec nous (rôle, diplômes, contrat, taux, assignations) et besoins de recrutement par saison selon les groupes prévus.",
+   "forWho": "JP",
+   "state": "à créer",
+   "level": 1,
+   "tasks": [
+    "P8.2.05",
+    "P8.2.06",
+    "P8.3.06"
+   ],
+   "note": null,
+   "addedOn": "2026-11-02"
   }
  ],
  "additions": {
@@ -5410,6 +5624,18 @@
    {
     "title": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses",
     "text": "Chaque pratique est un laboratoire : rien n'est improvisé. Les matchs ont leur propre section (nous contre l'adversaire, score, résumé, vidéo, analyse, joueuses et temps de jeu) et leur bilan financier (coût, part de l'adversaire encaissée ou non). Les réseaux sociaux sont suivis publication par publication, organique et payant, pour savoir quel contenu amène des essais et des inscriptions. L'éducateur arrive et sait tout : thème, montage du terrain, matériel, qui fait quoi, points clés, variantes et progressions. Ses rapports sont complets ou ses heures ne comptent pas, et les copier-coller sont bloqués. À la fin de chaque pratique, chaque joueuse donne sa note de la pratique et sa fatigue : on suit le taux d'appréciation des joueuses."
+   },
+   {
+    "title": "Matchs, arbitres et bilan de chaque match",
+    "text": "Les arbitres réservent eux-mêmes les postes de nos matchs vendus (50 $ par arbitre, 2 par match), reçoivent les informations par courriel et sont payés par virement après le match ; la paie s'ajoute aux dépenses à payer. Chaque match a son bilan : ce que l'adversaire paie, moins le terrain, les arbitres et les éducateurs. Les matchs ne sont pas là pour faire 50 % de marge, mais un match ne doit jamais nous coûter : au moins faire ses frais. Même logique pour chaque cadeau ou avantage donné (sacs, chandails, rabais) : il est compté comme une dépense de son programme."
+   },
+   {
+    "title": "Pratiques préparées 2 semaines d'avance",
+    "text": "Chaque pratique (Académie, et celles que JP donne ailleurs : CF Montréal, St-Gabriel…) a son plan prêt d'avance : vert quand elle est prête 2 semaines avant, jaune à 1 semaine, rouge à 3 jours. « Aujourd'hui » montre les pratiques à préparer et JP reçoit un rappel 2 fois par jour tant qu'une pratique est en rouge. Le calendrier de l'admin et celui de MonClubSportif restent identiques dans les deux sens."
+   },
+   {
+    "title": "Structure de l'Académie et recrutement",
+    "text": "Une vue d'ensemble de qui travaille avec nous (coachs, consultants, gérante, caméra, arbitres) : rôle, diplômes et certifications, contrat, taux, assignations. Et un plan de recrutement chiffré par saison : combien de coachs certifiés à temps plein, à temps partiel, de moniteurs, selon les groupes prévus (une coach pour dix filles). La structure doit suivre la croissance, sans s'alourdir avant les revenus."
    }
   ]
  },

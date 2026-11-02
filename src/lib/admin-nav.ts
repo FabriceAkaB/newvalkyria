@@ -228,10 +228,13 @@ export const ADMIN_NAV: AdminNavSection[] = [
       },
       {
         key: "matchs",
-        label: "Vente de matchs",
+        label: "Matchs & arbitres",
         icon: "calendar",
-        description: "Plages de match offertes aux autres clubs, demandes et réservations.",
-        tabs: [{ href: "/admin/matchs", label: "Vente de matchs" }]
+        description: "Plages de match offertes aux autres clubs, arbitres qui réservent leurs matchs, paie des arbitres et bilan financier de chaque match.",
+        tabs: [
+          { href: "/admin/matchs", label: "Vente de matchs" },
+          { href: "/admin/arbitres", label: "Arbitres et bilan", adminOnly: true }
+        ]
       }
     ]
   },

@@ -38,6 +38,23 @@ export const PILLAR_MODULES: PillarModule[] = [
   },
   { slug: "entrainements", pillar: "P1", title: "Entrer les pratiques et les matchs", question: "Où j'ajoute une pratique, un match ou un tournoi ?", status: "actif", href: "/admin/entraineurs/activites", objectives: ["P1.3"] },
   {
+    slug: "pratiques",
+    pillar: "P1",
+    title: "Pratiques préparées d'avance",
+    question: "Mes prochaines pratiques sont-elles prêtes, deux semaines d'avance ?",
+    status: "partiel",
+    href: "/admin/pratiques",
+    objectives: ["P1.3", "P8.4"],
+    links: ["AU21", "A12", "A02"],
+    planned: [
+      "Chaque pratique à venir : plan prêt (blocs et thème) ou non ; vert 2 semaines d'avance, jaune 1 semaine, rouge 3 jours",
+      "Rappel à JP 2 fois par jour tant qu'une pratique est en rouge",
+      "Pratiques de JP hors Académie (CF Montréal, St-Gabriel…) dans une section à part",
+      "Calendrier identique à MonClubSportif dans les deux sens (agent A12)"
+    ],
+    next: "P8.4.08 : lire le calendrier MonClubSportif (15 déc.)."
+  },
+  {
     slug: "methode",
     pillar: "P1",
     title: "Méthode Valkyria et curriculum",
@@ -311,6 +328,7 @@ export const PILLAR_MODULES: PillarModule[] = [
   { slug: "commandites", pillar: "P6", title: "Commandites 2027", question: "Quels emplacements sont vendus ?", status: "actif", href: "/admin/sponsors-2027", objectives: ["P6.3", "P6.4"], kpis: ["commandites_annee"] },
   { slug: "suivi-commanditaires", pillar: "P6", title: "Suivi des commanditaires", question: "Avec qui on négocie ?", status: "actif", href: "/admin/commandites", objectives: ["P6.5", "P6.6"], links: ["A08", "AU15"] },
   { slug: "matchs", pillar: "P6", title: "Vente de matchs", question: "Combien de plages de match sont vendues ?", status: "actif", href: "/admin/matchs", objectives: ["P6.7"], kpis: ["plages_matchs"] },
+  { slug: "arbitres", pillar: "P6", title: "Arbitres et bilan des matchs", question: "Qui arbitre, qui dois-je payer, et est-ce que mes matchs font leurs frais ?", status: "actif", href: "/admin/arbitres", objectives: ["P7.7", "P7.6"], links: ["AU22", "A04"] },
   {
     slug: "subventions",
     pillar: "P6",
@@ -379,6 +397,23 @@ export const PILLAR_MODULES: PillarModule[] = [
     links: ["AU20", "A10"],
     planned: ["Confirmation de présence de l'éducateur à chaque activité (portail entraîneur)", "Heures × taux de chaque éducateur = paie", "Relance à 24 h si la présence n'est pas confirmée ; liste des manquantes avant chaque paie"],
     next: "P8.3.04 : confirmation de présence et calcul des heures (15 déc.)."
+  },
+  {
+    slug: "structure",
+    pillar: "P8",
+    title: "Structure et recrutement",
+    question: "Qui travaille avec nous, avec quels diplômes, et qui dois-je recruter pour la prochaine saison ?",
+    status: "a-construire",
+    objectives: ["P8.2", "P8.3"],
+    links: ["AU23", "A10"],
+    planned: [
+      "Organigramme : JP, Annie, Christine, coachs, consultants, caméra, arbitres",
+      "Pour chacun : rôle, diplômes et certifications (licences C/B, sport sécuritaire, antécédents), contrat, taux, assignations",
+      "Plan de recrutement par saison : coachs certifiés temps plein, temps partiel, moniteurs, selon les groupes prévus (1 coach pour 10 filles) et la marge",
+      "Suivi de chaque recrutement : annonce, candidats, entrevue, antécédents, formation, contrat (relié à Contrats)",
+      "Existe déjà : fiches entraîneurs, certifications, contrats, paie"
+    ],
+    next: "P8.2.05 : dossier Structure (15 déc.)."
   },
   { slug: "equipe", pillar: "P8", title: "Équipe et coachs", question: "Qui travaille avec nous ?", status: "actif", href: "/admin/entraineurs", objectives: ["P8.2", "P8.3"] },
   { slug: "contrats", pillar: "P8", title: "Contrats d'embauche", question: "Qui a signé ?", status: "actif", href: "/admin/contrats", objectives: ["P8.3"] },

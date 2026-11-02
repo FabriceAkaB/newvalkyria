@@ -32,6 +32,7 @@ import { onPrivateCheckoutExpired, onPrivateRefund, onPrivateRegistrationPaid } 
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { markBookingsPaid, releaseBySession as releaseMatchBySession, toEmailSlots } from "@/lib/match-slots-repo";
+import { openPositions } from "@/lib/referees-repo";
 import { closeOtherOffersForSlot, onPartnershipOptionPaid } from "@/lib/partnership-offers";
 import { markRentalPaid, releaseRentalBySession } from "@/lib/terrain-rentals-repo";
 import { getOfferByToken, markOfferPaid } from "@/lib/special-offers";
@@ -511,6 +512,10 @@ export async function POST(request: Request) {
           await (getSupabaseAdminClient() as any).from("match_slot_bookings").update({ confirmation_sent_at: new Date().toISOString() }).in("id", bookings.map((b) => b.id));
         } catch (error) {
           console.error("Unable to send match slot confirmation email", error);
+        }
+        // Match vendu : ses postes d'arbitre s'ouvrent (les arbitres les verront dans leur lien).
+        for (const slotId of new Set(bookings.map((b: any) => b.slot_id).filter(Boolean))) {
+          await openPositions(String(slotId)).catch((err) => console.error("Unable to open referee positions", err));
         }
       }
       return NextResponse.json({ received: true });
