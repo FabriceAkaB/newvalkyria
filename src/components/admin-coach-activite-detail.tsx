@@ -8,6 +8,7 @@ import { EntityDocuments } from "@/components/admin-entity-documents";
 import { MatchPanel } from "@/components/match-panel";
 import { computeAssignment, computeHours, formatHours } from "@/lib/coach-payroll";
 import type { AssignmentStatus, Coach, CoachActivity, CoachAssignment, CoachTypeRate } from "@/lib/coaches-repo";
+import { planningLabel } from "@/lib/exercise-bank";
 import type { Exercise } from "@/lib/exercises-repo";
 import type { MatchConvocation, MatchDetails, MatchLineupSlot, MatchPlayerEvaluation, MatchRosterPlayer, PlaytimeSegment } from "@/lib/match-repo";
 import { formatCAD } from "@/lib/season-2027";
@@ -97,7 +98,7 @@ function SessionPlanEditor({ activityId, initialBlocks, exercises }: { activityI
         </select>
         <select className="admin-input" value={exerciseId} onChange={(e) => setExerciseId(e.target.value)} style={{ flex: "1 1 160px" }}>
           <option value="">Exercice de la bibliothèque (optionnel)</option>
-          {exercises.map((ex) => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+          {exercises.map((ex) => <option key={ex.id} value={ex.id}>{planningLabel(ex)}</option>)}
         </select>
         <input className="admin-input" placeholder="Titre libre (si pas d'exercice)" value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} style={{ flex: "1 1 160px" }} />
         <input className="admin-input" type="number" min={1} value={duration} onChange={(e) => setDuration(e.target.value)} style={{ width: "5rem" }} />

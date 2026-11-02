@@ -1,4 +1,6 @@
 import type { AdminRole } from "@/lib/admin-auth";
+import { STATUS_LABEL, fmtScore } from "@/lib/exercise-bank";
+import { getBank } from "@/lib/exercises-repo";
 import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
 import { getMcsStatus } from "@/lib/mcs-sync";
@@ -304,6 +306,30 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         }))
       })
     );
+  }
+
+  // ── Banque d'exercices : à valider par JP (2 éducateurs à 8+), à changer (note sous 8) ──
+  if (isAdmin) {
+    const bank = await getBank().catch(() => null);
+    const toDecide = (bank?.entries ?? []).filter((e) => e.bank.status === "a-valider" || e.bank.status === "a-changer");
+    if (bank && bank.entries.length) {
+      sections.push(
+        section({
+          key: "exercices",
+          title: "Banque d'exercices",
+          level: toDecide.length ? "orange" : "info",
+          emptyText: "Aucun exercice à valider ni à changer.",
+          href: "/admin/exercices",
+          hrefLabel: "Banque d'exercices",
+          items: toDecide.map((e) => ({
+            title: e.bank.status === "a-valider" ? `Valider « ${e.title} »` : `Changer « ${e.title} »`,
+            detail: e.bank.reason,
+            meta: `${STATUS_LABEL[e.bank.status]} · ${fmtScore(e.bank.average)}/10`,
+            href: `/admin/exercices/${e.id}`
+          }))
+        })
+      );
+    }
   }
 
   // ── Mandalart : tâches en retard et ⭐ dues dans les 7 prochains jours ──

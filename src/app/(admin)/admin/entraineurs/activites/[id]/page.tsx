@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminCoachActiviteDetail } from "@/components/admin-coach-activite-detail";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getActivity, getActivityAssignments, getAllCoachTypeRates, getCoaches } from "@/lib/coaches-repo";
-import { getExercises } from "@/lib/exercises-repo";
+import { getExercisesForPlanning } from "@/lib/exercises-repo";
 import { getConvocations, getLineup, getMatchDetails, getMatchEvaluations, getMatchRoster, getPlaytimeSegments } from "@/lib/match-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getBlocksForActivity } from "@/lib/session-plan-repo";
@@ -25,7 +25,8 @@ export default async function AdminCoachActiviteDetailPage({ params }: { params:
     getCoaches(),
     getAllCoachTypeRates(),
     getBlocksForActivity(id),
-    getExercises(),
+    // Banque Valkyria : approuvés d'abord, sans les exercices qui ne peuvent pas aller dans cette séance
+    getBlocksForActivity(id).then((b) => getExercisesForPlanning(activity.activity_date, b.map((x) => x.exercise_id))),
     isMatch ? getMatchRoster(SEASON_DB_ID, activity.category, activity.activity_date) : Promise.resolve([]),
     isMatch ? getMatchDetails(id) : Promise.resolve(null),
     isMatch ? getConvocations(id) : Promise.resolve([]),

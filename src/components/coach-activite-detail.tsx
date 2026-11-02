@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { EntityDocuments } from "@/components/admin-entity-documents";
+import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
 import { MatchPanel } from "@/components/match-panel";
 import { computeHours, formatHoursMinutes } from "@/lib/coach-payroll";
+import { planningLabel } from "@/lib/exercise-bank";
 import { EVALUATION_CRITERIA, type PlayerAttendance, type PlayerAttendanceStatus, type PlayerEvaluation, type RosterPlayer } from "@/lib/coach-portal-repo";
 import type { CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
@@ -190,7 +192,7 @@ function SessionPlanEditor({ activityId, initialBlocks, initialExercises }: { ac
         </select>
         <select className="admin-input" value={exerciseId} onChange={(e) => setExerciseId(e.target.value)} style={{ flex: "1 1 160px" }}>
           <option value="">Exercice de la bibliothèque (optionnel)</option>
-          {exercises.map((ex) => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+          {exercises.map((ex) => <option key={ex.id} value={ex.id}>{planningLabel(ex)}</option>)}
         </select>
         <input className="admin-input" placeholder="Titre libre (si pas d'exercice)" value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} style={{ flex: "1 1 160px" }} />
         <input className="admin-input" type="number" min={1} value={duration} onChange={(e) => setDuration(e.target.value)} style={{ width: "5rem" }} />
@@ -413,6 +415,8 @@ export function CoachActiviteDetail({ coachName, coachId, activity, otherCoaches
           )}
 
           <SessionPlanEditor activityId={activity.id} initialBlocks={sessionBlocks} initialExercises={initialExercises} />
+
+          <CoachExerciseRatings activityId={activity.id} />
 
           <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Joueuses attendues ({roster.length})</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>

@@ -4,7 +4,7 @@ import { CoachActiviteDetail } from "@/components/coach-activite-detail";
 import { requireCoach } from "@/lib/coach-auth";
 import { getActivityAttendance, getActivityEvaluations, getCoachActivityById, getExpectedRoster } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
-import { getExercises } from "@/lib/exercises-repo";
+import { getExercisesForPlanning } from "@/lib/exercises-repo";
 import { getConvocations, getLineup, getMatchDetails, getMatchEvaluations, getMatchRoster, getPlaytimeSegments } from "@/lib/match-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getBlocksForActivity } from "@/lib/session-plan-repo";
@@ -27,7 +27,8 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
     getActivityAttendance(id),
     getActivityEvaluations(id),
     getBlocksForActivity(id),
-    getExercises(),
+    // Banque Valkyria : approuvés d'abord, sans les exercices qui ne peuvent pas aller dans cette séance
+    getBlocksForActivity(id).then((b) => getExercisesForPlanning(entry.activity.activity_date, b.map((x) => x.exercise_id))),
     isMatch ? getMatchRoster(SEASON_DB_ID, entry.activity.category, entry.activity.activity_date) : Promise.resolve([]),
     isMatch ? getMatchDetails(id) : Promise.resolve(null),
     isMatch ? getConvocations(id) : Promise.resolve([]),

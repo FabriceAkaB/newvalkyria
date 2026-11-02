@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
-import { deleteExercise, updateExercise } from "@/lib/exercises-repo";
+import { deleteExercise, parseExerciseBody, setBankDecision, updateExercise } from "@/lib/exercises-repo";
 import { jsonError } from "@/lib/http";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -14,22 +14,27 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   try {
-    await updateExercise(id, {
-      title: (body.title as string).trim(),
-      objective: (body.objective as string) || null,
-      category: (body.category as string) || null,
-      level: (body.level as string) || null,
-      durationMinutes: typeof body.durationMinutes === "number" ? body.durationMinutes : null,
-      material: (body.material as string) || null,
-      minPlayers: typeof body.minPlayers === "number" ? body.minPlayers : null,
-      maxPlayers: typeof body.maxPlayers === "number" ? body.maxPlayers : null,
-      dimensions: (body.dimensions as string) || null,
-      instructions: (body.instructions as string) || null,
-      variants: (body.variants as string) || null,
-      coachingPoints: (body.coachingPoints as string) || null,
-      commonMistakes: (body.commonMistakes as string) || null,
-      videoUrl: (body.videoUrl as string) || null
+    const { version } = await updateExercise(id, parseExerciseBody(body), {
+      newVersion: body.newVersion === true,
+      versionNote: typeof body.versionNote === "string" ? body.versionNote : null
     });
+    return NextResponse.json({ ok: true, version });
+  } catch (error) {
+    if (error instanceof Error) return jsonError(error.message, 422);
+    return jsonError("Erreur serveur", 500);
+  }
+}
+
+/** Décision de JP sur la banque : valider la version en cours, annuler la validation, retirer, remettre à l'essai. */
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
+  const { id } = await params;
+  const body = (await request.json().catch(() => null)) as { action?: string; reason?: string } | null;
+  const action = body?.action;
+  if (action !== "valider" && action !== "annuler-validation" && action !== "retirer" && action !== "remettre") return jsonError("Action invalide", 400);
+
+  try {
+    await setBankDecision(id, action, body?.reason ?? null);
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof Error) return jsonError(error.message, 422);

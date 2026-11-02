@@ -80,7 +80,7 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P1",
     title: "Banque d'exercices approuvés",
     question: "Quels exercices marchent vraiment, par âge, thème et espace ?",
-    status: "partiel",
+    status: "actif",
     href: "/admin/exercices",
     objectives: ["P1.3"],
     kpis: ["exercices_approuves", "seances_approuvees"],
@@ -94,7 +94,7 @@ export const PILLAR_MODULES: PillarModule[] = [
       "Recherche par âge, thème, type, lieu, nombre de joueuses, statut et note",
       "Base : les documents de référence de JP"
     ],
-    next: "P1.3.12 à P1.3.15 : types, liste de vérification, organisation selon le nombre et règle d'approbation (30 nov.)."
+    next: "Remplir les fiches : organisation 5 à 7 / 8 à 10 / 11 à 16 de chaque exercice (P1.3.14), puis importer les documents de référence de JP (P1.3.16, 15 déc.). Les éducateurs notent dans le portail après chaque séance."
   },
   {
     slug: "standards",

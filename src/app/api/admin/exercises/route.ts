@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
-import { createExercise, getExercises } from "@/lib/exercises-repo";
+import { createExercise, getExercises, parseExerciseBody } from "@/lib/exercises-repo";
 import { jsonError } from "@/lib/http";
 
 export async function GET() {
@@ -18,22 +18,6 @@ export async function POST(request: Request) {
     return jsonError("Titre requis", 400);
   }
 
-  const id = await createExercise({
-    title: (body.title as string).trim(),
-    objective: (body.objective as string) || null,
-    category: (body.category as string) || null,
-    level: (body.level as string) || null,
-    durationMinutes: typeof body.durationMinutes === "number" ? body.durationMinutes : null,
-    material: (body.material as string) || null,
-    minPlayers: typeof body.minPlayers === "number" ? body.minPlayers : null,
-    maxPlayers: typeof body.maxPlayers === "number" ? body.maxPlayers : null,
-    dimensions: (body.dimensions as string) || null,
-    instructions: (body.instructions as string) || null,
-    variants: (body.variants as string) || null,
-    coachingPoints: (body.coachingPoints as string) || null,
-    commonMistakes: (body.commonMistakes as string) || null,
-    videoUrl: (body.videoUrl as string) || null
-  });
-
+  const id = await createExercise(parseExerciseBody(body));
   return NextResponse.json({ ok: true, id }, { status: 201 });
 }

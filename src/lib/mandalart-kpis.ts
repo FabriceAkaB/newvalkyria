@@ -1,4 +1,5 @@
 import { CLUB_ID } from "@/lib/club";
+import { getBank } from "@/lib/exercises-repo";
 import { kpiProgress, parseKpiNumber, type ParsedNumber } from "@/lib/mandalart-core";
 import { PLAN, type PlanKpi } from "@/lib/mandalart-plan";
 import { computeRevenueSummary } from "@/lib/revenue-calc";
@@ -53,14 +54,15 @@ const GENERATION_TARGET = 40; // environ 40 joueuses par génération (indicateu
 /** Calcule tous les indicateurs automatiques à partir des vraies données. */
 export async function computeRealFigures(today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" })): Promise<RealFigures> {
   const year = today.slice(0, 4);
-  const [seasons, regs, leads, slots, sponsorSlots, matchBookings, exercises] = await Promise.all([
+  const [seasons, regs, leads, slots, sponsorSlots, matchBookings, bank, exerciseBlocks] = await Promise.all([
     rows(db().from("seasons").select("id, is_active")),
     rows(db().from("registrations").select("season_id, status, is_trial, parent_email, player_first_name, player_last_name, player_dob, time_slot_template_id, created_at")),
     rows(db().from("leads").select("status, email, parent_name, created_at")),
     rows(db().from("time_slot_templates").select("id, max_places, active")),
     rows(db().from("sponsor_slots_2027").select("status, price_cents")),
     rows(db().from("match_slot_bookings").select("status")),
-    rows(db().from("exercises").select("id"))
+    getBank().catch(() => ({ entries: [], ratings: [] })),
+    rows(db().from("activity_session_blocks").select("activity_id, exercise_id, activity:coach_activities(activity_date)").not("exercise_id", "is", null))
   ]);
   const activeSeason = seasons.find((s: any) => s.is_active)?.id ?? "automne-hiver-2026";
   const paid = regs.filter((r: any) => r.season_id === activeSeason && r.status === "paid");
@@ -135,8 +137,27 @@ export async function computeRealFigures(today = new Date().toLocaleDateString("
   // plages_matchs : réservations payées (module Vente de matchs)
   auto.plages_matchs = { value: matchBookings.filter((b: any) => b.status === "paid").length, note: "Réservations payées (module Vente de matchs)." };
 
-  // exercices_approuves : la banque n'a pas encore de statut « approuvé » (grille sur 10 à venir, P1.3.02)
-  auto.exercices_approuves = { value: 0, note: `${exercises.length} exercice(s) dans la banque ; aucun statut « approuvé » tant que la grille sur 10 n'est pas en place.` };
+  // exercices_approuves : statut calculé de la banque (2 éducateurs à 8/10 ou plus + validation de JP), par génération U8 à U12
+  const approved = bank.entries.filter((e) => e.bank.status === "approuve");
+  const byAge = ["U8", "U9", "U10", "U11", "U12"].map((a) => `${a} ${approved.filter((e) => (e.age_groups ?? []).includes(a)).length}`).join(" · ");
+  const toValidate = bank.entries.filter((e) => e.bank.status === "a-valider").length;
+  auto.exercices_approuves = {
+    value: approved.length,
+    note: `${approved.length} approuvé(s) sur ${bank.entries.length} dans la banque (${byAge}) ; ${toValidate} à valider par JP ; ${bank.ratings.length} note(s) d'éducateurs (/admin/exercices).`
+  };
+
+  // seances_approuvees : séances passées dont tous les exercices de la banque sont approuvés
+  const statusById = new Map(bank.entries.map((e) => [e.id, e.bank.status]));
+  const sessions = new Map<string, boolean>();
+  for (const b of exerciseBlocks) {
+    const date = String(b.activity?.activity_date ?? "");
+    if (!date || date > today) continue;
+    sessions.set(b.activity_id, (sessions.get(b.activity_id) ?? true) && statusById.get(b.exercise_id) === "approuve");
+  }
+  if (sessions.size) {
+    const ok = [...sessions.values()].filter(Boolean).length;
+    auto.seances_approuvees = { value: Math.round((ok / sessions.size) * 100), note: `${ok} séance(s) sur ${sessions.size} bâties seulement avec des exercices approuvés.` };
+  }
 
   // Sondages (module Voix des familles)
   try {

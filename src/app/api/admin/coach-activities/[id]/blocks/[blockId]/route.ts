@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
+import { assertExerciseUsable } from "@/lib/exercises-repo";
 import { jsonError } from "@/lib/http";
 import { deleteBlock, swapBlockOrder, updateBlock } from "@/lib/session-plan-repo";
 
@@ -21,6 +22,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.move) {
     await swapBlockOrder(id, blockId, body.move);
     return NextResponse.json({ ok: true });
+  }
+
+  try {
+    await assertExerciseUsable(body.exerciseId, id);
+  } catch (error) {
+    return jsonError(error instanceof Error ? error.message : "Exercice non disponible", 422);
   }
 
   await updateBlock(blockId, {
