@@ -81,7 +81,7 @@ export default async function FicheEvaluationPage({
         .fiche-bar a { color: #4c2d70; }
         .fiche-title { margin: 0 0 14px; font-size: 20px; letter-spacing: .08em; color: #2a1a45; border-bottom: 3px solid #72499a; padding-bottom: 8px; }
         .fiche-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 22px; margin-bottom: 14px; }
-        .fiche-field { display: flex; gap: 6px; align-items: baseline; border-bottom: 1px solid var(--adm-text-2); padding-bottom: 2px; font-size: 12.5px; min-height: 22px; }
+        .fiche-field { display: flex; gap: 6px; align-items: baseline; border-bottom: 1px solid #cfcad9; padding-bottom: 2px; font-size: 12.5px; min-height: 22px; }
         .fiche-field b { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #5b5670; white-space: nowrap; }
         .fiche-section { margin-top: 14px; break-inside: avoid; }
         .fiche-section h3 { margin: 0 0 4px; font-size: 13px; letter-spacing: .1em; color: #fff; background: #72499a; padding: 4px 8px; display: flex; justify-content: space-between; }
@@ -89,7 +89,7 @@ export default async function FicheEvaluationPage({
         .fiche-row .head { text-align: center; font-size: 10px; font-weight: 700; color: #5b5670; }
         .fiche-dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #9a93ab; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #5b5670; margin: 0 auto; }
         .fiche-dot.on { background: #2a1a45; color: #fff; border-color: #2a1a45; font-weight: 700; }
-        .fiche-remarks { border: 1px solid var(--adm-text-2); border-radius: 4px; padding: 6px 8px; min-height: 44px; margin-top: 6px; font-size: 12px; white-space: pre-wrap; }
+        .fiche-remarks { border: 1px solid #cfcad9; border-radius: 4px; padding: 6px 8px; min-height: 44px; margin-top: 6px; font-size: 12px; white-space: pre-wrap; }
         .fiche-remarks b { display: block; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #5b5670; margin-bottom: 2px; }
         .fiche-foot { display: grid; grid-template-columns: 2fr 1fr; gap: 10px 22px; margin-top: 10px; }
         @media print {
