@@ -2,6 +2,7 @@ import { CoachDashboard, type DashboardActivity, type ToComplete } from "@/compo
 import { requireCoach } from "@/lib/coach-auth";
 import { cleanCategory, getActivityReports, getCoachActivities, loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
 import { hasStarted, REPORT_RULE_START } from "@/lib/coach-report";
+import { listObservations } from "@/lib/coach-observations-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { getSeasonThemes, mondayOfWeek, themeFor } from "@/lib/season-themes-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
@@ -14,7 +15,13 @@ export default async function CoachDashboardPage() {
   const coachId = await requireCoach();
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
 
-  const [coach, allActivities, sources, themes] = await Promise.all([getCoach(coachId), getCoachActivities(coachId), loadRosterSources(), getSeasonThemes(SEASON_DB_ID).catch(() => [])]);
+  const [coach, allActivities, sources, themes, observations] = await Promise.all([
+    getCoach(coachId),
+    getCoachActivities(coachId),
+    loadRosterSources(),
+    getSeasonThemes(SEASON_DB_ID).catch(() => []),
+    listObservations({ coachId, sharedOnly: true }).catch(() => [])
+  ]);
   const activities = allActivities.filter((a) => a.assignment.status !== "cancelled" && a.assignment.status !== "replaced");
   const ids = activities.map((a) => a.activity.id);
   const { data: blocks } = ids.length
@@ -70,6 +77,11 @@ export default async function CoachDashboardPage() {
       today={view.filter((a) => a.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime))}
       upcoming={view.filter((a) => a.date > today).sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`))}
       toComplete={toComplete}
+      lastFeedback={
+        observations[0]
+          ? { date: observations[0].observed_on, total: observations[0].total, strengths: observations[0].strengths, toImprove: observations[0].to_improve, nextFocus: observations[0].next_focus, videoUrl: observations[0].video_url }
+          : null
+      }
     />
   );
 }

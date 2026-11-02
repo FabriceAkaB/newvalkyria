@@ -309,8 +309,11 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "suivi-educateurs",
         label: "Suivi des éducateurs",
         icon: "users",
-        description: "Accès au portail et rapports de chaque pratique : présences, évaluations, routine de fin.",
-        tabs: [{ href: "/admin/entraineurs/suivi", label: "Suivi des éducateurs", adminOnly: true }]
+        description: "Accès au portail, rapports de chaque pratique et observation filmée de chaque coach chaque mois, avec le retour de JP.",
+        tabs: [
+          { href: "/admin/entraineurs/suivi", label: "Suivi des éducateurs", adminOnly: true },
+          { href: "/admin/coaching/observations", label: "Observations du mois", adminOnly: true }
+        ]
       }
     ]
   },

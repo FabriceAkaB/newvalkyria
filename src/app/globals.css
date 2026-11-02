@@ -11264,3 +11264,12 @@ img { max-width: 100%; height: auto; }
 @media (min-width: 900px) {
   .sp-head { grid-template-columns: 150px minmax(0, 1fr) auto; align-items: center; gap: 12px; }
 }
+
+/* ── Espace coaching : observation des coachs (grille 0, 1, 2) ── */
+.ob-row { display: grid; gap: 8px; padding: 10px 12px; background: var(--adm-surface-2); border-radius: var(--adm-radius-sm); }
+.ob-row strong { display: block; color: var(--adm-text); font-size: 0.9rem; }
+.ob-row span { font-size: 0.78rem; color: var(--adm-text-3); }
+.ob-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.ob-seg button { min-height: 44px; border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); background: transparent; color: var(--adm-text-2); font: inherit; font-size: 0.82rem; cursor: pointer; }
+.ob-seg button[data-active="true"] { background: var(--adm-accent-soft); border-color: var(--adm-accent); color: var(--adm-text); font-weight: 600; }
+@media (min-width: 900px) { .ob-row { grid-template-columns: minmax(0, 1fr) 300px; align-items: center; } }

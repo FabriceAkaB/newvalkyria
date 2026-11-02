@@ -22,6 +22,8 @@ Tout ce qui sert à faire progresser les filles va dans Coaching (section « Sur
 | Progression des joueuses | `/admin/coaching/joueuses` (+ `[id]` = sa saison) | `getPlayersProgress`, `watchReasons` | (lecture) |
 | Tests et passeport | `/admin/coaching/tests` | `skill-tests.ts` (pur, testé), `skill-tests-repo.ts` | `skill_tests`, `skill_test_results` |
 | Méthode Valkyria | `/admin/coaching/methode`, `/admin/coaching/gestes` ; portail `/entraineur/methode` | `coaching-method.ts` (pur, testé), `coaching-method-repo.ts` | `coaching_method_docs`, `method_gestures` |
+| Observation mensuelle des coachs | `/admin/coaching/observations` ; portail : « Mon dernier retour » | `coach-observations.ts` (grille pure, testée), `coach-observations-repo.ts` | `coach_observations` |
+| Plan de l'année | `/admin/coaching/plan` | `season-plan.ts` (pur, testé), `season-themes-repo.ts` (`themeFor`) | `season_themes` (block_label, test_week, by_category) |
 | Banque d'exercices | `/admin/exercices` | `exercise-bank.ts`, `exercises-repo.ts` | `exercises`, `exercise_ratings` |
 
 ## Règles
@@ -36,6 +38,6 @@ Tout ce qui sert à faire progresser les filles va dans Coaching (section « Sur
 9. Après une pièce : fiche dans `mandalart-modules.ts` à jour, tâche cochée dans `mandalart_tasks_state` (note « Construit et mis en ligne par Claude Code le … »), skill `mise-en-ligne`.
 
 ## Pièces qui restent (dans l'ordre)
-1. Planification de l'année (périodisation) : thème par semaine et par catégorie, blocs de 4 à 6 semaines, semaines de tests, matchs, fermetures ; lien lieu ↔ thème (P1.3.17).
-2. Formation des coachs : certification interne (P1.4.02), observation filmée mensuelle avec rétroaction (P1.4.03), réunion technique mensuelle (P1.4.04).
+1. Lien lieu ↔ thème et exercices de la banque proposés selon le thème de la semaine (P1.3.17).
+2. Formation des coachs : certification interne (P1.4.02, critères de JP), réunion technique mensuelle (P1.4.04).
 3. Test mensuel dans le portail des éducateurs (P1.2.05) ; curriculum U8 à U12 (P1.1.06) ; matchs joués et Valkyria Lab (construits par d'autres sessions : relier, ne pas refaire).

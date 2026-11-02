@@ -26,11 +26,39 @@ export interface ToComplete {
   missing: string[];
 }
 
+export interface CoachFeedback {
+  date: string;
+  total: number | null;
+  strengths: string | null;
+  toImprove: string | null;
+  nextFocus: string | null;
+  videoUrl: string | null;
+}
+
 interface Props {
   coachName: string;
   today: DashboardActivity[];
   upcoming: DashboardActivity[];
   toComplete: ToComplete[];
+  /** Dernier retour publié par JP après une séance observée (P1.4.03). */
+  lastFeedback: CoachFeedback | null;
+}
+
+function FeedbackCard({ f }: { f: CoachFeedback }) {
+  return (
+    <div className="coach-card">
+      <p className="coach-card__label">
+        Mon dernier retour de JP · <span style={{ textTransform: "capitalize" }}>{dayLabel(f.date)}</span>
+        {f.total !== null ? ` · ${f.total}/10` : ""}
+      </p>
+      {f.nextFocus && <p style={{ margin: "0 0 8px", fontWeight: 600, color: "var(--adm-text)" }}>Mon focus ce mois-ci : {f.nextFocus}</p>}
+      <dl className="coach-feedback">
+        {f.strengths && <div><dt>Points forts</dt><dd>{f.strengths}</dd></div>}
+        {f.toImprove && <div><dt>À améliorer</dt><dd>{f.toImprove}</dd></div>}
+      </dl>
+      {f.videoUrl && <a href={f.videoUrl} target="_blank" rel="noreferrer" className="coach-secondary" style={{ marginTop: 12 }}>Revoir la vidéo ↗</a>}
+    </div>
+  );
 }
 
 const dayLabel = (iso: string, opts: Intl.DateTimeFormatOptions = { weekday: "long", day: "numeric", month: "long" }) =>
@@ -72,7 +100,7 @@ function ActivityRow({ activity, right, warning }: { activity: DashboardActivity
   );
 }
 
-export function CoachDashboard({ coachName, today, upcoming, toComplete }: Props) {
+export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFeedback }: Props) {
   const next = upcoming[0];
   return (
     <>
@@ -105,6 +133,12 @@ export function CoachDashboard({ coachName, today, upcoming, toComplete }: Props
               <div className="coach-list">{today.map((a) => <TodayHero key={a.id} activity={a} />)}</div>
             )}
           </section>
+
+          {lastFeedback && (
+            <section style={{ marginTop: 24 }}>
+              <FeedbackCard f={lastFeedback} />
+            </section>
+          )}
 
           <section style={{ marginTop: 24 }}>
             <h2 className="coach-h2">À venir</h2>

@@ -212,10 +212,11 @@ export const PILLAR_MODULES: PillarModule[] = [
     planned: [
       "En place : briefing de 5 minutes en tête de chaque pratique dans le portail (filles à suivre, objectifs, essais, absentes, moment surprise prévu)",
       "En place : méthode et règle du coach dans le portail (page Méthode) ; rapports de chaque pratique dans Suivi des éducateurs",
-      "À venir : certification interne Valkyria (P1.4.02), observation filmée mensuelle avec rétroaction (P1.4.03), réunion technique mensuelle (P1.4.04)",
+      "En place : observation filmée de chaque coach chaque mois (Coaching → Éducateurs → Observations du mois) : grille de la règle du coach sur 10, points forts, à améliorer, focus du mois suivant, retour publié dans le portail de l'éducateur",
+      "À venir : certification interne Valkyria (P1.4.02, critères à écrire par JP), réunion technique mensuelle (P1.4.04)",
       "Certifications des coachs (existe : fiches entraîneurs)"
     ],
-    next: "P1.4.01 : faire le briefing de 5 minutes avant chaque séance avec la page « Avant » du portail (31 déc.)."
+    next: "P1.4.01 : faire le briefing de 5 minutes avant chaque séance (31 déc.) ; P1.4.03 : observer et filmer une séance par coach chaque mois."
   },
 
   // ── P2 Offres et prix ──
