@@ -147,7 +147,10 @@ export const ADMIN_NAV: AdminNavSection[] = [
         label: "Pratiques",
         icon: "flask",
         description: "Chaque pratique préparée 2 semaines d'avance : vert, jaune, rouge. Aussi les pratiques que JP donne hors de l'Académie.",
-        tabs: [{ href: "/admin/pratiques", label: "À préparer" }]
+        tabs: [
+          { href: "/admin/pratiques", label: "À préparer" },
+          { href: "/admin/photos", label: "Photos des joueuses" }
+        ]
       },
       {
         key: "evaluations",
@@ -220,6 +223,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/themes", label: "Thèmes", adminOnly: true },
           { href: "/admin/entraineurs/paie", label: "Paie", adminOnly: true },
           { href: "/admin/contrats", label: "Contrats", adminOnly: true },
+          { href: "/admin/entraineurs/suivi", label: "Suivi des éducateurs", adminOnly: true },
           { href: "/admin/entraineurs/statistiques", label: "Statistiques", adminOnly: true }
         ]
       },
