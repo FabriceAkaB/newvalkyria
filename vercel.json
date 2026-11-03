@@ -24,6 +24,10 @@
     {
       "path": "/api/cron/presences-educateurs",
       "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/cron/mandalart-report",
+      "schedule": "0 9 * * *"
     }
   ]
 }

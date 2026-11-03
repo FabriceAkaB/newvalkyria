@@ -22,7 +22,7 @@ function db() {
 export const todayIso = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
 
 export async function getTaskStates(): Promise<TaskState[]> {
-  const { data, error } = await db().from("mandalart_tasks_state").select("code, status, note, evidence_url, done_at, updated_at").eq("club_id", CLUB_ID);
+  const { data, error } = await db().from("mandalart_tasks_state").select("code, status, note, evidence_url, done_at, updated_at, due, planned_due, fixed").eq("club_id", CLUB_ID);
   if (error) throw error;
   return data ?? [];
 }
@@ -58,6 +58,50 @@ export async function setTaskStatus(input: { code: string; status: TaskStatus; n
   if (task.status !== input.status || input.note) {
     await db().from("mandalart_events").insert({ club_id: CLUB_ID, code: input.code, from_status: task.status, to_status: input.status, note: input.note ?? null, by: input.by });
   }
+}
+
+/** Date fixe d'une tâche : elle n'est jamais reportée automatiquement. */
+export async function setTaskFixed(code: string, fixed: boolean, by: string): Promise<void> {
+  const task = (await getLiveTasks()).find((t) => t.code === code);
+  if (!task) throw new Error("Tâche introuvable");
+  const { error } = await db()
+    .from("mandalart_tasks_state")
+    .upsert({ club_id: CLUB_ID, code, status: task.status, fixed, updated_at: new Date().toISOString(), updated_by: by }, { onConflict: "club_id,code" });
+  if (error) throw error;
+  await db().from("mandalart_events").insert({ club_id: CLUB_ID, code, from_status: task.status, to_status: task.status, note: fixed ? "Date fixe : ne sera jamais reportée" : "Date fixe retirée", by });
+}
+
+/** Report automatique du matin (rescheduleTasks) : écrit la nouvelle date, garde la date d'origine, note chaque report au journal. */
+export async function applyReschedule(today = todayIso()): Promise<{ code: string; from: string; to: string; reason: "retard" | "suite"; title: string }[]> {
+  const { rescheduleTasks } = await import("@/lib/mandalart-reschedule");
+  const tasks = await getLiveTasks(today);
+  const { data: states } = await db().from("mandalart_tasks_state").select("code, planned_due, postponed_count").eq("club_id", CLUB_ID);
+  const stateOf = new Map(((states ?? []) as any[]).map((s) => [s.code, s]));
+  const changes = rescheduleTasks(tasks.map((t) => ({ code: t.code, objective: t.objective, due: t.due, status: t.status, fixed: t.fixed })), today);
+  const now = new Date().toISOString();
+  for (const c of changes) {
+    const t = tasks.find((x) => x.code === c.code)!;
+    const prev = stateOf.get(c.code);
+    const { error } = await db()
+      .from("mandalart_tasks_state")
+      .upsert(
+        { club_id: CLUB_ID, code: c.code, status: t.status, due: c.to, planned_due: prev?.planned_due ?? c.from, postponed_count: (prev?.postponed_count ?? 0) + 1, updated_at: now, updated_by: "Report automatique" },
+        { onConflict: "club_id,code" }
+      );
+    if (error) throw error;
+  }
+  if (changes.length) {
+    const fr = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("fr-CA", { day: "numeric", month: "short", timeZone: "UTC" });
+    await db()
+      .from("mandalart_events")
+      .insert(
+        changes.map((c) => {
+          const t = tasks.find((x) => x.code === c.code)!;
+          return { club_id: CLUB_ID, code: c.code, from_status: t.status, to_status: t.status, note: c.reason === "retard" ? `Pas faite : reportée du ${fr(c.from)} au ${fr(c.to)}` : `Réorganisée du ${fr(c.from)} au ${fr(c.to)} (suit une tâche reportée)`, by: "Report automatique" };
+        })
+      );
+  }
+  return changes.map((c) => ({ ...c, title: tasks.find((x) => x.code === c.code)?.title ?? c.code }));
 }
 
 export async function addCustomTask(input: { objective: string; title: string; level: number; priority: "star" | "progressive"; due: string | null; owner: string | null; by: string }): Promise<string> {

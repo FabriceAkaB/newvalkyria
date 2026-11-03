@@ -4,7 +4,7 @@ import { z, ZodError } from "zod";
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { addChannelStat } from "@/lib/marketing-stats";
 import { addRecovery, resolveRecovery } from "@/lib/mandalart-levers";
-import { addCustomTask, addKpiValue, setAgentState, setTaskStatus } from "@/lib/mandalart-repo";
+import { addCustomTask, addKpiValue, setAgentState, setTaskFixed, setTaskStatus } from "@/lib/mandalart-repo";
 import { jsonError } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +19,7 @@ const schema = z.discriminatedUnion("action", [
     note: z.string().max(2000).optional(),
     evidenceUrl: z.string().max(1000).optional()
   }),
+  z.object({ action: z.literal("fixed"), code: z.string().min(3).max(20), fixed: z.boolean() }),
   z.object({
     action: z.literal("add-task"),
     objective: z.string().regex(/^P\d\.\d$/),
@@ -60,6 +61,10 @@ export async function POST(request: Request) {
     const body = schema.parse(await request.json());
     if (body.action === "status") {
       await setTaskStatus({ code: body.code, status: body.status, note: body.note, evidenceUrl: body.evidenceUrl, by: "JP" });
+      return NextResponse.json({ ok: true });
+    }
+    if (body.action === "fixed") {
+      await setTaskFixed(body.code, body.fixed, "JP");
       return NextResponse.json({ ok: true });
     }
     if (body.action === "add-task") {

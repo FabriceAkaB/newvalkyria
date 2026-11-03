@@ -98,6 +98,7 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
 
 - Plan : `data/mandalart.json` (ne pas modifier sans JP), généré depuis `docs/MANDALART_VALKYRIA.md` par `node scripts/mandalart-build.mjs`. Les ajouts de JP vont dans la section 11 du .md.
 - Module : `/admin/mandalart` (section « Plan 1,5 M$ » du menu). L'état des tâches vit dans Supabase (`mandalart_tasks_state`), clé = `club_id` + code de tâche ; réimporter le JSON ne change jamais un statut existant.
+- Une tâche pas faite à sa date est reportée au lendemain chaque matin, la suite de son objectif réorganisée ; les tâches à date fixe (`fixed`) ne bougent jamais (`mandalart-reschedule.ts`, cron `api/cron/mandalart-report`).
 - Chaque pilier a ses sections (`src/lib/mandalart-modules.ts`) : toute nouvelle section d'un pilier s'y branche.
 - Voix des familles (sondages) : `/admin/sondages`, `surveys-repo.ts`, page famille `/sondage/[token]`.
 - Agents et automatisations : section 5 du dossier + `/admin/mandalart/agents` ; on construit dans l'ordre des niveaux, un agent à la fois, en mode assistant d'abord.

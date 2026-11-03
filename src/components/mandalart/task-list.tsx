@@ -22,6 +22,10 @@ export interface TaskItem {
   objectiveName: string;
   pillar: string;
   addedOn?: string | null;
+  /** Date prévue au départ, si la tâche a été reportée automatiquement. */
+  plannedDue?: string | null;
+  /** Date fixe : jamais reportée automatiquement. */
+  fixed?: boolean;
 }
 
 const NEXT: Record<Status, Status> = { a_faire: "en_cours", en_cours: "fait", fait: "a_faire", abandonne: "a_faire" };
@@ -47,6 +51,21 @@ function TaskRow({ t, currentLevel, showObjective }: { t: TaskItem; currentLevel
   const [note, setNote] = useState(t.note ?? "");
   const [evidence, setEvidence] = useState(t.evidenceUrl ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [fixed, setFixed] = useState(Boolean(t.fixed));
+
+  const toggleFixed = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await save({ action: "fixed", code: t.code, fixed: !fixed });
+      setFixed(!fixed);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const apply = async (next: Status, extra?: { note?: string; evidenceUrl?: string }) => {
     const prev = status;
@@ -87,6 +106,8 @@ function TaskRow({ t, currentLevel, showObjective }: { t: TaskItem; currentLevel
           <span className="mda-tnum">{t.code}</span>
           <span>N{t.level}</span>
           {t.due ? <span className={late ? "mda-late" : undefined}>{late ? `En retard · ${day(t.due)}` : day(t.due)}</span> : null}
+          {t.plannedDue && !fixed ? <span title="Reportée automatiquement : pas faite à sa date">Reportée · prévue le {day(t.plannedDue)}</span> : null}
+          {fixed ? <span className="mda-pill" title="Date fixe : jamais reportée">Date fixe</span> : null}
           {t.owner ? <span>{t.owner}</span> : null}
           {status === "en_cours" ? <span style={{ color: "var(--adm-warn)" }}>En cours</span> : null}
           {status === "abandonne" ? <span>Abandonnée</span> : null}
@@ -121,6 +142,9 @@ function TaskRow({ t, currentLevel, showObjective }: { t: TaskItem; currentLevel
                     {LABEL[s]}
                   </button>
                 ))}
+              <button type="button" className="admin-btn-ghost" disabled={busy} onClick={toggleFixed} title="Une tâche à date fixe n'est jamais reportée au lendemain">
+                {fixed ? "Retirer la date fixe" : "Date fixe (ne pas reporter)"}
+              </button>
               {status !== "abandonne" ? (
                 <button type="button" className="admin-btn-ghost" disabled={busy} onClick={() => confirm("Abandonner cette tâche ? Elle ne comptera plus dans la progression.") && apply("abandonne", { note, evidenceUrl: evidence })}>
                   Abandonner

@@ -15,6 +15,12 @@ export interface TaskState {
   evidence_url: string | null;
   done_at: string | null;
   updated_at?: string | null;
+  /** Date effective (reportée automatiquement) ; sinon celle du plan. */
+  due?: string | null;
+  /** Date d'origine du plan, gardée au premier report. */
+  planned_due?: string | null;
+  /** Date fixe : la tâche n'est jamais reportée. */
+  fixed?: boolean | null;
 }
 
 export interface CustomTask {
@@ -37,6 +43,9 @@ export interface LiveTask extends PlanTask {
   pillar: string;
   overdue: boolean;
   custom: boolean;
+  /** Date prévue au départ, si la tâche a été reportée. */
+  plannedDue: string | null;
+  fixed: boolean;
 }
 
 export type Medal = "bronze" | "argent" | "or" | "mauve" | null;
@@ -61,8 +70,12 @@ export function buildLiveTasks(plan: MandalartPlan, states: TaskState[], customs
       for (const t of [...o.tasks, ...extra]) {
         const s = byCode.get(t.code);
         const status = s?.status ?? t.initialStatus;
+        const due = s?.due ? String(s.due).slice(0, 10) : t.due;
         out.push({
           ...t,
+          due,
+          plannedDue: s?.planned_due && String(s.planned_due).slice(0, 10) !== due ? String(s.planned_due).slice(0, 10) : null,
+          fixed: Boolean(s?.fixed),
           status,
           note: s?.note ?? null,
           evidenceUrl: s?.evidence_url ?? null,
@@ -70,7 +83,7 @@ export function buildLiveTasks(plan: MandalartPlan, states: TaskState[], customs
           objective: o.code,
           objectiveName: o.name,
           pillar: p.code,
-          overdue: (status === "a_faire" || status === "en_cours") && !!t.due && t.due < today,
+          overdue: (status === "a_faire" || status === "en_cours") && !!due && due < today,
           custom: extra.includes(t)
         });
       }

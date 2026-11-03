@@ -19,6 +19,8 @@ export function toItems(tasks: LiveTask[]): TaskItem[] {
     objective: t.objective,
     objectiveName: t.objectiveName,
     pillar: t.pillar,
-    addedOn: t.addedOn ?? null
+    addedOn: t.addedOn ?? null,
+    plannedDue: t.plannedDue,
+    fixed: t.fixed
   }));
 }
