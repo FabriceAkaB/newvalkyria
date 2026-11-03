@@ -11,6 +11,8 @@ import { computeGap } from "@/lib/mandalart-levers";
 import { getMandalartOverview } from "@/lib/mandalart-repo";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { isComplete, reviewWeekFor, weekLabel } from "@/lib/weekly-review";
+import { getReview } from "@/lib/weekly-review-repo";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -63,6 +65,9 @@ export async function GET(request: Request) {
     ? o.kpis.filter((k) => k.current !== null && prev.kpis[k.id] !== undefined && prev.kpis[k.id] !== null && Number(prev.kpis[k.id]) !== k.current)
     : [];
   const site = env.publicSiteUrl;
+  // Bilan de la semaine (3 questions) : rappel tant qu'il n'est pas fait.
+  const due = reviewWeekFor(o.today);
+  const reviewDone = isComplete(await getReview(due.weekStart).catch(() => null));
   const li = (t: (typeof o.tasks)[number]) =>
     `<li style="margin:0 0 6px"><strong>${esc(t.title)}</strong><br><span style="color:#666;font-size:13px">${t.code} · ${t.due ? day(t.due) : ""}${t.owner ? ` · ${esc(t.owner)}` : ""}</span></li>`;
 
@@ -74,6 +79,7 @@ export async function GET(request: Request) {
     <p style="margin:0 0 16px">Exécution du plan : <strong>${pct(o.execution)}</strong>${prev?.execution != null ? ` (${o.execution >= Number(prev.execution) ? "+" : ""}${Math.round((o.execution - Number(prev.execution)) * 100)} pts en une semaine)` : ""} · ${level.daysLeft} jours avant la fin du niveau</p>
     ${focus.overdue.length ? `<h2 style="font-size:17px;color:#b3261e;margin:20px 0 8px">En retard · ${focus.overdue.length}</h2><ul style="padding-left:18px;margin:0">${focus.overdue.slice(0, 8).map(li).join("")}</ul>` : `<p style="color:#2e7d32">Aucune tâche en retard. 👏</p>`}
     ${gap ? `<h2 style="font-size:17px;margin:20px 0 8px">Écart et rattrapage</h2>${gap.proposal.map((p) => `<p style="margin:0 0 6px">${esc(p)}</p>`).join("")}<ul style="padding-left:18px;margin:6px 0 0">${gap.levers.slice(0, 3).map((l) => `<li>${esc(l.title)} — jusqu'à ${money(l.potentialCents)} (${l.when})</li>`).join("")}</ul>` : ""}
+    ${reviewDone ? "" : `<div style="background:#f3edff;border-radius:10px;padding:12px 16px;margin:16px 0"><strong>Ton bilan de la semaine ${weekLabel(due.weekStart)}</strong><br>Qu'est-ce qui a bien marché ? Qu'est-ce que tu ferais différemment ? Quelle est ta priorité n° 1 ?<br><a href="${site}/admin/mandalart/semaine?semaine=${due.weekStart}" style="color:#7c4dff;font-weight:bold">Répondre aux 3 questions →</a></div>`}
     <h2 style="font-size:17px;margin:20px 0 8px">Les 5 priorités de la semaine</h2>
     <ul style="padding-left:18px;margin:0">${next5.map(li).join("")}</ul>
     ${moved.length ? `<h2 style="font-size:17px;margin:20px 0 8px">Ce qui a bougé</h2><ul style="padding-left:18px;margin:0">${moved.map((k) => `<li>${esc(k.label)} : ${formatKpi(Number(prev!.kpis[k.id]), k.targetN.unit || k.startN.unit)} → <strong>${formatKpi(k.current, k.targetN.unit || k.startN.unit)}</strong></li>`).join("")}</ul>` : ""}

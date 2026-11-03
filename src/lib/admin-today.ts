@@ -13,6 +13,8 @@ import { getOutreachSummary, type OutreachPerson } from "@/lib/outreach";
 import { DISTRIBUTION_STATUS_LABELS, PROBLEM_TYPE_LABELS, type DistributionStatus, type ProblemType } from "@/lib/shop-repo";
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { isComplete, previousWeek, reviewWeekFor, weekLabel } from "@/lib/weekly-review";
+import { getReview } from "@/lib/weekly-review-repo";
 
 /** Page « Aujourd'hui » de l'admin : tout ce qui demande une action, recalculé à chaque
  *  visite à partir des mêmes données que l'Historique et les Relances. La gérante ne voit
@@ -92,6 +94,32 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
     ]);
 
   const sections: TodaySection[] = [];
+
+  // ── Bilan de la semaine de JP (3 questions) et sa priorité n° 1 ──
+  if (isAdmin) {
+    const due = reviewWeekFor(today);
+    const [dueReview, lastReview] = await Promise.all([getReview(due.weekStart).catch(() => null), getReview(previousWeek(today)).catch(() => null)]);
+    const items: TodayItem[] = [];
+    if (lastReview?.nextPriority) items.push({ title: `Priorité n° 1 : ${lastReview.nextPriority}`, detail: "Ta réponse au bilan de la semaine passée", href: "/admin/mandalart/semaine" });
+    if (!isComplete(dueReview))
+      items.push({
+        title: "Faire ton bilan de la semaine",
+        detail: "Ce qui a bien marché, ce que tu ferais différemment, ta priorité n° 1",
+        meta: `Semaine ${weekLabel(due.weekStart)}`,
+        href: `/admin/mandalart/semaine?semaine=${due.weekStart}`
+      });
+    sections.push(
+      section({
+        key: "bilan-semaine",
+        title: "Bilan de la semaine",
+        level: !isComplete(dueReview) && due.late ? "orange" : "info",
+        emptyText: "Bilan de la semaine fait.",
+        href: "/admin/mandalart/semaine",
+        hrefLabel: "Bilan de la semaine",
+        items
+      })
+    );
+  }
 
   // ── Réponses des familles (outreach_log) ──
   if (isAdmin && outreach) {

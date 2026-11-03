@@ -62,6 +62,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         description: "1 500 000 $ encaissés en 2028 : ce qu'il faut faire ce mois-ci, les 8 piliers, les niveaux, les chiffres et les agents.",
         tabs: [
           { href: "/admin/mandalart", label: "Ce mois-ci", adminOnly: true },
+          { href: "/admin/mandalart/semaine", label: "Bilan de la semaine", adminOnly: true },
           { href: "/admin/mandalart/piliers", label: "Les 8 piliers", adminOnly: true },
           { href: "/admin/mandalart/niveaux", label: "Niveaux", adminOnly: true },
           { href: "/admin/mandalart/trajectoire", label: "Trajectoire $", adminOnly: true },
