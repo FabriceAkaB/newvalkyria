@@ -72,3 +72,22 @@ export function getSportEtudesInstallmentPlan(now: Date, totalCents: number): In
     amountsCents: [base + remainder, base]
   };
 }
+
+/** Calendrier de versements sur mesure, porté par le lien de paiement (metadata `planSchedule`) quand JP accorde
+ *  un paiement par mois à une famille : « 11000@2026-11-05,11000@2026-12-01,… » (centimes@date). Le 1er versement
+ *  est celui payé par le lien ; les suivants sont prélevés par /api/cron/charge-installments. Retourne null si invalide. */
+export function parsePlanSchedule(raw: string | null | undefined): { amountCents: number; dueDate: string }[] | null {
+  if (!raw) return null;
+  const parts = raw.split(",").map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2 || parts.length > 12) return null;
+  const out: { amountCents: number; dueDate: string }[] = [];
+  for (const p of parts) {
+    const m = p.match(/^(\d{1,7})@(\d{4}-\d{2}-\d{2})$/);
+    if (!m || Number(m[1]) <= 0 || Number.isNaN(Date.parse(`${m[2]}T12:00:00Z`))) return null;
+    if (out.length && m[2] <= out[out.length - 1].dueDate) return null;
+    out.push({ amountCents: Number(m[1]), dueDate: m[2] });
+  }
+  return out;
+}
+
+export const formatPlanSchedule = (items: { amountCents: number; dueDate: string }[]) => items.map((i) => `${i.amountCents}@${i.dueDate}`).join(",");

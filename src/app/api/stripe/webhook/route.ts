@@ -8,10 +8,12 @@ import { env } from "@/lib/env";
 import { markLeadPaidInSheet } from "@/lib/google-sheets";
 import { jsonError } from "@/lib/http";
 import { hasProcessedStripeEvent, markLeadAsPaid, recordStripeEvent } from "@/lib/repositories";
+import { parsePlanSchedule } from "@/lib/payment-plan";
 import { PROGRAMS, type ProgramCode } from "@/lib/season-2027";
 import {
   activatePaymentPlan,
   completeDirectLinkRegistration,
+  createPaymentPlan,
   markInstallmentPaid,
   markRegistrationPaidByCheckoutSession,
   setRegistrationCheckoutSession,
@@ -250,6 +252,28 @@ export async function POST(request: Request) {
           if (session.metadata?.programId) patch.program_id = session.metadata.programId;
           if (session.metadata?.timeSlotTemplateId) patch.time_slot_template_id = session.metadata.timeSlotTemplateId;
           const { data: registration } = await supabase.from("registrations").update(patch).eq("id", registrationId).select("*").maybeSingle();
+          // Paiement par mois accordé par JP : le lien porte le calendrier (planSchedule) ; on crée le plan, on garde
+          // la carte et le 1er versement (ce paiement) est marqué payé. Les suivants : cron charge-installments.
+          const schedule = parsePlanSchedule(session.metadata?.planSchedule);
+          if (schedule && paymentIntentId) {
+            try {
+              const stripeCustomerId = typeof session.customer === "string" ? session.customer : undefined;
+              const pi = await getStripeClient().paymentIntents.retrieve(paymentIntentId);
+              const stripePaymentMethodId = typeof pi.payment_method === "string" ? pi.payment_method : undefined;
+              const planId = await createPaymentPlan({
+                registrationId,
+                totalAmountCents: schedule.reduce((t, i) => t + i.amountCents, 0),
+                installments: schedule.map((i, k) => ({ sequenceNo: k + 1, amountCents: i.amountCents, dueDate: i.dueDate }))
+              });
+              if (stripeCustomerId && stripePaymentMethodId) {
+                await activatePaymentPlan(planId, { stripeCustomerId, stripePaymentMethodId, firstInstallmentPaymentIntentId: paymentIntentId });
+              } else {
+                console.error("Trial-conversion plan missing customer or payment method", { planId, stripeCustomerId, stripePaymentMethodId });
+              }
+            } catch (error) {
+              console.error("Unable to create trial-conversion payment plan", error);
+            }
+          }
           await logAudit({
             actorRole: "system",
             actorLabel: "Paiement Stripe",
