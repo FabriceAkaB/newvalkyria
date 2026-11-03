@@ -11236,6 +11236,7 @@ img { max-width: 100%; height: auto; }
 .cm-blocks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .cm-block { display: grid; gap: 8px; padding: 12px; background: var(--adm-surface-2); border-radius: var(--adm-radius-sm); min-width: 0; }
 .cm-block .admin-input, .cm-block textarea { width: 100%; min-width: 0; box-sizing: border-box; }
+.cm-num { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--adm-accent-soft); color: var(--adm-text); font-weight: 700; font-size: 0.8rem; }
 .cm-block-head { display: grid; grid-template-columns: minmax(0, 1fr) 88px; gap: 8px; align-items: center; }
 .cm-place { grid-column: 1 / -1; font-size: 0.75rem; font-weight: 600; color: var(--adm-accent); }
 .cm-minutes { display: flex; align-items: center; gap: 4px; }

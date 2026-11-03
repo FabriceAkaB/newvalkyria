@@ -665,8 +665,9 @@ export function CoachActiviteDetail({
   initialMatchConvocations,
   initialMatchLineup,
   initialMatchPlaytime,
-  initialMatchEvaluations
-}: Props & { defaultStep: Step; briefing: BriefingPlayer[]; initialWinners: { registration_id: string; kind: WinKind }[] }) {
+  initialMatchEvaluations,
+  musts = []
+}: Props & { defaultStep: Step; briefing: BriefingPlayer[]; initialWinners: { registration_id: string; kind: WinKind }[]; musts?: { title: string; text: string }[] }) {
   const [step, setStep] = useState<Step>(defaultStep);
   const [showEditor, setShowEditor] = useState(false);
   const [attendance, setAttendance] = useState<Record<string, PlayerAttendanceStatus>>(Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status])));
@@ -758,6 +759,19 @@ export function CoachActiviteDetail({
                 </div>
               )}
               {activity.activity_type !== "Match" && <BriefingCard activity={activity} players={briefing} expected={roster.length} />}
+              {activity.activity_type !== "Match" && musts.length > 0 && (
+                <details className="coach-card" style={{ marginBottom: 12 }}>
+                  <summary className="coach-card__label" style={{ cursor: "pointer", marginBottom: 0 }}>Obligatoire dans chaque entraînement · {musts.length} point{musts.length > 1 ? "s" : ""}</summary>
+                  <ol className="coach-musts" style={{ marginTop: 12 }}>
+                    {musts.map((m, i) => (
+                      <li key={i}>
+                        <strong>{m.title}</strong>
+                        {m.text ? <span>{m.text}</span> : null}
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              )}
               <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} />
 
               {(activity.notes || activity.video_url) && (

@@ -21,7 +21,8 @@ export interface MethodDoc<T> {
 
 const DEFAULTS = {
   structure: { title: "Structure de séance", content: { blocks: DEFAULT_STRUCTURE } },
-  principes: { title: "Principes de la pédagogie Valkyria", content: { items: DEFAULT_PRINCIPLES } }
+  principes: { title: "Principes de la pédagogie Valkyria", content: { items: DEFAULT_PRINCIPLES } },
+  composantes: { title: "Composantes obligatoires de chaque entraînement", content: { items: [] as Principle[] } }
 } as const;
 export type MethodSlug = keyof typeof DEFAULTS;
 
@@ -38,6 +39,12 @@ export async function getStructure() {
 
 export async function getPrinciples() {
   const doc = await getMethodDoc<{ items: Principle[] }>("principes");
+  return { ...doc, items: doc.content.items ?? [] };
+}
+
+/** Ce que chaque entraînement doit avoir, écrit par JP point par point (vide tant qu'il ne l'a pas rempli). */
+export async function getComponents() {
+  const doc = await getMethodDoc<{ items: Principle[] }>("composantes");
   return { ...doc, items: doc.content.items ?? [] };
 }
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { CoachActiviteDetail } from "@/components/coach-activite-detail";
+import { getComponents } from "@/lib/coaching-method-repo";
 import { requireCoach } from "@/lib/coach-auth";
 import { cleanCategory, getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityById } from "@/lib/coach-portal-repo";
 import { defaultStepFor } from "@/lib/coach-report";
@@ -42,7 +43,11 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
     isMatch ? getMatchEvaluations(id) : Promise.resolve([])
   ]);
 
-  const [briefing, winners] = await Promise.all([getBriefing(entry.activity, roster).catch(() => []), getActivityWinners(id).catch(() => [])]);
+  const [briefing, winners, components] = await Promise.all([
+    getBriefing(entry.activity, roster).catch(() => []),
+    getActivityWinners(id).catch(() => []),
+    getComponents().catch(() => null)
+  ]);
 
   // Accès limité : la présence de l'éducateur sans son taux ni les champs de paiement.
   const { assignment } = entry;
@@ -74,6 +79,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       defaultStep={defaultStep}
       briefing={briefing}
       initialWinners={winners}
+      musts={components?.items ?? []}
       theme={theme ? { theme: themeFor(theme, cleanCategory(entry.activity.category)) ?? theme.theme, notes: theme.notes } : null}
       sessionBlocks={blocks}
       initialExercises={exercises}

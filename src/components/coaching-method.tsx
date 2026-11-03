@@ -75,6 +75,47 @@ export function StructureEditor({ initial, validated, practiceMinutes }: { initi
 
 /** Principes de la pédagogie Valkyria (P1.5.01, P1.4.05). */
 export function PrinciplesEditor({ initial, validated }: { initial: Principle[]; validated: boolean }) {
+  return <ItemsEditor slug="principes" initial={initial} validated={validated} addLabel="+ Ajouter un principe" validateLabel="Valider les principes" itemName="ce principe" />;
+}
+
+/** Composantes obligatoires de chaque entraînement : la ligne directrice de JP, point par point. */
+export function ComponentsEditor({ initial, validated, ideas }: { initial: Principle[]; validated: boolean; ideas: Principle[] }) {
+  return (
+    <ItemsEditor
+      slug="composantes"
+      initial={initial}
+      validated={validated}
+      addLabel="+ Ajouter une composante"
+      validateLabel="Valider la ligne directrice"
+      itemName="cette composante"
+      numbered
+      ideas={ideas}
+      placeholder={{ title: "Ex. Un ballon par fille", text: "Pourquoi et comment, en une ou deux phrases." }}
+    />
+  );
+}
+
+function ItemsEditor({
+  slug,
+  initial,
+  validated,
+  addLabel,
+  validateLabel,
+  itemName,
+  numbered = false,
+  ideas,
+  placeholder
+}: {
+  slug: "principes" | "composantes";
+  initial: Principle[];
+  validated: boolean;
+  addLabel: string;
+  validateLabel: string;
+  itemName: string;
+  numbered?: boolean;
+  ideas?: Principle[];
+  placeholder?: Principle;
+}) {
   const router = useRouter();
   const [items, setItems] = useState(initial);
   const [state, setState] = useState<SaveState>({ kind: "idle" });
@@ -82,29 +123,48 @@ export function PrinciplesEditor({ initial, validated }: { initial: Principle[];
     setItems((prev) => prev.map((p, j) => (j === i ? { ...p, ...patch } : p)));
     setState({ kind: "idle" });
   };
+  const move = (i: number, d: -1 | 1) => {
+    setItems((prev) => {
+      const next = [...prev];
+      [next[i], next[i + d]] = [next[i + d], next[i]];
+      return next;
+    });
+    setState({ kind: "idle" });
+  };
   const save = async (validate?: boolean) => {
     setState({ kind: "saving" });
-    const s = await send("/api/admin/coaching/methode", "PUT", { slug: "principes", items, validated: validate });
+    const s = await send("/api/admin/coaching/methode", "PUT", { slug, items, validated: validate });
     setState(s);
     if (s.kind === "saved") router.refresh();
   };
   return (
     <div>
+      {items.length === 0 && ideas?.length ? (
+        <div className="cm-block" style={{ marginBottom: 8 }}>
+          <p className="mda-sub" style={{ margin: 0 }}>Rien d&apos;écrit pour l&apos;instant. Écris tes points un par un, ou pars de ces idées tirées du plan et garde seulement ce qui te ressemble :</p>
+          <p className="mda-sub" style={{ margin: "6px 0 0", color: "var(--adm-text-2)" }}>{ideas.map((x) => x.title).join(" · ")}</p>
+          <button type="button" className="admin-btn-ghost" style={{ marginTop: 8, justifySelf: "start" }} onClick={() => setItems(ideas)}>Partir de ces idées</button>
+        </div>
+      ) : null}
       <div style={{ display: "grid", gap: 8 }}>
         {items.map((p, i) => (
           <div key={i} className="cm-block">
-            <div style={{ display: "flex", gap: 8 }}>
-              <input className="admin-input" value={p.title} onChange={(e) => upd(i, { title: e.target.value })} style={{ fontWeight: 600, flex: 1, minWidth: 0 }} aria-label="Titre du principe" />
-              <button type="button" className="admin-btn-ghost" onClick={() => setItems((prev) => prev.filter((_, j) => j !== i))} aria-label="Retirer ce principe">×</button>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {numbered && <span className="cm-num" aria-hidden>{i + 1}</span>}
+              {!numbered && <input className="admin-input" value={p.title} onChange={(e) => upd(i, { title: e.target.value })} placeholder={placeholder?.title} style={{ fontWeight: 600, flex: 1, minWidth: 0 }} aria-label={`Titre du point ${i + 1}`} />}
+              {numbered && <span style={{ flex: 1 }} />}
+              {numbered && i > 0 && <button type="button" className="admin-btn-ghost" style={{ padding: "4px 12px" }} onClick={() => move(i, -1)} aria-label="Monter">↑</button>}
+              <button type="button" className="admin-btn-ghost" style={numbered ? { padding: "4px 12px" } : undefined} onClick={() => setItems((prev) => prev.filter((_, j) => j !== i))} aria-label={`Retirer ${itemName}`}>×</button>
             </div>
-            <textarea className="admin-input" rows={2} value={p.text} onChange={(e) => upd(i, { text: e.target.value })} style={{ width: "100%", boxSizing: "border-box" }} aria-label="Texte du principe" />
+            {numbered && <input className="admin-input" value={p.title} onChange={(e) => upd(i, { title: e.target.value })} placeholder={placeholder?.title} style={{ fontWeight: 600 }} aria-label={`Titre du point ${i + 1}`} />}
+            <textarea className="admin-input" rows={2} value={p.text} onChange={(e) => upd(i, { text: e.target.value })} placeholder={placeholder?.text} style={{ width: "100%", boxSizing: "border-box" }} aria-label={`Détail du point ${i + 1}`} />
           </div>
         ))}
       </div>
       <div className="cm-actions">
-        <button type="button" className="admin-btn-ghost" onClick={() => setItems((prev) => [...prev, { title: "", text: "" }])}>+ Ajouter un principe</button>
+        <button type="button" className="admin-btn-ghost" onClick={() => setItems((prev) => [...prev, { title: "", text: "" }])}>{addLabel}</button>
         <button type="button" className="admin-btn-ghost" onClick={() => save()} disabled={state.kind === "saving"}>Enregistrer</button>
-        {!validated && <button type="button" className="admin-btn-primary" onClick={() => save(true)} disabled={state.kind === "saving"}>Valider les principes</button>}
+        {!validated && items.length > 0 && <button type="button" className="admin-btn-primary" onClick={() => save(true)} disabled={state.kind === "saving"}>{validateLabel}</button>}
         <Status state={state} />
       </div>
     </div>

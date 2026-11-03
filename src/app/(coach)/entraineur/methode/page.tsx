@@ -1,7 +1,7 @@
 import { CoachTopbar } from "@/components/coach-topbar";
 import { requireCoach } from "@/lib/coach-auth";
 import { familyLabel, PROGRESSION_STEPS } from "@/lib/coaching-method";
-import { getGestures, getPrinciples, getStructure } from "@/lib/coaching-method-repo";
+import { getComponents, getGestures, getPrinciples, getStructure } from "@/lib/coaching-method-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { LEVEL_LABEL, PASSPORT_LEVELS } from "@/lib/skill-tests";
 
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 /** La méthode Valkyria pour l'éducateur (lecture seule) : structure de séance, principes et gestes par niveau. */
 export default async function CoachMethodPage() {
   const coachId = await requireCoach();
-  const [coach, structure, principles, gestures] = await Promise.all([getCoach(coachId), getStructure(), getPrinciples(), getGestures({ activeOnly: true })]);
+  const [coach, components, structure, principles, gestures] = await Promise.all([getCoach(coachId), getComponents(), getStructure(), getPrinciples(), getGestures({ activeOnly: true })]);
   const total = structure.blocks.reduce((s, b) => s + b.minutes, 0);
 
   return (
@@ -21,6 +21,22 @@ export default async function CoachMethodPage() {
         <div className="coach-page">
           <h1 className="coach-title">La méthode Valkyria</h1>
           <p className="coach-sub">Comment se déroule chaque séance, ce qu&apos;on défend et les gestes à enseigner à chaque niveau.</p>
+
+          {components.items.length > 0 && (
+            <section style={{ marginTop: 24 }}>
+              <h2 className="coach-h2">Obligatoire dans chaque entraînement</h2>
+              <div className="coach-card">
+                <ol className="coach-musts">
+                  {components.items.map((c, i) => (
+                    <li key={i}>
+                      <strong>{c.title}</strong>
+                      {c.text ? <span>{c.text}</span> : null}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </section>
+          )}
 
           <section style={{ marginTop: 24 }}>
             <h2 className="coach-h2">Une séance · {total} min</h2>

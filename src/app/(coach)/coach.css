@@ -168,3 +168,10 @@
 .coach-win-row > span { flex: 1; min-width: 0; font-size: 0.9rem; color: var(--adm-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .coach-win-row .coach-seg { flex-wrap: nowrap; }
 .coach-win-row .coach-seg button { padding: 0 10px; font-size: 0.8rem; }
+
+/* Composantes obligatoires de chaque entraînement (ligne directrice de JP) */
+.coach-musts { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
+.coach-musts li { color: var(--adm-text); font-size: 0.92rem; line-height: 1.4; }
+.coach-musts li::marker { color: var(--adm-accent); font-weight: 700; }
+.coach-musts strong { display: block; }
+.coach-musts span { display: block; color: var(--adm-text-2); font-size: 0.85rem; }

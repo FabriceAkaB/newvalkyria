@@ -1,8 +1,9 @@
 import { AdminTopbar } from "@/components/admin-topbar";
-import { PrinciplesEditor, StructureEditor } from "@/components/coaching-method";
+import { ComponentsEditor, PrinciplesEditor, StructureEditor } from "@/components/coaching-method";
 import { Pill } from "@/components/mandalart/ui";
 import { requireAdmin } from "@/lib/admin-auth";
-import { getPrinciples, getStructure } from "@/lib/coaching-method-repo";
+import { COMPONENT_IDEAS } from "@/lib/coaching-method";
+import { getComponents, getPrinciples, getStructure } from "@/lib/coaching-method-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const metadata = { title: "Méthode Valkyria — Coaching", robots: "noindex" };
@@ -24,7 +25,7 @@ async function usualPracticeMinutes(): Promise<number> {
 /** « Comment se déroule une séance Valkyria, et sur quels principes ? » (P1.1.01, P1.5.01, P1.4.05) */
 export default async function MethodPage() {
   await requireAdmin({ roles: ["admin"] });
-  const [structure, principles, minutes] = await Promise.all([getStructure(), getPrinciples(), usualPracticeMinutes()]);
+  const [components, structure, principles, minutes] = await Promise.all([getComponents(), getStructure(), getPrinciples(), usualPracticeMinutes()]);
   return (
     <>
       <AdminTopbar />
@@ -35,6 +36,17 @@ export default async function MethodPage() {
             <h1 className="mda-h1">Une séance Valkyria, du début à la fin</h1>
             <p className="mda-lead">Les éducateurs voient cette page dans leur portail (Méthode). Les blocs reprennent les places de la banque d&apos;exercices : jeu d&apos;entrée, ball mastery, technique, forme jouée.</p>
           </header>
+
+          <section className="mda-card">
+            <div className="mda-card-head" style={{ padding: 0, marginBottom: 8 }}>
+              <div>
+                <h2 className="mda-h2" style={{ margin: 0 }}>Ce que chaque entraînement doit avoir</h2>
+                <p className="mda-sub" style={{ margin: "2px 0 0" }}>Ta ligne directrice, point par point : les composantes obligatoires de toute pratique Valkyria. Les éducateurs la voient avant chaque pratique.</p>
+              </div>
+              <Pill tone={components.validatedAt ? "good" : components.items.length ? "warn" : undefined}>{components.validatedAt ? "Validée par JP" : components.items.length ? `${components.items.length} point${components.items.length > 1 ? "s" : ""} · à valider` : "À écrire"}</Pill>
+            </div>
+            <ComponentsEditor initial={components.items} validated={Boolean(components.validatedAt)} ideas={COMPONENT_IDEAS} />
+          </section>
 
           <section className="mda-card">
             <div className="mda-card-head" style={{ padding: 0, marginBottom: 8 }}>

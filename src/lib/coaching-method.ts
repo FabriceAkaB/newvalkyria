@@ -66,6 +66,19 @@ export const DEFAULT_PRINCIPLES: Principle[] = [
   { title: "Prise d'information", text: "Dossards bicolores dans tous les exercices ; une forme jouée avec prises de décision dans chaque séance." }
 ];
 
+/* ── Composantes obligatoires de chaque entraînement ─────────────── */
+
+/** La ligne directrice que JP écrit point par point : ce que TOUT entraînement Valkyria doit contenir.
+ *  Vide au départ (JP la remplit) ; ces idées, tirées du plan, ne sont qu'un point de départ à reprendre ou non. */
+export const COMPONENT_IDEAS: Principle[] = [
+  { title: "Échauffement FIFA 11+ Kids", text: "À chaque séance, intégré au jeu d'entrée (prévention du ligament croisé)." },
+  { title: "Un ballon par fille", text: "Aucune file d'attente : viser 500 touches par fille." },
+  { title: "Le thème de la semaine", text: "Le geste ou le thème du plan de l'année, avec sa progression." },
+  { title: "Une forme jouée avec prises de décision", text: "Dossards bicolores, petits jeux, le thème doit passer dans le jeu." },
+  { title: "Un compliment précis à chaque fille", text: "La nommer et dire exactement ce qu'elle a bien fait." },
+  { title: "Le sondage de fin", text: "Présences, plaisir, fatigue et ce qu'elles veulent plus, avant de partir." }
+];
+
 export function parsePrinciples(input: unknown): Principle[] | null {
   if (!Array.isArray(input) || input.length > 30) return null;
   return input
