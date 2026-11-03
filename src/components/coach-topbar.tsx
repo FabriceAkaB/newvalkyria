@@ -11,6 +11,7 @@ interface Props {
 const LINKS = [
   { href: "/entraineur/dashboard", label: "Mes pratiques" },
   { href: "/entraineur/joueuses", label: "Joueuses" },
+  { href: "/entraineur/exercices", label: "Exercices" },
   { href: "/entraineur/methode", label: "Méthode" }
 ];
 

@@ -11322,3 +11322,43 @@ img { max-width: 100%; height: auto; }
 .ps-next:disabled { border-color: var(--adm-border); background: transparent; color: var(--adm-text-3); cursor: default; }
 .ps-notes { padding: 14px 16px; background: var(--adm-surface); border: 1px solid var(--adm-line); border-radius: var(--adm-radius); }
 .ps-notes ul { margin: 6px 0 0; padding-left: 18px; color: var(--adm-text); font-size: 0.9rem; display: grid; gap: 4px; }
+
+/* ── Galerie des exercices en diapos (exercise-gallery.tsx), admin et portail des éducateurs ── */
+.xg { display: grid; gap: 12px; min-width: 0; }
+.xg-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.xg-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.xg-chips::-webkit-scrollbar { display: none; }
+.xg-chips button { flex: none; min-height: 38px; padding: 0 12px; border: 1px solid var(--adm-border); border-radius: 999px; background: transparent; color: var(--adm-text-2); font: inherit; font-size: 0.84rem; cursor: pointer; }
+.xg-chips button[data-on="true"] { background: var(--adm-accent-soft); border-color: var(--adm-accent); color: var(--adm-text); font-weight: 600; }
+.xg-select { width: auto; min-height: 38px; }
+.xg-toggle { font-size: 0.84rem; color: var(--adm-accent); text-decoration: none; margin-left: auto; }
+.xg-empty { color: var(--adm-text-2); margin: 0; padding: 20px; background: var(--adm-surface); border: 1px solid var(--adm-line); border-radius: var(--adm-radius); }
+.xg-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--adm-text-2); font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+.xg-nav button { min-width: 48px; min-height: 44px; border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); background: var(--adm-surface); color: var(--adm-text); font-size: 1.1rem; cursor: pointer; }
+.xg-nav button:disabled { opacity: 0.35; cursor: default; }
+.xg-track { cursor: grab; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; overscroll-behavior-x: contain; align-items: flex-start; scrollbar-width: none; border-radius: var(--adm-radius); outline: none; }
+.xg-track::-webkit-scrollbar { display: none; }
+.xg-track:focus-visible { box-shadow: 0 0 0 2px var(--adm-accent); }
+.xg-slide { flex: 0 0 100%; min-width: 0; box-sizing: border-box; scroll-snap-align: start; scroll-snap-stop: always; background: var(--adm-surface); border: 1px solid var(--adm-line); border-radius: var(--adm-radius); overflow: hidden; }
+.xg-media { background: #0d0c11; display: grid; place-items: center; min-height: 200px; }
+.xg-media img { display: block; width: 100%; max-height: 62vh; object-fit: contain; user-select: none; }
+.xg-media svg { max-width: 420px !important; margin: 12px; }
+.xg-nomedia { color: var(--adm-text-3); font-size: 0.88rem; margin: 0; padding: 40px 16px; text-align: center; }
+.xg-body { padding: 16px; display: grid; gap: 12px; }
+.xg-title { margin: 0; font-size: 1.2rem; color: var(--adm-text); line-height: 1.25; }
+.xg-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.xg-tags span { font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; background: var(--adm-surface-2); color: var(--adm-text-2); }
+.xg-tags span[data-tone="accent"] { background: var(--adm-accent-soft); color: var(--adm-text); }
+.xg-tags span[data-tone="warn"] { background: var(--adm-warn-soft, var(--adm-surface-2)); color: var(--adm-warn); }
+.xg-block-label { margin: 0 0 2px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--adm-text-3); }
+.xg-block-text { margin: 0; white-space: pre-wrap; color: var(--adm-text); font-size: 0.92rem; line-height: 1.5; }
+.xg-links { display: flex; flex-wrap: wrap; gap: 16px; }
+.xg-links a { color: var(--adm-accent); text-decoration: none; font-size: 0.88rem; font-weight: 600; }
+.xg-dots { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.xg-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--adm-border); }
+.xg-dots span[data-on="true"] { background: var(--adm-accent); }
+@media (min-width: 900px) {
+  .xg-slide { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+  .xg-media { min-height: 100%; }
+  .xg-body { max-height: 70vh; overflow-y: auto; }
+}
