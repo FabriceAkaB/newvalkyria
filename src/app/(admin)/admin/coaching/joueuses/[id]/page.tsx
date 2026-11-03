@@ -6,6 +6,7 @@ import { BulletinView } from "@/components/bulletin-view";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getBulletinData } from "@/lib/coach-portal-repo";
 import { CONTEXT_LABEL, formatGain, LEVEL_LABEL, progressFor } from "@/lib/skill-tests";
+import { getPointsSummaries } from "@/lib/player-points-repo";
 import { getResults, getTests } from "@/lib/skill-tests-repo";
 
 const fr = (n: number) => n.toLocaleString("fr-CA", { maximumFractionDigits: 1 });
@@ -17,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function PlayerSeasonPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const [data, tests, results] = await Promise.all([getBulletinData(id, "equipe"), getTests({ activeOnly: true }), getResults([id])]);
+  const [data, tests, results, points] = await Promise.all([getBulletinData(id, "equipe"), getTests({ activeOnly: true }), getResults([id]), getPointsSummaries([id]).then((m) => m.get(id) ?? null)]);
   if (!data) notFound();
 
   return (
@@ -29,6 +30,19 @@ export default async function PlayerSeasonPage({ params }: { params: Promise<{ i
             ← Progression des joueuses
           </Link>
           <BulletinView data={data} />
+
+          {points && (
+            <div className="mda" style={{ maxWidth: 720, marginTop: 24 }}>
+              <h2 className="mda-h2">Points</h2>
+              <section className="mda-card" style={{ marginTop: 12 }}>
+                <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>{points.balance} points à échanger</p>
+                <p className="mda-lead" style={{ margin: "4px 0 0" }}>
+                  {points.presences} présence{points.presences > 1 ? "s" : ""} · {points.victoires} victoire{points.victoires > 1 ? "s" : ""} · {points.attitudes} fois l&apos;attitude du jour
+                  {points.spent ? ` · ${points.spent} points déjà échangés` : ""}. <Link href="/admin/coaching/points">Points et récompenses</Link>
+                </p>
+              </section>
+            </div>
+          )}
 
           <div className="mda" style={{ maxWidth: 720, marginTop: 24 }}>
             <h2 className="mda-h2">Tests de progression</h2>

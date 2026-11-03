@@ -13,6 +13,7 @@ import { MatchPanel } from "@/components/match-panel";
 import { computeHours, formatHoursMinutes, timeToMinutes } from "@/lib/coach-payroll";
 import { planningLabel } from "@/lib/exercise-bank";
 import type { BriefingPlayer, PlayerAttendance, PlayerAttendanceStatus, PlayerEvaluation, RosterPlayer } from "@/lib/coach-portal-repo";
+import { MAX_WINNERS, POINTS, WIN_LABEL, type WinKind } from "@/lib/player-points";
 import { cleanNote, isQuickEvaluationComplete, NOTE_MIN_CHARS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START } from "@/lib/coach-report";
 import type { AssignmentStatus, CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
@@ -599,6 +600,48 @@ function EndRoutine({
   );
 }
 
+/** Gagnantes du jour : l'éducateur touche le nom des gagnantes ; les points se comptent tout seuls. */
+function WinnersCard({ activityId, players, initial }: { activityId: string; players: RosterPlayer[]; initial: { registration_id: string; kind: WinKind }[] }) {
+  const [wins, setWins] = useState(initial);
+  const [error, setError] = useState<string | null>(null);
+  const has = (id: string, kind: WinKind) => wins.some((w) => w.registration_id === id && w.kind === kind);
+  const count = (kind: WinKind) => wins.filter((w) => w.kind === kind).length;
+
+  const toggle = async (id: string, kind: WinKind) => {
+    const on = !has(id, kind);
+    setError(null);
+    const r = await postJson(`/api/coach/activities/${activityId}/winners`, { registrationId: id, kind, on });
+    if (!r.ok) return setError(r.error ?? null);
+    setWins((prev) => (on ? [...prev, { registration_id: id, kind }] : prev.filter((w) => !(w.registration_id === id && w.kind === kind))));
+  };
+
+  return (
+    <div className="coach-card">
+      <p className="coach-card__label">
+        Gagnantes du jour · victoire {count("victoire")}/{MAX_WINNERS} · attitude {count("attitude")}/{MAX_WINNERS}
+      </p>
+      <p className="coach-sub" style={{ marginTop: 0 }}>
+        Touche les gagnantes : +{POINTS.victoire} points pour une victoire, +{POINTS.attitude} pour l&apos;attitude (la présence donne déjà {POINTS.presence} points). Prends-les en photo si la famille l&apos;a permis.
+      </p>
+      {error && <p className="coach-error" role="alert">{error}</p>}
+      <div style={{ marginTop: 8 }}>
+        {players.map((p) => (
+          <div key={p.registrationId} className="coach-win-row">
+            <span>{p.firstName} {p.lastName[0] ?? ""}.</span>
+            <div className="coach-seg">
+              {(["victoire", "attitude"] as WinKind[]).map((k) => (
+                <button key={k} type="button" data-active={String(has(p.registrationId, k))} aria-pressed={has(p.registrationId, k)} onClick={() => toggle(p.registrationId, k)} title={WIN_LABEL[k]}>
+                  {k === "victoire" ? "🏆 Victoire" : "⭐ Attitude"}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MyPresenceCard({ activity, initial, onChange }: { activity: CoachActivity; initial: MyPresence; onChange: (p: MyPresence) => void }) {
   const start = String(activity.start_time).slice(0, 5);
   const end = String(activity.end_time).slice(0, 5);
@@ -670,13 +713,14 @@ export function CoachActiviteDetail({
   initialExercises,
   defaultStep,
   briefing,
+  initialWinners,
   matchRoster,
   initialMatchDetails,
   initialMatchConvocations,
   initialMatchLineup,
   initialMatchPlaytime,
   initialMatchEvaluations
-}: Props & { defaultStep: Step; briefing: BriefingPlayer[] }) {
+}: Props & { defaultStep: Step; briefing: BriefingPlayer[]; initialWinners: { registration_id: string; kind: WinKind }[] }) {
   const [step, setStep] = useState<Step>(defaultStep);
   const [showEditor, setShowEditor] = useState(false);
   const [attendance, setAttendance] = useState<Record<string, PlayerAttendanceStatus>>(Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status])));
@@ -856,6 +900,12 @@ export function CoachActiviteDetail({
               {reportNeeded && participants.length > 0 && (
                 <div style={{ marginBottom: 16 }}>
                   <EndRoutine activityId={activity.id} players={participants} values={feedback} onChange={(id, v) => setFeedback((prev) => ({ ...prev, [id]: v }))} />
+                </div>
+              )}
+
+              {participants.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <WinnersCard activityId={activity.id} players={participants} initial={initialWinners} />
                 </div>
               )}
 

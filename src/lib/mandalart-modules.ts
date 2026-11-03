@@ -174,6 +174,7 @@ export const PILLAR_MODULES: PillarModule[] = [
       "En place : présences en un geste (« Toutes présentes »), photos des joueuses, effectif réel de la plage horaire",
       "En place : contrôle de qualité : les heures comptent quand la présence de l'éducateur est confirmée et que présences et évaluations sont complètes",
       "En place : accès limités : seulement ses activités et les joueuses de ses groupes ; aucun prix, paiement, taux ni donnée des parents",
+      "En place : gagnantes du jour dans le rapport (victoire, attitude) ; points comptés tout seuls (présence, victoire, attitude) et échangés contre des récompenses (Coaching → Joueuses → Points et récompenses)",
       "Note des exercices sur 10 dans le même rapport (banque d'exercices)"
     ],
     next: "Donner un identifiant à chaque éducateur (Équipe → Entraîneurs) et préparer la pratique du jour de chaque séance dans Pratiques."

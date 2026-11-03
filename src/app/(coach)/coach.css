@@ -162,3 +162,9 @@
 .coach-feedback { margin: 0; display: grid; gap: 8px; }
 .coach-feedback dt { font-size: 0.75rem; font-weight: 600; color: var(--adm-text-3); }
 .coach-feedback dd { margin: 2px 0 0; font-size: 0.9rem; color: var(--adm-text); white-space: pre-line; }
+
+/* Gagnantes du jour */
+.coach-win-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--adm-line); }
+.coach-win-row > span { flex: 1; min-width: 0; font-size: 0.9rem; color: var(--adm-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.coach-win-row .coach-seg { flex-wrap: nowrap; }
+.coach-win-row .coach-seg button { padding: 0 10px; font-size: 0.8rem; }

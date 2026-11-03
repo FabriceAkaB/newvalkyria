@@ -24,6 +24,7 @@ Tout ce qui sert à faire progresser les filles va dans Coaching (section « Sur
 | Méthode Valkyria | `/admin/coaching/methode`, `/admin/coaching/gestes` ; portail `/entraineur/methode` | `coaching-method.ts` (pur, testé), `coaching-method-repo.ts` | `coaching_method_docs`, `method_gestures` |
 | Observation mensuelle des coachs | `/admin/coaching/observations` ; portail : « Mon dernier retour » | `coach-observations.ts` (grille pure, testée), `coach-observations-repo.ts` | `coach_observations` |
 | Plan de l'année | `/admin/coaching/plan` | `season-plan.ts` (pur, testé), `season-themes-repo.ts` (`themeFor`) | `season_themes` (block_label, test_week, by_category) |
+| Points des joueuses et récompenses | rapport de l'éducateur (« Gagnantes du jour ») ; `/admin/coaching/points` | `player-points.ts` (pur, testé : présence 5, victoire 10, attitude 10, 3 gagnantes max par catégorie), `player-points-repo.ts` | `player_points`, `point_rewards` (présences comptées depuis `activity_player_attendance`) |
 | Banque d'exercices | `/admin/exercices` | `exercise-bank.ts`, `exercises-repo.ts` | `exercises`, `exercise_ratings` |
 
 ## Règles
@@ -35,7 +36,8 @@ Tout ce qui sert à faire progresser les filles va dans Coaching (section « Sur
 6. **Contenu de la méthode** : c'est JP qui l'écrit et le valide. Ne jamais inventer de gestes, de seuils ou de principes : proposer à partir du plan Mandalart, marqué « proposition à valider ».
 7. Les blocs de séance utilisent les mêmes clés que la banque d'exercices (`SESSION_PLACES` : jeu-entree, ball-mastery, technique, forme-jouee).
 8. Règles métier dans des fichiers purs testés (`coach-report.ts`, `skill-tests.ts`, `coaching-method.ts`) ; l'écran ne fait qu'afficher.
-9. Après une pièce : fiche dans `mandalart-modules.ts` à jour, tâche cochée dans `mandalart_tasks_state` (note « Construit et mis en ligne par Claude Code le … »), skill `mise-en-ligne`.
+9. Points : aucun classement entre les filles (chacune voit ses points) ; aucune photo d'enfant enregistrée sans consentement (`players.image_consent`).
+10. Après une pièce : fiche dans `mandalart-modules.ts` à jour, tâche cochée dans `mandalart_tasks_state` (note « Construit et mis en ligne par Claude Code le … »), skill `mise-en-ligne`.
 
 ## Pièces qui restent (dans l'ordre)
 1. Lien lieu ↔ thème et exercices de la banque proposés selon le thème de la semaine (P1.3.17).

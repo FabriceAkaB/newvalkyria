@@ -5,6 +5,7 @@ import { requireCoach } from "@/lib/coach-auth";
 import { cleanCategory, getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityById } from "@/lib/coach-portal-repo";
 import { defaultStepFor } from "@/lib/coach-report";
 import { getCoach } from "@/lib/coaches-repo";
+import { getActivityWinners } from "@/lib/player-points-repo";
 import { getExercisesForPlanning } from "@/lib/exercises-repo";
 import { getConvocations, getLineup, getMatchDetails, getMatchEvaluations, getMatchRoster, getPlaytimeSegments } from "@/lib/match-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
@@ -41,7 +42,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
     isMatch ? getMatchEvaluations(id) : Promise.resolve([])
   ]);
 
-  const briefing = await getBriefing(entry.activity, roster).catch(() => []);
+  const [briefing, winners] = await Promise.all([getBriefing(entry.activity, roster).catch(() => []), getActivityWinners(id).catch(() => [])]);
 
   // Accès limité : la présence de l'éducateur sans son taux ni les champs de paiement.
   const { assignment } = entry;
@@ -72,6 +73,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       myPresence={myPresence}
       defaultStep={defaultStep}
       briefing={briefing}
+      initialWinners={winners}
       theme={theme ? { theme: themeFor(theme, cleanCategory(entry.activity.category)) ?? theme.theme, notes: theme.notes } : null}
       sessionBlocks={blocks}
       initialExercises={exercises}
