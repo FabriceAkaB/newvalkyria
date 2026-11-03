@@ -245,8 +245,11 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "coaching",
         label: "Cette semaine",
         icon: "sun",
-        description: "Les pratiques de la semaine, la note des joueuses, les rapports des éducateurs et les joueuses à suivre.",
-        tabs: [{ href: "/admin/coaching", label: "Cette semaine" }]
+        description: "Les pratiques de la semaine, le sondage de fin (présence, plaisir, fatigue, ce qu'elles veulent plus), les rapports des éducateurs et les joueuses à suivre.",
+        tabs: [
+          { href: "/admin/coaching", label: "Cette semaine" },
+          { href: "/admin/coaching/sondage", label: "Sondage de fin" }
+        ]
       },
       {
         key: "pratiques",

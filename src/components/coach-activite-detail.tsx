@@ -10,10 +10,12 @@ import { CoachTopbar } from "@/components/coach-topbar";
 import { SurpriseMomentEditor } from "@/components/surprise-moment";
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
 import { MatchPanel } from "@/components/match-panel";
+import { PracticeSurvey } from "@/components/practice-survey";
 import { computeHours, formatHoursMinutes, timeToMinutes } from "@/lib/coach-payroll";
 import { planningLabel } from "@/lib/exercise-bank";
 import type { BriefingPlayer, PlayerAttendance, PlayerAttendanceStatus, PlayerEvaluation, RosterPlayer } from "@/lib/coach-portal-repo";
 import { MAX_WINNERS, POINTS, WIN_LABEL, type WinKind } from "@/lib/player-points";
+import { isAnswered, type SurveyAnswer } from "@/lib/practice-survey";
 import { cleanNote, isQuickEvaluationComplete, NOTE_MIN_CHARS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START } from "@/lib/coach-report";
 import type { AssignmentStatus, CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
@@ -544,62 +546,6 @@ function QuickEvaluation({
   );
 }
 
-function EndRoutine({
-  activityId,
-  players,
-  values,
-  onChange
-}: {
-  activityId: string;
-  players: RosterPlayer[];
-  values: Record<string, { rating: number | null; fatigue: number | null }>;
-  onChange: (id: string, v: { rating: number | null; fatigue: number | null }) => void;
-}) {
-  const [error, setError] = useState<string | null>(null);
-  const done = players.filter((p) => values[p.registrationId]?.rating != null && values[p.registrationId]?.fatigue != null).length;
-
-  const set = async (p: RosterPlayer, field: "rating" | "fatigue", raw: string) => {
-    const prev = values[p.registrationId] ?? { rating: null, fatigue: null };
-    const next = { ...prev, [field]: raw === "" ? null : Number(raw) };
-    onChange(p.registrationId, next);
-    const r = await postJson("/api/coach/feedback", { activityId, registrationId: p.registrationId, practiceRating: next.rating, fatigue: next.fatigue });
-    if (!r.ok) {
-      onChange(p.registrationId, prev);
-      setError(r.error ?? null);
-    } else setError(null);
-  };
-
-  return (
-    <div className="coach-card">
-      <p className="coach-card__label">Routine de fin · {done} sur {players.length}</p>
-      <p className="coach-sub" style={{ marginTop: 0 }}>
-        Avant de partir, chaque joueuse dit sa note de la pratique (0 à 10) et sa fatigue (0 = pleine d&apos;énergie, 10 = épuisée).
-      </p>
-      <div className="coach-progress" aria-hidden><div style={{ width: `${players.length ? (done / players.length) * 100 : 0}%` }} /></div>
-      {error && <p className="coach-error">{error}</p>}
-      <div style={{ marginTop: 12 }}>
-        {players.map((p) => {
-          const v = values[p.registrationId] ?? { rating: null, fatigue: null };
-          return (
-            <div key={p.registrationId} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderTop: "1px solid var(--adm-line)" }}>
-              <span style={{ flex: 1, minWidth: 0, fontSize: "0.9rem", color: "var(--adm-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.firstName} {p.lastName[0] ?? ""}.</span>
-              {(["rating", "fatigue"] as const).map((field) => (
-                <label key={field} style={{ display: "grid", gap: 2, textAlign: "center" }}>
-                  <span className="coach-muted" style={{ fontSize: "0.68rem" }}>{field === "rating" ? "Note" : "Fatigue"}</span>
-                  <select className="coach-time" value={v[field] ?? ""} onChange={(e) => set(p, field, e.target.value)} aria-label={`${field === "rating" ? "Note de la pratique" : "Fatigue"} de ${p.firstName}`} style={{ width: 64 }}>
-                    <option value="">—</option>
-                    {Array.from({ length: 11 }, (_, i) => <option key={i} value={i}>{i}</option>)}
-                  </select>
-                </label>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 /** Gagnantes du jour : l'éducateur touche le nom des gagnantes ; les points se comptent tout seuls. */
 function WinnersCard({ activityId, players, initial }: { activityId: string; players: RosterPlayer[]; initial: { registration_id: string; kind: WinKind }[] }) {
   const [wins, setWins] = useState(initial);
@@ -724,8 +670,10 @@ export function CoachActiviteDetail({
   const [step, setStep] = useState<Step>(defaultStep);
   const [showEditor, setShowEditor] = useState(false);
   const [attendance, setAttendance] = useState<Record<string, PlayerAttendanceStatus>>(Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status])));
-  const [feedback, setFeedback] = useState<Record<string, { rating: number | null; fatigue: number | null }>>(
-    Object.fromEntries(initialAttendance.map((a) => [a.registration_id, { rating: a.practice_rating ?? null, fatigue: a.fatigue ?? null }]))
+  const [feedback, setFeedback] = useState<Record<string, SurveyAnswer>>(
+    Object.fromEntries(
+      initialAttendance.map((a) => [a.registration_id, { practiceRating: a.practice_rating ?? null, fatigue: a.fatigue ?? null, wantsMore: a.wants_more ?? [], wantsMoreNote: a.wants_more_note ?? null }])
+    )
   );
   const [mine, setMine] = useState<Record<string, PlayerEvaluation>>(Object.fromEntries(initialEvaluations.filter((e) => e.coach_id === coachId).map((e) => [e.registration_id, e])));
   const [presence, setPresence] = useState(myPresence);
@@ -750,7 +698,7 @@ export function CoachActiviteDetail({
   const isEvaluated = (id: string) => isQuickEvaluationComplete(mine[id]) || (others[id] ?? []).some((o) => isQuickEvaluationComplete(o.evaluation));
   const marked = roster.filter((p) => attendance[p.registrationId]).length;
   const evaluated = participants.filter((p) => isEvaluated(p.registrationId)).length;
-  const routineDone = participants.filter((p) => feedback[p.registrationId]?.rating != null && feedback[p.registrationId]?.fatigue != null).length;
+  const routineDone = participants.filter((p) => isAnswered(feedback[p.registrationId])).length;
   const reportNeeded = REPORT_REQUIRED_TYPES.includes(activity.activity_type) && !activity.organization && roster.length > 0;
   const ruleApplies = String(activity.activity_date).slice(0, 10) >= REPORT_RULE_START;
   const reportComplete = !reportNeeded || (marked === roster.length && evaluated === participants.length);
@@ -856,7 +804,7 @@ export function CoachActiviteDetail({
                 <ul className="coach-checklist">
                   {reportNeeded && <li data-done={String(marked === roster.length)}>Présences des joueuses · {marked}/{roster.length}</li>}
                   {reportNeeded && <li data-done={String(participants.length > 0 && evaluated === participants.length)}>Évaluation de chaque joueuse présente · {evaluated}/{participants.length}</li>}
-                  {reportNeeded && <li data-done={String(participants.length > 0 && routineDone === participants.length)}>Routine de fin · {routineDone}/{participants.length}</li>}
+                  {reportNeeded && <li data-done={String(participants.length > 0 && routineDone === participants.length)}>Sondage de fin · {routineDone}/{participants.length}</li>}
                   <li data-done={String(presence.confirmed)}>Ma présence confirmée</li>
                 </ul>
                 <p className="coach-sub" style={{ marginTop: 12, color: hoursCount ? "var(--adm-good)" : undefined }}>
@@ -899,7 +847,16 @@ export function CoachActiviteDetail({
 
               {reportNeeded && participants.length > 0 && (
                 <div style={{ marginBottom: 16 }}>
-                  <EndRoutine activityId={activity.id} players={participants} values={feedback} onChange={(id, v) => setFeedback((prev) => ({ ...prev, [id]: v }))} />
+                  <h2 className="coach-h2">Sondage de fin · {routineDone}/{participants.length}</h2>
+                  <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>Avant de partir, chaque fille dit si elle a aimé, sa fatigue et ce qu&apos;elle aimerait avoir plus. 3 touches par fille.</p>
+                  <PracticeSurvey
+                    activityId={activity.id}
+                    players={participants}
+                    initialPresence={attendance}
+                    initialAnswers={feedback}
+                    feedbackUrl="/api/coach/feedback"
+                    onAnswersChange={setFeedback}
+                  />
                 </div>
               )}
 

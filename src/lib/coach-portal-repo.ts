@@ -1,5 +1,6 @@
 import { cleanNote, computeReport, feedbackByWeek, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, watchReasons, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
 import type { CoachActivity, CoachAssignment } from "@/lib/coaches-repo";
+import type { SurveyAnswer } from "@/lib/practice-survey";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -234,6 +235,9 @@ export interface PlayerAttendance {
   practice_rating: number | null;
   /** Routine de fin : fatigue de la joueuse, sur 10. */
   fatigue: number | null;
+  /** Sondage de fin : ce qu'elle aimerait avoir plus (clés de WANTS_MORE) et un mot libre. */
+  wants_more?: string[] | null;
+  wants_more_note?: string | null;
 }
 
 export async function getActivityAttendance(activityId: string): Promise<PlayerAttendance[]> {
@@ -252,14 +256,23 @@ export async function setPlayerAttendance(activityId: string, registrationId: st
   if (error) throw new Error(error.message);
 }
 
-/** Routine de fin : note de la pratique et fatigue données par la joueuse (sur 10), saisies par l'éducateur.
- *  Crée la ligne de présence (présente) si l'éducateur ne l'avait pas encore marquée. */
-export async function setPlayerFeedback(activityId: string, registrationId: string, practiceRating: number | null, fatigue: number | null): Promise<void> {
+/** Sondage de fin : plaisir et fatigue (sur 10) et ce que la joueuse aimerait avoir plus, saisis par l'éducateur ou JP.
+ *  Crée la ligne de présence (présente) si elle n'avait pas encore été marquée. */
+export async function setPlayerFeedback(activityId: string, registrationId: string, answer: SurveyAnswer): Promise<void> {
   const now = new Date().toISOString();
   const { error } = await db()
     .from("activity_player_attendance")
     .upsert(
-      { activity_id: activityId, registration_id: registrationId, practice_rating: practiceRating, fatigue, feedback_at: now, updated_at: now },
+      {
+        activity_id: activityId,
+        registration_id: registrationId,
+        practice_rating: answer.practiceRating,
+        fatigue: answer.fatigue,
+        wants_more: answer.wantsMore,
+        wants_more_note: answer.wantsMoreNote,
+        feedback_at: now,
+        updated_at: now
+      },
       { onConflict: "activity_id,registration_id" }
     );
   if (error) throw new Error(error.message);

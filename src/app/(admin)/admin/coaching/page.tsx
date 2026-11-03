@@ -88,7 +88,8 @@ export default async function CoachingWeekPage() {
             </div>
             <div className="mda-card">
               <p className="mda-num">{w.feedback?.rating !== null && w.feedback ? `${fr(w.feedback.rating)}/10` : "—"}</p>
-              <p className="mda-label">{w.feedback ? `Note des joueuses (sem. du ${dayLabel(w.feedback.weekStart)}) · fatigue ${fr(w.feedback.fatigue)}/10` : "Note des joueuses : pas encore de routine de fin"}</p>
+              <p className="mda-label">{w.feedback ? `Plaisir des joueuses (sem. du ${dayLabel(w.feedback.weekStart)}) · fatigue ${fr(w.feedback.fatigue)}/10` : "Plaisir des joueuses : pas encore de sondage de fin"}</p>
+              <Link href="/admin/coaching/sondage" className="mda-sub" style={{ color: "var(--adm-accent)", textDecoration: "none" }}>Sondage de fin →</Link>
             </div>
             <div className="mda-card">
               <p className="mda-num" style={{ color: w.reportsMissing.length ? "var(--adm-warn)" : undefined }}>{w.reportsMissing.length}</p>
