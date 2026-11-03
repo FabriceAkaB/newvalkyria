@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { FATIGUE_SCALE, isAnswered, levelOf, parseSurveyAnswer, PLEASURE_SCALE, summarizeSurvey } from "@/lib/practice-survey";
+import { isAnswered, parseSurveyAnswer, SCALE_VALUES, summarizeSurvey } from "@/lib/practice-survey";
 
 describe("sondage de fin de pratique", () => {
-  it("affiche le niveau le plus proche d'une note sur 10", () => {
-    expect(levelOf(PLEASURE_SCALE, 10)?.label).toBe("Adoré");
-    expect(levelOf(PLEASURE_SCALE, 7)?.value).toBe(6);
-    expect(levelOf(FATIGUE_SCALE, 0)?.label).toBe("Pleine d'énergie");
-    expect(levelOf(PLEASURE_SCALE, null)).toBeNull();
+  it("note de 1 à 10", () => {
+    expect(SCALE_VALUES[0]).toBe(1);
+    expect(SCALE_VALUES.at(-1)).toBe(10);
   });
 
   it("une réponse est complète avec le plaisir et la fatigue", () => {

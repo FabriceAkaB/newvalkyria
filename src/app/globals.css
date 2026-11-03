@@ -11312,8 +11312,10 @@ img { max-width: 100%; height: auto; }
 .ps-row-label { display: flex; justify-content: space-between; gap: 8px; margin: 0; font-size: 0.8rem; font-weight: 600; color: var(--adm-text-2); }
 .ps-row-label span { font-weight: 400; color: var(--adm-text-3); }
 .ps-scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
-.ps-scale button { min-height: 52px; border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); background: transparent; font-size: 1.6rem; line-height: 1; cursor: pointer; filter: grayscale(0.6); }
-.ps-scale button[data-active="true"] { background: var(--adm-accent-soft); border-color: var(--adm-accent); filter: none; transform: scale(1.04); }
+.ps-scale button { min-height: 46px; border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); background: transparent; color: var(--adm-text); font: inherit; font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer; }
+.ps-scale button[data-active="true"] { background: var(--adm-accent-strong); border-color: var(--adm-accent-strong); color: #fff; }
+.ps-scale-ends { display: flex; justify-content: space-between; gap: 8px; margin: 0; font-size: 0.72rem; color: var(--adm-text-3); }
+@media (min-width: 520px) { .ps-scale { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
 .ps-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .ps-chips button { min-height: 40px; padding: 0 12px; border: 1px solid var(--adm-border); border-radius: 999px; background: transparent; color: var(--adm-text-2); font: inherit; font-size: 0.84rem; cursor: pointer; }
 .ps-chips button[data-on="true"] { background: var(--adm-accent-soft); border-color: var(--adm-accent); color: var(--adm-text); font-weight: 600; }

@@ -2,31 +2,20 @@
  *  Chaque fille présente dit, en 3 touches : son plaisir, sa fatigue et ce qu'elle aimerait avoir plus.
  *  Règles pures, partagées par le portail des éducateurs et l'espace Coaching.
  *
- *  Le plaisir et la fatigue restent enregistrés sur 10 (practice_rating, fatigue) pour l'indicateur ;
- *  à l'écran, 5 choix faciles pour des filles de 8 à 12 ans, qui valent 2, 4, 6, 8 et 10. */
+ *  Le plaisir et la fatigue sont notés sur 10 (practice_rating, fatigue) : le plaisir alimente l'indicateur. */
 
-export interface ScaleLevel {
-  value: number;
-  emoji: string;
+/** Plaisir et fatigue notés de 1 à 10 (demande de JP, 3 nov. 2026). Les mots aux deux bouts aident les plus jeunes. */
+export interface Scale {
+  key: "plaisir" | "fatigue";
   label: string;
+  low: string;
+  high: string;
 }
 
-export const PLEASURE_SCALE: ScaleLevel[] = [
-  { value: 2, emoji: "😞", label: "Pas aimé" },
-  { value: 4, emoji: "🙁", label: "Bof" },
-  { value: 6, emoji: "😐", label: "Correct" },
-  { value: 8, emoji: "🙂", label: "Aimé" },
-  { value: 10, emoji: "😍", label: "Adoré" }
-];
-
-/** 2 = pleine d'énergie, 10 = épuisée. */
-export const FATIGUE_SCALE: ScaleLevel[] = [
-  { value: 2, emoji: "⚡", label: "Pleine d'énergie" },
-  { value: 4, emoji: "🙂", label: "En forme" },
-  { value: 6, emoji: "😮‍💨", label: "Un peu fatiguée" },
-  { value: 8, emoji: "😓", label: "Fatiguée" },
-  { value: 10, emoji: "🥵", label: "Épuisée" }
-];
+export const SCALE_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
+export const PLEASURE: Scale = { key: "plaisir", label: "Plaisir", low: "😞 Pas aimé", high: "Adoré 😍" };
+/** 1 = pleine d'énergie, 10 = épuisée. */
+export const FATIGUE: Scale = { key: "fatigue", label: "Fatigue", low: "⚡ Pleine d'énergie", high: "Épuisée 🥵" };
 
 export const WANTS_MORE = [
   { key: "matchs", label: "Matchs" },
@@ -43,12 +32,6 @@ export type WantsMoreKey = (typeof WANTS_MORE)[number]["key"];
 
 export const wantsLabel = (k: string) => WANTS_MORE.find((w) => w.key === k)?.label ?? k;
 export const NOTE_MAX = 80;
-
-/** Le niveau affiché pour une note sur 10 déjà enregistrée (ancienne saisie de 0 à 10 comprise). */
-export function levelOf(scale: ScaleLevel[], value: number | null | undefined): ScaleLevel | null {
-  if (value === null || value === undefined) return null;
-  return scale.reduce((best, l) => (Math.abs(l.value - value) < Math.abs(best.value - value) ? l : best), scale[0]);
-}
 
 export interface SurveyAnswer {
   practiceRating: number | null;

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 
-import { FATIGUE_SCALE, isAnswered, levelOf, NOTE_MAX, PLEASURE_SCALE, summarizeSurvey, WANTS_MORE, wantsLabel, type ScaleLevel, type SurveyAnswer } from "@/lib/practice-survey";
+import { FATIGUE, isAnswered, NOTE_MAX, PLEASURE, SCALE_VALUES, summarizeSurvey, WANTS_MORE, wantsLabel, type Scale, type SurveyAnswer } from "@/lib/practice-survey";
 
 export interface SurveyPlayer {
   registrationId: string;
@@ -25,21 +25,24 @@ async function post(url: string, body: unknown): Promise<string | null> {
 
 const fr = (n: number | null) => (n === null ? "—" : n.toLocaleString("fr-CA", { maximumFractionDigits: 1 }));
 
-function Scale({ label, scale, value, onPick, name }: { label: string; scale: ScaleLevel[]; value: number | null; onPick: (v: number) => void; name: string }) {
-  const current = levelOf(scale, value);
+function ScaleRow({ scale, value, onPick, name }: { scale: Scale; value: number | null; onPick: (v: number) => void; name: string }) {
   return (
     <div className="ps-row">
       <p className="ps-row-label">
-        {label}
-        {current ? <span>{current.label}</span> : null}
+        {scale.label} sur 10
+        {value !== null ? <span>{value}/10</span> : null}
       </p>
-      <div className="ps-scale" role="radiogroup" aria-label={`${label} de ${name}`}>
-        {scale.map((l) => (
-          <button key={l.value} type="button" role="radio" aria-checked={current?.value === l.value} aria-label={l.label} title={l.label} data-active={String(current?.value === l.value)} onClick={() => onPick(l.value)}>
-            <span aria-hidden>{l.emoji}</span>
+      <div className="ps-scale" role="radiogroup" aria-label={`${scale.label} de ${name}, de 1 à 10`}>
+        {SCALE_VALUES.map((v) => (
+          <button key={v} type="button" role="radio" aria-checked={value === v} data-active={String(value === v)} onClick={() => onPick(v)}>
+            {v}
           </button>
         ))}
       </div>
+      <p className="ps-scale-ends" aria-hidden>
+        <span>1 {scale.low}</span>
+        <span>{scale.high} 10</span>
+      </p>
     </div>
   );
 }
@@ -164,8 +167,6 @@ export function PracticeSurvey({
           const done = isAnswered(a);
           const open = isHere && openId === id;
           const name = `${p.firstName} ${p.lastName}`.trim();
-          const pl = levelOf(PLEASURE_SCALE, a.practiceRating);
-          const fa = levelOf(FATIGUE_SCALE, a.fatigue);
           return (
             <li key={id} className="ps-player" data-open={String(open)} data-absent={String(status === "absent" || status === "injured")}>
               <div className="ps-head">
@@ -179,7 +180,7 @@ export function PracticeSurvey({
                         : !isHere
                           ? status === "injured" ? "Blessée" : "Absente"
                           : done
-                            ? [pl && `${pl.emoji} ${pl.label}`, fa && `${fa.emoji} ${fa.label}`, a.wantsMore.length ? `plus de ${a.wantsMore.map(wantsLabel).join(", ").toLowerCase()}` : null].filter(Boolean).join(" · ")
+                            ? [a.practiceRating != null && `Plaisir ${a.practiceRating}/10`, a.fatigue != null && `fatigue ${a.fatigue}/10`, a.wantsMore.length ? `plus de ${a.wantsMore.map(wantsLabel).join(", ").toLowerCase()}` : null].filter(Boolean).join(" · ")
                             : "À sonder"}
                       {p.isTrial ? " · essai" : ""}
                     </small>
@@ -196,8 +197,8 @@ export function PracticeSurvey({
 
               {open && (
                 <div className="ps-body">
-                  <Scale label="Plaisir" scale={PLEASURE_SCALE} value={a.practiceRating} name={p.firstName} onPick={(v) => save(id, { practiceRating: v })} />
-                  <Scale label="Fatigue" scale={FATIGUE_SCALE} value={a.fatigue} name={p.firstName} onPick={(v) => save(id, { fatigue: v })} />
+                  <ScaleRow scale={PLEASURE} value={a.practiceRating} name={p.firstName} onPick={(v) => save(id, { practiceRating: v })} />
+                  <ScaleRow scale={FATIGUE} value={a.fatigue} name={p.firstName} onPick={(v) => save(id, { fatigue: v })} />
                   <div className="ps-row">
                     <p className="ps-row-label">J&apos;aimerais avoir plus de… <span>facultatif</span></p>
                     <div className="ps-chips">

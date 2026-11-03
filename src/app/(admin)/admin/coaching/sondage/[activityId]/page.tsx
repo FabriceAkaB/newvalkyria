@@ -15,7 +15,7 @@ export default async function SurveyPage({ params }: { params: Promise<{ activit
   const { activityId } = await params;
   const data = await getSurveyData(activityId);
   if (!data) notFound();
-  const { activity, roster, attendance } = data;
+  const { activity, roster, attendance, label } = data;
   const date = new Date(`${String(activity.activity_date).slice(0, 10)}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" });
 
   return (
@@ -29,8 +29,8 @@ export default async function SurveyPage({ params }: { params: Promise<{ activit
               <span style={{ textTransform: "capitalize" }}>{date}</span> · {String(activity.start_time).slice(0, 5)}
               {activity.location ? ` · ${activity.location}` : ""}
             </p>
-            <h1 className="mda-h1">{activity.title || activity.category || activity.activity_type}</h1>
-            <p className="mda-lead">Touche « Présente » ou « Absente », puis pour chaque fille : son plaisir, sa fatigue et, si elle veut, ce qu&apos;elle aimerait avoir plus. Tout s&apos;enregistre à chaque touche.</p>
+            <h1 className="mda-h1">{label} · {roster.length} joueuse{roster.length > 1 ? "s" : ""}</h1>
+            <p className="mda-lead">Touche « Présente » ou « Absente », puis pour chaque fille : son plaisir et sa fatigue sur 10 et, si elle veut, ce qu&apos;elle aimerait avoir plus. Tout s&apos;enregistre à chaque touche.</p>
           </header>
           <PracticeSurvey
             activityId={activity.id}

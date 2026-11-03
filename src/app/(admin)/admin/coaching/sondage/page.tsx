@@ -36,7 +36,7 @@ export default async function SurveyListPage() {
           <header>
             <p className="mda-eyebrow">Espace coaching · à la fin de chaque pratique</p>
             <h1 className="mda-h1">{toDo.length ? `${toDo.length} pratique${toDo.length > 1 ? "s" : ""} d'hier ou d'aujourd'hui à sonder` : recent.length ? "Les pratiques d'hier et d'aujourd'hui sont sondées" : "Aucune pratique hier ni aujourd'hui"}</h1>
-            <p className="mda-lead">Marque qui était là, puis chaque fille dit en 3 touches si elle a aimé, sa fatigue et ce qu&apos;elle aimerait avoir plus. Le plaisir alimente l&apos;indicateur « appréciation des joueuses » du Mandalart.</p>
+            <p className="mda-lead">Les joueuses de chaque pratique sont déjà là, selon leur groupe et leur journée. Marque qui était présente, puis chaque fille donne son plaisir et sa fatigue sur 10 (et, si elle veut, ce qu&apos;elle aimerait avoir plus). Le plaisir alimente l&apos;indicateur « appréciation des joueuses » du Mandalart.</p>
           </header>
 
           {trend && trend.answered > 0 && (
@@ -68,6 +68,7 @@ export default async function SurveyListPage() {
                         </p>
                         <div className="mda-task-meta">
                           <span>{p.location}</span>
+                          <span>{p.expected} joueuse{p.expected > 1 ? "s" : ""} attendue{p.expected > 1 ? "s" : ""}</span>
                           {p.present ? <span>{p.present} présente{p.present > 1 ? "s" : ""}</span> : <span>Présences pas encore marquées</span>}
                         </div>
                       </div>
