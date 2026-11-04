@@ -11414,3 +11414,14 @@ img { max-width: 100%; height: auto; }
 .adm-skel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
 @keyframes adm-skel { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 @media (prefers-reduced-motion: reduce) { .adm-skel { animation: none; } }
+
+/* ── Aujourd'hui : la prochaine action et la semaine en bandeau sur téléphone ── */
+.admin-shell .agd-next { background: var(--adm-surface); border: 1px solid var(--adm-line); border-left-width: 4px; border-radius: 14px; padding: 16px 18px; margin: 0 0 1.4rem; display: grid; gap: 6px; }
+.admin-shell .agd-next-label { margin: 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.admin-shell .agd-next-title { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--adm-text); line-height: 1.3; }
+.admin-shell .agd-next-detail { margin: 0; font-size: 0.9rem; color: var(--adm-text-2); }
+.admin-shell .agd-next-btn { justify-self: start; margin-top: 6px; min-height: 44px; display: inline-flex; align-items: center; text-decoration: none; }
+@media (max-width: 860px) {
+  .admin-shell .agd-week { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(140px, 46%); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .admin-shell .agd-week > * { scroll-snap-align: start; }
+}
