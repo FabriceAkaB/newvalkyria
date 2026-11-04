@@ -270,6 +270,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         icon: "list",
         description: "La méthode écrite : structure de séance, principes de la pédagogie Valkyria et bibliothèque des gestes par niveau du passeport.",
         tabs: [
+          { href: "/admin/coaching/parcours", label: "Parcours Valkyria" },
           { href: "/admin/coaching/methode", label: "Séance et principes", adminOnly: true },
           { href: "/admin/coaching/gestes", label: "Gestes", adminOnly: true }
         ]
