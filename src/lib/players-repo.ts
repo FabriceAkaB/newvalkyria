@@ -86,3 +86,39 @@ export async function findOrCreatePlayer(input: {
   if (insertErr) throw new Error(insertErr.message);
   return created.id as string;
 }
+
+/* ── Photo déposée par la famille avec un lien personnel (/photo/[jeton]), sans compte ───────────── */
+
+export interface PhotoLinkPlayer {
+  id: string;
+  firstName: string;
+  hasPhoto: boolean;
+  imageConsent: boolean;
+}
+
+export async function getPlayerByPhotoToken(token: string): Promise<PhotoLinkPlayer | null> {
+  if (!/^[a-f0-9]{32}$/.test(token)) return null;
+  const { data } = await db().from("players").select("id, first_name, photo_url, image_consent").eq("photo_token", token).maybeSingle();
+  if (!data) return null;
+  return { id: data.id, firstName: String(data.first_name ?? "").trim(), hasPhoto: Boolean(data.photo_url), imageConsent: Boolean(data.image_consent) };
+}
+
+/** Le jeton du lien photo d'une joueuse (créé au premier besoin, ensuite toujours le même). */
+export async function ensurePhotoToken(playerId: string): Promise<string> {
+  const { data } = await db().from("players").select("photo_token").eq("id", playerId).maybeSingle();
+  if (data?.photo_token) return data.photo_token as string;
+  const { randomBytes } = await import("node:crypto");
+  const token = randomBytes(16).toString("hex");
+  const { error } = await db().from("players").update({ photo_token: token }).eq("id", playerId);
+  if (error) throw new Error(error.message);
+  return token;
+}
+
+/** Accord de publication (droit à l'image) donné par la famille ; retirable en tout temps. */
+export async function setImageConsent(playerId: string, consent: boolean): Promise<void> {
+  const { error } = await db()
+    .from("players")
+    .update({ image_consent: consent, image_consent_at: consent ? new Date().toISOString() : null })
+    .eq("id", playerId);
+  if (error) throw new Error(error.message);
+}
