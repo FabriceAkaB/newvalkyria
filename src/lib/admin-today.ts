@@ -18,6 +18,7 @@ import { getReview } from "@/lib/weekly-review-repo";
 import { isLate as isLatePractice } from "@/lib/practice-history";
 import { getPracticeHistory } from "@/lib/practice-history-repo";
 import { getRecentPracticesForSurvey } from "@/lib/practice-survey-repo";
+import { loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
 
 /** Page « Aujourd'hui » de l'admin : tout ce qui demande une action, recalculé à chaque
  *  visite à partir des mêmes données que l'Historique et les Relances. La gérante ne voit
@@ -340,6 +341,37 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
           meta: r.reminderSentAt ? `Relancé ${shortDay(r.reminderSentAt)}` : r.coachHasEmail ? "Relance à 24 h" : "Pas de courriel : appeler",
           href: `/admin/entraineurs/activites/${r.activityId}`
         }))
+      })
+    );
+  }
+
+  // ── Photos à prendre aux pratiques d'aujourd'hui (filles sans photo sur leur fiche), groupe par groupe ──
+  {
+    const todays = (await listPractices({ from: today, to: today }).catch(() => [])).filter((p) => !p.organization && p.source !== "programme");
+    const { slots, regs: rosterRegs } = todays.length ? await loadRosterSources().catch(() => ({ slots: [], regs: [] })) : { slots: [], regs: [] };
+    const seen = new Set<string>();
+    const items: TodayItem[] = [];
+    for (const p of todays) {
+      const missing = rosterForActivity({ activity_date: p.date, start_time: p.start, category: p.group }, slots, rosterRegs).filter((r) => !r.photoUrl && !seen.has(r.registrationId));
+      missing.forEach((r) => seen.add(r.registrationId));
+      if (!missing.length) continue;
+      items.push({
+        title: `${p.start} · ${p.group} · ${missing.length} photo${missing.length > 1 ? "s" : ""} à prendre`,
+        detail: missing.map((r) => `${r.firstName} ${r.lastName.slice(0, 1)}.`).join(", "),
+        meta: p.location,
+        href: "/admin/photos"
+      });
+    }
+    sections.push(
+      section({
+        key: "photos",
+        title: "Photos des filles à prendre aujourd'hui",
+        level: items.length ? "orange" : "info",
+        count: seen.size,
+        emptyText: "Aucune photo à prendre aux pratiques d'aujourd'hui.",
+        href: "/admin/photos",
+        hrefLabel: "Photos des joueuses",
+        items
       })
     );
   }
