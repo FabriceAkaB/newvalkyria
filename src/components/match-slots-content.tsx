@@ -180,12 +180,9 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
     if (restricted && !team) return { available: true, reason: null };
     // Admissible d'office, ou demande approuvée par l'académie pour cette plage.
     if (u.slots.every((s) => checkEligibility(s.rules, team).ok || s.request === "approved")) return { available: true, reason: null };
-    if (u.slots.every((s) => s.allowRequests)) {
-      const request = u.slots.find((s) => s.request)?.request ?? null;
-      return { available: false, requestable: true, request, reason: null };
-    }
-    const failing = u.slots.map((s) => checkEligibility(s.rules, team)).find((e) => !e.ok);
-    return { available: false, reason: failing && !failing.ok ? failing.reason : "Non admissible" };
+    // Pas la catégorie prévue : on peut toujours faire une demande ; l'académie l'approuve (lien de paiement) ou non.
+    const request = u.slots.find((s) => s.request)?.request ?? null;
+    return { available: false, requestable: true, request, reason: null };
   };
 
   // Dès que la catégorie est connue, on montre les plages qui lui conviennent… et celles « sur demande ».
@@ -579,18 +576,21 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                               <p style={{ margin: "0.55rem 0 0", fontSize: "0.84rem", color: "#c3c2c8", lineHeight: 1.55 }}>
                                 <span style={{ color: "#9d9da0" }}>Contre :</span> <strong style={{ color: "#fff" }}>{opponents.join(" puis ")}</strong>
                                 {first.format && <><br /><span style={{ color: "#9d9da0" }}>Format :</span> {first.format}</>}
-                                {!commonLocation && <><br /><span style={{ color: "#9d9da0" }}>Terrain :</span> {first.field ? `${first.field} · ` : ""}{first.location}</>}
+                                <br /><span style={{ color: "#9d9da0" }}>Lieu :</span> {first.field ? `${first.field} · ` : ""}{first.location}
                                 {first.preferred && <><br /><span style={{ color: "#8fce9f" }}>{first.preferred}</span></>}
                               </p>
                               {first.restriction && (
                                 <details style={{ marginTop: "0.35rem" }}>
                                   <summary style={{ cursor: "pointer", fontSize: "0.74rem", color: "#9d9da0" }}>Qui peut jouer ce match ?</summary>
-                                  <p style={{ margin: "0.3rem 0 0", fontSize: "0.76rem", color: "#c3c2c8" }}>{first.restriction}{first.allowRequests ? " · Autres équipes : sur demande." : ""}</p>
+                                  <p style={{ margin: "0.3rem 0 0", fontSize: "0.76rem", color: "#c3c2c8" }}>{first.restriction} · Autres équipes : sur demande.</p>
                                 </details>
                               )}
 
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem", marginTop: "0.7rem", flexWrap: "wrap" }}>
-                                <span style={{ fontSize: "0.78rem", color: "#9d9da0" }}>{formatMoney(unitDeposit)} maintenant · {formatMoney(unitBalance)} sur place</span>
+                                <span style={{ fontSize: "0.82rem", color: "#e5e4ea" }}>
+                                  <strong style={{ color: "#fff" }}>{formatMoney(unitDeposit + unitBalance)}</strong>
+                                  <span style={{ color: "#9d9da0" }}>{unitBalance ? ` · ${formatMoney(unitDeposit)} pour réserver, ${formatMoney(unitBalance)} sur place` : " · payé en ligne"}</span>
+                                </span>
                                 {state.available && (
                                   <button
                                     type="button"

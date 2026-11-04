@@ -418,7 +418,6 @@ export async function createSlotRequests(profileId: string, slotIds: string[], m
   const unique = Array.from(new Map(all.map((s) => [s.id, s])).values());
   for (const s of unique) {
     if (!s.active) throw new MatchConflictError("Une des plages n'est plus offerte.");
-    if (!s.allow_requests) throw new MatchConflictError("Cette plage n'accepte pas de demande : elle est réservée à une catégorie précise.");
   }
   for (const s of unique) {
     const { data: existing } = await db().from("match_slot_requests").select("id, status").eq("slot_id", s.id).eq("profile_id", profileId).maybeSingle();

@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { getSlotsWithAvailability } from "@/lib/match-slots-repo";
 import { needsOpponent } from "@/lib/mcs-teams";
 import { getRobotStatus } from "@/lib/mcs-robot-config";
-import { getUpcomingEvents, listTeams, syncStaleTeams } from "@/lib/mcs-teams-repo";
+import { getOpponentsToSync, getUpcomingEvents, listTeams, syncStaleTeams } from "@/lib/mcs-teams-repo";
 
 export const metadata = { title: "Équipes MonClubSportif — Admin", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ const ago = (iso: string | null) => {
 export default async function McsTeamsPage() {
   await requireAdmin({ roles: ["admin"] });
   await syncStaleTeams(15, 6_000).catch(() => 0);
-  const [teams, events, slots, robot] = await Promise.all([listTeams(), getUpcomingEvents().catch(() => []), getSlotsWithAvailability().catch(() => []), getRobotStatus().catch(() => null)]);
+  const [teams, events, slots, robot, toName] = await Promise.all([listTeams(), getUpcomingEvents().catch(() => []), getSlotsWithAvailability().catch(() => []), getRobotStatus().catch(() => null), getOpponentsToSync().catch(() => [])]);
   const teamName = new Map(teams.map((t) => [t.id, t.name]));
   const matches = events.filter((e) => e.type === "Match" || e.type === "Tournoi");
   const toFind = matches.filter(needsOpponent);
@@ -47,6 +47,26 @@ export default async function McsTeamsPage() {
           <div className="mda-card"><p className="mda-num" style={{ color: toFind.length ? "var(--adm-warn)" : undefined }}>{toFind.length}</p><p className="mda-label">Matchs sans adversaire</p></div>
           <div className="mda-card"><p className="mda-num" style={{ color: blocked.length ? "var(--adm-warn)" : undefined }}>{blocked.length}</p><p className="mda-label">Plages retirées de la vente (équipe prise)</p></div>
         </section>
+
+        {toName.length > 0 && (
+          <section className="mda-card-flush">
+            <div className="mda-card-head">
+              <h2 className="mda-h2">Adversaires qui ont payé : à inscrire dans MonClubSportif</h2>
+              <Pill tone={robot ? "info" : "warn"}>{robot ? "Le robot s'en charge" : "Robot pas encore branché"}</Pill>
+            </div>
+            <ul className="mda-tasks">
+              {toName.map((o) => (
+                <li key={`${o.date}-${o.start}`} className="mda-task" style={{ display: "block" }}>
+                  <p className="mda-task-title" style={{ fontWeight: 600 }}>{day(o.date)} · {o.start} · {o.opponent}</p>
+                  <div className="mda-task-meta">
+                    <span>{o.location}</span>
+                    <span>{o.mcsMatch ? `Mettre « ${o.opponent} » comme adversaire du match de ${o.mcsMatch.team}` : "Aucun match à cette heure dans MonClubSportif : le créer (ou y déplacer le match)"}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {toFind.length > 0 && (
           <section className="mda-card-flush">

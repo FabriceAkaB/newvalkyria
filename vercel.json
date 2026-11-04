@@ -32,6 +32,10 @@
     {
       "path": "/api/cron/mcs-sync",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/arbitres",
+      "schedule": "0 15 * * *"
     }
   ]
 }

@@ -143,3 +143,36 @@ export async function getEventsBetween(from: string, to: string): Promise<(McsEv
   const name = new Map(((teams ?? []) as any[]).map((t) => [t.id, t.name]));
   return ((data ?? []) as any[]).map((e) => ({ ...e, date: String(e.event_date).slice(0, 10), start: e.start_time, end: e.end_time, team: name.get(e.team_id) ?? "" }));
 }
+
+export interface OpponentToSync {
+  date: string;
+  start: string;
+  location: string;
+  opponent: string;
+  /** Le match MonClubSportif à la même heure (sans adversaire), ou null s'il faut le créer ou le déplacer. */
+  mcsMatch: { team: string; title: string } | null;
+}
+
+/** Chaque plage payée par une équipe adverse doit porter son nom dans MonClubSportif (demande de JP). Tant que le robot
+ *  n'est pas branché, la liste dit quoi y écrire ; une fois fait (le nom lu dans le calendrier), la ligne disparaît. */
+export async function getOpponentsToSync(): Promise<OpponentToSync[]> {
+  const from = todayIso();
+  const [{ data: bookings }, events] = await Promise.all([
+    db().from("match_slot_bookings").select("org_name, team_label, status, slot:match_slots(slot_date, start_time, location, field_label)").eq("status", "paid"),
+    getEventsBetween(from, addDays(from, WINDOW_DAYS)).catch(() => [])
+  ]);
+  const toMin = (t: string | null) => (t ? Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)) : -1);
+  const out: OpponentToSync[] = [];
+  for (const b of (bookings ?? []) as any[]) {
+    const date = String(b.slot?.slot_date ?? "").slice(0, 10);
+    if (!date || date < from) continue;
+    const start = String(b.slot.start_time).slice(0, 5);
+    const name = [b.org_name, b.team_label].filter(Boolean).join(" · ");
+    const sameTime = events.filter((e) => (e.type === "Match" || e.type === "Tournoi") && e.date === date && Math.abs(toMin(e.start) - toMin(start)) <= 30);
+    const named = sameTime.find((e) => e.opponent && b.org_name && e.opponent.toLowerCase().includes(String(b.org_name).toLowerCase().slice(0, 6)));
+    if (named) continue;
+    const open = sameTime.find((e) => !e.opponent) ?? null;
+    out.push({ date, start, location: [b.slot.field_label, b.slot.location].filter(Boolean).join(" · "), opponent: name, mcsMatch: open ? { team: open.team, title: open.title } : null });
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
+}

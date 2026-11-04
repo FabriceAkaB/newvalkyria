@@ -375,3 +375,19 @@ export async function getRefereesToPay(): Promise<{ id: string; name: string; da
       .map((a) => ({ id: a.id, name: a.referee ? `${a.referee.first_name} ${a.referee.last_name}` : "Arbitre", date: m.date, feeCents: a.fee_cents, interac: a.referee?.interac_email ?? a.referee?.email ?? null }))
   );
 }
+
+/** Invitation automatique des arbitres (demande de JP, 4 nov. 2026) : chaque jour, les postes des matchs vendus sont
+ *  ouverts ; s'il reste un poste libre pour un match dans les 14 prochains jours, tous les arbitres actifs reçoivent
+ *  la liste des matchs ouverts (au plus une fois tous les 3 jours, pour ne pas les inonder). */
+export async function autoInviteReferees(nowMs = Date.now()): Promise<{ opened: number; sent: number; openSoon: number; skipped?: string }> {
+  const opened = await openAllUpcoming();
+  const soon = new Date(nowMs + 14 * 86_400_000).toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const matches = (await listMatches({ from: today(), to: soon })).filter((m) => m.bookingStatus === "paid");
+  const openSoon = matches.reduce((s, m) => s + m.assignments.filter((a) => a.status === "ouvert").length, 0);
+  if (!openSoon) return { opened, sent: 0, openSoon };
+  const { data: last } = await db().from("app_settings").select("value").eq("club_id", CLUB_ID).eq("key", "arbitres_derniere_invitation").maybeSingle();
+  if (last?.value && nowMs - Date.parse(last.value) < 3 * 86_400_000) return { opened, sent: 0, openSoon, skipped: "invitation déjà envoyée il y a moins de 3 jours" };
+  const { sent } = await sendOpenMatchesEmail();
+  await db().from("app_settings").upsert({ club_id: CLUB_ID, key: "arbitres_derniere_invitation", value: new Date(nowMs).toISOString(), updated_at: new Date(nowMs).toISOString() }, { onConflict: "club_id,key" });
+  return { opened, sent, openSoon };
+}
