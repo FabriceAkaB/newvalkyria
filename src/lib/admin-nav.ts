@@ -352,6 +352,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         icon: "list",
         description: "Ce qui manque dans MonClubSportif (nouvelles inscrites, activités, retraits) et les fichiers d'export complets.",
         tabs: [
+          { href: "/admin/monclubsportif/equipes", label: "Équipes et calendriers", adminOnly: true },
           { href: "/admin/monclubsportif", label: "À faire dans MonClubSportif", adminOnly: true },
           { href: "/admin/exports", label: "Exports complets", adminOnly: true }
         ]

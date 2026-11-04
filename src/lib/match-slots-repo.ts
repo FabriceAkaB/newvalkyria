@@ -1,4 +1,5 @@
 import { checkEligibility, expandDoubles, type CategoryRule, type SlotGender, type TeamGender } from "@/lib/match-slots-core";
+import { getSlotConflicts } from "@/lib/mcs-teams-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 function db() {
@@ -174,7 +175,9 @@ async function expireStale(): Promise<void> {
     .lt("reservation_expires_at", new Date().toISOString());
 }
 
-export async function getSlotsWithAvailability(options: { includeInactive?: boolean; includePast?: boolean } = {}): Promise<(MatchSlot & { available: boolean })[]> {
+/** Plages de match avec leur disponibilité. Une plage où l'équipe Valkyria du même âge a déjà un événement dans
+ *  MonClubSportif n'est pas disponible (`mcsConflict` dit pourquoi) : on ne vend jamais un match impossible à jouer. */
+export async function getSlotsWithAvailability(options: { includeInactive?: boolean; includePast?: boolean } = {}): Promise<(MatchSlot & { available: boolean; mcsConflict: string | null })[]> {
   await expireStale();
   const supabase = db();
   const today = new Date().toISOString().slice(0, 10);
@@ -185,7 +188,13 @@ export async function getSlotsWithAvailability(options: { includeInactive?: bool
   if (error) throw new Error(error.message);
   const { data: taken } = await supabase.from("match_slot_bookings").select("slot_id").in("status", ["pending", "paid"]);
   const takenSet = new Set((taken ?? []).map((t: any) => t.slot_id));
-  return ((slots ?? []) as MatchSlot[]).map((s) => ({ ...s, available: !takenSet.has(s.id) }));
+  const free = ((slots ?? []) as MatchSlot[]).filter((s) => !takenSet.has(s.id));
+  const conflicts = await getSlotConflicts(free as any[]).catch(() => new Map());
+  return ((slots ?? []) as MatchSlot[]).map((s) => {
+    const c = conflicts.get(s.id);
+    const mcsConflict = c ? `${c.team} a déjà « ${c.event.title} » (${c.event.start ?? "toute la journée"}) dans MonClubSportif` : null;
+    return { ...s, available: !takenSet.has(s.id) && !c, mcsConflict };
+  });
 }
 
 /** Plages déjà actives (payées ou en cours de paiement) pour une équipe : même nom
