@@ -1,9 +1,11 @@
 import Link from "next/link";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { AgentBlueprintView } from "@/components/mandalart/agent-blueprint";
 import { AgentStateForm } from "@/components/mandalart/forms";
 import { Pill } from "@/components/mandalart/ui";
 import { requireAdmin } from "@/lib/admin-auth";
+import { AGENT_FOUNDATION, blueprintOf, blueprintSummary } from "@/lib/agents-blueprint";
 import { PLAN } from "@/lib/mandalart-plan";
 import { getAgentStates, getLiveTasks, initialAutomationStatus } from "@/lib/mandalart-repo";
 
@@ -38,6 +40,7 @@ export default async function MandalartAgentsPage() {
   const activeAgents = PLAN.agents.filter((a) => stateOf(a.id, "a_creer").status === "actif").length;
   const activeAutos = PLAN.automations.filter((a) => stateOf(a.id, initialAutomationStatus(a.state)).status === "actif").length;
   const hours = states.reduce((s, x) => s + (Number(x.hours_saved_week) || 0), 0);
+  const sum = blueprintSummary();
 
   return (
     <>
@@ -95,9 +98,24 @@ export default async function MandalartAgentsPage() {
             </details>
           </section>
 
+          <section className="mda-card">
+            <h2 className="mda-h2">Le cahier de charges : chaque tâche de l&apos;académie dans la case d&apos;un agent</h2>
+            <p className="mda-sub">
+              {sum.missions} missions rangées dans les 12 agents : {sum.existe} existent déjà, {sum.partiel} sont partielles, {sum.aConstruire} sont à construire. {sum.regle} sont des règles fixes (sans IA), {sum.brouillon} des brouillons validés par un humain, {sum.autonome} autonomes sur règles. Chaque agent a ses tables permises et interdites et les fonctions du site qu&apos;il peut appeler : ouvrez un agent ci-dessous.
+            </p>
+            <p style={{ margin: "12px 0 6px", fontWeight: 600, fontSize: "0.88rem" }}>À bâtir une seule fois, avant le premier agent</p>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: "0.85rem", color: "var(--adm-text-2)", lineHeight: 1.6 }}>
+              {AGENT_FOUNDATION.map((f) => (
+                <li key={f.title}>
+                  <strong style={{ color: "var(--adm-text)" }}>{f.title}</strong> <Pill tone={f.state === "partiel" ? "warn" : undefined}>{f.state === "partiel" ? "Partiel" : "À construire"}</Pill> {f.detail}
+                </li>
+              ))}
+            </ul>
+          </section>
+
           <section>
-            <h2 className="mda-h2">Les agents IA, dans l'ordre de construction</h2>
-            <p className="mda-sub">Chaque agent a son déclencheur, ses données, ce qu'il fait et qui valide. Les prérequis cochés sont les tâches du plan déjà faites.</p>
+            <h2 className="mda-h2">Les agents IA, dans l&apos;ordre de construction</h2>
+            <p className="mda-sub">Chaque agent a son déclencheur, ses données, ce qu&apos;il fait et qui valide. Les prérequis cochés sont les tâches du plan déjà faites.</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[...PLAN.agents]
                 .sort((a, b) => a.order - b.order)
@@ -141,7 +159,7 @@ export default async function MandalartAgentsPage() {
                         </div>
                         <p className="mda-label"><strong style={{ color: "var(--adm-text)" }}>Validation humaine :</strong> {a.humanValidation}</p>
                         <p className="mda-label"><strong style={{ color: "var(--adm-text)" }}>Accès :</strong> {a.access}</p>
-                        <p className="mda-label"><strong style={{ color: "var(--adm-text)" }}>Comment savoir s'il fonctionne :</strong> {a.metrics}</p>
+                        <p className="mda-label"><strong style={{ color: "var(--adm-text)" }}>Comment savoir s&apos;il fonctionne :</strong> {a.metrics}</p>
                         <p className="mda-label">
                           <strong style={{ color: "var(--adm-text)" }}>Tâches du plan :</strong>{" "}
                           {a.tasks.map((c, i) => (
@@ -152,6 +170,7 @@ export default async function MandalartAgentsPage() {
                           ))}{" "}
                           ({ready}/{a.tasks.length} faites)
                         </p>
+                        {blueprintOf(a.id) ? <AgentBlueprintView b={blueprintOf(a.id)!} /> : null}
                         <AgentStateForm itemId={a.id} status={st.status} mode={st.mode} hours={st.hours_saved_week} isAgent />
                       </div>
                     </details>

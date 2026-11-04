@@ -102,6 +102,7 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
 - Chaque pilier a ses sections (`src/lib/mandalart-modules.ts`) : toute nouvelle section d'un pilier s'y branche.
 - Voix des familles (sondages) : `/admin/sondages`, `surveys-repo.ts`, page famille `/sondage/[token]`.
 - Agents et automatisations : section 5 du dossier + `/admin/mandalart/agents` ; on construit dans l'ordre des niveaux, un agent à la fois, en mode assistant d'abord.
+- **Cahier de charges des agents** : `src/lib/agents-blueprint.ts` (chaque mission de l'académie dans la case d'un agent, ce qui existe / ce qui manque, tables lues, écrites, interdites, fonctions permises, clés ; `agentCan()` = garde d'accès). Toute nouvelle tâche répétitive s'y range ; le test vérifie que tables et fonctions existent.
 - Loi 25 : aucune donnée d'enfant dans les tables `mandalart_*` ; vidéos d'enfants en stockage privé seulement.
 - « Ce mois-ci » se joue (`mandalart-game.ts` : quête du jour, XP, série, carte des mondes) et s'ajuste (`mandalart-levers.ts` : écart au plan, trésorerie jusqu'en avril, argent à rattraper, leviers chiffrés).
 - Duplicable pour un autre club : tout est rangé par `club_id` (`src/lib/club.ts`). Skill `mandalart`.
