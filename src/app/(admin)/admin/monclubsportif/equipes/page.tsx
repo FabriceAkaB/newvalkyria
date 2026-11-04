@@ -1,8 +1,9 @@
-import { McsTeamActions, McsTeamForm } from "@/components/mcs-teams-admin";
+import { McsRobotForm, McsTeamActions, McsTeamForm } from "@/components/mcs-teams-admin";
 import { Pill } from "@/components/mandalart/ui";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getSlotsWithAvailability } from "@/lib/match-slots-repo";
 import { needsOpponent } from "@/lib/mcs-teams";
+import { getRobotStatus } from "@/lib/mcs-robot-config";
 import { getUpcomingEvents, listTeams, syncStaleTeams } from "@/lib/mcs-teams-repo";
 
 export const metadata = { title: "Équipes MonClubSportif — Admin", robots: "noindex" };
@@ -20,7 +21,7 @@ const ago = (iso: string | null) => {
 export default async function McsTeamsPage() {
   await requireAdmin({ roles: ["admin"] });
   await syncStaleTeams(15, 6_000).catch(() => 0);
-  const [teams, events, slots] = await Promise.all([listTeams(), getUpcomingEvents().catch(() => []), getSlotsWithAvailability().catch(() => [])]);
+  const [teams, events, slots, robot] = await Promise.all([listTeams(), getUpcomingEvents().catch(() => []), getSlotsWithAvailability().catch(() => []), getRobotStatus().catch(() => null)]);
   const teamName = new Map(teams.map((t) => [t.id, t.name]));
   const matches = events.filter((e) => e.type === "Match" || e.type === "Tournoi");
   const toFind = matches.filter(needsOpponent);
@@ -101,6 +102,11 @@ export default async function McsTeamsPage() {
               })}
             </ul>
           )}
+        </section>
+
+        <section className="mda-card">
+          <h2 className="mda-h2" style={{ marginBottom: 10 }}>Compte robot MonClubSportif</h2>
+          <McsRobotForm status={robot} />
         </section>
 
         <section className="mda-card">

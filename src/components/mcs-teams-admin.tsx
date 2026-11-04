@@ -88,3 +88,46 @@ export function McsTeamActions({ team }: { team: McsTeam }) {
     </div>
   );
 }
+
+/** Le compte robot MonClubSportif, tapé par JP lui-même : chiffré dans la base, jamais réaffiché ni envoyé à Claude. */
+export function McsRobotForm({ status }: { status: { email: string; updatedAt: string | null } | null }) {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [state, setState] = useState<{ kind: "idle" | "saving" | "saved" | "error"; message?: string }>({ kind: "idle" });
+  const save = async () => {
+    setState({ kind: "saving" });
+    const res = await fetch("/api/admin/monclubsportif/robot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) }).catch(() => null);
+    const data = await res?.json().catch(() => ({}));
+    setPassword("");
+    if (!res?.ok) return setState({ kind: "error", message: data?.error ?? "Pas enregistré : réessaie." });
+    setState({ kind: "saved" });
+    setEmail("");
+    router.refresh();
+  };
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <p className="mda-sub" style={{ margin: 0 }}>
+        {status ? `Compte robot enregistré : ${status.email}. Pour le changer, retape le courriel et le mot de passe.` : "Aucun compte robot pour l'instant."} Le mot de passe est chiffré dans la base : il n&apos;est jamais réaffiché, ni montré à Claude.
+      </p>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          save();
+        }}
+        style={{ display: "grid", gap: 8 }}
+        autoComplete="off"
+      >
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
+          <label className="ct-field"><span>Courriel du compte robot</span><input className="admin-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" /></label>
+          <label className="ct-field"><span>Mot de passe</span><input className="admin-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" /></label>
+        </div>
+        <div className="cm-actions" style={{ marginTop: 0 }}>
+          <button type="submit" className="admin-btn-primary" disabled={!email || !password || state.kind === "saving"} style={{ minHeight: 44 }}>{state.kind === "saving" ? "Enregistrement…" : "Enregistrer le compte robot"}</button>
+          {state.kind === "saved" && <span style={{ color: "var(--adm-good)", fontSize: "0.85rem" }}>Enregistré et chiffré.</span>}
+          {state.kind === "error" && <span role="alert" style={{ color: "var(--adm-bad)", fontSize: "0.85rem" }}>{state.message}</span>}
+        </div>
+      </form>
+    </div>
+  );
+}
