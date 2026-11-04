@@ -4,15 +4,16 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /** Déposer une pratique passée : le lien de ses diapos et l'analyse d'après pratique (ce qui a marché, ce qu'on change). */
-export function PracticeDeposit({ practiceKey, deckUrl, analysis }: { practiceKey: string; deckUrl: string | null; analysis: string | null }) {
+export function PracticeDeposit({ practiceKey, deckUrl, analysis, themeScore, theme }: { practiceKey: string; deckUrl: string | null; analysis: string | null; themeScore: number | null; theme: string | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [deck, setDeck] = useState(deckUrl ?? "");
   const [text, setText] = useState(analysis ?? "");
+  const [score, setScore] = useState(themeScore === null ? "" : String(themeScore));
   const [state, setState] = useState<{ kind: "idle" | "saving" | "error"; message?: string }>({ kind: "idle" });
   const save = async () => {
     setState({ kind: "saving" });
-    const res = await fetch("/api/admin/coaching/historique", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: practiceKey, deckUrl: deck, analysis: text }) }).catch(() => null);
+    const res = await fetch("/api/admin/coaching/historique", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: practiceKey, deckUrl: deck, analysis: text, themeScore: score }) }).catch(() => null);
     const data = await res?.json().catch(() => ({}));
     if (!res?.ok) return setState({ kind: "error", message: data?.error ?? "Pas enregistré : réessaie." });
     setState({ kind: "idle" });
@@ -22,7 +23,7 @@ export function PracticeDeposit({ practiceKey, deckUrl, analysis }: { practiceKe
   if (!open) {
     return (
       <button type="button" className="admin-btn-ghost" onClick={() => setOpen(true)} style={{ whiteSpace: "nowrap" }}>
-        {deckUrl || analysis ? "Modifier" : "Déposer"}
+        {deckUrl || analysis || themeScore !== null ? "Modifier" : "Déposer"}
       </button>
     );
   }
@@ -36,6 +37,14 @@ export function PracticeDeposit({ practiceKey, deckUrl, analysis }: { practiceKe
         <span>Analyse d&apos;après pratique : ce qui a marché, ce qu&apos;on change la prochaine fois</span>
         <textarea className="admin-input" rows={3} value={text} onChange={(e) => setText(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }} />
       </label>
+      <div className="ct-field">
+        <span>Pertinence au thème{theme ? ` « ${theme} »` : ""} : ta note sur 10 (8 et plus = la pratique entre dans la galerie)</span>
+        <div className="ps-scale" role="radiogroup" aria-label="Note de pertinence au thème sur 10">
+          {Array.from({ length: 11 }, (_, i) => String(i)).map((v) => (
+            <button key={v} type="button" role="radio" aria-checked={score === v} data-active={String(score === v)} onClick={() => setScore(score === v ? "" : v)}>{v}</button>
+          ))}
+        </div>
+      </div>
       <div className="cm-actions" style={{ marginTop: 0 }}>
         <button type="button" className="admin-btn-primary" onClick={save} disabled={state.kind === "saving"} style={{ minHeight: 44 }}>{state.kind === "saving" ? "Enregistrement…" : "Enregistrer"}</button>
         <button type="button" className="admin-btn-ghost" onClick={() => setOpen(false)}>Annuler</button>

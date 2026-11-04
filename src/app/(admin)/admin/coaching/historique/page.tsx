@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Pill } from "@/components/mandalart/ui";
 import { PracticeDeposit } from "@/components/practice-deposit";
 import { requireAdmin } from "@/lib/admin-auth";
-import { CHECKS, checksOf, isComplete, isLate, missingOf } from "@/lib/practice-history";
+import { CHECKS, checksOf, GALLERY_MIN_SCORE, inGallery, isComplete, isLate } from "@/lib/practice-history";
 import { getPracticeHistory, type HistoryRow } from "@/lib/practice-history-repo";
 import { todayIso } from "@/lib/practices-repo";
 
@@ -18,7 +18,11 @@ function Row({ r }: { r: HistoryRow }) {
   return (
     <li className="mda-task" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
       <div className="mda-task-body" style={{ flex: "1 1 240px" }}>
-        <p className="mda-task-title" style={{ fontWeight: 600 }}>{day(r.date)} · {r.start.replace(":", " h ")} · Filles {r.group}</p>
+        <p className="mda-task-title" style={{ fontWeight: 600 }}>
+          {day(r.date)} · {r.start.replace(":", " h ")} · Filles {r.group}
+          {r.themeScore !== null ? <> <Pill tone={inGallery(r) ? "good" : "warn"}>{r.themeScore}/10{inGallery(r) ? " · galerie" : ""}</Pill></> : null}
+        </p>
+        {r.theme ? <p className="mda-sub" style={{ margin: "2px 0 0" }}>Thème : {r.theme}</p> : null}
         <div className="mda-task-meta">
           {CHECKS.map((k) => (
             <span key={k.key} style={{ color: c[k.key] ? "var(--adm-good)" : "var(--adm-text-3)" }}>{c[k.key] ? "✓" : "○"} {k.label}</span>
@@ -28,7 +32,7 @@ function Row({ r }: { r: HistoryRow }) {
         </div>
         {r.analysisText ? <p className="mda-sub" style={{ margin: "6px 0 0", whiteSpace: "pre-wrap" }}>{r.analysisText}</p> : null}
       </div>
-      <PracticeDeposit practiceKey={r.key} deckUrl={r.deckUrl} analysis={r.analysisText} />
+      <PracticeDeposit practiceKey={r.key} deckUrl={r.deckUrl} analysis={r.analysisText} themeScore={r.themeScore} theme={r.theme} />
     </li>
   );
 }
@@ -51,7 +55,7 @@ export default async function PracticeHistoryPage() {
           <p className="mda-eyebrow">Espace coaching · l&apos;historique exact de chaque pratique</p>
           <h1 className="mda-h1">{late.length ? `${late.length} pratique${late.length > 1 ? "s" : ""} en retard à déposer` : "Toutes les pratiques passées sont déposées"}</h1>
           <p className="mda-lead">
-            Une pratique est complète quand elle est déposée (le lien de ses diapos ou son plan de séance), que les présences et le sondage de fin sont faits et que l&apos;analyse d&apos;après pratique est écrite. {complete} sur {past.length} pratiques de la saison sont complètes.
+            Depuis le 1er novembre. Une pratique est complète quand elle est déposée et décortiquée (diapos ou plan bloc par bloc), que les présences et le sondage sont faits, que l&apos;analyse d&apos;après pratique est écrite et que tu as noté sa pertinence au thème. À {GALLERY_MIN_SCORE}/10 et plus, elle entre dans la galerie. {complete} sur {past.length} pratiques sont complètes.
           </p>
         </header>
 
@@ -79,7 +83,7 @@ export default async function PracticeHistoryPage() {
             </section>
           );
         })}
-        <p className="mda-sub" style={{ margin: 0 }}>À venir : les capsules vidéo de ball mastery de chaque joueuse, rangées avec la pratique et la fiche de la joueuse. Ce qui manque à une pratique : {past.length ? missingOf(past[0]).join(", ") || "rien" : "—"} (dernière pratique).</p>
+        <p className="mda-sub" style={{ margin: 0 }}>À venir : les capsules vidéo de ball mastery de chaque joueuse, rangées avec la pratique et la fiche de la joueuse.</p>
       </div>
     </div>
   );
