@@ -500,7 +500,21 @@ async function loadUnpaidInstallments(): Promise<UnpaidInstallment[]> {
 }
 
 /** Vérifie dans Stripe qu'un paiement annulé a réellement été encaissé et pas encore remboursé. */
+/** État Stripe d'un paiement d'inscription annulée, gardé 15 minutes : « Aujourd'hui » n'interroge plus Stripe pour
+ *  chaque annulation à chaque chargement (c'était le plus lent de la page). */
+const refundStateCache = new Map<string, { at: number; value: { pending: boolean; amountCents?: number; note?: string } }>();
+const REFUND_CACHE_MS = 15 * 60 * 1000;
+
 async function stripeRefundState(paymentIntentId: string): Promise<{ pending: boolean; amountCents?: number; note?: string }> {
+  const hit = refundStateCache.get(paymentIntentId);
+  if (hit && Date.now() - hit.at < REFUND_CACHE_MS) return hit.value;
+  const value = await stripeRefundStateLive(paymentIntentId);
+  // Une erreur Stripe n'est pas gardée : on réessaie au prochain chargement.
+  if (!value.note?.startsWith("Vérification Stripe impossible")) refundStateCache.set(paymentIntentId, { at: Date.now(), value });
+  return value;
+}
+
+async function stripeRefundStateLive(paymentIntentId: string): Promise<{ pending: boolean; amountCents?: number; note?: string }> {
   try {
     const intent = await getStripeClient().paymentIntents.retrieve(paymentIntentId, { expand: ["latest_charge"] });
     if (intent.status !== "succeeded") return { pending: false };

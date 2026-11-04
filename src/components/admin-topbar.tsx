@@ -122,23 +122,38 @@ function GlobalSearchBox() {
   );
 }
 
-/* Chaque page admin rend son propre menu : le rôle, gardé en mémoire entre
- * deux navigations côté client, évite que les liens réservés à l'admin
- * clignotent à chaque changement de page. Au premier chargement il vaut null,
+/* Le rôle, gardé en mémoire, évite que les liens réservés à l'admin clignotent. Au premier chargement il vaut null,
  * côté serveur comme à l'hydratation. */
 let rememberedRole: "admin" | "gerante" | null = null;
 /* Dernier espace affiché (Académie ou Coaching), pour une page qui n'appartient à aucun hub. */
 let rememberedSpace: AdminSpace = "academie";
 
-/** Menu de gauche (un lien par hub) + en-tête de la section affichée avec ses
- *  onglets. Rendu juste avant `.admin-content` par chaque page admin. */
+/** Ancien point d'entrée : chaque page l'appelait encore avant `.admin-content`. Le menu vit maintenant une seule fois
+ *  dans `(admin)/layout.tsx` (AdminChrome) : il ne se reconstruit plus et ne refait plus d'appel à chaque page.
+ *  Ne rien rendre ici évite de toucher les ~90 pages ; une nouvelle page n'a plus besoin de l'importer. */
 export function AdminTopbar() {
-  const router = useRouter();
+  return null;
+}
+
+/** Pages sans menu : la connexion et les fiches à imprimer des journées d'évaluation. */
+const NO_CHROME = [/^\/admin\/?$/, /^\/admin\/evaluations\/[^/]+\/(terrain|fiche)/];
+
+/** Menu de gauche (un lien par hub) + en-tête de la section affichée avec ses onglets, rendu une seule fois par la
+ *  mise en page de l'admin, juste avant le contenu de chaque page. */
+export function AdminChrome() {
   const pathname = usePathname();
+  if (NO_CHROME.some((r) => r.test(pathname))) return null;
+  return <AdminChromeInner pathname={pathname} />;
+}
+
+function AdminChromeInner({ pathname }: { pathname: string }) {
+  const router = useRouter();
   const [role, setRole] = useState<"admin" | "gerante" | null>(rememberedRole);
   const [toolsOpen, setToolsOpen] = useState(false);
-  // Sur téléphone, le menu est replié derrière un bouton (sinon il précède le contenu de chaque page).
-  const [menuOpen, setMenuOpen] = useState(false);
+  // Sur téléphone, le menu est replié derrière un bouton ; il se referme tout seul quand on change de page.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const menuOpen = openOn === pathname;
+  const setMenuOpen = (open: boolean) => setOpenOn(open ? pathname : null);
 
   useEffect(() => {
     fetch("/api/admin/session")

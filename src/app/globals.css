@@ -11408,3 +11408,9 @@ img { max-width: 100%; height: auto; }
 .pv-link small { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--adm-text-3); }
 .pv-link p { margin: 2px 0 0; font-size: 0.85rem; color: var(--adm-text); line-height: 1.4; }
 @media (max-width: 640px) { .pv-link { grid-template-columns: 1fr; } }
+
+/* ── Chargement d'une page de l'admin (loading.tsx) ── */
+.adm-skel { border-radius: var(--adm-radius-sm); background: linear-gradient(90deg, var(--adm-surface) 0%, var(--adm-surface-2) 50%, var(--adm-surface) 100%); background-size: 200% 100%; animation: adm-skel 1.2s ease-in-out infinite; }
+.adm-skel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
+@keyframes adm-skel { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .adm-skel { animation: none; } }
