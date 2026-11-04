@@ -15,6 +15,8 @@ import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { isComplete, previousWeek, reviewWeekFor, weekLabel } from "@/lib/weekly-review";
 import { getReview } from "@/lib/weekly-review-repo";
+import { isLate as isLatePractice } from "@/lib/practice-history";
+import { getPracticeHistory } from "@/lib/practice-history-repo";
 
 /** Page « Aujourd'hui » de l'admin : tout ce qui demande une action, recalculé à chaque
  *  visite à partir des mêmes données que l'Historique et les Relances. La gérante ne voit
@@ -333,6 +335,27 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
           detail: `${holdDetail(r)} · ${r.activityLabel}`,
           meta: r.reminderSentAt ? `Relancé ${shortDay(r.reminderSentAt)}` : r.coachHasEmail ? "Relance à 24 h" : "Pas de courriel : appeler",
           href: `/admin/entraineurs/activites/${r.activityId}`
+        }))
+      })
+    );
+  }
+
+  // ── Pratiques passées pas encore déposées (diapos ou plan) : l'historique exact de chaque pratique ──
+  {
+    const since = localDay(new Date(now - 14 * DAY_MS));
+    const late = (await getPracticeHistory().catch(() => [])).filter((r) => r.date >= since && isLatePractice(r, today));
+    sections.push(
+      section({
+        key: "pratiques-a-deposer",
+        title: "Pratiques à déposer",
+        level: late.length ? "orange" : "info",
+        emptyText: "Les pratiques des 2 dernières semaines sont déposées.",
+        href: "/admin/coaching/historique",
+        hrefLabel: "Historique des pratiques",
+        items: late.map((r) => ({
+          title: `${shortDay(`${r.date}T12:00:00`)} · ${r.start} · Filles ${r.group}`,
+          detail: "Lien des diapos ou plan de séance, puis l'analyse d'après pratique",
+          href: "/admin/coaching/historique"
         }))
       })
     );

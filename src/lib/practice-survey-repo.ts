@@ -25,8 +25,8 @@ const toMin = (t: string) => {
   return h * 60 + (m || 0);
 };
 /** Même pratique sur le terrain : même jour, même endroit, début à 15 minutes près (ex. lundi 19 h 30, 2015 et 2014-2013). */
-const together = (a: Practice, b: Practice) => a.date === b.date && a.location === b.location && Math.abs(toMin(a.start) - toMin(b.start)) <= 15;
-const groupName = (g: string) => g.replace(/^Filles\s+/i, "");
+export const together = (a: Practice, b: Practice) => a.date === b.date && a.location === b.location && Math.abs(toMin(a.start) - toMin(b.start)) <= 15;
+export const groupName = (g: string) => g.replace(/^Filles\s+/i, "");
 
 async function academyPractices(from: string, to: string): Promise<Practice[]> {
   return (await listPractices({ from, to })).filter((p) => !p.organization && p.source !== "programme" && p.activityType !== "Match");
