@@ -11364,3 +11364,20 @@ img { max-width: 100%; height: auto; }
   .xg-media { min-height: 100%; }
   .xg-body { max-height: 70vh; overflow-y: auto; }
 }
+
+/* ── Barre de progression des points (points-progress.tsx) : Coaching, fiche joueuse, espace des familles ── */
+.pp { display: grid; gap: 8px; min-width: 0; }
+.pp-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pp-level { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; color: #fff; background: linear-gradient(135deg, #8b5cf6, #c084fc); box-shadow: 0 2px 8px rgba(139, 92, 246, 0.35); }
+.pp-name { display: grid; min-width: 0; line-height: 1.2; }
+.pp-name strong { font-size: 0.95rem; }
+.pp-name small { font-size: 0.75rem; opacity: 0.7; font-variant-numeric: tabular-nums; }
+.pp-goal { margin-left: auto; font-size: 0.75rem; opacity: 0.7; white-space: nowrap; }
+.pp-bar { height: 10px; border-radius: 999px; background: rgba(139, 92, 246, 0.15); overflow: hidden; }
+.pp-bar div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #8b5cf6, #f0abfc); transition: width 0.4s; }
+.pp-sub { margin: 0; font-size: 0.8rem; opacity: 0.8; }
+.pp-rewards { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.pp-rewards span { font-size: 0.75rem; padding: 3px 9px; border-radius: 999px; background: rgba(240, 171, 252, 0.15); }
+.pp-rewards span[data-given] { opacity: 0.6; }
+.pp[data-compact] .pp-level { width: 28px; height: 28px; border-radius: 8px; font-size: 0.85rem; }
+.pp[data-compact] .pp-bar { height: 7px; }

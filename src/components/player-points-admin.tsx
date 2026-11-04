@@ -12,16 +12,16 @@ async function post(body: unknown): Promise<string | null> {
   return data?.error ?? "Pas enregistré : réessaie.";
 }
 
-/** Échanger les points d'une joueuse contre une récompense (seulement celles que son solde permet). */
-export function RedeemButton({ registrationId, name, balance, rewards }: { registrationId: string; name: string; balance: number; rewards: PointReward[] }) {
+/** Remettre une récompense débloquée (palier de points atteint, pas encore remise). Les points ne baissent pas. */
+export function RedeemButton({ registrationId, name, earned, given, rewards }: { registrationId: string; name: string; earned: number; given: string[]; rewards: PointReward[] }) {
   const router = useRouter();
-  const options = rewards.filter((r) => r.active && r.cost <= balance);
+  const options = rewards.filter((r) => r.active && r.cost <= earned && !given.includes(r.id));
   const [rewardId, setRewardId] = useState("");
   const [error, setError] = useState<string | null>(null);
   if (!options.length) return <span style={{ fontSize: "0.78rem", color: "var(--adm-text-3)" }}>—</span>;
   const redeem = async () => {
     const r = options.find((o) => o.id === rewardId);
-    if (!r || !confirm(`Échanger ${r.cost} points de ${name} contre « ${r.name} » ?`)) return;
+    if (!r || !confirm(`Remettre « ${r.name} » à ${name} ?`)) return;
     const problem = await post({ action: "redeem", registrationId, rewardId });
     if (problem) return setError(problem);
     setRewardId("");
@@ -30,7 +30,7 @@ export function RedeemButton({ registrationId, name, balance, rewards }: { regis
   return (
     <span style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
       <select className="admin-input" value={rewardId} onChange={(e) => setRewardId(e.target.value)} aria-label={`Récompense pour ${name}`} style={{ minWidth: 0, maxWidth: 180 }}>
-        <option value="">Échanger…</option>
+        <option value="">À remettre…</option>
         {options.map((o) => <option key={o.id} value={o.id}>{o.name} ({o.cost})</option>)}
       </select>
       {rewardId && <button type="button" className="admin-btn-primary" onClick={redeem}>OK</button>}
@@ -39,7 +39,7 @@ export function RedeemButton({ registrationId, name, balance, rewards }: { regis
   );
 }
 
-/** Catalogue des récompenses : nom, coût en points, produit de la boutique (facultatif). */
+/** Catalogue des récompenses : nom, palier de points qui la débloque, produit de la boutique (facultatif). */
 export function RewardsEditor({ rewards, products }: { rewards: PointReward[]; products: { id: string; name: string }[] }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -65,7 +65,7 @@ export function RewardsEditor({ rewards, products }: { rewards: PointReward[]; p
       {rewards.map((r) => (
         <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, opacity: r.active ? 1 : 0.5 }}>
           <span style={{ color: "var(--adm-text)" }}>
-            <strong>{r.cost} points</strong> · {r.name}
+            <strong>À {r.cost} points</strong> · {r.name}
             {r.product_id ? ` · ${products.find((p) => p.id === r.product_id)?.name ?? "produit"}` : ""}
           </span>
           <button type="button" className="admin-btn-ghost" onClick={() => toggle(r)}>{r.active ? "Retirer" : "Remettre"}</button>
@@ -73,7 +73,7 @@ export function RewardsEditor({ rewards, products }: { rewards: PointReward[]; p
       ))}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8 }}>
         <label className="ct-field"><span>Récompense</span><input className="admin-input" value={name} onChange={(e) => setName(e.target.value)} /></label>
-        <label className="ct-field"><span>Coût en points</span><input className="admin-input" inputMode="numeric" value={cost} onChange={(e) => setCost(e.target.value.replace(/\D/g, ""))} /></label>
+        <label className="ct-field"><span>Débloquée à (points)</span><input className="admin-input" inputMode="numeric" value={cost} onChange={(e) => setCost(e.target.value.replace(/\D/g, ""))} /></label>
         <label className="ct-field">
           <span>Produit de la boutique (facultatif)</span>
           <select className="admin-input" value={productId} onChange={(e) => setProductId(e.target.value)}>

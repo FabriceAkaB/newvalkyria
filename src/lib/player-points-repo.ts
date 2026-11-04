@@ -43,6 +43,8 @@ export interface PointsSummary {
   earned: number;
   spent: number;
   balance: number;
+  /** Récompenses déjà remises (débloquées à un palier, une seule fois chacune). */
+  givenRewardIds: string[];
 }
 
 /** Soldes de points (présences comptées automatiquement à partir des présences du rapport). */
@@ -51,12 +53,13 @@ export async function getPointsSummaries(registrationIds: string[]): Promise<Map
   if (!registrationIds.length) return out;
   const [{ data: att, error: e1 }, { data: lines, error: e2 }] = await Promise.all([
     db().from("activity_player_attendance").select("registration_id, status").in("registration_id", registrationIds),
-    db().from("player_points").select("registration_id, kind, points").in("registration_id", registrationIds)
+    db().from("player_points").select("registration_id, kind, points, reward_id").in("registration_id", registrationIds)
   ]);
   if (e1 || e2) throw new Error((e1 ?? e2).message);
   for (const id of registrationIds) {
     const presences = ((att ?? []) as any[]).filter((a) => a.registration_id === id && PARTICIPATED.includes(a.status)).length;
-    out.set(id, { registrationId: id, presences, ...pointsBalance(presences, ((lines ?? []) as any[]).filter((l) => l.registration_id === id)) });
+    const mine = ((lines ?? []) as any[]).filter((l) => l.registration_id === id);
+    out.set(id, { registrationId: id, presences, ...pointsBalance(presences, mine), givenRewardIds: mine.filter((l) => l.kind === "echange" && l.reward_id).map((l) => l.reward_id as string) });
   }
   return out;
 }
@@ -84,16 +87,18 @@ export async function saveReward(input: { id?: string; name: string; cost: numbe
   if (error) throw new Error(error.message);
 }
 
-/** Échange des points contre une récompense : refusé si le solde ne suffit pas. */
+/** Remet une récompense débloquée : la joueuse a atteint son palier de points ; une seule fois par récompense.
+ *  Les points ne baissent pas (progression comme dans un jeu). */
 export async function redeemReward(registrationId: string, rewardId: string): Promise<string | null> {
   const reward = (await getRewards()).find((r) => r.id === rewardId && r.active);
   if (!reward) return "Récompense introuvable.";
   const summary = (await getPointsSummaries([registrationId])).get(registrationId);
-  if (!summary || summary.balance < reward.cost) return `Pas assez de points : ${summary?.balance ?? 0} sur ${reward.cost}.`;
+  if (!summary || summary.earned < reward.cost) return `Pas encore débloquée : ${summary?.earned ?? 0} points sur ${reward.cost}.`;
+  if (summary.givenRewardIds.includes(reward.id)) return "Déjà remise à cette joueuse.";
   const { data: reg } = await db().from("registrations").select("player_id").eq("id", registrationId).maybeSingle();
   const { error } = await db()
     .from("player_points")
-    .insert({ club_id: CLUB_ID, registration_id: registrationId, player_id: reg?.player_id ?? null, kind: "echange", points: -reward.cost, reward_id: reward.id, note: reward.name });
+    .insert({ club_id: CLUB_ID, registration_id: registrationId, player_id: reg?.player_id ?? null, kind: "echange", points: 0, reward_id: reward.id, note: reward.name });
   if (error) throw new Error(error.message);
   return null;
 }

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { PointsProgress } from "@/components/points-progress";
+import type { Progress } from "@/lib/player-points";
 import { birthYearFromDob, BIRTH_YEAR_LABELS } from "@/lib/season-2027";
 import type { Child } from "@/lib/parent-repo";
 
@@ -26,6 +28,7 @@ interface SeasonActivity {
   attendance: { id: string; status: string; activity: { activity_date: string; title: string | null; activity_type: string } }[];
   evaluations: { id: string; ratings: Record<string, number>; comment: string | null; created_at: string; activity: { activity_date: string; title: string | null } }[];
   objectives: { id: string; objective: string; active: boolean }[];
+  points: Progress | null;
   paymentPlan: {
     totalAmountCents: number;
     installments: { sequenceNo: number; amountCents: number; dueDate: string; status: string; paidAt: string | null }[];
@@ -167,6 +170,13 @@ function ChildActivity({ childId, onUnlink }: { childId: string; onUnlink: () =>
                   📋 Bulletin
                 </a>
               </div>
+
+              {s.points && s.points.xp > 0 && (
+                <div style={{ margin: "0.4rem 0 0.7rem", color: "#fff" }}>
+                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.35rem", textTransform: "uppercase" }}>Ses points Valkyria</p>
+                  <PointsProgress p={s.points} />
+                </div>
+              )}
 
               {s.attendance.length > 0 && (
                 <div style={{ marginBottom: "0.5rem" }}>

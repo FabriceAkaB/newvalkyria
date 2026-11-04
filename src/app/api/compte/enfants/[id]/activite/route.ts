@@ -5,6 +5,8 @@ import { getParentUserId } from "@/lib/parent-auth";
 import { getChildrenForParent, getRegistrationsForPlayer } from "@/lib/parent-repo";
 import { getPaymentPlanForRegistration, getSeason, getSeasonPrograms } from "@/lib/season-admin-repo";
 import { getPlayerAttendanceHistory, getPlayerEvaluations, getPlayerObjectives } from "@/lib/coach-portal-repo";
+import { progressOf } from "@/lib/player-points";
+import { getPointsSummaries, getRewards } from "@/lib/player-points-repo";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getParentUserId();
@@ -17,6 +19,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!child.player_id) return NextResponse.json({ linked: false, seasons: [] });
 
   const registrations = await getRegistrationsForPlayer(child.player_id);
+  // Points de la joueuse (présences, victoires, attitude) : sa barre de progression, comme dans un jeu.
+  const [points, rewards] = await Promise.all([getPointsSummaries(registrations.map((r) => r.id)).catch(() => new Map()), getRewards().catch(() => [])]);
+  const activeRewards = rewards.filter((r) => r.active).map((r) => ({ id: r.id, name: r.name, cost: r.cost }));
 
   const seasons = await Promise.all(
     registrations.map(async (reg) => {
@@ -39,7 +44,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         attendance,
         evaluations,
         objectives,
-        paymentPlan
+        paymentPlan,
+        points: points.get(reg.id) ? progressOf(points.get(reg.id)!.earned, activeRewards, points.get(reg.id)!.givenRewardIds) : null
       };
     })
   );

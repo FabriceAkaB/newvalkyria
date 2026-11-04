@@ -1,8 +1,9 @@
 import { AdminTopbar } from "@/components/admin-topbar";
 import { Pill } from "@/components/mandalart/ui";
 import { RedeemButton, RewardsEditor } from "@/components/player-points-admin";
+import { PointsProgress } from "@/components/points-progress";
 import { requireAdmin } from "@/lib/admin-auth";
-import { POINTS } from "@/lib/player-points";
+import { LEVELS, POINTS, progressOf } from "@/lib/player-points";
 import { getPointsSummaries, getRewards } from "@/lib/player-points-repo";
 import { getSeasonPlayers } from "@/lib/skill-tests-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -34,6 +35,7 @@ export default async function PointsPage() {
   const winners = ((recent ?? []) as any[]).filter((w) => nameOf.has(w.registration_id));
   const groups = [...new Map(players.map((p) => [p.groupKey, p.group])).entries()];
   const total = [...summaries.values()].reduce((s, x) => s + x.earned, 0);
+  const active = rewards.filter((r) => r.active);
 
   return (
     <>
@@ -44,7 +46,7 @@ export default async function PointsPage() {
             <p className="mda-eyebrow">Espace coaching · points des joueuses</p>
             <h1 className="mda-h1">{winners.length ? `${winners.length} titre${winners.length > 1 ? "s" : ""} de gagnante cette semaine` : "Aucune gagnante nommée cette semaine"}</h1>
             <p className="mda-lead">
-              Présence : {POINTS.presence} points (comptés tout seuls). Victoire : {POINTS.victoire} points. Attitude : {POINTS.attitude} points (au plus 3 gagnantes par catégorie et par pratique, nommées dans le rapport de l&apos;éducateur). Les points s&apos;échangent contre une récompense. {total.toLocaleString("fr-CA")} points gagnés cette saison.
+              Présence : {POINTS.presence} points (comptés tout seuls). Victoire : {POINTS.victoire} points. Attitude : {POINTS.attitude} points (au plus 3 gagnantes par catégorie et par pratique, nommées dans le rapport de l&apos;éducateur). Les points font monter de niveau comme dans un jeu et ne se perdent jamais ; chaque récompense se débloque à son palier. {total.toLocaleString("fr-CA")} points gagnés cette saison.
             </p>
           </header>
 
@@ -85,7 +87,7 @@ export default async function PointsPage() {
                         <th style={{ textAlign: "right" }}>Présences</th>
                         <th style={{ textAlign: "right" }}>🏆</th>
                         <th style={{ textAlign: "right" }}>⭐</th>
-                        <th style={{ textAlign: "right" }}>Points</th>
+                        <th style={{ minWidth: 220 }}>Progression</th>
                         <th>Récompense</th>
                       </tr>
                     </thead>
@@ -98,11 +100,8 @@ export default async function PointsPage() {
                             <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{s.presences}</td>
                             <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{s.victoires}</td>
                             <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{s.attitudes}</td>
-                            <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
-                              <strong>{s.balance}</strong>
-                              {s.spent > 0 && <span style={{ display: "block", fontSize: "0.72rem", color: "var(--adm-text-3)" }}>{s.spent} échangés</span>}
-                            </td>
-                            <td><RedeemButton registrationId={p.registrationId} name={p.firstName} balance={s.balance} rewards={rewards} /></td>
+                            <td><PointsProgress p={progressOf(s.earned, active, s.givenRewardIds)} compact /></td>
+                            <td><RedeemButton registrationId={p.registrationId} name={p.firstName} earned={s.earned} given={s.givenRewardIds} rewards={rewards} /></td>
                           </tr>
                         );
                       })}
@@ -114,6 +113,8 @@ export default async function PointsPage() {
           })}
 
           <section className="mda-card">
+            <h2 className="mda-h2" style={{ marginBottom: 6 }}>Les niveaux</h2>
+            <p className="mda-sub" style={{ margin: "0 0 10px" }}>{LEVELS.map((l) => `${l.n}. ${l.name} (${l.min})`).join(" · ")}</p>
             <h2 className="mda-h2" style={{ marginBottom: 12 }}>Récompenses</h2>
             <RewardsEditor rewards={rewards} products={(products ?? []) as { id: string; name: string }[]} />
           </section>

@@ -39,3 +39,49 @@ export function rewardsFor(balance: number, rewards: { id: string; name: string;
   const sorted = [...rewards].sort((a, b) => a.cost - b.cost);
   return { available: sorted.filter((r) => r.cost <= balance), next: sorted.find((r) => r.cost > balance) ?? null };
 }
+
+/* ── Progression comme dans un jeu (demande de JP, 3 nov. 2026) ─────────────────────────────────
+ *  Les points gagnés (présences, victoires, attitude, bonus) font monter de niveau et ne se perdent jamais.
+ *  Chaque récompense se débloque à un nombre de points ; une fois remise, elle ne retire aucun point. */
+
+export const LEVELS = [
+  { n: 1, name: "Recrue", min: 0 },
+  { n: 2, name: "Apprentie", min: 25 },
+  { n: 3, name: "Joueuse", min: 60 },
+  { n: 4, name: "Guerrière", min: 100 },
+  { n: 5, name: "Capitaine", min: 150 },
+  { n: 6, name: "Étoile", min: 220 },
+  { n: 7, name: "Valkyrie", min: 300 },
+  { n: 8, name: "Légende", min: 400 }
+] as const;
+export type Level = (typeof LEVELS)[number];
+
+export interface Progress {
+  xp: number;
+  level: Level;
+  next: Level | null;
+  /** Part du chemin vers le niveau suivant (0 à 1 ; 1 au dernier niveau). */
+  pct: number;
+  toNext: number;
+  unlocked: { id: string; name: string; cost: number; given: boolean }[];
+  nextReward: { id: string; name: string; cost: number; toGo: number } | null;
+}
+
+export function progressOf(xp: number, rewards: { id: string; name: string; cost: number }[] = [], givenIds: string[] = []): Progress {
+  const points = Math.max(0, Math.floor(xp));
+  const idx = LEVELS.reduce((best, l, i) => (points >= l.min ? i : best), 0);
+  const level = LEVELS[idx];
+  const next = LEVELS[idx + 1] ?? null;
+  const pct = next ? (points - level.min) / (next.min - level.min) : 1;
+  const sorted = [...rewards].sort((a, b) => a.cost - b.cost);
+  const nr = sorted.find((r) => r.cost > points) ?? null;
+  return {
+    xp: points,
+    level,
+    next,
+    pct: Math.max(0, Math.min(1, pct)),
+    toNext: next ? next.min - points : 0,
+    unlocked: sorted.filter((r) => r.cost <= points).map((r) => ({ ...r, given: givenIds.includes(r.id) })),
+    nextReward: nr ? { ...nr, toGo: nr.cost - points } : null
+  };
+}
