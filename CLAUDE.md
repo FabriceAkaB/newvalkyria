@@ -108,4 +108,4 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
 
 ## Skills du projet (`.claude/skills/`)
 
-`mandalart` · `coaching` · `relance` · `courriel-familles` · `nouveau-programme` · `paiement` · `admin-page` · `finances` · `fin-de-mois` · `automatisation` · `rapport` · `mise-en-ligne` · `design-interface`
+`travail-efficace` (à lire avant de coder : recettes base, tests, session admin de test, push ; scripts `q.cjs`, `mig.cjs`, `inbox.py`) · `mandalart` · `coaching` · `pratique-diapos` (pratiques en diapos sur claude.ai, planification PSG) · `monclubsportif` · `boite-courriels` · `relance` · `courriel-familles` · `nouveau-programme` · `paiement` · `admin-page` · `finances` · `fin-de-mois` · `automatisation` · `rapport` · `mise-en-ligne` · `design-interface`

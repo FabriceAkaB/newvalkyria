@@ -30,6 +30,7 @@ Tout ce qui sert à faire progresser les filles va dans Coaching (section « Sur
 | Galerie en diapos (approuvés, on balaie) | `/admin/exercices/galerie` (`?tous=1`) ; portail `/entraineur/exercices` | `exercise-gallery.ts` (pur, testé), `exercise-gallery.tsx` ; la diapo = `exercises.image_url`, sinon le schéma | (lecture de la banque) |
 
 ## Règles
+0. **Créer une pratique** (diapos, thème de la semaine, planification PSG) : skill `pratique-diapos`. Recettes de code : skill `travail-efficace`.
 1. **Aucun montant dans l'espace Coaching** ni dans le portail des éducateurs (pas de taux, de paie, de prix, ni de donnée des parents). La paie reste dans Académie → Équipe → Paie.
 2. **Chaque fille est comparée à elle-même** (jour 1, test précédent, début de saison), jamais aux autres (P1.5.03).
 3. **Loi 25** : vidéos d'enfants = lien YouTube non répertorié ou dossier privé, jamais un fichier public ; notes des éducateurs internes (le bulletin parent ne les montre pas : `getBulletinData(id, "parent")`).
