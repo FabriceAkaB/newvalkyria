@@ -5,6 +5,7 @@ import { jsonError } from "@/lib/http";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { getStripeClient } from "@/lib/stripe";
 import { isValidPhone } from "@/lib/form-validation";
+import { checkSlotPass } from "@/lib/match-links";
 import { MATCH_FORMAT, restrictionLabel } from "@/lib/match-slots-core";
 import {
   cancelBookings,
@@ -21,15 +22,23 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const token = new URL(request.url).searchParams.get("equipe");
+  const params = new URL(request.url).searchParams;
+  const token = params.get("equipe");
+  // Lien de paiement direct (?plage=…&cle=…) : cette plage (et sa double cédule) est ouverte à ce club d'office.
+  const plage = params.get("plage");
+  const directId = checkSlotPass(plage, params.get("cle")) ? plage : null;
   const profile = token ? await getTeamProfileByToken(token) : null;
   const requests = profile ? await getRequestsForProfile(profile.id) : [];
   const all = await getSlotsWithAvailability();
   // Une plage réservée (ou une double cédule dont une moitié l'est) disparaît de la page publique.
   const blockedGroups = new Set(all.filter((s) => !s.available && s.double_group).map((s) => s.double_group));
   const slots = all.filter((s) => s.available && !(s.double_group && blockedGroups.has(s.double_group)));
+  const directSlot = directId ? all.find((s) => s.id === directId) : null;
+  const isDirect = (s: (typeof all)[number]) => Boolean(directSlot && (s.id === directSlot.id || (directSlot.double_group && s.double_group === directSlot.double_group)));
   return NextResponse.json({
     maxPerTeam: MAX_SLOTS_PER_TEAM,
+    /** Lien direct : la plage visée, ou « taken » si elle n'est plus libre. */
+    direct: directId ? (directSlot && slots.some((s) => s.id === directId) ? directId : "taken") : null,
     slots: slots.map((s) => ({
       id: s.id,
       date: s.slot_date,
@@ -55,7 +64,8 @@ export async function GET(request: Request) {
       },
       doubleGroup: s.double_group,
       allowRequests: s.allow_requests,
-      request: requests.find((r) => r.slot_id === s.id)?.status ?? null,
+      request: isDirect(s) ? "approved" : (requests.find((r) => r.slot_id === s.id)?.status ?? null),
+      direct: isDirect(s),
       notes: s.notes,
       available: s.available
     }))
@@ -74,7 +84,9 @@ const schema = z.object({
   contactEmail: z.string().trim().email("Courriel invalide"),
   contactPhone: z.string().refine(isValidPhone, "Numéro de téléphone invalide (10 chiffres)"),
   notes: z.string().optional(),
-  termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" })
+  termsAccepted: z.boolean().refine((v) => v, { message: "L'acceptation des conditions est obligatoire" }),
+  plage: z.string().optional().nullable(),
+  cle: z.string().optional().nullable()
 });
 
 /** Réserve 1 ou 2 plages de match (une double cédule en bloc) et ouvre le paiement Stripe.
@@ -95,7 +107,8 @@ export async function POST(request: Request) {
       teamBirthYear: payload.teamBirthYear,
       teamBirthYearTo: payload.teamBirthYearTo ?? payload.teamBirthYear,
       profileId: payload.profileId,
-      notes: payload.notes?.trim() || null
+      notes: payload.notes?.trim() || null,
+      directSlotId: checkSlotPass(payload.plage, payload.cle) ? payload.plage : null
     });
 
     try {

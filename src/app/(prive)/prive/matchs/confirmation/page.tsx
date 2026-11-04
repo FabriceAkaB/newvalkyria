@@ -1,8 +1,15 @@
 import { Container } from "@/components/container";
 import { getBookingsByIds } from "@/lib/match-slots-repo";
+import { MATCH_FORMAT } from "@/lib/match-slots-core";
 import { formatMoney } from "@/lib/private-programs";
 
-export const metadata = { title: "Confirmation — New Valkyria", robots: { index: false, follow: false } };
+export const metadata = { title: "Votre match — New Valkyria", robots: { index: false, follow: false } };
+
+const arrival = (start: string) => {
+  const [h, m] = start.split(":").map(Number);
+  const t = h * 60 + m - 30;
+  return `${Math.floor(t / 60)} h ${String(t % 60).padStart(2, "0")}`;
+};
 export const dynamic = "force-dynamic";
 
 export default async function MatchConfirmationPage({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
@@ -25,10 +32,20 @@ export default async function MatchConfirmationPage({ searchParams }: { searchPa
                 <p key={b.id} style={{ margin: "0 0 0.25rem" }}>
                   {new Date(b.slot.slot_date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · {b.slot.start_time} – {b.slot.end_time}
                   {b.slot.double_group ? " · double cédule" : ""}
-                  {b.slot.match_format ? ` · ${b.slot.match_format}` : ""}
+                  {` · ${b.slot.match_format || MATCH_FORMAT}`}
                   {b.slot.opponent ? ` · contre ${b.slot.opponent}` : ""}
                 </p>
               ))}
+              <p style={{ margin: "0.6rem 0 0" }}>
+                <span style={{ color: "#9d9da0" }}>Lieu :</span> {bookings[0].slot.field_label ? `${bookings[0].slot.field_label} · ` : ""}{bookings[0].slot.location}
+                <br />
+                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookings[0].slot.location.replace(/\s+—\s+terrain voisin$/, ""))}`} target="_blank" rel="noreferrer" style={{ color: "#c4a4e4", fontWeight: 700 }}>
+                  Itinéraire →
+                </a>
+              </p>
+              <p style={{ margin: "0.4rem 0 0" }}>
+                <span style={{ color: "#9d9da0" }}>Arrivée :</span> {arrival(String(bookings[0].slot.start_time).slice(0, 5))}, 30 minutes avant le match · arbitres fournis par New Valkyria
+              </p>
               {bookings.some((b) => b.balance_due_cents > 0) ? (
                 <>
                   <p style={{ margin: "0.6rem 0 0" }}>Acompte payé : {formatMoney(bookings.reduce((n, b) => n + b.price_cents, 0))}</p>

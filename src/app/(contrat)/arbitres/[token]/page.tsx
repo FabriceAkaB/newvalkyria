@@ -35,14 +35,14 @@ export default async function RefereePage({ params }: { params: Promise<{ token:
     .filter((m) => !m.assignments.some((a) => a.referee_id === referee.id && a.status === "reserve"))
     .flatMap((m) => {
       const a = m.assignments.find((x) => x.status === "ouvert");
-      return a ? [{ id: a.id, fee: a.fee_cents, date: m.date, label: dateLong(m.date), start: m.start, end: m.end, place: `${m.field ?? ""}${m.field ? " — " : ""}${m.location}`, teams: `${m.ourTeam ?? "New Valkyria"}${m.opponent ? ` contre ${m.opponent}` : ""}`, format: m.format, left: m.assignments.filter((x) => x.status === "ouvert").length }] : [];
+      return a ? [{ id: a.id, fee: a.fee_cents, date: m.date, label: dateLong(m.date), start: m.start, end: m.end, place: `${m.field ?? ""}${m.field ? " — " : ""}${m.location}`, teams: `${m.ourTeam ?? "New Valkyria"}${m.opponent ? ` contre ${m.opponent}` : ""}`, format: m.format, left: m.assignments.filter((x) => x.status === "ouvert").length, doubleFee: m.doubleGroup ? matches.filter((x) => x.doubleGroup === m.doubleGroup).reduce((n, x) => n + x.refereeFeeCents, 0) : null }] : [];
     });
   return (
     <>
       <div style={card}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0, color: "#1d1730" }}>Bonjour {referee.first_name} !</h1>
         <p style={{ color: "#5d566b", lineHeight: 1.6, margin: "0.5rem 0 0" }}>
-          Réservez les matchs que vous voulez arbitrer : premier arrivé, premier servi. Arrivée 30 minutes avant le match. Paiement par virement Interac dans les 2 jours suivant chaque match.
+          Réservez les matchs que vous voulez arbitrer : premier arrivé, premier servi. Arrivée 30 minutes avant le match. 50 $ par match, 100 $ pour une double plage (2 matchs de suite), par virement Interac dans les 2 jours suivant chaque match.
         </p>
       </div>
       <RefereeBoard token={token} mine={mine} open={open} />

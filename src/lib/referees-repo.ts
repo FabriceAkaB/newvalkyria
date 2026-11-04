@@ -54,6 +54,8 @@ export interface MatchRow {
   location: string;
   field: string | null;
   format: string | null;
+  /** Double plage : 2 matchs de suite (l'arbitre qui fait les deux touche 2 × le tarif). */
+  doubleGroup?: string | null;
   ourTeam: string | null;
   opponent: string | null;
   bookingStatus: string | null;
@@ -132,6 +134,7 @@ export async function listMatches(opts: { from?: string; to?: string } = {}): Pr
       location: s.location,
       field: s.field_label,
       format: s.match_format,
+      doubleGroup: s.double_group ?? null,
       ourTeam: s.opponent,
       opponent: b ? [b.org_name, b.team_label].filter(Boolean).join(" · ") : null,
       bookingStatus: b?.status ?? null,
@@ -390,4 +393,17 @@ export async function autoInviteReferees(nowMs = Date.now()): Promise<{ opened: 
   const { sent } = await sendOpenMatchesEmail();
   await db().from("app_settings").upsert({ club_id: CLUB_ID, key: "arbitres_derniere_invitation", value: new Date(nowMs).toISOString(), updated_at: new Date(nowMs).toISOString() }, { onConflict: "club_id,key" });
   return { opened, sent, openSoon };
+}
+
+/** Un arbitre a perdu son lien personnel : on le lui renvoie par courriel (rien n'est dit si le courriel est inconnu). */
+export async function sendRefereeLink(email: string): Promise<void> {
+  const { data } = await db().from("referees").select("*").eq("club_id", CLUB_ID).ilike("email", email.trim().replace(/[%_\\]/g, "\\$&")).limit(1);
+  const referee = (data ?? [])[0] as Referee | undefined;
+  if (!referee || referee.status !== "actif" || !isEmailConfigured()) return;
+  await getResendClient().emails.send({
+    from: env.resendFrom,
+    to: referee.email,
+    subject: "Votre lien d'arbitre New Valkyria",
+    html: `<p>Bonjour ${esc(referee.first_name)},</p><p>Voici votre lien personnel pour réserver les matchs à arbitrer (premier arrivé, premier servi) :</p><p><a href="${refereeLink(referee.token)}">${refereeLink(referee.token)}</a></p><p>Gardez-le : il vous sert à chaque fois.</p>`
+  });
 }

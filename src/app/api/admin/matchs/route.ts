@@ -6,6 +6,7 @@ import { getCurrentAdminRole, isAdminRequest } from "@/lib/admin-auth";
 import { sendMatchRequestDecisionEmail, sendMatchSlotsConfirmationEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
+import { slotLinks } from "@/lib/match-links";
 import { areConsecutive, MATCH_FORMAT } from "@/lib/match-slots-core";
 import { cancelBookings, decideSlotRequest, getAllBookings, getAllSlotRequests, getAllTeamProfiles, getBookingsByIds, getSlotsWithAvailability, toEmailSlots } from "@/lib/match-slots-repo";
 import { getStripeClient } from "@/lib/stripe";
@@ -18,7 +19,7 @@ function db() {
 export async function GET() {
   if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
   const [slots, bookings, profiles, requests] = await Promise.all([getSlotsWithAvailability({ includeInactive: true, includePast: true }), getAllBookings(), getAllTeamProfiles(), getAllSlotRequests()]);
-  return NextResponse.json({ slots, bookings, profiles, requests });
+  return NextResponse.json({ slots, bookings, profiles, requests, links: slotLinks(slots, bookings) });
 }
 
 /** Convertit les champs d'édition d'une plage (corps de requête) en colonnes — seulement ceux fournis. */

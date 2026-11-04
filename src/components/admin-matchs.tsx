@@ -7,6 +7,7 @@ import { effectiveCategories, restrictionLabel, totalsFor, type SlotGender } fro
 import { formatMoney } from "@/lib/private-programs";
 import type { MatchBooking, MatchSlot, MatchSlotRequest, MatchTeamProfile } from "@/lib/match-slots-repo";
 import { NV_OPPONENT_PRESETS } from "@/lib/match-slots-core";
+import type { MatchLinks } from "@/lib/match-links";
 
 type Slot = MatchSlot & { available: boolean };
 type Booking = MatchBooking & { slot: MatchSlot };
@@ -86,7 +87,7 @@ function payload(d: Draft, only?: Set<keyof Draft>): Record<string, unknown> {
 
 const EMPTY_BULK: Draft = { format: "", opponent: "", categories: [], allowRequests: true, preferred: "", restrictionNote: "", notes: "", deposit: "", balance: "", location: "", field: "" };
 
-export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; bookings: Booking[]; profiles: MatchTeamProfile[]; requests: (MatchSlotRequest & { slot: MatchSlot; profile: MatchTeamProfile })[] }; origin: string }) {
+export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; bookings: Booking[]; profiles: MatchTeamProfile[]; requests: (MatchSlotRequest & { slot: MatchSlot; profile: MatchTeamProfile })[]; links: Record<string, MatchLinks> }; origin: string }) {
   const [data, setData] = useState(initial);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -99,6 +100,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
   const [ns, setNs] = useState({ date: "", start: "17:30", end: "18:30", location: "Complexe sportif Terrebonne, Centre de soccer multifonctionnel, terrain #4 – 2475, boul. des Entreprises, Terrebonne J6X 4J9", field: "Terrain n° 4", deposit: "150", balance: "0" });
   const today = new Date().toISOString().slice(0, 10);
   const link = `${origin}/prive/matchs`;
+  const copy = (url: string, done: string) => navigator.clipboard.writeText(url).then(() => flash(done), () => window.prompt("Copiez ce lien :", url));
 
   const flash = (m: string) => {
     setMsg(m);
@@ -418,7 +420,16 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                           </td>
                           <td style={cell}>{restr ?? <span style={{ color: "var(--adm-text-3)" }}>Aucune restriction</span>}{s.preferred_note ? <><br /><span style={{ color: "var(--adm-good)" }}>{s.preferred_note}</span></> : null}</td>
                           <td style={cell}>Acompte {formatMoney(s.price_cents)}<br />Solde {formatMoney(s.balance_due_cents)}</td>
-                          <td style={cell}>{b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : <span style={{ color: "var(--adm-good)" }}>Libre</span>}</td>
+                          <td style={cell}>
+                            {b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : <span style={{ color: "var(--adm-good)" }}>Libre</span>}
+                            {data.links?.[s.id] && (
+                              <span style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", marginTop: "0.35rem" }}>
+                                {!b && s.active && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title="La plage est déjà choisie : le club remplit son équipe et paie, même hors de la catégorie prévue." onClick={() => copy(data.links[s.id].pay, "Lien de paiement copié : envoyez-le au club qui veut ce match.")}>🔗 Lien de paiement</button>}
+                                {data.links[s.id].opponent && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title="La page de son match : date, lieu, itinéraire, ce qui est payé." onClick={() => copy(data.links[s.id].opponent!, "Lien de l'adversaire copié.")}>🔗 Adversaire</button>}
+                                {s.active && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title="La page du match pour les arbitres : paie, inscription, lien personnel." onClick={() => copy(data.links[s.id].referee, "Lien des arbitres copié.")}>🔗 Arbitres</button>}
+                              </span>
+                            )}
+                          </td>
                           <td style={cell}>
                             <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => { if (open) { setEditing(null); setDraft(null); } else { setEditing(s.id); setDraft(draftOf(s)); } }}>{open ? "Fermer" : "Modifier"}</button>{" "}
                             <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "slot_update", slotId: s.id, active: !s.active }, s.active ? "Plage masquée." : "Plage affichée.")}>{s.active ? "Masquer" : "Afficher"}</button>{" "}

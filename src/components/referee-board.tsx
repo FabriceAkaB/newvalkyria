@@ -14,6 +14,8 @@ interface Item {
   teams: string;
   format: string | null;
   left?: number;
+  /** Double plage : 2 matchs de suite, le tarif des deux si l'arbitre les fait tous les deux. */
+  doubleFee?: number | null;
 }
 
 const money = (c: number) => `${(c / 100).toLocaleString("fr-CA", { maximumFractionDigits: 2 })} $`;
@@ -65,7 +67,7 @@ export function RefereeBoard({ token, mine, open }: { token: string; mine: Item[
         </div>
       ))}
       <h2 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "1.6rem 0 0", color: "#1d1730" }}>Matchs à arbitrer · {open.length}</h2>
-      {open.length === 0 ? <p style={{ color: "#6b6478", margin: "0.4rem 0 0" }}>Aucun poste ouvert pour l'instant. Vous recevrez un courriel quand de nouveaux matchs s'ajoutent.</p> : null}
+      {open.length === 0 ? <p style={{ color: "#6b6478", margin: "0.4rem 0 0" }}>Aucun poste ouvert pour l&apos;instant. Vous recevrez un courriel quand de nouveaux matchs s&apos;ajoutent.</p> : null}
       {open.map((m) => (
         <div key={m.id} style={card}>
           <p style={{ margin: 0, fontWeight: 800, color: "#1d1730" }}>
@@ -77,6 +79,7 @@ export function RefereeBoard({ token, mine, open }: { token: string; mine: Item[
             {m.teams}
             {m.format ? ` · ${m.format}` : ""} · <strong>{money(m.fee)}</strong>
             {m.left && m.left > 1 ? ` · ${m.left} postes ouverts` : ""}
+            {m.doubleFee ? <><br /><span style={{ color: "#5b2a86", fontWeight: 700 }}>Double plage : {money(m.doubleFee)} si vous arbitrez les 2 matchs de suite</span></> : null}
           </p>
           <button type="button" style={{ ...btn(true), marginTop: "0.7rem", width: "100%" }} disabled={busy === m.id} onClick={() => act("reserve", m.id)}>
             {busy === m.id ? "…" : "Réserver ce match"}
@@ -126,6 +129,40 @@ export function RefereeSignup() {
       <button type="submit" disabled={busy} style={{ minHeight: 52, borderRadius: 12, border: "none", background: "#5b2a86", color: "#fff", fontWeight: 800, fontSize: "1.05rem", cursor: "pointer" }}>
         {busy ? "Envoi…" : "M'inscrire comme arbitre"}
       </button>
+    </form>
+  );
+}
+
+/** « J'ai perdu mon lien » : l'arbitre déjà approuvé reçoit son lien personnel par courriel. */
+export function RefereeLinkRequest() {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (sent) return <p style={{ color: "#1e6b34", fontWeight: 700, margin: 0 }}>✓ Si ce courriel est celui d&apos;un arbitre approuvé, votre lien vient de vous être envoyé.</p>;
+  return (
+    <form
+      style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setError(null);
+        try {
+          const res = await fetch("/api/arbitres/lien", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
+          if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? "Erreur");
+          setSent(true);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Erreur");
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <input style={{ ...input, flex: "1 1 220px", width: "auto" }} type="email" placeholder="Votre courriel" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+      <button type="submit" disabled={busy} style={{ ...btn(true), flex: "0 0 auto" }}>
+        {busy ? "Envoi…" : "Recevoir mon lien"}
+      </button>
+      {error ? <p style={{ color: "#b3261e", fontWeight: 600, margin: 0, width: "100%" }}>{error}</p> : null}
     </form>
   );
 }

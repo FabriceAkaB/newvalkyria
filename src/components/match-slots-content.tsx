@@ -43,6 +43,8 @@ interface Slot {
   request: "pending" | "approved" | "declined" | null;
   notes: string | null;
   available: boolean;
+  /** Plage visée par un lien de paiement direct de l'académie. */
+  direct?: boolean;
 }
 
 /** Une unité réservable : une plage seule, ou une double cédule (plages réservées en bloc). */
@@ -99,12 +101,29 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
   const [error, setError] = useState<string | null>(cancelled ? "Le paiement a été annulé. Vos plages ne sont pas réservées." : null);
 
   const [teamToken, setTeamToken] = useState<string | null>(null);
+  // Lien de paiement direct envoyé par l'académie (?plage=…&cle=…) : le match est déjà choisi.
+  const [directLink] = useState<{ plage: string; cle: string } | null>(() => {
+    if (typeof window === "undefined") return null;
+    const q = new URLSearchParams(window.location.search);
+    const plage = q.get("plage");
+    const cle = q.get("cle");
+    return plage && cle ? { plage, cle } : null;
+  });
+  const [direct, setDirect] = useState<string | null>(null);
   const load = useCallback(async () => {
-    const res = await fetch(`/api/prive/matchs${teamToken ? `?equipe=${encodeURIComponent(teamToken)}` : ""}`);
+    const q = new URLSearchParams();
+    if (teamToken) q.set("equipe", teamToken);
+    if (directLink) {
+      q.set("plage", directLink.plage);
+      q.set("cle", directLink.cle);
+    }
+    const qs = q.toString();
+    const res = await fetch(`/api/prive/matchs${qs ? `?${qs}` : ""}`);
     const json = await res.json();
     setSlots(json.slots ?? []);
     setMax(json.maxPerTeam ?? 2);
-  }, [teamToken]);
+    setDirect(json.direct ?? null);
+  }, [teamToken, directLink]);
 
   useEffect(() => {
     load();
@@ -230,6 +249,17 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
     setSelected((prev) => [...prev, ...ids]);
   };
 
+  // Lien direct : dès que l'équipe est remplie, son match est coché et on l'amène au paiement.
+  const directDone = useRef(false);
+  useEffect(() => {
+    if (directDone.current || !team || !slots || !direct || direct === "taken") return;
+    const target = slots.find((s) => s.id === direct);
+    if (!target) return;
+    directDone.current = true;
+    const ids = target.doubleGroup ? slots.filter((s) => s.doubleGroup === target.doubleGroup).map((s) => s.id) : [target.id];
+    setSelected((prev) => (ids.every((id) => prev.includes(id)) ? prev : [...prev.filter((id) => !ids.includes(id)), ...ids].slice(-max)));
+  }, [team, slots, direct, max]);
+
   // Si la catégorie change, on retire les plages devenues non admissibles.
   useEffect(() => {
     setSelected((prev) => {
@@ -310,7 +340,9 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
           contactEmail: form.contactEmail,
           contactPhone: form.contactPhone,
           notes: form.notes,
-          termsAccepted: terms
+          termsAccepted: terms,
+          plage: directLink?.plage ?? null,
+          cle: directLink?.cle ?? null
         })
       });
       const json = await res.json().catch(() => null);
@@ -385,6 +417,31 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
 
       <section className="section-band" style={{ paddingBottom: profileId ? "6rem" : undefined }}>
         <Container className="max-w-2xl">
+          {direct && direct !== "taken" && slots && (() => {
+            const target = slots.find((s) => s.id === direct);
+            if (!target) return null;
+            const group = target.doubleGroup ? slots.filter((s) => s.doubleGroup === target.doubleGroup).sort((a, b) => a.start.localeCompare(b.start)) : [target];
+            const total = group.reduce((n, s) => n + s.depositCents + s.balanceDueCents, 0);
+            return (
+              <div style={{ background: "#1d1530", border: "2px solid #c4a4e4", borderRadius: "14px", padding: "1rem 1.1rem", marginBottom: "1rem" }}>
+                <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#c4a4e4" }}>Votre match vous attend</p>
+                <p style={{ margin: "0.3rem 0 0", fontSize: "1.05rem", fontWeight: 800, color: "#fff" }}>
+                  {dayLabel(target.date)} · {hhmm(group[0].start)} à {hhmm(group[group.length - 1].end)}{group.length > 1 ? " · 2 matchs" : ""}
+                </p>
+                <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#c3c2c8", lineHeight: 1.5 }}>
+                  {target.field ? `${target.field} · ` : ""}{target.location}
+                  <br />{target.format ?? "7 vs 7"} · <strong style={{ color: "#fff" }}>{formatMoney(total)}</strong>
+                </p>
+                <p style={{ margin: "0.5rem 0 0", fontSize: "0.8rem", color: "#e9d7ff" }}>{profileId ? "Votre match est coché : acceptez les conditions et payez en bas de la page." : "Remplissez l'étape 1 (votre équipe) : votre match sera coché tout seul, il ne restera qu'à payer."}</p>
+              </div>
+            );
+          })()}
+          {direct === "taken" && (
+            <div style={{ background: "#2a1a1a", border: "1px solid #5a2a2a", borderRadius: "14px", padding: "0.9rem 1.1rem", marginBottom: "1rem", color: "#ffb4b4", fontSize: "0.85rem" }}>
+              Le match de ce lien n&apos;est plus libre. Voici les autres matchs offerts ; écrivez-nous à info@newvalkyria.com au besoin.
+            </div>
+          )}
+
           {/* ── Les 3 étapes ── */}
           <ol style={{ listStyle: "none", padding: 0, margin: "0 0 1rem", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.4rem" }}>
             {["Votre équipe", "Vos matchs", "Paiement"].map((label, i) => {

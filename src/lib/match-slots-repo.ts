@@ -225,6 +225,9 @@ export interface ReserveInput {
   /** Formulaire « Votre équipe » rempli au préalable (obligatoire). */
   profileId: string;
   notes: string | null;
+  /** Lien de paiement direct de l'académie (clé vérifiée par l'appelant) : cette plage et sa double cédule
+   *  peuvent être payées même hors de la catégorie d'âge prévue. */
+  directSlotId?: string | null;
 }
 
 /** Réserve 1 ou 2 plages d'un coup (une double cédule se réserve toujours en bloc).
@@ -272,6 +275,10 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
   const { data: approvedReqs } = await db().from("match_slot_requests").select("slot_id").eq("profile_id", profile.id).eq("status", "approved");
   const approvedSlotIds = new Set<string>((approvedReqs ?? []).map((r: any) => r.slot_id));
   const { data: slots, error } = await db().from("match_slots").select("*").in("id", slotIds);
+  if (input.directSlotId) {
+    const direct = (slots ?? []).find((s: any) => s.id === input.directSlotId);
+    for (const s of (slots ?? []) as MatchSlot[]) if (s.id === input.directSlotId || (direct?.double_group && s.double_group === direct.double_group)) approvedSlotIds.add(s.id);
+  }
   if (error) throw new Error(error.message);
   const today = new Date().toISOString().slice(0, 10);
   if ((slots ?? []).length !== slotIds.length) throw new MatchConflictError("Une des plages n'existe plus.");
