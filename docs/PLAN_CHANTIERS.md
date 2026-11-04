@@ -81,3 +81,52 @@ D'autres sessions ont du code pas encore commité :
 - « Ce que chaque entraînement doit avoir » : ta ligne directrice point par point (Coaching → Méthode Valkyria).
 - Bilan de la semaine : 3 questions chaque semaine (Mandalart → Bilan de la semaine, rappel dans Aujourd'hui et le courriel du lundi).
 - Galerie des exercices en diapos (Banque d'exercices → Galerie en diapos, et Exercices dans le portail des éducateurs).
+
+## Refonte de l'espace administrateur (commencée le 3 novembre 2026)
+
+**L'inventaire de départ** :
+
+- 93 écrans, 79 onglets, 23 hubs.
+- Beaucoup de doublons : 8 vues de l'argent, 7 listes de joueuses, 5 endroits pour préparer une pratique, 5 calendriers.
+- Deux styles d'écran coexistent : les anciens composants `admin-*` avec des styles écrits dans les pages, et les nouveaux en `mda-*`.
+
+**Fait (vague 1 et 2)** :
+
+- Le menu est rendu une seule fois dans `(admin)/layout.tsx` (`AdminChrome`). `AdminTopbar` ne rend plus rien : une
+  nouvelle page n'a plus besoin de l'importer.
+- `loading.tsx` : chaque page montre sa forme pendant qu'elle charge.
+- Aujourd'hui :
+  - garde l'état Stripe des remboursements en mémoire 15 minutes ;
+  - commence par « Ta prochaine action » ;
+  - affiche les sujets avant le calendrier ;
+  - montre la semaine en bandeau à faire glisser sur téléphone.
+
+**À faire, dans l'ordre** :
+
+1. **Rattacher les pages sans lien** (non commitées par d'autres sessions) :
+   - calculateur → Argent ;
+   - réseaux → Communications ;
+   - inventaire et registre des contrats → Équipe ;
+   - Valkyria Lab → Programmes.
+
+   Corriger leurs liens morts (`registre-contrats` n'a pas de page, `valkyria-lab/routine` et `/familles` sont vides).
+2. **Un seul hub « Argent »**, à 3 onglets : Ce mois, Trésorerie, Année et budget. `revenus` et `revenus/tresorerie` font le même calcul.
+3. **Une seule liste et une seule fiche joueuse**, pour la saison active, avec un filtre par programme. Tests, points, photos et
+   progression deviennent des onglets de la fiche.
+4. **Archiver Été 2026 en lecture seule** avec les composants de la saison (`seasonId=ete-2026`). Cela retire `inscriptions`,
+   `joueuses`, `plages`, `capacite`, `essais` et `dashboard`, soit environ 3 000 lignes.
+5. **Coaching › Pratiques en un seul planificateur** : plan de l'année → semaine (thème PSG) → pratique → exercices. Les pages
+   séparées `themes` et `entraineurs/activites` disparaissent.
+6. **Au plus 4 onglets par hub** :
+   - Mandalart : Mois, Piliers, Chiffres ;
+   - Uniformes : À préparer et à remettre, Problèmes, Produits ;
+   - un seul Calendrier filtrable.
+7. **Porter les ~60 anciens composants vers les classes `mda-*`**, en commençant par les plus utilisés (Saison, Revenus, Uniformes).
+   Sous 640 px, les tableaux deviennent des listes, avec des zones à toucher de 44 px.
+
+**Ensuite, le site public : un rafraîchissement, pas une reconstruction.**
+
+- Garder la photo d'ouverture et l'identité.
+- Remplacer les sections répétitives « icône + carte » par de vraies photos et vidéos (avec l'accord des familles), les coachs,
+  les chiffres réels et des témoignages.
+- Un seul bouton principal.
