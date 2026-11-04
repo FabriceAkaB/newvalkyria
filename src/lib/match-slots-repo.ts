@@ -275,15 +275,18 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
   const { data: approvedReqs } = await db().from("match_slot_requests").select("slot_id").eq("profile_id", profile.id).eq("status", "approved");
   const approvedSlotIds = new Set<string>((approvedReqs ?? []).map((r: any) => r.slot_id));
   const { data: slots, error } = await db().from("match_slots").select("*").in("id", slotIds);
+  const directIds = new Set<string>();
   if (input.directSlotId) {
     const direct = (slots ?? []).find((s: any) => s.id === input.directSlotId);
-    for (const s of (slots ?? []) as MatchSlot[]) if (s.id === input.directSlotId || (direct?.double_group && s.double_group === direct.double_group)) approvedSlotIds.add(s.id);
+    for (const s of (slots ?? []) as MatchSlot[]) if (s.id === input.directSlotId || (direct?.double_group && s.double_group === direct.double_group)) directIds.add(s.id);
+    for (const id of directIds) approvedSlotIds.add(id);
   }
   if (error) throw new Error(error.message);
   const today = new Date().toISOString().slice(0, 10);
   if ((slots ?? []).length !== slotIds.length) throw new MatchConflictError("Une des plages n'existe plus.");
   for (const s of slots as MatchSlot[]) {
-    if (!s.active || s.slot_date < today) throw new MatchConflictError("Une des plages n'est plus offerte.");
+    // Une plage masquée ne se paie que par le lien direct de l'académie.
+    if ((!s.active && !directIds.has(s.id)) || s.slot_date < today) throw new MatchConflictError("Une des plages n'est plus offerte.");
     const elig = checkEligibility(s, { gender: input.teamGender, birthYear: input.teamBirthYear, birthYearTo: input.teamBirthYearTo ?? input.teamBirthYear, level: profile.team_level });
     // Une équipe non admissible d'office peut réserver si sa demande pour cette plage a été approuvée.
     if (!elig.ok && approvedSlotIds.has(s.id)) continue;

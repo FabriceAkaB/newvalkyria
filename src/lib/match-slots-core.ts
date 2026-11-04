@@ -4,6 +4,12 @@
 /** Tous les matchs New Valkyria se jouent à 7 contre 7. */
 export const MATCH_FORMAT = "7 vs 7";
 
+/** Le nom court du lieu d'un match (« Complexe sportif Terrebonne », « Centre multisports de Rosemère »), lu dans l'adresse. */
+export function placeName(location: string | null | undefined): string {
+  const first = String(location ?? "").split(/,|–/)[0].trim();
+  return first.replace(/\s*\((?:CMR)\)\s*$/, "").trim() || "Lieu à confirmer";
+}
+
 export type SlotGender = "tous" | "filles" | "garcons";
 export type TeamGender = "filles" | "garcons" | "mixte";
 

@@ -29,12 +29,13 @@ export async function GET(request: Request) {
   const directId = checkSlotPass(plage, params.get("cle")) ? plage : null;
   const profile = token ? await getTeamProfileByToken(token) : null;
   const requests = profile ? await getRequestsForProfile(profile.id) : [];
-  const all = await getSlotsWithAvailability();
+  // Le lien direct marche aussi pour une plage pas encore en vente (masquée de la page) : elle n'apparaît qu'à ce club.
+  const all = await getSlotsWithAvailability({ includeInactive: Boolean(directId) });
   // Une plage réservée (ou une double cédule dont une moitié l'est) disparaît de la page publique.
   const blockedGroups = new Set(all.filter((s) => !s.available && s.double_group).map((s) => s.double_group));
-  const slots = all.filter((s) => s.available && !(s.double_group && blockedGroups.has(s.double_group)));
   const directSlot = directId ? all.find((s) => s.id === directId) : null;
   const isDirect = (s: (typeof all)[number]) => Boolean(directSlot && (s.id === directSlot.id || (directSlot.double_group && s.double_group === directSlot.double_group)));
+  const slots = all.filter((s) => (s.active || isDirect(s)) && s.available && !(s.double_group && blockedGroups.has(s.double_group)));
   return NextResponse.json({
     maxPerTeam: MAX_SLOTS_PER_TEAM,
     /** Lien direct : la plage visée, ou « taken » si elle n'est plus libre. */

@@ -6,12 +6,12 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Réservez votre match | New Valkyria",
-  description: "Réservez vos plages de match contre New Valkyria au Complexe sportif de Terrebonne.",
+  description: "Réservez vos plages de match contre New Valkyria à Terrebonne et à Rosemère : le lieu est indiqué sur chaque match.",
   robots: { index: false, follow: false, nocache: true },
   alternates: { canonical: "/prive/matchs" },
   openGraph: {
     title: "Réservez votre match | New Valkyria",
-    description: "Réservez vos plages de match contre New Valkyria au Complexe sportif de Terrebonne.",
+    description: "Réservez vos plages de match contre New Valkyria à Terrebonne et à Rosemère : le lieu est indiqué sur chaque match.",
     url: "/prive/matchs",
     type: "website",
     locale: "fr_CA",

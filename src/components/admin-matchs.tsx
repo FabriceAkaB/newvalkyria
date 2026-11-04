@@ -6,7 +6,7 @@ import { AdminTopbar } from "@/components/admin-topbar";
 import { effectiveCategories, restrictionLabel, totalsFor, type SlotGender } from "@/lib/match-slots-core";
 import { formatMoney } from "@/lib/private-programs";
 import type { MatchBooking, MatchSlot, MatchSlotRequest, MatchTeamProfile } from "@/lib/match-slots-repo";
-import { NV_OPPONENT_PRESETS } from "@/lib/match-slots-core";
+import { NV_OPPONENT_PRESETS, placeName } from "@/lib/match-slots-core";
 import type { MatchLinks } from "@/lib/match-links";
 
 type Slot = MatchSlot & { available: boolean };
@@ -416,7 +416,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                           <td style={cell}>
                             <strong style={{ color: "#fff" }}>{s.match_format ?? "Format à préciser"}</strong>
                             <br />Adversaire : {s.opponent ?? <em style={{ color: "var(--adm-warn)" }}>à préciser</em>}
-                            <br />{s.field_label ?? s.location.split("–")[0]}
+                            <br /><strong style={{ color: "#fff" }}>📍 {placeName(s.location)}</strong>{s.field_label ? ` · ${s.field_label}` : ""}
                           </td>
                           <td style={cell}>{restr ?? <span style={{ color: "var(--adm-text-3)" }}>Aucune restriction</span>}{s.preferred_note ? <><br /><span style={{ color: "var(--adm-good)" }}>{s.preferred_note}</span></> : null}</td>
                           <td style={cell}>Acompte {formatMoney(s.price_cents)}<br />Solde {formatMoney(s.balance_due_cents)}</td>
@@ -424,9 +424,9 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                             {b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : <span style={{ color: "var(--adm-good)" }}>Libre</span>}
                             {data.links?.[s.id] && (
                               <span style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", marginTop: "0.35rem" }}>
-                                {!b && s.active && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title="La plage est déjà choisie : le club remplit son équipe et paie, même hors de la catégorie prévue." onClick={() => copy(data.links[s.id].pay, "Lien de paiement copié : envoyez-le au club qui veut ce match.")}>🔗 Lien de paiement</button>}
+                                {!b && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title={s.active ? "La plage est déjà choisie : le club remplit son équipe et paie, même hors de la catégorie prévue." : "Plage masquée de la page publique : seul le club qui reçoit ce lien peut la payer."} onClick={() => copy(data.links[s.id].pay, "Lien de paiement copié : envoyez-le au club qui veut ce match.")}>🔗 Lien de paiement</button>}
                                 {data.links[s.id].opponent && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title="La page de son match : date, lieu, itinéraire, ce qui est payé." onClick={() => copy(data.links[s.id].opponent!, "Lien de l'adversaire copié.")}>🔗 Adversaire</button>}
-                                {s.active && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title="La page du match pour les arbitres : paie, inscription, lien personnel." onClick={() => copy(data.links[s.id].referee, "Lien des arbitres copié.")}>🔗 Arbitres</button>}
+                                {(s.active || b?.status === "paid") && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title="La page du match pour les arbitres : paie, inscription, lien personnel." onClick={() => copy(data.links[s.id].referee, "Lien des arbitres copié.")}>🔗 Arbitres</button>}
                               </span>
                             )}
                           </td>

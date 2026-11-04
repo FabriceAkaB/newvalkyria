@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Container } from "@/components/container";
-import { checkEligibility, parseTeamYears, TEAM_LEVELS, teamYearsLabel, teamYearsValue, type SlotRules, type TeamCategory, type TeamGender } from "@/lib/match-slots-core";
+import { checkEligibility, parseTeamYears, placeName, TEAM_LEVELS, teamYearsLabel, teamYearsValue, type SlotRules, type TeamCategory, type TeamGender } from "@/lib/match-slots-core";
 import { formatMoney } from "@/lib/private-programs";
 
 const TEAM_TOKEN_KEY = "nv_match_team";
@@ -458,9 +458,11 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
 
           {/* ── L'essentiel en un coup d'œil ── */}
           <div style={{ ...card, display: "grid", gap: "0.45rem", fontSize: "0.82rem", color: "#c3c2c8", lineHeight: 1.5 }}>
-            {commonLocation && (
-              <span>📍 <strong style={{ color: "#fff" }}>{commonField ? `${commonField} — ` : ""}Complexe sportif de Terrebonne</strong><br /><span style={{ color: "#9d9da0" }}>{commonLocation}</span></span>
-            )}
+            {commonLocation ? (
+              <span>📍 <strong style={{ color: "#fff" }}>{commonField ? `${commonField} — ` : ""}{placeName(commonLocation)}</strong><br /><span style={{ color: "#9d9da0" }}>{commonLocation}</span></span>
+            ) : slots && slots.length > 0 ? (
+              <span>📍 <strong style={{ color: "#fff" }}>Les matchs ne sont pas tous au même endroit</strong> ({Array.from(new Set(slots.map((s) => placeName(s.location)))).join(", ")}) : le lieu est indiqué sur chaque match.</span>
+            ) : null}
             <span>⚽ Toujours à <strong style={{ color: "#fff" }}>7 contre 7</strong> · matchs d&apos;une heure · maximum {max} par équipe</span>
             <span>💳 {fullPayment ? `${formatMoney(depositEach)} par match, payé au complet en ligne pour réserver` : `${formatMoney(depositEach + balanceEach)} par match : ${formatMoney(depositEach)} en ligne pour réserver, ${formatMoney(balanceEach)} sur place`}</span>
             <span>🔁 <strong style={{ color: "#c4a4e4" }}>Double cédule</strong> = 2 matchs de suite, réservés ensemble (votre équipe joue les deux, ou vous alignez deux équipes)</span>
@@ -633,7 +635,8 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
                               <p style={{ margin: "0.55rem 0 0", fontSize: "0.84rem", color: "#c3c2c8", lineHeight: 1.55 }}>
                                 <span style={{ color: "#9d9da0" }}>Contre :</span> <strong style={{ color: "#fff" }}>{opponents.join(" puis ")}</strong>
                                 {first.format && <><br /><span style={{ color: "#9d9da0" }}>Format :</span> {first.format}</>}
-                                <br /><span style={{ color: "#9d9da0" }}>Lieu :</span> {first.field ? `${first.field} · ` : ""}{first.location}
+                                <br /><span style={{ color: "#9d9da0" }}>Lieu :</span> <strong style={{ color: "#fff" }}>{placeName(first.location)}</strong>{first.field ? ` · ${first.field}` : ""}
+                                <br /><span style={{ color: "#9d9da0", fontSize: "0.78rem" }}>{first.location}</span>
                                 {first.preferred && <><br /><span style={{ color: "#8fce9f" }}>{first.preferred}</span></>}
                               </p>
                               {first.restriction && (

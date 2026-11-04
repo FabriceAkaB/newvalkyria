@@ -110,7 +110,11 @@ export async function updateReferee(id: string, patch: Partial<Pick<Referee, "st
 
 /** Nos matchs (plages actives), avec l'adversaire, ce qu'il a payé, les postes d'arbitre et les coûts. */
 export async function listMatches(opts: { from?: string; to?: string } = {}): Promise<MatchRow[]> {
-  let q = db().from("match_slots").select("*").eq("active", true).order("slot_date").order("start_time");
+  // Plages en vente, plus celles masquées mais payées par un lien direct (un match qui aura lieu).
+  const { data: paidRows } = await db().from("match_slot_bookings").select("slot_id").eq("status", "paid");
+  const paidIds = Array.from(new Set(((paidRows ?? []) as any[]).map((r) => r.slot_id))).filter((id) => /^[0-9a-f-]{36}$/i.test(id));
+  let q = db().from("match_slots").select("*").order("slot_date").order("start_time");
+  q = paidIds.length ? q.or(`active.eq.true,id.in.(${paidIds.join(",")})`) : q.eq("active", true);
   if (opts.from) q = q.gte("slot_date", opts.from);
   if (opts.to) q = q.lte("slot_date", opts.to);
   const { data: slots, error } = await q;
