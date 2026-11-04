@@ -87,6 +87,8 @@ export interface MatchTeamProfile {
   notes: string | null;
   /** Lien personnel : /prive/matchs?equipe=<access_token> — l'équipe n'a pas à refaire le formulaire. */
   access_token: string;
+  /** Logo du club (le même pour toutes ses équipes), ajouté par JP dans l'admin. */
+  logo_url?: string | null;
   created_at: string;
 }
 

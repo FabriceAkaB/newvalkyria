@@ -58,6 +58,8 @@ export interface MatchRow {
   doubleGroup?: string | null;
   ourTeam: string | null;
   opponent: string | null;
+  /** Logo du club adverse (ajouté dans l'admin), s'il y en a un. */
+  opponentLogo?: string | null;
   bookingStatus: string | null;
   /** Encaissé (dépôt payé en ligne + solde s'il a été payé). */
   revenueCents: number;
@@ -122,10 +124,13 @@ export async function listMatches(opts: { from?: string; to?: string } = {}): Pr
   const ids = (slots ?? []).map((s: any) => s.id);
   if (!ids.length) return [];
   const [{ data: bookings }, { data: assigns }, { data: refs }] = await Promise.all([
-    db().from("match_slot_bookings").select("slot_id, org_name, team_label, status, price_cents, balance_due_cents, balance_paid_at").in("slot_id", ids).neq("status", "cancelled"),
+    db().from("match_slot_bookings").select("slot_id, org_name, org_key, team_label, status, price_cents, balance_due_cents, balance_paid_at").in("slot_id", ids).neq("status", "cancelled"),
     db().from("referee_assignments").select("*").in("match_slot_id", ids).neq("status", "annule").order("created_at"),
     db().from("referees").select("id, first_name, last_name, email, phone, interac_email").eq("club_id", CLUB_ID)
   ]);
+  const keys = Array.from(new Set(((bookings ?? []) as any[]).map((b) => b.org_key).filter(Boolean)));
+  const { data: logoRows } = keys.length ? await db().from("match_team_profiles").select("org_key, logo_url").in("org_key", keys).not("logo_url", "is", null) : { data: [] };
+  const logoOf = new Map(((logoRows ?? []) as any[]).map((r) => [r.org_key, r.logo_url]));
   return (slots ?? []).map((s: any) => {
     const b = (bookings ?? []).find((x: any) => x.slot_id === s.id && x.status === "paid") ?? (bookings ?? []).find((x: any) => x.slot_id === s.id);
     const revenue = b && b.status === "paid" ? (b.price_cents ?? 0) + (b.balance_paid_at ? b.balance_due_cents ?? 0 : 0) : 0;
@@ -141,6 +146,7 @@ export async function listMatches(opts: { from?: string; to?: string } = {}): Pr
       doubleGroup: s.double_group ?? null,
       ourTeam: s.opponent,
       opponent: b ? [b.org_name, b.team_label].filter(Boolean).join(" · ") : null,
+      opponentLogo: b ? logoOf.get(b.org_key) ?? null : null,
       bookingStatus: b?.status ?? null,
       revenueCents: revenue,
       balanceDueCents: balanceDue,

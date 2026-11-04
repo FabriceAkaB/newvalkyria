@@ -45,6 +45,10 @@ export default async function RefereeMatchPage({ params }: { params: Promise<{ s
           {last.end ? ` à ${hour(last.end)}` : ""}
           {group.length > 1 ? " · 2 matchs de suite" : ""}
         </p>
+        {m.opponentLogo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={m.opponentLogo} alt={m.opponent ?? "Club adverse"} width={56} height={56} style={{ width: 56, height: 56, objectFit: "contain", marginTop: "0.6rem", borderRadius: 10, border: "1px solid #e6e0ee", background: "#fff" }} />
+        ) : null}
         <p style={{ color: "#5d566b", lineHeight: 1.6, margin: "0.6rem 0 0" }}>
           {m.field ? `${m.field} — ` : ""}
           {m.location}

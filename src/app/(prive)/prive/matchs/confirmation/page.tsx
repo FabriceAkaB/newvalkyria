@@ -1,4 +1,5 @@
 import { Container } from "@/components/container";
+import { getClubLogos } from "@/lib/club-logos";
 import { getBookingsByIds } from "@/lib/match-slots-repo";
 import { MATCH_FORMAT } from "@/lib/match-slots-core";
 import { formatMoney } from "@/lib/private-programs";
@@ -17,6 +18,7 @@ export default async function MatchConfirmationPage({ searchParams }: { searchPa
   const list = (ids ?? "").split(",").filter((x) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 2);
   const bookings = list.length ? await getBookingsByIds(list) : [];
   const paid = bookings.length > 0 && bookings.every((b) => b.status === "paid");
+  const clubLogo = bookings.length ? (await getClubLogos()).get(bookings[0].org_key) ?? null : null;
 
   return (
     <section className="section-band">
@@ -27,6 +29,15 @@ export default async function MatchConfirmationPage({ searchParams }: { searchPa
           <>
             <h1 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "0.6rem" }}>{paid ? "✓ Réservation confirmée" : "Paiement en cours de vérification…"}</h1>
             <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem", fontSize: "0.85rem", color: "#c3c2c8" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.7rem", margin: "0 0 0.7rem" }}>
+                {clubLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={clubLogo} alt="" width={48} height={48} style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 10, background: "#fff" }} />
+                ) : null}
+                <span style={{ color: "#9d9da0", fontWeight: 700 }}>contre</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="New Valkyria" width={48} height={48} style={{ width: 48, height: 48, objectFit: "contain" }} />
+              </div>
               <p style={{ margin: "0 0 0.5rem", color: "#fff", fontWeight: 700 }}>{bookings[0].org_name} — {bookings[0].team_label}</p>
               {bookings.map((b) => (
                 <p key={b.id} style={{ margin: "0 0 0.25rem" }}>

@@ -129,6 +129,44 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
     }
   };
 
+  // Logo de chaque club (un par club, partagé par ses équipes).
+  const logoOf = (orgKey: string | null | undefined) => (orgKey ? data.profiles.find((p) => p.org_key === orgKey && p.logo_url)?.logo_url ?? null : null);
+  const logoImg = (url: string | null, size = 28) =>
+    url ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={url} alt="" width={size} height={size} style={{ width: size, height: size, objectFit: "contain", borderRadius: 6, background: "#fff", verticalAlign: "middle", marginRight: 6 }} />
+    ) : null;
+  const uploadLogo = async (profileId: string, file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.set("profileId", profileId);
+      fd.set("file", file);
+      const res = await fetch("/api/admin/matchs/logo", { method: "POST", body: fd });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Erreur");
+      setData(await fetch("/api/admin/matchs").then((r) => r.json()));
+      flash("Logo ajouté : il s'affiche pour toutes les équipes de ce club.");
+    } catch (e) {
+      flash(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const removeLogo = async (profileId: string) => {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/matchs/logo?profileId=${profileId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Erreur");
+      setData(await fetch("/api/admin/matchs").then((r) => r.json()));
+      flash("Logo retiré.");
+    } catch (e) {
+      flash(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
   const takenBy = (slotId: string) => data.bookings.find((b) => b.slot_id === slotId && (b.status === "paid" || b.status === "pending"));
   const slots = data.slots.filter((s) => showPast || s.slot_date >= today);
   const upcoming = data.slots.filter((s) => s.active && s.slot_date >= today);
@@ -306,7 +344,16 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                     const booked = data.bookings.filter((b) => b.team_profile_id === p.id && b.status !== "cancelled").length;
                     return (
                       <tr key={p.id}>
-                        <td style={cell}><strong style={{ color: "#fff" }}>{p.org_name}</strong><br />{p.team_label}{p.notes ? <><br /><em>{p.notes}</em></> : null}</td>
+                        <td style={cell}>
+                          {logoImg(p.logo_url ?? null, 36)}
+                          <strong style={{ color: "#fff" }}>{p.org_name}</strong><br />{p.team_label}{p.notes ? <><br /><em>{p.notes}</em></> : null}
+                          <br />
+                          <label className="admin-btn-ghost" style={{ fontSize: "0.62rem", cursor: "pointer", display: "inline-block", marginTop: 4 }}>
+                            {p.logo_url ? "Changer le logo" : "+ Ajouter le logo"}
+                            <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: "none" }} disabled={busy} onChange={(e) => { void uploadLogo(p.id, e.target.files?.[0]); e.target.value = ""; }} />
+                          </label>
+                          {p.logo_url && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem", color: "var(--adm-bad)", marginLeft: 4 }} disabled={busy} onClick={() => confirm("Retirer le logo de ce club ?") && removeLogo(p.id)}>Retirer</button>}
+                        </td>
                         <td style={cell}>{GENDER_LABEL[p.team_gender]} · {p.team_birth_year_to && p.team_birth_year_to !== p.team_birth_year ? `groupe ${p.team_birth_year}-${p.team_birth_year_to}` : `nés en ${p.team_birth_year}`}</td>
                         <td style={cell}>{p.team_level}{p.team_players ? <><br />{p.team_players} joueurs</> : null}</td>
                         <td style={cell}>{p.contact_name}<br />{p.contact_email}<br />{p.contact_phone}</td>
@@ -336,7 +383,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                     <tr key={b.id} style={{ opacity: b.status === "cancelled" ? 0.5 : 1 }}>
                       <td style={cell}>{b.slot.slot_date}<br />{b.slot.start_time} – {b.slot.end_time}{b.slot.double_group ? <><br /><span style={{ color: "var(--adm-accent)" }}>Double cédule</span></> : null}</td>
                       <td style={cell}>
-                        <strong style={{ color: "#fff" }}>{b.org_name}</strong><br />{b.team_label}
+                        {logoImg(logoOf(b.org_key))}<strong style={{ color: "#fff" }}>{b.org_name}</strong><br />{b.team_label}
                         {b.team_gender ? <><br />{GENDER_LABEL[b.team_gender]}{b.team_birth_year ? (b.team_birth_year_to && b.team_birth_year_to !== b.team_birth_year ? ` · groupe ${b.team_birth_year}-${b.team_birth_year_to}` : ` · nés en ${b.team_birth_year}`) : ""}{b.team_level ? ` · ${b.team_level}` : ""}</> : null}
                         {b.notes ? <><br /><em>{b.notes}</em></> : null}
                       </td>
@@ -433,7 +480,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                           <td style={cell}>{restr ?? <span style={{ color: "var(--adm-text-3)" }}>Aucune restriction</span>}{s.preferred_note ? <><br /><span style={{ color: "var(--adm-good)" }}>{s.preferred_note}</span></> : null}</td>
                           <td style={cell}>Acompte {formatMoney(s.price_cents)}<br />Solde {formatMoney(s.balance_due_cents)}</td>
                           <td style={cell}>
-                            {b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : <span style={{ color: "var(--adm-good)" }}>Libre</span>}
+                            {b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{logoImg(logoOf(b.org_key), 22)}{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : <span style={{ color: "var(--adm-good)" }}>Libre</span>}
                             {data.links?.[s.id] && (
                               <span style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", marginTop: "0.35rem" }}>
                                 {!b && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title={s.active ? "La plage est déjà choisie : le club remplit son équipe et paie, même hors de la catégorie prévue." : "Plage masquée de la page publique : seul le club qui reçoit ce lien peut la payer."} onClick={() => copy(data.links[s.id].pay, "Lien de paiement copié : envoyez-le au club qui veut ce match.")}>🔗 Lien de paiement</button>}
