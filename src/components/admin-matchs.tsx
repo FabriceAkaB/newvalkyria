@@ -100,7 +100,12 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
   const [ns, setNs] = useState({ date: "", start: "17:30", end: "18:30", location: "Complexe sportif Terrebonne, Centre de soccer multifonctionnel, terrain #4 – 2475, boul. des Entreprises, Terrebonne J6X 4J9", field: "Terrain n° 4", deposit: "150", balance: "0" });
   const today = new Date().toISOString().slice(0, 10);
   const link = `${origin}/prive/matchs`;
-  const copy = (url: string, done: string) => navigator.clipboard.writeText(url).then(() => flash(done), () => window.prompt("Copiez ce lien :", url));
+  // Le lien est toujours affiché (copie bloquée sur certains téléphones) : on peut le copier à la main ou l'ouvrir.
+  const [shown, setShown] = useState<{ url: string; label: string } | null>(null);
+  const copy = (url: string, done: string) => {
+    setShown({ url, label: done });
+    navigator.clipboard?.writeText(url).then(() => flash(done), () => flash("Copie bloquée par le navigateur : le lien est affiché en haut, sélectionnez-le."));
+  };
 
   const flash = (m: string) => {
     setMsg(m);
@@ -234,6 +239,13 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             <br />Règles automatiques : le match est payé au complet en ligne pour réserver (150 $ par plage par défaut, aucun solde sur place), 2 plages maximum par équipe, doubles cédules réservées en bloc, restrictions vérifiées côté serveur.
           </p>
           {msg && <p style={{ fontSize: "0.78rem", color: "var(--adm-good)" }}>{msg}</p>}
+          {shown && (
+            <div style={{ position: "sticky", top: 8, zIndex: 5, display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap", padding: "0.6rem 0.7rem", marginBottom: "0.8rem", borderRadius: 10, border: "1px solid var(--adm-accent)", background: "var(--adm-surface, #14111c)" }}>
+              <input className="admin-input" readOnly value={shown.url} onFocus={(e) => e.currentTarget.select()} style={{ flex: "1 1 260px", fontSize: "0.72rem" }} aria-label="Lien à envoyer" />
+              <a href={shown.url} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ fontSize: "0.68rem" }}>Ouvrir</a>
+              <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => setShown(null)}>Fermer</button>
+            </div>
+          )}
 
           <div className="admin-stats" style={{ marginBottom: "1.2rem" }}>
             <div className="admin-stat-card"><p className="admin-stat-value">{upcoming.length}</p><p className="admin-stat-label">Plages à venir{doublesCount ? ` (dont ${doublesCount} doubles)` : ""}</p></div>

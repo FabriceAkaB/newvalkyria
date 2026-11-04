@@ -463,7 +463,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             ) : slots && slots.length > 0 ? (
               <span>📍 <strong style={{ color: "#fff" }}>Les matchs ne sont pas tous au même endroit</strong> ({Array.from(new Set(slots.map((s) => placeName(s.location)))).join(", ")}) : le lieu est indiqué sur chaque match.</span>
             ) : null}
-            <span>⚽ Toujours à <strong style={{ color: "#fff" }}>7 contre 7</strong> · matchs d&apos;une heure · maximum {max} par équipe</span>
+            <span>⚽ Toujours à <strong style={{ color: "#fff" }}>7 contre 7</strong> · l&apos;heure et le lieu sont indiqués sur chaque match · maximum {max} par équipe</span>
             <span>💳 {fullPayment ? `${formatMoney(depositEach)} par match, payé au complet en ligne pour réserver` : `${formatMoney(depositEach + balanceEach)} par match : ${formatMoney(depositEach)} en ligne pour réserver, ${formatMoney(balanceEach)} sur place`}</span>
             <span>🔁 <strong style={{ color: "#c4a4e4" }}>Double cédule</strong> = 2 matchs de suite, réservés ensemble (votre équipe joue les deux, ou vous alignez deux équipes)</span>
           </div>
