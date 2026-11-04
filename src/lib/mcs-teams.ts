@@ -12,7 +12,8 @@ export interface McsEventLite {
   type: string;
 }
 
-const PLACEHOLDER = /^(?:\?+|tbd|tba|a determiner|a confirmer|a venir|adversaire|adversaire a (?:trouver|determiner|confirmer)|inconnu|-+)$/;
+/** « À déterminer (équipe extérieure) », « TBD », « ? »… : pas encore d'adversaire. */
+const PLACEHOLDER = /^(?:\?+|tbd|tba|a determiner|a confirmer|a venir|adversaire|inconnu|equipe exterieure|-+)(?:\b|$)/;
 const norm = (s: string) =>
   s
     .normalize("NFD")
@@ -23,15 +24,18 @@ const norm = (s: string) =>
 
 /** L'adversaire écrit dans le titre d'un match MonClubSportif, ou null s'il n'y en a pas encore. */
 export function opponentOf(title: string): string | null {
-  const m = title.match(/(?:\bvs\.?|\bv\.|\bcontre\b|\bc\.|@|\bversus\b)\s*(.+)$/i);
+  const m = title.match(/(?:\bvs\.?|\bv\.|\bcontre\b|(?:^|\s)c\.|@|\bversus\b)\s*(.+)$/i);
   if (!m) return null;
   const raw = m[1].replace(/[()[\]]/g, " ").replace(/\s+/g, " ").trim().replace(/[-–—:,.\s]+$/, "");
   if (!raw || PLACEHOLDER.test(norm(raw))) return null;
   return raw;
 }
 
-/** Un match (pas une pratique, pas un tournoi) dont l'adversaire n'est pas encore trouvé. */
-export const needsOpponent = (e: Pick<McsEventLite, "type" | "title">) => e.type === "Match" && opponentOf(e.title) === null;
+const VERSUS = /(?:\bvs\.?|\bv\.|\bcontre\b|(?:^|\s)c\.|@|\bversus\b)/i;
+
+/** Un match contre une équipe extérieure dont l'adversaire n'est pas encore trouvé (« vs. À déterminer »).
+ *  Un match interne sans adversaire écrit (« Simulation match #2 ») n'en a pas besoin. */
+export const needsOpponent = (e: Pick<McsEventLite, "type" | "title">) => e.type === "Match" && VERSUS.test(e.title) && opponentOf(e.title) === null;
 
 const toMin = (t: string | null | undefined) => {
   const m = String(t ?? "").match(/^(\d{1,2}):(\d{2})/);

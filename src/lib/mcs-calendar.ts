@@ -122,7 +122,7 @@ export const minutesOf = (t: string | null | undefined): number | null => {
 export function guessActivityType(text: string): "Pratique" | "Match" | "Tournoi" | "Camp" | "Évaluation" | "Réunion" {
   const t = norm(text);
   if (/tournoi|festival|\bcoupe\b|classique/.test(t)) return "Tournoi";
-  if (/\bmatchs?\b|\bpartie\b|\bvs\b|\bcontre\b|\bgame\b|hors[- ]concours/.test(t)) return "Match";
+  if (/\bmatchs?\b|\bpartie\b|\bvs\b|\bcontre\b|\bgame\b|hors[- ]concours|\sc\.\s/.test(t)) return "Match";
   if (/\bcamps?\b/.test(t)) return "Camp";
   if (/evaluation|\bessais?\b|tryout|selection/.test(t)) return "Évaluation";
   if (/reunion|meeting|rencontre de parents/.test(t)) return "Réunion";

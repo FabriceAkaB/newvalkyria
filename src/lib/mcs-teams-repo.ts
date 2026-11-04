@@ -76,7 +76,9 @@ export async function syncTeam(teamId: string, timeoutMs = 10_000): Promise<{ ok
     const text = await fetchIcalText(team.ical_url, timeoutMs);
     const from = addDays(todayIso(), -1);
     const { occurrences } = readIcalWindow(text, { from, to: addDays(from, WINDOW_DAYS) });
-    const rows = occurrences.map((o) => {
+    // Les pratiques annulées dans MonClubSportif ne comptent pas (statut annulé ou titre « [Annulé] »).
+    const live = occurrences.filter((o) => !o.cancelled && !/^\s*\[(?:annul|cancel)/i.test(o.summary ?? ""));
+    const rows = live.map((o) => {
       const e = mcsEventFromOccurrence(o);
       return { team_id: teamId, key: e.key, event_date: e.date, start_time: o.start ?? null, end_time: e.end, title: e.title.slice(0, 300), location: e.location || null, type: e.type, opponent: e.type === "Match" ? opponentOf(e.title) : null, synced_at: now };
     });
