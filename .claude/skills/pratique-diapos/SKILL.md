@@ -68,6 +68,15 @@ pastilles `#E6DAF1`. Sections du `deck.json` : intro (couverture, clous, correct
 - Points et petits tournois individuels pour l'engagement ; pas de classement humiliant (chaque fille comparée à elle-même).
 - Le thème ressort par les **paramètres** (doc conception par les paramètres), pas par des arrêts répétés.
 
+## Ensuite : la déposer et la décortiquer (obligatoire, historique exact depuis le 1er novembre 2026)
+
+- **Déposer :** l'historique est dans Coaching → Pratiques → Historique (`practice-history-repo.ts`, `depositPractice`). Le lien du deck va dans `coach_activities.deck_url`.
+- **Décortiquer bloc par bloc :** une ligne `activity_session_blocks` par exercice, dans l'ordre du déroulé, sans les pauses d'eau.
+  - Chaque ligne contient : le type, le titre, les minutes, `setup` (organisation), `material`, `key_points` (critères, un par ligne), `progressions` (étapes minutées), `variants` (simplifier, corser).
+  - `notes` commence par « Lien avec le thème : … ».
+  - Pour lire les diapos, confier la lecture à un agent qui rend un JSON par groupe : c'est ce qui a été fait pour le 2 novembre.
+- **Analyse et note :** l'analyse d'après pratique va dans `analysis`. La **note de pertinence au thème** (`theme_score`, sur 10) est donnée par **JP seulement**. À 8 et plus, la pratique entre dans la galerie des pratiques modèles.
+
 ## Ensuite : la ranger dans le site (sinon le portail des éducateurs ne la voit pas)
 
 1. Créer ou retrouver l'activité de la pratique : `listPractices` puis `createActivityFor` (`practices-repo.ts`).
