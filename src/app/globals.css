@@ -11453,3 +11453,36 @@ img { max-width: 100%; height: auto; }
   .cal-dow { display: inline; text-transform: capitalize; }
   .cal-item { white-space: normal; font-size: 0.82rem; padding: 6px 8px; }
 }
+
+/* ── Mandalart 9 × 9 (/admin/mandalart/piliers) : une couleur par pilier (--h = teinte), objectifs remplis (--p) ── */
+.mdb { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.mdb-block { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 6px; border-radius: 16px; background: hsl(var(--h, 268) 40% 50% / 0.07); border: 1px solid hsl(var(--h, 268) 50% 60% / 0.18); }
+.mdb-block[data-center] { background: linear-gradient(135deg, hsl(268 60% 50% / 0.12), hsl(300 60% 50% / 0.08)); border-color: hsl(268 70% 70% / 0.35); }
+.mdb-obj, .mdb-pillar, .mdb-center { aspect-ratio: 1 / 1; min-width: 0; border-radius: 10px; padding: 7px; display: flex; flex-direction: column; justify-content: space-between; text-decoration: none; overflow: hidden; position: relative; }
+.mdb-obj { color: var(--adm-text); background: linear-gradient(to top, hsl(var(--h) 65% 55% / 0.42) var(--p), hsl(var(--h) 30% 30% / 0.18) var(--p)); border: 1px solid hsl(var(--h) 50% 60% / 0.2); transition: transform 0.15s, border-color 0.15s; }
+.mdb-obj:hover, .mdb-pillar:hover { transform: translateY(-2px); border-color: hsl(var(--h) 70% 70% / 0.7); }
+.mdb-obj-name { font-size: 0.68rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.mdb-obj-foot { display: flex; gap: 4px; align-items: center; font-size: 0.66rem; color: var(--adm-text-2); font-variant-numeric: tabular-nums; }
+.mdb-pillar { color: #fff; background: linear-gradient(145deg, hsl(var(--h) 70% 52%), hsl(calc(var(--h) + 25) 70% 42%)); border: 1px solid hsl(var(--h) 70% 70% / 0.5); box-shadow: 0 4px 14px hsl(var(--h) 70% 40% / 0.35); }
+.mdb-pillar-code { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.85; }
+.mdb-pillar-name { font-size: 0.74rem; font-weight: 700; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.mdb-pillar[data-big] .mdb-pillar-name { font-size: 0.8rem; }
+.mdb-pillar-foot { display: flex; gap: 5px; align-items: center; font-size: 0.68rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mdb-ring { width: 14px; height: 14px; border-radius: 50%; background: conic-gradient(#fff var(--p), rgba(255,255,255,0.25) 0); flex: none; }
+.mdb-late { display: inline-grid; place-items: center; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--adm-bad); color: #fff; font-size: 0.6rem; font-weight: 700; }
+.mdb-center { background: radial-gradient(circle at 30% 20%, #8b5cf6, #3b1d5e); color: #fff; justify-content: center; gap: 3px; text-align: center; align-items: center; box-shadow: 0 6px 22px rgba(139, 92, 246, 0.45); }
+.mdb-center-eyebrow { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.8; }
+.mdb-center-goal { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.mdb-center-sub { font-size: 0.62rem; opacity: 0.9; line-height: 1.25; }
+.mdb-center-bar { width: 80%; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.25); overflow: hidden; margin: 2px 0; }
+.mdb-center-bar span { display: block; height: 100%; background: #f0abfc; }
+.mdb-legend { margin: 0; font-size: 0.8rem; color: var(--adm-text-2); }
+.mdb-wrap { container-type: inline-size; }
+/* Pas assez de place pour les 81 cases : les blocs passent l'un sous l'autre, en grand, le centre en premier. */
+@container (max-width: 1040px) {
+  .mdb { grid-template-columns: 1fr; gap: 14px; max-width: 560px; margin: 0 auto; }
+  .mdb-block[data-center] { order: -1; }
+  .mdb-obj-name { font-size: 0.78rem; }
+  .mdb-pillar-name { font-size: 0.86rem; }
+  .mdb-center-goal { font-size: 2rem; }
+}
