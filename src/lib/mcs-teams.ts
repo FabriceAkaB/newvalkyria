@@ -81,9 +81,17 @@ export function slotConflict(
   if (!fits) return null;
   const g = slot.allowed_gender;
   const sameGender = (t: { gender?: string | null }) => !g || g === "tous" || !t.gender || t.gender === "mixte" || t.gender === g;
-  const concerned = teams.filter((t) => sameGender(t) && t.birth_years.some(fits));
+  const ofAge = teams.filter((t) => sameGender(t) && t.birth_years.some(fits));
+  // Le match de la plage elle-même est aussi dans MonClubSportif (« vs. À déterminer ») : il ne la bloque pas, et il dit
+  // quelle équipe joue. Deux équipes du même âge (2015 AV et 2015 INT) ne se bloquent donc pas l'une l'autre.
+  const sameMatch = (e: McsEventLite) => (e.type === "Match" || e.type === "Tournoi") && e.date === slot.slot_date && Math.abs((toMin(e.start) ?? -999) - (toMin(slot.start_time) ?? 999)) <= 15;
+  const players = new Set(events.filter((e) => sameMatch(e) && ofAge.some((t) => t.id === e.team_id)).map((e) => e.team_id));
+  const concerned = players.size ? ofAge.filter((t) => players.has(t.id)) : ofAge;
   for (const t of concerned) {
-    const hit = events.find((e) => e.team_id === t.id && overlaps({ date: slot.slot_date, start: slot.start_time, end: slot.end_time }, { date: e.date, start: e.start, end: e.end }));
+    // Le match est déjà dans MonClubSportif : l'équipe y est attendue (pratique juste avant au même terrain comprise),
+    // seul un vrai chevauchement compte ; sinon on garde 30 minutes de déplacement.
+    const buffer = players.size ? 0 : 30;
+    const hit = events.find((e) => e.team_id === t.id && !sameMatch(e) && overlaps({ date: slot.slot_date, start: slot.start_time, end: slot.end_time }, { date: e.date, start: e.start, end: e.end }, buffer));
     if (hit) return { team: t.name, event: hit };
   }
   return null;

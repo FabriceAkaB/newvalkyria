@@ -44,6 +44,23 @@ describe("MonClubSportif : équipes, adversaires et conflits", () => {
     expect(slotConflict(slot, teams, events)?.team).toBe("Valkyria 2016");
     expect(slotConflict({ ...slot, birth_year_min: 2013, birth_year_max: 2014 }, teams, events)).toBeNull();
     expect(slotConflict({ ...slot, birth_year_min: null, birth_year_max: null }, teams, events)).toBeNull();
+    // Le match de la plage elle-même (dans MonClubSportif) ne la bloque pas.
+    const own = [{ team_id: "a", date: "2026-11-07", start: "08:15", end: "09:45", title: "Équipe 2016 vs. À déterminer", type: "Match" }];
+    expect(slotConflict(slot, teams, own)).toBeNull();
+    // Deux équipes du même âge : la plage de l'une n'est pas bloquée par la pratique ou le match de l'autre…
+    const twins = [
+      { id: "av", name: "Équipe 2016 AV", birth_years: [2016] },
+      { id: "int", name: "Équipe 2016 INT", birth_years: [2016] }
+    ];
+    const day = [
+      { team_id: "av", date: "2026-11-07", start: "08:15", end: "09:45", title: "Équipe 2016 AV vs. À déterminer", type: "Match" },
+      { team_id: "int", date: "2026-11-07", start: "09:15", end: "10:45", title: "Équipe 2016 INT - Pratique", type: "Pratique" }
+    ];
+    expect(slotConflict(slot, twins, day)).toBeNull();
+    // Pratique de la même équipe juste avant son match : pas un conflit.
+    expect(slotConflict(slot, twins, [day[0], { team_id: "av", date: "2026-11-07", start: "07:15", end: "08:15", title: "Équipe 2016 AV - Pratique", type: "Pratique" }])).toBeNull();
+    // …mais reste bloquée si l'équipe qui joue est vraiment prise en même temps.
+    expect(slotConflict(slot, twins, [...day, { team_id: "av", date: "2026-11-07", start: "09:00", end: "10:00", title: "Équipe 2016 AV - Pratique", type: "Pratique" }])?.team).toBe("Équipe 2016 AV");
     // Une plage pour filles n'est pas bloquée par une équipe de garçons du même âge.
     const boys = [{ id: "a", name: "Intensif garçons 2016", birth_years: [2016], gender: "garcons" }];
     expect(slotConflict({ ...slot, allowed_gender: "filles" }, boys, events)).toBeNull();
