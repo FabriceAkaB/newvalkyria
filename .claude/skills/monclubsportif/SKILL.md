@@ -18,6 +18,18 @@ description: Relier MonClubSportif (MCS, la plateforme d'équipes de New Valkyri
   - jamais avec un mot de passe saisi par Claude ;
   - c'est l'agent A12, en mode assistant d'abord : préparer les clics, JP regarde.
 
+## En place (3 nov. 2026, commit 8a4067c)
+
+- **Lecture par équipe :**
+  - tables `mcs_teams` (nom, `birth_years`, genre, `ical_url` gardé côté serveur, dernière lecture, erreur) et `mcs_events` (cache sur 10 semaines, `opponent` lu dans le titre) ;
+  - écran `/admin/monclubsportif/equipes` ;
+  - code : `mcs-teams-repo.ts` (`syncTeam`, `syncStaleTeams`, `getSlotConflicts`) et `mcs-teams.ts` (règles pures testées : `opponentOf`, `needsOpponent`, `overlaps` à ±30 min, `slotConflict`, `parseBirthYears`).
+- **Relecture :** toutes les 15 min à l'ouverture de l'écran, et chaque matin par le cron `api/cron/mcs-sync` (10 h UTC).
+- **Vente des plages :** `getSlotsWithAvailability` rend une plage indisponible (`mcsConflict`) si une équipe du même âge est prise.
+- **À faire ensuite :**
+  - le robot d'écriture (inscriptions payées → bonne équipe, activités et matchs créés, match renommé quand l'adversaire paie) ;
+  - il attend le compte robot de JP et `MCS_ROBOT_EMAIL` / `MCS_ROBOT_PASSWORD` dans Vercel.
+
 ## Ce qui existe déjà dans le code
 
 - `src/lib/ical.ts` : lecture et développement d'un calendrier iCal (fuseau, répétitions, exceptions), avec ses tests (`ical.test.ts`).
