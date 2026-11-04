@@ -5,7 +5,7 @@ import { jsonError } from "@/lib/http";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { getStripeClient } from "@/lib/stripe";
 import { isValidPhone } from "@/lib/form-validation";
-import { restrictionLabel } from "@/lib/match-slots-core";
+import { MATCH_FORMAT, restrictionLabel } from "@/lib/match-slots-core";
 import {
   cancelBookings,
   getRequestsForProfile,
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       field: s.field_label,
       depositCents: s.price_cents,
       balanceDueCents: s.balance_due_cents,
-      format: s.match_format,
+      format: s.match_format || MATCH_FORMAT,
       opponent: s.opponent,
       allowedGender: s.allowed_gender,
       birthYearMin: s.birth_year_min,

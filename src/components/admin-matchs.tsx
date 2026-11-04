@@ -149,7 +149,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
     const touch = (key: keyof Draft) => bulkMode && setBulkFields((prev) => new Set(prev).add(key));
     return (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: "0.6rem" }}>
-        {wrap("format", "Format du match", <input className="admin-input" placeholder="ex. 7 contre 7" value={d.format} onChange={(e) => { touch("format"); set({ ...d, format: e.target.value }); }} />)}
+        {wrap("format", "Format du match", <input className="admin-input" placeholder="7 vs 7 (par défaut)" value={d.format} onChange={(e) => { touch("format"); set({ ...d, format: e.target.value }); }} />)}
         {wrap("opponent", "Adversaire (équipe de chez nous)", (
           <>
             <select

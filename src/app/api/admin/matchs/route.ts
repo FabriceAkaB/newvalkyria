@@ -6,7 +6,7 @@ import { getCurrentAdminRole, isAdminRequest } from "@/lib/admin-auth";
 import { sendMatchRequestDecisionEmail, sendMatchSlotsConfirmationEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
-import { areConsecutive } from "@/lib/match-slots-core";
+import { areConsecutive, MATCH_FORMAT } from "@/lib/match-slots-core";
 import { cancelBookings, decideSlotRequest, getAllBookings, getAllSlotRequests, getAllTeamProfiles, getBookingsByIds, getSlotsWithAvailability, toEmailSlots } from "@/lib/match-slots-repo";
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -34,7 +34,7 @@ function slotPatch(body: Record<string, any>): Record<string, unknown> {
   if (typeof body.active === "boolean") patch.active = body.active;
   if (body.priceCents !== undefined) patch.price_cents = cents(body.priceCents);
   if (body.balanceDueCents !== undefined) patch.balance_due_cents = cents(body.balanceDueCents);
-  if (body.format !== undefined) patch.match_format = text(body.format);
+  if (body.format !== undefined) patch.match_format = text(body.format) ?? MATCH_FORMAT;
   if (body.opponent !== undefined) patch.opponent = text(body.opponent);
   if (body.allowedGender !== undefined) {
     if (!["tous", "filles", "garcons"].includes(body.allowedGender)) throw new Error("Genre admis invalide.");

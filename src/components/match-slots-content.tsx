@@ -404,7 +404,7 @@ export function MatchSlotsContent({ cancelled }: { cancelled: boolean }) {
             {commonLocation && (
               <span>📍 <strong style={{ color: "#fff" }}>{commonField ? `${commonField} — ` : ""}Complexe sportif de Terrebonne</strong><br /><span style={{ color: "#9d9da0" }}>{commonLocation}</span></span>
             )}
-            <span>⏱ Matchs d&apos;une heure, le dimanche · maximum {max} par équipe</span>
+            <span>⚽ Toujours à <strong style={{ color: "#fff" }}>7 contre 7</strong> · matchs d&apos;une heure · maximum {max} par équipe</span>
             <span>💳 {fullPayment ? `${formatMoney(depositEach)} par match, payé au complet en ligne pour réserver` : `${formatMoney(depositEach + balanceEach)} par match : ${formatMoney(depositEach)} en ligne pour réserver, ${formatMoney(balanceEach)} sur place`}</span>
             <span>🔁 <strong style={{ color: "#c4a4e4" }}>Double cédule</strong> = 2 matchs de suite, réservés ensemble (votre équipe joue les deux, ou vous alignez deux équipes)</span>
           </div>

@@ -1,6 +1,9 @@
 /** Règles pures des plages de match (sans accès base de données) — partagées entre
  *  le serveur (validation) et la page de réservation (affichage). */
 
+/** Tous les matchs New Valkyria se jouent à 7 contre 7. */
+export const MATCH_FORMAT = "7 vs 7";
+
 export type SlotGender = "tous" | "filles" | "garcons";
 export type TeamGender = "filles" | "garcons" | "mixte";
 
