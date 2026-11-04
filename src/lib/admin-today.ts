@@ -17,6 +17,7 @@ import { isComplete, previousWeek, reviewWeekFor, weekLabel } from "@/lib/weekly
 import { getReview } from "@/lib/weekly-review-repo";
 import { isLate as isLatePractice } from "@/lib/practice-history";
 import { getPracticeHistory } from "@/lib/practice-history-repo";
+import { getRecentPracticesForSurvey } from "@/lib/practice-survey-repo";
 
 /** Page « Aujourd'hui » de l'admin : tout ce qui demande une action, recalculé à chaque
  *  visite à partir des mêmes données que l'Historique et les Relances. La gérante ne voit
@@ -187,6 +188,9 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
   // ── Annulées après paiement : remboursement à confirmer ──
   if (isAdmin) {
     const refunded = new Set(refundAudit.map((a: any) => String(a.entity_id)));
+    // Annulations que JP a réglées sans que ça paraisse au journal d'audit (ex. « rien à rembourser » retiré du journal).
+    const { data: ignored } = await db().from("app_settings").select("value").eq("key", "remboursements_ignores").maybeSingle();
+    for (const id of (() => { try { return JSON.parse(ignored?.value ?? "[]") as string[]; } catch { return []; } })()) refunded.add(String(id));
     const all = [
       ...regs.map((r: any) => ({ ...r, program: "Filles" })),
       ...boysRegs.map((r: any) => ({ ...r, program: "Programme garçons" })),
@@ -335,6 +339,26 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
           detail: `${holdDetail(r)} · ${r.activityLabel}`,
           meta: r.reminderSentAt ? `Relancé ${shortDay(r.reminderSentAt)}` : r.coachHasEmail ? "Relance à 24 h" : "Pas de courriel : appeler",
           href: `/admin/entraineurs/activites/${r.activityId}`
+        }))
+      })
+    );
+  }
+
+  // ── Sondage de fin des pratiques d'hier et d'aujourd'hui (plaisir, fatigue) : un bouton qui l'ouvre directement ──
+  {
+    const recent = (await getRecentPracticesForSurvey().catch(() => [])).filter((p) => p.daysLeft >= -1 && p.daysLeft <= 0 && (!p.present || p.answered < p.present));
+    sections.push(
+      section({
+        key: "sondage-fin",
+        title: "Sondage de fin à remplir",
+        level: "info",
+        emptyText: "Le sondage de fin des pratiques d'hier et d'aujourd'hui est fait.",
+        href: "/admin/sondage",
+        hrefLabel: "Ouvrir le sondage",
+        items: recent.map((p) => ({
+          title: `${shortDay(`${p.date}T12:00:00`)} · ${p.start} · Filles ${p.group.replace(/^Filles /, "")}`,
+          detail: p.present ? `${p.answered} sur ${p.present} présentes ont répondu` : `${p.expected} joueuses attendues : présences et sondage à faire`,
+          href: p.activityId ? `/admin/coaching/sondage/${p.activityId}` : "/admin/sondage"
         }))
       })
     );

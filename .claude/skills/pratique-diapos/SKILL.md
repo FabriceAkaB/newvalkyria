@@ -38,6 +38,19 @@ touches, défense active, opposition équilibrée), changer les exercices.
 5. Exercices déjà **approuvés** de la banque pour cet âge et ce thème (`getBank()`), et ceux « à changer » ou notés sous 8 cette semaine
    (à ne pas reprendre).
 
+## Groupes multi-âges (règle de JP, 4 nov. 2026)
+
+La plupart des groupes mélangent 2 années, parfois 3 : 2016-2017, 2014-2015, 2013-2012, ou 2015 avec 2014-2013 au même gymnase à la même heure. Les équipes MonClubSportif sont aussi multi-âges (Équipe 2016-2017 AV/INT, Lundi 2014-2015…). Quand on monte une pratique :
+
+- **Prendre l'effectif réel de la plage**, toutes années confondues (liste du sondage ou `rosterForActivity`, groupes fusionnés), avec l'âge de chaque fille, pas seulement le nom du groupe.
+- **Un seul thème pour tout le groupe**, mais chaque exercice précise la différence par âge :
+  - pour les plus jeunes : plus d'espace, plus de touches, défense passive plus longtemps ;
+  - pour les plus vieilles : moins d'espace, 1 ou 2 touches, une contrainte de plus ;
+  - c'est la ligne « Pour simplifier / Pour corser » de la diapo de progression.
+- **Former les équipes en mélangeant les âges**, et noter qui joue le rôle clé (la cachée, la jokeuse), pour que les plus jeunes aient aussi le ballon.
+- **Avancé et intermédiaire** (AV / INT) : même thème, mais la diapo de progression monte plus vite pour le groupe avancé.
+- **Le PSG** donne U8/U11 et U12/U16 : pour un groupe à cheval, prendre l'objectif de la catégorie de la majorité, et mettre en variante la technique de l'autre.
+
 ## Le deck (ordre des diapos du modèle)
 
 1. **Couverture** : « New Valkyria · <groupes> · <thème> · <date> ».

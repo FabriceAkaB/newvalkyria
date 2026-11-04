@@ -132,3 +132,14 @@ export async function getSlotConflicts<T extends SlotForConflict & { id: string 
   }
   return out;
 }
+
+/** Les événements MonClubSportif d'une période (pour le calendrier du mois), avec le nom de l'équipe. */
+export async function getEventsBetween(from: string, to: string): Promise<(McsEvent & { team: string })[]> {
+  const [{ data: teams }, { data, error }] = await Promise.all([
+    db().from("mcs_teams").select("id, name").eq("club_id", CLUB_ID),
+    db().from("mcs_events").select("team_id, key, event_date, start_time, end_time, title, location, type, opponent").gte("event_date", from).lte("event_date", to).order("event_date").order("start_time")
+  ]);
+  if (error) throw new Error(error.message);
+  const name = new Map(((teams ?? []) as any[]).map((t) => [t.id, t.name]));
+  return ((data ?? []) as any[]).map((e) => ({ ...e, date: String(e.event_date).slice(0, 10), start: e.start_time, end: e.end_time, team: name.get(e.team_id) ?? "" }));
+}

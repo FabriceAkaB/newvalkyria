@@ -258,6 +258,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         icon: "calendar",
         description: "Chaque pratique préparée 2 semaines d'avance (pratique du jour bloc par bloc), le calendrier des entraînements et le thème de chaque semaine.",
         tabs: [
+          { href: "/admin/coaching/calendrier", label: "Calendrier" },
           { href: "/admin/pratiques", label: "À préparer" },
           { href: "/admin/coaching/historique", label: "Historique" },
           { href: "/admin/coaching/plan", label: "Plan de l'année", adminOnly: true },
