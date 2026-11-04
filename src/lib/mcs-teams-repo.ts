@@ -122,7 +122,7 @@ export async function getSlotConflicts<T extends SlotForConflict & { id: string 
   const out = new Map<string, { team: string; event: McsEventLite }>();
   if (!slots.length) return out;
   const [{ data: teams }, events] = await Promise.all([
-    db().from("mcs_teams").select("id, name, birth_years").eq("club_id", CLUB_ID).eq("active", true),
+    db().from("mcs_teams").select("id, name, birth_years, gender").eq("club_id", CLUB_ID).eq("active", true),
     getUpcomingEvents().catch(() => [] as McsEvent[])
   ]);
   if (!teams?.length || !events.length) return out;

@@ -44,6 +44,10 @@ describe("MonClubSportif : équipes, adversaires et conflits", () => {
     expect(slotConflict(slot, teams, events)?.team).toBe("Valkyria 2016");
     expect(slotConflict({ ...slot, birth_year_min: 2013, birth_year_max: 2014 }, teams, events)).toBeNull();
     expect(slotConflict({ ...slot, birth_year_min: null, birth_year_max: null }, teams, events)).toBeNull();
+    // Une plage pour filles n'est pas bloquée par une équipe de garçons du même âge.
+    const boys = [{ id: "a", name: "Intensif garçons 2016", birth_years: [2016], gender: "garcons" }];
+    expect(slotConflict({ ...slot, allowed_gender: "filles" }, boys, events)).toBeNull();
+    expect(slotConflict({ ...slot, allowed_gender: "garcons" }, boys, events)?.team).toBe("Intensif garçons 2016");
   });
 
   it("comprend les années écrites librement", () => {

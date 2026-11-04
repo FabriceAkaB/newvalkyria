@@ -54,6 +54,8 @@ export function overlaps(a: { date: string; start: string | null; end: string | 
 }
 
 export interface SlotForConflict {
+  /** « filles », « garcons » ou « tous » : une plage filles n'est jamais bloquée par une équipe de garçons. */
+  allowed_gender?: string | null;
   slot_date: string;
   start_time: string | null;
   end_time: string | null;
@@ -72,12 +74,14 @@ export function slotYears(s: SlotForConflict): ((y: number) => boolean) | null {
 /** Le premier événement MCS d'une équipe du même âge qui empêche de vendre la plage, ou null. */
 export function slotConflict(
   slot: SlotForConflict,
-  teams: { id: string; name: string; birth_years: number[] }[],
+  teams: { id: string; name: string; birth_years: number[]; gender?: string | null }[],
   events: (McsEventLite & { team_id: string })[]
 ): { team: string; event: McsEventLite } | null {
   const fits = slotYears(slot);
   if (!fits) return null;
-  const concerned = teams.filter((t) => t.birth_years.some(fits));
+  const g = slot.allowed_gender;
+  const sameGender = (t: { gender?: string | null }) => !g || g === "tous" || !t.gender || t.gender === "mixte" || t.gender === g;
+  const concerned = teams.filter((t) => sameGender(t) && t.birth_years.some(fits));
   for (const t of concerned) {
     const hit = events.find((e) => e.team_id === t.id && overlaps({ date: slot.slot_date, start: slot.start_time, end: slot.end_time }, { date: e.date, start: e.start, end: e.end }));
     if (hit) return { team: t.name, event: hit };
