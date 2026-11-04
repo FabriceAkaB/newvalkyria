@@ -147,7 +147,7 @@ export default async function AdminTodayPage({ searchParams }: { searchParams: P
                 {offset === 0 ? "Ma semaine" : `Semaine du ${dayOf(days[0]).getUTCDate()} ${MONTHS[dayOf(days[0]).getUTCMonth()]}`}
               </h2>
               <span style={{ display: "inline-flex", gap: 8 }}>
-                <Link href={`/admin/aujourdhui?semaine=${offset - 1}`} className="admin-btn-ghost" style={{ padding: "6px 12px", textDecoration: "none" }}>← Semaine d'avant</Link>
+                <Link href={`/admin/aujourdhui?semaine=${offset - 1}`} className="admin-btn-ghost" style={{ padding: "6px 12px", textDecoration: "none" }}>← Semaine d’avant</Link>
                 {offset !== 0 ? <Link href="/admin/aujourdhui" className="admin-btn-ghost" style={{ padding: "6px 12px", textDecoration: "none" }}>Cette semaine</Link> : null}
                 <Link href={`/admin/aujourdhui?semaine=${offset + 1}`} className="admin-btn-ghost" style={{ padding: "6px 12px", textDecoration: "none" }}>Semaine suivante →</Link>
               </span>
