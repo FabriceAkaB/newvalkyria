@@ -253,6 +253,7 @@ export class McsSession {
     return true;
   }
 
+  /** Pages 1 à `pages` de la grille (page 1 = les derniers événements passés, 2 = le bloc en cours, 3 = la suite). */
   async presences(team: number, season: number, pages = 3): Promise<PresenceGrid> {
     const grid: PresenceGrid = { events: [], rows: [] };
     for (let p = 1; p <= pages; p++) {

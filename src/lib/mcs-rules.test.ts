@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_MCS_RULES, dueReminder, normalizeRules, reminderMoments, sameMemberName, teamsFor, yearsOf, type TeamTarget } from "@/lib/mcs-rules";
+import { attendanceFromMcs, DEFAULT_MCS_RULES, dueReminder, normalizeRules, reminderMoments, sameMemberName, teamsFor, yearsOf, type TeamTarget } from "@/lib/mcs-rules";
 
 const H = 3_600_000;
 const team = (p: Partial<TeamTarget>): TeamTarget => ({ id: "t", name: "T", kind: "pratique", birth_years: [], slot_ids: [], program_ids: [], session_program_slugs: [], mcs_team_id: 1, mcs_season_id: 2, ...p });
@@ -61,5 +61,14 @@ describe("règles MonClubSportif", () => {
     expect(sameMemberName("ELOÏSE  cousineau", "Éloïse", "Cousineau")).toBe(true);
     expect(sameMemberName("Emma Gracioppo", "Emma", "Dorismond Giroux")).toBe(false);
     expect(sameMemberName("Mila Dorothy", "Lyvia", "Dorothy")).toBe(false);
+  });
+
+  it("une présence MonClubSportif devient une présence du site, sauf sans réponse ou incertaine", () => {
+    expect(attendanceFromMcs("present")).toBe("present");
+    expect(attendanceFromMcs("late")).toBe("late");
+    expect(attendanceFromMcs("absent")).toBe("absent");
+    expect(attendanceFromMcs("uncertain")).toBeNull();
+    expect(attendanceFromMcs("unknown")).toBeNull();
+    expect(attendanceFromMcs(undefined)).toBeNull();
   });
 });

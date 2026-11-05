@@ -3,7 +3,7 @@ import { CLUB, CLUB_ID } from "@/lib/club";
 import { env } from "@/lib/env";
 import { McsRobotError, McsSession, type PresenceGrid } from "@/lib/mcs-robot";
 import { getRobotCredentials } from "@/lib/mcs-robot-config";
-import { dueReminder, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type TeamTarget } from "@/lib/mcs-rules";
+import { attendanceFromMcs, dueReminder, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type TeamTarget } from "@/lib/mcs-rules";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { MCS_BASE } from "@/lib/mcs-site-map";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
@@ -26,6 +26,8 @@ const todayLocal = () => new Date().toLocaleDateString("en-CA", { timeZone: TZ }
 
 export interface ExpectedPlayer {
   key: string;
+  /** Inscription de saison (pour verser ses présences dans le site) ; null pour les programmes à dates fixes. */
+  registrationId: string | null;
   firstName: string;
   lastName: string;
   gender: "female" | "male";
@@ -66,7 +68,7 @@ export async function loadExpectedPlayers(teams?: TeamTarget[]): Promise<Expecte
   const catLabel = new Map(((cats ?? []) as any[]).map((c) => [`${c.season_id}|${c.id}`, c.label as string]));
   const photo = new Map(((players ?? []) as any[]).map((p) => [personKey(p.first_name, p.last_name), p.photo_url as string]));
   const out = new Map<string, ExpectedPlayer>();
-  const add = (p: Omit<ExpectedPlayer, "key" | "photoUrl" | "teams">, targets: TeamTarget[]) => {
+  const add = (p: Omit<ExpectedPlayer, "key" | "photoUrl" | "teams" | "registrationId"> & { registrationId?: string | null }, targets: TeamTarget[]) => {
     const key = personKey(p.firstName, p.lastName);
     if (!key || !targets.length) return;
     const prev = out.get(key);
@@ -74,13 +76,13 @@ export async function loadExpectedPlayers(teams?: TeamTarget[]): Promise<Expecte
       for (const t of targets) if (!prev.teams.some((x) => x.id === t.id)) prev.teams.push(t);
       return;
     }
-    out.set(key, { ...p, key, photoUrl: photo.get(key) ?? null, teams: [...targets] });
+    out.set(key, { ...p, registrationId: p.registrationId ?? null, key, photoUrl: photo.get(key) ?? null, teams: [...targets] });
   };
   for (const r of (regs ?? []) as any[]) {
     if (season?.id && r.season_id !== season.id) continue;
     const years = yearsOf(catLabel.get(`${r.season_id}|${r.category_id}`) ?? r.category_id);
     add(
-      { firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: "female", birthYear: r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : years.length === 1 ? years[0] : null, parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
+      { registrationId: r.id, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: "female", birthYear: r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : years.length === 1 ? years[0] : null, parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
       teamsFor({ slotId: r.time_slot_template_id, programId: r.program_id, years }, list)
     );
   }
@@ -317,3 +319,84 @@ export async function sendPresenceReminders(now = Date.now(), rules?: McsRules):
 }
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+
+/* ── Présences : MonClubSportif → site (jeunes et entraîneurs) ─────────── */
+
+const dayIso = (ms: number) => new Date(ms).toLocaleDateString("en-CA", { timeZone: TZ });
+const hm = (ms: number) => new Date(ms).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: TZ });
+
+/** L'activité du site pour un événement MCS passé : même jour, même heure (± 15 min), hors activités de JP ;
+ *  créée au besoin (même règle que le sondage de fin) pour que la présence ait où aller. */
+async function activityFor(date: string, start: string, end: string | null, location: string, group: string): Promise<string> {
+  const { data } = await db().from("coach_activities").select("id, start_time, organization").eq("activity_date", date);
+  const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const hit = ((data ?? []) as any[]).find((a) => !a.organization && Math.abs(toMin(String(a.start_time)) - toMin(start)) <= 15);
+  if (hit) return hit.id;
+  const { createActivityFor } = await import("@/lib/practices-repo");
+  return createActivityFor({ date, start, end, location, group });
+}
+
+/** Chaque soir : les présences des événements passés (7 derniers jours) lues dans MonClubSportif deviennent les
+ *  présences du site (fiche de la joueuse, bulletin, rapports), et la présence de chaque entraîneur confirme son
+ *  assignation pour la paie (« MonClubSportif »). Rien n'est écrasé quand la famille n'a pas répondu. */
+export async function syncMcsAttendance(opts: { days?: number; now?: number } = {}): Promise<{ players: number; coaches: number; unmatched: string[]; skipped?: string }> {
+  const rules = await getMcsRules();
+  if (!rules.robotActive) return { players: 0, coaches: 0, unmatched: [], skipped: "Robot pas encore activé (mode assistant)." };
+  const session = await openRobotSession();
+  if (!session) return { players: 0, coaches: 0, unmatched: [], skipped: "Compte robot pas encore enregistré." };
+  const now = opts.now ?? Date.now();
+  const since = now - (opts.days ?? 7) * 86_400_000;
+  const teams = (await loadTeamTargets()).filter((t) => t.mcs_team_id && t.mcs_season_id);
+  const players = await loadExpectedPlayers(teams);
+  const [{ data: coaches }, { data: events }] = await Promise.all([
+    db().from("coaches").select("id, first_name, last_name").eq("status", "active"),
+    db().from("mcs_events").select("team_id, key, event_date, location, type").gte("event_date", dayIso(since)).lte("event_date", dayIso(now))
+  ]);
+  const byId = new Map<number, any>();
+  for (const e of (events ?? []) as any[]) {
+    const id = mcsIdOf(e.key)?.id;
+    const [, s, en] = String(e.key).split("|");
+    if (id) byId.set(id, { ...e, start: Number(s), end: Number(en) || null });
+  }
+  const { setPlayerAttendance } = await import("@/lib/coach-portal-repo");
+  let nPlayers = 0;
+  let nCoaches = 0;
+  const unmatched = new Set<string>();
+  for (const t of teams) {
+    let grid: PresenceGrid;
+    try {
+      grid = await session.presences(t.mcs_team_id!, t.mcs_season_id!, 2);
+    } catch {
+      continue;
+    }
+    for (const ev of grid.events) {
+      const e = byId.get(ev.id);
+      if (!e || !e.start || e.start > now || e.start < since || e.type === "Match" || e.type === "Tournoi") continue;
+      const date = String(e.event_date).slice(0, 10);
+      const activityId = await activityFor(date, hm(e.start), e.end ? hm(e.end) : null, e.location ?? "", t.name);
+      for (const row of grid.rows) {
+        const status = attendanceFromMcs(row.states[ev.id]);
+        if (!status) continue;
+        const coach = ((coaches ?? []) as any[]).find((c) => sameMemberName(row.name, c.first_name, c.last_name));
+        if (coach) {
+          const { data: asg } = await db().from("coach_assignments").select("id, confirmed").eq("activity_id", activityId).eq("coach_id", coach.id).maybeSingle();
+          const patch: Record<string, unknown> = { status: status === "absent" ? "absent" : "present", updated_at: new Date().toISOString() };
+          if (status !== "absent" && !asg?.confirmed) Object.assign(patch, { confirmed: true, confirmed_at: new Date().toISOString(), confirmed_by: "MonClubSportif" });
+          if (asg) await db().from("coach_assignments").update(patch).eq("id", asg.id);
+          else if (status !== "absent") await db().from("coach_assignments").insert({ activity_id: activityId, coach_id: coach.id, arrival_time: hm(e.start), departure_time: e.end ? hm(e.end) : null, ...patch });
+          nCoaches++;
+          continue;
+        }
+        const p = players.find((x) => sameMemberName(row.name, x.firstName, x.lastName));
+        if (!p?.registrationId) {
+          unmatched.add(row.name);
+          continue;
+        }
+        await setPlayerAttendance(activityId, p.registrationId, status);
+        nPlayers++;
+      }
+    }
+  }
+  if (nPlayers || nCoaches) await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_attendance_sync", entityType: "activity_player_attendance", entityId: CLUB_ID, entityLabel: `${nPlayers} présences de jeunes, ${nCoaches} d'entraîneurs`, after: { unmatched: [...unmatched] } }).catch(() => null);
+  return { players: nPlayers, coaches: nCoaches, unmatched: [...unmatched] };
+}

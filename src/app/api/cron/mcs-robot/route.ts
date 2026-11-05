@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
-import { runMcsRobot, sendPresenceReminders } from "@/lib/mcs-robot-runner";
+import { runMcsRobot, sendPresenceReminders, syncMcsAttendance } from "@/lib/mcs-robot-runner";
 import { syncStaleTeams } from "@/lib/mcs-teams-repo";
 import { sendDueEmails } from "@/lib/scheduled-emails";
 
@@ -21,5 +21,8 @@ export async function GET(request: Request) {
   const synced = await syncStaleTeams(50, 8000).catch(() => 0);
   const robot = await runMcsRobot({ reason: "cron horaire" }).catch((e) => ({ ok: false, error: e instanceof Error ? e.message : "erreur" }));
   const reminders = await sendPresenceReminders().catch((e) => ({ sent: 0, error: e instanceof Error ? e.message : "erreur" }));
-  return NextResponse.json({ ok: true, emails, synced, robot, reminders });
+  // Le soir (22 h et 23 h) : les présences de la journée, jeunes et entraîneurs, entrent dans le site (bulletin, paie).
+  const hour = Number(new Date().toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "America/Toronto" }));
+  const attendance = hour >= 22 || new URL(request.url).searchParams.has("presences") ? await syncMcsAttendance().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
+  return NextResponse.json({ ok: true, emails, synced, robot, reminders, attendance });
 }

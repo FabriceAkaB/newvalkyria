@@ -152,3 +152,8 @@ export function sameMemberName(mcsName: string, first: string, last: string): bo
   if (a.join(" ") === [...f, ...l].join(" ")) return true;
   return a[0] === f[0] && l.some((w) => a.slice(1).includes(w));
 }
+
+/** État d'une présence MonClubSportif → statut de présence du site (rien si la famille n'a pas répondu ou hésite). */
+export function attendanceFromMcs(state: string | undefined): "present" | "late" | "absent" | null {
+  return state === "present" ? "present" : state === "late" ? "late" : state === "absent" ? "absent" : null;
+}

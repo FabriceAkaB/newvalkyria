@@ -13,7 +13,13 @@ export const MCS_PATHS = {
   rosterAdd: (team: number, season: number) => `/team/${team}/seasons/${season}/roster/add`,
   member: (team: number, season: number, member: number) => `/team/${team}/seasons/${season}/roster/${member}`,
   memberModify: (team: number, season: number, member: number) => `/team/${team}/seasons/${season}/roster/${member}/modify`,
-  presences: (team: number, season: number, page = 1) => `/team/${team}/seasons/${season}/presences${page > 1 ? `?page=${page}` : ""}`,
+  /** Par blocs de 5 événements ; sans « page », MCS ouvre le bloc en cours (page 2) : la page 1 = les derniers passés. */
+  presences: (team: number, season: number, page: number) => `/team/${team}/seasons/${season}/presences?page=${page}`,
+  eventCreate: (team: number, season: number) => `/team/${team}/seasons/${season}/calendar/events/create`,
+  eventEdit: (team: number, season: number, id: number) => `/team/${team}/seasons/${season}/calendar/events/${id}/edit`,
+  /** Suppression : POST « _method=delete » + jeton de la balise meta csrf-token, en-tête X-Requested-With (sinon refusé). */
+  event: (team: number, season: number, id: number) => `/team/${team}/seasons/${season}/calendar/events/${id}`,
+  eventCancel: (team: number, season: number, id: number) => `/team/${team}/seasons/${season}/calendar/events/${id}/cancel`,
   settings: (team: number) => `/team/${team}/settings`,
   teamUpdate: (team: number) => `/team/${team}`,
   calendar: (team: number, season: number) => `/team/${team}/seasons/${season}/calendar`,
