@@ -19,6 +19,7 @@ const norm = (s: unknown) =>
     .replace(/\s+/g, " ")
     .trim();
 
+export const photoKey = (first: unknown, last: unknown) => [first, last].map(norm).join("|");
 export const memberKey = (r: (string | null)[]) => [r[0], r[1], r[4], r[5]].map(norm).join("|");
 export const memberLabel = (r: (string | null)[]) => `${r[0] ?? ""} ${r[1] ?? ""} · ${r[5] ?? r[4] ?? ""}`.trim();
 export const eventKey = (r: (string | null)[]) => [r[1], r[2], r[6], r[11]].map(norm).join("|");
@@ -30,6 +31,8 @@ export interface McsStatus {
   events: (string | null)[][];
   newEvents: (string | null)[][];
   toRemove: { key: string; label: string }[];
+  /** Joueuses inscrites dont on a la photo et qui ne l'ont pas encore dans MonClubSportif (la bonne photo au bon jeune). */
+  photosToSend: { key: string; label: string; photoUrl: string }[];
   syncedMembers: number;
   syncedEvents: number;
   lastSync: string | null;
@@ -37,10 +40,11 @@ export interface McsStatus {
 
 export async function getMcsStatus(): Promise<McsStatus> {
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
-  const [members, allEvents, { data: synced }] = await Promise.all([
+  const [members, allEvents, { data: synced }, { data: photos }] = await Promise.all([
     getAllMembersForExport(),
     getAllEventsForExport(),
-    db().from("mcs_sync_items").select("kind, key, label, synced_at, removed_at").eq("club_id", CLUB_ID)
+    db().from("mcs_sync_items").select("kind, key, label, synced_at, removed_at").eq("club_id", CLUB_ID),
+    db().from("players").select("first_name, last_name, photo_url").not("photo_url", "is", null)
   ]);
   const events = allEvents.filter((r) => String(r[1] ?? "") >= today);
   const done = (kind: string) => new Set((synced ?? []).filter((s: any) => s.kind === kind).map((s: any) => s.key));
@@ -51,12 +55,20 @@ export async function getMcsStatus(): Promise<McsStatus> {
     .filter((s: any) => s.kind === "membre" && !s.removed_at && !currentMemberKeys.has(s.key))
     .map((s: any) => ({ key: s.key, label: s.label ?? s.key }));
   const dates = (synced ?? []).map((s: any) => String(s.synced_at)).sort();
+  // Seulement les joueuses encore inscrites (même prénom et nom qu'un membre de la liste MonClubSportif).
+  const inscribed = new Set(members.map((r) => photoKey(r[0], r[1])));
+  const sentPhotos = done("photo");
+  const photosToSend = ((photos ?? []) as any[])
+    .map((p) => ({ key: photoKey(p.first_name, p.last_name), label: `${p.first_name ?? ""} ${p.last_name ?? ""}`.replace(/\s+/g, " ").trim(), photoUrl: p.photo_url as string }))
+    .filter((p, i, a) => inscribed.has(p.key) && !sentPhotos.has(p.key) && a.findIndex((x) => x.key === p.key) === i)
+    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
   return {
     members,
     newMembers: members.filter((r) => !m.has(memberKey(r))),
     events,
     newEvents: events.filter((r) => !e.has(eventKey(r))),
     toRemove,
+    photosToSend,
     syncedMembers: m.size,
     syncedEvents: e.size,
     lastSync: dates.at(-1) ?? null
@@ -76,5 +88,11 @@ export async function markImported(kind: "membre" | "evenement"): Promise<number
 
 export async function markRemoved(key: string): Promise<void> {
   const { error } = await db().from("mcs_sync_items").update({ removed_at: new Date().toISOString() }).eq("club_id", CLUB_ID).eq("kind", "membre").eq("key", key);
+  if (error) throw error;
+}
+
+/** La photo de cette joueuse est maintenant dans son profil MonClubSportif. */
+export async function markPhotoSent(key: string, label: string): Promise<void> {
+  const { error } = await db().from("mcs_sync_items").upsert({ club_id: CLUB_ID, kind: "photo", key, label }, { onConflict: "club_id,kind,key", ignoreDuplicates: true });
   if (error) throw error;
 }

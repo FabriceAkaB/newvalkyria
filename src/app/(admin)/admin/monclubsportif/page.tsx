@@ -18,7 +18,7 @@ export default async function McsPage() {
       <div className="admin-content">
         <div className="admin-section mda">
           <header>
-            <p className="mda-eyebrow">Tâche P8.4.06 · automatisation AU19 · plus tard l'agent MonClubSportif (A12)</p>
+            <p className="mda-eyebrow">Tâche P8.4.06 · automatisation AU19 · plus tard l&apos;agent MonClubSportif (A12)</p>
             <h1 className="mda-h1">{first ? "Point de départ à fixer" : total ? `${total} chose${total > 1 ? "s" : ""} à faire dans MonClubSportif` : "MonClubSportif est à jour"}</h1>
             <p className="mda-lead">
               Le site prépare un fichier avec seulement les nouveautés depuis la dernière importation. Importez-le dans MonClubSportif (Membres → Importer, Calendrier → Importer), puis touchez « Importé ». Les joueuses qui ne sont plus inscrites apparaissent à retirer.
@@ -115,12 +115,33 @@ export default async function McsPage() {
             </section>
           )}
 
+          {s.photosToSend.length > 0 && (
+            <section className="mda-card-flush">
+              <div className="mda-card-head">
+                <h2 className="mda-h2">Photos à mettre dans MonClubSportif · {s.photosToSend.length}</h2>
+                <p className="mda-sub" style={{ margin: 0 }}>La bonne photo sur le profil du bon jeune (fait par le robot A12, ou à la main). Profil interne de l&apos;équipe seulement, jamais publié.</p>
+              </div>
+              <ul className="mda-tasks">
+                {s.photosToSend.map((p) => (
+                  <li key={p.key} className="mda-task" style={{ justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.photoUrl} alt="" width={40} height={40} style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 8 }} />
+                      <span className="mda-task-title">{p.label}</span>
+                    </span>
+                    <McsButton body={{ action: "photo", key: p.key, label: p.label }} label="Photo mise ✓" />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section className="mda-card">
-            <h2 className="mda-h2">Vers l'autonomie complète (agent A12)</h2>
+            <h2 className="mda-h2">Vers l&apos;autonomie complète (agent A12)</h2>
             <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: "var(--adm-text-2)", fontSize: "0.88rem", lineHeight: 1.6 }}>
-              <li>Aujourd'hui : le site prépare les fichiers des nouveautés ; l'importation dans MonClubSportif prend une minute.</li>
-              <li>Étape suivante : un agent Claude, dans votre navigateur Chrome où MonClubSportif est déjà ouvert, télécharge ce fichier et fait l'importation à votre place, une fois par jour, et note ce qu'il a fait.</li>
-              <li>Si MonClubSportif offre une API ou un lien de calendrier (iCal), l'agent l'utilise à la place : plus besoin du navigateur.</li>
+              <li>Aujourd&apos;hui : le site prépare les fichiers des nouveautés ; l&apos;importation dans MonClubSportif prend une minute.</li>
+              <li>Étape suivante : un agent Claude, dans votre navigateur Chrome où MonClubSportif est déjà ouvert, télécharge ce fichier et fait l&apos;importation à votre place, une fois par jour, et note ce qu&apos;il a fait.</li>
+              <li>Si MonClubSportif offre une API ou un lien de calendrier (iCal), l&apos;agent l&apos;utilise à la place : plus besoin du navigateur.</li>
             </ul>
           </section>
         </div>

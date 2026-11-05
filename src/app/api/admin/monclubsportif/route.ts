@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
-import { getMcsStatus, markImported, markRemoved } from "@/lib/mcs-sync";
+import { getMcsStatus, markImported, markPhotoSent, markRemoved } from "@/lib/mcs-sync";
 import { EVENT_EXPORT_HEADER, MEMBER_EXPORT_HEADER } from "@/lib/monclubsportif-export";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,8 @@ export async function GET(request: Request) {
 
 const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("imported"), kind: z.enum(["membre", "evenement"]) }),
-  z.object({ action: z.literal("removed"), key: z.string().min(3).max(400) })
+  z.object({ action: z.literal("removed"), key: z.string().min(3).max(400) }),
+  z.object({ action: z.literal("photo"), key: z.string().min(3).max(400), label: z.string().max(200) })
 ]);
 
 export async function POST(request: Request) {
@@ -39,6 +40,10 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return jsonError("Demande invalide");
   if (parsed.data.action === "imported") return NextResponse.json({ ok: true, count: await markImported(parsed.data.kind) });
+  if (parsed.data.action === "photo") {
+    await markPhotoSent(parsed.data.key, parsed.data.label);
+    return NextResponse.json({ ok: true });
+  }
   await markRemoved(parsed.data.key);
   return NextResponse.json({ ok: true });
 }
