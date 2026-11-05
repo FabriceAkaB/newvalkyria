@@ -209,7 +209,10 @@ export interface McsFeedRow {
 
 /** Titre MCS lisible : sans le préfixe « Event Équipe - » / « Game Équipe - », avec l'équipe devant. */
 export function mcsFeedTitle(title: string | null, team: string): string {
-  const clean = (title ?? "").replace(/^(event|game|match)\s+.+?\s+-\s+/i, "").trim() || "Activité";
+  const raw = (title ?? "").trim();
+  const ev = raw.match(/^(?:event|[ée]v[ée]nement)\s+.+\s+-\s+(.+)$/i);
+  const game = raw.match(/^\S+\s+.+?\s+vs\.?\s+(.+)$/i);
+  const clean = (ev ? ev[1] : game ? `Match c. ${game[1]}` : raw).trim() || "Activité";
   return /solo/i.test(team) || clean.toLowerCase().includes(team.toLowerCase()) ? clean : `${team} · ${clean}`;
 }
 

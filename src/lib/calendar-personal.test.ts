@@ -8,6 +8,9 @@ describe("agenda personnel de JP", () => {
   it("nettoie le titre MCS et met l'équipe devant", () => {
     expect(mcsFeedTitle("Event Vendredi Solo - Pratique finition (45 min) – Nelly Piché", "Vendredi Solo")).toBe("Pratique finition (45 min) – Nelly Piché");
     expect(mcsFeedTitle("Event Équipe 2015 AV - Pratique sur synthétique", "Équipe 2015 AV")).toBe("Équipe 2015 AV · Pratique sur synthétique");
+    expect(mcsFeedTitle("Event Programme intensif  Garçons - 2014 - Pratique Programme Intensif", "Programme intensif Garçons 2014")).toBe("Programme intensif Garçons 2014 · Pratique Programme Intensif");
+    expect(mcsFeedTitle("Événement Lundi 2014-2015 - Pratique en gym", "Lundi 2014-2015")).toBe("Lundi 2014-2015 · Pratique en gym");
+    expect(mcsFeedTitle("Pre-season Équipe 2016-2017 AV vs. À déterminer (équipe extérieure)", "Équipe 2016-2017 AV")).toBe("Équipe 2016-2017 AV · Match c. À déterminer (équipe extérieure)");
   });
 
   it("garde tout MCS, ajoute le site sans doublon, sans les essais", () => {
