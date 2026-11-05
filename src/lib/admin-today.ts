@@ -319,12 +319,17 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
 
   // ── Robot MonClubSportif : ce qui demande JP (compte, activation, erreur récente) ──
   if (isAdmin) {
-    const [robot, rules, { data: lastRuns }] = await Promise.all([
+    const [robot, rules, { data: lastRuns }, { count: lateEmails }, { count: failedEmails }] = await Promise.all([
       getRobotStatus().catch(() => null),
       getMcsRules().catch(() => null),
-      db().from("audit_log").select("created_at, after").eq("action", "mcs_robot_run").gte("created_at", new Date(now - 24 * 3_600_000).toISOString()).order("created_at", { ascending: false }).limit(5)
+      db().from("audit_log").select("created_at, after").eq("action", "mcs_robot_run").gte("created_at", new Date(now - 24 * 3_600_000).toISOString()).order("created_at", { ascending: false }).limit(5),
+      // Courriels programmés encore en attente plus d'une heure après leur heure : l'envoi automatique n'a pas roulé.
+      db().from("scheduled_emails").select("id", { count: "exact", head: true }).eq("status", "en_attente").lt("send_at", new Date(now - 3_600_000).toISOString()),
+      db().from("scheduled_emails").select("id", { count: "exact", head: true }).eq("status", "echec").gte("send_at", new Date(now - 3 * 24 * 3_600_000).toISOString())
     ]);
     const errors = ((lastRuns ?? []) as any[]).flatMap((r) => (r.after?.errors ?? []) as string[]);
+    if (lateEmails) errors.push(`${lateEmails} courriel(s) programmé(s) pas encore partis plus d'une heure après l'heure prévue`);
+    if (failedEmails) errors.push(`${failedEmails} courriel(s) programmé(s) en échec`);
     const items = [
       ...(!robot ? [{ title: "Enregistrer le compte robot", detail: "Accepte l'invitation reçue à info+robot@, puis entre son courriel et son mot de passe (chiffré).", href: "/admin/monclubsportif/robot" }] : []),
       ...(robot && rules && !rules.robotActive ? [{ title: "Voir ce que le robot ferait, puis l'activer", detail: "Tant qu'il n'est pas activé, rien ne se fait tout seul dans MonClubSportif.", href: "/admin/monclubsportif/robot" }] : []),
