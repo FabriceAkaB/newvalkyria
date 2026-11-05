@@ -81,6 +81,11 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
   (réseau : Bash sans sandbox).
 - **Serveur de dev** : `nohup node node_modules/next/dist/bin/next dev > /tmp/nv-dev.log 2>&1 &` (le preview intégré casse Turbopack).
   Si une route répond succès sans effet en base après une édition de `src/lib`, redémarrer le serveur (cache HMR obsolète).
+- **Tâches automatiques (cron)** : une seule liste, `src/lib/cron-jobs.ts` (doit égaler `vercel.json`, testé). Chaque route
+  `api/cron/*` commence par `cronGate(request, "<nom>")` (`cron-gate.ts`) : trace dans `cron_runs`, secours Supabase
+  (pg_cron + pg_net, 20 min après Vercel, ne refait rien si Vercel a roulé ; migration `20261135_cron_secours.sql` à
+  regénérer pour une nouvelle tâche), alerte dans Aujourd'hui si une tâche n'a pas roulé. Une automatisation n'est « faite »
+  qu'après une vraie trace en production.
 - Liens dans les courriels : toujours `https://www.newvalkyria.com/…` (`env.publicSiteUrl`), jamais localhost.
 
 ## Règles métier
