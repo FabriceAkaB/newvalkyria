@@ -54,6 +54,8 @@ export interface CalendarEvent {
   terrainId: string | null;
   category: string | null;
   coachNames: string | null;
+  /** Activité de JP hors académie (Saint-Gabriel, FC Elevate…), sinon null. */
+  organization?: string | null;
 }
 
 /** Calendrier unifié — combine les activités entraîneurs (pratiques, matchs,
@@ -114,7 +116,8 @@ export async function getUnifiedCalendarEvents(from: string, to: string): Promis
     location: a.location,
     terrainId: a.terrain_id,
     category: a.category,
-    coachNames: coachNamesByActivity.get(a.id) ?? null
+    coachNames: coachNamesByActivity.get(a.id) ?? null,
+    organization: (a as { organization?: string | null }).organization ?? null
   }));
 
   const regTrials = (regTrialsRes.data ?? []) as any[];
