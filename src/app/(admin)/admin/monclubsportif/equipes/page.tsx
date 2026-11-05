@@ -1,9 +1,11 @@
+import { McsRobotPanel } from "@/components/mcs-robot-panel";
 import { McsRobotForm, McsTeamActions, McsTeamForm } from "@/components/mcs-teams-admin";
 import { Pill } from "@/components/mandalart/ui";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getSlotsWithAvailability } from "@/lib/match-slots-repo";
 import { needsOpponent } from "@/lib/mcs-teams";
 import { getRobotStatus } from "@/lib/mcs-robot-config";
+import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { getOpponentsToSync, getUpcomingEvents, listTeams, syncStaleTeams } from "@/lib/mcs-teams-repo";
 
 export const metadata = { title: "Équipes MonClubSportif — Admin", robots: "noindex" };
@@ -21,7 +23,7 @@ const ago = (iso: string | null) => {
 export default async function McsTeamsPage() {
   await requireAdmin({ roles: ["admin"] });
   await syncStaleTeams(15, 6_000).catch(() => 0);
-  const [teams, events, slots, robot, toName] = await Promise.all([listTeams(), getUpcomingEvents().catch(() => []), getSlotsWithAvailability().catch(() => []), getRobotStatus().catch(() => null), getOpponentsToSync().catch(() => [])]);
+  const [teams, events, slots, robot, toName, rules] = await Promise.all([listTeams(), getUpcomingEvents().catch(() => []), getSlotsWithAvailability().catch(() => []), getRobotStatus().catch(() => null), getOpponentsToSync().catch(() => []), getMcsRules()]);
   const teamName = new Map(teams.map((t) => [t.id, t.name]));
   const matches = events.filter((e) => e.type === "Match" || e.type === "Tournoi");
   const toFind = matches.filter(needsOpponent);
@@ -115,6 +117,16 @@ export default async function McsTeamsPage() {
                       <span>{t.events_count} événement{t.events_count > 1 ? "s" : ""}</span>
                       <span>{own.length} match{own.length > 1 ? "s" : ""} ({own.filter(needsOpponent).length} sans adversaire)</span>
                     </div>
+                    <div className="mda-task-meta">
+                      <span>{t.mcs_team_id ? `MonClubSportif n° ${t.mcs_team_id}` : "Numéro MonClubSportif manquant : le robot l'ignore"}</span>
+                      <span>
+                        {t.kind === "match"
+                          ? `Équipe de matchs : ${(t.program_ids ?? []).join(", ") || "aucun programme relié"}`
+                          : t.kind === "programme"
+                            ? `Programme : ${[...(t.session_program_slugs ?? []), ...(t.program_ids ?? [])].join(", ") || "aucun programme relié"}`
+                            : `Groupe de pratique : ${(t.slot_ids ?? []).length} plage${(t.slot_ids ?? []).length > 1 ? "s" : ""} horaire${(t.slot_ids ?? []).length > 1 ? "s" : ""}`}
+                      </span>
+                    </div>
                     {t.last_error && <p style={{ margin: 0, color: "var(--adm-bad)", fontSize: "0.85rem" }}>{t.last_error}</p>}
                     <McsTeamActions team={t} />
                   </li>
@@ -122,6 +134,12 @@ export default async function McsTeamsPage() {
               })}
             </ul>
           )}
+        </section>
+
+        <section className="mda-card">
+          <h2 className="mda-h2" style={{ marginBottom: 4 }}>Robot MonClubSportif : les règles du club</h2>
+          <p className="mda-sub" style={{ marginTop: 0 }}>Ce qui se fait tout seul dès qu&apos;une joueuse paie, chaque heure, et les rappels de présence. Enregistré pour ce club : un autre club aura ses propres règles.</p>
+          <McsRobotPanel initial={rules} hasAccount={Boolean(robot)} />
         </section>
 
         <section className="mda-card">

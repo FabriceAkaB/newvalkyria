@@ -1,5 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import Stripe from "stripe";
 
 import { programEmailLabel, sendConfirmationEmail, sendMatchSlotsConfirmationEmail, sendPaidRegistrationNotification, sendSponsorshipPaidNotification, sendShopOrderConfirmationEmail, sendTerrainRentalConfirmationEmail } from "@/lib/email";
@@ -34,10 +34,14 @@ import { onPrivateCheckoutExpired, onPrivateRefund, onPrivateRegistrationPaid } 
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { markBookingsPaid, releaseBySession as releaseMatchBySession, toEmailSlots } from "@/lib/match-slots-repo";
+import { runMcsRobot } from "@/lib/mcs-robot-runner";
 import { openPositions } from "@/lib/referees-repo";
 import { closeOtherOffersForSlot, onPartnershipOptionPaid } from "@/lib/partnership-offers";
 import { markRentalPaid, releaseRentalBySession } from "@/lib/terrain-rentals-repo";
 import { getOfferByToken, markOfferPaid } from "@/lib/special-offers";
+
+/** Le robot MonClubSportif tourne après la réponse à Stripe : on lui laisse le temps de finir. */
+export const maxDuration = 120;
 
 export async function POST(request: Request) {
   if (!env.stripeWebhookSecret) {
@@ -68,6 +72,14 @@ export async function POST(request: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const checkoutType = session.metadata?.checkoutType ?? (session.mode === "setup" ? "trial" : "elite");
+
+    // MonClubSportif tout de suite (robot A12) : la joueuse payée entre dans ses équipes (invitation au parent, calendrier,
+    // photo) et l'adversaire qui paie sa plage est écrit sur le match. Lancé après la réponse à Stripe, jamais bloquant.
+    if (["season-registration", "trial-conversion", "special-offer", "season-completion", "sessionprogram", "match-slot"].includes(checkoutType)) {
+      after(async () => {
+        await runMcsRobot({ reason: `paiement ${checkoutType}`, unlock: false }).catch((err) => console.error("MCS robot after payment failed", err));
+      });
+    }
 
     // ── Saison Automne/Hiver 2026 — inscriptions en base de données ──
     if (checkoutType === "season-registration") {
@@ -101,7 +113,7 @@ export async function POST(request: Request) {
       if (registration) {
         try {
           const programName = registration.program_id ? PROGRAMS[registration.program_id as ProgramCode]?.name : undefined;
-          await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name, programName });
+          await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name, programName, withMcs: true });
         } catch (error) {
           console.error("Unable to send season confirmation email", error);
         }
@@ -286,7 +298,7 @@ export async function POST(request: Request) {
           });
           if (registration) {
             const programName = registration.program_id ? PROGRAMS[registration.program_id as ProgramCode]?.name : undefined;
-            await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name, programName }).catch((error) =>
+            await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name, programName, withMcs: true }).catch((error) =>
               console.error("Unable to send trial conversion confirmation", error)
             );
             await notifyPaidRegistration(programName ?? "Saison New Valkyria", registration, session, "Essai converti en inscription");
@@ -369,7 +381,7 @@ export async function POST(request: Request) {
         }
         if (first) {
           const programName = PROGRAMS[offer.registrations[0].programId as ProgramCode]?.name;
-          await sendConfirmationEmail({ to: first.parent_email, parentName: first.parent_name, programName }).catch((error) =>
+          await sendConfirmationEmail({ to: first.parent_email, parentName: first.parent_name, programName, withMcs: true }).catch((error) =>
             console.error("Unable to send special offer confirmation", error)
           );
         }
@@ -479,7 +491,7 @@ export async function POST(request: Request) {
         await enrollInAllDates(registration.id, registration.program_slug as "privilege-valkyria" | "intensif-garcons");
         if (!isPrivateProgram) {
           try {
-            await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name });
+            await sendConfirmationEmail({ to: registration.parent_email, parentName: registration.parent_name, withMcs: true });
           } catch (error) {
             console.error("Unable to send session-program confirmation email", error);
           }

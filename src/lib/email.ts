@@ -8,6 +8,8 @@ interface ConfirmationEmailInput {
   to: string;
   parentName: string;
   programName?: string;
+  /** Le programme a une équipe MonClubSportif : le parent y est invité tout de suite (robot A12). */
+  withMcs?: boolean;
 }
 
 interface TrialEmailInput {
@@ -158,7 +160,11 @@ export async function sendConfirmationEmail(input: ConfirmationEmailInput) {
       <div style="font-family:Arial,sans-serif;line-height:1.5;color:#161419;max-width:600px">
         <h1 style="font-size:22px">Merci ${input.parentName}, votre inscription est confirmée.</h1>
         <p>Nous avons bien reçu votre paiement pour le programme ${input.programName ?? "New Valkyria"}.</p>
-        <p>Notre équipe vous contacte sous 24h pour finaliser la place de votre fille.</p>
+        ${
+          input.withMcs
+            ? `<p><strong>Dans quelques minutes, vous recevrez une invitation de MonClubSportif</strong>, l'application de l'équipe : l'horaire des pratiques et des matchs, les messages de l'entraîneur et la présence de votre enfant. Acceptez-la (pensez à vérifier vos courriels indésirables). Vous pouvez y indiquer ou changer la présence en tout temps ; un rappel vous est envoyé si elle n'est pas indiquée.</p><p>Notre équipe vous écrit si une information manque pour finaliser la place.</p>`
+            : `<p>Notre équipe vous contacte sous 24h pour finaliser la place de votre fille.</p>`
+        }
         <p style="margin-top:24px">New Valkyria<br/>Académie féminine technique</p>
       </div>
     `

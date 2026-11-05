@@ -26,6 +26,13 @@ export interface McsTeam {
   last_sync_at: string | null;
   last_error: string | null;
   events_count: number;
+  /** Lien avec le robot (agent A12) : numéros MonClubSportif et groupes du site qui vont dans cette équipe. */
+  kind?: "pratique" | "match" | "programme";
+  mcs_team_id?: number | null;
+  mcs_season_id?: number | null;
+  slot_ids?: string[];
+  program_ids?: string[];
+  session_program_slugs?: string[];
 }
 
 export interface McsEvent extends McsEventLite {
