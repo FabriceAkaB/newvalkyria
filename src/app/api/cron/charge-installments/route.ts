@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { isAdminRequest } from "@/lib/admin-auth";
+import { cronGate } from "@/lib/cron-gate";
 import { sendInstallmentReceiptEmail, sendInstallmentReminderEmail, sendPaymentPlanFailedEmail } from "@/lib/email";
 import { getInstallmentsNeedingReminder, markInstallmentReminderSent } from "@/lib/private-programs-repo";
-import { env } from "@/lib/env";
-import { jsonError } from "@/lib/http";
 import { getDueInstallments as getDueSeasonInstallments, markInstallmentFailed as markSeasonInstallmentFailed, markInstallmentPaid as markSeasonInstallmentPaid } from "@/lib/season-admin-repo";
 import {
   getDueInstallments as getDueSessionProgramInstallments,
@@ -24,9 +22,8 @@ import { getStripeClient } from "@/lib/stripe";
  *  CRON_SECRET) ; peut aussi être déclenché manuellement par un admin
  *  connecté (ex. pour vérifier/forcer un prélèvement sans attendre le cron). */
 export async function GET(request: Request) {
-  const auth = request.headers.get("authorization");
-  const hasValidCronSecret = env.cronSecret && auth === `Bearer ${env.cronSecret}`;
-  if (!hasValidCronSecret && !(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  const gate = await cronGate(request, "charge-installments");
+  if (!gate.ok) return gate.response;
 
   // Rappel (3 jours avant) pour les 2es versements des programmes privés garçons.
   let reminders = 0;

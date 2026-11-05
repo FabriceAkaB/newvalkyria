@@ -5,6 +5,7 @@ import { STATUS_LABEL, fmtScore } from "@/lib/exercise-bank";
 import { getBank } from "@/lib/exercises-repo";
 import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
+import { cronAlerts, type CronRunRow } from "@/lib/cron-jobs";
 import { getMcsStatus } from "@/lib/mcs-sync";
 import { getRobotStatus } from "@/lib/mcs-robot-config";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
@@ -344,6 +345,26 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         href: "/admin/monclubsportif/robot",
         hrefLabel: "Robot et règles",
         items
+      })
+    );
+  }
+
+  // ── Tâches automatiques (cron) : une tâche qui n'a pas roulé, ou Vercel qui appelle avec un mauvais secret ──
+  if (isAdmin) {
+    const [{ data: runs }, { data: cfg }] = await Promise.all([
+      db().from("cron_runs").select("name, source, ok, ran_at").gte("ran_at", new Date(now - 8 * 24 * 3_600_000).toISOString()).order("ran_at", { ascending: false }).limit(2000),
+      db().from("cron_backup_config").select("created_at").eq("id", 1).maybeSingle()
+    ]);
+    const alerts = cronAlerts((runs ?? []) as CronRunRow[], new Date(now), (cfg?.created_at as string | undefined) ?? null);
+    sections.push(
+      section({
+        key: "taches-automatiques",
+        title: "Tâches automatiques",
+        level: alerts.length ? "rouge" : "info",
+        emptyText: "Toutes les tâches automatiques ont roulé à l'heure (Vercel, avec secours Supabase).",
+        href: "/admin/audit",
+        hrefLabel: "Journal",
+        items: alerts.map((a) => ({ title: a.label, detail: a.detail }))
       })
     );
   }

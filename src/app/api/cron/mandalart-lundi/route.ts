@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { isAdminRequest } from "@/lib/admin-auth";
+import { cronGate } from "@/lib/cron-gate";
 import { CLUB_ID } from "@/lib/club";
 import { OWNER_NOTIFY_EMAIL } from "@/lib/email";
 import { env } from "@/lib/env";
-import { jsonError } from "@/lib/http";
 import { isOpen, monthFocus } from "@/lib/mandalart-core";
 import { formatKpi } from "@/lib/mandalart-kpis";
 import { computeGap } from "@/lib/mandalart-levers";
@@ -30,9 +29,8 @@ const day = (iso: string) => {
  *  et envoie à JP le résumé : niveau, ⭐ faites, retards, 5 priorités, indicateurs qui ont bougé.
  *  Vercel Cron chaque lundi à 11 h UTC (6 h à Montréal l'hiver) ; ?envoyer=0 pour l'instantané seul. */
 export async function GET(request: Request) {
-  const auth = request.headers.get("authorization");
-  const cron = env.cronSecret && auth === `Bearer ${env.cronSecret}`;
-  if (!cron && !(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
+  const gate = await cronGate(request, "mandalart-lundi", { adminRoles: ["admin"] });
+  if (!gate.ok) return gate.response;
   const send = new URL(request.url).searchParams.get("envoyer") !== "0";
 
   const o = await getMandalartOverview();

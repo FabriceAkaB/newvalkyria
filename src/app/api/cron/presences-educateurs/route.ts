@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { isAdminRequest } from "@/lib/admin-auth";
+import { cronGate } from "@/lib/cron-gate";
 import { getPayrollRows, holdDetail, type PayrollRow } from "@/lib/coach-payroll-data";
 import { markPresenceReminded } from "@/lib/coach-portal-repo";
 import { activityEndMs } from "@/lib/coach-report";
 import { getCoaches } from "@/lib/coaches-repo";
 import { env } from "@/lib/env";
-import { jsonError } from "@/lib/http";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
 
 export const dynamic = "force-dynamic";
@@ -18,9 +17,8 @@ const dateFr = (iso: string) => new Date(`${String(iso).slice(0, 10)}T12:00:00`)
  *  dont la présence n'est pas confirmée ou le rapport incomplet = un courriel à l'éducateur (une seule fois par
  *  activité), sans aucune donnée d'enfant. Sans courriel au dossier, « Aujourd'hui » dit à JP de l'appeler. */
 export async function GET(request: Request) {
-  const auth = request.headers.get("authorization");
-  const cron = env.cronSecret && auth === `Bearer ${env.cronSecret}`;
-  if (!cron && !(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
+  const gate = await cronGate(request, "presences-educateurs", { adminRoles: ["admin"] });
+  if (!gate.ok) return gate.response;
 
   const now = Date.now();
   const [rows, coaches] = await Promise.all([getPayrollRows(), getCoaches()]);

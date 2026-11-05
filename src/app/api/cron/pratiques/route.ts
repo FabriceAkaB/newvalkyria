@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { isAdminRequest } from "@/lib/admin-auth";
+import { cronGate } from "@/lib/cron-gate";
 import { OWNER_NOTIFY_EMAIL } from "@/lib/email";
 import { env } from "@/lib/env";
-import { jsonError } from "@/lib/http";
 import { listPractices } from "@/lib/practices-repo";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
 import { sendDueEmails } from "@/lib/scheduled-emails";
@@ -14,9 +13,8 @@ export const maxDuration = 300;
 /** Rappel des pratiques en rouge (AU21) : Vercel Cron 2 fois par jour (8 h et 16 h, heure de Montréal).
  *  Un courriel à JP seulement s'il y a au moins une pratique sans plan à 3 jours ou moins. */
 export async function GET(request: Request) {
-  const auth = request.headers.get("authorization");
-  const cron = env.cronSecret && auth === `Bearer ${env.cronSecret}`;
-  if (!cron && !(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
+  const gate = await cronGate(request, "pratiques", { adminRoles: ["admin"] });
+  if (!gate.ok) return gate.response;
   // Filet de sécurité : les courriels programmés (« prévenir les parents à 8 h ») partent aussi à ce passage de 8 h et 16 h,
   // au cas où le passage horaire (api/cron/mcs-robot) n'aurait pas roulé. Un courriel n'est jamais envoyé deux fois (réservé avant l'envoi).
   await sendDueEmails().catch(() => null);
