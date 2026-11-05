@@ -108,6 +108,33 @@ export function parseOpponents(html: string): Map<string, string> {
 /** Champs du formulaire « nouvelle activité » jamais envoyés : pas de courriel MCS, pas de répétition, et jamais les remplaçantes. */
 export const CREATE_EVENT_SKIPPED = ["send_by_email", "recurrence[on]", "everyone_present", "show_arrival_time", "include_reserve", "invite[]"];
 
+export interface McsPostInput {
+  subject: string;
+  /** HTML simple (<p>, <strong>, <a>, <br>). */
+  html: string;
+  /** "all" = toute l'équipe ; sinon des numéros de membres (publication privée, ex. un lien personnel par famille). */
+  to: "all" | number[];
+  sticky?: boolean;
+  /** Avis par courriel et dans l'app MCS (par défaut oui). */
+  notify?: boolean;
+}
+
+/** Champs du formulaire « nouvelle publication ». Aucun destinataire = refus (jamais « toute l'équipe » par défaut). */
+export function buildPostForm(token: string, post: McsPostInput): [string, string][] {
+  const P = MCS_FIELDS.post;
+  if (!post.subject.trim() || !post.html.trim()) throw new McsRobotError("Publication sans sujet ou sans texte.");
+  if (post.to !== "all" && !post.to.length) throw new McsRobotError("Publication sans destinataire.");
+  const out: [string, string][] = [[MCS_FIELDS.csrf, token]];
+  for (const r of post.to === "all" ? [P.all] : post.to.map(String)) out.push([P.recipients, r]);
+  out.push([P.subject, post.subject], [P.body, post.html]);
+  if (post.sticky) out.push([P.sticky, "1"]);
+  if (post.notify !== false) out.push([P.sendByEmail, "1"]);
+  return out;
+}
+
+/** Titre d'une activité annulée (MCS n'a pas d'état « annulée » pour une pratique) ; ne double jamais la mention. */
+export const cancelledTitle = (title: string) => (/^ANNULÉE\s*:/i.test(title.trim()) ? title.trim() : `ANNULÉE : ${title.trim()}`);
+
 export function formFields(html: string, actionIncludes: string): [string, string][] {
   const form = parse(html)
     .querySelectorAll("form")
@@ -298,6 +325,35 @@ export class McsSession {
     for (const [k, v] of Object.entries(set)) f.set(k, v);
     const res = await this.request(MCS_PATHS.event(team, season, id), { method: "POST", body: f });
     if (res.status >= 400) throw new McsRobotError(`Heure refusée par MonClubSportif (${date}).`);
+  }
+
+  /** Publie un message dans l'équipe (toute l'équipe ou des membres précis) ; rend le numéro de la publication. */
+  async createPost(team: number, season: number, post: McsPostInput): Promise<number> {
+    const html = await this.page(MCS_PATHS.postCreate(team, season));
+    const token = formFields(html, MCS_PATHS.posts(team, season)).find(([k]) => k === MCS_FIELDS.csrf)?.[1];
+    if (!token) throw new McsRobotError("Formulaire de publication illisible (balises à revoir).");
+    const f = new FormData();
+    for (const [k, v] of buildPostForm(token, post)) f.append(k, v);
+    const res = await this.request(MCS_PATHS.posts(team, season), { method: "POST", body: f });
+    const id = res.url.match(/\/posts\/(\d+)$/)?.[1];
+    if (!id || res.status >= 400) throw new McsRobotError(`Publication refusée par MonClubSportif (${res.status}).`);
+    return Number(id);
+  }
+
+  /** Marque une activité « ANNULÉE » (titre + raison en commentaire), sans la supprimer ni envoyer de courriel MCS. */
+  async markEventCancelled(team: number, season: number, id: number, reason: string): Promise<void> {
+    const html = await this.page(MCS_PATHS.eventEdit(team, season, id));
+    const fields = formFields(html, MCS_PATHS.event(team, season, id)).filter(([k]) => k !== "send_by_email");
+    if (!fields.length) throw new McsRobotError("Formulaire de l'activité illisible (balises à revoir).");
+    const E = MCS_FIELDS.event;
+    const get = (k: string) => fields.find(([n, v]) => n === k && v !== "")?.[1] ?? "";
+    const f = new URLSearchParams();
+    for (const [k, v] of fields) f.append(k, v);
+    f.set(E.duration, get(E.duration)); // MCS a deux champs « durée », dont un vide : garder la vraie valeur
+    f.set(E.title, cancelledTitle(get(E.title)));
+    f.set(E.comments, reason);
+    const res = await this.request(MCS_PATHS.event(team, season, id), { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Annulation refusée par MonClubSportif (${res.status}).`);
   }
 
   /** Activités où ce membre n'est pas encore assigné. */

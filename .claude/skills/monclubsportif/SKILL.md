@@ -50,6 +50,16 @@ les faire passer avant tout commit qui touche au robot.
 - `/calendar/assignments` : assignation en lot (`events[]`, `assign[]`, `unassign=0` ne retire personne).
 - `/roster/M/modify` : formulaire multipart, photo dans `member[picture]`.
 
+**Ce que le robot sait faire sur demande de JP (`McsSession`) :**
+- `createPost` : publier un message dans une équipe, à toute l'équipe (`to: "all"`, épinglé si besoin) ou en
+  **publication privée** à des membres précis (avis courriel et app de MCS). Exemple : annonce d'une pratique annulée.
+- **Sondages** : MCS n'a pas d'outil de sondage (ni dans les équipes, ni dans le portail organisation). Le sondage se
+  crée dans `/admin/sondages` (lien personnel par famille) ; pour qu'il soit « dans MCS », une publication privée par
+  joueuse avec son lien personnel (fait le 5 nov. pour le voyage 2028 : 29 familles 2015 AV et 2016-2017 AV).
+- `markEventCancelled` : une pratique annulée devient « ANNULÉE : … » avec la raison en commentaire, sans être supprimée
+  (supprimer dans MCS seulement si JP le dit). Toujours prévenir les familles en plus (courriel + publication).
+- Chaque envoi aux familles est noté dans `outreach_log` (`logOutreach`).
+
 **Ce qui manque pour qu'il tourne seul :** le compte robot (info+robot@newvalkyria.com) accepté dans l'organisation, ses accès
 enregistrés dans Robot et règles, puis « Activer le robot » (`robotActive`). C'est JP qui le fait : Claude ne saisit
 jamais de mot de passe. Tant que ce n'est pas fait, le cron horaire `api/cron/mcs-robot` ne fait rien dans MCS.

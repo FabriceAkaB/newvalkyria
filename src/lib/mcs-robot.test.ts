@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CREATE_EVENT_SKIPPED, csrfOf, formFields, isLoginPage, parseAssignIds, parseOpponents, parsePresences, parseRoster } from "@/lib/mcs-robot";
+import { buildPostForm, cancelledTitle, CREATE_EVENT_SKIPPED, csrfOf, formFields, isLoginPage, parseAssignIds, parseOpponents, parsePresences, parseRoster } from "@/lib/mcs-robot";
 
 // Pages MonClubSportif réduites à l'essentiel (structure relevée le 5 nov. 2026, noms inventés).
 const cell = (event: number, state: string) =>
@@ -55,5 +55,29 @@ describe("remplaçantes jamais assignées par le robot", () => {
     const html = `<form action="/team/1/seasons/2/calendar/events"><input type="checkbox" name="assign[]" value="11" checked><input type="checkbox" name="include_reserve" checked><input type="checkbox" class="reserve-checkbox" name="invite[]" value="77" checked><input type="checkbox" class="reserve-checkbox" name="invite[]" value="78"></form>`;
     const sent = formFields(html, "/calendar/events").filter(([k]) => !CREATE_EVENT_SKIPPED.includes(k));
     expect(sent).toEqual([["assign[]", "11"]]);
+  });
+});
+
+describe("publications et annulations", () => {
+  it("publication privée : un membre par case, avis courriel par défaut", () => {
+    expect(buildPostForm("tok", { subject: "Sondage", html: "<p>Lien</p>", to: [12, 34] })).toEqual([
+      ["authenticity_token", "tok"],
+      ["recipients[]", "12"],
+      ["recipients[]", "34"],
+      ["post[subject]", "Sondage"],
+      ["post[body]", "<p>Lien</p>"],
+      ["send_by_email", "1"]
+    ]);
+  });
+  it("toute l'équipe, épinglée, sans avis ; refus sans destinataire", () => {
+    const f = buildPostForm("tok", { subject: "Annulée", html: "<p>x</p>", to: "all", sticky: true, notify: false });
+    expect(f).toContainEqual(["recipients[]", "all"]);
+    expect(f).toContainEqual(["post[sticky]", "1"]);
+    expect(f.some(([k]) => k === "send_by_email")).toBe(false);
+    expect(() => buildPostForm("tok", { subject: "x", html: "<p>x</p>", to: [] })).toThrow();
+  });
+  it("titre annulé jamais doublé", () => {
+    expect(cancelledTitle("Pratique semi privée")).toBe("ANNULÉE : Pratique semi privée");
+    expect(cancelledTitle("ANNULÉE : Pratique semi privée")).toBe("ANNULÉE : Pratique semi privée");
   });
 });

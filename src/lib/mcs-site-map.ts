@@ -27,6 +27,9 @@ export const MCS_PATHS = {
   calendarAssignments: (team: number, season: number) => `/team/${team}/seasons/${season}/calendar/assignments`,
   /** Les activités d'un membre (cases cochées = il y est assigné). */
   memberAssignments: (team: number, season: number, member: number) => `/team/${team}/seasons/${season}/roster/${member}/modify?assignment=true`,
+  /** Publications de l'équipe (messages aux familles, avis courriel de MCS). */
+  posts: (team: number, season: number) => `/team/${team}/seasons/${season}/posts`,
+  postCreate: (team: number, season: number) => `/team/${team}/seasons/${season}/posts/create`,
   gameEdit: (team: number, season: number, game: number) => `/team/${team}/seasons/${season}/calendar/games/${game}/edit`,
   game: (team: number, season: number, game: number) => `/team/${team}/seasons/${season}/calendar/games/${game}`
 } as const;
@@ -59,6 +62,9 @@ export const MCS_FIELDS = {
     assignAllEvents: "team[assign_all_events]"
   },
   assignments: { events: "events[]", members: "assign[]", unassign: "unassign" },
+  /** Publication : « recipients[]=all » = toute l'équipe, sinon un numéro de membre par case (publication privée). */
+  post: { recipients: "recipients[]", all: "all", subject: "post[subject]", body: "post[body]", sticky: "post[sticky]", sendByEmail: "send_by_email" },
+  event: { title: "happening[title]", comments: "happening[comments]", duration: "happening[duration_minutes]" },
   game: { opponentId: "game[opponent_id]", opponentName: "opponent[name]", newOpponent: "new", sendByEmail: "send_by_email" }
 } as const;
 
