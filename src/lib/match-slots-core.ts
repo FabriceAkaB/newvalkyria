@@ -49,7 +49,7 @@ export interface TeamCategory {
 }
 
 /** Calibres proposés aux équipes à la création du compte. */
-export const TEAM_LEVELS = ["Récréatif", "Intermédiaire", "Compétitif", "AA", "AAA", "P1", "Élite"] as const;
+export const TEAM_LEVELS = ["Récréatif", "Intermédiaire", "Compétitif", "D3", "D2", "D1", "AA", "AAA", "P1", "Élite"] as const;
 
 /** « 2014 » ou « 2014-2015 ». */
 export function teamYearsValue(team: Pick<TeamCategory, "birthYear" | "birthYearTo">): string {
