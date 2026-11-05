@@ -11436,6 +11436,7 @@ img { max-width: 100%; height: auto; }
 [data-kind="match"] { --cal-c: var(--adm-accent); }
 [data-kind="match-a-trouver"] { --cal-c: var(--adm-bad); }
 [data-kind="mcs"] { --cal-c: var(--adm-info, #7cb8ff); }
+[data-kind="perso"] { --cal-c: #e8b04a; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .cal-head { font-size: 0.75rem; font-weight: 600; color: var(--adm-text-3); text-transform: uppercase; padding: 0 4px; }
 .cal-day { min-height: 104px; background: var(--adm-surface); border: 1px solid var(--adm-line); border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }

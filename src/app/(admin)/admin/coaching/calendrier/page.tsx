@@ -18,11 +18,13 @@ interface CalItem {
   key: string;
   time: string;
   label: string;
-  kind: "prete" | "a-preparer" | "passee" | "match" | "match-a-trouver" | "mcs";
+  kind: "prete" | "a-preparer" | "passee" | "match" | "match-a-trouver" | "mcs" | "perso";
   href: string | null;
 }
 
-const KIND: Record<CalItem["kind"], string> = { prete: "Prête", "a-preparer": "À préparer", passee: "Passée", match: "Match", "match-a-trouver": "Adversaire à trouver", mcs: "MonClubSportif" };
+const KIND: Record<CalItem["kind"], string> = { prete: "Prête", "a-preparer": "À préparer", passee: "Passée", match: "Match", "match-a-trouver": "Adversaire à trouver", mcs: "MonClubSportif", perso: "Activités de JP (hors académie)" };
+/** Activités de JP hors académie (Saint-Gabriel, FC Elevate…), aussi copiées dans MonClubSportif pour son calendrier. */
+const PERSO = /st-?gabriel|saint-gabriel|fc elevate|cadet/i;
 
 /** « Qu'est-ce qui se passe ce mois-ci ? » : chaque jour du mois avec ses pratiques (prête, à préparer, passée) et
  *  les matchs et activités de MonClubSportif qui ne sont pas déjà dans l'horaire du site. */
@@ -50,7 +52,12 @@ export default async function PracticeCalendarPage({ searchParams }: { searchPar
       href: past ? "/admin/coaching/historique" : p.activityId ? `/admin/entraineurs/activites/${p.activityId}` : "/admin/pratiques"
     });
   }
+  for (const p of practices.filter((x) => x.organization)) {
+    push(p.date, { key: p.key, time: p.start, label: `${p.organization} · ${p.group}`, kind: "perso", href: p.activityId ? `/admin/entraineurs/activites/${p.activityId}` : null });
+  }
+  const persoAt = (d: string, t: string | null) => practices.some((p) => p.organization && p.date === d && Math.abs(toMin(p.start) - toMin(t)) <= 15);
   for (const e of mcs) {
+    if (PERSO.test(e.title) && persoAt(e.date, e.start)) continue;
     const sameAsSite = practices.some((p) => p.date === e.date && Math.abs(toMin(p.start) - toMin(e.start)) <= 15) && e.type !== "Match";
     if (sameAsSite) continue;
     const isMatch = e.type === "Match" || e.type === "Tournoi";
@@ -58,7 +65,7 @@ export default async function PracticeCalendarPage({ searchParams }: { searchPar
       key: `${e.team_id}-${e.key}`,
       time: e.start ?? "",
       label: isMatch ? `${e.team}${e.opponent ? ` c. ${e.opponent}` : ""}` : `${e.team} · ${e.title.replace(/^(Event|Événement|Other|Autre)\s+/i, "").replace(e.team, "").replace(/^\s*-\s*/, "")}`,
-      kind: isMatch ? (needsOpponent(e) ? "match-a-trouver" : "match") : "mcs",
+      kind: PERSO.test(e.title) ? "perso" : isMatch ? (needsOpponent(e) ? "match-a-trouver" : "match") : "mcs",
       href: "/admin/monclubsportif/equipes"
     });
   }
