@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { attendanceFromMcs, DEFAULT_MCS_RULES, dueReminder, normalizeRules, reminderMoments, sameMemberName, teamsFor, yearsOf, type TeamTarget } from "@/lib/mcs-rules";
+import { attendanceFromMcs, calendarDiff, DEFAULT_MCS_RULES, dueReminder, normalizeRules, reminderMoments, sameMemberName, teamsFor, yearsOf, type TeamTarget } from "@/lib/mcs-rules";
 
 const H = 3_600_000;
 const team = (p: Partial<TeamTarget>): TeamTarget => ({ id: "t", name: "T", kind: "pratique", birth_years: [], slot_ids: [], program_ids: [], session_program_slugs: [], mcs_team_id: 1, mcs_season_id: 2, ...p });
@@ -9,7 +9,7 @@ describe("règles MonClubSportif", () => {
   it("valeurs par défaut : mode assistant, tout automatique une fois activé, rappels 48 h, 24 h et 2 fois le jour même", () => {
     const r = normalizeRules(null);
     expect(r.robotActive).toBe(false);
-    expect(r.inviteOnPaid && r.photoAuto && r.presenceAlwaysEditable && r.opponentOnPaid).toBe(true);
+    expect(r.inviteOnPaid && r.photoAuto && r.presenceAlwaysEditable && r.opponentOnPaid && r.calendarSync).toBe(true);
     expect(r.reminders).toEqual({ active: true, hoursBefore: [48, 24], sameDayHours: [9, 15] });
     expect(r.removeOnRefund).toBe("validation");
   });
@@ -70,5 +70,25 @@ describe("règles MonClubSportif", () => {
     expect(attendanceFromMcs("uncertain")).toBeNull();
     expect(attendanceFromMcs("unknown")).toBeNull();
     expect(attendanceFromMcs(undefined)).toBeNull();
+  });
+
+  it("calendrier : crée ce qui manque, corrige l'heure, signale le reste, ne touche pas aux matchs", () => {
+    const site = [
+      { date: "2026-11-07", start: "14:00", end: "15:30", title: "P", location: "Chambéry" },
+      { date: "2026-11-14", start: "15:00", end: "16:30", title: "P", location: "Chambéry" },
+      { date: "2026-11-21", start: "15:00", end: "16:30", title: "P", location: "Chambéry" },
+      { date: "2026-11-28", start: "15:00", end: "16:30", title: "P", location: "Chambéry" }
+    ];
+    const mcs = [
+      { id: 1, date: "2026-11-07", start: "15:00", end: "16:30", title: "P", isPractice: true },
+      { id: 2, date: "2026-11-14", start: "15:00", end: "16:30", title: "P", isPractice: true },
+      { id: 3, date: "2026-11-21", start: "15:05", end: "16:30", title: "P", isPractice: true },
+      { id: 4, date: "2026-12-05", start: "15:00", end: "16:30", title: "P", isPractice: true },
+      { id: 5, date: "2026-11-28", start: "10:00", end: "11:00", title: "Match", isPractice: false }
+    ];
+    const d = calendarDiff(site, mcs);
+    expect(d.retime.map((r) => [r.id, r.to.start])).toEqual([[3, "15:00"], [1, "14:00"]]);
+    expect(d.create.map((c) => c.date)).toEqual(["2026-11-28"]);
+    expect(d.extra.map((e) => e.id)).toEqual([4]);
   });
 });

@@ -149,6 +149,17 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/location-terrains", label: "Location de terrains" },
           { href: "/admin/seances-privees", label: "Séances privées" }
         ]
+      },
+      {
+        key: "monclubsportif",
+        label: "MonClubSportif",
+        icon: "calendar",
+        description: "Le robot qui tient MonClubSportif à jour tout seul : inscriptions, photos, calendrier, adversaires, présences et rappels.",
+        tabs: [
+          { href: "/admin/monclubsportif/robot", label: "Robot et règles", adminOnly: true },
+          { href: "/admin/monclubsportif/equipes", label: "Équipes et calendriers", adminOnly: true },
+          { href: "/admin/monclubsportif", label: "À faire dans MonClubSportif", adminOnly: true }
+        ]
       }
     ]
   },
@@ -350,14 +361,10 @@ export const ADMIN_NAV: AdminNavSection[] = [
       },
       {
         key: "exports",
-        label: "MonClubSportif",
+        label: "Exports",
         icon: "list",
-        description: "Ce qui manque dans MonClubSportif (nouvelles inscrites, activités, retraits) et les fichiers d'export complets.",
-        tabs: [
-          { href: "/admin/monclubsportif/equipes", label: "Équipes et calendriers", adminOnly: true },
-          { href: "/admin/monclubsportif", label: "À faire dans MonClubSportif", adminOnly: true },
-          { href: "/admin/exports", label: "Exports complets", adminOnly: true }
-        ]
+        description: "Les fichiers d'export complets (membres et activités pour MonClubSportif).",
+        tabs: [{ href: "/admin/exports", label: "Exports complets", adminOnly: true }]
       },
       {
         key: "ete-2026",

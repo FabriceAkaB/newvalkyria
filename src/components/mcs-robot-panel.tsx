@@ -13,6 +13,8 @@ interface Report {
   photos: string[];
   opponents: string[];
   unlocked: string[];
+  calendar?: string[];
+  extras?: string[];
   errors: string[];
 }
 
@@ -21,6 +23,7 @@ const TOGGLES: { key: keyof McsRules; label: string; hint: string }[] = [
   { key: "assignAllEvents", label: "Elle reçoit tout le calendrier de l'équipe", hint: "Pratiques et matchs à venir." },
   { key: "photoAuto", label: "Sa photo est mise sur son profil, par défaut", hint: "Dès qu'une photo existe ou est remplacée dans le site." },
   { key: "opponentOnPaid", label: "Le nom du club adverse est écrit sur le match payé", hint: "Dès qu'il paie sa plage." },
+  { key: "calendarSync", label: "L'horaire du site est recopié dans MonClubSportif", hint: "Pratiques ajoutées et heures corrigées toutes seules ; ce qui est en trop est seulement signalé." },
   { key: "presenceAlwaysEditable", label: "Présence modifiable en tout temps", hint: "Aucun verrou avant les matchs et les pratiques." }
 ];
 
@@ -147,6 +150,8 @@ export function McsRobotPanel({ initial, hasAccount }: { initial: McsRules; hasA
             {section(report.dryRun ? "Photos à mettre" : "Photos mises", report.photos)}
             {section(report.dryRun ? "Adversaires à écrire" : "Adversaires écrits", report.opponents)}
             {section("Équipes où les présences ont été déverrouillées", report.unlocked)}
+            {section(report.dryRun ? "Calendrier : à faire dans MonClubSportif" : "Calendrier : fait dans MonClubSportif", report.calendar ?? [])}
+            {section("À vérifier : dans MonClubSportif mais plus dans l'horaire du site", report.extras ?? [])}
             {section("Erreurs", report.errors)}
             {!report.skipped && !report.added.length && !report.photos.length && !report.opponents.length && !report.unlocked.length && !report.errors.length ? <p className="mda-sub" style={{ margin: "6px 0 0" }}>Rien à faire : tout concorde.</p> : null}
           </div>

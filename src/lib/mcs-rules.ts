@@ -13,6 +13,8 @@ export interface McsRules {
   photoAuto: boolean;
   /** Le nom du club adverse est écrit sur le match dès qu'il paie sa plage. */
   opponentOnPaid: boolean;
+  /** Le calendrier du site (plages et programmes) est recopié dans MonClubSportif : pratiques ajoutées, heures corrigées. */
+  calendarSync: boolean;
   /** Les familles peuvent mettre ou changer la présence en tout temps (aucun verrou avant un match ou une pratique). */
   presenceAlwaysEditable: boolean;
   /** Rappels aux familles qui n'ont pas mis leur présence : X heures avant, puis à ces heures le jour même. */
@@ -29,6 +31,7 @@ export const DEFAULT_MCS_RULES: McsRules = {
   assignAllEvents: true,
   photoAuto: true,
   opponentOnPaid: true,
+  calendarSync: true,
   presenceAlwaysEditable: true,
   reminders: { active: true, hoursBefore: [48, 24], sameDayHours: [9, 15] },
   removeOnRefund: "validation",
@@ -53,6 +56,7 @@ export function normalizeRules(input: unknown): McsRules {
     assignAllEvents: bool("assignAllEvents"),
     photoAuto: bool("photoAuto"),
     opponentOnPaid: bool("opponentOnPaid"),
+    calendarSync: bool("calendarSync"),
     presenceAlwaysEditable: bool("presenceAlwaysEditable"),
     reminders: {
       active: typeof rem.active === "boolean" ? rem.active : DEFAULT_MCS_RULES.reminders.active,
@@ -156,4 +160,59 @@ export function sameMemberName(mcsName: string, first: string, last: string): bo
 /** État d'une présence MonClubSportif → statut de présence du site (rien si la famille n'a pas répondu ou hésite). */
 export function attendanceFromMcs(state: string | undefined): "present" | "late" | "absent" | null {
   return state === "present" ? "present" : state === "late" ? "late" : state === "absent" ? "absent" : null;
+}
+
+/* ── Calendrier : site → MonClubSportif ──────────────────────────── */
+
+export interface SiteEvent {
+  date: string;
+  start: string;
+  end: string | null;
+  title: string;
+  location: string;
+}
+export interface McsCalEvent {
+  id: number;
+  date: string;
+  start: string;
+  end: string | null;
+  title: string;
+  isPractice: boolean;
+}
+export interface CalendarDiff {
+  create: SiteEvent[];
+  retime: { id: number; from: string; to: SiteEvent }[];
+  extra: McsCalEvent[];
+}
+
+const minOf = (t: string | null) => (t ? Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)) : NaN);
+
+/** Ce qu'il faut faire dans MonClubSportif pour qu'une équipe ait exactement les pratiques prévues dans le site :
+ *  créer celles qui manquent, corriger l'heure de celles qui ont bougé (même jour, une seule pratique de chaque côté),
+ *  et signaler les pratiques MonClubSportif qui ne sont plus dans le site (jamais supprimées toutes seules). Les
+ *  matchs et autres événements MonClubSportif ne sont jamais touchés. */
+export function calendarDiff(site: SiteEvent[], mcs: McsCalEvent[]): CalendarDiff {
+  const out: CalendarDiff = { create: [], retime: [], extra: [] };
+  const used = new Set<number>();
+  const leftSite: SiteEvent[] = [];
+  for (const s of site) {
+    const same = mcs.find((m) => !used.has(m.id) && m.date === s.date && Math.abs(minOf(m.start) - minOf(s.start)) <= 15);
+    if (!same) {
+      leftSite.push(s);
+      continue;
+    }
+    used.add(same.id);
+    if (same.isPractice && Math.abs(minOf(same.start) - minOf(s.start)) > 0 || (same.isPractice && s.end && same.end && Math.abs(minOf(same.end) - minOf(s.end)) > 5))
+      out.retime.push({ id: same.id, from: `${same.start}–${same.end ?? ""}`, to: s });
+  }
+  for (const s of leftSite) {
+    const daySite = leftSite.filter((x) => x.date === s.date);
+    const dayMcs = mcs.filter((m) => !used.has(m.id) && m.isPractice && m.date === s.date);
+    if (daySite.length === 1 && dayMcs.length === 1) {
+      used.add(dayMcs[0].id);
+      out.retime.push({ id: dayMcs[0].id, from: `${dayMcs[0].start}–${dayMcs[0].end ?? ""}`, to: s });
+    } else out.create.push(s);
+  }
+  out.extra = mcs.filter((m) => !used.has(m.id) && m.isPractice);
+  return out;
 }

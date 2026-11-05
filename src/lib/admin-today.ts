@@ -6,6 +6,8 @@ import { getBank } from "@/lib/exercises-repo";
 import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
 import { getMcsStatus } from "@/lib/mcs-sync";
+import { getRobotStatus } from "@/lib/mcs-robot-config";
+import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { listPractices } from "@/lib/practices-repo";
 import { dateLong, getRefereesToPay, listMatches } from "@/lib/referees-repo";
 import { getFamiliesToCall } from "@/lib/surveys-repo";
@@ -311,6 +313,32 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
           meta: `Signalé le ${shortDay(p.created_at)}`,
           href: `/admin/uniformes/commande/${p.order_id}`
         }))
+      })
+    );
+  }
+
+  // ── Robot MonClubSportif : ce qui demande JP (compte, activation, erreur récente) ──
+  if (isAdmin) {
+    const [robot, rules, { data: lastRuns }] = await Promise.all([
+      getRobotStatus().catch(() => null),
+      getMcsRules().catch(() => null),
+      db().from("audit_log").select("created_at, after").eq("action", "mcs_robot_run").gte("created_at", new Date(now - 24 * 3_600_000).toISOString()).order("created_at", { ascending: false }).limit(5)
+    ]);
+    const errors = ((lastRuns ?? []) as any[]).flatMap((r) => (r.after?.errors ?? []) as string[]);
+    const items = [
+      ...(!robot ? [{ title: "Enregistrer le compte robot", detail: "Accepte l'invitation reçue à info+robot@, puis entre son courriel et son mot de passe (chiffré).", href: "/admin/monclubsportif/robot" }] : []),
+      ...(robot && rules && !rules.robotActive ? [{ title: "Voir ce que le robot ferait, puis l'activer", detail: "Tant qu'il n'est pas activé, rien ne se fait tout seul dans MonClubSportif.", href: "/admin/monclubsportif/robot" }] : []),
+      ...[...new Set(errors)].slice(0, 5).map((e) => ({ title: "Le robot a eu un problème", detail: e, href: "/admin/monclubsportif/robot" }))
+    ];
+    sections.push(
+      section({
+        key: "monclubsportif",
+        title: "Robot MonClubSportif",
+        level: errors.length ? "rouge" : items.length ? "orange" : "info",
+        emptyText: "Le robot tient MonClubSportif à jour tout seul.",
+        href: "/admin/monclubsportif/robot",
+        hrefLabel: "Robot et règles",
+        items
       })
     );
   }

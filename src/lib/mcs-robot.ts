@@ -238,6 +238,50 @@ export class McsSession {
     if (res.status >= 400) throw new McsRobotError(`Adversaire refusé par MonClubSportif (${res.status}).`);
   }
 
+  /** Crée une activité (pratique) assignée à toute l'équipe, sans courriel de MonClubSportif. Lieu : l'option dont le
+   *  nom commence comme `location` (sinon `fallbackLocation`, sinon un nouveau lieu). */
+  async createEvent(team: number, season: number, ev: { title: string; type?: string; date: string; start: string; end: string; location: string; fallbackLocation?: string | null; comments?: string }): Promise<void> {
+    const path = MCS_PATHS.eventCreate(team, season);
+    const html = await this.page(path);
+    const action = `/team/${team}/seasons/${season}/calendar/events`;
+    const fields = formFields(html, action).filter(([k]) => !["send_by_email", "recurrence[on]", "everyone_present", "show_arrival_time"].includes(k));
+    if (!fields.length) throw new McsRobotError("Formulaire de création d'activité illisible (balises à revoir).");
+    const options = parse(html).querySelectorAll('select[name="happening[location_id]"] option').map((o) => ({ v: o.getAttribute("value") ?? "", t: o.text.trim() }));
+    const pick = (name?: string | null) => (name ? options.find((o) => o.v && o.v !== "new" && o.t.toLowerCase().startsWith(name.toLowerCase().slice(0, 18))) : undefined);
+    const loc = pick(ev.location) ?? pick(ev.fallbackLocation);
+    const mins = (Date.parse(`${ev.date}T${ev.end}:00Z`) - Date.parse(`${ev.date}T${ev.start}:00Z`)) / 60000;
+    const set: Record<string, string> = {
+      "happening[title]": ev.title,
+      "happening[event_type]": ev.type ?? "",
+      "happening[starts_at]": `${ev.date}T${ev.start}`,
+      "happening[ends_at]": `${ev.date}T${ev.end}`,
+      "happening[arrival_time]": `${ev.date}T${ev.start}`,
+      "happening[duration_minutes]": String(mins),
+      "happening[location_id]": loc?.v ?? "new",
+      "location[name]": loc ? "" : ev.location,
+      "happening[comments]": ev.comments ?? ""
+    };
+    const f = new URLSearchParams();
+    for (const [k, v] of fields) if (!(k in set)) f.append(k, v);
+    for (const [k, v] of Object.entries(set)) f.set(k, v);
+    const res = await this.request(action, { method: "POST", body: f });
+    if (/\/calendar\/events$/.test(res.url) || res.status >= 400) throw new McsRobotError(`Activité refusée par MonClubSportif (${ev.date} ${ev.start}).`);
+  }
+
+  /** Change l'heure d'une activité existante (le reste inchangé, sans courriel de MonClubSportif). */
+  async retimeEvent(team: number, season: number, id: number, date: string, start: string, end: string): Promise<void> {
+    const html = await this.page(MCS_PATHS.eventEdit(team, season, id));
+    const fields = formFields(html, MCS_PATHS.event(team, season, id)).filter(([k]) => k !== "send_by_email");
+    if (!fields.length) throw new McsRobotError("Formulaire de l'activité illisible (balises à revoir).");
+    const mins = (Date.parse(`${date}T${end}:00Z`) - Date.parse(`${date}T${start}:00Z`)) / 60000;
+    const set: Record<string, string> = { "happening[starts_at]": `${date}T${start}`, "happening[ends_at]": `${date}T${end}`, "happening[arrival_time]": `${date}T${start}`, "happening[duration_minutes]": String(mins) };
+    const f = new URLSearchParams();
+    for (const [k, v] of fields) if (!(k in set)) f.append(k, v);
+    for (const [k, v] of Object.entries(set)) f.set(k, v);
+    const res = await this.request(MCS_PATHS.event(team, season, id), { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Heure refusée par MonClubSportif (${date}).`);
+  }
+
   /** Présences modifiables en tout temps (0 h de verrou avant les matchs et les pratiques), le reste inchangé. */
   async unlockPresences(team: number): Promise<boolean> {
     const html = await this.page(MCS_PATHS.settings(team));

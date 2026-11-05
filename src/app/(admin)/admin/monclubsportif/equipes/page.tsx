@@ -1,11 +1,11 @@
-import { McsRobotPanel } from "@/components/mcs-robot-panel";
-import { McsRobotForm, McsTeamActions, McsTeamForm } from "@/components/mcs-teams-admin";
+import Link from "next/link";
+
+import { McsTeamActions, McsTeamForm } from "@/components/mcs-teams-admin";
 import { Pill } from "@/components/mandalart/ui";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getSlotsWithAvailability } from "@/lib/match-slots-repo";
 import { needsOpponent } from "@/lib/mcs-teams";
 import { getRobotStatus } from "@/lib/mcs-robot-config";
-import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { getOpponentsToSync, getUpcomingEvents, listTeams, syncStaleTeams } from "@/lib/mcs-teams-repo";
 
 export const metadata = { title: "Équipes MonClubSportif — Admin", robots: "noindex" };
@@ -23,7 +23,7 @@ const ago = (iso: string | null) => {
 export default async function McsTeamsPage() {
   await requireAdmin({ roles: ["admin"] });
   await syncStaleTeams(15, 6_000).catch(() => 0);
-  const [teams, events, slots, robot, toName, rules] = await Promise.all([listTeams(), getUpcomingEvents().catch(() => []), getSlotsWithAvailability().catch(() => []), getRobotStatus().catch(() => null), getOpponentsToSync().catch(() => []), getMcsRules()]);
+  const [teams, events, slots, robot, toName] = await Promise.all([listTeams(), getUpcomingEvents().catch(() => []), getSlotsWithAvailability().catch(() => []), getRobotStatus().catch(() => null), getOpponentsToSync().catch(() => [])]);
   const teamName = new Map(teams.map((t) => [t.id, t.name]));
   const matches = events.filter((e) => e.type === "Match" || e.type === "Tournoi");
   const toFind = matches.filter(needsOpponent);
@@ -137,14 +137,7 @@ export default async function McsTeamsPage() {
         </section>
 
         <section className="mda-card">
-          <h2 className="mda-h2" style={{ marginBottom: 4 }}>Robot MonClubSportif : les règles du club</h2>
-          <p className="mda-sub" style={{ marginTop: 0 }}>Ce qui se fait tout seul dès qu&apos;une joueuse paie, chaque heure, et les rappels de présence. Enregistré pour ce club : un autre club aura ses propres règles.</p>
-          <McsRobotPanel initial={rules} hasAccount={Boolean(robot)} />
-        </section>
-
-        <section className="mda-card">
-          <h2 className="mda-h2" style={{ marginBottom: 10 }}>Compte robot MonClubSportif</h2>
-          <McsRobotForm status={robot} />
+          <p className="mda-label" style={{ margin: 0 }}>Le robot, ses règles, son compte et son journal sont dans l&apos;onglet <Link href="/admin/monclubsportif/robot" style={{ color: "var(--adm-accent)" }}>Robot et règles</Link>.</p>
         </section>
 
         <section className="mda-card">

@@ -3,7 +3,7 @@ import { CLUB, CLUB_ID } from "@/lib/club";
 import { env } from "@/lib/env";
 import { McsRobotError, McsSession, type PresenceGrid } from "@/lib/mcs-robot";
 import { getRobotCredentials } from "@/lib/mcs-robot-config";
-import { attendanceFromMcs, dueReminder, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type TeamTarget } from "@/lib/mcs-rules";
+import { attendanceFromMcs, calendarDiff, dueReminder, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type TeamTarget } from "@/lib/mcs-rules";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { MCS_BASE } from "@/lib/mcs-site-map";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
@@ -47,6 +47,10 @@ export interface RobotReport {
   photos: string[];
   opponents: string[];
   unlocked: string[];
+  /** Calendrier : pratiques du site créées ou remises à la bonne heure dans MonClubSportif. */
+  calendar: string[];
+  /** Pratiques MonClubSportif qui ne sont plus dans le site : à vérifier (jamais supprimées toutes seules). */
+  extras: string[];
   errors: string[];
 }
 
@@ -127,7 +131,7 @@ export async function openRobotSession(): Promise<McsSession | null> {
 export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryRun?: boolean } = { reason: "cron" }): Promise<RobotReport> {
   const rules = await getMcsRules();
   const dry = opts.dryRun ?? !rules.robotActive;
-  const report: RobotReport = { ok: true, dryRun: dry, added: [], photos: [], opponents: [], unlocked: [], errors: [] };
+  const report: RobotReport = { ok: true, dryRun: dry, added: [], photos: [], opponents: [], unlocked: [], calendar: [], extras: [], errors: [] };
   let session: McsSession | null = null;
   try {
     session = await openRobotSession();
@@ -182,6 +186,17 @@ export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryR
     }
   }
 
+  // Calendrier : chaque pratique prévue dans le site existe dans MonClubSportif, à la bonne heure.
+  if (rules.calendarSync) {
+    try {
+      const c = await syncCalendar(session, teams, dry);
+      report.calendar.push(...c.done);
+      report.extras.push(...c.extras);
+    } catch (e) {
+      report.errors.push(`Calendrier : ${e instanceof Error ? e.message : "erreur"}`);
+    }
+  }
+
   // 3 : le nom de l'adversaire sur chaque match payé.
   if (rules.opponentOnPaid) {
     try {
@@ -192,7 +207,7 @@ export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryR
   }
 
   report.ok = report.errors.length === 0;
-  if (!dry && (report.added.length || report.photos.length || report.opponents.length || report.unlocked.length || report.errors.length)) {
+  if (!dry && (report.added.length || report.photos.length || report.opponents.length || report.unlocked.length || report.calendar.length || report.errors.length)) {
     await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_robot_run", entityType: "mcs_teams", entityId: CLUB_ID, entityLabel: opts.reason, after: report as unknown as object }).catch(() => null);
   }
   return report;
@@ -399,4 +414,46 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number } = 
   }
   if (nPlayers || nCoaches) await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_attendance_sync", entityType: "activity_player_attendance", entityId: CLUB_ID, entityLabel: `${nPlayers} présences de jeunes, ${nCoaches} d'entraîneurs`, after: { unmatched: [...unmatched] } }).catch(() => null);
   return { players: nPlayers, coaches: nCoaches, unmatched: [...unmatched] };
+}
+
+/** Les pratiques prévues dans le site (plages de la saison, programmes à dates fixes) pour les 45 prochains jours,
+ *  équipe par équipe, comparées à MonClubSportif : création et remise à l'heure ; le reste est signalé. */
+export async function syncCalendar(session: McsSession, teams: TeamTarget[], dry: boolean): Promise<{ done: string[]; extras: string[] }> {
+  const { listPractices } = await import("@/lib/practices-repo");
+  const today = todayLocal();
+  const to = new Date(Date.parse(`${today}T12:00:00Z`) + 45 * 86_400_000).toISOString().slice(0, 10);
+  const [practices, { data: evs }] = await Promise.all([listPractices({ from: today, to }), db().from("mcs_events").select("team_id, key, event_date, start_time, end_time, title, type, location").gte("event_date", today).lte("event_date", to)]);
+  const done: string[] = [];
+  const extras: string[] = [];
+  const fmt = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  for (const t of teams) {
+    if (!t.slot_ids.length && !t.session_program_slugs.length) continue; // aucune source dans le site : on ne touche à rien
+    const site = practices
+      .filter((p) => !p.organization && ((p.key.startsWith("tpl-") && t.slot_ids.some((id) => p.key.startsWith(`tpl-${id}-`))) || t.session_program_slugs.some((slug) => p.key.startsWith(`prog-${slug}-`))))
+      .map((p) => ({ date: p.date, start: p.start, end: p.end, title: p.group, location: p.location }))
+      // Deux plages (deux catégories d'âge) à la même heure dans la même équipe = une seule pratique dans MonClubSportif.
+      .filter((p, i, a) => a.findIndex((x) => x.date === p.date && x.start === p.start) === i);
+    const mine = ((evs ?? []) as any[]).filter((e) => e.team_id === t.id);
+    const mcs = mine
+      .map((e) => ({ id: mcsIdOf(e.key)?.id ?? 0, kind: mcsIdOf(e.key)?.type, date: String(e.event_date).slice(0, 10), start: String(e.start_time ?? "").slice(0, 5), end: e.end_time ? String(e.end_time).slice(0, 5) : null, title: e.title as string, isPractice: e.type !== "Match" && e.type !== "Tournoi" && !/st-?gabriel|elevate|finition|solo/i.test(e.title) }))
+      .filter((e) => e.id && e.kind === "event");
+    const fallback = (() => {
+      const counts = new Map<string, number>();
+      for (const e of mine) if (e.location) counts.set(e.location, (counts.get(e.location) ?? 0) + 1);
+      return [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    })();
+    const diff = calendarDiff(site, mcs);
+    for (const c of diff.create) {
+      const label = `${t.name} : pratique ajoutée ${fmt(c.date)} ${c.start}–${c.end ?? ""}`;
+      if (!dry) await session.createEvent(t.mcs_team_id!, t.mcs_season_id!, { title: `Pratique – ${c.title}`, type: c.title, date: c.date, start: c.start, end: c.end ?? c.start, location: c.location, fallbackLocation: fallback, comments: "Ajoutée par le robot New Valkyria (horaire du site)." });
+      done.push(label);
+    }
+    for (const r of diff.retime) {
+      const label = `${t.name} : ${fmt(r.to.date)} ${r.from} → ${r.to.start}–${r.to.end ?? ""}`;
+      if (!dry && r.to.end) await session.retimeEvent(t.mcs_team_id!, t.mcs_season_id!, r.id, r.to.date, r.to.start, r.to.end);
+      done.push(label);
+    }
+    for (const e of diff.extra) extras.push(`${t.name} : ${fmt(e.date)} ${e.start} « ${e.title.replace(/^(Event|Événement)\s+/i, "")} » n'est pas dans l'horaire du site`);
+  }
+  return { done, extras };
 }
