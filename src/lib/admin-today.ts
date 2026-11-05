@@ -86,7 +86,7 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
       ),
       rows(db().from("boys_trials").select("program_slug, status, trial_date, player_first_name, player_last_name, parent_name").eq("status", "confirmed").gte("trial_date", today)),
       rows(db().from("match_slot_requests").select("id, profile_id, status, created_at, message, profile:match_team_profiles(org_name, team_label, contact_name)").eq("status", "pending").order("created_at")),
-      rows(db().from("shop_orders").select("id, customer_name, distribution_status, created_at").eq("status", "paid").neq("distribution_status", "remis").order("created_at")),
+      rows(db().from("shop_orders").select("id, customer_name, customer_email, registration_id, distribution_status, created_at, items:shop_order_items(product_name, variant_label, quantity, delivered_quantity)").eq("status", "paid").neq("distribution_status", "remis").order("created_at")),
       rows(db().from("shop_order_problems").select("id, order_id, problem_type, description, created_at, order:shop_orders(customer_name)").eq("status", "ouvert").order("created_at")),
       isAdmin ? getOutreachSummary().catch(() => null) : Promise.resolve(null),
       isAdmin ? rows(db().from("special_offers").select("token, title, parent_name, expires_at, paid_at").is("paid_at", null).gt("expires_at", new Date(now).toISOString())) : Promise.resolve([]),
@@ -269,25 +269,32 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
     })
   );
 
-  // ── Commandes boutique / uniformes à remettre ──
+  // ── Commandes boutique / uniformes : chaque article payé et pas encore remis est une priorité du jour (demande de JP) :
+  //    quoi (articles, tailles), pour qui, où en est la commande et la prochaine pratique de la joueuse pour le remettre. ──
   {
-    const priority: Partial<Record<DistributionStatus, number>> = { pret_a_remettre: 0, partiellement_remis: 1, recu: 2 };
+    const priority: Partial<Record<DistributionStatus, number>> = { pret_a_remettre: 0, partiellement_remis: 1, recu: 2, en_production: 3, a_commander: 4 };
     const orders = [...shopOrders].sort((a: any, b: any) => (priority[a.distribution_status as DistributionStatus] ?? 9) - (priority[b.distribution_status as DistributionStatus] ?? 9));
-    const ready = orders.filter((o: any) => o.distribution_status === "pret_a_remettre" || o.distribution_status === "partiellement_remis").length;
+    const nextPractice = await nextPracticeForOrders(orders, today).catch(() => new Map<string, { player: string; when: string }>());
     sections.push(
       section({
         key: "commandes",
-        title: "Commandes à remettre",
-        level: ready ? "orange" : "info",
+        title: "Articles commandés à distribuer",
+        level: orders.length ? "orange" : "info",
         emptyText: "Toutes les commandes payées ont été remises.",
         href: "/admin/uniformes/a-remettre?saison=all",
         hrefLabel: "Uniformes à remettre",
-        items: orders.map((o: any) => ({
-          title: o.customer_name ?? "Commande",
-          detail: DISTRIBUTION_STATUS_LABELS[o.distribution_status as DistributionStatus] ?? o.distribution_status,
-          meta: `Payée le ${shortDay(o.created_at)}`,
-          href: `/admin/uniformes/commande/${o.id}`
-        }))
+        items: orders.map((o: any) => {
+          const np = nextPractice.get(o.id);
+          const items = ((o.items ?? []) as any[])
+            .filter((i) => (i.quantity ?? 0) > (i.delivered_quantity ?? 0))
+            .map((i) => `${(i.quantity ?? 1) - (i.delivered_quantity ?? 0)} × ${String(i.product_name).replace(/\s+New Valkyria$/i, "")}${i.variant_label ? ` (${i.variant_label})` : ""}`);
+          return {
+            title: np ? `${np.player} (${o.customer_name ?? "parent"})` : o.customer_name ?? "Commande",
+            detail: `${items.join(", ") || "Articles"} · ${DISTRIBUTION_STATUS_LABELS[o.distribution_status as DistributionStatus] ?? o.distribution_status}`,
+            meta: np ? `À remettre à sa pratique ${np.when}` : `Payée le ${shortDay(o.created_at)}`,
+            href: `/admin/uniformes/commande/${o.id}`
+          };
+        })
       })
     );
     sections.push(
@@ -603,4 +610,37 @@ async function stripeRefundStateLive(paymentIntentId: string): Promise<{ pending
   } catch {
     return { pending: true, note: "Vérification Stripe impossible : à confirmer" };
   }
+}
+
+const DAYS_FR = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+
+/** Pour chaque commande : la joueuse (liée à la commande, sinon trouvée par le courriel du parent) et sa prochaine
+ *  pratique selon l'horaire de son groupe, pour savoir quand remettre les articles. */
+async function nextPracticeForOrders(orders: any[], today: string): Promise<Map<string, { player: string; when: string }>> {
+  const out = new Map<string, { player: string; when: string }>();
+  if (!orders.length) return out;
+  const ids = orders.map((o) => o.registration_id).filter(Boolean);
+  const emails = orders.filter((o) => !o.registration_id && o.customer_email).map((o) => String(o.customer_email).trim().toLowerCase());
+  const select = "id, parent_email, player_first_name, player_last_name, status, is_trial, created_at, slot:time_slot_templates(day, start_time)";
+  const [byId, byEmail] = await Promise.all([
+    ids.length ? rows(db().from("registrations").select(select).in("id", ids)) : Promise.resolve([]),
+    emails.length ? rows(db().from("registrations").select(select).eq("status", "paid").eq("is_trial", false).order("created_at", { ascending: false })) : Promise.resolve([])
+  ]);
+  for (const o of orders) {
+    const r: any = o.registration_id ? byId.find((x: any) => x.id === o.registration_id) : byEmail.find((x: any) => String(x.parent_email ?? "").trim().toLowerCase() === String(o.customer_email ?? "").trim().toLowerCase());
+    if (!r) continue;
+    const dow = DAYS_FR.indexOf(String(r.slot?.day ?? "").toLowerCase());
+    let when = "";
+    if (dow >= 0) {
+      const base = new Date(`${today}T12:00:00Z`);
+      const start = String(r.slot?.start_time ?? "23:59").slice(0, 5);
+      const nowHm = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: TZ });
+      // Déjà commencée aujourd'hui : on vise la semaine suivante.
+      const delta = ((dow - base.getUTCDay() + 7) % 7) || (nowHm >= start ? 7 : 0);
+      const d = new Date(base.getTime() + delta * 86_400_000).toISOString().slice(0, 10);
+      when = `${delta === 0 ? "aujourd'hui" : `du ${shortDay(`${d}T12:00:00`)}`}${r.slot?.start_time ? ` à ${String(r.slot.start_time).slice(0, 5).replace(":", " h ")}` : ""}`;
+    }
+    out.set(o.id, { player: fullName(r), when: when || "suivante" });
+  }
+  return out;
 }
