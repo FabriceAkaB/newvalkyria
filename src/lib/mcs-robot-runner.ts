@@ -51,6 +51,8 @@ export interface RobotReport {
   calendar: string[];
   /** Pratiques MonClubSportif qui ne sont plus dans le site : à vérifier (jamais supprimées toutes seules). */
   extras: string[];
+  /** Direction assignée à toutes les activités (ex. JP dans chaque équipe). */
+  staff?: string[];
   errors: string[];
 }
 
@@ -131,7 +133,7 @@ export async function openRobotSession(): Promise<McsSession | null> {
 export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryRun?: boolean } = { reason: "cron" }): Promise<RobotReport> {
   const rules = await getMcsRules();
   const dry = opts.dryRun ?? !rules.robotActive;
-  const report: RobotReport = { ok: true, dryRun: dry, added: [], photos: [], opponents: [], unlocked: [], calendar: [], extras: [], errors: [] };
+  const report: RobotReport = { ok: true, dryRun: dry, added: [], photos: [], opponents: [], unlocked: [], calendar: [], extras: [], staff: [], errors: [] };
   let session: McsSession | null = null;
   try {
     session = await openRobotSession();
@@ -197,6 +199,25 @@ export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryR
     }
   }
 
+  // La direction (JP) est assignée à toutes les activités de toutes les équipes, même celles où il ne va pas.
+  if (rules.alwaysAssigned.length) {
+    for (const t of teams) {
+      try {
+        const roster = await session.roster(t.mcs_team_id!, t.mcs_season_id!);
+        for (const name of rules.alwaysAssigned) {
+          const member = roster.find((m) => personKey(m.name, "") === personKey(name, ""));
+          if (!member) continue;
+          const missing = await session.missingAssignments(t.mcs_team_id!, t.mcs_season_id!, member.id);
+          if (!missing.length) continue;
+          if (!dry) await session.assignToAllEvents(t.mcs_team_id!, t.mcs_season_id!, [member.id]);
+          report.staff!.push(`${name} → ${t.name} (${missing.length} activité${missing.length > 1 ? "s" : ""})`);
+        }
+      } catch (e) {
+        report.errors.push(`${t.name} (assignations) : ${e instanceof Error ? e.message : "erreur"}`);
+      }
+    }
+  }
+
   // 3 : le nom de l'adversaire sur chaque match payé.
   if (rules.opponentOnPaid) {
     try {
@@ -207,7 +228,7 @@ export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryR
   }
 
   report.ok = report.errors.length === 0;
-  if (!dry && (report.added.length || report.photos.length || report.opponents.length || report.unlocked.length || report.calendar.length || report.errors.length)) {
+  if (!dry && (report.added.length || report.photos.length || report.opponents.length || report.unlocked.length || report.calendar.length || report.staff!.length || report.errors.length)) {
     await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_robot_run", entityType: "mcs_teams", entityId: CLUB_ID, entityLabel: opts.reason, after: report as unknown as object }).catch(() => null);
   }
   return report;

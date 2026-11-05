@@ -191,3 +191,58 @@ export async function getUnifiedCalendarEvents(from: string, to: string): Promis
     return (a.startTime ?? "").localeCompare(b.startTime ?? "");
   });
 }
+
+/* ── Agenda personnel de JP (« ?perso=1 ») ───────────────────────────
+ *  Tout ce qui est dans MonClubSportif (JP est assigné à toutes les activités de toutes les équipes),
+ *  plus ce que le site connaît en dehors (activités hors académie, pratiques plus loin que la fenêtre iCal de MCS).
+ *  Une activité du site à la même date et la même heure qu'une activité MCS n'est pas répétée. */
+
+export interface McsFeedRow {
+  key: string;
+  event_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  title: string | null;
+  location: string | null;
+  team: string;
+}
+
+/** Titre MCS lisible : sans le préfixe « Event Équipe - » / « Game Équipe - », avec l'équipe devant. */
+export function mcsFeedTitle(title: string | null, team: string): string {
+  const clean = (title ?? "").replace(/^(event|game|match)\s+.+?\s+-\s+/i, "").trim() || "Activité";
+  return /solo/i.test(team) || clean.toLowerCase().includes(team.toLowerCase()) ? clean : `${team} · ${clean}`;
+}
+
+export function mergePersonalFeed(mcs: McsFeedRow[], site: CalendarEvent[]): CalendarEvent[] {
+  const hm = (t: string | null | undefined) => (t ?? "").slice(0, 5);
+  const fromMcs: CalendarEvent[] = mcs.map((e) => ({
+    id: `mcs-${e.key.replace(/[^A-Za-z0-9-]/g, "-")}`,
+    date: e.event_date.slice(0, 10),
+    startTime: e.start_time,
+    endTime: e.end_time,
+    kind: "activite",
+    activityType: null,
+    title: mcsFeedTitle(e.title, e.team),
+    location: e.location,
+    terrainId: null,
+    category: null,
+    coachNames: null
+  }));
+  const taken = new Set(fromMcs.map((e) => `${e.date}|${hm(e.startTime)}`));
+  const extra = site
+    .filter((e) => e.kind !== "essai")
+    .filter((e) => !taken.has(`${e.date}|${hm(e.startTime)}`))
+    .map((e) => (e.organization && !/st-?gabriel|fc elevate/i.test(e.title) ? { ...e, title: `${e.title} (${e.organization})` } : e));
+  return [...fromMcs, ...extra].sort((a, b) => (a.date !== b.date ? a.date.localeCompare(b.date) : (a.startTime ?? "").localeCompare(b.startTime ?? "")));
+}
+
+export async function getPersonalCalendarEvents(from: string, to: string): Promise<CalendarEvent[]> {
+  const [site, { data }] = await Promise.all([
+    getUnifiedCalendarEvents(from, to),
+    db().from("mcs_events").select("key, event_date, start_time, end_time, title, location, team:mcs_teams!inner(name, active)").gte("event_date", from).lte("event_date", to)
+  ]);
+  const rows: McsFeedRow[] = ((data ?? []) as any[])
+    .filter((r) => r.team?.active !== false)
+    .map((r) => ({ key: r.key, event_date: String(r.event_date), start_time: r.start_time, end_time: r.end_time, title: r.title, location: r.location, team: r.team?.name ?? "" }));
+  return mergePersonalFeed(rows, site);
+}

@@ -23,6 +23,10 @@ export const MCS_PATHS = {
   settings: (team: number) => `/team/${team}/settings`,
   teamUpdate: (team: number) => `/team/${team}`,
   calendar: (team: number, season: number) => `/team/${team}/seasons/${season}/calendar`,
+  /** Assignation en lot : cocher des activités (events[]) puis des membres (assign[]) ; unassign=0 ne retire personne. */
+  calendarAssignments: (team: number, season: number) => `/team/${team}/seasons/${season}/calendar/assignments`,
+  /** Les activités d'un membre (cases cochées = il y est assigné). */
+  memberAssignments: (team: number, season: number, member: number) => `/team/${team}/seasons/${season}/roster/${member}/modify?assignment=true`,
   gameEdit: (team: number, season: number, game: number) => `/team/${team}/seasons/${season}/calendar/games/${game}/edit`,
   game: (team: number, season: number, game: number) => `/team/${team}/seasons/${season}/calendar/games/${game}`
 } as const;
@@ -54,6 +58,7 @@ export const MCS_FIELDS = {
     lockHoursEvent: "team[disable_presence_hours_before_happening]",
     assignAllEvents: "team[assign_all_events]"
   },
+  assignments: { events: "events[]", members: "assign[]", unassign: "unassign" },
   game: { opponentId: "game[opponent_id]", opponentName: "opponent[name]", newOpponent: "new", sendByEmail: "send_by_email" }
 } as const;
 

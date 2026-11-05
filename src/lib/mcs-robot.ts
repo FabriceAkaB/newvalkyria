@@ -44,6 +44,20 @@ export function parseAssignIds(html: string): string[] {
     .filter(Boolean);
 }
 
+/** Page « activités du membre » : nombre d'activités et celles où il n'est pas encore assigné. */
+export function parseMemberAssignments(html: string): { total: number; missing: string[] } {
+  const boxes = parse(html).querySelectorAll(`input[name="${MCS_FIELDS.member.assign}"]`);
+  return { total: boxes.length, missing: boxes.filter((b) => b.getAttribute("checked") === undefined).map((b) => b.getAttribute("value") ?? "").filter(Boolean) };
+}
+
+/** Page d'assignation en lot : toutes les activités à venir de l'équipe. */
+export function parseAssignmentEvents(html: string): string[] {
+  return parse(html)
+    .querySelectorAll(`input[name="${MCS_FIELDS.assignments.events}"]`)
+    .map((i) => i.getAttribute("value") ?? "")
+    .filter(Boolean);
+}
+
 export interface PresenceGrid {
   events: { id: number; title: string }[];
   rows: { memberId: number; name: string; states: Record<number, McsPresenceState> }[];
@@ -280,6 +294,31 @@ export class McsSession {
     for (const [k, v] of Object.entries(set)) f.set(k, v);
     const res = await this.request(MCS_PATHS.event(team, season, id), { method: "POST", body: f });
     if (res.status >= 400) throw new McsRobotError(`Heure refusée par MonClubSportif (${date}).`);
+  }
+
+  /** Activités où ce membre n'est pas encore assigné. */
+  async missingAssignments(team: number, season: number, member: number): Promise<string[]> {
+    return parseMemberAssignments(await this.page(MCS_PATHS.memberAssignments(team, season, member))).missing;
+  }
+
+  /** Assigne ces membres à toutes les activités à venir de l'équipe, sans retirer personne ni marquer présent. */
+  async assignToAllEvents(team: number, season: number, memberIds: number[]): Promise<number> {
+    const path = MCS_PATHS.calendarAssignments(team, season);
+    const html = await this.page(path);
+    const events = parseAssignmentEvents(html);
+    const token = csrfOf(html);
+    if (!events.length) return 0;
+    if (!token) throw new McsRobotError("Page d'assignation illisible (balises à revoir).");
+    const A = MCS_FIELDS.assignments;
+    const f = new URLSearchParams();
+    f.set(MCS_FIELDS.csrf, token);
+    for (const e of events) f.append(A.events, e);
+    f.set(A.unassign, "0");
+    for (const m of memberIds) f.append(A.members, String(m));
+    f.set("button", "");
+    const res = await this.request(path, { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Assignation refusée par MonClubSportif (${res.status}).`);
+    return events.length;
   }
 
   /** Présences modifiables en tout temps (0 h de verrou avant les matchs et les pratiques), le reste inchangé. */

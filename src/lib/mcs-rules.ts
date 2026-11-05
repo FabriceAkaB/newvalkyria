@@ -23,6 +23,9 @@ export interface McsRules {
   removeOnRefund: "validation" | "auto" | "jamais";
   /** Programme du site → niveau de l'équipe de matchs (ex. Team Valkyria Avancé → AV). */
   matchLevelByProgram: Record<string, "AV" | "INT">;
+  /** Personnes (nom affiché dans MCS) assignées à TOUTES les activités de toutes les équipes, même absentes :
+   *  la direction voit ainsi tout dans son calendrier MonClubSportif. */
+  alwaysAssigned: string[];
 }
 
 export const DEFAULT_MCS_RULES: McsRules = {
@@ -35,7 +38,8 @@ export const DEFAULT_MCS_RULES: McsRules = {
   presenceAlwaysEditable: true,
   reminders: { active: true, hoursBefore: [48, 24], sameDayHours: [9, 15] },
   removeOnRefund: "validation",
-  matchLevelByProgram: { TVA: "AV", SVA: "AV", TV: "INT", SV: "INT", TVD: "INT" }
+  matchLevelByProgram: { TVA: "AV", SVA: "AV", TV: "INT", SV: "INT", TVD: "INT" },
+  alwaysAssigned: ["Jean-Paul Aka Boidi"]
 };
 
 const hours = (v: unknown, max: number) =>
@@ -64,7 +68,10 @@ export function normalizeRules(input: unknown): McsRules {
       sameDayHours: (hours(rem.sameDayHours, 23) ?? DEFAULT_MCS_RULES.reminders.sameDayHours).sort((a, b) => a - b)
     },
     removeOnRefund: r.removeOnRefund === "auto" || r.removeOnRefund === "jamais" ? r.removeOnRefund : "validation",
-    matchLevelByProgram: levels
+    matchLevelByProgram: levels,
+    alwaysAssigned: Array.isArray(r.alwaysAssigned)
+      ? [...new Set(r.alwaysAssigned.map((n: unknown) => String(n ?? "").trim().replace(/\s+/g, " ")).filter((n: string) => n.length >= 3 && n.length <= 80))].slice(0, 10)
+      : DEFAULT_MCS_RULES.alwaysAssigned
   };
 }
 

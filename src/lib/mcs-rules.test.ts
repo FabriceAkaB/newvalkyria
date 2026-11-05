@@ -92,3 +92,11 @@ describe("règles MonClubSportif", () => {
     expect(d.extra.map((e) => e.id)).toEqual([4]);
   });
 });
+
+describe("toujours assignés", () => {
+  it("JP par défaut, liste nettoyée sinon", async () => {
+    const { normalizeRules } = await import("@/lib/mcs-rules");
+    expect(normalizeRules({}).alwaysAssigned).toEqual(["Jean-Paul Aka Boidi"]);
+    expect(normalizeRules({ alwaysAssigned: ["  Maeva  Desjardin ", "x", "Maeva Desjardin"] }).alwaysAssigned).toEqual(["Maeva Desjardin"]);
+  });
+});

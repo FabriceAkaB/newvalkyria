@@ -40,3 +40,12 @@ describe("robot MonClubSportif : lecture des pages", () => {
     expect(formFields(game, "/games/5")).toEqual([["_method", "patch"], ["game[opponent_id]", "12"], ["game[home]", "1"], ["game[comments]", "Bonne chance"]]);
   });
 });
+
+describe("assignations de la direction", () => {
+  it("lit les activités où le membre n'est pas assigné", async () => {
+    const { parseMemberAssignments, parseAssignmentEvents } = await import("@/lib/mcs-robot");
+    const html = `<form><input type="checkbox" name="assign[]" value="11" checked><input type="checkbox" name="assign[]" value="12"></form>`;
+    expect(parseMemberAssignments(html)).toEqual({ total: 2, missing: ["12"] });
+    expect(parseAssignmentEvents(`<input name="events[]" value="5"><input name="events[]" value="6">`)).toEqual(["5", "6"]);
+  });
+});

@@ -24,7 +24,7 @@ interface NewGroupForm {
   maxPlaces: number;
 }
 
-const EMPTY_FORM: NewGroupForm = { label: "", day: "Vendredi", startTime: "18:00", endTime: "19:15", location: "", maxPlaces: 4 };
+const EMPTY_FORM: NewGroupForm = { label: "", day: "Vendredi", startTime: "18:00", endTime: "19:00", location: "", maxPlaces: 4 };
 
 function playerName(r: Registration): string {
   const name = [r.player_first_name, r.player_last_name].filter(Boolean).join(" ");

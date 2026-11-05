@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getUnifiedCalendarEvents, verifyCalendarFeedToken } from "@/lib/calendar-repo";
+import { getPersonalCalendarEvents, getUnifiedCalendarEvents, verifyCalendarFeedToken } from "@/lib/calendar-repo";
 import { generateICS } from "@/lib/ical";
 
 function isoDate(d: Date): string {
@@ -17,15 +17,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   const valid = await verifyCalendarFeedToken(token);
   if (!valid) return new NextResponse("Jeton invalide", { status: 404 });
 
-  // « ?perso=1 » : seulement les activités de JP hors académie (Saint-Gabriel, FC Elevate…), toute la saison,
-  // pour son agenda Google ; sinon l'agenda de l'académie (90 jours).
+  // « ?perso=1 » : l'agenda de JP pour Google, toute la saison : tout ce qui est dans MonClubSportif (il est assigné
+  // à toutes les activités) + ses activités hors académie (Saint-Gabriel, FC Elevate…) ; sinon l'agenda de l'académie (90 jours).
   const perso = new URL(request.url).searchParams.has("perso");
   const today = new Date();
   const from = isoDate(new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000));
   const to = isoDate(new Date(today.getTime() + (perso ? 400 : 90) * 24 * 60 * 60 * 1000));
 
-  const all = await getUnifiedCalendarEvents(from, to);
-  const events = perso ? all.filter((e) => e.organization).map((e) => ({ ...e, title: `${e.title}${/st-?gabriel/i.test(e.title) || /fc elevate/i.test(e.title) ? "" : ` (${e.organization})`}` })) : all;
+  const events = perso ? await getPersonalCalendarEvents(from, to) : await getUnifiedCalendarEvents(from, to);
   const ics = generateICS(events);
 
   return new NextResponse(ics, {

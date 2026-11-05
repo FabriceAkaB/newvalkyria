@@ -15,6 +15,7 @@ interface Report {
   unlocked: string[];
   calendar?: string[];
   extras?: string[];
+  staff?: string[];
   errors: string[];
 }
 
@@ -122,6 +123,9 @@ export function McsRobotPanel({ initial, hasAccount }: { initial: McsRules; hasA
           </select>
         </label>
         <p className="mda-sub" style={{ margin: 0 }}>
+          Toujours assigné à toutes les activités, même absent : {rules.alwaysAssigned.join(", ") || "personne"}
+        </p>
+        <p className="mda-sub" style={{ margin: 0 }}>
           Équipes de matchs : {Object.entries(rules.matchLevelByProgram).map(([p, l]) => `${p} → ${l}`).join(" · ")}
         </p>
         <div className="cm-actions" style={{ marginTop: 0 }}>
@@ -152,8 +156,9 @@ export function McsRobotPanel({ initial, hasAccount }: { initial: McsRules; hasA
             {section("Équipes où les présences ont été déverrouillées", report.unlocked)}
             {section(report.dryRun ? "Calendrier : à faire dans MonClubSportif" : "Calendrier : fait dans MonClubSportif", report.calendar ?? [])}
             {section("À vérifier : dans MonClubSportif mais plus dans l'horaire du site", report.extras ?? [])}
+            {section(report.dryRun ? "Direction à assigner à toutes les activités" : "Direction assignée à toutes les activités", report.staff ?? [])}
             {section("Erreurs", report.errors)}
-            {!report.skipped && !report.added.length && !report.photos.length && !report.opponents.length && !report.unlocked.length && !report.errors.length ? <p className="mda-sub" style={{ margin: "6px 0 0" }}>Rien à faire : tout concorde.</p> : null}
+            {!report.skipped && !report.added.length && !report.photos.length && !report.opponents.length && !report.unlocked.length && !(report.calendar ?? []).length && !(report.staff ?? []).length && !report.errors.length ? <p className="mda-sub" style={{ margin: "6px 0 0" }}>Rien à faire : tout concorde.</p> : null}
           </div>
         )}
       </div>
