@@ -18,7 +18,43 @@ description: Relier MonClubSportif (MCS, la plateforme d'équipes de New Valkyri
   - jamais avec un mot de passe saisi par Claude ;
   - c'est l'agent A12, en mode assistant d'abord : préparer les clics, JP regarde.
 
-## En place (3 nov. 2026, commit 8a4067c)
+## Le robot A12 : état au 5 nov. 2026 (à lire avant de toucher au code)
+
+**Où vit quoi.** Ce qui ne doit pas bouger quand le code change est en base, pas dans le code :
+- Règles du club : `app_settings` clé `mcs_rules` (`mcs-rules.ts`, `normalizeRules`). Les champs absents prennent la valeur
+  par défaut, donc un ajout de règle ne casse jamais les règles enregistrées. Écran : `/admin/monclubsportif/robot`.
+- Mémoire du robot : `mcs_sync_items` (kind `membre`, `evenement`, `photo`, `adversaire`, `rappel`), clé = `personKey`
+  (« beatrice prevost »). `photoKey` de `mcs-sync.ts` est la même clé. Sans cette mémoire, le robot refait tout à chaque heure.
+- Équipes : `mcs_teams` (`mcs_team_id`, `mcs_season_id`, `kind`, `slot_ids`, `program_ids`, `session_program_slugs`).
+- Courriels programmés : `scheduled_emails`.
+
+**Code.** `mcs-site-map.ts` (adresses et noms de champs MCS : seul endroit à corriger si MCS change ses pages),
+`mcs-robot.ts` (session, lecture des pages, formulaires), `mcs-robot-runner.ts` (`runMcsRobot`), `mcs-rules.ts` (règles pures).
+Tests : `mcs-robot.test.ts`, `mcs-rules.test.ts`, `calendar-personal.test.ts`. Ils verrouillent les règles ci-dessous :
+les faire passer avant tout commit qui touche au robot.
+
+**Règles que JP a fixées (ne pas changer sans lui) :**
+- JP (« Jean-Paul Aka Boidi », règle `alwaysAssigned`) est assigné à **toutes** les activités de toutes les équipes, même
+  celles où il ne va pas. Son agenda Google (`/api/calendar/<jeton>.ics?perso=1`) montre tout MCS plus ses activités hors académie.
+- **Remplaçantes** (section « Remplaçants » du roster) : jamais assignées par le robot. Le formulaire « nouvelle activité » de MCS
+  les met dans `invite[]` et `include_reserve` : le robot ne les envoie jamais (`CREATE_EVENT_SKIPPED`). Une remplaçante n'est
+  mise sur une activité qu'à la demande de JP (ex. 5 nov. : Béatrice Prévost sur le match du 7 nov., Stella Roy sur les
+  pratiques du 15 et du 29 nov., équipe 2016-2017 AV).
+- Une éducatrice peut rester dans un groupe sans être assignée (ex. Maéva chez les garçons 2014-2015 : seulement la semaine du 7 nov.).
+- Photos du site → profil MCS dès l'inscription (fait à la main le 5 nov. pour les 34 inscrites, 96 profils, notées dans `mcs_sync_items`).
+
+**Pages MCS utiles (pas d'API, Rails, session du compte organisation) :**
+- `/team/T/seasons/S/roster` : sections Joueurs, Entraîneurs, Remplaçants ; `no_photo_thumb` = pas de photo.
+- `/roster/M/modify?assignment=true` : les activités du membre (cases `assign[]`) ; le formulaire `/roster/M/assign`
+  (`_method=patch`) remplace **exactement** la liste cochée.
+- `/calendar/assignments` : assignation en lot (`events[]`, `assign[]`, `unassign=0` ne retire personne).
+- `/roster/M/modify` : formulaire multipart, photo dans `member[picture]`.
+
+**Ce qui manque pour qu'il tourne seul :** le compte robot (info+robot@newvalkyria.com) accepté dans l'organisation, ses accès
+enregistrés dans Robot et règles, puis « Activer le robot » (`robotActive`). C'est JP qui le fait : Claude ne saisit
+jamais de mot de passe. Tant que ce n'est pas fait, le cron horaire `api/cron/mcs-robot` ne fait rien dans MCS.
+
+## Historique : lecture iCal (3 nov. 2026, commit 8a4067c)
 
 - **Lecture par équipe :**
   - tables `mcs_teams` (nom, `birth_years`, genre, `ical_url` gardé côté serveur, dernière lecture, erreur) et `mcs_events` (cache sur 10 semaines, `opponent` lu dans le titre) ;

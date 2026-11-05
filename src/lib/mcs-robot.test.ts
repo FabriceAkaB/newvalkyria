@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { csrfOf, formFields, isLoginPage, parseAssignIds, parseOpponents, parsePresences, parseRoster } from "@/lib/mcs-robot";
+import { CREATE_EVENT_SKIPPED, csrfOf, formFields, isLoginPage, parseAssignIds, parseOpponents, parsePresences, parseRoster } from "@/lib/mcs-robot";
 
 // Pages MonClubSportif réduites à l'essentiel (structure relevée le 5 nov. 2026, noms inventés).
 const cell = (event: number, state: string) =>
@@ -47,5 +47,13 @@ describe("assignations de la direction", () => {
     const html = `<form><input type="checkbox" name="assign[]" value="11" checked><input type="checkbox" name="assign[]" value="12"></form>`;
     expect(parseMemberAssignments(html)).toEqual({ total: 2, missing: ["12"] });
     expect(parseAssignmentEvents(`<input name="events[]" value="5"><input name="events[]" value="6">`)).toEqual(["5", "6"]);
+  });
+});
+
+describe("remplaçantes jamais assignées par le robot", () => {
+  it("une nouvelle activité n'invite ni les remplaçantes ni « inclure les remplaçants », même si MCS les cochait", () => {
+    const html = `<form action="/team/1/seasons/2/calendar/events"><input type="checkbox" name="assign[]" value="11" checked><input type="checkbox" name="include_reserve" checked><input type="checkbox" class="reserve-checkbox" name="invite[]" value="77" checked><input type="checkbox" class="reserve-checkbox" name="invite[]" value="78"></form>`;
+    const sent = formFields(html, "/calendar/events").filter(([k]) => !CREATE_EVENT_SKIPPED.includes(k));
+    expect(sent).toEqual([["assign[]", "11"]]);
   });
 });

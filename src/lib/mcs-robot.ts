@@ -105,6 +105,9 @@ export function parseOpponents(html: string): Map<string, string> {
 }
 
 /** Tous les champs d'un formulaire (pour renvoyer les valeurs actuelles en ne changeant que ce qu'il faut). */
+/** Champs du formulaire « nouvelle activité » jamais envoyés : pas de courriel MCS, pas de répétition, et jamais les remplaçantes. */
+export const CREATE_EVENT_SKIPPED = ["send_by_email", "recurrence[on]", "everyone_present", "show_arrival_time", "include_reserve", "invite[]"];
+
 export function formFields(html: string, actionIncludes: string): [string, string][] {
   const form = parse(html)
     .querySelectorAll("form")
@@ -258,7 +261,8 @@ export class McsSession {
     const path = MCS_PATHS.eventCreate(team, season);
     const html = await this.page(path);
     const action = `/team/${team}/seasons/${season}/calendar/events`;
-    const fields = formFields(html, action).filter(([k]) => !["send_by_email", "recurrence[on]", "everyone_present", "show_arrival_time"].includes(k));
+    // Jamais les remplaçantes (« invite[] », « include_reserve ») : une remplaçante n'est mise sur une activité qu'à la main, par JP.
+    const fields = formFields(html, action).filter(([k]) => !CREATE_EVENT_SKIPPED.includes(k));
     if (!fields.length) throw new McsRobotError("Formulaire de création d'activité illisible (balises à revoir).");
     const options = parse(html).querySelectorAll('select[name="happening[location_id]"] option').map((o) => ({ v: o.getAttribute("value") ?? "", t: o.text.trim() }));
     const pick = (name?: string | null) => (name ? options.find((o) => o.v && o.v !== "new" && o.t.toLowerCase().startsWith(name.toLowerCase().slice(0, 18))) : undefined);

@@ -100,3 +100,12 @@ describe("toujours assignés", () => {
     expect(normalizeRules({ alwaysAssigned: ["  Maeva  Desjardin ", "x", "Maeva Desjardin"] }).alwaysAssigned).toEqual(["Maeva Desjardin"]);
   });
 });
+
+describe("clé photo", () => {
+  it("le robot et la liste « à faire dans MCS » utilisent la même clé", async () => {
+    const { photoKey } = await import("@/lib/mcs-sync");
+    const { personKey } = await import("@/lib/mcs-rules");
+    expect(photoKey("Béatrice", "Prévost")).toBe(personKey("Béatrice", "Prévost"));
+    expect(photoKey("Béatrice", "Prévost")).toBe("beatrice prevost");
+  });
+});

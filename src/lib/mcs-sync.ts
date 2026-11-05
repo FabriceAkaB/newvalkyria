@@ -1,4 +1,5 @@
 import { CLUB_ID } from "@/lib/club";
+import { personKey } from "@/lib/mcs-rules";
 import { getAllEventsForExport, getAllMembersForExport } from "@/lib/monclubsportif-export";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -19,7 +20,8 @@ const norm = (s: unknown) =>
     .replace(/\s+/g, " ")
     .trim();
 
-export const photoKey = (first: unknown, last: unknown) => [first, last].map(norm).join("|");
+/** Même clé que le robot (`personKey`) : une photo notée « envoyée » ici l'est aussi pour le robot, et l'inverse. */
+export const photoKey = (first: unknown, last: unknown) => personKey(first, last);
 export const memberKey = (r: (string | null)[]) => [r[0], r[1], r[4], r[5]].map(norm).join("|");
 export const memberLabel = (r: (string | null)[]) => `${r[0] ?? ""} ${r[1] ?? ""} · ${r[5] ?? r[4] ?? ""}`.trim();
 export const eventKey = (r: (string | null)[]) => [r[1], r[2], r[6], r[11]].map(norm).join("|");
