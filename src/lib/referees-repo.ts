@@ -161,7 +161,7 @@ export async function listMatches(opts: { from?: string; to?: string } = {}): Pr
       bookingStatus: b?.status ?? null,
       revenueCents: revenue,
       balanceDueCents: balanceDue,
-      refereesNeeded: s.referees_needed ?? 2,
+      refereesNeeded: s.referees_needed ?? 1,
       refereeFeeCents: s.referee_fee_cents ?? 5000,
       fieldCostCents: s.field_cost_cents ?? 18650,
       coachCostCents: s.coach_cost_cents ?? 4000,
@@ -191,7 +191,7 @@ export async function updateMatchCosts(slotId: string, patch: { referees_needed?
 export async function openPositions(slotId: string): Promise<number> {
   const { data: slot } = await db().from("match_slots").select("referees_needed, referee_fee_cents").eq("id", slotId).single();
   const { data: existing } = await db().from("referee_assignments").select("id").eq("match_slot_id", slotId).neq("status", "annule");
-  const missing = Math.max(0, (slot?.referees_needed ?? 2) - (existing?.length ?? 0));
+  const missing = Math.max(0, (slot?.referees_needed ?? 1) - (existing?.length ?? 0));
   if (missing) {
     const rows = Array.from({ length: missing }, () => ({ club_id: CLUB_ID, match_slot_id: slotId, fee_cents: slot?.referee_fee_cents ?? 5000, role: "arbitre", status: "ouvert" }));
     const { error } = await db().from("referee_assignments").insert(rows);
