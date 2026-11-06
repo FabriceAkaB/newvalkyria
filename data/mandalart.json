@@ -1928,6 +1928,20 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Préparations à l'avance"
+      },
+      {
+       "code": "P2.4.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Passer chaque offre à l'équation de valeur de $100M Offers (résultat rêvé, probabilité perçue, délai, effort) : ajouter garantie, bonus, rareté et urgence ; commencer par l'été 2027.",
+       "due": "2026-12-15",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
       }
      ]
     },
@@ -2162,6 +2176,34 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.1.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Concept à essayer en vrai : concours « Toi et ton amie gagnez » (les deux gagnent la même chose, ex. une séance privée ou un sac Valkyria). Participation par le site avec le courriel des deux familles ; mesurer participations, nouvelles familles, essais et inscriptions.",
+       "due": "2026-12-15",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.1.07",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Refaire un concours à chaque période d'inscription (été, saison) avec le prix qui a le mieux marché ; règlement du concours conforme (Régie des alcools, des courses et des jeux si la valeur l'exige).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
       }
      ]
     },
@@ -2224,6 +2266,90 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      },
+      {
+       "code": "P3.2.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Commencer à publier sur les comptes de l'académie le 15 novembre et ne plus arrêter (calendrier de publication tenu chaque semaine).",
+       "due": "2026-11-15",
+       "owner": "JP + caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.2.07",
+       "priority": "star",
+       "level": 1,
+       "title": "Tourner les entrevues vidéo des joueuses (ce qu'elles ont appris, ce qu'elles aiment, leur progrès), avec le consentement écrit des parents.",
+       "due": "2026-11-30",
+       "owner": "JP + caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.2.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Tourner les entrevues vidéo des parents (pourquoi New Valkyria, ce qui a changé chez leur fille) et les publier comme témoignages.",
+       "due": "2026-11-30",
+       "owner": "JP + caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.2.09",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Monter chaque entrevue en 3 formats : reel de 30 secondes, version longue pour le site, citation en image.",
+       "due": "2026-12-15",
+       "owner": "Caméra",
+       "links": [
+        "A13"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.2.10",
+       "priority": "star",
+       "level": 1,
+       "title": "Écrire la charte graphique Valkyria (logo, couleurs, polices, gabarits reel, carrousel, story, affiche) pour qu'une publication de l'académie se reconnaisse au premier coup d'œil.",
+       "due": "2026-11-30",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A13"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.2.11",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Vérifier chaque publication contre la charte avant de publier (agent identité visuelle).",
+       "due": "2027-01-31",
+       "owner": "Claude Code",
+       "links": [
+        "A13"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
       }
      ]
     },
@@ -2378,6 +2504,32 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P3.6.04",
+       "priority": "star",
+       "level": 1,
+       "title": "Concept à essayer en vrai : la Bourse Valkyria. Les familles postulent (formulaire court : la joueuse, sa motivation) ; quelques bourses complètes, et chaque candidate non retenue reçoit une bourse partielle (rabais) valable 7 jours. Chaque candidature entre dans la liste chaude.",
+       "due": "2027-01-31",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.6.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Mesurer la Bourse : candidatures, bourses partielles utilisées, inscriptions, coût par inscription ; décider de la refaire chaque saison.",
+       "due": "2027-03-31",
+       "owner": "Claude Code",
+       "links": [
+        "A06"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
       }
      ]
     },
@@ -4093,6 +4245,20 @@
         "A06"
        ],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.5.03",
+       "priority": "star",
+       "level": 2,
+       "title": "Bâtir le modèle d'argent de l'académie selon $100M Money Models : offre d'attraction (essai, concours, bourse), montée en gamme (Solo, privé, Sport-Études), offre de repli (demi-saison, versements), offre continue (saison suivante, camps) ; une ligne par offre avec son prix et sa marge.",
+       "due": "2027-01-31",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
       }
      ]
     },
@@ -4847,6 +5013,20 @@
         "A11"
        ],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.7.09",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Construire l'agent analyse de la concurrence (A07) : fiche par concurrent dans `docs/concurrence/`, relevé mensuel, alerte si un concurrent ouvre un groupe filles dans nos villes.",
+       "due": "2027-01-31",
+       "owner": "Claude Code",
+       "links": [
+        "A07"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
       }
      ]
     },
@@ -5186,16 +5366,19 @@
     "P8.7.04"
    ],
    "objective": "P8.7",
-   "role": "Analyse les meilleures académies (offres, prix) et propose de nouvelles sources de revenus.",
+   "role": "Son seul travail : connaître les concurrents mieux qu'eux-mêmes (offres, prix, remplissage, marketing, forces et faiblesses) et dire à JP quoi copier, quoi éviter et où attaquer. Tous ses rapports vont dans le dossier « Analyse de la concurrence » (`docs/concurrence/`), à commencer par Footie Elite (26 oct. 2026).",
    "triggers": [
-    "Une fois par mois."
+    "Une fois par mois",
+    "dès qu'un concurrent ouvre un groupe, une ville ou une offre dans nos secteurs."
    ],
    "reads": [
-    "Sites publics des académies et clubs."
+    "Sites publics, tunnels de réservation (sans s'inscrire ni payer), avis Google, réseaux sociaux et bibliothèque publicitaire Meta des académies et clubs."
    ],
    "does": [
-    "Rapport mensuel des offres et prix observés",
-    "Idées de revenus, chacune envoyée à l'agent financier."
+    "Fiche par concurrent tenue à jour",
+    "relevé mensuel du remplissage (ex. Footie Elite à Boisbriand, Mirabel, Saint-Jérôme)",
+    "alerte si un concurrent ouvre un groupe filles 9-12 ans dans nos villes",
+    "idées à copier, chacune envoyée à l'agent financier pour le calculateur."
    ],
    "humanValidation": "JP choisit ce qui passe au calculateur.",
    "access": "Web public seulement.",
@@ -5329,6 +5512,40 @@
    "humanValidation": "Aucune décision.",
    "access": "Lecture seule.",
    "metrics": "JP lit un seul résumé au lieu de onze rapports."
+  },
+  {
+   "id": "A13",
+   "order": 13,
+   "name": "Agent identité visuelle",
+   "level": 1,
+   "prerequisites": [
+    "Charte graphique approuvée par JP (P3.2.10)"
+   ],
+   "tasks": [
+    "P3.2.10",
+    "P3.2.11"
+   ],
+   "objective": "P3.2",
+   "role": "Qu'on reconnaisse une publication de l'académie en une seconde, avant même de lire le nom : mêmes couleurs, mêmes polices, mêmes gabarits, même façon de filmer et de titrer.",
+   "triggers": [
+    "Avant chaque publication",
+    "chaque nouvelle campagne (concours, bourse, inscriptions)",
+    "une fois par mois (revue du fil Instagram)."
+   ],
+   "reads": [
+    "Charte graphique Valkyria",
+    "publications prévues (marketing_posts)",
+    "fil Instagram et Facebook public."
+   ],
+   "does": [
+    "Tient la charte graphique (logo, couleurs, polices, gabarits de reel, carrousel, story et affiche)",
+    "vérifie chaque publication contre la charte et la corrige avant que JP publie",
+    "prépare les gabarits de chaque campagne."
+   ],
+   "humanValidation": "JP approuve la charte et chaque gabarit ; ensuite la vérification est automatique.",
+   "access": "Lecture : publications prévues, charte. Écriture : brouillons de publications. Interdit : inscriptions, paiements, données des enfants.",
+   "metrics": "Publications conformes à la charte (cible 100 %) ; reconnaissance de la marque dans le sondage de fin de saison.",
+   "addedOn": "2026-11-02"
   },
   {
    "id": "A12",
@@ -5764,6 +5981,10 @@
    {
     "title": "Présence sur Google et référencement local (6 nov. 2026)",
     "text": "Une académie privée se choisit sur Google : une famille tape « soccer filles Sainte-Thérèse » ou « académie de soccer Laurentides » et appelle les trois premiers résultats de la carte. La fiche Google (catégorie **École de sport**, choix de JP), les avis des familles contentes et des pages par ville font ce travail gratuitement, toute l'année. Même nom, même adresse, même téléphone partout. Claude Code prépare et déploie les inscriptions dès le feu vert de JP ; JP fait seulement les vérifications qui demandent son identité (code postal ou appel de Google)."
+   },
+   {
+    "title": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)",
+    "text": "Ce qui ramène le plus de familles, confirmé autour de JP : **les concours**, surtout « tu gagnes et ton amie gagne la même chose » (chaque participation amène une nouvelle famille), et **la bourse** : les familles postulent pour une bourse ; celles qui ne la gagnent pas reçoivent une bourse partielle (un rabais) valable quelques jours, ce qui transforme chaque candidature en inscription probable. À essayer pour vrai, mesuré comme le reste. Le contenu ne s'arrête plus : **à partir du 15 novembre, l'académie publie sans arrêt**, et **à la fin novembre on tourne les entrevues vidéo des joueuses et des parents** (la meilleure preuve qu'on puisse montrer). Les livres d'Alex Hormozi servent de base partout : **$100M Offers** (équation de valeur, garantie, bonus, rareté, urgence) pour chaque offre ; **$100M Leads** (Core Four, règle des 100, Lead Getters) dans la tête du responsable marketing (agent A05) ; **$100M Money Models** (offre d'attraction, offre de montée en gamme, offre de repli, offre continue) dans la tête du responsable des finances (agent A04)."
    }
   ]
  },

@@ -307,12 +307,12 @@ Deux choses différentes : les **automatisations** sont des règles fixes du sit
 - **Comment savoir s'il fonctionne** : Part des inscriptions avec source connue (cible 100 %).
 - **Construit au niveau** N6 ; objectif P8.7 ; tâches P7.5.02, P8.7.03.
 
-#### A07 — Agent veille commerciale
+#### A07 — Agent analyse de la concurrence
 
-- **Rôle** : Analyse les meilleures académies (offres, prix) et propose de nouvelles sources de revenus.
-- **Se déclenche quand** : Une fois par mois.
-- **Lit** : Sites publics des académies et clubs.
-- **Fait** : Rapport mensuel des offres et prix observés ; Idées de revenus, chacune envoyée à l'agent financier.
+- **Rôle** : Son seul travail : connaître les concurrents mieux qu'eux-mêmes (offres, prix, remplissage, marketing, forces et faiblesses) et dire à JP quoi copier, quoi éviter et où attaquer. Tous ses rapports vont dans le dossier « Analyse de la concurrence » (`docs/concurrence/`), à commencer par Footie Elite (26 oct. 2026).
+- **Se déclenche quand** : Une fois par mois ; dès qu'un concurrent ouvre un groupe, une ville ou une offre dans nos secteurs.
+- **Lit** : Sites publics, tunnels de réservation (sans s'inscrire ni payer), avis Google, réseaux sociaux et bibliothèque publicitaire Meta des académies et clubs.
+- **Fait** : Fiche par concurrent tenue à jour ; relevé mensuel du remplissage (ex. Footie Elite à Boisbriand, Mirabel, Saint-Jérôme) ; alerte si un concurrent ouvre un groupe filles 9-12 ans dans nos villes ; idées à copier, chacune envoyée à l'agent financier pour le calculateur.
 - **Validation humaine** : JP choisit ce qui passe au calculateur.
 - **Accès** : Web public seulement.
 - **Comment savoir s'il fonctionne** : Idées testées ; idées passées en GO.
@@ -1277,6 +1277,7 @@ Le Mandalart ne sert pas qu'à cocher. Chaque mois, il compare l'argent encaiss�
 
 | Ordre | Agent | Niveau de construction | Prérequis | Tâches du Mandalart |
 | --- | --- | --- | --- | --- |
+| 13 | A13 Agent identité visuelle | N1 | Charte graphique approuvée par JP (P3.2.10) | P3.2.10, P3.2.11 |
 | 12 | A12 Agent MonClubSportif | N2 | Liste « à faire dans MonClubSportif » (AU19) ; Liste des tâches manuelles (P8.4.04) ; Réponse de MonClubSportif sur l'API (P8.4.05) | P8.4.05, P8.4.07 |
 
 #### A12 — Agent MonClubSportif
@@ -1289,6 +1290,17 @@ Le Mandalart ne sert pas qu'à cocher. Chaque mois, il compare l'argent encaiss�
 - **Accès** : Lecture : inscriptions, paiements, calendrier. Écriture : MonClubSportif seulement (par API si elle existe, sinon navigateur automatisé avec un compte dédié dont JP garde le mot de passe). Interdit : paiements, données de santé.
 - **Comment savoir s'il fonctionne** : Écarts entre le site et MonClubSportif (cible 0) ; minutes de saisie sauvées par semaine.
 - **Construit au niveau** N2 ; objectif P8.4 ; tâches P8.4.05, P8.4.07.
+
+#### A13 — Agent identité visuelle
+
+- **Rôle** : Qu'on reconnaisse une publication de l'académie en une seconde, avant même de lire le nom : mêmes couleurs, mêmes polices, mêmes gabarits, même façon de filmer et de titrer.
+- **Se déclenche quand** : Avant chaque publication ; chaque nouvelle campagne (concours, bourse, inscriptions) ; une fois par mois (revue du fil Instagram).
+- **Lit** : Charte graphique Valkyria ; publications prévues (marketing_posts) ; fil Instagram et Facebook public.
+- **Fait** : Tient la charte graphique (logo, couleurs, polices, gabarits de reel, carrousel, story et affiche) ; vérifie chaque publication contre la charte et la corrige avant que JP publie ; prépare les gabarits de chaque campagne.
+- **Validation humaine** : JP approuve la charte et chaque gabarit ; ensuite la vérification est automatique.
+- **Accès** : Lecture : publications prévues, charte. Écriture : brouillons de publications. Interdit : inscriptions, paiements, données des enfants.
+- **Comment savoir s'il fonctionne** : Publications conformes à la charte (cible 100 %) ; reconnaissance de la marque dans le sondage de fin de saison.
+- **Construit au niveau** N1 ; objectif P3.2 ; tâches P3.2.10, P3.2.11.
 
 ### Présence sur Google et référencement local (6 nov. 2026)
 
@@ -1303,6 +1315,45 @@ Une académie privée se choisit sur Google : une famille tape « soccer filles 
 - [ ] `P3.8.10` ➜ N2 — Créer une page par ville et par besoin, avec du vrai contenu (groupes, horaires, lieu, photos) : soccer féminin à Sainte-Thérèse, Prévost, Blainville, Saint-Jérôme ; Sport-Études soccer Laurentides ; camp de soccer filles l'été. — 31 janv. 2027 · Claude Code
 - [ ] `P3.8.11` ➜ N2 — Publier chaque semaine sur la fiche Google : photo de pratique, résultat de match, période d'inscription. — 31 janv. 2027 · JP · A05
 - [ ] `P3.8.12` ➜ N2 — Suivre chaque mois les mots clés (position), les appels et les clics de la fiche Google et le nombre d'avis ; corriger ce qui ne monte pas. — 28 févr. 2027 · Claude Code · A06
+
+### Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)
+
+Ce qui ramène le plus de familles, confirmé autour de JP : **les concours**, surtout « tu gagnes et ton amie gagne la même chose » (chaque participation amène une nouvelle famille), et **la bourse** : les familles postulent pour une bourse ; celles qui ne la gagnent pas reçoivent une bourse partielle (un rabais) valable quelques jours, ce qui transforme chaque candidature en inscription probable. À essayer pour vrai, mesuré comme le reste.
+
+Le contenu ne s'arrête plus : **à partir du 15 novembre, l'académie publie sans arrêt**, et **à la fin novembre on tourne les entrevues vidéo des joueuses et des parents** (la meilleure preuve qu'on puisse montrer).
+
+Les livres d'Alex Hormozi servent de base partout : **$100M Offers** (équation de valeur, garantie, bonus, rareté, urgence) pour chaque offre ; **$100M Leads** (Core Four, règle des 100, Lead Getters) dans la tête du responsable marketing (agent A05) ; **$100M Money Models** (offre d'attraction, offre de montée en gamme, offre de repli, offre continue) dans la tête du responsable des finances (agent A04).
+
+#### P3.1 Parrainage
+
+- [ ] `P3.1.06` ⭐ N1 — Concept à essayer en vrai : concours « Toi et ton amie gagnez » (les deux gagnent la même chose, ex. une séance privée ou un sac Valkyria). Participation par le site avec le courriel des deux familles ; mesurer participations, nouvelles familles, essais et inscriptions. — 15 déc. 2026 · JP + Claude Code · A05
+- [ ] `P3.1.07` ➜ N2 — Refaire un concours à chaque période d'inscription (été, saison) avec le prix qui a le mieux marché ; règlement du concours conforme (Régie des alcools, des courses et des jeux si la valeur l'exige). — 31 mars 2027 · JP · A05
+
+#### P3.6 Liste chaude
+
+- [ ] `P3.6.04` ⭐ N1 — Concept à essayer en vrai : la Bourse Valkyria. Les familles postulent (formulaire court : la joueuse, sa motivation) ; quelques bourses complètes, et chaque candidate non retenue reçoit une bourse partielle (rabais) valable 7 jours. Chaque candidature entre dans la liste chaude. — 31 janv. 2027 · JP + Claude Code
+- [ ] `P3.6.05` ➜ N2 — Mesurer la Bourse : candidatures, bourses partielles utilisées, inscriptions, coût par inscription ; décider de la refaire chaque saison. — 31 mars 2027 · Claude Code · A06
+
+#### P3.2 Vidéos portfolio et avant-après
+
+- [ ] `P3.2.06` ⭐ N1 — Commencer à publier sur les comptes de l'académie le 15 novembre et ne plus arrêter (calendrier de publication tenu chaque semaine). — 15 nov. 2026 · JP + caméra · A05
+- [ ] `P3.2.07` ⭐ N1 — Tourner les entrevues vidéo des joueuses (ce qu'elles ont appris, ce qu'elles aiment, leur progrès), avec le consentement écrit des parents. — 30 nov. 2026 · JP + caméra · A05
+- [ ] `P3.2.08` ⭐ N1 — Tourner les entrevues vidéo des parents (pourquoi New Valkyria, ce qui a changé chez leur fille) et les publier comme témoignages. — 30 nov. 2026 · JP + caméra · A05
+- [ ] `P3.2.09` ➜ N1 — Monter chaque entrevue en 3 formats : reel de 30 secondes, version longue pour le site, citation en image. — 15 déc. 2026 · Caméra · A13
+- [ ] `P3.2.10` ⭐ N1 — Écrire la charte graphique Valkyria (logo, couleurs, polices, gabarits reel, carrousel, story, affiche) pour qu'une publication de l'académie se reconnaisse au premier coup d'œil. — 30 nov. 2026 · JP + Claude Code · A13
+- [ ] `P3.2.11` ➜ N2 — Vérifier chaque publication contre la charte avant de publier (agent identité visuelle). — 31 janv. 2027 · Claude Code · A13
+
+#### P2.4 Échelle d'offres sur 5 générations
+
+- [ ] `P2.4.06` ⭐ N1 — Passer chaque offre à l'équation de valeur de $100M Offers (résultat rêvé, probabilité perçue, délai, effort) : ajouter garantie, bonus, rareté et urgence ; commencer par l'été 2027. — 15 déc. 2026 · JP + Claude Code · A05
+
+#### P7.5 Valeur d'une famille et coût d'acquisition
+
+- [ ] `P7.5.03` ⭐ N2 — Bâtir le modèle d'argent de l'académie selon $100M Money Models : offre d'attraction (essai, concours, bourse), montée en gamme (Solo, privé, Sport-Études), offre de repli (demi-saison, versements), offre continue (saison suivante, camps) ; une ligne par offre avec son prix et sa marge. — 31 janv. 2027 · JP + Claude Code · A04
+
+#### P8.7 Agents d'affaires
+
+- [ ] `P8.7.09` ➜ N2 — Construire l'agent analyse de la concurrence (A07) : fiche par concurrent dans `docs/concurrence/`, relevé mensuel, alerte si un concurrent ouvre un groupe filles dans nos villes. — 31 janv. 2027 · Claude Code · A07
 
 ### Indicateurs ajoutés
 

@@ -112,6 +112,7 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
 - **Cahier de charges des agents** : `src/lib/agents-blueprint.ts` (chaque mission de l'académie dans la case d'un agent, ce qui existe / ce qui manque, tables lues, écrites, interdites, fonctions permises, clés ; `agentCan()` = garde d'accès). Toute nouvelle tâche répétitive s'y range ; le test vérifie que tables et fonctions existent.
 - Loi 25 : aucune donnée d'enfant dans les tables `mandalart_*` ; vidéos d'enfants en stockage privé seulement.
 - « Ce mois-ci » se joue (`mandalart-game.ts` : quête du jour, XP, série, carte des mondes) et s'ajuste (`mandalart-levers.ts` : écart au plan, trésorerie jusqu'en avril, argent à rattraper, leviers chiffrés).
+- Analyse de la concurrence : `docs/concurrence/` (une fiche datée par concurrent, dont Footie Elite), tenue par l'agent A07. Identité visuelle : agent A13 (charte graphique, P3.2.10). Bases d'Alex Hormozi : $100M Offers et $100M Leads pour le marketing (A05), $100M Money Models pour les finances (A04).
 - Duplicable pour un autre club : tout est rangé par `club_id` (`src/lib/club.ts`). Skill `mandalart`.
 
 ## Skills du projet (`.claude/skills/`)

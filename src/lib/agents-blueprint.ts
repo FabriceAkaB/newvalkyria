@@ -7,7 +7,7 @@
  *  complète par agent (mêmes identifiants A01 à A12). `agentCan()` servira de garde d'accès quand on construira les agents.
  *  Le test `agents-blueprint.test.ts` vérifie que chaque table et chaque fonction citées existent vraiment. */
 
-export type AgentId = "A01" | "A02" | "A03" | "A04" | "A05" | "A06" | "A07" | "A08" | "A09" | "A10" | "A11" | "A12";
+export type AgentId = "A01" | "A02" | "A03" | "A04" | "A05" | "A06" | "A07" | "A08" | "A09" | "A10" | "A11" | "A12" | "A13";
 
 /** Comment la mission tourne une fois mûre : règle fixe du site (sans IA), brouillon de l'IA validé par un humain,
  *  ou IA qui agit seule dans des règles écrites (après 4 semaines sans erreur en brouillon). */
@@ -157,7 +157,7 @@ export const AGENT_BLUEPRINTS: AgentBlueprint[] = [
     tools: [AUDIT, { module: "stripe", fn: "getStripeClient", why: "Lecture du solde, des paiements et des versements (clé restreinte live)." }, { module: "revenue-repo", fn: "getRevenueExpenses", why: "Dépenses et échéances." }, { module: "revenue-repo", fn: "getIncomeEntries", why: "Revenus saisis." }, { module: "referees-repo", fn: "matchFinance", why: "Bilan d'un match." }, { module: "launch-calculator", fn: "computeLaunch", why: "Verdict GO ou NO-GO." }, { module: "contracts-registry", fn: "getContractAlerts", why: "Contrats qui arrivent à échéance." }, { module: "inventory-repo", fn: "getInventoryAlerts", why: "Matériel à remplacer." }, { module: "coach-payroll-data", fn: "missingBeforePayroll", why: "Ce qui bloque la paie." }],
     channels: ["Rapport à JP (courriel du lundi, Aujourd'hui)"],
     secrets: ["STRIPE_LIVE_SYNC_KEY (lecture seulement, jamais de paiement)", "ANTHROPIC_API_KEY"],
-    knowledge: ["Vrais coûts (terrains, coachs, matériel)", "Règle des 35 % de marge", "Trajectoire 1,5 M$ (section 3 bis du plan)"]
+    knowledge: ["$100M Money Models (Alex Hormozi) : offre d'attraction, montée en gamme, offre de repli, offre continue ; chaque offre a son rôle dans le modèle d'argent (P7.5.03)", "Vrais coûts (terrains, coachs, matériel)", "Règle des 35 % de marge", "Trajectoire 1,5 M$ (section 3 bis du plan)"]
   },
   {
     id: "A05",
@@ -174,7 +174,7 @@ export const AGENT_BLUEPRINTS: AgentBlueprint[] = [
     tools: [AUDIT, { module: "marketing-posts", fn: "listPosts", why: "Publications prévues et faites." }, { module: "marketing-posts", fn: "addPost", why: "Déposer un brouillon de publication." }, { module: "mcs-teams-repo", fn: "getEventsBetween", why: "Matchs et événements à filmer." }],
     channels: ["Réseaux sociaux (publication par JP)"],
     secrets: ["ANTHROPIC_API_KEY"],
-    knowledge: ["Voix et image de marque Valkyria", "Loi 25 : aucun nom d'enfant sans consentement écrit"]
+    knowledge: ["$100M Leads (Alex Hormozi) : Core Four (contacts chauds, contenu, contacts froids, pub), règle des 100 par jour, Lead Getters (parents, partenaires)", "$100M Offers (Alex Hormozi) : équation de valeur, garantie, bonus, rareté, urgence", "Concours « toi et ton amie gagnez » et Bourse Valkyria (P3.1.06, P3.6.04)", "Voix et image de marque Valkyria", "Loi 25 : aucun nom d'enfant sans consentement écrit"]
   },
   {
     id: "A06",
@@ -194,10 +194,12 @@ export const AGENT_BLUEPRINTS: AgentBlueprint[] = [
   },
   {
     id: "A07",
-    scope: "La veille : offres et prix des autres académies, nouvelles idées de revenus.",
+    scope: "Seulement l'analyse de la concurrence : offres, prix, remplissage, marketing, forces et faiblesses de chaque concurrent ; ce qu'on copie, ce qu'on évite, où on attaque. Rapports rangés dans docs/concurrence/.",
     missions: [
-      { title: "Rapport mensuel des offres et prix observés", when: "Une fois par mois", mode: "brouillon", state: "a_construire", validation: "JP" },
-      { title: "Chaque idée de revenu passée au calculateur", when: "Idée retenue par JP", mode: "brouillon", state: "a_construire", validation: "JP", existing: "Calculateur de lancement" }
+      { title: "Fiche de chaque concurrent tenue à jour (offre, prix, villes, clientèle, marketing, forces et faiblesses)", when: "Une fois par mois", mode: "brouillon", state: "partiel", validation: "JP", existing: "docs/concurrence/footie-elite-2026-10.md (26 oct. 2026)", missing: "Une fiche par concurrent de nos secteurs, même gabarit" },
+      { title: "Relevé du remplissage des concurrents dans nos villes (tunnel de réservation, sans s'inscrire ni payer)", when: "Une fois par mois", mode: "brouillon", state: "a_construire", validation: null, missing: "Relevé daté par ville et par groupe d'âge (Boisbriand, Mirabel, Saint-Jérôme, Terrebonne)" },
+      { title: "Alerte : un concurrent ouvre un groupe filles 9-12 ans, une ville ou une offre dans nos secteurs", when: "Dès que le relevé le voit", mode: "regle", state: "a_construire", validation: null },
+      { title: "Idées à copier, chacune passée au calculateur", when: "Idée retenue par JP", mode: "brouillon", state: "a_construire", validation: "JP", existing: "Calculateur de lancement" }
     ],
     reads: ["launch_scenarios"],
     writes: ["launch_scenarios", "audit_log"],
@@ -205,7 +207,7 @@ export const AGENT_BLUEPRINTS: AgentBlueprint[] = [
     tools: [AUDIT, { module: "launch-calculator", fn: "computeLaunch", why: "Premier calcul d'une idée." }],
     channels: ["Web public seulement"],
     secrets: ["ANTHROPIC_API_KEY"],
-    knowledge: ["Échelle d'offres (P2.4)", "Prix actuels de la saison"]
+    knowledge: ["Dossier « Analyse de la concurrence » (docs/concurrence/), dont Footie Elite (26 oct. 2026)", "Échelle d'offres (P2.4)", "Prix actuels de la saison", "$100M Offers (Alex Hormozi) : comparer la valeur perçue, pas seulement le prix"]
   },
   {
     id: "A08",
@@ -301,6 +303,23 @@ export const AGENT_BLUEPRINTS: AgentBlueprint[] = [
     channels: ["Calendriers iCal « Sync » (lecture)", "Site MonClubSportif avec le compte robot administrateur (écriture, formulaires)", "Courriel info@ pour les rappels de présence"],
     secrets: ["Compte robot MonClubSportif chiffré (app_settings)"],
     knowledge: ["Balises du site MonClubSportif (mcs-site-map.ts)", "Règles du club (mcs_rules)", "Correspondance des équipes MonClubSportif et des groupes du site (mcs_teams)", "Conditions d'utilisation de MonClubSportif (accord demandé à devops@)"]
+  },
+  {
+    id: "A13",
+    scope: "L'identité visuelle : qu'on reconnaisse une publication de l'académie en une seconde (couleurs, polices, gabarits, façon de filmer et de titrer).",
+    missions: [
+      { title: "Tenir la charte graphique Valkyria : logo, couleurs, polices, gabarits reel, carrousel, story, affiche", when: "Une fois, puis à chaque campagne", mode: "brouillon", state: "a_construire", validation: "JP approuve la charte" },
+      { title: "Vérifier chaque publication contre la charte et la corriger avant que JP publie", when: "Avant chaque publication", mode: "brouillon", state: "a_construire", validation: "JP publie", existing: "Publications et réseaux /admin/reseaux (marketing_posts)" },
+      { title: "Gabarits de chaque campagne (concours, bourse, entrevues, inscriptions)", when: "Nouvelle campagne", mode: "brouillon", state: "a_construire", validation: "JP" },
+      { title: "Revue du fil Instagram : cohérence d'ensemble", when: "Une fois par mois", mode: "brouillon", state: "a_construire", validation: null }
+    ],
+    reads: ["marketing_posts", "marketing_channel_stats"],
+    writes: ["marketing_posts", "audit_log"],
+    forbidden: ["registrations", "registration_payment_plans", "revenue_income", "players", "player_evaluations", "lab_submissions"],
+    tools: [AUDIT, { module: "marketing-posts", fn: "listPosts", why: "Publications à vérifier." }, { module: "marketing-posts", fn: "addPost", why: "Déposer une version corrigée ou un gabarit." }],
+    channels: ["Brouillons de publications ; publication par JP"],
+    secrets: ["ANTHROPIC_API_KEY"],
+    knowledge: ["Charte graphique Valkyria (à écrire, P3.2.10)", "Logo et couleurs du site (mauve New Valkyria)", "Loi 25 : aucune photo d'enfant sans consentement à l'image"]
   }
 ];
 
