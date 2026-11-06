@@ -44,6 +44,17 @@ export interface Assignment {
   expense_id: string | null;
   paid_at: string | null;
   paid_note: string | null;
+  /** Prénom de la personne pour qui JP garde ce poste (les autres arbitres ne le voient pas). */
+  held_for?: string | null;
+}
+
+const nameKey = (s: string | null | undefined) => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+/** Ce poste ouvert peut-il être pris par cet arbitre ? (gardé pour quelqu'un d'autre : non) */
+export function canTake(a: Pick<Assignment, "status" | "held_for">, referee: Pick<Referee, "first_name"> | null): boolean {
+  if (a.status !== "ouvert") return false;
+  if (!a.held_for) return true;
+  return Boolean(referee) && nameKey(referee!.first_name).split(/[\s-]+/)[0] === nameKey(a.held_for).split(/[\s-]+/)[0];
 }
 
 export interface MatchRow {
@@ -222,6 +233,7 @@ export async function reservePosition(token: string, assignmentId: string): Prom
   if (!referee || referee.status !== "actif") return { ok: false, error: "Lien inactif. Écrivez-nous à info@newvalkyria.com." };
   const { data: a } = await db().from("referee_assignments").select("*").eq("id", assignmentId).single();
   if (!a || a.status !== "ouvert") return { ok: false, error: "Ce poste vient d'être pris. Choisissez-en un autre." };
+  if (!canTake(a, referee)) return { ok: false, error: "Ce poste est déjà gardé pour un autre arbitre." };
   const { data: mine } = await db().from("referee_assignments").select("id").eq("match_slot_id", a.match_slot_id).eq("referee_id", referee.id).neq("status", "annule");
   if (mine?.length) return { ok: false, error: "Vous êtes déjà inscrit à ce match." };
   const { data: updated } = await db()
@@ -333,14 +345,15 @@ async function sendReservationEmails(referee: Referee, match: MatchRow, feeCents
 /** Envoie la liste des matchs ouverts aux arbitres actifs (chacun avec son lien). */
 export async function sendOpenMatchesEmail(refereeIds?: string[]): Promise<{ sent: number; openPositions: number }> {
   if (!isEmailConfigured()) throw new Error("Courriel non configuré");
-  const matches = (await listMatches({ from: today() })).filter((m) => m.assignments.some((a) => a.status === "ouvert"));
-  const open = matches.reduce((s, m) => s + m.assignments.filter((a) => a.status === "ouvert").length, 0);
+  const free = (a: Assignment) => a.status === "ouvert" && !a.held_for;
+  const matches = (await listMatches({ from: today() })).filter((m) => m.assignments.some(free));
+  const open = matches.reduce((s, m) => s + m.assignments.filter(free).length, 0);
   if (!open) return { sent: 0, openPositions: 0 };
   let refs = (await listReferees()).filter((r) => r.status === "actif");
   if (refereeIds) refs = refs.filter((r) => refereeIds.includes(r.id));
   const resend = getResendClient();
   const list = matches
-    .map((m) => `<li><strong>${esc(dateLong(m.date))}, ${m.start.replace(":", " h ")}</strong> — ${esc(m.field ?? m.location)}${m.opponent ? ` · ${esc(m.opponent)}` : ""} · ${m.assignments.filter((a) => a.status === "ouvert").length} poste(s) à ${money(m.refereeFeeCents)}</li>`)
+    .map((m) => `<li><strong>${esc(dateLong(m.date))}, ${m.start.replace(":", " h ")}</strong> — ${esc(m.field ?? m.location)}${m.opponent ? ` · ${esc(m.opponent)}` : ""} · ${m.assignments.filter(free).length} poste(s) à ${money(m.refereeFeeCents)}</li>`)
     .join("");
   let sent = 0;
   for (const r of refs) {
@@ -396,7 +409,7 @@ export async function autoInviteReferees(nowMs = Date.now()): Promise<{ opened: 
   const opened = await openAllUpcoming();
   const soon = new Date(nowMs + 14 * 86_400_000).toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
   const matches = (await listMatches({ from: today(), to: soon })).filter((m) => m.bookingStatus === "paid");
-  const openSoon = matches.reduce((s, m) => s + m.assignments.filter((a) => a.status === "ouvert").length, 0);
+  const openSoon = matches.reduce((s, m) => s + m.assignments.filter((a) => a.status === "ouvert" && !a.held_for).length, 0);
   if (!openSoon) return { opened, sent: 0, openSoon };
   const { data: last } = await db().from("app_settings").select("value").eq("club_id", CLUB_ID).eq("key", "arbitres_derniere_invitation").maybeSingle();
   if (last?.value && nowMs - Date.parse(last.value) < 3 * 86_400_000) return { opened, sent: 0, openSoon, skipped: "invitation déjà envoyée il y a moins de 3 jours" };

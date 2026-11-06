@@ -145,7 +145,7 @@ export default async function RefereesPage() {
                           </span>
                         ) : (
                           <span key={a.id} className="mda-pill" data-tone="warn">
-                            Poste ouvert · {money(a.fee_cents)}
+                            Poste ouvert · {money(a.fee_cents)}{a.held_for ? ` · gardé pour ${a.held_for}` : ""}
                           </span>
                         )
                       )}

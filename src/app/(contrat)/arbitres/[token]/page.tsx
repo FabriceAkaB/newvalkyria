@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { RefereeBoard } from "@/components/referee-board";
-import { dateLong, getRefereeByToken, listMatches } from "@/lib/referees-repo";
+import { canTake, dateLong, getRefereeByToken, listMatches } from "@/lib/referees-repo";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Arbitres | New Valkyria", robots: { index: false, follow: false, nocache: true } };
@@ -34,8 +34,8 @@ export default async function RefereePage({ params }: { params: Promise<{ token:
   const open = matches
     .filter((m) => !m.assignments.some((a) => a.referee_id === referee.id && a.status === "reserve"))
     .flatMap((m) => {
-      const a = m.assignments.find((x) => x.status === "ouvert");
-      return a ? [{ id: a.id, fee: a.fee_cents, date: m.date, label: dateLong(m.date), start: m.start, end: m.end, place: `${m.field ?? ""}${m.field ? " — " : ""}${m.location}`, teams: `${m.ourTeam ?? "New Valkyria"}${m.opponent ? ` contre ${m.opponent}` : ""}`, format: m.format, left: m.assignments.filter((x) => x.status === "ouvert").length, doubleFee: m.doubleGroup ? matches.filter((x) => x.doubleGroup === m.doubleGroup).reduce((n, x) => n + x.refereeFeeCents, 0) : null }] : [];
+      const a = m.assignments.find((x) => canTake(x, referee));
+      return a ? [{ id: a.id, fee: a.fee_cents, date: m.date, label: dateLong(m.date), start: m.start, end: m.end, place: `${m.field ?? ""}${m.field ? " — " : ""}${m.location}`, teams: `${m.ourTeam ?? "New Valkyria"}${m.opponent ? ` contre ${m.opponent}` : ""}`, format: m.format, left: m.assignments.filter((x) => canTake(x, referee)).length, doubleFee: m.doubleGroup ? matches.filter((x) => x.doubleGroup === m.doubleGroup).reduce((n, x) => n + x.refereeFeeCents, 0) : null }] : [];
     });
   return (
     <>
