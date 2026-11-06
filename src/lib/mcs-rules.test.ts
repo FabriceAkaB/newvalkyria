@@ -123,3 +123,13 @@ describe("joueuses payées pas encore dans MonClubSportif", () => {
     expect(out).toEqual([{ key: maeva.key, name: "Maeva ALLAGBE", parentEmail: "p@x.ca", createdAt: maeva.createdAt, missingTeams: ["Équipe 2016-2017 INT"] }]);
   });
 });
+
+describe("nom inversé dans le site", () => {
+  it("reconnaît la même joueuse quand prénom et nom sont inversés, sans confondre deux sœurs", async () => {
+    const { sameMemberName } = await import("@/lib/mcs-rules");
+    expect(sameMemberName("Gabriella Rojas Afanador", "Afanador Reyes", "Gabriella")).toBe(true);
+    expect(sameMemberName("Gabriella Rojas Afanador", "Gabriella", "Afanador Reyes")).toBe(true);
+    expect(sameMemberName("Èva Roy", "Stella", "Roy")).toBe(false);
+    expect(sameMemberName("Roy Stella", "Èva", "Roy")).toBe(false);
+  });
+});

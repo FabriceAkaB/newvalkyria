@@ -382,6 +382,22 @@ export class McsSession {
   }
 
   /** Présences modifiables en tout temps (0 h de verrou avant les matchs et les pratiques), le reste inchangé. */
+  /** Retire un membre d'une équipe (bouton « Supprimer » de la liste). Réservé aux corrections validées par JP
+   *  (ex. un doublon créé par erreur) : le robot ne retire jamais personne de lui-même. */
+  async removeMember(team: number, season: number, memberId: number): Promise<void> {
+    const html = await this.page(MCS_PATHS.roster(team, season));
+    if (!html.includes(`id="m_${memberId}"`)) throw new McsRobotError(`Membre ${memberId} introuvable dans l'équipe.`);
+    const token = csrfOf(html);
+    if (!token) throw new McsRobotError("Jeton de sécurité introuvable (balises à revoir).");
+    const f = new URLSearchParams();
+    f.set(MCS_FIELDS.csrf, token);
+    f.set("_method", "delete");
+    const res = await this.request(MCS_PATHS.member(team, season, memberId), { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Retrait refusé par MonClubSportif (${res.status}).`);
+    const after = await this.page(MCS_PATHS.roster(team, season));
+    if (after.includes(`id="m_${memberId}"`)) throw new McsRobotError(`Le membre ${memberId} est encore dans l'équipe.`);
+  }
+
   async unlockPresences(team: number): Promise<boolean> {
     const html = await this.page(MCS_PATHS.settings(team));
     const fields = formFields(html, MCS_PATHS.teamUpdate(team));

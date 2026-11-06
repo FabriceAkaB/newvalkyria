@@ -161,7 +161,11 @@ export function sameMemberName(mcsName: string, first: string, last: string): bo
   const l = personKey(last, "").split(" ").filter((w) => w.length > 1);
   if (!a.length || !f.length) return false;
   if (a.join(" ") === [...f, ...l].join(" ")) return true;
-  return a[0] === f[0] && l.some((w) => a.slice(1).includes(w));
+  if (a[0] === f[0] && l.some((w) => a.slice(1).includes(w))) return true;
+  // Prénom et nom inversés dans le site (« Afanador Reyes » / « Gabriella » = « Gabriella Rojas Afanador ») :
+  // le prénom de MonClubSportif est dans le nom du site et un autre mot du nom est commun.
+  const site = new Set([...f, ...l].filter((w) => w.length > 1));
+  return site.has(a[0]) && !f.includes(a[0]) && a.slice(1).some((w) => w.length > 1 && site.has(w));
 }
 
 /** État d'une présence MonClubSportif → statut de présence du site (rien si la famille n'a pas répondu ou hésite). */
