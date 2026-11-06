@@ -66,7 +66,7 @@ export default async function ConfirmationPage({ searchParams }: ConfirmationPag
   // ── Essai gratuit : confirmation uniquement après validation Stripe ──────
   if (params.trial === "true") {
     if (!params.session_id || !(await verifyTrialSession(params.session_id))) {
-      redirect("/qualification?cancelled=1");
+      redirect("/inscription/essai");
     }
 
     return (

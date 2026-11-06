@@ -16,7 +16,7 @@ chercher dans `src/lib/*` et `src/app/(admin)` un module qui fait déjà presque
   - `(prive)` : pages non répertoriées : `/prive/[slug]` (programmes garçons privés), `/prive/matchs` (vente de matchs à d'autres clubs), `/partenariat/[token]` (offre de partenariat).
   - `(contrat)` : pages blanches à lien personnel : `/contrat/[token]` (contrat d'embauche), `/offre/[token]` (offre spéciale).
   - `(admin)` : `/admin/*`. Menu et onglets décrits dans **`src/lib/admin-nav.ts`** (6 sections + Outils, un lien par hub, onglets en en-tête) ; l'admin s'ouvre sur `/admin/aujourdhui` (`src/lib/admin-today.ts`). Deux espaces (sélecteur en haut du menu, champ `space` des sections) : **Académie** (le business, s'ouvre sur Aujourd'hui) et **Coaching** (seulement le foot : `/admin/coaching`, pratiques, exercices, progression des joueuses `/admin/coaching/joueuses`, suivi des éducateurs ; aucun montant, `src/lib/coaching-repo.ts`). Toute modification de l'admin suit le skill `admin-page`.
-  - `(coach)` : `/entraineur/*` (portail entraîneurs). Aussi `(atlantic)` (`/programme/[slug]`, pages FC Atlantic) et `(gate)` (`/qualification`).
+  - `(coach)` : `/entraineur/*` (portail entraîneurs). Aussi `(atlantic)` (`/programme/[slug]`, pages FC Atlantic). (`/qualification` retirée le 6 nov. 2026 : redirigée vers `/inscription/essai`.)
 - **Supabase** : côté serveur, toujours `getSupabaseAdminClient()` (`src/lib/supabase-admin.ts`, service role ; pas de types
   générés, d'où les `as any`). Accès direct à la base pour vérifier ou corriger : node + `pg` + `SUPABASE_DB_URL` de `.env.local`.
 - **Stripe** : `getStripeClient()` (`src/lib/stripe.ts`) utilise `STRIPE_SECRET_KEY`. En local c'est une clé **test** ;
