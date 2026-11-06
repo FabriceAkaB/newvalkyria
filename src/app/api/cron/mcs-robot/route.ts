@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { syncBounces } from "@/lib/email-bounces";
+
 import { cronGate } from "@/lib/cron-gate";
 import { runMcsRobot, sendPresenceReminders, syncMcsAttendance } from "@/lib/mcs-robot-runner";
 import { syncStaleTeams } from "@/lib/mcs-teams-repo";
@@ -15,11 +17,13 @@ export async function GET(request: Request) {
   if (!gate.ok) return gate.response;
   // D'abord les courriels programmés (ex. « prévenir les parents à 8 h ») : ils ne doivent pas attendre le robot.
   const emails = await sendDueEmails().catch((e) => ({ sent: 0, failed: 0, error: e instanceof Error ? e.message : "erreur" }));
+  // Courriels refusés (rebonds dans info@) : rangés pour qu'Aujourd'hui les montre le jour même.
+  const bounces = await syncBounces().catch((e) => ({ found: 0, added: 0, error: e instanceof Error ? e.message : "erreur" }));
   const synced = await syncStaleTeams(50, 8000).catch(() => 0);
   const robot = await runMcsRobot({ reason: "cron horaire" }).catch((e) => ({ ok: false, error: e instanceof Error ? e.message : "erreur" }));
   const reminders = await sendPresenceReminders().catch((e) => ({ sent: 0, error: e instanceof Error ? e.message : "erreur" }));
   // Le soir (22 h et 23 h) : les présences de la journée, jeunes et entraîneurs, entrent dans le site (bulletin, paie).
   const hour = Number(new Date().toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "America/Toronto" }));
   const attendance = hour >= 22 || new URL(request.url).searchParams.has("presences") ? await syncMcsAttendance().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
-  return NextResponse.json({ ok: true, emails, synced, robot, reminders, attendance });
+  return NextResponse.json({ ok: true, emails, bounces, synced, robot, reminders, attendance });
 }

@@ -7,6 +7,7 @@ import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
 import { cronAlerts, type CronRunRow } from "@/lib/cron-jobs";
 import { getMcsStatus } from "@/lib/mcs-sync";
+import { BOUNCE_KIND_LABEL, getRecentBounces } from "@/lib/email-bounces";
 import { getRobotStatus } from "@/lib/mcs-robot-config";
 import { getPendingMcsPlayers } from "@/lib/mcs-robot-runner";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
@@ -319,6 +320,26 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
           meta: `Signalé le ${shortDay(p.created_at)}`,
           href: `/admin/uniformes/commande/${p.order_id}`
         }))
+      })
+    );
+  }
+
+  // ── Courriels refusés par la boîte du destinataire (rebonds lus chaque heure dans info@) ──
+  if (isAdmin) {
+    const bounces = await getRecentBounces(7).catch(() => []);
+    const auth = bounces.filter((b) => b.kind === "authentification").length;
+    sections.push(
+      section({
+        key: "courriels-refuses",
+        title: "Courriels qui ne se sont pas rendus",
+        level: bounces.length ? "rouge" : "info",
+        emptyText: "Aucun courriel refusé cette semaine.",
+        href: "/admin/communications",
+        hrefLabel: "Messages",
+        items: [
+          ...(auth ? [{ title: `${auth} courriel(s) refusé(s) parce que le domaine n'est pas authentifié`, detail: "Hotmail/Outlook refuse tout ce qui part d'info@ : vérifier l'enregistrement DMARC de newvalkyria.com (Squarespace, DNS).", meta: "Urgent" }] : []),
+          ...bounces.slice(0, 10).map((b) => ({ title: `${b.recipient ?? "Destinataire inconnu"} · ${b.subject ?? "(sans sujet)"}`, detail: BOUNCE_KIND_LABEL[b.kind], meta: shortDay(b.bounced_at) }))
+        ]
       })
     );
   }
