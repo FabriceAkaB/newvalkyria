@@ -110,7 +110,9 @@ async function done(kind: string): Promise<Set<string>> {
   return new Set(((data ?? []) as any[]).map((r) => r.key));
 }
 async function mark(kind: string, key: string, label: string) {
-  await db().from("mcs_sync_items").upsert({ club_id: CLUB_ID, kind, key, label: label.slice(0, 300) }, { onConflict: "club_id,kind,key", ignoreDuplicates: true });
+  const { error } = await db().from("mcs_sync_items").upsert({ club_id: CLUB_ID, kind, key, label: label.slice(0, 300) }, { onConflict: "club_id,kind,key", ignoreDuplicates: true });
+  // Jamais en silence : une marque refusée ferait refaire (ou renvoyer) la même chose à chaque passage.
+  if (error) throw new Error(`Trace MonClubSportif refusée (${kind}) : ${error.message}`);
 }
 
 async function fetchPicture(url: string): Promise<{ data: ArrayBuffer; type: string; name: string } | null> {
