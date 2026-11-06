@@ -50,6 +50,36 @@ export function parseMemberAssignments(html: string): { total: number; missing: 
   return { total: boxes.length, missing: boxes.filter((b) => b.getAttribute("checked") === undefined).map((b) => b.getAttribute("value") ?? "").filter(Boolean) };
 }
 
+export interface AssignmentItem {
+  id: string;
+  title: string;
+  /** AAAA-MM-JJ (null si la date est illisible). */
+  date: string | null;
+  checked: boolean;
+}
+
+const FR_MONTHS: Record<string, number> = { janvier: 1, fevrier: 2, mars: 3, avril: 4, mai: 5, juin: 6, juillet: 7, aout: 8, septembre: 9, octobre: 10, novembre: 11, decembre: 12 };
+
+/** « Lundi, 09 novembre 2026 à 18h00 » → « 2026-11-09 ». */
+export function parseFrDate(label: string): string | null {
+  const m = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/(\d{1,2})\s+([a-z]+)\s+(\d{4})/);
+  if (!m || !FR_MONTHS[m[2]]) return null;
+  return `${m[3]}-${String(FR_MONTHS[m[2]]).padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+}
+
+/** Page « Assigner » d'un membre (ou assignation en lot) : chaque activité, sa date et si elle est cochée. */
+export function parseAssignmentList(html: string): AssignmentItem[] {
+  const root = parse(html);
+  return root.querySelectorAll("li.boolean").flatMap((li) => {
+    const input = li.querySelector('input[type="checkbox"].event-checkbox') ?? li.querySelector('input[name="assign[]"]') ?? li.querySelector('input[name="events[]"]');
+    if (!input) return [];
+    const labels = li.querySelectorAll("label");
+    const title = (labels[0]?.text ?? "").trim().replace(/\s+/g, " ");
+    const when = (labels[labels.length - 1]?.text ?? "").trim();
+    return [{ id: input.getAttribute("value") ?? "", title, date: parseFrDate(when), checked: input.getAttribute("checked") !== undefined }];
+  }).filter((x) => x.id);
+}
+
 /** Page d'assignation en lot : toutes les activités à venir de l'équipe. */
 export function parseAssignmentEvents(html: string): string[] {
   return parse(html)
@@ -381,7 +411,6 @@ export class McsSession {
     return events.length;
   }
 
-  /** Présences modifiables en tout temps (0 h de verrou avant les matchs et les pratiques), le reste inchangé. */
   /** Retire un membre d'une équipe (bouton « Supprimer » de la liste). Réservé aux corrections validées par JP
    *  (ex. un doublon créé par erreur) : le robot ne retire jamais personne de lui-même. */
   async removeMember(team: number, season: number, memberId: number): Promise<void> {
@@ -396,6 +425,84 @@ export class McsSession {
     if (res.status >= 400) throw new McsRobotError(`Retrait refusé par MonClubSportif (${res.status}).`);
     const after = await this.page(MCS_PATHS.roster(team, season));
     if (after.includes(`id="m_${memberId}"`)) throw new McsRobotError(`Le membre ${memberId} est encore dans l'équipe.`);
+  }
+
+  /** Activités assignées à un membre (cases cochées), avec leur date (page « Assigner » du membre). */
+  async memberAssignmentList(team: number, season: number, member: number): Promise<AssignmentItem[]> {
+    return parseAssignmentList(await this.page(MCS_PATHS.memberAssignments(team, season, member)));
+  }
+
+  /** Remplace exactement la liste des activités assignées à ce membre (les autres ne sont pas touchés). */
+  async setMemberAssignments(team: number, season: number, member: number, eventIds: string[]): Promise<void> {
+    const html = await this.page(MCS_PATHS.memberAssignments(team, season, member));
+    const action = `${MCS_PATHS.member(team, season, member)}/assign`;
+    const fields = formFields(html, action).filter(([k]) => k !== MCS_FIELDS.member.assign);
+    if (!fields.length) throw new McsRobotError("Page d'assignation du membre illisible (balises à revoir).");
+    const f = new URLSearchParams();
+    for (const [k, v] of fields) f.append(k, v);
+    for (const id of eventIds) f.append(MCS_FIELDS.member.assign, id);
+    const res = await this.request(action, { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Assignations refusées par MonClubSportif (${res.status}).`);
+  }
+
+  /** Type du membre (section de la liste) et droit de gestionnaire de l'équipe. */
+  async memberProfile(team: number, season: number, member: number): Promise<{ type: string; manager: boolean }> {
+    const fields = formFields(await this.page(MCS_PATHS.memberModify(team, season, member)), MCS_PATHS.member(team, season, member));
+    return { type: fields.find(([k]) => k === MCS_FIELDS.member.type)?.[1] ?? "", manager: fields.some(([k, v]) => k === MCS_FIELDS.member.manager && v === "1") };
+  }
+
+  /** Change la section (joueur, entraîneur, remplaçant, autre personnel) et/ou le droit de gestionnaire, le reste inchangé.
+   *  Retourne false si rien n'avait à changer. */
+  async updateMember(team: number, season: number, member: number, patch: { type?: "player" | "coach" | "reserve" | "staff"; manager?: boolean }): Promise<boolean> {
+    const action = MCS_PATHS.member(team, season, member);
+    const fields = formFields(await this.page(MCS_PATHS.memberModify(team, season, member)), action);
+    if (!fields.length) throw new McsRobotError("Fiche du membre illisible (balises à revoir).");
+    const M = MCS_FIELDS.member;
+    const curType = fields.find(([k]) => k === M.type)?.[1] ?? "";
+    const curManager = fields.some(([k, v]) => k === M.manager && v === "1");
+    const type = patch.type ?? curType;
+    const manager = patch.manager ?? curManager;
+    if (type === curType && manager === curManager) return false;
+    const f = new URLSearchParams();
+    for (const [k, v] of fields) if (k !== M.manager && k !== M.type) f.append(k, v);
+    f.append(M.manager, manager ? "1" : "0");
+    if (type) f.append(M.type, type);
+    const res = await this.request(action, { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Fiche du membre refusée par MonClubSportif (${res.status}).`);
+    const after = await this.memberProfile(team, season, member);
+    if (after.type !== type || after.manager !== manager) throw new McsRobotError("La fiche du membre n'a pas été modifiée.");
+    return true;
+  }
+
+  /** Indique la présence d'un membre à une activité (présent, retard, incertain, absent). */
+  async setPresence(team: number, season: number, eventId: number, member: number, status: Exclude<McsPresenceState, "unknown">): Promise<void> {
+    const html = await this.page(MCS_PATHS.presences(team, season, 2));
+    const token = csrfOf(html);
+    if (!token) throw new McsRobotError("Jeton de sécurité introuvable (balises à revoir).");
+    const f = new URLSearchParams();
+    f.set(MCS_FIELDS.csrf, token);
+    f.set("event_id", String(eventId));
+    f.set("member_id", String(member));
+    f.set("status", status);
+    const res = await this.request(`/team/${team}/seasons/${season}/presences/set`, { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Présence refusée par MonClubSportif (${res.status}).`);
+  }
+
+  /** Toutes les pages de la grille des présences, de la page 1 jusqu'à la dernière (au plus `max`). */
+  async presencesAll(team: number, season: number, max = 12): Promise<PresenceGrid> {
+    const out: PresenceGrid = { events: [], rows: [] };
+    for (let p = 1; p <= max; p++) {
+      const grid = parsePresences(await this.page(MCS_PATHS.presences(team, season, p)));
+      const fresh = grid.events.filter((e) => !out.events.some((x) => x.id === e.id));
+      if (!fresh.length) break;
+      out.events.push(...fresh);
+      for (const r of grid.rows) {
+        const row = out.rows.find((x) => x.memberId === r.memberId);
+        if (row) Object.assign(row.states, r.states);
+        else out.rows.push({ ...r, states: { ...r.states } });
+      }
+    }
+    return out;
   }
 
   async unlockPresences(team: number): Promise<boolean> {

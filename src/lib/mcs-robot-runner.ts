@@ -29,6 +29,8 @@ export interface ExpectedPlayer {
   key: string;
   /** Inscription de saison (pour verser ses présences dans le site) ; null pour les programmes à dates fixes. */
   registrationId: string | null;
+  /** Demi-saison : dernière date couverte (AAAA-MM-JJ) ; null = toute la saison. */
+  halfUntil: string | null;
   firstName: string;
   lastName: string;
   gender: "female" | "male";
@@ -56,6 +58,10 @@ export interface RobotReport {
   extras: string[];
   /** Direction assignée à toutes les activités (ex. JP dans chaque équipe). */
   staff?: string[];
+  /** Demi-saison : activités retirées après la fin (ou rendues si la 2e partie est payée). */
+  halfSeason?: string[];
+  /** Présences mises par défaut (ex. JP présent à tout). */
+  presences?: string[];
   errors: string[];
 }
 
@@ -69,7 +75,7 @@ export async function loadExpectedPlayers(teams?: TeamTarget[]): Promise<Expecte
   const list = teams ?? (await loadTeamTargets());
   const [{ data: season }, { data: regs }, { data: sessionRegs }, { data: players }, { data: cats }] = await Promise.all([
     db().from("seasons").select("id").eq("is_active", true).maybeSingle(),
-    db().from("registrations").select("id, created_at, season_id, player_first_name, player_last_name, player_dob, parent_name, parent_email, program_id, time_slot_template_id, category_id").eq("status", "paid").eq("is_trial", false),
+    db().from("registrations").select("id, created_at, season_id, player_first_name, player_last_name, player_dob, parent_name, parent_email, program_id, time_slot_template_id, category_id, is_half_season, half_season_ends_on").eq("status", "paid").eq("is_trial", false),
     db().from("session_program_registrations").select("created_at, player_first_name, player_last_name, player_dob, birth_year, parent_name, parent_email, program_slug").eq("status", "paid"),
     db().from("players").select("first_name, last_name, photo_url").not("photo_url", "is", null),
     db().from("birth_categories").select("id, season_id, label")
@@ -77,7 +83,7 @@ export async function loadExpectedPlayers(teams?: TeamTarget[]): Promise<Expecte
   const catLabel = new Map(((cats ?? []) as any[]).map((c) => [`${c.season_id}|${c.id}`, c.label as string]));
   const photo = new Map(((players ?? []) as any[]).map((p) => [personKey(p.first_name, p.last_name), p.photo_url as string]));
   const out = new Map<string, ExpectedPlayer>();
-  const add = (p: Omit<ExpectedPlayer, "key" | "photoUrl" | "teams" | "registrationId" | "createdAt"> & { registrationId?: string | null; createdAt?: string | null }, targets: TeamTarget[]) => {
+  const add = (p: Omit<ExpectedPlayer, "key" | "photoUrl" | "teams" | "registrationId" | "createdAt" | "halfUntil"> & { registrationId?: string | null; createdAt?: string | null; halfUntil?: string | null }, targets: TeamTarget[]) => {
     const key = personKey(p.firstName, p.lastName);
     if (!key || !targets.length) return;
     const prev = out.get(key);
@@ -86,13 +92,13 @@ export async function loadExpectedPlayers(teams?: TeamTarget[]): Promise<Expecte
       for (const t of targets) if (!prev.teams.some((x) => x.id === t.id)) prev.teams.push(t);
       return;
     }
-    out.set(key, { ...p, registrationId: p.registrationId ?? null, createdAt: p.createdAt ?? null, key, photoUrl: photo.get(key) ?? null, teams: [...targets] });
+    out.set(key, { ...p, registrationId: p.registrationId ?? null, halfUntil: p.halfUntil ?? null, createdAt: p.createdAt ?? null, key, photoUrl: photo.get(key) ?? null, teams: [...targets] });
   };
   for (const r of (regs ?? []) as any[]) {
     if (season?.id && r.season_id !== season.id) continue;
     const years = yearsOf(catLabel.get(`${r.season_id}|${r.category_id}`) ?? r.category_id);
     add(
-      { registrationId: r.id, createdAt: r.created_at ?? null, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: "female", birthYear: r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : years.length === 1 ? years[0] : null, parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
+      { registrationId: r.id, halfUntil: r.is_half_season && r.half_season_ends_on ? String(r.half_season_ends_on).slice(0, 10) : null, createdAt: r.created_at ?? null, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: "female", birthYear: r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : years.length === 1 ? years[0] : null, parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
       teamsFor({ slotId: r.time_slot_template_id, programId: r.program_id, years }, list)
     );
   }
@@ -210,6 +216,24 @@ export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryR
     }
   }
 
+  // Demi-saison : la joueuse n'est pas assignée aux activités après sa fin ; si elle paie la 2e partie, tout lui est rendu.
+  if (!dry) {
+    try {
+      report.halfSeason = await syncHalfSeason(session, teams, players);
+    } catch (e) {
+      report.errors.push(`Demi-saison : ${e instanceof Error ? e.message : "erreur"}`);
+    }
+  }
+
+  // Présence par défaut (ex. JP présent à toutes les activités à partir du 9 novembre, s'il n'a rien indiqué).
+  if (!dry && rules.defaultPresent.length) {
+    try {
+      report.presences = await applyDefaultPresence(session, teams, rules);
+    } catch (e) {
+      report.errors.push(`Présences par défaut : ${e instanceof Error ? e.message : "erreur"}`);
+    }
+  }
+
   // Calendrier : chaque pratique prévue dans le site existe dans MonClubSportif, à la bonne heure.
   if (rules.calendarSync) {
     try {
@@ -251,13 +275,98 @@ export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryR
 
   report.ok = report.errors.length === 0;
   if (dry) await alertPendingAfterPayment(opts.reason, "le robot est en mode assistant (pas encore activé)");
-  if (!dry && (report.added.length || report.photos.length || report.opponents.length || report.unlocked.length || report.calendar.length || report.staff!.length || report.errors.length)) {
+  if (!dry && (report.added.length || report.photos.length || report.opponents.length || report.unlocked.length || report.calendar.length || report.staff!.length || report.halfSeason?.length || report.presences?.length || report.errors.length)) {
     await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_robot_run", entityType: "mcs_teams", entityId: CLUB_ID, entityLabel: opts.reason, after: report as unknown as object }).catch(() => null);
   }
   return report;
 }
 
 const MEMBER_MARK = "membre-robot";
+
+/** Demi-saison : retire la joueuse des activités après sa date de fin (marque « demi-saison ») ; si elle n'est plus en
+ *  demi-saison (2e partie payée), lui rend tout le calendrier et enlève la marque. */
+async function syncHalfSeason(session: McsSession, teams: TeamTarget[], players: ExpectedPlayer[]): Promise<string[]> {
+  const out: string[] = [];
+  const marked = await done(HALF_MARK);
+  const halfKeys = new Set(players.filter((p) => p.halfUntil).map((p) => p.key));
+  const touched = players.filter((p) => p.halfUntil || p.teams.some((t) => marked.has(memberTeamKey(p.key, t.id))));
+  if (!touched.length) return out;
+  for (const t of teams) {
+    const mine = touched.filter((p) => p.teams.some((x) => x.id === t.id));
+    if (!mine.length) continue;
+    const roster = await session.roster(t.mcs_team_id!, t.mcs_season_id!);
+    for (const p of mine) {
+      const member = roster.find((m) => sameMemberName(m.name, p.firstName, p.lastName));
+      if (!member) continue;
+      const k = memberTeamKey(p.key, t.id);
+      if (halfKeys.has(p.key)) {
+        const list = await session.memberAssignmentList(t.mcs_team_id!, t.mcs_season_id!, member.id);
+        const after = list.filter((e) => e.checked && e.date && e.date > p.halfUntil!);
+        if (after.length) {
+          await session.setMemberAssignments(t.mcs_team_id!, t.mcs_season_id!, member.id, list.filter((e) => e.checked && !(e.date && e.date > p.halfUntil!)).map((e) => e.id));
+          out.push(`${p.firstName} ${p.lastName} → ${t.name} : retirée de ${after.length} activité(s) après le ${p.halfUntil}`);
+        }
+        if (!marked.has(k)) await mark(HALF_MARK, k, `${p.firstName} ${p.lastName} · ${t.name}`);
+      } else if (marked.has(k)) {
+        const n = await session.assignToAllEvents(t.mcs_team_id!, t.mcs_season_id!, [member.id]);
+        await db().from("mcs_sync_items").delete().eq("club_id", CLUB_ID).eq("kind", HALF_MARK).eq("key", k);
+        out.push(`${p.firstName} ${p.lastName} → ${t.name} : 2e partie payée, ${n} activité(s) rendue(s)`);
+      }
+    }
+  }
+  return out;
+}
+const HALF_MARK = "demi-saison";
+
+/** Met « présent » aux personnes des règles (ex. JP) sur chaque activité à partir de leur date, là où rien n'est indiqué. */
+async function applyDefaultPresence(session: McsSession, teams: TeamTarget[], rules: McsRules): Promise<string[]> {
+  const out: string[] = [];
+  for (const t of teams) {
+    const roster = await session.roster(t.mcs_team_id!, t.mcs_season_id!);
+    const people = rules.defaultPresent.map((d) => ({ ...d, member: roster.find((m) => personKey(m.name, "") === personKey(d.name, "")) })).filter((d) => d.member);
+    if (!people.length) continue;
+    const grid = await session.presencesAll(t.mcs_team_id!, t.mcs_season_id!);
+    for (const d of people) {
+      const row = grid.rows.find((r) => r.memberId === d.member!.id);
+      if (!row) continue;
+      const dates = new Map((await session.memberAssignmentList(t.mcs_team_id!, t.mcs_season_id!, d.member!.id)).map((e) => [Number(e.id), e.date]));
+      let n = 0;
+      for (const ev of grid.events) {
+        const date = dates.get(ev.id);
+        if (!date || date < d.from || row.states[ev.id] !== "unknown") continue;
+        await session.setPresence(t.mcs_team_id!, t.mcs_season_id!, ev.id, d.member!.id, "present");
+        n++;
+      }
+      if (n) out.push(`${d.name} présent par défaut → ${t.name} (${n} activité${n > 1 ? "s" : ""})`);
+    }
+  }
+  return out;
+}
+
+/** Une fois par jour : seules les personnes permises sont gestionnaires d'équipe, et le personnel (ex. Alex) est rangé
+ *  dans « Autre personnel » plutôt que « Entraîneurs ». Retourne ce qui a été corrigé. */
+export async function auditMcsAccess(opts: { dryRun?: boolean } = {}): Promise<{ fixed: string[]; skipped?: string }> {
+  const rules = await getMcsRules();
+  const session = await openRobotSession().catch(() => null);
+  if (!session) return { fixed: [], skipped: "Compte robot pas encore enregistré." };
+  const allowed = new Set(rules.managers.map((n) => personKey(n, "")));
+  const staff = new Set(rules.staffNames.map((n) => personKey(n, "")));
+  const fixed: string[] = [];
+  for (const t of (await loadTeamTargets()).filter((x) => x.mcs_team_id && x.mcs_season_id)) {
+    for (const m of await session.roster(t.mcs_team_id!, t.mcs_season_id!)) {
+      const key = personKey(m.name, "");
+      const prof = await session.memberProfile(t.mcs_team_id!, t.mcs_season_id!, m.id);
+      const patch: { manager?: boolean; type?: "staff" } = {};
+      if (prof.manager && !allowed.has(key)) patch.manager = false;
+      if (staff.has(key) && prof.type !== "staff") patch.type = "staff";
+      if (!Object.keys(patch).length) continue;
+      if (!opts.dryRun) await session.updateMember(t.mcs_team_id!, t.mcs_season_id!, m.id, patch);
+      fixed.push(`${m.name} (${t.name}) : ${[patch.manager === false ? "accès gestionnaire retiré" : "", patch.type ? "rangé dans Autre personnel" : ""].filter(Boolean).join(", ")}`);
+    }
+  }
+  if (fixed.length && !opts.dryRun) await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_access_audit", entityType: "mcs_teams", entityId: CLUB_ID, entityLabel: `${fixed.length} correction(s) d'accès`, after: { fixed } as unknown as object }).catch(() => null);
+  return { fixed };
+}
 
 /** Nouvelles joueuses payées (14 derniers jours) qui ne sont pas encore dans toutes leurs équipes MonClubSportif. */
 export async function getPendingMcsPlayers(days = 14): Promise<PendingMcsPlayer[]> {
@@ -344,7 +453,8 @@ export async function sendPresenceReminders(now = Date.now(), rules?: McsRules):
   const r = rules ?? (await getMcsRules());
   if (!r.robotActive) return { sent: 0, skipped: "Robot pas encore activé (mode assistant)." };
   if (!r.reminders.active) return { sent: 0, skipped: "Rappels désactivés." };
-  if (!isEmailConfigured()) return { sent: 0, skipped: "Courriel non configuré." };
+  const viaMcs = r.reminders.channel === "mcs";
+  if (!viaMcs && !isEmailConfigured()) return { sent: 0, skipped: "Courriel non configuré." };
   const teams = (await loadTeamTargets()).filter((t) => t.mcs_team_id && t.mcs_season_id);
   const horizon = new Date(now + (Math.max(...r.reminders.hoursBefore, 24) + 2) * 3_600_000).toISOString().slice(0, 10);
   const { data: events } = await db().from("mcs_events").select("team_id, key, event_date, title, type").gte("event_date", todayLocal()).lte("event_date", horizon);
@@ -366,6 +476,9 @@ export async function sendPresenceReminders(now = Date.now(), rules?: McsRules):
   const already = await done("rappel");
   // Un seul courriel par parent et par passage, qui liste tout ce qui manque.
   const perParent = new Map<string, { name: string | null; lines: { text: string; url: string }[]; keys: string[] }>();
+  // Notification MonClubSportif (choix de JP) : une publication privée par activité, adressée seulement aux membres
+  // qui n'ont rien indiqué, sans courriel ; MonClubSportif la pousse dans l'application.
+  let posted = 0;
   for (const team of teams) {
     const mine = due.filter((e) => e.team_id === team.id);
     if (!mine.length) continue;
@@ -376,6 +489,25 @@ export async function sendPresenceReminders(now = Date.now(), rules?: McsRules):
       continue;
     }
     for (const e of mine) {
+      if (viaMcs) {
+        const who = grid.rows.filter((row) => row.states[e.mcsId] === "unknown" && !already.has(`${e.mcsId}|${row.memberId}|${e.stage}`) && (byKey.get(personKey(row.name, "")) ?? players.find((x) => sameMemberName(row.name, x.firstName, x.lastName))));
+        if (!who.length) continue;
+        const when = new Date(e.start).toLocaleString("fr-CA", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: TZ });
+        const what = String(e.title).replace(/^(Other|Autre|Event|Événement|Hors-concours)\s+/i, "");
+        try {
+          await session.createPost(team.mcs_team_id!, team.mcs_season_id!, {
+            subject: `Rappel : ta présence pour ${what}`,
+            html: `<p>Petit rappel : ta présence n'est pas encore indiquée pour <strong>${esc(what)}</strong> (${esc(when)}).</p><p>Indique-la dans l'onglet Présences : tu peux la mettre ou la changer en tout temps, même à la dernière minute. Merci !</p>`,
+            to: who.map((w) => w.memberId),
+            notify: false
+          });
+          for (const w of who) await mark("rappel", `${e.mcsId}|${w.memberId}|${e.stage}`, team.name);
+          posted++;
+        } catch {
+          /* on réessaiera au prochain passage si le rappel est encore dû */
+        }
+        continue;
+      }
       for (const row of grid.rows) {
         if (row.states[e.mcsId] !== "unknown") continue;
         const p = byKey.get(personKey(row.name, "")) ?? players.find((x) => sameMemberName(row.name, x.firstName, x.lastName));
@@ -391,7 +523,7 @@ export async function sendPresenceReminders(now = Date.now(), rules?: McsRules):
       }
     }
   }
-  let sent = 0;
+  let sent = posted;
   for (const [to, entry] of perParent) {
     const first = String(entry.name ?? "").trim().split(/\s+/)[0];
     const items = entry.lines.map((l) => `<li>${esc(l.text)} — <a href="${l.url}">indiquer la présence</a></li>`).join("");

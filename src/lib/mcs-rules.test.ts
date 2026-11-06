@@ -10,7 +10,9 @@ describe("règles MonClubSportif", () => {
     const r = normalizeRules(null);
     expect(r.robotActive).toBe(false);
     expect(r.inviteOnPaid && r.photoAuto && r.presenceAlwaysEditable && r.opponentOnPaid && r.calendarSync).toBe(true);
-    expect(r.reminders).toEqual({ active: true, hoursBefore: [48, 24], sameDayHours: [9, 15] });
+    expect(r.reminders).toEqual({ active: true, hoursBefore: [48, 24], sameDayHours: [9, 15], channel: "mcs" });
+    expect(r.managers).toContain("Christine Durand");
+    expect(r.defaultPresent).toEqual([{ name: "Jean-Paul Aka Boidi", from: "2026-11-09" }]);
     expect(r.removeOnRefund).toBe("validation");
   });
 

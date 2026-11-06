@@ -17,8 +17,10 @@ export interface McsRules {
   calendarSync: boolean;
   /** Les familles peuvent mettre ou changer la présence en tout temps (aucun verrou avant un match ou une pratique). */
   presenceAlwaysEditable: boolean;
-  /** Rappels aux familles qui n'ont pas mis leur présence : X heures avant, puis à ces heures le jour même. */
-  reminders: { active: boolean; hoursBefore: number[]; sameDayHours: number[] };
+  /** Rappels aux familles qui n'ont pas mis leur présence : X heures avant, puis à ces heures le jour même.
+   *  `channel` : « mcs » = notification MonClubSportif (publication privée, sans courriel ; choix de JP le 6 nov. 2026)
+   *  ou « courriel ». */
+  reminders: { active: boolean; hoursBefore: number[]; sameDayHours: number[]; channel: "mcs" | "courriel" };
   /** Joueuse remboursée : la retirer de MonClubSportif seulement après validation de JP (par défaut), toute seule, ou jamais. */
   removeOnRefund: "validation" | "auto" | "jamais";
   /** Programme du site → niveau de l'équipe de matchs (ex. Team Valkyria Avancé → AV). */
@@ -26,6 +28,12 @@ export interface McsRules {
   /** Personnes (nom affiché dans MCS) assignées à TOUTES les activités de toutes les équipes, même absentes :
    *  la direction voit ainsi tout dans son calendrier MonClubSportif. */
   alwaysAssigned: string[];
+  /** Personnes indiquées « présentes » par défaut à toutes les activités à partir d'une date (si elles n'ont rien mis). */
+  defaultPresent: { name: string; from: string }[];
+  /** Personnes rangées dans la section « Autre personnel » (pas « Entraîneurs ») dans chaque équipe. */
+  staffNames: string[];
+  /** Seules ces personnes peuvent avoir « Accès à la gestion de l'équipe » ; le robot retire ce droit à tous les autres. */
+  managers: string[];
 }
 
 export const DEFAULT_MCS_RULES: McsRules = {
@@ -36,16 +44,21 @@ export const DEFAULT_MCS_RULES: McsRules = {
   opponentOnPaid: true,
   calendarSync: true,
   presenceAlwaysEditable: true,
-  reminders: { active: true, hoursBefore: [48, 24], sameDayHours: [9, 15] },
+  reminders: { active: true, hoursBefore: [48, 24], sameDayHours: [9, 15], channel: "mcs" },
   removeOnRefund: "validation",
   matchLevelByProgram: { TVA: "AV", SVA: "AV", TV: "INT", SV: "INT", TVD: "INT" },
-  alwaysAssigned: ["Jean-Paul Aka Boidi"]
+  alwaysAssigned: ["Jean-Paul Aka Boidi"],
+  defaultPresent: [{ name: "Jean-Paul Aka Boidi", from: "2026-11-09" }],
+  staffNames: ["Alexandre Ali-Ngindu"],
+  managers: ["Jean-Paul Aka Boidi", "Annie Tremblay", "Christine Durand"]
 };
 
 const hours = (v: unknown, max: number) =>
   Array.isArray(v)
     ? [...new Set(v.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n <= max))].sort((a, b) => b - a)
     : null;
+
+const names = (v: unknown[]) => [...new Set(v.map((n) => String(n ?? "").trim().replace(/\s+/g, " ")).filter((n) => n.length >= 3 && n.length <= 80))].slice(0, 10);
 
 /** Fusionne des règles enregistrées (même partielles ou anciennes) avec les valeurs par défaut, en refusant le n'importe quoi. */
 export function normalizeRules(input: unknown): McsRules {
@@ -65,13 +78,19 @@ export function normalizeRules(input: unknown): McsRules {
     reminders: {
       active: typeof rem.active === "boolean" ? rem.active : DEFAULT_MCS_RULES.reminders.active,
       hoursBefore: hours(rem.hoursBefore, 336) ?? DEFAULT_MCS_RULES.reminders.hoursBefore,
-      sameDayHours: (hours(rem.sameDayHours, 23) ?? DEFAULT_MCS_RULES.reminders.sameDayHours).sort((a, b) => a - b)
+      sameDayHours: (hours(rem.sameDayHours, 23) ?? DEFAULT_MCS_RULES.reminders.sameDayHours).sort((a, b) => a - b),
+      channel: rem.channel === "courriel" ? "courriel" : "mcs"
     },
     removeOnRefund: r.removeOnRefund === "auto" || r.removeOnRefund === "jamais" ? r.removeOnRefund : "validation",
     matchLevelByProgram: levels,
     alwaysAssigned: Array.isArray(r.alwaysAssigned)
       ? [...new Set(r.alwaysAssigned.map((n: unknown) => String(n ?? "").trim().replace(/\s+/g, " ")).filter((n: string) => n.length >= 3 && n.length <= 80))].slice(0, 10)
-      : DEFAULT_MCS_RULES.alwaysAssigned
+      : DEFAULT_MCS_RULES.alwaysAssigned,
+    defaultPresent: Array.isArray(r.defaultPresent)
+      ? r.defaultPresent.map((d: any) => ({ name: names([d?.name])[0] ?? "", from: /^\d{4}-\d{2}-\d{2}$/.test(String(d?.from)) ? String(d.from) : "" })).filter((d: { name: string; from: string }) => d.name && d.from).slice(0, 10)
+      : DEFAULT_MCS_RULES.defaultPresent,
+    staffNames: Array.isArray(r.staffNames) ? names(r.staffNames) : DEFAULT_MCS_RULES.staffNames,
+    managers: Array.isArray(r.managers) && names(r.managers).length ? names(r.managers) : DEFAULT_MCS_RULES.managers
   };
 }
 
