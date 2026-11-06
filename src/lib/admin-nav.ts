@@ -88,7 +88,8 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/saison/{saison}/inscriptions", label: "Inscriptions" },
           { href: "/admin/saison/{saison}/horaire", label: "Horaire" },
           { href: "/admin/saison/{saison}/capacite", label: "Capacité" },
-          { href: "/admin/saison/{saison}/solo", label: "Groupes solo" }
+          { href: "/admin/saison/{saison},/solo", label: "Groupes solo" },
+          { href: "/admin/promesses", label: "Promesses tenues" }
         ]
       },
       {

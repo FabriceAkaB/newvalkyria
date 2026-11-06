@@ -7,6 +7,7 @@ import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
 import { cronAlerts, type CronRunRow } from "@/lib/cron-jobs";
 import { getMcsStatus } from "@/lib/mcs-sync";
+import { getDeliveryReport } from "@/lib/delivery-repo";
 import { BOUNCE_KIND_LABEL, getRecentBounces } from "@/lib/email-bounces";
 import { getRobotStatus } from "@/lib/mcs-robot-config";
 import { getPendingMcsPlayers } from "@/lib/mcs-robot-runner";
@@ -322,6 +323,25 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         }))
       })
     );
+  }
+
+  // ── Promesses tenues : un groupe sous ce qui a été vendu (pratiques annulées sans reprise, horaire trop court) ──
+  {
+    const report = await getDeliveryReport().catch(() => null);
+    const short = (report?.groups ?? []).filter((g) => g.shortfall > 0);
+    if (short.length) {
+      sections.push(
+        section({
+          key: "promesses",
+          title: "Promesses de la saison",
+          level: "orange",
+          emptyText: "Toutes les promesses sont couvertes.",
+          href: "/admin/promesses",
+          hrefLabel: "Promesses tenues",
+          items: short.slice(0, 6).map((g) => ({ title: `${g.teamName} : ${g.shortfall} séance${g.shortfall > 1 ? "s" : ""} à remettre`, detail: `Promis ${g.promised}, donné ${g.given}, à venir ${g.upcoming}${g.cancelled.length ? `, annulé ${g.cancelled.length}` : ""}. Ajouter une reprise, ou prévoir un rabais ou un crédit.`, href: "/admin/promesses" }))
+        })
+      );
+    }
   }
 
   // ── Courriels refusés par la boîte du destinataire (rebonds lus chaque heure dans info@) ──

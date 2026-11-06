@@ -3,6 +3,7 @@ import { CLUB, CLUB_ID } from "@/lib/club";
 import { env } from "@/lib/env";
 import { McsRobotError, McsSession, type PresenceGrid } from "@/lib/mcs-robot";
 import { getRobotCredentials } from "@/lib/mcs-robot-config";
+import { eventKind, isCancelled } from "@/lib/delivery-core";
 import { attendanceFromMcs, calendarDiff, dueReminder, memberTeamKey, pendingMcsPlayers, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type PendingMcsPlayer, type TeamTarget } from "@/lib/mcs-rules";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { MCS_BASE } from "@/lib/mcs-site-map";
@@ -31,6 +32,8 @@ export interface ExpectedPlayer {
   registrationId: string | null;
   /** Demi-saison : dernière date couverte (AAAA-MM-JJ) ; null = toute la saison. */
   halfUntil: string | null;
+  /** Programmes achetés : code de saison (TV, SVA…) ou « prog:<slug> » pour un programme à dates fixes. */
+  programs: string[];
   firstName: string;
   lastName: string;
   gender: "female" | "male";
@@ -83,34 +86,37 @@ export async function loadExpectedPlayers(teams?: TeamTarget[]): Promise<Expecte
   const catLabel = new Map(((cats ?? []) as any[]).map((c) => [`${c.season_id}|${c.id}`, c.label as string]));
   const photo = new Map(((players ?? []) as any[]).map((p) => [personKey(p.first_name, p.last_name), p.photo_url as string]));
   const out = new Map<string, ExpectedPlayer>();
-  const add = (p: Omit<ExpectedPlayer, "key" | "photoUrl" | "teams" | "registrationId" | "createdAt" | "halfUntil"> & { registrationId?: string | null; createdAt?: string | null; halfUntil?: string | null }, targets: TeamTarget[]) => {
+  const add = (p: Omit<ExpectedPlayer, "key" | "photoUrl" | "teams" | "registrationId" | "createdAt" | "halfUntil" | "programs"> & { registrationId?: string | null; createdAt?: string | null; halfUntil?: string | null; programs?: string[] }, targets: TeamTarget[]) => {
     const key = personKey(p.firstName, p.lastName);
     if (!key || !targets.length) return;
     const prev = out.get(key);
     if (prev) {
+      for (const pr of p.programs ?? []) if (!prev.programs.includes(pr)) prev.programs.push(pr);
+      if (p.halfUntil && !prev.halfUntil) prev.halfUntil = p.halfUntil;
       if (p.createdAt && (!prev.createdAt || p.createdAt > prev.createdAt)) prev.createdAt = p.createdAt;
       for (const t of targets) if (!prev.teams.some((x) => x.id === t.id)) prev.teams.push(t);
       return;
     }
-    out.set(key, { ...p, registrationId: p.registrationId ?? null, halfUntil: p.halfUntil ?? null, createdAt: p.createdAt ?? null, key, photoUrl: photo.get(key) ?? null, teams: [...targets] });
+    out.set(key, { ...p, programs: [...(p.programs ?? [])], registrationId: p.registrationId ?? null, halfUntil: p.halfUntil ?? null, createdAt: p.createdAt ?? null, key, photoUrl: photo.get(key) ?? null, teams: [...targets] });
   };
   for (const r of (regs ?? []) as any[]) {
     if (season?.id && r.season_id !== season.id) continue;
     const years = yearsOf(catLabel.get(`${r.season_id}|${r.category_id}`) ?? r.category_id);
     add(
-      { registrationId: r.id, halfUntil: r.is_half_season && r.half_season_ends_on ? String(r.half_season_ends_on).slice(0, 10) : null, createdAt: r.created_at ?? null, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: "female", birthYear: r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : years.length === 1 ? years[0] : null, parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
+      { registrationId: r.id, programs: r.program_id ? [String(r.program_id)] : [], halfUntil: r.is_half_season && r.half_season_ends_on ? String(r.half_season_ends_on).slice(0, 10) : null, createdAt: r.created_at ?? null, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: "female", birthYear: r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : years.length === 1 ? years[0] : null, parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
       teamsFor({ slotId: r.time_slot_template_id, programId: r.program_id, years }, list)
     );
   }
   for (const r of (sessionRegs ?? []) as any[]) {
     add(
-      { createdAt: r.created_at ?? null, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: /garcon/i.test(r.program_slug) ? "male" : "female", birthYear: r.birth_year ?? (r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : null), parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
+      { programs: [`prog:${r.program_slug}`], createdAt: r.created_at ?? null, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: /garcon/i.test(r.program_slug) ? "male" : "female", birthYear: r.birth_year ?? (r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : null), parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
       teamsFor({ sessionProgramSlug: r.program_slug }, list)
     );
   }
   return [...out.values()];
 }
 
+const done_ = (kind: string) => done(kind);
 async function done(kind: string): Promise<Set<string>> {
   const { data } = await db().from("mcs_sync_items").select("key").eq("club_id", CLUB_ID).eq("kind", kind);
   return new Set(((data ?? []) as any[]).map((r) => r.key));
@@ -317,6 +323,34 @@ async function syncHalfSeason(session: McsSession, teams: TeamTarget[], players:
   return out;
 }
 const HALF_MARK = "demi-saison";
+
+/** Chaque jour : toutes les activités de la saison de chaque équipe (grille des présences, toutes les pages), avec leur
+ *  date (liste d'assignation de JP, assigné à tout), rangées dans `delivery_events` pour « Promesses tenues ». */
+export async function syncDeliveryEvents(): Promise<{ teams: number; events: number; skipped?: string }> {
+  const session = await openRobotSession().catch(() => null);
+  if (!session) return { teams: 0, events: 0, skipped: "Compte robot pas encore enregistré." };
+  const rules = await getMcsRules();
+  const teams = (await loadTeamTargets()).filter((t) => t.mcs_team_id && t.mcs_season_id);
+  const now = new Date().toISOString();
+  let total = 0;
+  for (const t of teams) {
+    const roster = await session.roster(t.mcs_team_id!, t.mcs_season_id!);
+    const director = roster.find((m) => rules.alwaysAssigned.some((n) => personKey(m.name, "") === personKey(n, "")));
+    const grid = await session.presencesAll(t.mcs_team_id!, t.mcs_season_id!);
+    const dates = new Map(director ? (await session.memberAssignmentList(t.mcs_team_id!, t.mcs_season_id!, director.id)).map((e) => [Number(e.id), e.date]) : []);
+    const base = (e: { id: number; title: string }) => ({ club_id: CLUB_ID, team_id: t.id, mcs_event_id: e.id, title: e.title, kind: eventKind(e.title), cancelled: isCancelled(e.title), removed_at: null, seen_at: now });
+    const withDate = grid.events.filter((e) => dates.get(e.id)).map((e) => ({ ...base(e), event_date: dates.get(e.id) }));
+    const noDate = grid.events.filter((e) => !dates.get(e.id)).map(base);
+    for (const rows of [withDate, noDate]) {
+      if (!rows.length) continue;
+      const { error } = await db().from("delivery_events").upsert(rows, { onConflict: "team_id,mcs_event_id" });
+      if (error) throw new Error(error.message);
+    }
+    if (grid.events.length) await db().from("delivery_events").update({ removed_at: now }).eq("team_id", t.id).is("removed_at", null).not("mcs_event_id", "in", `(${grid.events.map((e) => e.id).join(",")})`);
+    total += grid.events.length;
+  }
+  return { teams: teams.length, events: total };
+}
 
 /** Met « présent » aux personnes des règles (ex. JP) sur chaque activité à partir de leur date, là où rien n'est indiqué. */
 async function applyDefaultPresence(session: McsSession, teams: TeamTarget[], rules: McsRules): Promise<string[]> {
@@ -633,6 +667,8 @@ export async function syncCalendar(session: McsSession, teams: TeamTarget[], dry
   const [practices, { data: evs }] = await Promise.all([listPractices({ from: today, to }), db().from("mcs_events").select("team_id, key, event_date, start_time, end_time, title, type, location").gte("event_date", today).lte("event_date", to)]);
   const done: string[] = [];
   const extras: string[] = [];
+  const fresh: string[] = [];
+  const seenNew = await done_("nouvelle-activite");
   const fmt = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   for (const t of teams) {
     if (!t.slot_ids.length && !t.session_program_slugs.length) continue; // aucune source dans le site : on ne touche à rien
@@ -661,7 +697,32 @@ export async function syncCalendar(session: McsSession, teams: TeamTarget[], dry
       if (!dry && r.to.end) await session.retimeEvent(t.mcs_team_id!, t.mcs_season_id!, r.id, r.to.date, r.to.start, r.to.end);
       done.push(label);
     }
-    for (const e of diff.extra) extras.push(`${t.name} : ${fmt(e.date)} ${e.start} « ${e.title.replace(/^(Event|Événement)\s+/i, "")} » n'est pas dans l'horaire du site`);
+    for (const e of diff.extra) {
+      const what = e.title.replace(/^(Event|Événement)\s+/i, "");
+      const known = seenNew.has(String(e.id));
+      // Lien entre les deux plateformes : une pratique ajoutée dans MonClubSportif pour un programme à dates fixes entre
+      // dans l'horaire du site (pages des familles, promesses tenues). Pour un groupe de saison, JP est averti.
+      const slug = t.session_program_slugs.length === 1 ? t.session_program_slugs[0] : null;
+      if (!dry && slug) {
+        const loc = mine.find((x) => mcsIdOf(x.key)?.id === e.id)?.location ?? null;
+        const { data: exists } = await db().from("session_program_dates").select("id").eq("program_slug", slug).eq("session_date", e.date).limit(1);
+        if (!exists?.length) {
+          const { error } = await db().from("session_program_dates").insert({ program_slug: slug, session_date: e.date, start_time: e.start, end_time: e.end ?? e.start, location: loc });
+          if (!error) done.push(`${t.name} : ${fmt(e.date)} ${e.start} « ${what} » ajoutée à l'horaire du site (créée dans MonClubSportif)`);
+        }
+      } else extras.push(`${t.name} : ${fmt(e.date)} ${e.start} « ${what} » n'est pas dans l'horaire du site`);
+      if (!known && !dry) {
+        fresh.push(`${t.name} : ${fmt(e.date)} ${e.start} « ${what} »${slug ? " (ajoutée à l'horaire du site)" : ""}`);
+        await mark("nouvelle-activite", String(e.id), `${t.name} · ${e.date} ${e.start}`);
+        seenNew.add(String(e.id));
+      }
+    }
+  }
+  // JP averti (une seule fois par activité) de toute activité ajoutée dans MonClubSportif hors de l'horaire du site.
+  if (fresh.length) {
+    await getResendClient()
+      .emails.send({ from: env.resendFrom, to: OWNER_NOTIFY_EMAIL, subject: `MonClubSportif : ${fresh.length} nouvelle${fresh.length > 1 ? "s" : ""} activité${fresh.length > 1 ? "s" : ""}`, html: `<p>Ajoutée${fresh.length > 1 ? "s" : ""} dans MonClubSportif (hors de l'horaire du site) :</p><ul>${fresh.map((f) => `<li>${esc(f)}</li>`).join("")}</ul><p>Les programmes à dates fixes sont mis à jour tout seuls ; « Promesses tenues » en tient compte au prochain calcul.</p>` } as never)
+      .catch(() => null);
   }
   return { done, extras };
 }
