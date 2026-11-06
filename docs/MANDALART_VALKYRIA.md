@@ -1290,6 +1290,20 @@ Le Mandalart ne sert pas qu'à cocher. Chaque mois, il compare l'argent encaiss�
 - **Comment savoir s'il fonctionne** : Écarts entre le site et MonClubSportif (cible 0) ; minutes de saisie sauvées par semaine.
 - **Construit au niveau** N2 ; objectif P8.4 ; tâches P8.4.05, P8.4.07.
 
+### Présence sur Google et référencement local (6 nov. 2026)
+
+Une académie privée se choisit sur Google : une famille tape « soccer filles Sainte-Thérèse » ou « académie de soccer Laurentides » et appelle les trois premiers résultats de la carte. La fiche Google (catégorie **École de sport**, choix de JP), les avis des familles contentes et des pages par ville font ce travail gratuitement, toute l'année. Même nom, même adresse, même téléphone partout. Claude Code prépare et déploie les inscriptions dès le feu vert de JP ; JP fait seulement les vérifications qui demandent son identité (code postal ou appel de Google).
+
+#### P3.8 Publicité payante et mesure
+
+- [ ] `P3.8.06` ⭐ N1 — Créer la fiche Google de l'académie (Google Business Profile) : catégorie École de sport, zone desservie (Sainte-Thérèse, Blainville, Rosemère, Prévost, Saint-Jérôme, Mirabel, Terrebonne), description, photos, horaires, lien d'inscription ; JP fait la vérification d'identité. — 20 nov. 2026 · JP + Claude Code
+- [ ] `P3.8.07` ⭐ N1 — Vérifier le site dans Google Search Console et Bing Webmaster Tools et soumettre le plan du site. — 20 nov. 2026 · Claude Code
+- [ ] `P3.8.08` ⭐ N1 — Inscrire l'académie avec le même nom, la même adresse et le même téléphone : Apple Business Connect, Bing Places, Pages Jaunes, Facebook et Instagram à jour, bottins des organismes de loisirs des villes où nous louons des gymnases. — 15 déc. 2026 · Claude Code (feu vert de JP)
+- [ ] `P3.8.09` ⭐ N1 — Demander un avis Google aux familles qui donnent 9 ou 10 sur 10 dans les sondages, automatiquement, une seule fois par famille. — 15 déc. 2026 · Claude Code · AU17
+- [ ] `P3.8.10` ➜ N2 — Créer une page par ville et par besoin, avec du vrai contenu (groupes, horaires, lieu, photos) : soccer féminin à Sainte-Thérèse, Prévost, Blainville, Saint-Jérôme ; Sport-Études soccer Laurentides ; camp de soccer filles l'été. — 31 janv. 2027 · Claude Code
+- [ ] `P3.8.11` ➜ N2 — Publier chaque semaine sur la fiche Google : photo de pratique, résultat de match, période d'inscription. — 31 janv. 2027 · JP · A05
+- [ ] `P3.8.12` ➜ N2 — Suivre chaque mois les mots clés (position), les appels et les clics de la fiche Google et le nombre d'avis ; corriger ce qui ne monte pas. — 28 févr. 2027 · Claude Code · A06
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |
@@ -1298,6 +1312,7 @@ Le Mandalart ne sert pas qu'à cocher. Chaque mois, il compare l'argent encaiss�
 | `solde_bancaire` | Solde du compte (BMO + Stripe) | 0 $ (2 nov. 2026, note de JP) | 3 mois de dépenses fixes | 31 déc. 2027 | manuel | Saisi par JP ; sert au calcul de la trésorerie jusqu'en avril dans « Écart et rattrapage ». |
 | `entrees_attendues` | Entrées d'argent attendues hors versements des familles | 10 000 $ (2 × 5 000 $, novembre 2026) | à mesurer | 30 avr. 2027 | manuel | Montant total attendu d'ici avril (ex. 5 000 $ deux vendredis de suite) ; mis à jour par JP. |
 | `appreciation_joueuses` | Note des pratiques donnée par les joueuses (sur 10) | à mesurer | 9/10 | 31 mars 2027 | auto | Moyenne des notes données par les joueuses à la fin des pratiques (routine de fin), saisies par l'éducateur dans le portail entraîneur ; suivie chaque semaine. |
+| `avis_google` | Avis Google de l'académie | 0 (6 nov. 2026, pas de fiche) | 50 avis, moyenne 4,8 | 31 déc. 2027 | manuel | Nombre et moyenne des avis sur la fiche Google ; saisi chaque mois (tâche P3.8.12). |
 | `satisfaction` | Familles satisfaites (8 sur 10 et plus) | à mesurer | 90 % | 31 déc. 2027 | auto | Part des répondants qui donnent 8 sur 10 ou plus à la question de recommandation. Module Sondages. |
 
 ### Automatisations ajoutées

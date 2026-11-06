@@ -349,6 +349,16 @@
    "addedOn": "2026-11-02"
   },
   {
+   "id": "avis_google",
+   "label": "Avis Google de l'académie",
+   "start": "0 (6 nov. 2026, pas de fiche)",
+   "target": "50 avis, moyenne 4,8",
+   "due": "2027-12-31",
+   "source": "manuel",
+   "how": "Nombre et moyenne des avis sur la fiche Google ; saisi chaque mois (tâche P3.8.12).",
+   "addedOn": "2026-11-02"
+  },
+  {
    "id": "satisfaction",
    "label": "Familles satisfaites (8 sur 10 et plus)",
    "start": "à mesurer",
@@ -2476,6 +2486,96 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      },
+      {
+       "code": "P3.8.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Créer la fiche Google de l'académie (Google Business Profile) : catégorie École de sport, zone desservie (Sainte-Thérèse, Blainville, Rosemère, Prévost, Saint-Jérôme, Mirabel, Terrebonne), description, photos, horaires, lien d'inscription ; JP fait la vérification d'identité.",
+       "due": "2026-11-20",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Présence sur Google et référencement local (6 nov. 2026)"
+      },
+      {
+       "code": "P3.8.07",
+       "priority": "star",
+       "level": 1,
+       "title": "Vérifier le site dans Google Search Console et Bing Webmaster Tools et soumettre le plan du site.",
+       "due": "2026-11-20",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Présence sur Google et référencement local (6 nov. 2026)"
+      },
+      {
+       "code": "P3.8.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Inscrire l'académie avec le même nom, la même adresse et le même téléphone : Apple Business Connect, Bing Places, Pages Jaunes, Facebook et Instagram à jour, bottins des organismes de loisirs des villes où nous louons des gymnases.",
+       "due": "2026-12-15",
+       "owner": "Claude Code (feu vert de JP)",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Présence sur Google et référencement local (6 nov. 2026)"
+      },
+      {
+       "code": "P3.8.09",
+       "priority": "star",
+       "level": 1,
+       "title": "Demander un avis Google aux familles qui donnent 9 ou 10 sur 10 dans les sondages, automatiquement, une seule fois par famille.",
+       "due": "2026-12-15",
+       "owner": "Claude Code",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Présence sur Google et référencement local (6 nov. 2026)"
+      },
+      {
+       "code": "P3.8.10",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Créer une page par ville et par besoin, avec du vrai contenu (groupes, horaires, lieu, photos) : soccer féminin à Sainte-Thérèse, Prévost, Blainville, Saint-Jérôme ; Sport-Études soccer Laurentides ; camp de soccer filles l'été.",
+       "due": "2027-01-31",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Présence sur Google et référencement local (6 nov. 2026)"
+      },
+      {
+       "code": "P3.8.11",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Publier chaque semaine sur la fiche Google : photo de pratique, résultat de match, période d'inscription.",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Présence sur Google et référencement local (6 nov. 2026)"
+      },
+      {
+       "code": "P3.8.12",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Suivre chaque mois les mots clés (position), les appels et les clics de la fiche Google et le nombre d'avis ; corriger ce qui ne monte pas.",
+       "due": "2027-02-28",
+       "owner": "Claude Code",
+       "links": [
+        "A06"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Présence sur Google et référencement local (6 nov. 2026)"
       }
      ]
     }
@@ -5660,6 +5760,10 @@
    {
     "title": "Un plan qui s'ajuste et qui se joue",
     "text": "Le Mandalart ne sert pas qu'à cocher. Chaque mois, il compare l'argent encaissé au plan (mois, trimestre), à la trésorerie jusqu'en avril et à l'argent que JP veut rattraper (ex. charges avancées), puis propose des leviers chiffrés à partir des vrais chiffres : places libres, programmes garçons, plages de matchs, commandites, préventes. Quand ça ne marche pas, il propose une autre voie. Et il se joue comme un jeu : une quête du jour de 3 petites bouchées, de l'XP (⭐ = 100, ➜ = 50), des rangs, une série de jours, et une carte des 6 mondes qui dit, au rythme réel des dernières semaines, si on arrive à temps."
+   },
+   {
+    "title": "Présence sur Google et référencement local (6 nov. 2026)",
+    "text": "Une académie privée se choisit sur Google : une famille tape « soccer filles Sainte-Thérèse » ou « académie de soccer Laurentides » et appelle les trois premiers résultats de la carte. La fiche Google (catégorie **École de sport**, choix de JP), les avis des familles contentes et des pages par ville font ce travail gratuitement, toute l'année. Même nom, même adresse, même téléphone partout. Claude Code prépare et déploie les inscriptions dès le feu vert de JP ; JP fait seulement les vérifications qui demandent son identité (code postal ou appel de Google)."
    }
   ]
  },
