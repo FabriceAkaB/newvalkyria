@@ -109,3 +109,17 @@ describe("clé photo", () => {
     expect(photoKey("Béatrice", "Prévost")).toBe("beatrice prevost");
   });
 });
+
+describe("joueuses payées pas encore dans MonClubSportif", () => {
+  it("liste celle qui manque dans une de ses équipes, ignore les anciennes et celles déjà vues", async () => {
+    const { pendingMcsPlayers, memberTeamKey, personKey } = await import("@/lib/mcs-rules");
+    const jeudi = { id: "t-jeudi", name: "Jeudi 2016-2017" };
+    const int = { id: "t-int", name: "Équipe 2016-2017 INT" };
+    const maeva = { key: personKey("Maeva", "ALLAGBE"), firstName: "Maeva", lastName: "ALLAGBE", parentEmail: "p@x.ca", createdAt: "2026-11-06T01:24:19Z", teams: [jeudi, int] };
+    const vue = { ...maeva, key: personKey("Léa", "Roy"), firstName: "Léa", lastName: "Roy" };
+    const vieille = { ...maeva, key: personKey("Anne", "Lee"), firstName: "Anne", lastName: "Lee", createdAt: "2026-09-01T00:00:00Z" };
+    const inMcs = new Set([memberTeamKey(maeva.key, jeudi.id), memberTeamKey(vue.key, jeudi.id), memberTeamKey(vue.key, int.id)]);
+    const out = pendingMcsPlayers([maeva, vue, vieille], inMcs, "2026-10-23T00:00:00Z");
+    expect(out).toEqual([{ key: maeva.key, name: "Maeva ALLAGBE", parentEmail: "p@x.ca", createdAt: maeva.createdAt, missingTeams: ["Équipe 2016-2017 INT"] }]);
+  });
+});

@@ -3,6 +3,7 @@ import { McsRobotForm } from "@/components/mcs-teams-admin";
 import { ScheduledEmailCancel } from "@/components/scheduled-email-cancel";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getRobotStatus } from "@/lib/mcs-robot-config";
+import { getPendingMcsPlayers } from "@/lib/mcs-robot-runner";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { listPendingEmails } from "@/lib/scheduled-emails";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -16,11 +17,12 @@ const when = (iso: string) => new Date(iso).toLocaleString("fr-CA", { weekday: "
  *  et les courriels programmés qui attendent leur heure. */
 export default async function McsRobotPage() {
   await requireAdmin({ roles: ["admin"] });
-  const [rules, robot, pending, { data: journal }] = await Promise.all([
+  const [rules, robot, pending, { data: journal }, missing] = await Promise.all([
     getMcsRules(),
     getRobotStatus().catch(() => null),
     listPendingEmails(),
-    (getSupabaseAdminClient() as any).from("audit_log").select("created_at, action, entity_label, after").in("action", ["mcs_robot_run", "mcs_attendance_sync", "mcs_rules_saved", "mcs_robot_saved"]).order("created_at", { ascending: false }).limit(15)
+    (getSupabaseAdminClient() as any).from("audit_log").select("created_at, action, entity_label, after").in("action", ["mcs_robot_run", "mcs_attendance_sync", "mcs_rules_saved", "mcs_robot_saved"]).order("created_at", { ascending: false }).limit(15),
+    getPendingMcsPlayers(14).catch(() => [])
   ]);
   const campaigns = [...new Set(pending.map((p) => p.campaign ?? p.subject))];
   const summary = (a: any) => {
@@ -49,6 +51,30 @@ export default async function McsRobotPage() {
             <p className="mda-label">Courriel{pending.length > 1 ? "s" : ""} programmé{pending.length > 1 ? "s" : ""} en attente</p>
           </div>
         </section>
+
+        {missing.length > 0 && (
+          <section className="mda-card">
+            <h2 className="mda-h2" style={{ marginBottom: 4 }}>Payées, pas encore dans MonClubSportif ({missing.length})</h2>
+            <p className="mda-sub" style={{ marginTop: 0 }}>
+              {robot && rules.robotActive ? "Le robot les ajoute à son prochain passage (chaque heure et dès un paiement)." : "Rien ne se fait tout seul tant que le compte robot n'est pas enregistré ci-dessous : une fois enregistré, le robot s'active et les ajoute aussitôt."}
+            </p>
+            <ul className="mda-tasks">
+              {missing.map((p) => (
+                <li key={p.key} className="mda-task">
+                  <span className="mda-muted mda-tnum" style={{ minWidth: 120 }}>{when(p.createdAt)}</span>
+                  <span className="mda-task-title">{p.name} → {p.missingTeams.join(", ")}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {!robot && (
+          <section className="mda-card">
+            <h2 className="mda-h2" style={{ marginBottom: 10 }}>Brancher le robot (une seule fois)</h2>
+            <McsRobotForm status={robot} />
+          </section>
+        )}
 
         <section className="mda-card">
           <h2 className="mda-h2" style={{ marginBottom: 4 }}>Les règles du club</h2>
@@ -98,7 +124,7 @@ export default async function McsRobotPage() {
 
         <section className="mda-card">
           <h2 className="mda-h2" style={{ marginBottom: 10 }}>Compte robot MonClubSportif</h2>
-          <McsRobotForm status={robot} />
+          {robot ? <McsRobotForm status={robot} /> : <p className="mda-sub" style={{ margin: 0 }}>À enregistrer plus haut.</p>}
         </section>
       </div>
     </div>

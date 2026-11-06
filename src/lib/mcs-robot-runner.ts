@@ -3,9 +3,10 @@ import { CLUB, CLUB_ID } from "@/lib/club";
 import { env } from "@/lib/env";
 import { McsRobotError, McsSession, type PresenceGrid } from "@/lib/mcs-robot";
 import { getRobotCredentials } from "@/lib/mcs-robot-config";
-import { attendanceFromMcs, calendarDiff, dueReminder, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type TeamTarget } from "@/lib/mcs-rules";
+import { attendanceFromMcs, calendarDiff, dueReminder, memberTeamKey, pendingMcsPlayers, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type PendingMcsPlayer, type TeamTarget } from "@/lib/mcs-rules";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { MCS_BASE } from "@/lib/mcs-site-map";
+import { OWNER_NOTIFY_EMAIL } from "@/lib/email";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -35,6 +36,8 @@ export interface ExpectedPlayer {
   parentEmail: string | null;
   parentName: string | null;
   photoUrl: string | null;
+  /** Date de l'inscription (sert à repérer les nouvelles joueuses pas encore dans MCS). */
+  createdAt: string | null;
   teams: TeamTarget[];
 }
 
@@ -66,35 +69,36 @@ export async function loadExpectedPlayers(teams?: TeamTarget[]): Promise<Expecte
   const list = teams ?? (await loadTeamTargets());
   const [{ data: season }, { data: regs }, { data: sessionRegs }, { data: players }, { data: cats }] = await Promise.all([
     db().from("seasons").select("id").eq("is_active", true).maybeSingle(),
-    db().from("registrations").select("id, season_id, player_first_name, player_last_name, player_dob, parent_name, parent_email, program_id, time_slot_template_id, category_id").eq("status", "paid").eq("is_trial", false),
-    db().from("session_program_registrations").select("player_first_name, player_last_name, player_dob, birth_year, parent_name, parent_email, program_slug").eq("status", "paid"),
+    db().from("registrations").select("id, created_at, season_id, player_first_name, player_last_name, player_dob, parent_name, parent_email, program_id, time_slot_template_id, category_id").eq("status", "paid").eq("is_trial", false),
+    db().from("session_program_registrations").select("created_at, player_first_name, player_last_name, player_dob, birth_year, parent_name, parent_email, program_slug").eq("status", "paid"),
     db().from("players").select("first_name, last_name, photo_url").not("photo_url", "is", null),
     db().from("birth_categories").select("id, season_id, label")
   ]);
   const catLabel = new Map(((cats ?? []) as any[]).map((c) => [`${c.season_id}|${c.id}`, c.label as string]));
   const photo = new Map(((players ?? []) as any[]).map((p) => [personKey(p.first_name, p.last_name), p.photo_url as string]));
   const out = new Map<string, ExpectedPlayer>();
-  const add = (p: Omit<ExpectedPlayer, "key" | "photoUrl" | "teams" | "registrationId"> & { registrationId?: string | null }, targets: TeamTarget[]) => {
+  const add = (p: Omit<ExpectedPlayer, "key" | "photoUrl" | "teams" | "registrationId" | "createdAt"> & { registrationId?: string | null; createdAt?: string | null }, targets: TeamTarget[]) => {
     const key = personKey(p.firstName, p.lastName);
     if (!key || !targets.length) return;
     const prev = out.get(key);
     if (prev) {
+      if (p.createdAt && (!prev.createdAt || p.createdAt > prev.createdAt)) prev.createdAt = p.createdAt;
       for (const t of targets) if (!prev.teams.some((x) => x.id === t.id)) prev.teams.push(t);
       return;
     }
-    out.set(key, { ...p, registrationId: p.registrationId ?? null, key, photoUrl: photo.get(key) ?? null, teams: [...targets] });
+    out.set(key, { ...p, registrationId: p.registrationId ?? null, createdAt: p.createdAt ?? null, key, photoUrl: photo.get(key) ?? null, teams: [...targets] });
   };
   for (const r of (regs ?? []) as any[]) {
     if (season?.id && r.season_id !== season.id) continue;
     const years = yearsOf(catLabel.get(`${r.season_id}|${r.category_id}`) ?? r.category_id);
     add(
-      { registrationId: r.id, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: "female", birthYear: r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : years.length === 1 ? years[0] : null, parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
+      { registrationId: r.id, createdAt: r.created_at ?? null, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: "female", birthYear: r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : years.length === 1 ? years[0] : null, parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
       teamsFor({ slotId: r.time_slot_template_id, programId: r.program_id, years }, list)
     );
   }
   for (const r of (sessionRegs ?? []) as any[]) {
     add(
-      { firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: /garcon/i.test(r.program_slug) ? "male" : "female", birthYear: r.birth_year ?? (r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : null), parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
+      { createdAt: r.created_at ?? null, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim(), gender: /garcon/i.test(r.program_slug) ? "male" : "female", birthYear: r.birth_year ?? (r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : null), parentEmail: r.parent_email?.trim() || null, parentName: r.parent_name ?? null },
       teamsFor({ sessionProgramSlug: r.program_slug }, list)
     );
   }
@@ -138,13 +142,26 @@ export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryR
   try {
     session = await openRobotSession();
   } catch (e) {
-    return { ...report, ok: false, skipped: e instanceof Error ? e.message : "Connexion impossible." };
+    const skipped = e instanceof Error ? e.message : "Connexion impossible.";
+    await alertPendingAfterPayment(opts.reason, `le robot n'a pas pu se connecter à MonClubSportif (${skipped})`);
+    return { ...report, ok: false, skipped };
   }
-  if (!session) return { ...report, ok: false, skipped: "Compte robot pas encore enregistré dans l'admin (MonClubSportif → Équipes)." };
+  if (!session) {
+    const skipped = "Compte robot pas encore enregistré dans l'admin (MonClubSportif → Robot et règles).";
+    await alertPendingAfterPayment(opts.reason, "le compte robot n'est pas enregistré dans l'admin");
+    return { ...report, ok: false, skipped };
+  }
 
   const teams = (await loadTeamTargets()).filter((t) => t.mcs_team_id && t.mcs_season_id);
   const players = await loadExpectedPlayers(teams);
   const photosDone = await done("photo");
+  const inMcs = await done(MEMBER_MARK);
+  const seen = async (p: ExpectedPlayer, t: TeamTarget) => {
+    const k = memberTeamKey(p.key, t.id);
+    if (inMcs.has(k)) return;
+    await mark(MEMBER_MARK, k, `${p.firstName} ${p.lastName} · ${t.name}`);
+    inMcs.add(k);
+  };
 
   // 1 et 2 : membres et photos, équipe par équipe.
   for (const t of teams) {
@@ -161,13 +178,16 @@ export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryR
           }
           const picture = wantPhoto ? await fetchPicture(p.photoUrl!) : null;
           await session.addMember(t.mcs_team_id!, t.mcs_season_id!, { firstName: p.firstName, lastName: p.lastName, gender: p.gender, birthYear: p.birthYear, parentEmail: p.parentEmail, picture, note: "Ajoutée par le robot New Valkyria après le paiement." }, { assignAll: rules.assignAllEvents });
+          await seen(p, t);
           report.added.push(`${p.firstName} ${p.lastName} → ${t.name}`);
           if (picture) {
             await mark("photo", p.key, `${p.firstName} ${p.lastName}`);
             photosDone.add(p.key);
             report.photos.push(`${p.firstName} ${p.lastName}`);
           }
-        } else if (wantPhoto) {
+        }
+        if (memberId) await seen(p, t);
+        if (memberId && wantPhoto) {
           if (dry) {
             report.photos.push(`${p.firstName} ${p.lastName} (${t.name})`);
             continue;
@@ -228,11 +248,44 @@ export async function runMcsRobot(opts: { reason: string; unlock?: boolean; dryR
   }
 
   report.ok = report.errors.length === 0;
+  if (dry) await alertPendingAfterPayment(opts.reason, "le robot est en mode assistant (pas encore activé)");
   if (!dry && (report.added.length || report.photos.length || report.opponents.length || report.unlocked.length || report.calendar.length || report.staff!.length || report.errors.length)) {
     await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_robot_run", entityType: "mcs_teams", entityId: CLUB_ID, entityLabel: opts.reason, after: report as unknown as object }).catch(() => null);
   }
   return report;
 }
+
+const MEMBER_MARK = "membre-robot";
+
+/** Nouvelles joueuses payées (14 derniers jours) qui ne sont pas encore dans toutes leurs équipes MonClubSportif. */
+export async function getPendingMcsPlayers(days = 14): Promise<PendingMcsPlayer[]> {
+  const teams = (await loadTeamTargets()).filter((t) => t.mcs_team_id && t.mcs_season_id);
+  const [players, inMcs] = await Promise.all([loadExpectedPlayers(teams), done(MEMBER_MARK)]);
+  return pendingMcsPlayers(players, inMcs, new Date(Date.now() - days * 86_400_000).toISOString());
+}
+
+/** Après un paiement, si le robot n'a rien pu faire : avis immédiat à JP, une seule fois par joueuse, avec les équipes où
+ *  l'ajouter. Une joueuse payée ne reste jamais hors de MonClubSportif sans que JP le sache. */
+async function alertPendingAfterPayment(reason: string, why: string): Promise<void> {
+  if (!/^paiement/.test(reason)) return;
+  try {
+    const [pending, warned] = await Promise.all([getPendingMcsPlayers(2), done("avis-mcs")]);
+    const fresh = pending.filter((p) => !warned.has(p.key));
+    if (!fresh.length) return;
+    const list = fresh.map((p) => `<li><strong>${esc(p.name)}</strong> : à ajouter dans ${p.missingTeams.map(esc).join(", ")}${p.parentEmail ? ` (parent : ${esc(p.parentEmail)})` : ""}</li>`).join("");
+    const res = await getResendClient().emails.send({
+      from: env.resendFrom,
+      to: OWNER_NOTIFY_EMAIL,
+      subject: `À faire : ${fresh.map((p) => p.name).join(", ")} pas encore dans MonClubSportif`,
+      html: `<p>Inscription payée, mais ${esc(why)} : rien n'a été fait dans MonClubSportif.</p><ul>${list}</ul><p><a href="${env.publicSiteUrl}/admin/monclubsportif/robot">Robot et règles</a></p>`
+    } as never);
+    if ((res as any)?.error) throw new Error(String((res as any).error?.message ?? "envoi refusé"));
+    for (const p of fresh) await mark("avis-mcs", p.key, p.name);
+  } catch (e) {
+    console.error("Avis MCS après paiement impossible", e);
+  }
+}
+
 
 const mcsIdOf = (key: string) => {
   const m = key.match(/^(event|game)-(\d+)@/);

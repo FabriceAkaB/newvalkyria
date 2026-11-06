@@ -124,7 +124,7 @@ export function McsRobotForm({ status }: { status: { email: string; updatedAt: s
         </div>
         <div className="cm-actions" style={{ marginTop: 0 }}>
           <button type="submit" className="admin-btn-primary" disabled={!email || !password || state.kind === "saving"} style={{ minHeight: 44 }}>{state.kind === "saving" ? "Enregistrement…" : "Enregistrer le compte robot"}</button>
-          {state.kind === "saved" && <span style={{ color: "var(--adm-good)", fontSize: "0.85rem" }}>Enregistré et chiffré.</span>}
+          {state.kind === "saved" && <span style={{ color: "var(--adm-good)", fontSize: "0.85rem" }}>Connexion réussie, robot activé : il ajoute maintenant les joueuses qui manquent (résultat dans le journal ci-dessus dans 1 à 2 minutes).</span>}
           {state.kind === "error" && <span role="alert" style={{ color: "var(--adm-bad)", fontSize: "0.85rem" }}>{state.message}</span>}
         </div>
       </form>

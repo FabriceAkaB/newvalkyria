@@ -223,3 +223,28 @@ export function calendarDiff(site: SiteEvent[], mcs: McsCalEvent[]): CalendarDif
   out.extra = mcs.filter((m) => !used.has(m.id) && m.isPractice);
   return out;
 }
+
+/** Clé « cette personne est dans cette équipe MCS » (marque `membre-robot` dans mcs_sync_items). */
+export const memberTeamKey = (personKeyValue: string, teamId: string) => `${personKeyValue}|${teamId}`;
+
+export interface PendingMcsPlayer {
+  key: string;
+  name: string;
+  parentEmail: string | null;
+  createdAt: string;
+  missingTeams: string[];
+}
+
+/** Joueuses payées depuis `sinceIso` qui ne sont pas encore (vues ou ajoutées par le robot) dans toutes leurs équipes MCS.
+ *  C'est la liste qui ne doit jamais rester pleine : Aujourd'hui la montre en rouge et JP reçoit un avis après le paiement. */
+export function pendingMcsPlayers(
+  players: { key: string; firstName: string; lastName: string; parentEmail: string | null; createdAt: string | null; teams: { id: string; name: string }[] }[],
+  inMcs: Set<string>,
+  sinceIso: string
+): PendingMcsPlayer[] {
+  return players
+    .filter((p) => p.createdAt && p.createdAt >= sinceIso)
+    .map((p) => ({ key: p.key, name: `${p.firstName} ${p.lastName}`.trim(), parentEmail: p.parentEmail, createdAt: p.createdAt!, missingTeams: p.teams.filter((t) => !inMcs.has(memberTeamKey(p.key, t.id))).map((t) => t.name) }))
+    .filter((p) => p.missingTeams.length > 0)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}

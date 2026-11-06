@@ -8,6 +8,7 @@ import { getLiveTasks } from "@/lib/mandalart-repo";
 import { cronAlerts, type CronRunRow } from "@/lib/cron-jobs";
 import { getMcsStatus } from "@/lib/mcs-sync";
 import { getRobotStatus } from "@/lib/mcs-robot-config";
+import { getPendingMcsPlayers } from "@/lib/mcs-robot-runner";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { listPractices } from "@/lib/practices-repo";
 import { dateLong, getRefereesToPay, listMatches } from "@/lib/referees-repo";
@@ -320,21 +321,25 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
 
   // ── Robot MonClubSportif : ce qui demande JP (compte, activation, erreur récente) ──
   if (isAdmin) {
-    const [robot, rules, { data: lastRuns }, { count: lateEmails }, { count: failedEmails }] = await Promise.all([
+    const [robot, rules, { data: lastRuns }, { count: lateEmails }, { count: failedEmails }, pendingMcs] = await Promise.all([
       getRobotStatus().catch(() => null),
       getMcsRules().catch(() => null),
       db().from("audit_log").select("created_at, after").eq("action", "mcs_robot_run").gte("created_at", new Date(now - 24 * 3_600_000).toISOString()).order("created_at", { ascending: false }).limit(5),
       // Courriels programmés encore en attente plus d'une heure après leur heure : l'envoi automatique n'a pas roulé.
       db().from("scheduled_emails").select("id", { count: "exact", head: true }).eq("status", "en_attente").lt("send_at", new Date(now - 3_600_000).toISOString()),
-      db().from("scheduled_emails").select("id", { count: "exact", head: true }).eq("status", "echec").gte("send_at", new Date(now - 3 * 24 * 3_600_000).toISOString())
+      db().from("scheduled_emails").select("id", { count: "exact", head: true }).eq("status", "echec").gte("send_at", new Date(now - 3 * 24 * 3_600_000).toISOString()),
+      // Nouvelles joueuses payées pas encore dans toutes leurs équipes MonClubSportif (vu ou ajouté par le robot).
+      getPendingMcsPlayers(14).catch(() => [])
     ]);
     const errors = ((lastRuns ?? []) as any[]).flatMap((r) => (r.after?.errors ?? []) as string[]);
     if (lateEmails) errors.push(`${lateEmails} courriel(s) programmé(s) pas encore partis plus d'une heure après l'heure prévue`);
     if (failedEmails) errors.push(`${failedEmails} courriel(s) programmé(s) en échec`);
+    if (pendingMcs.length) errors.push(`${pendingMcs.length} joueuse(s) payée(s) pas encore dans MonClubSportif`);
     const items = [
+      ...pendingMcs.slice(0, 8).map((p) => ({ title: `${p.name} n'est pas dans MonClubSportif`, detail: `Payée le ${new Date(p.createdAt).toLocaleDateString("fr-CA", { day: "numeric", month: "long", timeZone: "America/Toronto" })}. À ajouter dans : ${p.missingTeams.join(", ")}.`, href: "/admin/monclubsportif/robot" })),
       ...(!robot ? [{ title: "Enregistrer le compte robot", detail: "Accepte l'invitation reçue à info+robot@, puis entre son courriel et son mot de passe (chiffré).", href: "/admin/monclubsportif/robot" }] : []),
       ...(robot && rules && !rules.robotActive ? [{ title: "Voir ce que le robot ferait, puis l'activer", detail: "Tant qu'il n'est pas activé, rien ne se fait tout seul dans MonClubSportif.", href: "/admin/monclubsportif/robot" }] : []),
-      ...[...new Set(errors)].slice(0, 5).map((e) => ({ title: "Le robot a eu un problème", detail: e, href: "/admin/monclubsportif/robot" }))
+      ...[...new Set(errors)].filter((e) => !/payée\(s\) pas encore dans MonClubSportif/.test(e)).slice(0, 5).map((e) => ({ title: "Le robot a eu un problème", detail: e, href: "/admin/monclubsportif/robot" }))
     ];
     sections.push(
       section({
