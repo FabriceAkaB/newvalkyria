@@ -1,6 +1,20 @@
 import type { MetadataRoute } from "next";
 
-const pages = ["", "/methode", "/equipe", "/inscription", "/confirmation", "/politique-confidentialite", "/mentions-legales"];
+// Pages publiques que Google doit trouver (pas /confirmation : page de fin de paiement, sans intérêt pour la recherche).
+const pages = [
+  "",
+  "/inscription",
+  "/inscription/essai",
+  "/sport-etudes",
+  "/programmes/intensif-garcons",
+  "/programmes/privilege-valkyria",
+  "/location-terrains",
+  "/boutique",
+  "/methode",
+  "/equipe",
+  "/politique-confidentialite",
+  "/mentions-legales"
+];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://www.newvalkyria.com";
