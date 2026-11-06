@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { computeGroup, eventKind, isCancelled, promiseFor, type DeliveryEvent } from "@/lib/delivery-core";
+import { cleanTitle, computeGroup, eventKind, isCancelled, isSoloSession, promiseFor, titleDate, type DeliveryEvent } from "@/lib/delivery-core";
 
 const ev = (id: number, date: string | null, title = "Pratique en gym"): DeliveryEvent => ({ id, title, date, kind: eventKind(title), cancelled: isCancelled(title) });
 
@@ -11,6 +11,20 @@ describe("promesses tenues", () => {
     expect(isCancelled("ANNULÉE : Pratique semi privée")).toBe(true);
     expect(isCancelled("[Annulé] Pratique")).toBe(true);
     expect(isCancelled("Pratique en gym")).toBe(false);
+    expect(isCancelled("Pratique solo en gym (one-o... (Annulé) Ven 16 oct. 2026 06:00 PM")).toBe(true);
+    expect(eventKind("Hors-concours c. Dollars-De... Sam 7 nov. 2026 08:15 AM")).toBe("match");
+    expect(eventKind("Autre c. À déterminer (équi... Dim 3 jan. 2027 04:30 PM")).toBe("match");
+    expect(eventKind("Pratique sur synthétique Dim 6 déc. 2026 04:30 PM")).toBe("pratique");
+    expect(isSoloSession("Pratique solo en gym (one-o... Ven 9 oct. 2026 06:00 PM")).toBe(true);
+    expect(isSoloSession("FC Elevate – séance de regr... Sam 28 nov. 2026 07:30 PM")).toBe(false);
+  });
+
+  it("lit la date et nettoie le titre de la grille", () => {
+    expect(titleDate("Pratique sur synthétique Dim 6 déc. 2026 04:30 PM")).toBe("2026-12-06");
+    expect(titleDate("Hors-concours c. À détermin... Sam 9 jan. 2027 08:45 AM")).toBe("2027-01-09");
+    expect(titleDate("Pratique d'ajustement Mer 23 sept. 2026 06:30 PM")).toBe("2026-09-23");
+    expect(titleDate("Pratique en gym")).toBe(null);
+    expect(cleanTitle("Pratique sur synthétique Dim 6 déc. 2026 04:30 PM")).toBe("Pratique sur synthétique");
   });
 
   it("calcule donné, à venir, annulé et ce qu'il faut remettre, joueuse par joueuse (demi-saison comprise)", () => {

@@ -3,7 +3,7 @@ import { CLUB, CLUB_ID } from "@/lib/club";
 import { env } from "@/lib/env";
 import { McsRobotError, McsSession, type PresenceGrid } from "@/lib/mcs-robot";
 import { getRobotCredentials } from "@/lib/mcs-robot-config";
-import { eventKind, isCancelled } from "@/lib/delivery-core";
+import { cleanTitle, eventKind, isCancelled, titleDate } from "@/lib/delivery-core";
 import { attendanceFromMcs, calendarDiff, dueReminder, memberTeamKey, pendingMcsPlayers, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type PendingMcsPlayer, type TeamTarget } from "@/lib/mcs-rules";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { MCS_BASE } from "@/lib/mcs-site-map";
@@ -338,9 +338,10 @@ export async function syncDeliveryEvents(): Promise<{ teams: number; events: num
     const director = roster.find((m) => rules.alwaysAssigned.some((n) => personKey(m.name, "") === personKey(n, "")));
     const grid = await session.presencesAll(t.mcs_team_id!, t.mcs_season_id!);
     const dates = new Map(director ? (await session.memberAssignmentList(t.mcs_team_id!, t.mcs_season_id!, director.id)).map((e) => [Number(e.id), e.date]) : []);
-    const base = (e: { id: number; title: string }) => ({ club_id: CLUB_ID, team_id: t.id, mcs_event_id: e.id, title: e.title, kind: eventKind(e.title), cancelled: isCancelled(e.title), removed_at: null, seen_at: now });
-    const withDate = grid.events.filter((e) => dates.get(e.id)).map((e) => ({ ...base(e), event_date: dates.get(e.id) }));
-    const noDate = grid.events.filter((e) => !dates.get(e.id)).map(base);
+    const base = (e: { id: number; title: string }) => ({ club_id: CLUB_ID, team_id: t.id, mcs_event_id: e.id, title: cleanTitle(e.title), kind: eventKind(e.title), cancelled: isCancelled(e.title), removed_at: null, seen_at: now });
+    const dateOf = (e: { id: number; title: string }) => dates.get(e.id) ?? titleDate(e.title);
+    const withDate = grid.events.filter((e) => dateOf(e)).map((e) => ({ ...base(e), event_date: dateOf(e) }));
+    const noDate = grid.events.filter((e) => !dateOf(e)).map(base);
     for (const rows of [withDate, noDate]) {
       if (!rows.length) continue;
       const { error } = await db().from("delivery_events").upsert(rows, { onConflict: "team_id,mcs_event_id" });

@@ -54,13 +54,38 @@ export interface GroupDelivery {
   players: PlayerDelivery[];
 }
 
-/** « Match », « Tournoi », « vs » : pas une pratique. */
+const plain = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+/** « Match », « Tournoi », « Hors-concours c. X », « Autre c. X » (adversaire) : pas une pratique. */
 export function eventKind(title: string): "pratique" | "match" {
-  return /\b(match|tournoi|partie|vs\.?|contre)\b/i.test(title) ? "match" : "pratique";
+  const t = plain(title);
+  return /\b(match|tournoi|partie|hors-concours|vs\.?|contre)\b/.test(t) || /\bc\.\s/.test(t) ? "match" : "pratique";
 }
 
-/** Annulée dans MonClubSportif (titre « ANNULÉE : … » ou « [Annulé] »). */
+/** Séance solo (une à une), pas une autre activité rangée dans la même équipe. */
+export function isSoloSession(title: string): boolean {
+  return /\b(solo|one-on-one|one-o|individuel)/.test(plain(title));
+}
+
+const MONTHS: Record<string, number> = { janv: 1, jan: 1, fevr: 2, fev: 2, mars: 3, mar: 3, avr: 4, mai: 5, juin: 6, juil: 7, aout: 8, sept: 9, sep: 9, oct: 10, nov: 11, dec: 12 };
+
+/** La grille des présences écrit la date dans le titre : « Pratique sur synthétique Dim 6 déc. 2026 04:30 PM » → 2026-12-06. */
+export function titleDate(title: string): string | null {
+  const all = [...plain(title).matchAll(/\b(\d{1,2})\s+([a-z]+)\.?\s+(\d{4})\b/g)];
+  const m = all.at(-1);
+  if (!m) return null;
+  const month = MONTHS[m[2]] ?? MONTHS[m[2].slice(0, 4)] ?? MONTHS[m[2].slice(0, 3)];
+  return month ? `${m[3]}-${String(month).padStart(2, "0")}-${m[1].padStart(2, "0")}` : null;
+}
+
+/** Le titre sans la date ajoutée par la grille. */
+export function cleanTitle(title: string): string {
+  return title.replace(/\s+(lun|mar|mer|jeu|ven|sam|dim)\.?\s+\d{1,2}\s+\S+\s+\d{4}\s+\d{1,2}:\d{2}\s*(AM|PM)?\s*$/i, "").trim();
+}
+
+/** Annulée dans MonClubSportif : « ANNULÉE : … », « [Annulé] … » ou « … (Annulé) … ». */
 export function isCancelled(title: string): boolean {
+  if (/\(annule/.test(plain(title))) return true;
   return /^\s*(\[)?\s*annul/i.test(title.normalize("NFD").replace(/[̀-ͯ]/g, ""));
 }
 

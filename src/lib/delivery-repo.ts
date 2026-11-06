@@ -1,5 +1,5 @@
 import { CLUB_ID } from "@/lib/club";
-import { computeGroup, promiseFor, type DeliveryEvent, type GroupDelivery, type GroupKind, type PlayerPromise } from "@/lib/delivery-core";
+import { computeGroup, isSoloSession, promiseFor, type DeliveryEvent, type GroupDelivery, type GroupKind, type PlayerPromise } from "@/lib/delivery-core";
 import { loadExpectedPlayers, loadTeamTargets } from "@/lib/mcs-robot-runner";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -34,9 +34,12 @@ export async function getDeliveryReport(): Promise<DeliveryReport> {
   const groups = teams
     .map((t) => {
       const kind: GroupKind = /solo/i.test(t.name) ? "solo" : t.kind === "pratique" ? "technique" : t.kind === "match" ? "equipe" : "programme";
-      const events: DeliveryEvent[] = rows.filter((r) => r.team_id === t.id).map((r) => ({ id: Number(r.mcs_event_id), title: r.title, date: r.event_date ? String(r.event_date).slice(0, 10) : null, kind: r.kind, cancelled: r.cancelled }));
+      const events: DeliveryEvent[] = rows
+        .filter((r) => r.team_id === t.id && (kind !== "solo" || isSoloSession(r.title)))
+        .map((r) => ({ id: Number(r.mcs_event_id), title: r.title, date: r.event_date ? String(r.event_date).slice(0, 10) : null, kind: r.kind, cancelled: r.cancelled }));
+      // Le Solo n'a pas de plage dans le site : ses joueuses sont celles qui ont acheté un programme Solo (SV, SVA).
       const mine: PlayerPromise[] = players
-        .filter((p) => p.teams.some((x) => x.id === t.id))
+        .filter((p) => (kind === "solo" ? p.programs.some((c) => c === "SV" || c === "SVA") : p.teams.some((x) => x.id === t.id)))
         .flatMap((p) => {
           const half = !!p.halfUntil || p.programs.includes("TVD");
           let program = "";
