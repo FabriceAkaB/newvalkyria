@@ -173,16 +173,20 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
   if (isAdmin) {
     const overdue = installments.filter((i) => i.dueDay < today);
     const upcoming = installments.filter((i) => i.dueDay >= today && i.dueDay <= inAWeek);
+    // Sans carte, le prélèvement de nuit saute le versement en silence : on le dit 30 jours d'avance.
+    const in30 = new Date(now + 30 * 86_400_000).toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+    const noCard = installments.filter((i) => i.noCard && i.dueDay >= today && i.dueDay <= in30);
     sections.push(
       section({
         key: "versements",
         title: overdue.length ? "Versements en retard" : "Prélèvements des 7 prochains jours",
-        level: overdue.length ? "rouge" : "info",
-        count: overdue.length || upcoming.length,
+        level: overdue.length || noCard.length ? "rouge" : "info",
+        count: overdue.length + noCard.length || upcoming.length,
         emptyText: "Aucun versement en retard ni prélèvement cette semaine.",
         href: "/admin/revenus/paiements",
         hrefLabel: "Paiements échelonnés",
         items: [
+          ...noCard.map((i) => ({ title: `${i.player} : aucune carte enregistrée`, detail: `${money(i.amountCents)} · ${i.program} · ne sera pas prélevé tout seul`, meta: `Dû le ${shortDay(`${i.dueDay}T12:00:00`)}` })),
           ...overdue.map((i) => ({ title: i.player, detail: `${money(i.amountCents)} · ${i.program}`, meta: `Dû le ${shortDay(`${i.dueDay}T12:00:00`)} (en retard)` })),
           ...upcoming.map((i) => ({ title: i.player, detail: `${money(i.amountCents)} · ${i.program}`, meta: `Prélèvement prévu le ${shortDay(`${i.dueDay}T12:00:00`)}` }))
         ]
@@ -615,6 +619,8 @@ interface UnpaidInstallment {
   amountCents: number;
   /** Date d'échéance (AAAA-MM-JJ, colonne date). */
   dueDay: string;
+  /** Aucune carte enregistrée sur le plan : le prélèvement automatique sautera ce versement. */
+  noCard: boolean;
 }
 
 /** Versements non payés des trois plans de paiement (filles, programmes garçons, Sport-Études). */
@@ -628,16 +634,18 @@ async function loadUnpaidInstallments(): Promise<UnpaidInstallment[]> {
     kinds.map(async (k) => {
       const inst = await rows(db().from(`${k.prefix}_payment_plan_installments`).select("plan_id, amount_cents, due_date, status").not("status", "in", "(paid,cancelled)"));
       if (!inst.length) return [];
-      const plans = await rows(db().from(`${k.prefix}_payment_plans`).select("id, registration_id").in("id", [...new Set(inst.map((i: any) => i.plan_id))]));
+      const plans = await rows(db().from(`${k.prefix}_payment_plans`).select("id, registration_id, stripe_payment_method_id").in("id", [...new Set(inst.map((i: any) => i.plan_id))]));
       const regs = await rows(db().from(k.regTable).select("id, player_first_name, player_last_name, status").in("id", [...new Set(plans.map((p: any) => p.registration_id))]));
       const regByPlan = new Map(plans.map((p: any) => [p.id, regs.find((r: any) => r.id === p.registration_id)]));
+      const cardByPlan = new Map(plans.map((p: any) => [p.id, Boolean(p.stripe_payment_method_id)]));
       return inst
         .filter((i: any) => i.due_date && regByPlan.get(i.plan_id)?.status !== "cancelled")
         .map((i: any) => ({
           player: fullName(regByPlan.get(i.plan_id) ?? {}),
           program: k.program,
           amountCents: i.amount_cents ?? 0,
-          dueDay: String(i.due_date).slice(0, 10)
+          dueDay: String(i.due_date).slice(0, 10),
+          noCard: !cardByPlan.get(i.plan_id)
         }));
     })
   );

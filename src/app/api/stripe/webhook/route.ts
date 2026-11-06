@@ -39,6 +39,7 @@ import { openPositions } from "@/lib/referees-repo";
 import { closeOtherOffersForSlot, onPartnershipOptionPaid } from "@/lib/partnership-offers";
 import { markRentalPaid, releaseRentalBySession } from "@/lib/terrain-rentals-repo";
 import { getOfferByToken, markOfferPaid } from "@/lib/special-offers";
+import { savePlanCard } from "@/lib/plan-card";
 
 /** Le robot MonClubSportif tourne après la réponse à Stripe : on lui laisse le temps de finir. */
 export const maxDuration = 120;
@@ -79,6 +80,16 @@ export async function POST(request: Request) {
       after(async () => {
         await runMcsRobot({ reason: `paiement ${checkoutType}`, unlock: false }).catch((err) => console.error("MCS robot after payment failed", err));
       });
+    }
+
+    // ── Carte enregistrée pour les versements à venir d'un plan (aucun montant prélevé maintenant) ──
+    if (checkoutType === "plan-card") {
+      try {
+        await savePlanCard(session);
+      } catch (error) {
+        console.error("Unable to save plan card", error);
+      }
+      return NextResponse.json({ received: true });
     }
 
     // ── Saison Automne/Hiver 2026 — inscriptions en base de données ──

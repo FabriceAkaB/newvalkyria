@@ -12,6 +12,7 @@ interface ConfirmationPageProps {
     waitlist?: string;
     trial?: string;
     year?: string;
+    carte?: string;
   }>;
 }
 
@@ -72,6 +73,28 @@ export default async function ConfirmationPage({ searchParams }: ConfirmationPag
       <section className="conf-page">
         <Container className="max-w-2xl">
           <ConfirmationSuccess sessionId={params.session_id} isTrial={true} trialYear={params.year} />
+        </Container>
+      </section>
+    );
+  }
+
+  // ── Carte enregistrée pour les versements à venir (lien /api/paiement/carte/[planId]) ──
+  if (params.carte === "true") {
+    return (
+      <section className="conf-page">
+        <Container className="max-w-2xl">
+          <div className="conf-root">
+            <div className="conf-icon-wrap" aria-hidden>
+              <span className="conf-glow" />
+              <svg className="conf-svg" viewBox="0 0 72 72" fill="none" aria-label="Carte enregistrée">
+                <circle cx="36" cy="36" r="34" className="conf-circle conf-circle-pop" />
+                <path d="M20 37.5l11 11 21-22" className="conf-path" />
+              </svg>
+            </div>
+            <p className="conf-kicker">Carte enregistrée</p>
+            <h1 className="conf-title">Merci, c&apos;est<br />réglé</h1>
+            <p className="conf-sub">Votre carte est enregistrée pour le prochain versement : il sera prélevé automatiquement à la date prévue. Aucun montant n&apos;a été prélevé aujourd&apos;hui. Une question ? info@newvalkyria.com</p>
+          </div>
         </Container>
       </section>
     );
