@@ -651,6 +651,36 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
     );
   }
 
+  // ── Tâches confiées (espace JP) : à JP, celles en retard et celles terminées depuis 2 jours ; à la gérante, les siennes ──
+  {
+    const { listTeamTasks } = await import("@/lib/team-tasks-repo");
+    const tasks = await listTeamTasks().catch(() => []);
+    const open = (t: { status: string }) => t.status === "a_faire" || t.status === "en_cours";
+    if (isAdmin) {
+      const late = tasks.filter((t) => t.assignee !== "JP" && open(t) && t.due && t.due < today);
+      const done = tasks.filter((t) => t.assignee !== "JP" && t.status === "fait" && t.done_at && now - Date.parse(t.done_at) <= 2 * DAY_MS);
+      const items: TodayItem[] = [
+        ...late.map((t) => ({ title: `${t.assignee} : ${t.title}`, detail: t.seen_at ? (t.status === "en_cours" ? "S'en occupe, pas terminée" : "Vue, pas commencée") : "Pas encore ouverte", meta: `En retard · prévue ${shortDay(`${t.due}T12:00:00Z`)}`, href: "/admin/moi/confiees" })),
+        ...done.map((t) => ({ title: `Fait par ${t.assignee} : ${t.title}`, detail: t.done_note, meta: dayTime(t.done_at!), href: "/admin/moi/confiees" }))
+      ];
+      if (items.length)
+        sections.push(section({ key: "taches-confiees", title: "Tâches confiées", level: late.length ? "orange" : "info", emptyText: "Rien en retard.", href: "/admin/moi/confiees", hrefLabel: "Tâches confiées", items }));
+    } else {
+      const mine = tasks.filter((t) => /christine/i.test(t.assignee) && open(t) && t.token).sort((x, y) => (x.due ?? "9999").localeCompare(y.due ?? "9999"));
+      sections.push(
+        section({
+          key: "mes-taches",
+          title: "Tâches que JP t'a confiées",
+          level: mine.some((t) => t.due && t.due <= today) ? "orange" : "info",
+          emptyText: "Aucune tâche de JP en attente.",
+          href: mine[0]?.token ? `/tache/${mine[0].token}` : "/admin/aujourdhui",
+          hrefLabel: "Ouvrir la première",
+          items: mine.map((t) => ({ title: t.title, detail: t.details, meta: t.due ? `${t.due < today ? "En retard · " : ""}pour ${shortDay(`${t.due}T12:00:00Z`)}` : null, href: `/tache/${t.token}` }))
+        })
+      );
+    }
+  }
+
   return sections;
 }
 

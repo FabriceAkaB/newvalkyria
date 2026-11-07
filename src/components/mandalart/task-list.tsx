@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { DelegateForm } from "@/components/delegate-form";
+
 type Status = "a_faire" | "en_cours" | "fait" | "abandonne";
 
 export interface TaskItem {
@@ -52,6 +54,8 @@ function TaskRow({ t, currentLevel, showObjective }: { t: TaskItem; currentLevel
   const [evidence, setEvidence] = useState(t.evidenceUrl ?? "");
   const [error, setError] = useState<string | null>(null);
   const [fixed, setFixed] = useState(Boolean(t.fixed));
+  const [delegating, setDelegating] = useState(false);
+  const [owner, setOwner] = useState(t.owner);
 
   const toggleFixed = async () => {
     setBusy(true);
@@ -108,7 +112,7 @@ function TaskRow({ t, currentLevel, showObjective }: { t: TaskItem; currentLevel
           {t.due ? <span className={late ? "mda-late" : undefined}>{late ? `En retard · ${day(t.due)}` : day(t.due)}</span> : null}
           {t.plannedDue && !fixed ? <span title="Reportée automatiquement : pas faite à sa date">Reportée · prévue le {day(t.plannedDue)}</span> : null}
           {fixed ? <span className="mda-pill" title="Date fixe : jamais reportée">Date fixe</span> : null}
-          {t.owner ? <span>{t.owner}</span> : null}
+          {owner ? <span title="Responsable">{owner}</span> : null}
           {status === "en_cours" ? <span style={{ color: "var(--adm-warn)" }}>En cours</span> : null}
           {status === "abandonne" ? <span>Abandonnée</span> : null}
           {t.addedOn ? <span title="Ajoutée par JP le 2 nov. 2026">Ajout de JP</span> : null}
@@ -125,7 +129,25 @@ function TaskRow({ t, currentLevel, showObjective }: { t: TaskItem; currentLevel
           <button type="button" className="mda-task-more" onClick={() => setOpen((o) => !o)}>
             {open ? "Fermer" : t.note || t.evidenceUrl ? "Note ✎" : "Note"}
           </button>
+          {status === "a_faire" || status === "en_cours" ? (
+            <button type="button" className="mda-task-more" onClick={() => setDelegating((d) => !d)} title="Confier cette tâche à Christine, à Annie, à un éducateur…">
+              {delegating ? "Fermer" : "Confier"}
+            </button>
+          ) : null}
         </div>
+        {delegating ? (
+          <DelegateForm
+            mandalartCode={t.code}
+            defaultTitle={t.title}
+            defaultDue={t.due}
+            onCancel={() => setDelegating(false)}
+            onDone={(who) => {
+              setOwner(who);
+              setDelegating(false);
+              router.refresh();
+            }}
+          />
+        ) : null}
         {t.note && !open ? <p style={{ fontSize: "0.8rem", color: "var(--adm-text-2)", margin: "6px 0 0" }}>{t.note}</p> : null}
         {open ? (
           <div className="mda-task-edit">

@@ -11487,3 +11487,24 @@ img { max-width: 100%; height: auto; }
   .mdb-pillar-name { font-size: 0.86rem; }
   .mdb-center-goal { font-size: 2rem; }
 }
+
+/* ── Espace JP : grille des habitudes (7 jours), cases de 40 px au téléphone ── */
+.jp-habits { display: grid; gap: 6px; min-width: 430px; }
+.jp-habits-row { display: grid; grid-template-columns: minmax(112px, 1.6fr) repeat(7, minmax(32px, 1fr)) 52px; gap: 4px; align-items: center; }
+.jp-habits-row > :first-child { position: sticky; left: 0; z-index: 1; background: var(--adm-surface); padding-right: 4px; }
+.jp-habits-head span { font-size: 0.72rem; color: var(--adm-text-3); text-align: center; line-height: 1.2; }
+.jp-habits-head span:first-child { text-align: left; }
+.jp-habits-head span[data-today="true"] { color: var(--adm-accent, #b49bf2); font-weight: 700; }
+.jp-habit-name { font-size: 0.82rem; overflow-wrap: anywhere; font-weight: 600; display: grid; gap: 2px; }
+.jp-habit-name small, .jp-habit-score small { font-size: 0.72rem; font-weight: 400; color: var(--adm-text-3); }
+.jp-habit-score { display: grid; text-align: center; font-size: 0.85rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--adm-text-2); }
+.jp-habit-score[data-ok="true"] { color: var(--adm-good); }
+.jp-cell { width: 100%; height: 40px; border-radius: 8px; border: 1px solid var(--adm-line); background: var(--adm-surface-2); color: #fff; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-sizing: border-box; text-align: center; }
+.jp-cell:disabled { opacity: 0.35; cursor: default; }
+.jp-cell[data-today="true"] { border-color: var(--adm-accent, #b49bf2); }
+.jp-cell[data-met="true"] { background: var(--adm-good); border-color: var(--adm-good); color: #0b2a17; }
+.jp-cell-num { color: var(--adm-text); font-weight: 600; padding: 0 2px; }
+.jp-cell-num[data-met="true"] { color: #0b2a17; }
+.admin-space-switch[data-count="3"] { grid-template-columns: 1fr 1fr 1fr; }
+.admin-shell .mda-task-edit { min-width: 0; max-width: 100%; }
+.admin-shell .mda-task-edit .admin-input { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }

@@ -22,7 +22,7 @@ function db() {
 export const todayIso = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
 
 export async function getTaskStates(): Promise<TaskState[]> {
-  const { data, error } = await db().from("mandalart_tasks_state").select("code, status, note, evidence_url, done_at, updated_at, due, planned_due, fixed").eq("club_id", CLUB_ID);
+  const { data, error } = await db().from("mandalart_tasks_state").select("code, status, note, evidence_url, done_at, updated_at, due, planned_due, fixed, owner").eq("club_id", CLUB_ID);
   if (error) throw error;
   return data ?? [];
 }
@@ -58,6 +58,26 @@ export async function setTaskStatus(input: { code: string; status: TaskStatus; n
   if (task.status !== input.status || input.note) {
     await db().from("mandalart_events").insert({ club_id: CLUB_ID, code: input.code, from_status: task.status, to_status: input.status, note: input.note ?? null, by: input.by });
   }
+  // Tâche confiée (espace JP) : cochée ou abandonnée dans le Mandalart = fermée pour la personne aussi.
+  if (input.status === "fait" || input.status === "abandonne") {
+    await db()
+      .from("team_tasks")
+      .update({ status: input.status, done_at: input.status === "fait" ? new Date().toISOString() : null, updated_at: new Date().toISOString() })
+      .eq("club_id", CLUB_ID)
+      .eq("mandalart_code", input.code)
+      .in("status", ["a_faire", "en_cours"]);
+  }
+}
+
+/** Responsable d'une tâche (null = celui du plan). Écrit au journal. */
+export async function setTaskOwner(code: string, owner: string | null, by: string): Promise<void> {
+  const task = (await getLiveTasks()).find((t) => t.code === code);
+  if (!task) throw new Error("Tâche introuvable");
+  const { error } = await db()
+    .from("mandalart_tasks_state")
+    .upsert({ club_id: CLUB_ID, code, status: task.status, owner, updated_at: new Date().toISOString(), updated_by: by }, { onConflict: "club_id,code" });
+  if (error) throw error;
+  await db().from("mandalart_events").insert({ club_id: CLUB_ID, code, from_status: task.status, to_status: task.status, note: owner ? `Confiée à ${owner}` : "Reprise par JP", by });
 }
 
 /** Date fixe d'une tâche : elle n'est jamais reportée automatiquement. */

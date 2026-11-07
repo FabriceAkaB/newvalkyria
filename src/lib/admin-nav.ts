@@ -32,14 +32,14 @@ export interface AdminNavSection {
   hubs: AdminHub[];
   /** Section repliée par défaut (dépliée d'office quand on y est). */
   collapsible?: boolean;
-  /** Espace de l'admin : « academie » (le business, par défaut) ou « coaching » (seulement le foot). */
+  /** Espace de l'admin : « academie » (le business, par défaut), « coaching » (seulement le foot) ou « jp » (JP comme ressource). */
   space?: AdminSpace;
 }
 
-export type AdminSpace = "academie" | "coaching";
+export type AdminSpace = "academie" | "coaching" | "jp";
 
 /** Page d'entrée de chaque espace (le sélecteur en haut du menu y mène). */
-export const SPACE_HOME: Record<AdminSpace, string> = { academie: "/admin/aujourdhui", coaching: "/admin/coaching" };
+export const SPACE_HOME: Record<AdminSpace, string> = { academie: "/admin/aujourdhui", coaching: "/admin/coaching", jp: "/admin/moi" };
 
 export const TODAY_HUB: AdminHub = {
   key: "aujourdhui",
@@ -88,7 +88,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/saison/{saison}/inscriptions", label: "Inscriptions" },
           { href: "/admin/saison/{saison}/horaire", label: "Horaire" },
           { href: "/admin/saison/{saison}/capacite", label: "Capacité" },
-          { href: "/admin/saison/{saison},/solo", label: "Groupes solo" },
+          { href: "/admin/saison/{saison}/solo", label: "Groupes solo" },
           { href: "/admin/promesses", label: "Promesses tenues" }
         ]
       },
@@ -337,6 +337,52 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/entraineurs/suivi", label: "Suivi des éducateurs", adminOnly: true },
           { href: "/admin/coaching/observations", label: "Observations du mois", adminOnly: true }
         ]
+      }
+    ]
+  },
+  {
+    key: "jp",
+    label: "JP",
+    dotColor: "#ff9f6e",
+    space: "jp",
+    hubs: [
+      {
+        key: "ma-journee",
+        label: "Ma journée",
+        icon: "sun",
+        description: "Ce qui me revient aujourd'hui et cette semaine (Mandalart et ma liste), et ce que j'ai confié à Christine, à Annie ou aux éducateurs.",
+        tabs: [
+          { href: "/admin/moi", label: "Ma journée", adminOnly: true },
+          { href: "/admin/moi/confiees", label: "Tâches confiées", adminOnly: true }
+        ]
+      },
+      {
+        key: "mon-calendrier",
+        label: "Mon calendrier",
+        icon: "calendar",
+        description: "Mon Google Agenda et mes pratiques à l'académie : où va mon temps, catégorie par catégorie.",
+        tabs: [{ href: "/admin/moi/calendrier", label: "Mon calendrier", adminOnly: true }]
+      },
+      {
+        key: "mes-habitudes",
+        label: "Mes habitudes",
+        icon: "chart",
+        description: "Sommeil, coucher, entraînement, lecture, travail profond, contenu : ma semaine et mes séries.",
+        tabs: [{ href: "/admin/moi/habitudes", label: "Mes habitudes", adminOnly: true }]
+      },
+      {
+        key: "ma-nutrition",
+        label: "Ma nutrition",
+        icon: "bag",
+        description: "Chaque repas, les protéines et une note simple, pour tenir les journées de terrain.",
+        tabs: [{ href: "/admin/moi/nutrition", label: "Ma nutrition", adminOnly: true }]
+      },
+      {
+        key: "mes-connaissances",
+        label: "Mes connaissances",
+        icon: "list",
+        description: "Les livres, vidéos, cours et conseils que j'accumule : ce que j'en retiens et comment je l'applique.",
+        tabs: [{ href: "/admin/moi/connaissances", label: "Mes connaissances", adminOnly: true }]
       }
     ]
   },

@@ -21,6 +21,8 @@ export interface TaskState {
   planned_due?: string | null;
   /** Date fixe : la tâche n'est jamais reportée. */
   fixed?: boolean | null;
+  /** Responsable choisi dans l'admin (tâche confiée, espace JP) ; sinon celui du plan. */
+  owner?: string | null;
 }
 
 export interface CustomTask {
@@ -73,6 +75,7 @@ export function buildLiveTasks(plan: MandalartPlan, states: TaskState[], customs
         const due = s?.due ? String(s.due).slice(0, 10) : t.due;
         out.push({
           ...t,
+          owner: s?.owner || t.owner,
           due,
           plannedDue: s?.planned_due && String(s.planned_due).slice(0, 10) !== due ? String(s.planned_due).slice(0, 10) : null,
           fixed: Boolean(s?.fixed),
