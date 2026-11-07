@@ -264,3 +264,53 @@ export async function uploadChildPhoto(id: string, userId: string, file: File): 
   await setChildPhoto(id, userId, publicUrl);
   return publicUrl;
 }
+
+/* ── Courriel confirmé (avant de voir quoi que ce soit d'un enfant) ───────────
+ * Un compte se crée sans vérifier le courriel : n'importe qui pourrait taper celui d'un parent. Tant que le lien reçu
+ * par courriel n'est pas cliqué, le compte ne voit ni les inscriptions de ce courriel, ni les vidéos, ni les bulletins
+ * d'une joueuse qu'il voudrait relier. */
+
+export async function isParentEmailVerified(userId: string, email: string): Promise<boolean> {
+  if (!email) return false;
+  const { data } = await db().from("parent_email_checks").select("token").eq("user_id", userId).ilike("email", email).not("verified_at", "is", null).limit(1);
+  return Boolean(data?.length);
+}
+
+/** Courriel du compte, seulement s'il est confirmé (sinon null). */
+export async function getVerifiedParentEmail(userId: string): Promise<string | null> {
+  const account = await getParentAccount(userId);
+  if (!account?.email) return null;
+  return (await isParentEmailVerified(userId, account.email)) ? account.email : null;
+}
+
+/** Envoie le lien de confirmation (un nouveau à chaque demande, au plus un par 2 minutes). */
+export async function sendParentEmailCheck(userId: string): Promise<{ sent: boolean; email: string | null }> {
+  const account = await getParentAccount(userId);
+  if (!account?.email) return { sent: false, email: null };
+  const { data: recent } = await db().from("parent_email_checks").select("token").eq("user_id", userId).gte("created_at", new Date(Date.now() - 120_000).toISOString()).limit(1);
+  if (recent?.length) return { sent: false, email: account.email };
+  const token = randomBytes(24).toString("base64url");
+  const { error } = await db().from("parent_email_checks").insert({ token, user_id: userId, email: account.email.toLowerCase() });
+  if (error) throw new Error(error.message);
+  const url = `${env.publicSiteUrl}/api/compte/confirmer?t=${token}`;
+  const { getResendClient } = await import("@/lib/resend");
+  await getResendClient().emails.send({
+    from: env.resendFrom,
+    to: account.email,
+    subject: "Confirmez votre courriel — Espace parent New Valkyria",
+    html: `<p>Bonjour${account.fullName ? ` ${account.fullName}` : ""},</p><p>Pour protéger les renseignements de votre enfant, confirmez que ce courriel est bien le vôtre :</p><p><a href="${url}" style="display:inline-block;background:#5b2a86;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:700">Confirmer mon courriel</a></p><p>Ensuite, votre espace parent affiche les inscriptions, le bulletin et les matchs filmés de votre fille.</p><p>Vous n'avez pas créé de compte ? Ignorez ce message.</p>`
+  } as never);
+  return { sent: true, email: account.email };
+}
+
+/** Lien cliqué : le courriel est confirmé (le lien vaut 7 jours). Rend l'utilisateur, ou null si le lien est invalide. */
+export async function confirmParentEmailCheck(token: string): Promise<string | null> {
+  if (!/^[A-Za-z0-9_-]{20,64}$/.test(token)) return null;
+  const { data } = await db().from("parent_email_checks").select("user_id, created_at, verified_at").eq("token", token).maybeSingle();
+  if (!data) return null;
+  if (!data.verified_at) {
+    if (Date.now() - Date.parse(data.created_at) > 7 * 86_400_000) return null;
+    await db().from("parent_email_checks").update({ verified_at: new Date().toISOString() }).eq("token", token);
+  }
+  return data.user_id as string;
+}

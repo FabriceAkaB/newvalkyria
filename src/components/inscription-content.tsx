@@ -295,7 +295,8 @@ async function submitCheckout(input: {
         variant: input.variant,
         includeBag: input.includeBag,
         uniformBundle: input.uniformBundle ?? undefined,
-        paymentPlan: input.paymentPlan
+        paymentPlan: input.paymentPlan,
+        imageConsent: input.data.photoConsent === "yes" ? true : input.data.photoConsent === "no" ? false : undefined
       })
     });
     const body = await res.json().catch(() => null);

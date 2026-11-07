@@ -8,6 +8,7 @@ import { defaultStepFor } from "@/lib/coach-report";
 import { getCoach } from "@/lib/coaches-repo";
 import { getActivityWinners } from "@/lib/player-points-repo";
 import { getExercisesForPlanning } from "@/lib/exercises-repo";
+import { videosForActivity } from "@/lib/match-videos";
 import { getConvocations, getLineup, getMatchDetails, getMatchEvaluations, getMatchRoster, getPlaytimeSegments } from "@/lib/match-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getThemeForDate, themeFor } from "@/lib/season-themes-repo";
@@ -43,10 +44,11 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
     isMatch ? getMatchEvaluations(id) : Promise.resolve([])
   ]);
 
-  const [briefing, winners, components] = await Promise.all([
+  const [briefing, winners, components, videos] = await Promise.all([
     getBriefing(entry.activity, roster).catch(() => []),
     getActivityWinners(id).catch(() => []),
-    getComponents().catch(() => null)
+    getComponents().catch(() => null),
+    videosForActivity(id).catch(() => [])
   ]);
 
   // Accès limité : la présence de l'éducateur sans son taux ni les champs de paiement.
@@ -89,6 +91,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       initialMatchLineup={matchLineup}
       initialMatchPlaytime={matchPlaytime}
       initialMatchEvaluations={matchEvaluations}
+      videos={videos}
     />
   );
 }

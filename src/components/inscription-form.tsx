@@ -378,6 +378,10 @@ export function InscriptionForm({ onComplete, finalLabel = "Vers le paiement →
                 enfant dans le cadre des activités, entraînements, matchs et événements de l&apos;académie.
               </p>
               <p>
+                Les <strong>matchs filmés</strong> sont aussi déposés dans l&apos;espace client du site, où seules les
+                familles des joueuses de l&apos;équipe peuvent les regarder.
+              </p>
+              <p>
                 Cette autorisation vise l&apos;utilisation de l&apos;<strong>image, de la voix et des
                 enregistrements vidéo</strong> de mon enfant, en tout ou en partie, sans limite de durée
                 ni de territoire.

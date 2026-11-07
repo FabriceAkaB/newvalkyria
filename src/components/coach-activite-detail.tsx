@@ -7,6 +7,7 @@ import { EntityDocuments } from "@/components/admin-entity-documents";
 import { exerciseGuideFallback } from "@/components/admin-block-guide";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { CoachTopbar } from "@/components/coach-topbar";
+import { StreamPlayer } from "@/components/stream-player";
 import { SurpriseMomentEditor } from "@/components/surprise-moment";
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
 import { MatchPanel } from "@/components/match-panel";
@@ -666,8 +667,9 @@ export function CoachActiviteDetail({
   initialMatchLineup,
   initialMatchPlaytime,
   initialMatchEvaluations,
-  musts = []
-}: Props & { defaultStep: Step; briefing: BriefingPlayer[]; initialWinners: { registration_id: string; kind: WinKind }[]; musts?: { title: string; text: string }[] }) {
+  musts = [],
+  videos = []
+}: Props & { defaultStep: Step; briefing: BriefingPlayer[]; initialWinners: { registration_id: string; kind: WinKind }[]; musts?: { title: string; text: string }[]; videos?: { id: string; title: string }[] }) {
   const [step, setStep] = useState<Step>(defaultStep);
   const [showEditor, setShowEditor] = useState(false);
   const [attendance, setAttendance] = useState<Record<string, PlayerAttendanceStatus>>(Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status])));
@@ -813,6 +815,17 @@ export function CoachActiviteDetail({
 
           {step === "apres" && (
             <>
+              {videos.length > 0 && (
+                <div className="coach-card" style={{ marginBottom: 16, display: "grid", gap: 10 }}>
+                  <p className="coach-card__label">{videos.length > 1 ? "Les vidéos de cette activité" : "La vidéo de cette activité"}</p>
+                  {videos.map((v) => (
+                    <div key={v.id} style={{ display: "grid", gap: 6 }}>
+                      {videos.length > 1 ? <p className="coach-muted" style={{ margin: 0 }}>{v.title}</p> : null}
+                      <StreamPlayer endpoint={`/api/coach/videos/${v.id}`} label="Revoir la pratique" />
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="coach-card" style={{ marginBottom: 16 }}>
                 <p className="coach-card__label">Ton rapport</p>
                 <ul className="coach-checklist">

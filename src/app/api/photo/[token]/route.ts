@@ -21,6 +21,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   } else if (!player.hasPhoto) {
     return jsonError("Ajoutez la photo de votre fille.", 400);
   }
-  if (consent !== player.imageConsent) await setImageConsent(player.id, consent);
+  await setImageConsent(player.id, consent); // toujours noter la réponse (oui ou non), même inchangée
   return NextResponse.json({ ok: true });
 }

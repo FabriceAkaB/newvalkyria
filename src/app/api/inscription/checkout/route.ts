@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { jsonError } from "@/lib/http";
+import { setRegistrationImageConsent } from "@/lib/players-repo";
 import { getRequestOrigin } from "@/lib/request-origin";
 import { getInstallmentPlan } from "@/lib/payment-plan";
 import { PROGRAMS, type BirthYear } from "@/lib/season-2027";
@@ -130,6 +131,8 @@ export async function POST(request: Request) {
       advancedGroup: payload.variant === "advanced",
       isTrial: false
     });
+    // Accord photo et vidéo du formulaire : gardé sur l'inscription, recopié sur la joueuse (déclencheur en base).
+    if (typeof payload.imageConsent === "boolean") await setRegistrationImageConsent("registrations", registrationId, payload.imageConsent);
 
     let paymentPlanId: string | null = null;
     if (installmentPlan) {

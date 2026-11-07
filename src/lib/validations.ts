@@ -72,6 +72,8 @@ export const seasonCheckoutSchema = z.object({
   variant: z.enum(["public", "advanced"]),
   includeBag: z.boolean().optional(),
   paymentPlan: z.enum(["full", "installments"]).optional(),
+  /** Accord photo ET vidéo (droit à l'image) ; absent = pas répondu. */
+  imageConsent: z.boolean().optional(),
   uniformBundle: z.object({
     jerseyVariantId: z.string(),
     shortVariantId: z.string()

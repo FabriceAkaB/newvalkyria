@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 
 import { jsonError } from "@/lib/http";
 import { PARENT_COOKIE_MAX_AGE, PARENT_COOKIE_NAME } from "@/lib/parent-auth";
-import { createParentSession, signUpParent } from "@/lib/parent-repo";
+import { createParentSession, sendParentEmailCheck, signUpParent } from "@/lib/parent-repo";
 import { parentSignUpSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
@@ -14,6 +14,7 @@ export async function POST(request: Request) {
     if ("error" in result) return jsonError(result.error, 422);
 
     const token = await createParentSession(result.userId);
+    await sendParentEmailCheck(result.userId).catch(() => null); // lien de confirmation du courriel
 
     const response = NextResponse.json({ ok: true }, { status: 201 });
     response.cookies.set(PARENT_COOKIE_NAME, token, {

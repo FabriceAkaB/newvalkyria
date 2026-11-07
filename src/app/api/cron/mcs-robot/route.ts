@@ -7,6 +7,7 @@ import { runMcsRobot, sendPresenceReminders, syncMcsAttendance } from "@/lib/mcs
 import { syncStaleTeams } from "@/lib/mcs-teams-repo";
 import { sendDueEmails } from "@/lib/scheduled-emails";
 import { sendJpMonthlyList, sendTeamTaskReminders } from "@/lib/team-tasks-repo";
+import { syncVeo } from "@/lib/veo-robot";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -30,5 +31,7 @@ export async function GET(request: Request) {
   // Le 1er du mois à partir de 8 h (une seule fois) : la liste du mois à JP, ses tâches et celles qu'il a confiées.
   const month = hour >= 8 ? await sendJpMonthlyList().catch((e) => ({ sent: false, error: e instanceof Error ? e.message : "erreur" })) : null;
   const attendance = hour >= 22 || new URL(request.url).searchParams.has("presences") ? await syncMcsAttendance().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
-  return NextResponse.json({ ok: true, emails, bounces, synced, robot, reminders, tasks, month, attendance });
+  // À 23 h : les enregistrements Veo « Newval … » de la journée sont rangés (match → familles, pratique → éducateurs).
+  const veo = hour === 23 || new URL(request.url).searchParams.has("veo") ? await syncVeo().then((r) => ({ ok: r.ok, skipped: r.skipped, rangees: r.results.filter((x) => x.outcome === "importee").length })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
+  return NextResponse.json({ ok: true, emails, bounces, synced, robot, reminders, tasks, month, attendance, veo });
 }

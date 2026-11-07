@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { jsonError } from "@/lib/http";
 import { getParentUserId } from "@/lib/parent-auth";
-import { getChildrenForParent, getPlayerCandidatesForEmail, getParentAccount, linkChildToPlayer, unlinkChildFromPlayer } from "@/lib/parent-repo";
+import { getChildrenForParent, getPlayerCandidatesForEmail, getVerifiedParentEmail, linkChildToPlayer, unlinkChildFromPlayer } from "@/lib/parent-repo";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getParentUserId();
@@ -17,8 +17,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   // Le joueur choisi doit vraiment provenir d'une inscription de ce compte —
   // jamais faire confiance à un playerId envoyé tel quel par le client.
-  const account = await getParentAccount(userId);
-  const candidates = account?.email ? await getPlayerCandidatesForEmail(account.email) : [];
+  const email = await getVerifiedParentEmail(userId);
+  if (!email) return jsonError("Confirmez d'abord votre courriel (lien envoyé à la création du compte).", 403);
+  const candidates = await getPlayerCandidatesForEmail(email);
   if (!candidates.some((c) => c.playerId === body.playerId)) {
     return jsonError("Cette joueuse ne correspond à aucune inscription de votre compte", 403);
   }

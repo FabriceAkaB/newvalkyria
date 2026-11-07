@@ -46,6 +46,7 @@ function formatCAD(cents: number): string {
 function LinkPlayerBlock({ childId, onLinked }: { childId: string; onLinked: (playerId: string) => void }) {
   const [open, setOpen] = useState(false);
   const [candidates, setCandidates] = useState<PlayerCandidate[] | null>(null);
+  const [needsEmailCheck, setNeedsEmailCheck] = useState(false);
   const [loading, setLoading] = useState(false);
   const [linkingId, setLinkingId] = useState<string | null>(null);
 
@@ -57,6 +58,7 @@ function LinkPlayerBlock({ childId, onLinked }: { childId: string; onLinked: (pl
       const res = await fetch(`/api/compte/enfants/${childId}/candidats`);
       const data = await res.json().catch(() => ({ candidates: [] }));
       setCandidates(data.candidates ?? []);
+      setNeedsEmailCheck(Boolean(data.needsEmailCheck));
     } finally {
       setLoading(false);
     }
@@ -94,7 +96,10 @@ function LinkPlayerBlock({ childId, onLinked }: { childId: string; onLinked: (pl
         Laquelle de ces inscriptions correspond à ce profil ?
       </p>
       {loading && <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Recherche...</p>}
-      {!loading && candidates?.length === 0 && (
+      {!loading && needsEmailCheck && (
+        <p style={{ fontSize: "0.72rem", color: "#c9a227", margin: 0 }}>Confirmez d&apos;abord votre courriel : cliquez le lien reçu par courriel (bouton « Renvoyer le lien » en haut de la page).</p>
+      )}
+      {!loading && !needsEmailCheck && candidates?.length === 0 && (
         <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Aucune inscription trouvée avec le courriel de ce compte pour l&apos;instant.</p>
       )}
       {!loading && candidates && candidates.length > 0 && (

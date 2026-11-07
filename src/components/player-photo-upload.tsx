@@ -53,7 +53,7 @@ export function PlayerPhotoUpload({ token, firstName, hasPhoto, initialConsent }
       <label style={{ display: "flex", gap: "0.7rem", alignItems: "flex-start", lineHeight: 1.45, color: "#1d1730", cursor: "pointer" }}>
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} style={{ width: 22, height: 22, marginTop: 2, accentColor: "#5b2a86", flex: "none" }} />
         <span>
-          <strong>Facultatif :</strong> j&apos;accepte que New Valkyria publie des photos ou des vidéos de {firstName} prises pendant les activités (site web et réseaux sociaux de l&apos;académie). Je peux retirer cet accord en tout temps en écrivant à info@newvalkyria.com.
+          <strong>Facultatif :</strong> j&apos;accepte que New Valkyria publie des photos ou des vidéos de {firstName} prises pendant les activités (site web et réseaux sociaux de l&apos;académie). Les matchs filmés sont aussi visibles dans l&apos;espace client du site, seulement par les familles de l&apos;équipe. Je peux retirer cet accord en tout temps en écrivant à info@newvalkyria.com.
         </span>
       </label>
 

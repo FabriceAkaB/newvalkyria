@@ -114,11 +114,22 @@ export async function ensurePhotoToken(playerId: string): Promise<string> {
   return token;
 }
 
-/** Accord de publication (droit à l'image) donné par la famille ; retirable en tout temps. */
+/** Accord photo ET vidéo (droit à l'image) donné ou refusé par la famille ; retirable en tout temps.
+ *  `image_consent_at` = date de la réponse (oui ou non) ; null = la famille n'a jamais répondu. */
 export async function setImageConsent(playerId: string, consent: boolean): Promise<void> {
   const { error } = await db()
     .from("players")
-    .update({ image_consent: consent, image_consent_at: consent ? new Date().toISOString() : null })
+    .update({ image_consent: consent, image_consent_at: new Date().toISOString() })
     .eq("id", playerId);
   if (error) throw new Error(error.message);
 }
+
+/** Réponse du formulaire d'inscription, gardée sur l'inscription ; un déclencheur la recopie sur la joueuse. */
+export async function setRegistrationImageConsent(table: "registrations" | "session_program_registrations", registrationId: string, consent: boolean): Promise<void> {
+  const { error } = await db().from(table).update({ image_consent: consent }).eq("id", registrationId);
+  if (error) throw new Error(error.message);
+}
+
+export type ConsentState = "oui" | "non" | "sans-reponse";
+export const consentState = (p: { image_consent?: boolean | null; image_consent_at?: string | null }): ConsentState =>
+  p.image_consent ? "oui" : p.image_consent_at ? "non" : "sans-reponse";
