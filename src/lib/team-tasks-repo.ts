@@ -277,3 +277,76 @@ export async function getJpDay(today = todayIso()): Promise<JpDay> {
     assignees
   };
 }
+
+// ───────────────────────── Le mois (liste du 1er) ─────────────────────────
+
+export interface JpMonth {
+  /** AAAA-MM */
+  month: string;
+  today: string;
+  /** Ce qui revient à JP ce mois-ci : en retard d'avant + échéance dans le mois (Mandalart et sa liste). */
+  mine: DayEntry[];
+  /** Ce qu'il a confié et qui n'est pas fini (toutes échéances), puis ce qui a été fait le mois passé. */
+  delegatedOpen: TeamTask[];
+  delegatedDoneLastMonth: TeamTask[];
+  doneLastMonth: number;
+}
+
+const monthOf = (iso: string) => iso.slice(0, 7);
+const prevMonth = (ym: string) => {
+  const [y, m] = ym.split("-").map(Number);
+  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`;
+};
+
+export async function getJpMonth(today = todayIso()): Promise<JpMonth> {
+  const month = monthOf(today);
+  const last = prevMonth(month);
+  const [live, tasks] = await Promise.all([getLiveTasks(today), listTeamTasks()]);
+  const inScope = (due: string | null) => !due || monthOf(due) <= month;
+  const mandalart: DayEntry[] = live
+    .filter((t) => (t.status === "a_faire" || t.status === "en_cours") && isJpOwner(t.owner) && t.due && monthOf(t.due) <= month)
+    .map((t) => ({ key: t.code, title: t.title, due: t.due, bucket: bucketOf(t.due, today), source: "mandalart", code: t.code, star: t.priority === "star", status: t.status as TeamTaskStatus, taskId: null, objectiveName: t.objectiveName }));
+  const perso: DayEntry[] = tasks
+    .filter((t) => t.assignee === JP && isOpenTask(t.status) && !t.mandalart_code && inScope(t.due))
+    .map((t) => ({ key: t.id, title: t.title, due: t.due, bucket: bucketOf(t.due, today), source: "perso", code: null, star: false, status: t.status, taskId: t.id, objectiveName: null }));
+  const doneLast =
+    live.filter((t) => t.status === "fait" && isJpOwner(t.owner) && t.doneAt && monthOf(t.doneAt) === last).length +
+    tasks.filter((t) => t.assignee === JP && t.status === "fait" && t.done_at && monthOf(t.done_at) === last).length;
+  return {
+    month,
+    today,
+    mine: [...mandalart, ...perso].sort((a, b) => byDue(a, b) || Number(b.star) - Number(a.star)),
+    delegatedOpen: tasks.filter((t) => t.assignee !== JP && isOpenTask(t.status)).sort(byDue),
+    delegatedDoneLastMonth: tasks.filter((t) => t.assignee !== JP && t.status === "fait" && t.done_at && monthOf(t.done_at) === last),
+    doneLastMonth: doneLast
+  };
+}
+
+const MONTH_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+export const monthLabelFr = (ym: string) => `${MONTH_FR[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}`;
+
+/** Le 1er du mois (à partir de 8 h, une seule fois) : la liste du mois à JP — ses tâches et celles qu'il a confiées. */
+export async function sendJpMonthlyList(opts: { today?: string; force?: boolean } = {}): Promise<{ sent: boolean; reason?: string }> {
+  const today = opts.today ?? todayIso();
+  if (!opts.force && today.slice(8, 10) !== "01") return { sent: false, reason: "pas le 1er" };
+  const KEY = "jp_month_list_sent";
+  const { data: flag } = await db().from("app_settings").select("value").eq("club_id", CLUB_ID).eq("key", KEY).maybeSingle();
+  if (!opts.force && flag?.value === monthOf(today)) return { sent: false, reason: "déjà envoyée" };
+  const m = await getJpMonth(today);
+  const line = (title: string, meta: string) => `<li style="margin:0 0 6px">${esc(title)} <span style="color:#6b6478;font-size:13px">· ${esc(meta)}</span></li>`;
+  const due = (d: string | null) => (d ? (d < today ? `en retard, prévue ${frDay(d)}` : frDay(d)) : "sans date");
+  const late = m.mine.filter((e) => e.bucket === "retard");
+  const html = `<div style="font-family:Arial,sans-serif;line-height:1.55;color:#1a1a2e;max-width:640px">
+  <h2 style="margin:0 0 4px">Ton mois de ${esc(monthLabelFr(m.month))}</h2>
+  <p style="margin:0 0 16px;color:#6b6478">Le mois passé : ${m.doneLastMonth} tâche${m.doneLastMonth > 1 ? "s" : ""} faite${m.doneLastMonth > 1 ? "s" : ""} par toi, ${m.delegatedDoneLastMonth.length} par ton équipe.</p>
+  <h3 style="margin:18px 0 8px">À toi (${m.mine.length}${late.length ? `, dont ${late.length} en retard` : ""})</h3>
+  ${m.mine.length ? `<ul style="padding-left:18px;margin:0">${m.mine.map((e) => line(`${e.star ? "⭐ " : ""}${e.title}`, `${due(e.due)}${e.code ? ` · Mandalart ${e.code}` : ""}`)).join("")}</ul>` : "<p>Rien de prévu : choisis tes priorités dans le Mandalart.</p>"}
+  <h3 style="margin:18px 0 8px">Confiées, à suivre (${m.delegatedOpen.length})</h3>
+  ${m.delegatedOpen.length ? `<ul style="padding-left:18px;margin:0">${m.delegatedOpen.map((t) => line(`${t.assignee} : ${t.title}`, `${due(t.due)} · ${t.status === "en_cours" ? "s'en occupe" : t.seen_at ? "vue, pas commencée" : "pas encore ouverte"}`)).join("")}</ul>` : "<p>Rien de confié en cours. Qu'est-ce que Christine ou Annie pourrait prendre ce mois-ci ?</p>"}
+  ${m.delegatedDoneLastMonth.length ? `<h3 style="margin:18px 0 8px">Faites par ton équipe le mois passé</h3><ul style="padding-left:18px;margin:0">${m.delegatedDoneLastMonth.map((t) => line(`${t.assignee} : ${t.title}`, t.done_note ?? "faite")).join("")}</ul>` : ""}
+  <p style="margin:20px 0 0"><a href="${env.publicSiteUrl}/admin/moi/mois" style="display:inline-block;background:#5b2a86;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Ouvrir mon mois</a></p>
+</div>`;
+  await sendMail(OWNER_NOTIFY_EMAIL, `Ton mois de ${monthLabelFr(m.month)} : ${m.mine.length} à toi, ${m.delegatedOpen.length} confiées`, html);
+  await db().from("app_settings").upsert({ club_id: CLUB_ID, key: KEY, value: monthOf(today), updated_at: new Date().toISOString() }, { onConflict: "club_id,key" });
+  return { sent: true };
+}

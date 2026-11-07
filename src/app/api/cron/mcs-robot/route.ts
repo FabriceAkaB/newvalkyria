@@ -6,7 +6,7 @@ import { cronGate } from "@/lib/cron-gate";
 import { runMcsRobot, sendPresenceReminders, syncMcsAttendance } from "@/lib/mcs-robot-runner";
 import { syncStaleTeams } from "@/lib/mcs-teams-repo";
 import { sendDueEmails } from "@/lib/scheduled-emails";
-import { sendTeamTaskReminders } from "@/lib/team-tasks-repo";
+import { sendJpMonthlyList, sendTeamTaskReminders } from "@/lib/team-tasks-repo";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -27,6 +27,8 @@ export async function GET(request: Request) {
   const hour = Number(new Date().toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "America/Toronto" }));
   // À partir de 8 h : rappel aux personnes qui ont une tâche de JP (la veille de l'échéance, puis aux 2 jours en retard).
   const tasks = hour >= 8 && hour < 21 ? await sendTeamTaskReminders().catch((e) => ({ sent: 0, error: e instanceof Error ? e.message : "erreur" })) : null;
+  // Le 1er du mois à partir de 8 h (une seule fois) : la liste du mois à JP, ses tâches et celles qu'il a confiées.
+  const month = hour >= 8 ? await sendJpMonthlyList().catch((e) => ({ sent: false, error: e instanceof Error ? e.message : "erreur" })) : null;
   const attendance = hour >= 22 || new URL(request.url).searchParams.has("presences") ? await syncMcsAttendance().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
-  return NextResponse.json({ ok: true, emails, bounces, synced, robot, reminders, tasks, attendance });
+  return NextResponse.json({ ok: true, emails, bounces, synced, robot, reminders, tasks, month, attendance });
 }
