@@ -57,6 +57,20 @@ export default async function MatchVideosPage() {
           <h1 className="mda-h1">Matchs et pratiques filmés</h1>
           <p className="mda-lead">Un match est dans l&apos;espace client des familles de l&apos;équipe (et des joueuses présentes) ; une pratique est dans le portail des éducateurs, sur la page de l&apos;activité. Lecture en 1080p, avec les périodes et les temps forts de Veo.</p>
         </header>
+        {list.some((v) => v.status === "erreur") ? (
+          <section className="mda-card">
+            <h2 className="mda-h2" style={{ marginTop: 0 }}>Plus disponibles chez Veo</h2>
+            <ul className="mda-sub" style={{ margin: 0, paddingLeft: 18 }}>
+              {list
+                .filter((v) => v.status === "erreur")
+                .map((v) => (
+                  <li key={v.id}>
+                    {v.match_date} · {v.title} : {v.error}
+                  </li>
+                ))}
+            </ul>
+          </section>
+        ) : null}
         <MatchVideosAdmin videos={list.filter((v) => v.status === "pret").map(row)} toClassify={toClassify} teams={teamOptions} veo={veo ? { email: veo.email, updatedAt: veo.updatedAt } : null} />
       </div>
     </div>

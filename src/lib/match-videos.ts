@@ -270,3 +270,24 @@ export async function playerDataForCoach(videoId: string, allowedActivityIds: st
   if (!v || v.status !== "pret" || !v.activity_id || !allowedActivityIds.includes(v.activity_id)) return null;
   return toPlayer(v);
 }
+
+/** Toutes les heures : chaque vidéo rangée répond-elle encore chez Veo ? Un fichier expiré ou retiré passe en
+ *  « erreur » (plus montré aux familles ni aux éducateurs) ; s'il revient, la vidéo est remise en place. */
+export async function checkVideoFiles(): Promise<{ checked: number; broken: number; back: number }> {
+  const { data } = await db().from("match_videos").select("id, status, video_url, error").eq("club_id", CLUB_ID).in("status", ["pret", "erreur"]).not("video_url", "is", null);
+  let broken = 0;
+  let back = 0;
+  const LOST = "Le fichier n'est plus disponible chez Veo (expiré ou retiré).";
+  for (const r of (data ?? []) as any[]) {
+    const ok = await fetch(r.video_url, { method: "HEAD", cache: "no-store" }).then((x) => x.ok).catch(() => null);
+    if (ok === null) continue; // réseau : on revérifie à l'heure suivante
+    if (!ok && r.status === "pret") {
+      broken++;
+      await db().from("match_videos").update({ status: "erreur", error: LOST, updated_at: new Date().toISOString() }).eq("id", r.id);
+    } else if (ok && r.status === "erreur" && r.error === LOST) {
+      back++;
+      await db().from("match_videos").update({ status: "pret", error: null, updated_at: new Date().toISOString() }).eq("id", r.id);
+    }
+  }
+  return { checked: (data ?? []).length, broken, back };
+}

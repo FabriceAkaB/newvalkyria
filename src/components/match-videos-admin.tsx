@@ -144,7 +144,7 @@ function VeoAccount({ status }: { status: { email: string; updatedAt: string | n
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <p className="mda-sub" style={{ margin: 0 }}>
-        Chaque soir à 23 h, le site prend dans Veo les enregistrements dont le titre commence par <strong>« Newval »</strong> et les range seul, d&apos;après le jour et l&apos;heure : un match va dans l&apos;espace client des familles de l&apos;équipe, une pratique dans le portail des éducateurs. Les vidéos restent chez Veo. Si deux activités ont lieu en même temps, mets l&apos;équipe dans le titre (ex. « Newval 2015 AV match »).
+        Toutes les heures, le site regarde dans Veo et prend les enregistrements dont le titre commence par <strong>« Newval »</strong> et les range seul, d&apos;après le jour et l&apos;heure : un match va dans l&apos;espace client des familles de l&apos;équipe, une pratique dans le portail des éducateurs. Les vidéos restent chez Veo. Si deux activités ont lieu en même temps, mets l&apos;équipe dans le titre (ex. « Newval 2015 AV match »).
       </p>
       {open ? (
         <div style={{ display: "grid", gap: 8 }}>

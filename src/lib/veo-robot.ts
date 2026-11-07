@@ -1,12 +1,12 @@
 /** Robot Veo : se connecte au compte Veo de JP (courriel et mot de passe gardés chiffrés dans l'admin), lit sa
  *  vidéothèque et range les enregistrements dont le titre commence par « Newval » (match → espace client des familles
  *  de l'équipe, pratique → portail des éducateurs). Les vidéos restent chez Veo : le site garde le lien du fichier
- *  1080p, l'aperçu, les périodes et les temps forts. Roule chaque soir (cron horaire mcs-robot, 23 h) et sur demande. */
+ *  1080p, l'aperçu, les périodes et les temps forts. Roule toutes les heures (cron horaire mcs-robot) et sur demande : un match que Veo prépare encore est repris à l'heure suivante. */
 
 import { CLUB_ID } from "@/lib/club";
 import { env } from "@/lib/env";
 import { OWNER_NOTIFY_EMAIL } from "@/lib/email";
-import { importVeoRecordings, type VeoImportResult, type VeoRecording } from "@/lib/match-videos";
+import { checkVideoFiles, importVeoRecordings, type VeoImportResult, type VeoRecording } from "@/lib/match-videos";
 import { isNewvalRecording } from "@/lib/match-videos-core";
 import { getResendClient } from "@/lib/resend";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -90,6 +90,7 @@ const SEEN_KEY = "veo_signale";
 /** Va chercher les enregistrements « Newval » dans Veo et les range. JP est averti par courriel de ce qui a été rangé
  *  et de ce qu'il doit classer lui-même (une seule fois par enregistrement). */
 export async function syncVeo(opts: { dryRun?: boolean; notify?: boolean } = {}): Promise<{ ok: boolean; skipped?: string; results: VeoImportResult[] }> {
+  if (!opts.dryRun) await checkVideoFiles().catch(() => null);
   const creds = await getVeoCredentials();
   if (!creds) return { ok: false, skipped: "Compte Veo pas encore enregistré dans l'admin.", results: [] };
   const s = new VeoSession();
