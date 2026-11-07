@@ -1,12 +1,12 @@
 /** Robot Veo : se connecte au compte Veo de JP (courriel et mot de passe gardés chiffrés dans l'admin), lit sa
  *  vidéothèque et range les enregistrements dont le titre commence par « Newval » (match → espace client des familles
- *  de l'équipe, pratique → portail des éducateurs). Le fichier 1080p est pris chez Veo directement par Cloudflare :
- *  rien ne passe par l'ordinateur de JP. Roule chaque soir (cron horaire mcs-robot, 23 h) et sur demande dans l'admin. */
+ *  de l'équipe, pratique → portail des éducateurs). Les vidéos restent chez Veo : le site garde le lien du fichier
+ *  1080p, l'aperçu, les périodes et les temps forts. Roule chaque soir (cron horaire mcs-robot, 23 h) et sur demande. */
 
 import { CLUB_ID } from "@/lib/club";
 import { env } from "@/lib/env";
 import { OWNER_NOTIFY_EMAIL } from "@/lib/email";
-import { getStreamConfig, importVeoRecordings, type VeoImportResult, type VeoRecording } from "@/lib/match-videos";
+import { importVeoRecordings, type VeoImportResult, type VeoRecording } from "@/lib/match-videos";
 import { isNewvalRecording } from "@/lib/match-videos-core";
 import { getResendClient } from "@/lib/resend";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -60,12 +60,24 @@ export class VeoSession {
     return all;
   }
 
-  /** Le fichier vidéo de l'enregistrement (rendu « standard », la plus haute qualité). */
-  async videoFile(slug: string): Promise<string | null> {
+  /** Le fichier vidéo de l'enregistrement (rendu « standard », la plus haute qualité) et son aperçu. */
+  async videoFile(slug: string): Promise<{ url: string; thumbnail: string | null } | null> {
     const { data } = await this.get<any[]>(`/api/app/matches/${slug}/videos/`);
     const list = (Array.isArray(data) ? data : []).filter((v) => v?.url && v.mime_type === "video/mp4" && v.availability !== "unavailable");
     list.sort((a, b) => Number(a.render_type !== "standard") - Number(b.render_type !== "standard") || (b.height ?? 0) - (a.height ?? 0));
-    return list[0]?.url ?? null;
+    return list[0] ? { url: list[0].url, thumbnail: list[0].thumbnail ?? null } : null;
+  }
+
+  /** Tout ce qu'il faut pour le lecteur du site : fichier, aperçu, périodes de jeu et temps forts. */
+  async recording(r: any): Promise<VeoRecording> {
+    const base = { slug: String(r.slug), title: String(r.title), start: String(r.start), durationS: r.duration ?? null };
+    if (r.processing_status?.status === "preparing") return { ...base, mp4: null, thumbnail: null, periods: [], highlights: [] };
+    const [file, periods, highlights] = await Promise.all([
+      this.videoFile(r.slug).catch(() => null),
+      this.get(`/api/app/matches/${r.slug}/periods/`).then((x) => x.data).catch(() => []),
+      this.get(`/api/app/matches/${r.slug}/highlights/?include_ai=true`).then((x) => x.data).catch(() => [])
+    ]);
+    return { ...base, mp4: file?.url ?? null, thumbnail: file?.thumbnail ?? (typeof r.thumbnail === "string" ? r.thumbnail : null), periods, highlights };
   }
 }
 
@@ -80,26 +92,53 @@ const SEEN_KEY = "veo_signale";
 export async function syncVeo(opts: { dryRun?: boolean; notify?: boolean } = {}): Promise<{ ok: boolean; skipped?: string; results: VeoImportResult[] }> {
   const creds = await getVeoCredentials();
   if (!creds) return { ok: false, skipped: "Compte Veo pas encore enregistré dans l'admin.", results: [] };
-  if (!opts.dryRun && !(await getStreamConfig())) return { ok: false, skipped: "Hébergement vidéo (Cloudflare Stream) pas encore branché.", results: [] };
   const s = new VeoSession();
   await s.login(creds.email, creds.password);
   const recs = (await s.recordings(creds.club || DEFAULT_CLUB)).filter((r) => isNewvalRecording(r.title) && r.is_accessible !== false && r.expiration_status !== "expired");
   const list: VeoRecording[] = [];
-  for (const r of recs) list.push({ id: String(r.identifier ?? r.slug), title: String(r.title), start: String(r.start), durationS: r.duration ?? null, mp4: r.processing_status?.status === "preparing" ? null : await s.videoFile(r.slug).catch(() => null) });
+  for (const r of recs) list.push(await s.recording(r));
   const results = await importVeoRecordings(list, { dryRun: opts.dryRun });
 
   if (opts.notify !== false && !opts.dryRun) {
     const { data } = await db().from("app_settings").select("value").eq("club_id", CLUB_ID).eq("key", SEEN_KEY).maybeSingle();
     const seen = new Set<string>(data?.value ? JSON.parse(data.value) : []);
-    const fresh = results.filter((r) => (r.outcome === "importee" || r.outcome === "a-classer") && !seen.has(`${r.outcome}|${r.date}|${r.title}`));
+    const fresh = results.filter((r) => (r.outcome === "rangee" || r.outcome === "a-classer") && !seen.has(`${r.outcome}|${r.date}|${r.title}`));
     if (fresh.length) {
-      const li = fresh.map((r) => `<li>${r.date} · ${r.title} : ${r.outcome === "importee" ? `rangé (${r.where})` : `à classer — ${r.reason}`}</li>`).join("");
+      const li = fresh.map((r) => `<li>${r.date} · ${r.title} : ${r.outcome === "rangee" ? `rangé (${r.where})` : `à classer — ${r.reason}`}</li>`).join("");
       await getResendClient()
-        .emails.send({ from: env.resendFrom, to: OWNER_NOTIFY_EMAIL, subject: `Veo : ${fresh.filter((r) => r.outcome === "importee").length} vidéo(s) rangée(s)`, html: `<ul>${li}</ul><p>Publier un match aux familles : <a href="${env.publicSiteUrl}/admin/matchs/videos">Matchs et pratiques filmés</a>.</p>` } as never)
+        .emails.send({ from: env.resendFrom, to: OWNER_NOTIFY_EMAIL, subject: `Veo : ${fresh.filter((r) => r.outcome === "rangee").length} vidéo(s) rangée(s)${fresh.some((r) => r.outcome === "a-classer") ? ", à classer" : ""}`, html: `<ul>${li}</ul><p>Les matchs sont déjà dans l'espace client des familles de l'équipe. À voir ou à classer : <a href="${env.publicSiteUrl}/admin/matchs/videos">Matchs et pratiques filmés</a>.</p>` } as never)
         .catch(() => null);
       for (const r of fresh) seen.add(`${r.outcome}|${r.date}|${r.title}`);
       await db().from("app_settings").upsert({ club_id: CLUB_ID, key: SEEN_KEY, value: JSON.stringify([...seen].slice(-500)), updated_at: new Date().toISOString() }, { onConflict: "club_id,key" });
     }
   }
   return { ok: true, results };
+}
+
+/** Le code d'un enregistrement Veo tiré de son lien (« app.veo.co/matches/20261101-match-…/ ») ou du code lui-même. */
+export function veoSlugOf(input: string): string | null {
+  const s = input.trim();
+  const m = s.match(/veo\.co\/matches\/([a-z0-9][a-z0-9_-]{5,200})\/?/i) ?? s.match(/^([0-9]{8}-[a-z0-9_-]{3,200})$/i);
+  return m ? m[1] : null;
+}
+
+/** Range des enregistrements Veo donnés par leur lien ou leur code. Un match « public » de Veo se lit sans se
+ *  connecter ; sinon le compte Veo de l'admin est utilisé. Même règle : seuls les titres « Newval » sont rangés. */
+export async function importVeoLinks(inputs: string[]): Promise<VeoImportResult[]> {
+  const slugs = [...new Set(inputs.map(veoSlugOf).filter((x): x is string => Boolean(x)))];
+  if (!slugs.length) return [];
+  const s = new VeoSession();
+  const creds = await getVeoCredentials();
+  if (creds) await s.login(creds.email, creds.password).catch(() => null);
+  const list: VeoRecording[] = [];
+  const out: VeoImportResult[] = [];
+  for (const slug of slugs) {
+    try {
+      const { data } = await s.get(`/api/app/matches/${slug}/`);
+      list.push(await s.recording({ ...data, slug }));
+    } catch {
+      out.push({ title: slug, date: "", outcome: "erreur", reason: "Veo ne montre pas cet enregistrement (lien privé : enregistre le compte Veo dans l'admin)." });
+    }
+  }
+  return [...out, ...(await importVeoRecordings(list))];
 }

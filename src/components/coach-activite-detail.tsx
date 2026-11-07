@@ -7,7 +7,7 @@ import { EntityDocuments } from "@/components/admin-entity-documents";
 import { exerciseGuideFallback } from "@/components/admin-block-guide";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { CoachTopbar } from "@/components/coach-topbar";
-import { StreamPlayer } from "@/components/stream-player";
+import { MatchPlayer } from "@/components/match-player";
 import { SurpriseMomentEditor } from "@/components/surprise-moment";
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
 import { MatchPanel } from "@/components/match-panel";
@@ -821,7 +821,7 @@ export function CoachActiviteDetail({
                   {videos.map((v) => (
                     <div key={v.id} style={{ display: "grid", gap: 6 }}>
                       {videos.length > 1 ? <p className="coach-muted" style={{ margin: 0 }}>{v.title}</p> : null}
-                      <StreamPlayer endpoint={`/api/coach/videos/${v.id}`} label="Revoir la pratique" />
+                      <MatchPlayer id={v.id} endpoint={`/api/coach/videos/${v.id}`} label="Revoir la vidéo" />
                     </div>
                   ))}
                 </div>

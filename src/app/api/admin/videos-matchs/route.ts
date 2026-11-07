@@ -4,78 +4,64 @@ import { z, ZodError } from "zod";
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { logAudit } from "@/lib/audit-repo";
 import { jsonError } from "@/lib/http";
+import { adminPlayerData, assignVideo, deleteVideo, setVideoPublished } from "@/lib/match-videos";
 import { saveVeoCredentials } from "@/lib/veo-config";
-import { syncVeo } from "@/lib/veo-robot";
-import { adminPlayerUrl, deleteVideo, importVideoFromUrl, publishVideo, refreshVideoStatuses, saveStreamConfig, startFileUpload } from "@/lib/match-videos";
+import { importVeoLinks, syncVeo } from "@/lib/veo-robot";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
-
-const match = {
-  kind: z.enum(["match", "pratique"]).default("match"),
-  activityId: z.string().uuid().nullable().optional(),
-  teamId: z.string().uuid().nullable(),
-  mcsEventId: z.number().int().positive().nullable(),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  title: z.string().min(2).max(200),
-  opponent: z.string().max(200).nullable().optional()
-};
+export const maxDuration = 120;
 
 const schema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("config"), accountId: z.string().min(10).max(64), token: z.string().min(20).max(200) }),
-  z.object({ action: z.literal("import-url"), ...match, url: z.string().url().max(4000) }),
-  z.object({ action: z.literal("start-upload"), ...match, size: z.number().int().positive(), filename: z.string().min(1).max(300) }),
-  z.object({ action: z.literal("refresh") }),
-  z.object({ action: z.literal("veo-sync"), dryRun: z.boolean().default(false) }),
   z.object({ action: z.literal("veo"), email: z.string().email().max(200), password: z.string().min(4).max(200), club: z.string().max(120).nullable().optional() }),
-  z.object({ action: z.literal("publish"), id: z.string().uuid(), publish: z.boolean(), confirmed: z.boolean().default(false) }),
+  z.object({ action: z.literal("veo-sync") }),
+  z.object({ action: z.literal("veo-links"), links: z.array(z.string().max(500)).min(1).max(30) }),
+  z.object({
+    action: z.literal("assign"),
+    id: z.string().uuid(),
+    kind: z.enum(["match", "pratique"]),
+    teamId: z.string().uuid().nullable(),
+    mcsEventId: z.number().int().positive().nullable(),
+    activityId: z.string().uuid().nullable(),
+    teamName: z.string().min(1).max(200)
+  }),
+  z.object({ action: z.literal("publish"), id: z.string().uuid(), publish: z.boolean() }),
   z.object({ action: z.literal("delete"), id: z.string().uuid() })
 ]);
 
-/** Aperçu d'une vidéo pour l'admin (lien signé). */
+const audit = (entityId: string, entityLabel: string, entityType = "match_video") => logAudit({ actorRole: "admin", actorLabel: "JP", action: "update", entityType, entityId, entityLabel }).catch(() => null);
+
+/** Aperçu d'une vidéo pour l'admin (lien Veo, périodes, temps forts). */
 export async function GET(request: Request) {
-  const role = await getCurrentAdminRole();
-  if (role !== "admin") return jsonError("Réservé à l'administrateur.", 403);
-  const id = new URL(request.url).searchParams.get("play") ?? "";
-  const url = /^[0-9a-f-]{36}$/.test(id) ? await adminPlayerUrl(id).catch(() => null) : null;
-  if (!url) return jsonError("Vidéo pas encore prête.", 404);
-  return NextResponse.json({ url });
+  if ((await getCurrentAdminRole()) !== "admin") return jsonError("Réservé à l'administrateur.", 403);
+  const data = await adminPlayerData(new URL(request.url).searchParams.get("play") ?? "").catch(() => null);
+  if (!data) return jsonError("Vidéo introuvable.", 404);
+  return NextResponse.json(data);
 }
 
-/** Matchs filmés pour l'espace client : brancher Cloudflare Stream, importer (lien Veo ou fichier), publier. Admin seulement. */
+/** Matchs et pratiques filmés : compte Veo, aller chercher dans Veo, ranger à la main, retirer. Admin seulement. */
 export async function POST(request: Request) {
-  const role = await getCurrentAdminRole();
-  if (role !== "admin") return jsonError("Réservé à l'administrateur.", 403);
+  if ((await getCurrentAdminRole()) !== "admin") return jsonError("Réservé à l'administrateur.", 403);
   try {
     const p = schema.parse(await request.json());
-    if (p.action === "config") {
-      await saveStreamConfig(p.accountId, p.token);
-      return NextResponse.json({ ok: true });
-    }
-    if (p.action === "import-url") {
-      const id = await importVideoFromUrl({ ...p, by: "admin" });
-      await logAudit({ actorRole: "admin", actorLabel: "JP", action: "create", entityType: "match_video", entityId: id, entityLabel: `${p.date} ${p.title}` }).catch(() => null);
-      return NextResponse.json({ ok: true, id });
-    }
-    if (p.action === "start-upload") return NextResponse.json({ ok: true, ...(await startFileUpload({ ...p, by: "admin" })) });
     if (p.action === "veo") {
       await saveVeoCredentials(p.email, p.password, p.club ?? null);
-      await logAudit({ actorRole: "admin", actorLabel: "JP", action: "update", entityType: "settings", entityId: "veo", entityLabel: "Compte Veo enregistré (mot de passe chiffré)" }).catch(() => null);
+      await audit("veo", "Compte Veo enregistré (mot de passe chiffré)", "settings");
       return NextResponse.json({ ok: true });
     }
-    if (p.action === "veo-sync") return NextResponse.json(await syncVeo({ dryRun: p.dryRun }));
-    if (p.action === "refresh") {
-      await refreshVideoStatuses();
+    if (p.action === "veo-sync") return NextResponse.json(await syncVeo());
+    if (p.action === "veo-links") return NextResponse.json({ ok: true, results: await importVeoLinks(p.links) });
+    if (p.action === "assign") {
+      await assignVideo(p.id, p);
+      await audit(p.id, `Rangée : ${p.teamName} (${p.kind})`);
       return NextResponse.json({ ok: true });
     }
     if (p.action === "publish") {
-      const r = await publishVideo(p.id, p.publish, p.confirmed);
-      if (!r.ok) return jsonError(r.reason ?? "Publication refusée.", 409);
-      await logAudit({ actorRole: "admin", actorLabel: "JP", action: "update", entityType: "match_video", entityId: p.id, entityLabel: p.publish ? `Publiée aux familles${p.confirmed ? " (accord confirmé par JP)" : ""}` : "Retirée de l'espace client" }).catch(() => null);
+      await setVideoPublished(p.id, p.publish);
+      await audit(p.id, p.publish ? "Remise dans l'espace client" : "Retirée de l'espace client");
       return NextResponse.json({ ok: true });
     }
     await deleteVideo(p.id);
-    await logAudit({ actorRole: "admin", actorLabel: "JP", action: "delete", entityType: "match_video", entityId: p.id, entityLabel: "Vidéo supprimée" }).catch(() => null);
+    await audit(p.id, "Retirée du site (reste dans Veo)");
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof ZodError) return jsonError(error.issues[0]?.message ?? "Données invalides", 422);

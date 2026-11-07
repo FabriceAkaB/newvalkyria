@@ -32,6 +32,6 @@ export async function GET(request: Request) {
   const month = hour >= 8 ? await sendJpMonthlyList().catch((e) => ({ sent: false, error: e instanceof Error ? e.message : "erreur" })) : null;
   const attendance = hour >= 22 || new URL(request.url).searchParams.has("presences") ? await syncMcsAttendance().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
   // À 23 h : les enregistrements Veo « Newval … » de la journée sont rangés (match → familles, pratique → éducateurs).
-  const veo = hour === 23 || new URL(request.url).searchParams.has("veo") ? await syncVeo().then((r) => ({ ok: r.ok, skipped: r.skipped, rangees: r.results.filter((x) => x.outcome === "importee").length })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
+  const veo = hour === 23 || new URL(request.url).searchParams.has("veo") ? await syncVeo().then((r) => ({ ok: r.ok, skipped: r.skipped, rangees: r.results.filter((x) => x.outcome === "rangee").length })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
   return NextResponse.json({ ok: true, emails, bounces, synced, robot, reminders, tasks, month, attendance, veo });
 }
