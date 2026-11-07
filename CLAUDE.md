@@ -104,6 +104,7 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
 
 ## Mandalart (objectif 1,5 M$ sur l'année civile 2028)
 
+- **Vision long terme** (au-delà de 2028) : `docs/CAHIER_DES_CHARGES.md`, le cahier des charges de JP (18 modules, océan bleu, seconde entreprise, centre sportif) avec la carte de ce qui existe déjà pour chaque module. Le lire avant de construire un de ces modules ; il ne remplace pas le Mandalart.
 - Plan : `data/mandalart.json` (ne pas modifier sans JP), généré depuis `docs/MANDALART_VALKYRIA.md` par `node scripts/mandalart-build.mjs`. Les ajouts de JP vont dans la section 11 du .md.
 - Module : `/admin/mandalart` (section « Plan 1,5 M$ » du menu). L'état des tâches vit dans Supabase (`mandalart_tasks_state`), clé = `club_id` + code de tâche ; réimporter le JSON ne change jamais un statut existant.
 - Une tâche pas faite à sa date est reportée au lendemain chaque matin, la suite de son objectif réorganisée ; les tâches à date fixe (`fixed`) ne bougent jamais (`mandalart-reschedule.ts`, cron `api/cron/mandalart-report`).
