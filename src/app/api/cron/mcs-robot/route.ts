@@ -8,6 +8,7 @@ import { syncStaleTeams } from "@/lib/mcs-teams-repo";
 import { sendDueEmails } from "@/lib/scheduled-emails";
 import { sendJpMonthlyList, sendTeamTaskReminders } from "@/lib/team-tasks-repo";
 import { syncVeo } from "@/lib/veo-robot";
+import { archiveVideos } from "@/lib/video-archive";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -15,6 +16,7 @@ export const maxDuration = 300;
 /** Chaque heure : envoie les courriels programmés dont l'heure est passée, relit les calendriers MonClubSportif, fait ce qui manque (joueuses payées dans leurs équipes, photos,
  *  adversaires, présences modifiables en tout temps) puis envoie les rappels de présence dus (48 h, 24 h, le jour même) et les rappels des tâches confiées par JP. */
 export async function GET(request: Request) {
+  const started = Date.now();
   const gate = await cronGate(request, "mcs-robot", { adminRoles: ["admin"] });
   if (!gate.ok) return gate.response;
   // D'abord les courriels programmés (ex. « prévenir les parents à 8 h ») : ils ne doivent pas attendre le robot.
@@ -34,5 +36,10 @@ export async function GET(request: Request) {
   // Toutes les heures : les enregistrements Veo « Newval … » prêts sont rangés (match → familles, pratique → éducateurs) ;
   // un match que Veo prépare encore est repris à l'heure suivante, jusqu'à ce qu'il soit disponible.
   const veo = await syncVeo().then((r) => ({ ok: r.ok, skipped: r.skipped, rangees: r.results.filter((x) => x.outcome === "rangee").length })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
-  return NextResponse.json({ ok: true, emails, bounces, synced, robot, reminders, tasks, month, attendance, veo });
+  // Puis, avec le temps qui reste : les vidéos sont téléchargées pour que l'académie les garde (Veo les efface après
+  // environ un an). Un fichier commencé reprend à l'heure suivante, là où il s'était arrêté.
+  const archive = await archiveVideos({ deadline: started + (maxDuration - 20) * 1000 })
+    .then((r) => ({ done: r.done.length, progress: r.progress, errors: r.errors.map((e) => e.error) }))
+    .catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
+  return NextResponse.json({ ok: true, emails, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
 }

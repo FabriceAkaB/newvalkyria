@@ -7,6 +7,7 @@ import { jsonError } from "@/lib/http";
 import { adminPlayerData, assignVideo, deleteVideo, setVideoPublished } from "@/lib/match-videos";
 import { saveVeoCredentials } from "@/lib/veo-config";
 import { importVeoLinks, syncVeo } from "@/lib/veo-robot";
+import { archiveVideos } from "@/lib/video-archive";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -14,6 +15,7 @@ export const maxDuration = 120;
 const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("veo"), email: z.string().email().max(200), password: z.string().min(4).max(200), club: z.string().max(120).nullable().optional() }),
   z.object({ action: z.literal("veo-sync") }),
+  z.object({ action: z.literal("archive") }),
   z.object({ action: z.literal("veo-links"), links: z.array(z.string().max(500)).min(1).max(30) }),
   z.object({
     action: z.literal("assign"),
@@ -49,6 +51,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
     if (p.action === "veo-sync") return NextResponse.json(await syncVeo());
+    if (p.action === "archive") return NextResponse.json({ ok: true, ...(await archiveVideos({ deadline: Date.now() + 100_000 })) });
     if (p.action === "veo-links") return NextResponse.json({ ok: true, results: await importVeoLinks(p.links) });
     if (p.action === "assign") {
       await assignVideo(p.id, p);

@@ -21,6 +21,8 @@ export interface AdminVideoRow {
   views: number;
   reason: string | null;
   veoUrl: string | null;
+  /** État de la copie gardée par l'académie (« Gardée par l'académie (3,1 Go) », « Téléchargement : 40 % »…). */
+  archive: string;
 }
 
 export interface PlaceOption {
@@ -144,7 +146,7 @@ function VeoAccount({ status }: { status: { email: string; updatedAt: string | n
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <p className="mda-sub" style={{ margin: 0 }}>
-        Toutes les heures, le site regarde dans Veo et prend les enregistrements dont le titre commence par <strong>« Newval »</strong> et les range seul, d&apos;après le jour et l&apos;heure : un match va dans l&apos;espace client des familles de l&apos;équipe, une pratique dans le portail des éducateurs. Les vidéos restent chez Veo. Si deux activités ont lieu en même temps, mets l&apos;équipe dans le titre (ex. « Newval 2015 AV match »).
+        Toutes les heures, le site regarde dans Veo et prend les enregistrements dont le titre commence par <strong>« Newval »</strong> et les range seul, d&apos;après le jour et l&apos;heure : un match va dans l&apos;espace client des familles de l&apos;équipe, une pratique dans le portail des éducateurs. Chaque vidéo est aussi téléchargée en 1080p et gardée par l&apos;académie : Veo efface ses enregistrements après environ un an, notre copie reste. Si deux activités ont lieu en même temps, mets l&apos;équipe dans le titre (ex. « Newval 2015 AV match »).
       </p>
       {open ? (
         <div style={{ display: "grid", gap: 8 }}>
@@ -206,6 +208,7 @@ function ToClassify({ v, options, teams }: { v: AdminVideoRow; options: PlaceOpt
             {day(v.date)}
             {v.duration ? ` · ${v.duration}` : ""}
             {v.reason ? ` · ${v.reason}` : ""}
+            {` · ${v.archive}`}
           </span>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <select className="admin-input" style={{ flex: "1 1 260px", minWidth: 0 }} value={pick} onChange={(e) => setPick(e.target.value)}>
@@ -218,7 +221,7 @@ function ToClassify({ v, options, teams }: { v: AdminVideoRow; options: PlaceOpt
             <button type="button" className="admin-btn-primary" disabled={busy || !o} onClick={() => o && run({ action: "assign", id: v.id, kind: o.kind, teamId: o.teamId, mcsEventId: o.mcsEventId, activityId: o.activityId, teamName: o.teamName })}>
               Ranger ici
             </button>
-            <button type="button" className="admin-btn-ghost" disabled={busy} onClick={() => run({ action: "delete", id: v.id })}>
+            <button type="button" className="admin-btn-ghost" disabled={busy} onClick={() => window.confirm("Ne pas ranger cette vidéo ? Elle est retirée du site, copie de l'académie comprise.") && run({ action: "delete", id: v.id })}>
               Ne pas ranger
             </button>
           </div>
@@ -242,6 +245,7 @@ function VideoRow({ v }: { v: AdminVideoRow }) {
             {v.duration ? <span>{v.duration}</span> : null}
             {v.goals ? <span>{v.goals} but{v.goals > 1 ? "s" : ""}</span> : null}
             {v.moments ? <span>{v.moments} temps forts</span> : null}
+            <span>{v.archive}</span>
             {v.kind === "match" ? <span>{v.published ? `Dans l'espace client · ${v.views} visionnement${v.views > 1 ? "s" : ""}` : "Retirée de l'espace client"}</span> : <span>Éducateurs seulement</span>}
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
@@ -260,7 +264,7 @@ function VideoRow({ v }: { v: AdminVideoRow }) {
               className="admin-btn-ghost"
               disabled={busy}
               onClick={() => {
-                if (window.confirm("Retirer cette vidéo du site ? Elle reste dans Veo.")) run({ action: "delete", id: v.id });
+                if (window.confirm("Retirer cette vidéo du site ? La copie gardée par l'académie est effacée aussi (Veo garde la sienne jusqu'à son expiration).")) run({ action: "delete", id: v.id });
               }}
             >
               Retirer du site
@@ -295,7 +299,46 @@ function List({ title, rows, empty }: { title: string; rows: AdminVideoRow[]; em
   );
 }
 
-export function MatchVideosAdmin({ videos, toClassify, teams, veo }: { videos: AdminVideoRow[]; toClassify: { v: AdminVideoRow; options: PlaceOption[] }[]; teams: PlaceOption[]; veo: { email: string; updatedAt: string | null } | null }) {
+export interface ArchiveSummary {
+  kept: number;
+  keptGo: string;
+  waiting: number;
+  blocked: string | null;
+}
+
+/** La copie de l'académie : combien de vidéos sont gardées, combien attendent, et le blocage s'il y en a un. */
+function Archive({ a }: { a: ArchiveSummary }) {
+  const { busy, error, run } = useAction();
+  const [res, setRes] = useState<string | null>(null);
+  return (
+    <section className="mda-card">
+      <h2 className="mda-h2" style={{ marginTop: 0 }}>Nos copies des vidéos</h2>
+      <p className="mda-sub" style={{ margin: 0 }}>
+        {a.kept} vidéo{a.kept > 1 ? "s" : ""} gardée{a.kept > 1 ? "s" : ""} par l&apos;académie ({a.keptGo}){a.waiting ? ` · ${a.waiting} à télécharger (le site continue chaque heure, environ 3 Go par match)` : " · tout est téléchargé"}. Tant que Veo garde la vidéo, on la lit chez Veo ; ensuite, notre copie prend le relais sans que personne ne s&apos;en aperçoive.
+      </p>
+      {a.blocked ? <p className="mda-sub" style={{ margin: "8px 0 0", color: "var(--adm-bad)" }}>{a.blocked}</p> : null}
+      {a.waiting ? (
+        <div style={{ marginTop: 10 }}>
+          <button
+            type="button"
+            className="admin-btn-ghost"
+            disabled={busy}
+            onClick={async () => {
+              const r = await run({ action: "archive" });
+              if (r) setRes(r.done?.length ? `${r.done.length} vidéo(s) terminée(s).` : r.progress?.length ? `En cours : ${r.progress[0].pct} %. La suite continue toute seule.` : r.errors?.length ? r.errors[0].error : "Rien à télécharger.");
+            }}
+          >
+            {busy ? "Téléchargement… (jusqu'à 2 min)" : "Télécharger maintenant"}
+          </button>
+        </div>
+      ) : null}
+      {res ? <p className="mda-sub" style={{ margin: "8px 0 0" }}>{res}</p> : null}
+      {error ? <p className="mda-sub" style={{ margin: "8px 0 0", color: "var(--adm-bad)" }}>{error}</p> : null}
+    </section>
+  );
+}
+
+export function MatchVideosAdmin({ videos, toClassify, teams, veo, archive }: { videos: AdminVideoRow[]; toClassify: { v: AdminVideoRow; options: PlaceOption[] }[]; teams: PlaceOption[]; veo: { email: string; updatedAt: string | null } | null; archive: ArchiveSummary }) {
   return (
     <>
       <section className="mda-card">
@@ -317,6 +360,7 @@ export function MatchVideosAdmin({ videos, toClassify, teams, veo }: { videos: A
           </ul>
         </section>
       ) : null}
+      <Archive a={archive} />
       <List title="Matchs (familles de l'équipe)" rows={videos.filter((v) => v.kind === "match")} empty="Aucun match rangé pour l'instant." />
       <List title="Pratiques (éducateurs seulement)" rows={videos.filter((v) => v.kind === "pratique")} empty="Aucune pratique rangée pour l'instant." />
     </>

@@ -1,7 +1,8 @@
 /** Matchs et pratiques filmés avec la caméra Veo (demande de JP, 7 nov. 2026).
  *
- *  Les vidéos restent chez Veo (rien n'est hébergé par le site) : on garde le lien du fichier 1080p, l'image d'aperçu,
- *  les périodes et les temps forts (buts, tirs… détectés par Veo) pour un lecteur où l'on saute directement au moment.
+ *  On garde le lien du fichier 1080p chez Veo, l'image d'aperçu, les périodes et les temps forts (buts, tirs… détectés
+ *  par Veo) pour un lecteur où l'on saute directement au moment. Chaque vidéo est aussi téléchargée dans le stockage
+ *  privé du site (video-archive.ts) : Veo efface ses enregistrements après environ un an, la copie de l'académie reste.
  *  - Match : dans l'espace client des familles de l'équipe et des joueuses présentes (`/compte/matchs`).
  *  - Pratique : seulement les éducateurs assignés, sur la page de l'activité du portail (le jour de l'évaluation).
  *  - Les administrateurs voient tout dans `/admin/matchs/videos`.
@@ -14,6 +15,7 @@ import { loadExpectedPlayers, loadTeamTargets, openRobotSession } from "@/lib/mc
 import { personKey } from "@/lib/mcs-rules";
 import { getChildrenForParent, getVerifiedParentEmail } from "@/lib/parent-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { archiveSignedUrl, removeArchive } from "@/lib/video-archive";
 
 function db() {
   return getSupabaseAdminClient() as any;
@@ -39,9 +41,16 @@ export interface MatchVideo {
   periods: VideoPeriod[];
   highlights: VideoHighlight[];
   created_at: string;
+  archive_status: "a-faire" | "en-cours" | "fait" | "erreur";
+  archive_path: string | null;
+  archive_thumb_path: string | null;
+  archive_size: number | null;
+  archive_bytes: number | null;
+  archive_error: string | null;
+  veo_expired: boolean;
 }
 
-const COLS = "id, kind, activity_id, team_id, mcs_event_id, match_date, title, veo_title, veo_slug, video_url, thumbnail_url, status, duration_s, error, published, participant_keys, periods, highlights, created_at";
+const COLS = "id, kind, activity_id, team_id, mcs_event_id, match_date, title, veo_title, veo_slug, video_url, thumbnail_url, status, duration_s, error, published, participant_keys, periods, highlights, created_at, archive_status, archive_path, archive_thumb_path, archive_size, archive_bytes, archive_error, veo_expired";
 const norm = (r: any): MatchVideo => ({ ...r, match_date: r.match_date ? String(r.match_date).slice(0, 10) : null, participant_keys: r.participant_keys ?? [], periods: r.periods ?? [], highlights: r.highlights ?? [] });
 
 export async function listMatchVideos(): Promise<(MatchVideo & { teamName: string | null })[]> {
@@ -187,10 +196,12 @@ export async function setVideoPublished(id: string, published: boolean): Promise
   if (error) throw new Error(error.message);
 }
 
-/** Retirer du site (la vidéo reste dans Veo). */
+/** Retirer du site, copie de l'académie comprise (la vidéo reste dans Veo tant que Veo la garde). */
 export async function deleteVideo(id: string): Promise<void> {
+  const { data } = await db().from("match_videos").select("archive_path, archive_thumb_path").eq("id", id).maybeSingle();
   const { error } = await db().from("match_videos").delete().eq("id", id);
   if (error) throw new Error(error.message);
+  if (data) await removeArchive([data.archive_path, data.archive_thumb_path]).catch(() => null);
 }
 
 export interface PlayerData {
@@ -203,7 +214,18 @@ export interface PlayerData {
   highlights: VideoHighlight[];
 }
 
-const toPlayer = (v: MatchVideo): PlayerData | null => (v.video_url ? { title: v.title, date: v.match_date, url: v.video_url, poster: v.thumbnail_url, duration_s: v.duration_s, periods: v.periods, highlights: v.highlights } : null);
+/** Tant que Veo répond, on lit chez Veo ; ensuite la copie de l'académie (lien signé, privé). */
+const ownCopy = (v: MatchVideo) => v.archive_status === "fait" && (v.veo_expired || !v.video_url);
+
+/** L'aperçu à montrer : celui de Veo, ou celui gardé par l'académie quand Veo a effacé la vidéo. */
+export async function posterOf(v: MatchVideo): Promise<string | null> {
+  return v.veo_expired || !v.thumbnail_url ? archiveSignedUrl(v.archive_thumb_path, 24 * 3600) : v.thumbnail_url;
+}
+
+async function toPlayer(v: MatchVideo): Promise<PlayerData | null> {
+  const url = ownCopy(v) ? await archiveSignedUrl(v.archive_path) : v.veo_expired ? null : v.video_url;
+  return url ? { title: v.title, date: v.match_date, url, poster: await posterOf(v), duration_s: v.duration_s, periods: v.periods, highlights: v.highlights } : null;
+}
 
 async function getVideo(id: string): Promise<MatchVideo | null> {
   if (!/^[0-9a-f-]{36}$/.test(id)) return null;
@@ -244,7 +266,7 @@ export async function videosForParent(userId: string): Promise<{ verified: boole
   const [family, all] = await Promise.all([familyOf(userId), listMatchVideos()]);
   return {
     verified,
-    videos: all.filter((v) => canWatch(v, family)).map((v) => ({ id: v.id, date: v.match_date, title: v.title, teamName: v.teamName, duration_s: v.duration_s, poster: v.thumbnail_url, goals: v.highlights.filter((h) => h.type === "goal").length }))
+    videos: await Promise.all(all.filter((v) => canWatch(v, family)).map(async (v) => ({ id: v.id, date: v.match_date, title: v.title, teamName: v.teamName, duration_s: v.duration_s, poster: await posterOf(v), goals: v.highlights.filter((h) => h.type === "goal").length })))
   };
 }
 
@@ -271,22 +293,24 @@ export async function playerDataForCoach(videoId: string, allowedActivityIds: st
   return toPlayer(v);
 }
 
-/** Toutes les heures : chaque vidéo rangée répond-elle encore chez Veo ? Un fichier expiré ou retiré passe en
- *  « erreur » (plus montré aux familles ni aux éducateurs) ; s'il revient, la vidéo est remise en place. */
+/** Toutes les heures : chaque vidéo répond-elle encore chez Veo ? Un fichier effacé chez Veo est lu dans la copie de
+ *  l'académie ; s'il n'a pas été téléchargé à temps, la vidéo passe en « erreur » (plus montrée) et JP le voit dans l'admin. */
 export async function checkVideoFiles(): Promise<{ checked: number; broken: number; back: number }> {
-  const { data } = await db().from("match_videos").select("id, status, video_url, error").eq("club_id", CLUB_ID).in("status", ["pret", "erreur"]).not("video_url", "is", null);
+  const { data } = await db().from("match_videos").select("id, status, video_url, error, veo_expired, archive_status").eq("club_id", CLUB_ID).not("video_url", "is", null);
   let broken = 0;
   let back = 0;
-  const LOST = "Le fichier n'est plus disponible chez Veo (expiré ou retiré).";
+  const LOST = "Le fichier n'est plus disponible chez Veo et n'a pas été téléchargé à temps.";
+  const now = () => new Date().toISOString();
   for (const r of (data ?? []) as any[]) {
     const ok = await fetch(r.video_url, { method: "HEAD", cache: "no-store" }).then((x) => x.ok).catch(() => null);
     if (ok === null) continue; // réseau : on revérifie à l'heure suivante
-    if (!ok && r.status === "pret") {
+    if (!ok && !r.veo_expired) {
       broken++;
-      await db().from("match_videos").update({ status: "erreur", error: LOST, updated_at: new Date().toISOString() }).eq("id", r.id);
-    } else if (ok && r.status === "erreur" && r.error === LOST) {
+      const kept = r.archive_status === "fait";
+      await db().from("match_videos").update({ veo_expired: true, ...(kept || r.status !== "pret" ? {} : { status: "erreur", error: LOST }), updated_at: now() }).eq("id", r.id);
+    } else if (ok && r.veo_expired) {
       back++;
-      await db().from("match_videos").update({ status: "pret", error: null, updated_at: new Date().toISOString() }).eq("id", r.id);
+      await db().from("match_videos").update({ veo_expired: false, ...(r.status === "erreur" && r.error === LOST ? { status: "pret", error: null } : {}), updated_at: now() }).eq("id", r.id);
     }
   }
   return { checked: (data ?? []).length, broken, back };

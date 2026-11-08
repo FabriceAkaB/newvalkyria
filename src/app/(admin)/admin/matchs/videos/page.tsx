@@ -1,10 +1,11 @@
-import { MatchVideosAdmin, type AdminVideoRow, type PlaceOption } from "@/components/match-videos-admin";
+import { MatchVideosAdmin, type AdminVideoRow, type ArchiveSummary, type PlaceOption } from "@/components/match-videos-admin";
 import { requireAdmin } from "@/lib/admin-auth";
-import { candidatesOn, listMatchVideos, type MatchVideo } from "@/lib/match-videos";
+import { candidatesOn, listMatchVideos, posterOf, type MatchVideo } from "@/lib/match-videos";
 import { durationLabel } from "@/lib/match-videos-core";
 import { loadTeamTargets } from "@/lib/mcs-robot-runner";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getVeoStatus } from "@/lib/veo-config";
+import { archiveLabel } from "@/lib/video-archive";
 
 export const metadata = { title: "Matchs et pratiques filmés — Admin New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export default async function MatchVideosPage() {
   const [list, veo, teams, { data: views }] = await Promise.all([listMatchVideos(), getVeoStatus(), loadTeamTargets(), (getSupabaseAdminClient() as any).from("match_video_views").select("video_id")]);
   const viewCount = new Map<string, number>();
   for (const v of (views ?? []) as any[]) viewCount.set(v.video_id, (viewCount.get(v.video_id) ?? 0) + 1);
-  const row = (v: MatchVideo & { teamName: string | null }): AdminVideoRow => ({
+  const row = async (v: MatchVideo & { teamName: string | null }): Promise<AdminVideoRow> => ({
     id: v.id,
     kind: v.kind,
     status: v.status,
@@ -27,14 +28,22 @@ export default async function MatchVideosPage() {
     veoTitle: v.veo_title,
     teamName: v.teamName,
     duration: durationLabel(v.duration_s),
-    poster: v.thumbnail_url,
+    poster: await posterOf(v),
     goals: v.highlights.filter((h) => h.type === "goal").length,
     moments: v.highlights.length,
     published: v.published,
     views: viewCount.get(v.id) ?? 0,
     reason: v.error,
-    veoUrl: v.veo_slug ? `https://app.veo.co/matches/${v.veo_slug}/` : null
+    veoUrl: v.veo_slug ? `https://app.veo.co/matches/${v.veo_slug}/` : null,
+    archive: archiveLabel(v)
   });
+  const kept = list.filter((v) => v.archive_status === "fait");
+  const archive: ArchiveSummary = {
+    kept: kept.length,
+    keptGo: `${(kept.reduce((n, v) => n + (v.archive_size ?? 0), 0) / 1e9).toFixed(1).replace(".", ",")} Go`,
+    waiting: list.filter((v) => v.archive_status !== "fait" && !v.veo_expired).length,
+    blocked: list.find((v) => v.archive_status === "erreur")?.archive_error ?? null
+  };
   // Ranger à la main : les activités du même jour d'abord, puis n'importe quelle équipe (match ou pratique).
   const teamOptions: PlaceOption[] = teams
     .filter((t) => t.kind === "match" || t.kind === "pratique")
@@ -43,7 +52,7 @@ export default async function MatchVideosPage() {
     list
       .filter((v) => v.status === "a-classer")
       .map(async (v) => ({
-        v: row(v),
+        v: await row(v),
         options: v.match_date
           ? (await candidatesOn(v.match_date).catch(() => [])).map((c) => ({ kind: c.kind, teamId: c.teamId, mcsEventId: c.mcsEventId, activityId: c.activityId, teamName: c.teamName, label: `Ce jour-là : ${c.teamName} · ${c.kind}${hhmm(c.startMin)}` }))
           : []
@@ -59,7 +68,7 @@ export default async function MatchVideosPage() {
         </header>
         {list.some((v) => v.status === "erreur") ? (
           <section className="mda-card">
-            <h2 className="mda-h2" style={{ marginTop: 0 }}>Plus disponibles chez Veo</h2>
+            <h2 className="mda-h2" style={{ marginTop: 0 }}>Effacées chez Veo avant d&apos;être téléchargées</h2>
             <ul className="mda-sub" style={{ margin: 0, paddingLeft: 18 }}>
               {list
                 .filter((v) => v.status === "erreur")
@@ -71,7 +80,7 @@ export default async function MatchVideosPage() {
             </ul>
           </section>
         ) : null}
-        <MatchVideosAdmin videos={list.filter((v) => v.status === "pret").map(row)} toClassify={toClassify} teams={teamOptions} veo={veo ? { email: veo.email, updatedAt: veo.updatedAt } : null} />
+        <MatchVideosAdmin videos={await Promise.all(list.filter((v) => v.status === "pret").map(row))} archive={archive} toClassify={toClassify} teams={teamOptions} veo={veo ? { email: veo.email, updatedAt: veo.updatedAt } : null} />
       </div>
     </div>
   );
