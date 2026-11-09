@@ -585,19 +585,19 @@ const hm = (ms: number) => new Date(ms).toLocaleTimeString("en-GB", { hour: "2-d
 
 /** L'activité du site pour un événement MCS passé : même jour, même heure (± 15 min), hors activités de JP ;
  *  créée au besoin (même règle que le sondage de fin) pour que la présence ait où aller. */
-async function activityFor(date: string, start: string, end: string | null, location: string, group: string): Promise<string> {
+async function activityFor(date: string, start: string, end: string | null, location: string, group: string, type = "Pratique"): Promise<string> {
   const { data } = await db().from("coach_activities").select("id, start_time, organization").eq("activity_date", date);
   const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
   const hit = ((data ?? []) as any[]).find((a) => !a.organization && Math.abs(toMin(String(a.start_time)) - toMin(start)) <= 15);
   if (hit) return hit.id;
   const { createActivityFor } = await import("@/lib/practices-repo");
-  return createActivityFor({ date, start, end, location, group });
+  return createActivityFor({ date, start, end, location, group, type });
 }
 
 /** Chaque soir : les présences des événements passés (7 derniers jours) lues dans MonClubSportif deviennent les
  *  présences du site (fiche de la joueuse, bulletin, rapports), et la présence de chaque entraîneur confirme son
  *  assignation pour la paie (« MonClubSportif »). Rien n'est écrasé quand la famille n'a pas répondu. */
-export async function syncMcsAttendance(opts: { days?: number; now?: number } = {}): Promise<{ players: number; coaches: number; unmatched: string[]; skipped?: string }> {
+export async function syncMcsAttendance(opts: { days?: number; now?: number; pages?: number } = {}): Promise<{ players: number; coaches: number; unmatched: string[]; skipped?: string }> {
   const rules = await getMcsRules();
   if (!rules.robotActive) return { players: 0, coaches: 0, unmatched: [], skipped: "Robot pas encore activé (mode assistant)." };
   const session = await openRobotSession();
@@ -624,19 +624,23 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number } = 
   for (const t of teams) {
     let grid: PresenceGrid;
     try {
-      grid = await session.presences(t.mcs_team_id!, t.mcs_season_id!, 2);
+      grid = await session.presences(t.mcs_team_id!, t.mcs_season_id!, opts.pages ?? 2);
     } catch {
       continue;
     }
     for (const ev of grid.events) {
       const e = byId.get(ev.id);
-      if (!e || !e.start || e.start > now || e.start < since || e.type === "Match" || e.type === "Tournoi") continue;
+      if (!e || !e.start || e.start > now || e.start < since) continue;
+      // Match ou tournoi : seule la présence des éducateurs compte (leur paie) ; celle des jeunes reste aux pratiques.
+      const game = e.type === "Match" || e.type === "Tournoi";
       const date = String(e.event_date).slice(0, 10);
-      const activityId = await activityFor(date, hm(e.start), e.endHm, e.location ?? "", t.name);
+      let activityId: string | null = null;
       for (const row of grid.rows) {
         const status = attendanceFromMcs(row.states[ev.id]);
         if (!status) continue;
         const coach = ((coaches ?? []) as any[]).find((c) => sameMemberName(row.name, c.first_name, c.last_name));
+        if (game && !coach) continue;
+        activityId ??= await activityFor(date, hm(e.start), e.endHm, e.location ?? "", t.name, game ? "Match" : "Pratique");
         if (coach) {
           const { data: asg } = await db().from("coach_assignments").select("id, confirmed").eq("activity_id", activityId).eq("coach_id", coach.id).maybeSingle();
           const patch: Record<string, unknown> = { status: status === "absent" ? "absent" : "present", updated_at: new Date().toISOString() };
