@@ -608,13 +608,14 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number } = 
   const players = await loadExpectedPlayers(teams);
   const [{ data: coaches }, { data: events }] = await Promise.all([
     db().from("coaches").select("id, first_name, last_name").eq("status", "active"),
-    db().from("mcs_events").select("team_id, key, event_date, location, type").gte("event_date", dayIso(since)).lte("event_date", dayIso(now))
+    db().from("mcs_events").select("team_id, key, event_date, location, type, end_time").gte("event_date", dayIso(since)).lte("event_date", dayIso(now))
   ]);
   const byId = new Map<number, any>();
   for (const e of (events ?? []) as any[]) {
     const id = mcsIdOf(e.key)?.id;
     const [, s, en] = String(e.key).split("|");
-    if (id) byId.set(id, { ...e, start: Number(s), end: Number(en) || null });
+    // La clé ne porte que le début : la fin vient de la colonne end_time (sans elle, l'activité ne pouvait pas être créée).
+    if (id) byId.set(id, { ...e, start: Number(s), endHm: Number(en) ? hm(Number(en)) : e.end_time ? String(e.end_time).slice(0, 5) : null });
   }
   const { setPlayerAttendance } = await import("@/lib/coach-portal-repo");
   let nPlayers = 0;
@@ -631,7 +632,7 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number } = 
       const e = byId.get(ev.id);
       if (!e || !e.start || e.start > now || e.start < since || e.type === "Match" || e.type === "Tournoi") continue;
       const date = String(e.event_date).slice(0, 10);
-      const activityId = await activityFor(date, hm(e.start), e.end ? hm(e.end) : null, e.location ?? "", t.name);
+      const activityId = await activityFor(date, hm(e.start), e.endHm, e.location ?? "", t.name);
       for (const row of grid.rows) {
         const status = attendanceFromMcs(row.states[ev.id]);
         if (!status) continue;
@@ -640,8 +641,13 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number } = 
           const { data: asg } = await db().from("coach_assignments").select("id, confirmed").eq("activity_id", activityId).eq("coach_id", coach.id).maybeSingle();
           const patch: Record<string, unknown> = { status: status === "absent" ? "absent" : "present", updated_at: new Date().toISOString() };
           if (status !== "absent" && !asg?.confirmed) Object.assign(patch, { confirmed: true, confirmed_at: new Date().toISOString(), confirmed_by: "MonClubSportif" });
-          if (asg) await db().from("coach_assignments").update(patch).eq("id", asg.id);
-          else if (status !== "absent") await db().from("coach_assignments").insert({ activity_id: activityId, coach_id: coach.id, arrival_time: hm(e.start), departure_time: e.end ? hm(e.end) : null, ...patch });
+          // Jamais en silence : cette présence est le « punch » de la paie de l'éducateur.
+          const { error } = asg
+            ? await db().from("coach_assignments").update(patch).eq("id", asg.id)
+            : status !== "absent"
+              ? await db().from("coach_assignments").insert({ activity_id: activityId, coach_id: coach.id, arrival_time: hm(e.start), departure_time: e.endHm, ...patch })
+              : { error: null };
+          if (error) throw new Error(`Présence de ${row.name} refusée par la base : ${error.message}`);
           nCoaches++;
           continue;
         }

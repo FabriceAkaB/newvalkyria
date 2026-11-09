@@ -63,6 +63,9 @@ describe("règles MonClubSportif", () => {
     expect(sameMemberName("ELOÏSE  cousineau", "Éloïse", "Cousineau")).toBe(true);
     expect(sameMemberName("Emma Gracioppo", "Emma", "Dorismond Giroux")).toBe(false);
     expect(sameMemberName("Mila Dorothy", "Lyvia", "Dorothy")).toBe(false);
+    expect(sameMemberName("Maeva Desjardin", "Maéva", "Desjardins")).toBe(true);
+    expect(sameMemberName("Noura Ouattara-Baldé", "noura", "ouatara")).toBe(true);
+    expect(sameMemberName("Maeva ALLAGBE", "Maéva", "Desjardins")).toBe(false);
   });
 
   it("une présence MonClubSportif devient une présence du site, sauf sans réponse ou incertaine", () => {

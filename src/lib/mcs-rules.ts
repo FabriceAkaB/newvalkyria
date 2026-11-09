@@ -181,6 +181,10 @@ export function sameMemberName(mcsName: string, first: string, last: string): bo
   if (!a.length || !f.length) return false;
   if (a.join(" ") === [...f, ...l].join(" ")) return true;
   if (a[0] === f[0] && l.some((w) => a.slice(1).includes(w))) return true;
+  // Même prénom, nom écrit un peu autrement (« Desjardin » / « Desjardins », « Ouattara-Baldé » / « Ouatara ») :
+  // lettres doublées et « s » final ignorés.
+  const loose = (w: string) => w.replace(/(.)\1+/g, "$1").replace(/s$/, "");
+  if (a[0] === f[0] && l.some((w) => w.length > 3 && a.slice(1).some((x) => loose(x) === loose(w)))) return true;
   // Prénom et nom inversés dans le site (« Afanador Reyes » / « Gabriella » = « Gabriella Rojas Afanador ») :
   // le prénom de MonClubSportif est dans le nom du site et un autre mot du nom est commun.
   const site = new Set([...f, ...l].filter((w) => w.length > 1));
