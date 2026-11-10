@@ -33,6 +33,7 @@ import {
 import { onPrivateCheckoutExpired, onPrivateRefund, onPrivateRegistrationPaid } from "@/lib/private-programs-lifecycle";
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { findWaitlistEntries, waitlistNote } from "@/lib/waitlist-watch";
 import { markBookingsPaid, releaseBySession as releaseMatchBySession, toEmailSlots } from "@/lib/match-slots-repo";
 import { runMcsRobot } from "@/lib/mcs-robot-runner";
 import { openPositions } from "@/lib/referees-repo";
@@ -704,7 +705,19 @@ async function notifyPaidRegistration(
   try {
     const parentName = reg?.parent_name ?? ([reg?.parent_first_name, reg?.parent_last_name].filter(Boolean).join(" ") || session.customer_details?.name || null);
     const playerName = reg ? [reg.player_first_name, reg.player_last_name].map((v) => (v ?? "").trim()).filter(Boolean).join(" ") || null : null;
+    // Une fille de la liste d'attente qui s'inscrit : JP doit le savoir (9 nov. 2026).
+    const fromWaitlist = reg
+      ? waitlistNote(
+          await findWaitlistEntries({
+            firstName: reg.player_first_name,
+            lastName: reg.player_last_name,
+            parentEmail: reg.parent_email ?? session.customer_details?.email,
+            excludeId: reg.id
+          }).catch(() => [])
+        )
+      : null;
     await sendPaidRegistrationNotification({
+      fromWaitlist,
       programName,
       playerName,
       birthYear: reg?.birth_year ?? reg?.player_birth_year ?? (reg?.player_dob ? String(reg.player_dob).slice(0, 4) : null),

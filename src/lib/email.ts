@@ -664,6 +664,8 @@ interface PaidRegistrationNotificationInput {
   note?: string | null;
   /** « waitlist » : inscription sur la liste d'attente (aucun paiement). */
   kind?: "paid" | "waitlist";
+  /** Inscription payée d'une fille qui était sur une liste d'attente (`waitlistNote`) : JP doit le savoir. */
+  fromWaitlist?: string | null;
 }
 
 /** Avis à JP : une inscription vient d'être payée, ou ajoutée à une liste d'attente (n'importe quel programme). */
@@ -673,7 +675,8 @@ export async function sendPaidRegistrationNotification(input: PaidRegistrationNo
   const row = (name: string, value: string | null | undefined) =>
     value ? `<tr><td style="padding:6px 10px;font-weight:bold;white-space:nowrap">${name}</td><td style="padding:6px 10px">${escapeHtml(value)}</td></tr>` : "";
   const who = input.playerName || input.parentName || "nouvelle inscription";
-  const title = input.kind === "waitlist" ? "Nouvelle inscription sur la liste d'attente" : "Nouvelle inscription payée";
+  const title =
+    input.kind === "waitlist" ? "Nouvelle inscription sur la liste d'attente" : input.fromWaitlist ? "Inscription payée d'une fille de la liste d'attente" : "Nouvelle inscription payée";
   await resend.emails.send({
     from: env.resendFrom,
     to: OWNER_NOTIFY_EMAIL,
@@ -683,6 +686,7 @@ export async function sendPaidRegistrationNotification(input: PaidRegistrationNo
       <div style="font-family:Arial,sans-serif;line-height:1.55;color:#161419;max-width:600px">
         <h1 style="font-size:20px">${title}</h1>
         <p><strong>${escapeHtml(input.programName)}</strong>${input.amountCents ? ` · ${fmt(input.amountCents)} payé` : ""}</p>
+        ${input.fromWaitlist ? `<p style="background:#fff4d6;border-left:4px solid #e0a100;padding:10px 12px">${escapeHtml(input.fromWaitlist)}</p>` : ""}
         <table style="border-collapse:collapse;font-size:14px;background:#f7f4fb;width:100%">
           ${row("Enfant", input.playerName)}
           ${row("Année de naissance", input.birthYear ? String(input.birthYear) : null)}
