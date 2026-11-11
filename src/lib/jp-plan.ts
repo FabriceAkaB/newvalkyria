@@ -2,6 +2,9 @@
  *  Chaque pièce dit pourquoi, quand (le bloc du calendrier Google), quoi faire en petites étapes et à quoi on voit
  *  que c'est fini. Les étapes cochées vivent dans `app_settings` « jp_plan_checks » ; une pièce liée au Mandalart
  *  coche ses tâches quand sa dernière étape est cochée (ou quand la tâche est déjà faite dans le Mandalart).
+ *  Règle de JP pour l'agenda : le plus difficile le matin, le plus facile vers la fin (créer → vendre → appels →
+ *  finir/approuver → montage, relances, logistique → formation). Seuls le terrain, les parascolaires et les appels
+ *  du soir aux familles ont une heure imposée.
  *  Règles pures ici ; lecture et écriture dans `jp-repo.ts`. */
 
 export interface PlanLink {
@@ -54,7 +57,7 @@ export const PLAN: PlanWeek[] = [
         id: "s1-pratiques",
         title: "Monter toutes les pratiques jusqu'au 19 décembre",
         why: "Tu es sur le terrain presque tous les soirs. Une pratique prête d'avance = pas d'improvisation et tes matins libres pour vendre.",
-        when: "Mercredi 11 nov. 5 h 45 et midi, jeudi 12 nov. 5 h 45 et 12 h 30. Pas fini ? Vendredi 13, 5 h 45.",
+        when: "Mercredi 11 nov. 5 h 45 et 13 h 30, jeudi 12 nov. 5 h 45 et 10 h. Pas fini ? Vendredi 13, 5 h 45.",
         doneWhen: "La page Pratiques n'a plus aucune pratique en rouge ni en jaune jusqu'au 19 décembre.",
         codes: [],
         star: true,
@@ -120,7 +123,7 @@ export const PLAN: PlanWeek[] = [
         id: "s2-publier",
         title: "Publier 3 vidéos cette semaine",
         why: "Le plan : publier dès le 15 novembre et ne plus jamais arrêter.",
-        when: "Lundi 16 nov., 7 h 30 tournage, 10 h montage.",
+        when: "Lundi 16 nov., 7 h 30 tournage, 12 h 30 montage.",
         doneWhen: "3 vidéos publiées sur les comptes de l'académie.",
         codes: ["P3.2.06"],
         steps: [
