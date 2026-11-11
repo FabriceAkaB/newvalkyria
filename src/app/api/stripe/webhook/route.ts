@@ -23,6 +23,7 @@ import { createOrder, decrementProductInventory, markOrderPaidByCheckoutSession 
 import {
   activatePaymentPlan as activateSessionProgramPaymentPlan,
   enrollInAllDates,
+  markInstallmentPaid as markSessionProgramInstallmentPaid,
   markRegistrationPaidByCheckoutSession as markSessionProgramRegistrationPaid
 } from "@/lib/session-programs-repo";
 import {
@@ -437,6 +438,16 @@ export async function POST(request: Request) {
       const installmentId = session.metadata?.installmentId;
       const planId = session.metadata?.planId;
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
+      if (installmentId && paymentIntentId && session.metadata?.source === "sessionprogram") {
+        // Versement d'un programme garçons / à dates fixes (carte refusée au prélèvement automatique).
+        try {
+          await markSessionProgramInstallmentPaid(installmentId, paymentIntentId);
+          await logAudit({ actorRole: "system", actorLabel: "Stripe", action: "installment_paid_by_link", entityType: "session_program_payment_plan_installments", entityId: installmentId, after: { paymentIntentId } });
+        } catch (error) {
+          console.error("Unable to process session program installment retry", error);
+        }
+        return NextResponse.json({ received: true });
+      }
       if (installmentId && paymentIntentId) {
         try {
           await markInstallmentPaid(installmentId, paymentIntentId);
