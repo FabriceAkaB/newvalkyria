@@ -2020,6 +2020,62 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.6.04",
+       "priority": "star",
+       "level": 1,
+       "title": "Commander les échantillons New Val chez 2 fournisseurs chacun : ballons, maillots, pastilles, buts rétractables, imperméables ; noter le prix, le délai et la quantité minimale.",
+       "due": "2026-12-15",
+       "owner": "JP",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
+      },
+      {
+       "code": "P2.6.05",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tester les échantillons (coachs et 3 familles), choisir les modèles, calculer la marge de chacun et mettre les gagnants en boutique.",
+       "due": "2027-01-31",
+       "owner": "JP + gérante",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
+      },
+      {
+       "code": "P2.6.06",
+       "priority": "star",
+       "level": 2,
+       "title": "Construire l'offre boutique : rabais après un nombre d'achats (carte fidélité), ensembles à prix réduit, et le prix de consolation (une fille qui n'a rien gagné reçoit un bon à utiliser à la boutique).",
+       "due": "2027-01-31",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
+      },
+      {
+       "code": "P2.6.07",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Suivre chaque mois les ventes de la boutique, le panier moyen et les bons utilisés ; ajuster l'offre après 2 mois.",
+       "due": "2027-03-31",
+       "owner": "Gérante",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
       }
      ]
     },
@@ -2350,6 +2406,86 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.2.12",
+       "priority": "star",
+       "level": 1,
+       "title": "Écrire la liste des vidéos explicatives pour les parents, en 5 séries (l'académie, nos programmes, nos projets, preuves et témoignages, nouveaux parents), avec une phrase clé et une durée par vidéo.",
+       "due": "2026-11-30",
+       "owner": "JP + gérante",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
+      },
+      {
+       "code": "P3.2.13",
+       "priority": "star",
+       "level": 1,
+       "title": "Tourner les 4 vidéos « Qui est New Valkyria » : ce qu'est l'académie, la mission, la philosophie de développement, ce qui nous distingue d'un club traditionnel (2 minutes chacune).",
+       "due": "2026-12-20",
+       "owner": "JP + caméra",
+       "links": [
+        "A13"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
+      },
+      {
+       "code": "P3.2.14",
+       "priority": "star",
+       "level": 2,
+       "title": "Tourner les vidéos des programmes : comment ils fonctionnent, ce que les filles apprennent, les objectifs à court, moyen et long terme, le parcours de la joueuse.",
+       "due": "2027-01-15",
+       "owner": "JP + caméra",
+       "links": [
+        "A13"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
+      },
+      {
+       "code": "P3.2.15",
+       "priority": "star",
+       "level": 2,
+       "title": "Mettre en ligne la page « Découvrir New Valkyria » : toutes les vidéos dans l'ordre, reliée à l'inscription, à la fiche Google et au courriel de bienvenue.",
+       "due": "2027-01-15",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
+      },
+      {
+       "code": "P3.2.16",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Tourner les vidéos des projets : Valkyria Lab, ball mastery et le tapis, développement individuel et collectif, matchs, tournois et Olympiades, projets futurs.",
+       "due": "2027-02-28",
+       "owner": "JP + coachs + caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
+      },
+      {
+       "code": "P3.2.17",
+       "priority": "star",
+       "level": 2,
+       "title": "Monter les vidéos de preuve : joueuses accompagnées avant/après, témoignages des parents, filles entrées en sport-études et ce que l'académie a changé concrètement pour elles.",
+       "due": "2027-03-31",
+       "owner": "Gérante + caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
       }
      ]
     },
@@ -2806,6 +2942,20 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.1.06",
+       "priority": "star",
+       "level": 2,
+       "title": "Tourner les 5 vidéos « nouveaux parents » (après l'inscription, l'encadrement, comment joindre l'équipe, suivre la progression de sa fille, à quoi s'attendre pendant une saison) et les envoyer automatiquement après le paiement.",
+       "due": "2027-03-31",
+       "owner": "Gérante + JP",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
       }
      ]
     },
@@ -4100,6 +4250,20 @@
         "A04"
        ],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.2.04",
+       "priority": "star",
+       "level": 1,
+       "title": "Faire l'analyse poussée de la ligue d'hiver : équipes et âges, vrais coûts (terrains, arbitres, matériel), revenus, ce que les familles en pensent, ce que font les autres ligues ; prix plancher et décision go/no-go avec le calculateur de lancement.",
+       "due": "2026-12-15",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
       }
      ]
     },
@@ -5985,6 +6149,10 @@
    {
     "title": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)",
     "text": "Ce qui ramène le plus de familles, confirmé autour de JP : **les concours**, surtout « tu gagnes et ton amie gagne la même chose » (chaque participation amène une nouvelle famille), et **la bourse** : les familles postulent pour une bourse ; celles qui ne la gagnent pas reçoivent une bourse partielle (un rabais) valable quelques jours, ce qui transforme chaque candidature en inscription probable. À essayer pour vrai, mesuré comme le reste. Le contenu ne s'arrête plus : **à partir du 15 novembre, l'académie publie sans arrêt**, et **à la fin novembre on tourne les entrevues vidéo des joueuses et des parents** (la meilleure preuve qu'on puisse montrer). Les livres d'Alex Hormozi servent de base partout : **$100M Offers** (équation de valeur, garantie, bonus, rareté, urgence) pour chaque offre ; **$100M Leads** (Core Four, règle des 100, Lead Getters) dans la tête du responsable marketing (agent A05) ; **$100M Money Models** (offre d'attraction, offre de montée en gamme, offre de repli, offre continue) dans la tête du responsable des finances (agent A04)."
+   },
+   {
+    "title": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)",
+    "text": "Idée centrale : ne pas vendre des séances d'entraînement, faire comprendre toute l'expérience New Valkyria. Un parent découvre l'académie par une série de vidéos (qui nous sommes, nos programmes, nos projets, les preuves, ce qui se passe après l'inscription) et comprend notre identité, notre fonctionnement et la valeur de notre accompagnement avant même de poser ses questions. Rattaché aux trois concepts discutés avec la gérante : Valkyria Family (l'appartenance), Valkyria Proof (les preuves) et Coaching OS (la méthode). Côté boutique : du matériel New Val à notre image, une offre qui récompense la fidélité, et le « prix de consolation » (une fille qui n'a rien gagné peut aller chercher quelque chose à la boutique). Chantiers à développer en 2027, visibles dans l'espace de JP et dans celui de la gérante."
    }
   ]
  },

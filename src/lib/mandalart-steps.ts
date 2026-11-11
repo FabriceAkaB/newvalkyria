@@ -393,6 +393,55 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
   "P7.4.X02": {
     how: ["Paie le solde de 1 614 $ au Centre multisports de Rosemère avant le 1er février.", "Garde le reçu et envoie-le à Claude."],
     done: "Le reçu de 1 614 $ est dans la tâche."
+  },
+  // ── Ajouts du 11 nov. 2026 : vidéos explicatives, matériel et boutique, ligue d'hiver ──
+  "P3.2.12": {
+    how: [
+      "Ouvre Mes tournages : les 21 idées des 5 séries sont déjà écrites (l'académie, les programmes, les projets, les preuves, les nouveaux parents).",
+      "Avec la gérante, relis-les en 20 minutes : enlève, ajoute, corrige la phrase clé de chacune.",
+      "Mets une durée visée sur chaque vidéo (2 minutes pour les vidéos d'identité, 45 secondes pour les autres)."
+    ],
+    done: "La liste des vidéos est validée avec la gérante, une phrase clé par vidéo.",
+    link: { href: "/admin/moi/tournages", label: "Mes tournages" }
+  },
+  "P3.2.13": {
+    how: ["La veille de chaque tournage, planifie UNE vidéo « Qui est New Valkyria » dans Mes tournages (accroche, message, plans).", "Tourne-la le matin (bloc 🎥 du lundi et du jeudi).", "Passe-la à Tourné, puis Monté, puis Publié."],
+    done: "Les 4 vidéos d'identité sont tournées et montées.",
+    link: { href: "/admin/moi/tournages", label: "Mes tournages" }
+  },
+  "P3.2.14": {
+    how: ["Même méthode que les vidéos d'identité : une vidéo de la série « Nos programmes » planifiée la veille, tournée le matin."],
+    done: "Les 4 vidéos des programmes sont publiées.",
+    link: { href: "/admin/moi/tournages", label: "Mes tournages" }
+  },
+  "P2.6.04": {
+    how: [
+      "Choisis 2 fournisseurs (ex. un fournisseur d'uniformes, un d'équipement de soccer).",
+      "Demande à chacun un échantillon de : ballon, maillot, pastilles, but rétractable, imperméable New Val.",
+      "Note pour chaque article : prix à l'unité, prix à 50 et à 100, délai, quantité minimale.",
+      "Range les prix dans Inventaire du matériel."
+    ],
+    done: "Les échantillons des 5 articles sont commandés chez 2 fournisseurs, prix et délais notés.",
+    link: { href: "/admin/inventaire", label: "Inventaire du matériel" }
+  },
+  "P2.6.06": {
+    how: [
+      "Fixe la règle de fidélité : ex. 3e article à −15 %, ou un rabais après 100 $ d'achats.",
+      "Crée 2 ensembles à prix réduit (ex. ballon + pastilles ; maillot + imperméable).",
+      "Prix de consolation : à chaque tournoi ou concours, une fille qui n'a rien gagné reçoit un bon à utiliser à la boutique.",
+      "Dis à Claude Code de brancher les rabais et les bons dans la boutique du site."
+    ],
+    done: "L'offre est écrite et en place dans la boutique du site.",
+    link: { href: "/admin/boutique", label: "Boutique" }
+  },
+  "P7.2.04": {
+    how: [
+      "Dis à Claude : « Fais l'analyse de la ligue d'hiver » ; il sort les équipes, les matchs, les coûts (terrains, arbitres) et les revenus du site.",
+      "Ajoute ce que les familles en pensent (sondage de mi-saison) et ce que font les autres ligues.",
+      "Passe le tout au calculateur de lancement : prix plancher, seuil, GO ou NO-GO."
+    ],
+    done: "La décision go/no-go de la ligue d'hiver est prise, avec son prix plancher.",
+    link: { href: "/admin/revenus/calculateur", label: "Calculateur de lancement" }
   }
 };
 

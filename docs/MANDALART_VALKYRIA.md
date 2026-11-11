@@ -1355,6 +1355,34 @@ Les livres d'Alex Hormozi servent de base partout : **$100M Offers** (équation 
 
 - [ ] `P8.7.09` ➜ N2 — Construire l'agent analyse de la concurrence (A07) : fiche par concurrent dans `docs/concurrence/`, relevé mensuel, alerte si un concurrent ouvre un groupe filles dans nos villes. — 31 janv. 2027 · Claude Code · A07
 
+### Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)
+
+Idée centrale : ne pas vendre des séances d'entraînement, faire comprendre toute l'expérience New Valkyria. Un parent découvre l'académie par une série de vidéos (qui nous sommes, nos programmes, nos projets, les preuves, ce qui se passe après l'inscription) et comprend notre identité, notre fonctionnement et la valeur de notre accompagnement avant même de poser ses questions. Rattaché aux trois concepts discutés avec la gérante : Valkyria Family (l'appartenance), Valkyria Proof (les preuves) et Coaching OS (la méthode). Côté boutique : du matériel New Val à notre image, une offre qui récompense la fidélité, et le « prix de consolation » (une fille qui n'a rien gagné peut aller chercher quelque chose à la boutique). Chantiers à développer en 2027, visibles dans l'espace de JP et dans celui de la gérante.
+
+#### P3.2 Vidéos portfolio et avant-après
+
+- [ ] `P3.2.12` ⭐ N1 — Écrire la liste des vidéos explicatives pour les parents, en 5 séries (l'académie, nos programmes, nos projets, preuves et témoignages, nouveaux parents), avec une phrase clé et une durée par vidéo. — 30 nov. 2026 · JP + gérante
+- [ ] `P3.2.13` ⭐ N1 — Tourner les 4 vidéos « Qui est New Valkyria » : ce qu'est l'académie, la mission, la philosophie de développement, ce qui nous distingue d'un club traditionnel (2 minutes chacune). — 20 déc. 2026 · JP + caméra · A13
+- [ ] `P3.2.14` ⭐ N2 — Tourner les vidéos des programmes : comment ils fonctionnent, ce que les filles apprennent, les objectifs à court, moyen et long terme, le parcours de la joueuse. — 15 janv. 2027 · JP + caméra · A13
+- [ ] `P3.2.15` ⭐ N2 — Mettre en ligne la page « Découvrir New Valkyria » : toutes les vidéos dans l'ordre, reliée à l'inscription, à la fiche Google et au courriel de bienvenue. — 15 janv. 2027 · Claude Code
+- [ ] `P3.2.16` ➜ N2 — Tourner les vidéos des projets : Valkyria Lab, ball mastery et le tapis, développement individuel et collectif, matchs, tournois et Olympiades, projets futurs. — 28 févr. 2027 · JP + coachs + caméra · A05
+- [ ] `P3.2.17` ⭐ N2 — Monter les vidéos de preuve : joueuses accompagnées avant/après, témoignages des parents, filles entrées en sport-études et ce que l'académie a changé concrètement pour elles. — 31 mars 2027 · Gérante + caméra · A05
+
+#### P4.1 Accueil marquant
+
+- [ ] `P4.1.06` ⭐ N2 — Tourner les 5 vidéos « nouveaux parents » (après l'inscription, l'encadrement, comment joindre l'équipe, suivre la progression de sa fille, à quoi s'attendre pendant une saison) et les envoyer automatiquement après le paiement. — 31 mars 2027 · Gérante + JP · A01 Agent administratif
+
+#### P2.6 Ventes complémentaires
+
+- [ ] `P2.6.04` ⭐ N1 — Commander les échantillons New Val chez 2 fournisseurs chacun : ballons, maillots, pastilles, buts rétractables, imperméables ; noter le prix, le délai et la quantité minimale. — 15 déc. 2026 · JP · A04
+- [ ] `P2.6.05` ➜ N2 — Tester les échantillons (coachs et 3 familles), choisir les modèles, calculer la marge de chacun et mettre les gagnants en boutique. — 31 janv. 2027 · JP + gérante · A04
+- [ ] `P2.6.06` ⭐ N2 — Construire l'offre boutique : rabais après un nombre d'achats (carte fidélité), ensembles à prix réduit, et le prix de consolation (une fille qui n'a rien gagné reçoit un bon à utiliser à la boutique). — 31 janv. 2027 · JP + Claude Code · A05
+- [ ] `P2.6.07` ➜ N2 — Suivre chaque mois les ventes de la boutique, le panier moyen et les bons utilisés ; ajuster l'offre après 2 mois. — 31 mars 2027 · Gérante · A04
+
+#### P7.2 Méthode de lancement : prix plancher et go/no-go
+
+- [ ] `P7.2.04` ⭐ N1 — Faire l'analyse poussée de la ligue d'hiver : équipes et âges, vrais coûts (terrains, arbitres, matériel), revenus, ce que les familles en pensent, ce que font les autres ligues ; prix plancher et décision go/no-go avec le calculateur de lancement. — 15 déc. 2026 · JP + Claude Code · A04
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |

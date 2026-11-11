@@ -4,6 +4,9 @@ import { AdminTopbar } from "@/components/admin-topbar";
 import { Bar } from "@/components/mandalart/ui";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getTodayActions, type TodaySection } from "@/lib/admin-today";
+import { Vision2027Board } from "@/components/vision-2027-board";
+import { getLiveTasks } from "@/lib/mandalart-repo";
+import { buildVision } from "@/lib/vision-2027";
 import { KIND_LABEL, addDays, getAgenda, getStepProjects, todayIso, type AgendaItem } from "@/lib/agenda";
 
 export const metadata = { title: "Aujourd'hui — Admin New Valkyria", robots: "noindex" };
@@ -33,6 +36,8 @@ export default async function AdminTodayPage({ searchParams }: { searchParams: P
   const monday = addDays(today, -((dayOf(today).getUTCDay() + 6) % 7) + offset * 7);
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
   const [sections, agenda, projects] = await Promise.all([getTodayActions(role), getAgenda(days[0], days[6], role).catch(() => []), getStepProjects(role).catch(() => [])]);
+  // La gérante voit les chantiers de 2027 ici (JP les voit dans Espace JP › Mon plan).
+  const vision = role === "gerante" ? await getLiveTasks().then((t) => buildVision(t)).catch(() => []) : [];
   const byDay = (d: string) => agenda.filter((i) => i.date === d);
   const openProjects = projects.filter((p) => p.done < p.total);
   const todo = sections.filter((s) => s.items.length > 0).sort((a, b) => LEVEL[a.level].order - LEVEL[b.level].order);
@@ -214,6 +219,8 @@ export default async function AdminTodayPage({ searchParams }: { searchParams: P
               );
             })}
           </section>
+
+          {vision.length > 0 && <Vision2027Board projects={vision} intro="Ce qu'on développe ensemble dans la prochaine année. Ouvre un chantier pour voir ses étapes, qui s'en occupe et pour quand." />}
 
           {/* Projets en plusieurs étapes, suivis jusqu'au bout */}
           {openProjects.length > 0 && (

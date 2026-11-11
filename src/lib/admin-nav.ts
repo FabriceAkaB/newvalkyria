@@ -391,7 +391,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/moi", label: "Ma journée", adminOnly: true },
           { href: "/admin/moi/mois", label: "Mon mois", adminOnly: true },
           { href: "/admin/moi/plan", label: "Mon plan", adminOnly: true },
-          { href: "/admin/moi/plan", label: "Mon plan", adminOnly: true },
+          { href: "/admin/moi/tournages", label: "Mes tournages", adminOnly: true },
           { href: "/admin/moi/confiees", label: "Tâches confiées", adminOnly: true }
         ]
       },

@@ -6,6 +6,8 @@ import { isOpen, type LiveTask } from "@/lib/mandalart-core";
 import { PLAN } from "@/lib/mandalart-plan";
 import { getMandalartOverview } from "@/lib/mandalart-repo";
 import { guideFor, isForJp, LEVEL_GUIDES } from "@/lib/mandalart-steps";
+import { buildVision } from "@/lib/vision-2027";
+import { Vision2027Board } from "@/components/vision-2027-board";
 
 export const metadata = { title: "Mon plan — Espace JP", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -175,6 +177,8 @@ export default async function MonPlanPage() {
             </details>
           ))}
         </section>
+
+        <Vision2027Board projects={buildVision(tasks)} />
 
         <section className="mda-card-flush">
           <div className="mda-card-head">
