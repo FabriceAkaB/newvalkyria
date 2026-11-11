@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { Avatar } from "@/components/admin-avatar";
+import { MatchLessonsLive } from "@/components/match-results-admin";
 import type {
   ConvocationStatus,
   MatchConvocation,
@@ -287,8 +288,7 @@ function LiveTimer({ activityId, roster, convocations, lineup, initial, role }: 
   );
 }
 
-function EvaluationsPanel({ activityId, roster, convocations, initial, role, coachId }: { activityId: string; roster: MatchRosterPlayer[]; convocations: Record<string, ConvocationStatus | undefined>; initial: MatchPlayerEvaluation[]; role: "admin" | "coach"; coachId?: string }) {
-  const [evaluations, setEvaluations] = useState(initial);
+function EvaluationsPanel({ activityId, roster, convocations, evaluations, setEvaluations, role, coachId }: { activityId: string; roster: MatchRosterPlayer[]; convocations: Record<string, ConvocationStatus | undefined>; evaluations: MatchPlayerEvaluation[]; setEvaluations: React.Dispatch<React.SetStateAction<MatchPlayerEvaluation[]>>; role: "admin" | "coach"; coachId?: string }) {
   const convokedIds = Object.entries(convocations).filter(([, s]) => s === "convoked" || s === "confirmed").map(([id]) => id);
   const base = apiBase(activityId, role);
 
@@ -393,6 +393,11 @@ function MatchEvalRow({ activityId, registrationId, coachId, playerLabel, existi
 export function MatchPanel({ activityId, roster, initialDetails, initialConvocations, initialLineup, initialPlaytime, initialEvaluations, role, coachId }: Props) {
   const convocationsMap: Record<string, ConvocationStatus | undefined> = Object.fromEntries(initialConvocations.map((c) => [c.registration_id, c.status]));
   const [convocations, setConvocations] = useState(convocationsMap);
+  // Les évaluations vivent ici : le résumé d'après-match se recalcule à chaque commentaire enregistré.
+  const [evaluations, setEvaluations] = useState(initialEvaluations);
+  const names = useMemo(() => Object.fromEntries(roster.map((r) => [r.registrationId, `${r.firstName} ${r.lastName}`.trim()])), [roster]);
+  // Analyse et résumé écrits sur la fiche du match (Coaching → Matchs), dans match_details.
+  const extra = initialDetails as (MatchDetails & { analysis?: unknown; summary?: string | null }) | null;
 
   return (
     <div>
@@ -400,7 +405,8 @@ export function MatchPanel({ activityId, roster, initialDetails, initialConvocat
       <ConvocationsPanelWithSync activityId={activityId} roster={roster} initial={initialConvocations} role={role} onChange={setConvocations} />
       <LineupBoard activityId={activityId} roster={roster} convocations={convocations} initial={initialLineup} role={role} />
       <LiveTimer activityId={activityId} roster={roster} convocations={convocations} lineup={initialLineup} initial={initialPlaytime} role={role} />
-      <EvaluationsPanel activityId={activityId} roster={roster} convocations={convocations} initial={initialEvaluations} role={role} coachId={coachId} />
+      <EvaluationsPanel activityId={activityId} roster={roster} convocations={convocations} evaluations={evaluations} setEvaluations={setEvaluations} role={role} coachId={coachId} />
+      <MatchLessonsLive activityId={activityId} role={role} evaluations={evaluations} names={names} analysis={extra?.analysis ?? null} summary={extra?.summary ?? null} />
     </div>
   );
 }

@@ -186,6 +186,16 @@ export const ADMIN_NAV: AdminNavSection[] = [
         icon: "chart",
         description: "Sondages avec un lien par famille : qui a répondu quoi, satisfaction, familles à rappeler et familles intéressées par un projet.",
         tabs: [{ href: "/admin/sondages", label: "Sondages", adminOnly: true }]
+      },
+      {
+        key: "marketing",
+        label: "Marketing & réseaux",
+        icon: "chart",
+        description: "Est-ce que nos réseaux grandissent, quel contenu amène des familles et d'où elles viennent : abonnés, vidéos par semaine, publications, organique ou payant, sources d'acquisition.",
+        tabs: [
+          { href: "/admin/reseaux", label: "Réseaux sociaux", adminOnly: true },
+          { href: "/admin/acquisition", label: "D'où viennent nos familles" }
+        ]
       }
     ]
   },
@@ -204,7 +214,10 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/revenus/paiements", label: "Paiements échelonnés", adminOnly: true },
           { href: "/admin/revenus/tresorerie", label: "Trésorerie", adminOnly: true },
           { href: "/admin/revenus/budget", label: "Budget annuel", adminOnly: true },
-          { href: "/admin/revenus/annuel", label: "Vue annuelle", adminOnly: true }
+          { href: "/admin/inventaire", label: "Inventaire du matériel", adminOnly: true },
+          { href: "/admin/registre-contrats", label: "Échéances des contrats", adminOnly: true },
+          { href: "/admin/revenus/annuel", label: "Vue annuelle", adminOnly: true },
+          { href: "/admin/revenus/calculateur", label: "Calculateur de lancement", adminOnly: true }
         ]
       }
     ]
@@ -223,7 +236,8 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/entraineurs", label: "Entraîneurs", adminOnly: true },
           { href: "/admin/entraineurs/paie", label: "Paie", adminOnly: true },
           { href: "/admin/contrats", label: "Contrats", adminOnly: true },
-          { href: "/admin/entraineurs/statistiques", label: "Statistiques", adminOnly: true }
+          { href: "/admin/entraineurs/statistiques", label: "Statistiques", adminOnly: true },
+          { href: "/admin/structure", label: "Structure et recrutement", adminOnly: true }
         ]
       },
       {
@@ -280,6 +294,16 @@ export const ADMIN_NAV: AdminNavSection[] = [
         ]
       },
       {
+        key: "nos-matchs",
+        label: "Matchs",
+        icon: "shield",
+        description: "Chaque match : score, résumé, vidéo, analyse, joueuses et temps de jeu ; les leçons à ramener en pratique et les statistiques de chaque joueuse.",
+        tabs: [
+          { href: "/admin/matchs/resultats", label: "Nos matchs" },
+          { href: "/admin/matchs/resultats/joueuses", label: "Joueuses en match" }
+        ]
+      },
+      {
         key: "methode",
         label: "Méthode Valkyria",
         icon: "list",
@@ -320,6 +344,17 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/photos", label: "Photos des joueuses" },
           { href: "/admin/evaluations", label: "Journées d'évaluation" }
         ]
+      },
+      {
+        key: "valkyria-lab",
+        label: "Valkyria Lab",
+        icon: "flask",
+        description: "Le travail à la maison : la routine du mois, le lien personnel de chaque famille et les vidéos envoyées par les joueuses, à regarder et commenter.",
+        tabs: [
+          { href: "/admin/valkyria-lab", label: "Vidéos reçues", adminOnly: true },
+          { href: "/admin/valkyria-lab/routine", label: "Routine du mois", adminOnly: true },
+          { href: "/admin/valkyria-lab/familles", label: "Liens des familles", adminOnly: true }
+        ]
       }
     ]
   },
@@ -355,6 +390,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         tabs: [
           { href: "/admin/moi", label: "Ma journée", adminOnly: true },
           { href: "/admin/moi/mois", label: "Mon mois", adminOnly: true },
+          { href: "/admin/moi/plan", label: "Mon plan", adminOnly: true },
           { href: "/admin/moi/confiees", label: "Tâches confiées", adminOnly: true }
         ]
       },

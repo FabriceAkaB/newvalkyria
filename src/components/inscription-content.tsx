@@ -7,6 +7,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 
 import { Container } from "@/components/container";
 import { InscriptionForm, type InscriptionFormData } from "@/components/inscription-form";
+import { toAcquisitionPayload } from "@/lib/acquisition-core";
 import { getInstallmentPlan } from "@/lib/payment-plan";
 import ctaTeamImg from "@/content/image/photos/inscription-cta-547.jpg";
 import yearImg2017 from "@/content/image/photos/inscription-year-2017.jpg";
@@ -221,7 +222,8 @@ async function submitTrial(data: InscriptionFormData, trialSlotId?: string): Pro
         playerLastName: data.plLast,
         playerDob: data.plDob || undefined,
         playerLevel: data.plLevel || undefined,
-        trialSlotId
+        trialSlotId,
+        acquisition: toAcquisitionPayload(data.acquisition)
       })
     });
     if (!res.ok) {
@@ -254,7 +256,8 @@ async function submitWaitlist(input: {
         playerDob: input.data.plDob || undefined,
         programCode: input.programCode,
         year: input.year,
-        variant: input.variant
+        variant: input.variant,
+        acquisition: toAcquisitionPayload(input.data.acquisition)
       })
     });
     if (!res.ok) {
@@ -296,7 +299,8 @@ async function submitCheckout(input: {
         includeBag: input.includeBag,
         uniformBundle: input.uniformBundle ?? undefined,
         paymentPlan: input.paymentPlan,
-        imageConsent: input.data.photoConsent === "yes" ? true : input.data.photoConsent === "no" ? false : undefined
+        imageConsent: input.data.photoConsent === "yes" ? true : input.data.photoConsent === "no" ? false : undefined,
+        acquisition: toAcquisitionPayload(input.data.acquisition)
       })
     });
     const body = await res.json().catch(() => null);

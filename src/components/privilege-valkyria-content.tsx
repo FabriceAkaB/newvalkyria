@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Container } from "@/components/container";
 import { InscriptionForm, type InscriptionFormData } from "@/components/inscription-form";
+import { toAcquisitionPayload } from "@/lib/acquisition-core";
 
 interface DateRow {
   id: string;
@@ -59,7 +60,8 @@ export function PrivilegeValkyriaContent({
           parentEmail: data.accEmail,
           parentPhone: data.accPhone,
           city: data.accCity,
-          cancelPath: "/programmes/privilege-valkyria?cancelled=1"
+          cancelPath: "/programmes/privilege-valkyria?cancelled=1",
+          acquisition: toAcquisitionPayload(data.acquisition)
         })
       });
       const body = await res.json().catch(() => null);

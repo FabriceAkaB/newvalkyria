@@ -147,16 +147,18 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P1",
     title: "Matchs : résultats, vidéos et analyse",
     question: "Contre qui a-t-on joué, qu'est-ce qui s'est passé, qui a joué, et combien ça a coûté ?",
-    status: "partiel",
+    status: "actif",
+    href: "/admin/matchs/resultats",
     objectives: ["P1.8", "P7.7"],
     planned: [
-      "Chaque match : nous contre l'adversaire (logos), score, résumé ; existe déjà en partie (adversaire, score, alignement et temps de jeu dans Entraînements)",
-      "Vidéo du match : lien YouTube non répertorié, ou dépôt direct dans un stockage privé (les fichiers ne passent pas par le site, donc il reste léger)",
-      "Analyse du match à partir de la vidéo",
-      "Par joueuse : matchs joués, minutes, évaluations (ex. combien de matchs Charlotte a joués)",
-      "Bilan financier : coût (terrain, arbitres, éducateurs), part de l'adversaire encaissée ou non, relié aux Revenus"
+      "En place : « Nos matchs » (Coaching → Matchs) : chaque match en carte New Valkyria vs adversaire (pastilles ou logo), score, date, lieu ; bilan de saison V-N-D et buts ; matchs hors Académie (Saint-Gabriel…) à part",
+      "En place : fiche du match : résumé, score, analyse (points forts, à corriger, actions), joueuses présentes et temps de jeu ; une plage vendue sans activité a le bouton « Créer l'activité du match » (convocations, chronomètre, évaluations) ; fiches à compléter dans Aujourd'hui",
+      "En place : vidéo par lien (YouTube non répertorié, Veo, Drive) ou dépôt direct dans le stockage privé « match-videos » (lien signé de 2 h, Loi 25)",
+      "En place : résumé d'après-match « à travailler en pratique » (panneau du match et fiche) : commentaires et analyse regroupés par thème, forces, à corriger, joueuses à surveiller, 3 priorités → bouton « Ajouter au thème de la semaine prochaine » ; « Leçons des derniers matchs » sur les 5 derniers",
+      "En place : par joueuse : matchs joués, titularisations, minutes, notes, V-N-D (ex. combien de matchs Charlotte a joués), par saison",
+      "Bilan financier : dans Équipe & partenaires → Arbitres et bilan (aucun montant dans l'espace Coaching)"
     ],
-    next: "P1.8.05 : section Matchs (31 déc.). En attendant, entrer chaque match dans Entraînements (type Match, adversaire, score)."
+    next: "Après chaque match : score, résumé et commentaires des joueuses, puis « Ajouter au thème de la semaine prochaine ». P1.8.06 : déposer la vidéo et en faire l'analyse (31 mars)."
   },
   {
     slug: "portail-educateurs",
@@ -185,12 +187,20 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P1",
     title: "Valkyria Lab",
     question: "Est-ce que les filles travaillent à la maison, et est-ce que les parents voient les progrès ?",
-    status: "a-construire",
+    status: "partiel",
+    href: "/admin/valkyria-lab",
     objectives: ["P1.7", "P4.3"],
     kpis: ["familles_video_lab", "familles_profil"],
     links: ["AU08", "AU07", "AU13", "A03"],
-    planned: ["Routine maison du mois et jeu de la semaine", "Bouton « Envoyer ma vidéo » (dossier privé de la joueuse)", "Profil de l'enfant dans l'espace parent, publié par JP ou le coach-chef", "Bulletins et défi ball mastery mensuel"],
-    next: "P1.7.02 : lancer la routine maison du mois, phase 1 (30 nov.). Commence cette saison et s'améliore chaque mois."
+    planned: [
+      "En place : routine maison du mois (consignes, gestes avec démonstration YouTube/Vimeo non répertoriée, défi du mois, jeu de la semaine), brouillon ou publiée",
+      "En place : lien personnel de chaque famille (/lab/…), créé à partir des inscriptions payées, envoyé par courriel à une famille ou à toutes",
+      "En place : « Envoyer ma vidéo » : dossier privé de la joueuse (Prénom-Nom_geste_AAAA-MM-JJ_maison), avis à JP, lecture par lien de 10 minutes, commentaire à la famille",
+      "En place : mesure mensuelle familles_video_lab et vidéos à regarder dans Aujourd'hui",
+      "Profil de l'enfant dans l'espace parent, publié par JP ou le coach-chef",
+      "Bulletins et défi ball mastery mensuel"
+    ],
+    next: "P1.7.02 : écrire et publier la routine de novembre (démonstrations de P1.7.01), créer les liens puis les envoyer (Coaching → Valkyria Lab). Après un mois : sondage « Le Valkyria Lab, un mois plus tard » (P1.7.12)."
   },
   {
     slug: "innovations",
@@ -228,11 +238,17 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P2",
     title: "Calculateur de lancement (GO / NO-GO)",
     question: "Ce nouveau programme est-il rentable avant de le lancer ?",
-    status: "a-construire",
+    status: "actif",
+    href: "/admin/revenus/calculateur",
     objectives: ["P2.5", "P7.2"],
     links: ["AU11", "A04"],
-    planned: ["Coûts fixes, coûts par joueuse, nombre de places", "Prix plancher, seuil de survie, seuil à 50 % de marge", "Verdict GO ou NO-GO et alerte 2 semaines avant le début"],
-    next: "P7.2.01 : fournir les vrais coûts (15 nov.), puis P7.2.02."
+    planned: [
+      "En place : coûts fixes (terrain à l'heure ou au contrat, éducateurs, matériel, assurance, marketing), coûts par participante (kit, frais Stripe 2,9 % + 0,30 $), places et prix",
+      "En place : prix plancher, seuil de survie, seuil de 50 % de marge, marge à 70 % de remplissage et verdict GO, À RISQUE ou NO-GO",
+      "En place : préremplissage depuis un programme existant, un contrat de terrain et le taux d'un éducateur ; scénarios enregistrés et comparés",
+      "En place : alerte dans Aujourd'hui 2 semaines avant le début si les préventes sont sous le seuil de survie"
+    ],
+    next: "P7.2.01 : entrer les vrais coûts (gymnase de Prévost, taux et heures de Noura) puis P7.2.03 : passer chaque programme au calculateur avant sa mise en vente."
   },
   { slug: "paiements", pillar: "P2", title: "Paiements et versements", question: "Qui doit encore payer et quand ?", status: "actif", href: "/admin/revenus/paiements", objectives: ["P2.7"], links: ["AU04"] },
 
@@ -241,13 +257,20 @@ export const PILLAR_MODULES: PillarModule[] = [
     slug: "reseaux",
     pillar: "P3",
     title: "Réseaux sociaux et publicité",
-    question: "Combien d'abonnés, de vidéos et de vues, et combien la pub coûte par inscription ?",
-    status: "partiel",
+    question: "Est-ce que nos réseaux grandissent, et quel contenu amène des familles ?",
+    status: "actif",
+    href: "/admin/reseaux",
     objectives: ["P3.2", "P3.8"],
     kpis: ["videos_semaine", "cac", "source_connue"],
     links: ["A05", "A06"],
-    planned: ["Instagram, Facebook, YouTube, TikTok : abonnés, publications, vues (saisie aux 2 semaines)", "Publicité Meta et Google : dépenses, contacts obtenus, coût par inscription", "Plus tard : l'agent statistiques (A06) remplit ces chiffres seul"],
-    next: "Entrer les chiffres d'aujourd'hui de chaque réseau pour avoir un point de départ."
+    planned: [
+      "En place : abonnés d'Instagram, Facebook, YouTube et TikTok dans le temps (un relevé aux 2 semaines)",
+      "En place : chaque publication suivie (réseau, type, thème, organique ou payant) avec ses vues, essais et inscriptions relevés 7 jours après",
+      "En place : vidéos par semaine (cible 3, idéal 5) et indicateur videos_semaine (moyenne des 4 dernières semaines)",
+      "En place : meilleurs contenus par vues et par essais, comparaison par thème, par type et par réseau, coût par essai et par inscription de la pub",
+      "Plus tard : l'agent statistiques (A06) remplit ces chiffres seul"
+    ],
+    next: "Entrer les abonnés d'aujourd'hui de chaque réseau (point de départ), puis ajouter chaque publication dès le 15 novembre."
   },
   { slug: "parrainage", pillar: "P3", title: "Parrainage et codes de référence", question: "Qui nous amène des familles ?", status: "actif", href: "/admin/references", objectives: ["P3.1"] },
   { slug: "essais", pillar: "P3", title: "Essais gratuits", question: "Qui vient essayer et quand ?", status: "actif", href: "/admin/essais-dates", objectives: ["P2.2", "P3.3"] },
@@ -256,12 +279,17 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P3",
     title: "Sources d'acquisition et liste chaude",
     question: "D'où viennent nos familles, et qui attend une place ?",
-    status: "a-construire",
-    objectives: ["P3.6", "P3.8"],
+    status: "actif",
+    href: "/admin/acquisition",
+    objectives: ["P3.6", "P3.8", "P3.1", "P6.1"],
     kpis: ["source_connue", "nouvelles_joueuses_an"],
     links: ["AU05", "A01"],
-    planned: ["Champ obligatoire « Comment nous avez-vous connus ? » à l'inscription et à l'essai", "Liste chaude : familles intéressées, à relancer à l'ouverture des inscriptions", "Tableau par canal : essais, inscriptions, coût"],
-    next: "P3.8.01 : rendre le champ source obligatoire (30 nov.)."
+    planned: [
+      "En place (6 nov. 2026) : « Comment nous avez-vous connus ? » obligatoire et « Avez-vous une entreprise ? » dans tous les formulaires d'inscription et d'essai",
+      "En place : tableau par canal (inscriptions, essais, conversion), codes de référence utilisés, familles avec une entreprise, familles sans source",
+      "À venir : liste chaude (familles intéressées, à relancer à l'ouverture des inscriptions) et coût par inscription de chaque canal"
+    ],
+    next: "Compléter la source des familles déjà inscrites (liste « sans source » de /admin/acquisition) et ajouter les entreprises déclarées au suivi des commanditaires."
   },
 
   // ── P4 Expérience client et renouvellement ──
@@ -373,6 +401,8 @@ export const PILLAR_MODULES: PillarModule[] = [
   { slug: "revenus", pillar: "P7", title: "Revenus et dépenses", question: "Combien j'ai encaissé et dépensé ?", status: "actif", href: "/admin/revenus", objectives: ["P7.4", "P7.7"], kpis: ["ca_annee", "ca_12m"] },
   { slug: "tresorerie", pillar: "P7", title: "Trésorerie", question: "Combien d'argent j'aurai dans 3 mois ?", status: "actif", href: "/admin/revenus/tresorerie", objectives: ["P7.4"], kpis: ["reserve_tresorerie"] },
   { slug: "marges", pillar: "P7", title: "Marges par programme", question: "Quel programme rapporte vraiment ?", status: "partiel", href: "/admin/historique", objectives: ["P7.3", "P7.7"], kpis: ["marge_valkyria"] },
+  { slug: "inventaire", pillar: "P7", title: "Inventaire du matériel", question: "Quel matériel avons-nous, où, et quoi remplacer ?", status: "actif", href: "/admin/inventaire", objectives: ["P7.6"], links: ["A09"] },
+  { slug: "registre-contrats", pillar: "P7", title: "Échéances des contrats", question: "Quelles échéances de contrats s'en viennent ?", status: "actif", href: "/admin/registre-contrats", objectives: ["P7.6"], links: ["AU10"] },
   {
     slug: "conformite",
     pillar: "P7",
@@ -439,17 +469,17 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P8",
     title: "Structure et recrutement",
     question: "Qui travaille avec nous, avec quels diplômes, et qui dois-je recruter pour la prochaine saison ?",
-    status: "a-construire",
+    status: "actif",
+    href: "/admin/structure",
     objectives: ["P8.2", "P8.3"],
     links: ["AU23", "A10"],
     planned: [
-      "Organigramme : JP, Annie, Christine, coachs, consultants, caméra, arbitres",
-      "Pour chacun : rôle, diplômes et certifications (licences C/B, sport sécuritaire, antécédents), contrat, taux, assignations",
-      "Plan de recrutement par saison : coachs certifiés temps plein, temps partiel, moniteurs, selon les groupes prévus (1 coach pour 10 filles) et la marge",
-      "Suivi de chaque recrutement : annonce, candidats, entrevue, antécédents, formation, contrat (relié à Contrats)",
-      "Existe déjà : fiches entraîneurs, certifications, contrats, paie"
+      "En place : organigramme (JP, Annie, Christine, éducateurs des fiches entraîneurs et des contrats, arbitres actifs, consultants et postes à venir), sans doublon",
+      "En place : pour chacun, statut, diplômes, certifications (expirées ou à moins de 60 jours signalées, antécédents et sport sécuritaire exigés sur le terrain), contrat, taux et assignations des 30 prochains jours",
+      "En place : plan de recrutement calculé avec les vrais groupes (1 adulte pour 10 joueuses, 2 adultes minimum par séance) contre l'équipe prévue chaque jour, postes à combler éditables et scénario « Et si j'ajoute des groupes ? » avec la marge",
+      "En place : suivi des candidats par étape (annonce, candidat, entrevue, antécédents, formation, contrat signé, refusé) ; une certification qui expire dans 30 jours apparaît dans Aujourd'hui"
     ],
-    next: "P8.2.05 : dossier Structure (15 déc.)."
+    next: "P8.2.06 : JP précise les jours de chacun (Modifier la fiche) et ouvre le poste calculé pour l'hiver 2027 (31 janv.)."
   },
   { slug: "equipe", pillar: "P8", title: "Équipe et coachs", question: "Qui travaille avec nous ?", status: "actif", href: "/admin/entraineurs", objectives: ["P8.2", "P8.3"] },
   { slug: "contrats", pillar: "P8", title: "Contrats d'embauche", question: "Qui a signé ?", status: "actif", href: "/admin/contrats", objectives: ["P8.3"] },

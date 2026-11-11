@@ -12,6 +12,7 @@ import { BOUNCE_KIND_LABEL, getRecentBounces } from "@/lib/email-bounces";
 import { getRobotStatus } from "@/lib/mcs-robot-config";
 import { getPendingMcsPlayers } from "@/lib/mcs-robot-runner";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
+import { getLaunchAlerts } from "@/lib/launch-scenarios-repo";
 import { listPractices } from "@/lib/practices-repo";
 import { dateLong, getRefereesToPay, listMatches } from "@/lib/referees-repo";
 import { getFamiliesToCall } from "@/lib/surveys-repo";
@@ -25,6 +26,8 @@ import { isLate as isLatePractice } from "@/lib/practice-history";
 import { getPracticeHistory } from "@/lib/practice-history-repo";
 import { getRecentPracticesForSurvey } from "@/lib/practice-survey-repo";
 import { loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
+import { getExpiringCertifications } from "@/lib/structure-repo";
+import { getLabTodayItems } from "@/lib/valkyria-lab";
 
 /** Page « Aujourd'hui » de l'admin : tout ce qui demande une action, recalculé à chaque
  *  visite à partir des mêmes données que l'Historique et les Relances. La gérante ne voit
@@ -434,6 +437,27 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
     );
   }
 
+  // ── Certifications des éducateurs et du personnel expirées ou qui expirent dans 30 jours (P8.2.05, AU23) — RH : admin ──
+  if (isAdmin) {
+    const certs = await getExpiringCertifications(30).catch(() => []);
+    sections.push(
+      section({
+        key: "certifications",
+        title: "Certifications à renouveler",
+        level: certs.some((c) => c.expired) ? "rouge" : certs.length ? "orange" : "info",
+        emptyText: "Aucune certification n'expire dans les 30 prochains jours.",
+        href: "/admin/structure#a-regler",
+        hrefLabel: "Structure et recrutement",
+        items: certs.map((c) => ({
+          title: `${c.name} : ${c.certification}`,
+          detail: c.expired ? `Expirée depuis le ${c.expiresLabel}` : c.daysLeft === 0 ? "Expire aujourd'hui" : `Expire le ${c.expiresLabel} (dans ${c.daysLeft} jour${c.daysLeft > 1 ? "s" : ""})`,
+          meta: "Demander la preuve renouvelée",
+          href: c.href
+        }))
+      })
+    );
+  }
+
   // ── Présences et rapports des éducateurs à compléter avant la paie (P8.3.05, AU20) — données RH : admin ──
   if (isAdmin) {
     const missing = missingBeforePayroll(await getPayrollRows().catch(() => []), now);
@@ -574,6 +598,32 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
     }
   }
 
+  // ── Valkyria Lab : vidéos des joueuses à regarder, routine du mois à publier, liens à envoyer ──
+  if (isAdmin) {
+    const lab = await getLabTodayItems(today).catch(() => null);
+    if (lab)
+      sections.push(
+        section({ key: "valkyria-lab", title: "Valkyria Lab", level: lab.level, emptyText: "Aucune vidéo à regarder ; la routine du mois est en ligne.", href: "/admin/valkyria-lab", hrefLabel: "Vidéos reçues", items: lab.items })
+      );
+  }
+
+  // ── Matchs joués depuis 45 jours sans score ou sans résumé (P1.8.05) : la fiche nourrit les leçons pour les pratiques ──
+  if (isAdmin) {
+    const matchItems = await import("@/lib/match-results").then((m) => m.getMatchResultsTodayItems(today)).catch(() => []);
+    if (matchItems.length)
+      sections.push(
+        section({
+          key: "fiches-match",
+          title: "Fiches de match à compléter",
+          level: matchItems.some((i) => i.urgent) ? "orange" : "info",
+          emptyText: "Tous les matchs joués ont leur score et leur résumé.",
+          href: "/admin/matchs/resultats",
+          hrefLabel: "Nos matchs",
+          items: matchItems.map(({ title, detail, meta, href }) => ({ title, detail, meta, href }))
+        })
+      );
+  }
+
   // ── Mandalart : tâches en retard et ⭐ dues dans les 7 prochains jours ──
   if (isAdmin) {
     const tasks = await getLiveTasks(today).catch(() => []);
@@ -596,6 +646,32 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         }))
       })
     );
+
+    // ── Calculateur de lancement : début dans 14 jours ou moins, préventes sous le seuil de survie (AU11) ──
+    const launches = await getLaunchAlerts(today).catch(() => []);
+    if (launches.length) {
+      sections.push(
+        section({
+          key: "lancements",
+          title: "Lancements sous le seuil de survie",
+          level: "rouge",
+          emptyText: "Aucun lancement sous le seuil de survie.",
+          href: "/admin/revenus/calculateur",
+          hrefLabel: "Calculateur de lancement",
+          items: launches.map((a) => ({
+            title:
+              a.presales === null
+                ? `${a.name} : entrer les inscrites à ce jour`
+                : a.breakEvenCount === null
+                  ? `${a.name} : le prix ne couvre jamais les coûts`
+                  : `${a.name} : ${a.presales} inscrite${a.presales > 1 ? "s" : ""} sur ${a.breakEvenCount} nécessaires`,
+            detail: "Remplir, reporter, fusionner avec un autre groupe ou annuler",
+            meta: `Début ${shortDay(`${a.startDate}T12:00:00`)}${a.daysToStart === 0 ? " (aujourd'hui)" : ` (dans ${a.daysToStart} j)`}`,
+            href: `/admin/revenus/calculateur?scenario=${a.scenarioId}`
+          }))
+        })
+      );
+    }
 
     // ── Arbitres : à payer, et matchs des 7 prochains jours sans arbitres ──
     const [toPay, soonMatches] = await Promise.all([getRefereesToPay().catch(() => []), listMatches({ from: today, to: inAWeek }).catch(() => [])]);
@@ -649,6 +725,51 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         }))
       })
     );
+
+    // ── D'où viennent nos familles (AU05, P6.1.02) : entreprises déclarées dans les 30 derniers jours, pas encore dans
+    //    le suivi des commanditaires, et inscriptions payées des 14 derniers jours sans source ──
+    const acquisition = await import("@/lib/acquisition").then((m) => m.getAcquisitionToday(new Date(now))).catch(() => null);
+    if (acquisition?.items.length) {
+      sections.push(
+        section({
+          key: "acquisition",
+          title: "Commandites possibles et sources à compléter",
+          level: acquisition.businesses ? "orange" : "info",
+          emptyText: "Aucune entreprise à approcher, toutes les nouvelles familles ont une source.",
+          href: "/admin/acquisition",
+          hrefLabel: "D'où viennent nos familles",
+          items: acquisition.items
+        })
+      );
+    }
+
+    // ── Contrôle des dépenses (P7.6, AU10) : contrats à 90 jours de l'échéance (60 pour une commandite), matériel à remplacer ──
+    const [{ contractTodayItems, getContractAlerts }, { getInventoryAlerts, inventoryTodayItems }] = await Promise.all([import("@/lib/contracts-registry"), import("@/lib/inventory-repo")]);
+    const [contractAlerts, gear] = await Promise.all([getContractAlerts(today).catch(() => []), getInventoryAlerts(today).catch(() => null)]);
+    sections.push(
+      section({
+        key: "contrats-echeances",
+        title: "Échéances des contrats",
+        level: contractAlerts.some((c) => c.state === "echu" || (c.daysLeft ?? 99) <= 30) ? "rouge" : contractAlerts.length ? "orange" : "info",
+        emptyText: "Aucun contrat n'arrive à échéance dans les 90 prochains jours.",
+        href: "/admin/registre-contrats",
+        hrefLabel: "Échéances des contrats",
+        items: contractTodayItems(contractAlerts)
+      })
+    );
+    if (gear && gear.itemCount > 0) {
+      sections.push(
+        section({
+          key: "materiel",
+          title: "Matériel à remplacer",
+          level: gear.dueNow.length ? "orange" : "info",
+          emptyText: "Aucun matériel à remplacer maintenant.",
+          href: "/admin/inventaire",
+          hrefLabel: "Inventaire du matériel",
+          items: inventoryTodayItems(gear.dueNow)
+        })
+      );
+    }
   }
 
   // ── Tâches confiées (espace JP) : à JP, celles en retard et celles terminées depuis 2 jours ; à la gérante, les siennes ──

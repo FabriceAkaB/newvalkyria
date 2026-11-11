@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { AcquisitionFields } from "@/components/acquisition-fields";
 import { Container } from "@/components/container";
+import { EMPTY_ACQUISITION, acquisitionErrors, firstAcquisitionError, toAcquisitionPayload, type AcquisitionValue } from "@/lib/acquisition-core";
 
 interface SessionRow {
   id: string;
@@ -79,6 +81,9 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [acquisition, setAcquisition] = useState<AcquisitionValue>(EMPTY_ACQUISITION);
+  const [attempted, setAttempted] = useState(false);
+  const acqErrors = acquisitionErrors(acquisition);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -88,6 +93,12 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
   const submit = async () => {
     if (!form.playerFirstName || !form.playerLastName || !form.parentFirstName || !form.parentLastName || !form.parentEmail || !form.parentPhone) {
       setError("Prénom et nom du joueur, ainsi que les coordonnées du parent, sont requis.");
+      return;
+    }
+    const acqError = firstAcquisitionError(acqErrors);
+    if (acqError) {
+      setAttempted(true);
+      setError(acqError);
       return;
     }
     if (!form.termsAccepted) {
@@ -100,7 +111,7 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
       const res = await fetch("/api/sport-etudes/inscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, optionChosen: option, paymentPlan: option === "full_program" ? paymentPlan : undefined })
+        body: JSON.stringify({ ...form, optionChosen: option, paymentPlan: option === "full_program" ? paymentPlan : undefined, acquisition: toAcquisitionPayload(acquisition) })
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error ?? "Erreur d'inscription");
@@ -246,6 +257,10 @@ export function SportEtudesContent({ sessions, remaining, isFull }: { sessions: 
               <label className="insc-field"><span>Téléphone *</span><input className="insc-input" value={form.parentPhone} onChange={(e) => set("parentPhone", e.target.value)} /></label>
             </div>
             <label className="insc-field"><span>Relation avec le joueur</span><input className="insc-input" value={form.parentRelationship} onChange={(e) => set("parentRelationship", e.target.value)} /></label>
+
+            <div style={{ marginTop: "1rem" }}>
+              <AcquisitionFields value={acquisition} onChange={setAcquisition} errors={attempted ? acqErrors : undefined} />
+            </div>
 
             <label className="insc-consent" style={{ marginTop: "0.75rem" }}>
               <div className="insc-checkbox-wrap">

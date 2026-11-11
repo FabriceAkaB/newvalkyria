@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import { AcquisitionFields } from "@/components/acquisition-fields";
+import { EMPTY_ACQUISITION, acquisitionErrors, firstAcquisitionError, toAcquisitionPayload } from "@/lib/acquisition-core";
+
 interface TrialSession {
   dateId: string;
   date: string;
@@ -12,10 +15,12 @@ interface TrialSession {
 }
 
 /** Essai gratuit sur une pratique du MARDI — sans paiement, places limitées par pratique. */
-export function BoysTrialSection({ slug, eligibleYears }: { slug: string; eligibleYears: string[] }) {
+export function BoysTrialSection({ slug, eligibleYears, brand = "nv" }: { slug: string; eligibleYears: string[]; brand?: "nv" | "atlantic" }) {
   const [sessions, setSessions] = useState<TrialSession[] | null>(null);
   const [dateId, setDateId] = useState("");
   const [form, setForm] = useState({ playerFirstName: "", playerLastName: "", birthYear: "", parentName: "", parentEmail: "", parentPhone: "", notes: "" });
+  const [acquisition, setAcquisition] = useState(EMPTY_ACQUISITION);
+  const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ date: string; start: string; end: string; location: string } | null>(null);
@@ -31,17 +36,23 @@ export function BoysTrialSection({ slug, eligibleYears }: { slug: string; eligib
   if (sessions === null || sessions.length === 0) return null;
 
   const years = eligibleYears.length ? eligibleYears : ["2018", "2015", "2014"];
+  const acqErrors = acquisitionErrors(acquisition);
 
   const submit = async () => {
     setError(null);
     if (!dateId) return setError("Choisissez une pratique du mardi.");
     if (!form.playerFirstName || !form.playerLastName || !form.birthYear || !form.parentName || !form.parentEmail || !form.parentPhone) return setError("Merci de remplir tous les champs obligatoires.");
+    const acqError = firstAcquisitionError(acqErrors);
+    if (acqError) {
+      setAttempted(true);
+      return setError(acqError);
+    }
     setSubmitting(true);
     try {
       const res = await fetch("/api/prive/essais", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, dateId, ...form, birthYear: Number(form.birthYear) })
+        body: JSON.stringify({ slug, dateId, ...form, birthYear: Number(form.birthYear), acquisition: toAcquisitionPayload(acquisition) })
       });
       const json = await res.json().catch(() => null);
       if (!res.ok) throw new Error(json?.error ?? "Erreur de réservation");
@@ -95,6 +106,9 @@ export function BoysTrialSection({ slug, eligibleYears }: { slug: string; eligib
         <div className="nv27-grid2">
           <label className="insc-field"><span>Courriel *</span><input type="email" className="insc-input" value={form.parentEmail} onChange={(e) => setForm({ ...form, parentEmail: e.target.value })} /></label>
           <label className="insc-field"><span>Téléphone *</span><input type="tel" className="insc-input" value={form.parentPhone} onChange={(e) => setForm({ ...form, parentPhone: e.target.value })} /></label>
+        </div>
+        <div style={{ marginTop: "0.4rem" }}>
+          <AcquisitionFields value={acquisition} onChange={setAcquisition} errors={attempted ? acqErrors : undefined} brand={brand} />
         </div>
         {error && <p className="nv27-pay-error">{error}</p>}
         <button type="button" className="nv27-btn-primary" onClick={submit} disabled={submitting} style={{ padding: "0.7rem", marginTop: "0.7rem" }}>

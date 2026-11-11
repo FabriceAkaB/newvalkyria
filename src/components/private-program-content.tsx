@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { AcquisitionFields } from "@/components/acquisition-fields";
 import { Container } from "@/components/container";
 import { BoysTrialSection } from "@/components/boys-trial-section";
 import { ShareProgramButtons, type ShareProgram } from "@/components/share-program-buttons";
+import { EMPTY_ACQUISITION, acquisitionErrors, firstAcquisitionError, toAcquisitionPayload, type AcquisitionValue } from "@/lib/acquisition-core";
 import { capacityLabel, computePrice, formatMoney, isBirthYearEligible, type PaymentOption } from "@/lib/private-programs";
 
 interface DateRow {
@@ -94,6 +96,8 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
   const [waitlisted, setWaitlisted] = useState(false);
   const [showAllDates, setShowAllDates] = useState(false);
   const [pkg, setPkg] = useState<"complet" | "samedi">("complet");
+  const [acquisition, setAcquisition] = useState<AcquisitionValue>(EMPTY_ACQUISITION);
+  const [attempted, setAttempted] = useState(false);
 
   // Le code de référencement est conservé pendant toute la procédure (même si
   // le parent change de page ou recharge) : lien ?ref= → stockage local.
@@ -107,11 +111,14 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
       if (code) {
         setRefCodeOrEmail(code);
         setReferralAnswer("oui");
+        // Arrivé par le lien d'une famille : « Parrainage » est déjà coché avec son code (modifiable).
+        setAcquisition((a) => (a.source ? a : { ...a, source: "parrainage", detail: code }));
       }
     } catch {
       if (initialRef) {
         setRefCodeOrEmail(initialRef);
         setReferralAnswer("oui");
+        setAcquisition((a) => (a.source ? a : { ...a, source: "parrainage", detail: initialRef }));
       }
     }
   }, [initialRef, program.slug]);
@@ -162,6 +169,19 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
   );
   const price = option === "full" ? priceFull : priceTwo;
 
+  // « Comment nous avez-vous connus ? » : avec le bloc Recommandation, le code ou le nom de la
+  // famille qui parraine est saisi une seule fois (dans ce bloc).
+  const atlanticBrand = program.brand === "atlantic";
+  const referralBlock = !atlanticBrand && !program.waitlistOnly && program.referralDiscountCents > 0;
+  const referralDetail = referralAnswer === "oui" ? [refCodeOrEmail, referrerName].map((x) => x.trim()).filter(Boolean).join(" · ") : "";
+  const acqErrors = acquisitionErrors(acquisition, { detailProvided: referralBlock && Boolean(referralDetail) });
+  const onAcquisitionChange = (next: AcquisitionValue) => {
+    if (referralBlock && next.source === "parrainage" && acquisition.source !== "parrainage") setReferralAnswer("oui");
+    // « Parrainage » retiré alors que la recommandation est restée vide : on remet « Non » (aucune recommandation fantôme).
+    if (referralBlock && acquisition.source === "parrainage" && next.source !== "parrainage" && !refCodeOrEmail.trim() && !referrerName.trim()) setReferralAnswer("non");
+    setAcquisition(next);
+  };
+
   const submit = async () => {
     setError(null);
     if (!form.playerFirstName || !form.playerLastName || !form.birthYear || !form.parentFirstName || !form.parentLastName || !form.parentEmail || !form.parentPhone) {
@@ -170,6 +190,12 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
     }
     if (ineligible) {
       setError(`Ce programme est réservé aux garçons nés en ${program.eligibleBirthYears.join(" et ")}.`);
+      return;
+    }
+    const acqError = firstAcquisitionError(acqErrors);
+    if (acqError) {
+      setAttempted(true);
+      setError(acqError);
       return;
     }
     if (!terms) {
@@ -201,6 +227,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
           termsAccepted: terms,
           autoDebitConsent: autoDebit,
           useCredit,
+          acquisition: toAcquisitionPayload(acquisition, referralBlock && acquisition.source === "parrainage" && referralDetail ? referralDetail : undefined),
           referral:
             referralAnswer === "oui"
               ? { answer: "oui", codeOrEmail: refCodeOrEmail || undefined, referrerName: referrerName || undefined, referrerPlayer: referrerPlayer || undefined }
@@ -240,10 +267,10 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
 
   const card: React.CSSProperties = { background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1rem 1.1rem", marginBottom: "1.25rem" };
   const h2: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" };
-  const atlantic = program.brand === "atlantic";
+  const atlantic = atlanticBrand;
   const waitlistOnly = Boolean(program.waitlistOnly);
   // Le référencement n'est proposé que pour les programmes qui offrent un rabais de recommandation.
-  const showReferral = !atlantic && !waitlistOnly && program.referralDiscountCents > 0;
+  const showReferral = referralBlock;
 
   // Essai gratuit seulement (ex. garçons 2018) : la page se limite à la réservation de l'essai.
   if (program.trialOnly) {
@@ -260,7 +287,7 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
         </section>
         <section className="section-band">
           <Container className="max-w-2xl">
-            <BoysTrialSection slug={program.slug} eligibleYears={program.eligibleBirthYears} />
+            <BoysTrialSection slug={program.slug} eligibleYears={program.eligibleBirthYears} brand={atlanticBrand ? "atlantic" : "nv"} />
             <p style={{ fontSize: "0.82rem", color: "#9d9da0", textAlign: "center", margin: 0 }}>
               Une question ? <a href="mailto:info@newvalkyria.com" style={{ color: "#c4a4e4" }}>info@newvalkyria.com</a>
             </p>
@@ -480,6 +507,16 @@ export function PrivateProgramContent({ program, initialRef }: { program: Privat
                   <label className="insc-field"><span>Téléphone *</span><input type="tel" className="insc-input" value={form.parentPhone} onChange={(e) => set("parentPhone", e.target.value)} /></label>
                 </div>
                 <label className="insc-field"><span>Ville</span><input className="insc-input" value={form.city} onChange={(e) => set("city", e.target.value)} /></label>
+
+                <div style={{ marginTop: "1rem" }}>
+                  <AcquisitionFields
+                    value={acquisition}
+                    onChange={onAcquisitionChange}
+                    errors={attempted ? acqErrors : undefined}
+                    brand={atlanticBrand ? "atlantic" : "nv"}
+                    referralElsewhere={referralBlock}
+                  />
+                </div>
 
                 {/* ── Référencement ── */}
                 {showReferral && (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { acquisitionField, saveAcquisition } from "@/lib/acquisition";
 import { jsonError } from "@/lib/http";
 import { getSportEtudesInstallmentPlan } from "@/lib/payment-plan";
 import { findOrCreatePlayer } from "@/lib/players-repo";
@@ -21,9 +22,12 @@ import { sportEtudesRegistrationSchema } from "@/lib/validations";
 
 const FULL_PROGRAM_PRICE_CENTS = 31595;
 
+// « Comment nous avez-vous connus ? » + entreprise : facultatif ici (anciens clients), obligatoire dans le formulaire.
+const registrationSchema = sportEtudesRegistrationSchema.extend(acquisitionField);
+
 export async function POST(request: Request) {
   try {
-    const payload = sportEtudesRegistrationSchema.parse(await request.json());
+    const payload = registrationSchema.parse(await request.json());
     const installmentPlan =
       payload.optionChosen === "full_program" && payload.paymentPlan === "installments"
         ? getSportEtudesInstallmentPlan(new Date(), FULL_PROGRAM_PRICE_CENTS)
@@ -74,6 +78,7 @@ export async function POST(request: Request) {
       optionChosen: payload.optionChosen,
       priceCents: payload.optionChosen === "full_program" ? FULL_PROGRAM_PRICE_CENTS : 0
     });
+    await saveAcquisition("sport_etudes_registrations", registrationId, payload.acquisition);
 
     if (payload.optionChosen === "diagnostic_only") {
       await enrollInDiagnosticOnly(registrationId);

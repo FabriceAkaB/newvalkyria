@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { acquisitionField, saveAcquisition } from "@/lib/acquisition";
 import { jsonError } from "@/lib/http";
 import { setRegistrationImageConsent } from "@/lib/players-repo";
 import { getRequestOrigin } from "@/lib/request-origin";
@@ -26,9 +27,12 @@ import type Stripe from "stripe";
 
 const SIGNUP_BONUS_FREE_THRESHOLD = 30;
 
+// « Comment nous avez-vous connus ? » + entreprise : facultatif ici (anciens clients), obligatoire dans le formulaire.
+const checkoutSchema = seasonCheckoutSchema.extend(acquisitionField);
+
 export async function POST(request: Request) {
   try {
-    const payload = seasonCheckoutSchema.parse(await request.json());
+    const payload = checkoutSchema.parse(await request.json());
 
     const [programs, programCategories, slots] = await Promise.all([
       getSeasonPrograms(SEASON_DB_ID),
@@ -133,6 +137,8 @@ export async function POST(request: Request) {
     });
     // Accord photo et vidéo du formulaire : gardé sur l'inscription, recopié sur la joueuse (déclencheur en base).
     if (typeof payload.imageConsent === "boolean") await setRegistrationImageConsent("registrations", registrationId, payload.imageConsent);
+    // Jamais bloquant : une erreur ici est seulement journalisée.
+    await saveAcquisition("registrations", registrationId, payload.acquisition);
 
     let paymentPlanId: string | null = null;
     if (installmentPlan) {

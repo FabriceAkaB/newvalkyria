@@ -1,3 +1,4 @@
+import { getSourceConnueKpi } from "@/lib/acquisition";
 import { CLUB_ID } from "@/lib/club";
 import { getBank } from "@/lib/exercises-repo";
 import { getFeedbackWeeks } from "@/lib/coach-portal-repo";
@@ -7,7 +8,9 @@ import { kpiProgress, parseKpiNumber, type ParsedNumber } from "@/lib/mandalart-
 import { PLAN, type PlanKpi } from "@/lib/mandalart-plan";
 import { computeRevenueSummary } from "@/lib/revenue-calc";
 import { getSurveyKpis } from "@/lib/surveys-repo";
+import { getVideosPerWeek } from "@/lib/marketing-posts";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { getLabKpi } from "@/lib/valkyria-lab";
 
 /** Indicateurs du Mandalart reliés aux vraies tables du site. Chaque calcul est décrit ici ;
  *  un indicateur sans calcul automatique (ou pas encore branché) prend la dernière valeur
@@ -200,6 +203,33 @@ export async function computeRealFigures(today = new Date().toLocaleDateString("
     /* module sondages pas encore utilisé */
   }
 
+  // source_connue : familles inscrites cette saison (filles, garçons, Sport-Études) qui ont répondu « Comment nous
+  // avez-vous connus ? » (/admin/acquisition)
+  try {
+    const src = await getSourceConnueKpi();
+    if (src.value !== null) auto.source_connue = src;
+  } catch {
+    /* sources d'acquisition indisponibles */
+  }
+
+  // familles_video_lab : Valkyria Lab (/admin/valkyria-lab), familles actives (inscriptions payées de la saison) qui ont
+  // envoyé au moins une vidéo dans le mois, à l'heure de Montréal.
+  try {
+    const lab = await getLabKpi(today);
+    if (lab.value !== null) auto.familles_video_lab = lab;
+  } catch {
+    /* Valkyria Lab pas encore utilisé */
+  }
+
+  // videos_semaine : Réseaux sociaux (/admin/reseaux), vidéos (reel ou vidéo) par semaine, moyenne des 4 dernières
+  // semaines ; une vidéo publiée sur 2 réseaux compte une fois. Rien tant qu'aucune publication n'est entrée.
+  try {
+    const v = await getVideosPerWeek(today);
+    if (v.value !== null) auto.videos_semaine = v;
+  } catch {
+    /* module réseaux sociaux pas encore utilisé */
+  }
+
   return { auto, cohorts, retention: { previousFamilies: summer.size, returned, lost }, monthsCents, activeSeason };
 }
 
@@ -214,6 +244,9 @@ export interface KpiView extends PlanKpi {
   met: boolean;
   history: { date: string; value: number }[];
 }
+
+/** videos_semaine : « manuel » dans le plan d'origine, calculé depuis /admin/reseaux (marketing_posts). */
+const PLAN_MANUAL_NOW_AUTO = new Set(["videos_semaine"]);
 
 export async function computeKpis(figures?: RealFigures): Promise<KpiView[]> {
   const [{ auto }, manualRows] = await Promise.all([
@@ -244,13 +277,17 @@ export async function computeKpis(figures?: RealFigures): Promise<KpiView[]> {
       currentNote = a.note;
     }
     const progress = kpiProgress(startN.value, targetN.value, current, targetN.lowerIsBetter);
-    return { ...k, startN, targetN, current, currentSource, currentNote, measuredAt, progress, met: progress !== null && progress >= 1, history };
+    // Noté « manuel » dans le plan mais calculé par le site : affiché « Automatique », sans formulaire de saisie qui serait ignoré.
+    const source = PLAN_MANUAL_NOW_AUTO.has(k.id) && currentSource === "auto" ? "auto" : k.source;
+    return { ...k, source, startN, targetN, current, currentSource, currentNote, measuredAt, progress, met: progress !== null && progress >= 1, history };
   });
 }
 
 export function formatKpi(value: number | null, unit: ParsedNumber["unit"]): string {
   if (value === null) return "—";
-  const n = value.toLocaleString("fr-CA", { maximumFractionDigits: unit === "%" || unit === "/10" ? 1 : 0 });
+  // Une petite moyenne sans unité (ex. 2,6 vidéos par semaine) garde sa décimale : arrondie, 2,6 afficherait la cible de 3.
+  const smallAverage = unit === "" && !Number.isInteger(value) && Math.abs(value) < 100;
+  const n = value.toLocaleString("fr-CA", { maximumFractionDigits: unit === "%" || unit === "/10" || smallAverage ? 1 : 0 });
   if (unit === "$") return `${n} $`;
   if (unit === "%") return `${n} %`;
   if (unit === "/10") return `${n}/10`;

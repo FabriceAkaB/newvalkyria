@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { acquisitionField, saveAcquisition } from "@/lib/acquisition";
 import { sendLeadNotificationEmail, sendWaitlistConfirmationEmail } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { createWaitlistRegistration, getSeasonPrograms } from "@/lib/season-admin-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { seasonWaitlistSchema } from "@/lib/validations";
 
+// « Comment nous avez-vous connus ? » + entreprise : facultatif ici (anciens clients), obligatoire dans le formulaire.
+const waitlistSchema = seasonWaitlistSchema.extend(acquisitionField);
+
 export async function POST(request: Request) {
   try {
-    const payload = seasonWaitlistSchema.parse(await request.json());
+    const payload = waitlistSchema.parse(await request.json());
 
     const programs = await getSeasonPrograms(SEASON_DB_ID);
     const program = programs.find((p) => p.id === payload.programCode);
@@ -30,6 +34,7 @@ export async function POST(request: Request) {
       advancedGroup: payload.variant === "advanced",
       isTrial: false
     });
+    await saveAcquisition("registrations", id, payload.acquisition);
 
     void sendLeadNotificationEmail({
       parent_name: payload.parentName,

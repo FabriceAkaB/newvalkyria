@@ -1,6 +1,7 @@
 import { after, NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 
+import { acquisitionField, saveAcquisition } from "@/lib/acquisition";
 import { sendBoysTrialConfirmationEmail, sendBoysTrialNotification } from "@/lib/email";
 import { createTrial, getTrialSessions, TrialError } from "@/lib/boys-trials-repo";
 import { isValidPhone } from "@/lib/form-validation";
@@ -23,7 +24,9 @@ const schema = z.object({
   parentName: z.string().trim().min(2, "Nom du parent requis"),
   parentEmail: z.string().trim().email("Courriel invalide"),
   parentPhone: z.string().refine(isValidPhone, "Numéro de téléphone invalide (10 chiffres)"),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  // « Comment nous avez-vous connus ? » + entreprise : facultatif ici (anciens clients), obligatoire dans le formulaire.
+  ...acquisitionField
 });
 
 /** Réserve un essai gratuit sur une pratique du mardi — sans paiement. */
@@ -41,6 +44,7 @@ export async function POST(request: Request) {
       parentPhone: p.parentPhone,
       notes: p.notes?.trim() || null
     });
+    await saveAcquisition("boys_trials", trial?.id, p.acquisition);
     void sendBoysTrialConfirmationEmail({
       to: p.parentEmail,
       parentName: p.parentName,

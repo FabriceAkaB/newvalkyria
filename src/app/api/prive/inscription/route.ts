@@ -1,6 +1,7 @@
 import { after, NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { acquisitionField, saveAcquisition } from "@/lib/acquisition";
 import { sendPaidRegistrationNotification } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { findOrCreatePlayer } from "@/lib/players-repo";
@@ -23,12 +24,15 @@ import { isWaitlistOnly, programBrand } from "@/lib/private-program-view";
 import { getStripeClient } from "@/lib/stripe";
 import { privateProgramRegistrationSchema } from "@/lib/validations";
 
+// « Comment nous avez-vous connus ? » + entreprise : facultatif ici (anciens clients), obligatoire dans le formulaire.
+const registrationSchema = privateProgramRegistrationSchema.extend(acquisitionField);
+
 /** Inscription + paiement d'un programme garçons privé (non répertorié).
  *  Le serveur recalcule TOUT (prix, rabais, supplément, crédit) — le client
  *  n'envoie jamais de montant. */
 export async function POST(request: Request) {
   try {
-    const payload = privateProgramRegistrationSchema.parse(await request.json());
+    const payload = registrationSchema.parse(await request.json());
     const program = await getPrivateProgram(payload.programSlug);
     if (!program || !program.active || !program.published) return jsonError("Ce programme est introuvable ou fermé.", 404);
 
@@ -107,6 +111,7 @@ export async function POST(request: Request) {
         autoDebitConsent: false,
         package: pkg
       });
+      await saveAcquisition("session_program_registrations", waitId, payload.acquisition);
       after(() => notifyWaitlist(program.name, payload, parentName, parentEmail));
       return NextResponse.json({ ok: true, waitlisted: true, registrationId: waitId });
     }
@@ -169,6 +174,8 @@ export async function POST(request: Request) {
       autoDebitConsent: Boolean(payload.autoDebitConsent),
       package: pkg
     });
+    // Jamais bloquant : une erreur ici est seulement journalisée.
+    await saveAcquisition("session_program_registrations", registrationId, payload.acquisition);
 
     // Deux parents sur la dernière place : l'ordre d'arrivée décide.
     if (!(await isWithinCapacity(program.slug, registrationId, program.max_capacity))) {

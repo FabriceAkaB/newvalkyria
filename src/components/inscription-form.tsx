@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { AcquisitionFields } from "@/components/acquisition-fields";
+import { EMPTY_ACQUISITION, acquisitionErrors, type AcquisitionValue } from "@/lib/acquisition-core";
 import { isValidEmail, isValidPhone } from "@/lib/form-validation";
 
 /* ── Données collectées par le formulaire ── */
@@ -21,8 +23,8 @@ export interface InscriptionFormData {
   hasHealth: boolean; health: string;
   hasMedication: boolean; medicationName: string; medicationInstr: string;
   hasRestrictions: boolean; restrictions: string;
-  // Bloc 5 — Provenance
-  source: string;
+  // Bloc 5 — Comment nous avez-vous connus ? (obligatoire) + entreprise (facultatif)
+  acquisition: AcquisitionValue;
   // Bloc 6 — Photo/vidéo
   photoConsent: "yes" | "no" | "";
 }
@@ -37,18 +39,13 @@ const EMPTY: InscriptionFormData = {
   hasHealth: false, health: "",
   hasMedication: false, medicationName: "", medicationInstr: "",
   hasRestrictions: false, restrictions: "",
-  source: "",
+  acquisition: EMPTY_ACQUISITION,
   photoConsent: ""
 };
 
 const LEVELS = ["Débutante", "D3", "D2", "D1"];
 const PROVINCES = ["Québec", "Ontario", "Nouveau-Brunswick", "Autre"];
 const COUNTRIES = ["Canada", "États-Unis", "Autre"];
-const SOURCES = [
-  "Facebook", "Instagram", "TikTok", "Google", "Site Web",
-  "Ami / Famille", "Ancienne joueuse", "Club", "École", "Autre"
-];
-
 const TOTAL_BLOCKS = 6;
 
 const BLOCK_TITLES = [
@@ -149,6 +146,7 @@ export function InscriptionForm({ onComplete, finalLabel = "Vers le paiement →
 
   // Validation par bloc — présence ET format (téléphone, courriel). Une seule
   // source de vérité : canContinue() est dérivé de blockFieldErrors().
+  const acqErrors = acquisitionErrors(data.acquisition);
   const blockFieldErrors = (): Partial<Record<keyof InscriptionFormData, string>> => {
     const errors: Partial<Record<keyof InscriptionFormData, string>> = {};
     switch (block) {
@@ -191,9 +189,11 @@ export function InscriptionForm({ onComplete, finalLabel = "Vers le paiement →
         if (data.hasMedication && !data.medicationName.trim()) errors.medicationName = "Nom de la médication requis";
         if (data.hasRestrictions && !data.restrictions.trim()) errors.restrictions = "Description requise";
         break;
-      case 5:
-        if (!data.source) errors.source = "Sélectionnez une provenance";
+      case 5: {
+        const first = acqErrors.source ?? acqErrors.detail ?? acqErrors.businessName;
+        if (first) errors.acquisition = first;
         break;
+      }
       case 6:
         if (data.photoConsent !== "yes" && data.photoConsent !== "no") errors.photoConsent = "Choisissez une option";
         break;
@@ -342,21 +342,13 @@ export function InscriptionForm({ onComplete, finalLabel = "Vers le paiement →
         </div>
       )}
 
-      {/* ── Bloc 5 ── */}
+      {/* ── Bloc 5 — Comment nous avez-vous connus ? ── */}
       {block === 5 && (
-        <div className="nv27-form-fields">
-          <p className="nv27-form-help">Comment avez-vous entendu parler de New Valkyria Académie ?</p>
-          <div className="nv27-source-grid">
-            {SOURCES.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => set("source", s)}
-                className={`nv27-source-chip${data.source === s ? " nv27-source-on" : ""}`}
-              >{s}</button>
-            ))}
-          </div>
-        </div>
+        <AcquisitionFields
+          value={data.acquisition}
+          onChange={(v) => set("acquisition", v)}
+          errors={attempted ? acqErrors : undefined}
+        />
       )}
 
       {/* ── Bloc 6 ── */}

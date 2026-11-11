@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { acquisitionField, saveAcquisition } from "@/lib/acquisition";
 import { sendLeadNotificationEmail, sendSeasonTrialConfirmationEmail } from "@/lib/email";
 import { jsonError } from "@/lib/http";
 import { createRegistration, getTrialSlotById } from "@/lib/season-admin-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { seasonTrialSchema } from "@/lib/validations";
 
+// « Comment nous avez-vous connus ? » + entreprise : facultatif ici (anciens clients), obligatoire dans le formulaire.
+const trialSchema = seasonTrialSchema.extend(acquisitionField);
+
 export async function POST(request: Request) {
   try {
-    const payload = seasonTrialSchema.parse(await request.json());
+    const payload = trialSchema.parse(await request.json());
 
     let trialDate: string | null = null;
     let slotSummary: string | null = null;
@@ -38,6 +42,7 @@ export async function POST(request: Request) {
       trialSlotId: payload.trialSlotId ?? null,
       trialDate
     });
+    await saveAcquisition("registrations", id, payload.acquisition);
 
     void sendLeadNotificationEmail({
       parent_name: payload.parentName,
