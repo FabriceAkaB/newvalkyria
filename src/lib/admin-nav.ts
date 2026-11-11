@@ -351,9 +351,10 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "ma-journee",
         label: "Ma journée",
         icon: "sun",
-        description: "Ce qui me revient aujourd'hui, cette semaine et ce mois-ci (Mandalart et ma liste), et ce que j'ai confié à Christine, à Annie ou aux éducateurs.",
+        description: "Ce qui me revient aujourd'hui, mon plan de la semaine étape par étape, ce mois-ci (Mandalart et ma liste), et ce que j'ai confié à Christine, à Annie ou aux éducateurs.",
         tabs: [
           { href: "/admin/moi", label: "Ma journée", adminOnly: true },
+          { href: "/admin/moi/plan", label: "Mon plan", adminOnly: true },
           { href: "/admin/moi/mois", label: "Mon mois", adminOnly: true },
           { href: "/admin/moi/confiees", label: "Tâches confiées", adminOnly: true }
         ]

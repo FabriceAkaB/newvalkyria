@@ -1,7 +1,8 @@
 import { CLUB_ID } from "@/lib/club";
 import { readIcalWindow, zonedToUtc } from "@/lib/ical";
 import { addDays, habitWeek, mondayOf, parseTags, weekTime, type CalEvent, type Habit, type HabitLog, type HabitWeek, type Meal, type MealMoment, type SourceType, type WeekTime } from "@/lib/jp-core";
-import { todayIso } from "@/lib/mandalart-repo";
+import { parseChecks, pieceOfStep, type Checks } from "@/lib/jp-plan";
+import { getLiveTasks, setTaskStatus, todayIso } from "@/lib/mandalart-repo";
 import { fetchIcalText } from "@/lib/mcs-calendar";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -226,4 +227,36 @@ export async function getCalendarView(today = todayIso()): Promise<CalendarView>
   const dup = (a: CalEvent) => google.some((g) => g.date === a.date && Math.abs(g.startMs - a.startMs) < 30 * 60_000);
   const events = [...google.map((e) => ({ ...e, source: "google" as const })), ...academy.filter((a) => !dup(a)).map((e) => ({ ...e, source: "academie" as const }))].sort((a, b) => a.startMs - b.startMs);
   return { connected: !!url, error, monday, events, week: weekTime(events, monday), next: weekTime(events, addDays(monday, 7)) };
+}
+
+// ───────────────────────── Mon plan (étapes cochées) ─────────────────────────
+
+const PLAN_KEY = "jp_plan_checks";
+
+export async function getPlanChecks(): Promise<Checks> {
+  const { data } = await db().from("app_settings").select("value").eq("club_id", CLUB_ID).eq("key", PLAN_KEY).maybeSingle();
+  return parseChecks(data?.value);
+}
+
+/** Coche ou décoche une étape de « Mon plan ». Quand la dernière étape d'une pièce est cochée,
+ *  ses tâches du Mandalart passent à « fait » (elles se voient alors faites partout : Ma journée, Mandalart). */
+export async function setPlanCheck(stepId: string, done: boolean): Promise<{ pieceFinished: boolean }> {
+  const piece = pieceOfStep(stepId);
+  if (!piece) throw new Error("Étape introuvable");
+  const checks = await getPlanChecks();
+  if (done) checks[stepId] = true;
+  else delete checks[stepId];
+  const { error } = await db()
+    .from("app_settings")
+    .upsert({ club_id: CLUB_ID, key: PLAN_KEY, value: JSON.stringify(checks), updated_at: new Date().toISOString() }, { onConflict: "club_id,key" });
+  if (error) throw error;
+  const pieceFinished = piece.steps.every((s) => checks[s.id]);
+  if (done && pieceFinished && piece.codes.length) {
+    const live = await getLiveTasks();
+    for (const code of piece.codes) {
+      const t = live.find((x) => x.code === code);
+      if (t && t.status !== "fait") await setTaskStatus({ code, status: "fait", note: `Fini dans Mon plan : ${piece.title}`, by: "JP" });
+    }
+  }
+  return { pieceFinished };
 }

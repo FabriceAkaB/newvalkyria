@@ -607,3 +607,42 @@ export function CalendarConnect({ connected }: { connected: boolean }) {
     </div>
   );
 }
+
+// ───────────────────────── Mon plan ─────────────────────────
+
+export interface PlanStepItem {
+  id: string;
+  text: string;
+  link?: { label: string; href: string };
+  done: boolean;
+}
+
+/** Une étape de « Mon plan » : un toucher la coche (ou la décoche). */
+export function PlanStepRow({ s, next }: { s: PlanStepItem; next?: boolean }) {
+  const { busy, error, run } = useAction();
+  const [done, setDone] = useState(s.done);
+  const toggle = () => {
+    const to = !done;
+    setDone(to);
+    void run(() => post({ action: "plan-step", stepId: s.id, done: to })).then((ok) => !ok && setDone(!to));
+  };
+  return (
+    <li className="mda-task" data-s={done ? "fait" : "a_faire"} style={next && !done ? { background: "var(--adm-accent-soft)" } : undefined}>
+      <button type="button" className="mda-check" data-s={done ? "fait" : "a_faire"} disabled={busy} onClick={toggle} aria-label={done ? "Décocher" : "Marquer comme fait"}>
+        <span>{done ? "✓" : ""}</span>
+      </button>
+      <div className="mda-task-body">
+        <p className="mda-task-title" style={done ? { textDecoration: "line-through", color: "var(--adm-text-3)" } : undefined}>
+          {next && !done ? <strong>👉 </strong> : null}
+          {s.text}
+        </p>
+        {s.link && !done ? (
+          <div className="mda-task-meta">
+            <a href={s.link.href}>Ouvrir {s.link.label} →</a>
+          </div>
+        ) : null}
+        <Err error={error} />
+      </div>
+    </li>
+  );
+}

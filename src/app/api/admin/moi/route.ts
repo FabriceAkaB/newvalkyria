@@ -3,7 +3,7 @@ import { z, ZodError } from "zod";
 
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
-import { addMeal, deleteKnowledge, deleteMeal, logHabit, saveCalendarUrl, saveHabit, saveKnowledge } from "@/lib/jp-repo";
+import { addMeal, deleteKnowledge, deleteMeal, logHabit, saveCalendarUrl, saveHabit, saveKnowledge, setPlanCheck } from "@/lib/jp-repo";
 import { createTeamTask, getAssignees, setTeamTaskStatus, takeBackTeamTask } from "@/lib/team-tasks-repo";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +55,8 @@ const schema = z.discriminatedUnion("action", [
     applied: z.boolean().optional()
   }),
   z.object({ action: z.literal("knowledge-delete"), id: z.string().uuid() }),
-  z.object({ action: z.literal("calendar-url"), url: z.string().max(500).nullable() })
+  z.object({ action: z.literal("calendar-url"), url: z.string().max(500).nullable() }),
+  z.object({ action: z.literal("plan-step"), stepId: z.string().min(2).max(40), done: z.boolean() })
 ]);
 
 /** Les personnes à qui confier une tâche (menu « Confier à » du Mandalart et de Ma journée). */
@@ -64,7 +65,7 @@ export async function GET() {
   return NextResponse.json({ assignees: await getAssignees() });
 }
 
-/** Espace JP (admin seulement) : tâches (ajouter, confier, cocher, reprendre), habitudes, nutrition, connaissances, calendrier. */
+/** Espace JP (admin seulement) : tâches (ajouter, confier, cocher, reprendre), habitudes, nutrition, connaissances, calendrier, étapes de Mon plan. */
 export async function POST(request: Request) {
   if ((await getCurrentAdminRole()) !== "admin") return jsonError("Non autorisé", 401);
   try {
@@ -77,6 +78,7 @@ export async function POST(request: Request) {
       await setTeamTaskStatus({ id: body.id, status: body.status, note: body.note, by: "JP" });
       return NextResponse.json({ ok: true });
     }
+    if (body.action === "plan-step") return NextResponse.json({ ok: true, ...(await setPlanCheck(body.stepId, body.done)) });
     if (body.action === "take-back") await takeBackTeamTask(body.id);
     else if (body.action === "habit-log") await logHabit(body.habitId, body.day, body.value);
     else if (body.action === "habit-save") await saveHabit(body);

@@ -3,7 +3,9 @@ import Link from "next/link";
 import { AddTask, DayList, DelegatedRow, type DayEntryItem } from "@/components/jp-space";
 import { requireAdmin } from "@/lib/admin-auth";
 import { dayMet } from "@/lib/jp-core";
-import { getCalendarView, getHabitsView } from "@/lib/jp-repo";
+import { nextAction } from "@/lib/jp-plan";
+import { getCalendarView, getHabitsView, getPlanChecks } from "@/lib/jp-repo";
+import { getLiveTasks } from "@/lib/mandalart-repo";
 import { getJpDay } from "@/lib/team-tasks-repo";
 
 export const metadata = { title: "Ma journée — Espace JP", robots: "noindex" };
@@ -15,7 +17,8 @@ const longDay = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString
  *  mes habitudes du jour et ce que j'ai confié aux autres. */
 export default async function MaJourneePage() {
   await requireAdmin({ roles: ["admin"] });
-  const [day, habits, cal] = await Promise.all([getJpDay(), getHabitsView(), getCalendarView().catch(() => null)]);
+  const [day, habits, cal, planChecks, live] = await Promise.all([getJpDay(), getHabitsView(), getCalendarView().catch(() => null), getPlanChecks().catch(() => ({})), getLiveTasks().catch(() => [])]);
+  const planNext = nextAction(day.today, planChecks, new Set(live.filter((t) => t.status === "fait").map((t) => t.code)));
   const toItem = (e: (typeof day.mine)[number]): DayEntryItem => ({ ...e, late: e.bucket === "retard" });
   const now = day.mine.filter((e) => e.bucket === "retard" || e.bucket === "aujourdhui").map(toItem);
   const week = day.mine.filter((e) => e.bucket === "semaine").map(toItem);
@@ -34,6 +37,14 @@ export default async function MaJourneePage() {
           <h1 className="mda-h1">{now.length ? `${now.length} chose${now.length > 1 ? "s" : ""} à faire aujourd'hui` : "Rien d'urgent aujourd'hui"}</h1>
           <p className="mda-lead">Tes tâches du Mandalart dont tu es responsable et ta propre liste. « Confier » envoie une tâche à Christine, à Annie, à un éducateur ou à n&apos;importe qui, avec un lien pour te dire où elle en est.</p>
         </header>
+
+        {planNext ? (
+          <Link href="/admin/moi/plan" className="mda-card" style={{ display: "grid", gap: 4, borderColor: "var(--adm-accent)", textDecoration: "none", color: "inherit" }}>
+            <span className="mda-label">{planNext.late ? "Mon plan · à rattraper d'abord" : "Mon plan · ta prochaine action"}</span>
+            <span style={{ fontSize: "1.05rem", fontWeight: 600, lineHeight: 1.35 }}>👉 {planNext.step.text}</span>
+            <span className="mda-sub" style={{ margin: 0 }}>{planNext.piece.title} · voir le plan →</span>
+          </Link>
+        ) : null}
 
         <section className="mda-cols-3">
           <div className="mda-card">
