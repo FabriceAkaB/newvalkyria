@@ -646,3 +646,86 @@ export function PlanStepRow({ s, next }: { s: PlanStepItem; next?: boolean }) {
     </li>
   );
 }
+
+// ───────────────────────── Mon gym ─────────────────────────
+
+export interface GymExerciseItem {
+  id: string;
+  name: string;
+  prescription: string;
+  rest: string;
+  cue: string;
+  swap: string;
+  sets: number;
+  unit: "reps" | "s";
+  target: string;
+  targetWeight: number | null;
+  last: string | null;
+  today: { w: number | null; r: number[] } | null;
+  superset: boolean;
+}
+
+/** Un exercice de la séance : quoi faire, quoi viser, et la case pour noter la charge et les répétitions. */
+export function GymExerciseCard({ e, day, n }: { e: GymExerciseItem; day: string; n: number }) {
+  const { busy, error, run } = useAction();
+  const [weight, setWeight] = useState(e.today?.w != null ? String(e.today.w) : e.targetWeight != null ? String(e.targetWeight) : "");
+  const [reps, setReps] = useState<string[]>(Array.from({ length: e.sets }, (_, i) => (e.today?.r[i] != null ? String(e.today.r[i]) : "")));
+  const [saved, setSaved] = useState(!!e.today);
+  const save = () =>
+    run(() =>
+      post({
+        action: "gym-log",
+        day,
+        exerciseId: e.id,
+        weight: weight.trim() ? Number(weight.replace(",", ".")) || 0 : null,
+        reps: reps.filter((r) => r.trim()).map((r) => Math.round(Number(r)) || 0)
+      })
+    ).then((ok) => ok && setSaved(true));
+  return (
+    <li className="mda-task" data-s={saved ? "fait" : "a_faire"} style={{ alignItems: "flex-start" }}>
+      <span className="mda-check" data-s={saved ? "fait" : "a_faire"} aria-hidden="true">
+        <span>{saved ? "✓" : n}</span>
+      </span>
+      <div className="mda-task-body" style={{ display: "grid", gap: 6 }}>
+        <p className="mda-task-title" style={{ margin: 0 }}>
+          <strong>{e.name}</strong> · {e.prescription}
+        </p>
+        <div className="mda-task-meta">
+          <span>Repos {e.rest}</span>
+          {e.superset ? <span className="mda-pill">En alternance avec le suivant</span> : null}
+          {e.last ? <span>Dernière fois : {e.last}</span> : <span>Première fois</span>}
+        </div>
+        <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--adm-text)" }}>🎯 {e.target}</p>
+        <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--adm-text-3)" }}>
+          ✋ {e.cue} · Sinon : {e.swap}
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+          {e.unit === "s" ? null : (
+            <input className="admin-input" style={{ width: 84 }} inputMode="decimal" placeholder="kg" aria-label="Charge en kg" value={weight} onChange={(x) => (setWeight(x.target.value), setSaved(false))} />
+          )}
+          {reps.map((r, i) => (
+            <input
+              key={i}
+              className="admin-input"
+              style={{ width: 62 }}
+              inputMode="numeric"
+              placeholder={`S${i + 1}`}
+              aria-label={`Série ${i + 1} : ${e.unit === "s" ? "secondes" : "répétitions"}`}
+              value={r}
+              onChange={(x) => {
+                const next = [...reps];
+                next[i] = x.target.value;
+                setReps(next);
+                setSaved(false);
+              }}
+            />
+          ))}
+          <button type="button" className={saved ? "admin-btn-ghost" : "admin-btn-primary"} disabled={busy || !reps.some((r) => r.trim())} onClick={save}>
+            {saved ? "Noté" : "Noter"}
+          </button>
+        </div>
+        <Err error={error} />
+      </div>
+    </li>
+  );
+}

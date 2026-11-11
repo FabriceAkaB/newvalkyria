@@ -3,7 +3,7 @@ import { z, ZodError } from "zod";
 
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
-import { addMeal, deleteKnowledge, deleteMeal, logHabit, saveCalendarUrl, saveHabit, saveKnowledge, setPlanCheck } from "@/lib/jp-repo";
+import { addMeal, deleteKnowledge, deleteMeal, logHabit, saveCalendarUrl, saveHabit, saveGymEntry, saveKnowledge, setPlanCheck } from "@/lib/jp-repo";
 import { createTeamTask, getAssignees, setTeamTaskStatus, takeBackTeamTask } from "@/lib/team-tasks-repo";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +56,8 @@ const schema = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("knowledge-delete"), id: z.string().uuid() }),
   z.object({ action: z.literal("calendar-url"), url: z.string().max(500).nullable() }),
-  z.object({ action: z.literal("plan-step"), stepId: z.string().min(2).max(40), done: z.boolean() })
+  z.object({ action: z.literal("plan-step"), stepId: z.string().min(2).max(40), done: z.boolean() }),
+  z.object({ action: z.literal("gym-log"), day: date, exerciseId: z.string().min(2).max(40), weight: z.number().min(0).max(500).nullable(), reps: z.array(z.number().int().min(0).max(300)).max(6) })
 ]);
 
 /** Les personnes à qui confier une tâche (menu « Confier à » du Mandalart et de Ma journée). */
@@ -65,7 +66,7 @@ export async function GET() {
   return NextResponse.json({ assignees: await getAssignees() });
 }
 
-/** Espace JP (admin seulement) : tâches (ajouter, confier, cocher, reprendre), habitudes, nutrition, connaissances, calendrier, étapes de Mon plan. */
+/** Espace JP (admin seulement) : tâches (ajouter, confier, cocher, reprendre), habitudes, nutrition, connaissances, calendrier, étapes de Mon plan, charges de Mon gym. */
 export async function POST(request: Request) {
   if ((await getCurrentAdminRole()) !== "admin") return jsonError("Non autorisé", 401);
   try {
@@ -79,6 +80,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
     if (body.action === "plan-step") return NextResponse.json({ ok: true, ...(await setPlanCheck(body.stepId, body.done)) });
+    if (body.action === "gym-log") {
+      await saveGymEntry({ day: body.day, exerciseId: body.exerciseId, weight: body.weight, reps: body.reps });
+      return NextResponse.json({ ok: true });
+    }
     if (body.action === "take-back") await takeBackTeamTask(body.id);
     else if (body.action === "habit-log") await logHabit(body.habitId, body.day, body.value);
     else if (body.action === "habit-save") await saveHabit(body);

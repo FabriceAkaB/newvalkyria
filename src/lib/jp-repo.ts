@@ -1,6 +1,7 @@
 import { CLUB_ID } from "@/lib/club";
 import { readIcalWindow, zonedToUtc } from "@/lib/ical";
 import { addDays, habitWeek, mondayOf, parseTags, weekTime, type CalEvent, type Habit, type HabitLog, type HabitWeek, type Meal, type MealMoment, type SourceType, type WeekTime } from "@/lib/jp-core";
+import { exerciseById, parseGymLog, trimGymLog, type GymLog } from "@/lib/jp-gym";
 import { parseChecks, pieceOfStep, type Checks } from "@/lib/jp-plan";
 import { getLiveTasks, setTaskStatus, todayIso } from "@/lib/mandalart-repo";
 import { fetchIcalText } from "@/lib/mcs-calendar";
@@ -259,4 +260,29 @@ export async function setPlanCheck(stepId: string, done: boolean): Promise<{ pie
     }
   }
   return { pieceFinished };
+}
+
+// ───────────────────────── Mon gym (charges notées) ─────────────────────────
+
+const GYM_KEY = "jp_gym_log";
+
+export async function getGymLog(): Promise<GymLog> {
+  const { data } = await db().from("app_settings").select("value").eq("club_id", CLUB_ID).eq("key", GYM_KEY).maybeSingle();
+  return parseGymLog(data?.value);
+}
+
+/** Note (ou efface, si aucune série) la charge et les répétitions d'un exercice pour une journée. */
+export async function saveGymEntry(input: { day: string; exerciseId: string; weight: number | null; reps: number[] }): Promise<void> {
+  if (!exerciseById(input.exerciseId)) throw new Error("Exercice introuvable");
+  const log = await getGymLog();
+  const reps = input.reps.filter((r) => Number.isFinite(r) && r >= 0).slice(0, 6);
+  if (reps.length) (log[input.day] ??= {})[input.exerciseId] = { w: input.weight, r: reps };
+  else if (log[input.day]) {
+    delete log[input.day][input.exerciseId];
+    if (!Object.keys(log[input.day]).length) delete log[input.day];
+  }
+  const { error } = await db()
+    .from("app_settings")
+    .upsert({ club_id: CLUB_ID, key: GYM_KEY, value: JSON.stringify(trimGymLog(log, todayIso())), updated_at: new Date().toISOString() }, { onConflict: "club_id,key" });
+  if (error) throw error;
 }

@@ -370,8 +370,11 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "mes-habitudes",
         label: "Mes habitudes",
         icon: "chart",
-        description: "Sommeil, coucher, entraînement, lecture, travail profond, contenu : ma semaine et mes séries.",
-        tabs: [{ href: "/admin/moi/habitudes", label: "Mes habitudes", adminOnly: true }]
+        description: "Sommeil, coucher, entraînement, lecture, travail profond, contenu : ma semaine et mes séries. Mon gym : la séance du jour, les répétitions et les charges à viser.",
+        tabs: [
+          { href: "/admin/moi/habitudes", label: "Mes habitudes", adminOnly: true },
+          { href: "/admin/moi/gym", label: "Mon gym", adminOnly: true }
+        ]
       },
       {
         key: "ma-nutrition",
