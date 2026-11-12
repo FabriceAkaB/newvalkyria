@@ -248,7 +248,25 @@ export const PILLAR_MODULES: PillarModule[] = [
       "En place : préremplissage depuis un programme existant, un contrat de terrain et le taux d'un éducateur ; scénarios enregistrés et comparés",
       "En place : alerte dans Aujourd'hui 2 semaines avant le début si les préventes sont sous le seuil de survie"
     ],
-    next: "P7.2.01 : entrer les vrais coûts (gymnase de Prévost, taux et heures de Noura) puis P7.2.03 : passer chaque programme au calculateur avant sa mise en vente."
+    next: "P7.2.01 : entrer les vrais coûts (gymnase de Prévost, taux et heures de Noura) puis P7.2.03 : passer chaque programme au calculateur avant sa mise en vente. P7.2.04 (15 déc.) : analyse complète de la ligue d'hiver (équipes, vrais coûts, revenus, avis des familles, autres ligues) et go/no-go au calculateur."
+  },
+  {
+    slug: "boutique",
+    pillar: "P2",
+    title: "Boutique et matériel New Val",
+    question: "Qu'est-ce qu'on vend en plus de la saison, avec quelle marge, et qu'est-ce qui fait acheter ?",
+    status: "partiel",
+    href: "/admin/boutique",
+    objectives: ["P2.6", "P1.6"],
+    links: ["A04"],
+    planned: [
+      "En place : boutique et uniformes (/admin/boutique, /admin/uniformes)",
+      "Échantillons New Val (P2.6.04, 15 déc. 2026) : ballons, maillots, pastilles, buts rétractables, imperméables, chez 2 fournisseurs chacun",
+      "Tester les échantillons, calculer la marge, mettre les modèles choisis en vente (P2.6.05, 31 janv. 2027)",
+      "Offre boutique (P2.6.06, 31 janv. 2027) : rabais après un nombre d'achats, ensembles, et le prix de consolation (une fille qui n'a rien gagné reçoit un bon pour la boutique)",
+      "Suivi mensuel des ventes par la gérante (P2.6.07)"
+    ],
+    next: "P2.6.04 : commander les échantillons chez 2 fournisseurs (inscrire chaque échantillon dans /admin/inventaire avec son prix)."
   },
   { slug: "paiements", pillar: "P2", title: "Paiements et versements", question: "Qui doit encore payer et quand ?", status: "actif", href: "/admin/revenus/paiements", objectives: ["P2.7"], links: ["AU04"] },
 
@@ -268,9 +286,11 @@ export const PILLAR_MODULES: PillarModule[] = [
       "En place : chaque publication suivie (réseau, type, thème, organique ou payant) avec ses vues, essais et inscriptions relevés 7 jours après",
       "En place : vidéos par semaine (cible 3, idéal 5) et indicateur videos_semaine (moyenne des 4 dernières semaines)",
       "En place : meilleurs contenus par vues et par essais, comparaison par thème, par type et par réseau, coût par essai et par inscription de la pub",
-      "Plus tard : l'agent statistiques (A06) remplit ces chiffres seul"
+      "Plus tard : l'agent statistiques (A06) remplit ces chiffres seul",
+      "En place (11 nov. 2026) : Mes tournages (/admin/moi/tournages, Espace JP) : la vidéo du lendemain planifiée la veille, idée → planifiée → tournée → montée → publiée, 21 idées déjà prêtes",
+      "Vidéos explicatives pour les parents (P3.2.12 à P3.2.17) : qui est New Valkyria, nos programmes, nos projets, preuves et témoignages, puis la page « Découvrir New Valkyria » pour le 15 janv. 2027"
     ],
-    next: "Entrer les abonnés d'aujourd'hui de chaque réseau (point de départ), puis ajouter chaque publication dès le 15 novembre."
+    next: "P3.2.12 : écrire avec la gérante la liste des vidéos explicatives (30 nov.), puis tourner les 4 vidéos « Qui est New Valkyria » (P3.2.13, 20 déc.) depuis Mes tournages."
   },
   { slug: "parrainage", pillar: "P3", title: "Parrainage et codes de référence", question: "Qui nous amène des familles ?", status: "actif", href: "/admin/references", objectives: ["P3.1"] },
   { slug: "essais", pillar: "P3", title: "Essais gratuits", question: "Qui vient essayer et quand ?", status: "actif", href: "/admin/essais-dates", objectives: ["P2.2", "P3.3"] },
@@ -334,7 +354,8 @@ export const PILLAR_MODULES: PillarModule[] = [
     status: "a-construire",
     objectives: ["P4.1", "P4.2", "P4.4", "P4.6"],
     links: ["AU12", "A01"],
-    planned: ["Parcours de bienvenue (courriel, vidéo de JP, kit)", "Anniversaires des joueuses", "Moments vedettes de la saison"]
+    planned: ["Parcours de bienvenue (courriel, vidéo de JP, kit)", "5 vidéos « nouveaux parents » envoyées automatiquement après le paiement (P4.1.06) : après l'inscription, l'encadrement, communiquer avec l'équipe, suivre la progression, la saison", "Anniversaires des joueuses", "Moments vedettes de la saison"],
+    next: "P4.1.06 (31 mars 2027) : tourner les 5 vidéos nouveaux parents (idées prêtes dans Mes tournages), puis les brancher au courriel de confirmation."
   },
 
   // ── P5 Diversification et conseil ──

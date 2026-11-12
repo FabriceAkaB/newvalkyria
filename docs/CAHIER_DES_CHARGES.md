@@ -32,14 +32,14 @@ réseaux sociaux, structure, calculateur de lancement, échéances des contrats,
 | 6 | Bibliothèque pédagogique / Coaching OS | Commencé | Banque d'exercices Valkyria (`exercise-bank.ts`, `/admin/exercices`), méthode Valkyria écrite (`coaching-method.ts`), espace Coaching, skill `coaching` | Thèmes manquants (neurocognition, psychologie, gestion émotionnelle), vidéo par exercice, philosophie de coaching de JP écrite |
 | 7 | Planification et suivi des séances | En place | Pratiques préparées d'avance (`practices-repo.ts`, `/admin/pratiques`), périodisation (`season-plan.ts`), thèmes (`/admin/themes`), pratique du jour et routine de fin (portail), présences | Comparaison planifié / réalisé, historique des thèmes par groupe |
 | 8 | Valkyria Passport (espace joueuse et famille) | Commencé | Compte parent (`/compte`, `parent-repo.ts`), passeport et tests (`skill-tests.ts`), points (`player-points.ts`), lien Valkyria Lab par famille (`/lab/[token]`) | Parcours sur plusieurs saisons, photos et vidéos, consentements parentaux détaillés et partage choisi par la famille |
-| 9 | Valkyria Proof (progression) | Commencé | Tests de progression (`skill-tests.ts`), évaluations à chaque pratique (`player_evaluations`), progression des joueuses (`/admin/coaching/joueuses`), `/admin/evaluations` | Vidéos annotées avant / après, rapports de progression aux familles, historique multi-saisons ; analyse vidéo automatique = étude de faisabilité |
+| 9 | Valkyria Proof (progression) | Commencé | Tests de progression (`skill-tests.ts`), évaluations à chaque pratique (`player_evaluations`), progression des joueuses (`/admin/coaching/joueuses`), `/admin/evaluations` | Vidéos annotées avant / après, rapports de progression aux familles, historique multi-saisons ; analyse vidéo automatique = étude de faisabilité. Vidéos « preuves et témoignages » : P3.2.17 (31 mars 2027) |
 | 10 | Valkyria Lab × Ball Mastery (**prioritaire**) | Commencé | Valkyria Lab phase 1 (`valkyria-lab.ts`, `/admin/valkyria-lab`, routines, défis, page famille), échantillons de tapis (P1.6.05 à P1.6.08) | Le tapis physique et sa vente, suivi de réalisation à la maison relié au passeport, choix du modèle économique, test de la demande avant production |
 | 11 | Entraînements individuels et semi-privés | Commencé | Séances privées (`private-sessions-repo.ts`, `/admin/seances-privees`), programmes privés et semi-privés (`private-programs*.ts`) | Forfaits, objectifs individuels et comptes rendus, rentabilité par séance et par éducateur |
 | 12 | Récompenses et appartenance, gala | Commencé | Points des joueuses sans classement (`player-points.ts`, P4.6), gagnantes du jour | Badges, niveaux, récompenses physiques ; le gala annuel (événement à planifier dans le Mandalart, pilier événements) |
-| 13 | Expérience parent | Commencé | Sondages Voix des familles (`/admin/sondages`), relances (`outreach.ts`), messages (`/admin/communications`), parcours Valkyria (`parcours-valkyria.ts`), agent courriels (chantier n° 1 de `PLAN_CHANTIERS.md`) | Accueil des nouvelles familles, suivi des problèmes et escalade, **avis automatique avant un changement sensible dans MonClubSportif** (cas des remplaçantes vu comme une rétrogradation : à brancher dans le robot MCS, `mcs-robot-runner.ts`) |
-| 14 | Boutique et merchandising | Commencé | Boutique et uniformes (`shop-repo.ts`, `uniform-kits-repo.ts`, `/admin/boutique`, `/admin/uniformes`) | Coût d'achat et marge par produit, fournisseurs, réassort, précommandes, ensembles, tapis Ball Mastery en vente |
-| 15 | Équipements pédagogiques | En place | Inventaire du matériel (`inventory-repo.ts`, `/admin/inventaire`, P7.6.02) | Entretien, fournisseurs |
-| 16 | Marketing, acquisition et contenu | Commencé | Réseaux sociaux (`marketing-posts.ts`, `/admin/reseaux`), sources d'acquisition (`acquisition.ts`, `/admin/acquisition`), stats des canaux (`marketing-stats.ts`), skills `social-media-skills:*` | Banque d'idées et calendrier éditorial de **30 scripts et 30 vidéos par semaine**, statuts de production, autorisations de diffusion (droit à l'image P8.1.01), coût d'acquisition et valeur à long terme |
+| 13 | Expérience parent | Commencé | Sondages Voix des familles (`/admin/sondages`), relances (`outreach.ts`), messages (`/admin/communications`), parcours Valkyria (`parcours-valkyria.ts`), agent courriels (chantier n° 1 de `PLAN_CHANTIERS.md`) | Accueil des nouvelles familles (5 vidéos « nouveaux parents » envoyées après le paiement : P4.1.06, 31 mars 2027), suivi des problèmes et escalade, **avis automatique avant un changement sensible dans MonClubSportif** (cas des remplaçantes vu comme une rétrogradation : à brancher dans le robot MCS, `mcs-robot-runner.ts`) |
+| 14 | Boutique et merchandising | Commencé | Boutique et uniformes (`shop-repo.ts`, `uniform-kits-repo.ts`, `/admin/boutique`, `/admin/uniformes`) | Coût d'achat et marge par produit, fournisseurs, réassort, précommandes, ensembles, tapis Ball Mastery en vente. Échantillons New Val (P2.6.04, 15 déc. 2026), offre fidélité + **prix de consolation** (P2.6.06, 31 janv. 2027) : section « Boutique et matériel New Val » du pilier P2 |
+| 15 | Équipements pédagogiques | En place | Inventaire du matériel (`inventory-repo.ts`, `/admin/inventaire`, P7.6.02) | Entretien, fournisseurs ; matériel New Val (ballons, maillots, pastilles, buts rétractables, imperméables) : échantillons P2.6.04, choix P2.6.05 |
+| 16 | Marketing, acquisition et contenu | Commencé | Réseaux sociaux (`marketing-posts.ts`, `/admin/reseaux`), sources d'acquisition (`acquisition.ts`, `/admin/acquisition`), stats des canaux (`marketing-stats.ts`), skills `social-media-skills:*` | Mes tournages (`video-shoots-core.ts`, `/admin/moi/tournages`, 11 nov. 2026) a commencé la banque d'idées et les statuts (idée → planifiée → tournée → montée → publiée) ; vidéos explicatives en 5 séries P3.2.12 à P3.2.17. Reste : calendrier éditorial de **30 scripts et 30 vidéos par semaine**, statuts de production, autorisations de diffusion (droit à l'image P8.1.01), coût d'acquisition et valeur à long terme |
 | 17 | Administration et automatisation | En place | Robot MonClubSportif, courriels programmés, crons (`cron-jobs.ts`), tâches confiées (`team-tasks-repo.ts`), cahier des agents (`agents-blueprint.ts`), Aujourd'hui | Numéro SMS centralisé avec transfert à un humain, analyse des postes administratifs (dans `/admin/structure`) |
 | 18 | Commandites et partenariats (CRM) | Commencé | `/admin/sponsors-2027`, `/admin/commandites`, offres de partenariat (`partnership-offers.ts`), échéances des contrats (`contracts-registry.ts`) | Pipeline de prospects, contreparties et activations, résultats et renouvellements |
 
@@ -75,6 +75,22 @@ réseaux sociaux, structure, calculateur de lancement, échéances des contrats,
 - **P2 Différenciation pédagogique** : Valkyria Lab × Ball Mastery en premier, puis vidéos avant / après et évaluations des éducateurs.
 - **P3 Croissance** : boutique avec marges, CRM commandites, subventions, attribution marketing.
 - **P4 Avancé** : analyse vidéo par IA, gala, B2B, multisport, centre sportif.
+
+## 4. À développer en 2027 (ajouté le 11 nov. 2026)
+
+Les chantiers de la prochaine année, demandés par JP. Chacun regroupe des tâches datées du Mandalart (section 11 du
+`MANDALART_VALKYRIA.md`) ; leur avancement se lit dans `src/lib/vision-2027.ts`, affiché dans **Mon plan** (JP) et dans
+**Aujourd'hui** (la gérante, sans montant). Un nouveau chantier = une entrée dans `VISION_2027` + ses tâches dans le Mandalart.
+
+| Chantier | Modules du cahier | Tâches du Mandalart |
+|---|---|---|
+| Vidéos explicatives (qui nous sommes, programmes, projets, preuves, nouveaux parents), tournées depuis Mes tournages | 13, 16 (Valkyria Family, Proof, Coaching OS) | P3.2.12 à P3.2.17, P4.1.06 |
+| Valkyria Proof | 9 | P8.1.02, P3.2.07 à P3.2.09, P8.1.03 |
+| Valkyria Family | 12, 13 | P4.5.01, P4.5.03, P4.6.01 à P4.6.03 |
+| Coaching OS | 6, 7 | P1.3.07, P1.3.08, P1.3.10, P1.4.02 à P1.4.04 |
+| Matériel New Val (ballons, maillots, pastilles, buts rétractables, imperméables) | 10, 14, 15 | P1.6.05, P1.6.06, P2.6.04, P2.6.05 |
+| Boutique qui vend plus (fidélité, ensembles, prix de consolation) | 14 | P2.6.01, P2.6.06, P2.6.07 |
+| Ligue d'hiver : analyse complète puis go/no-go | 3 | P7.2.04, P3.7.01 |
 
 ---
 

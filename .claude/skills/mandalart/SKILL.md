@@ -28,3 +28,10 @@ description: Le plan de guerre de New Valkyria (1,5 M$ encaissés en 2028) et so
 
 ## Prochains chantiers demandés par JP (2 nov. 2026)
 Banque d'exercices (types, liste de vérification, organisation 5-7 / 8-10 / 11-16, approbation à 2 notes ≥ 8), évaluation rapide des joueuses dans le portail entraîneur (+ note de la pratique par les joueuses), pratique du jour pour les éducateurs (contrôle de qualité des rapports), section Matchs (résultats, vidéos, statistiques, coûts), réseaux sociaux par publication, liste « à faire dans MonClubSportif » puis agent A12, présences et heures des éducateurs, rapprochement comptable.
+
+## À développer en 2027 (JP, 11 nov. 2026)
+Sept chantiers suivis dans `src/lib/vision-2027.ts` (Mon plan pour JP, Aujourd'hui pour la gérante) et rangés dans le cahier des charges (section 4) :
+vidéos explicatives pour les parents (P3.2.12 à P3.2.17, P4.1.06, tournées depuis `/admin/moi/tournages`), Valkyria Proof, Valkyria Family, Coaching OS,
+matériel New Val (échantillons de ballons, maillots, pastilles, buts rétractables, imperméables : P2.6.04, P2.6.05), boutique qui vend plus
+(fidélité, ensembles, prix de consolation : P2.6.06, P2.6.07, section « boutique » du pilier P2) et analyse de la ligue d'hiver (P7.2.04, go/no-go au calculateur).
+Toute nouvelle tâche liée à ces sujets s'ajoute au chantier concerné (`codes` de `VISION_2027`).
