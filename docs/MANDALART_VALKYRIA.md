@@ -1398,6 +1398,40 @@ Un espace à part dans l'admin, comme le Coaching : tout ce qui sert à filmer, 
 
 - [ ] `P8.1.04` ⭐ N1 — Ouvrir les journées d'entrevues au club des recrues dès la semaine du 21 novembre et inviter les familles (elles choisissent leur heure) ; viser 30 filles d'ici la fin de la saison. — 21 nov. 2026 · JP + caméra · A05
 
+### Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)
+
+Décisions de JP : l'académie devient **Académie** (le groupe avancé : 3 groupes de 16, un 2015, un 2016, un 2017, 950 $, seuls à avoir les pratiques d'équipe, les matchs et les tournois) et **Pré-académie** (3 villes, 30 filles par ville en deux groupes 2018-2017 et 2016-2015, 690 $, sans matchs). Semi-privés de 6 au Club des Recrues la fin de semaine. Parascolaire à 250 $ pour 10 semaines, 30 jeunes au plus par école. Camps des Fêtes et de la relâche : 30 jeunes au plus par camp. **Salaire de dirigeant de JP : 100 000 $ inscrits en charge** dans le budget de l'hiver 2027-2028 ; l'objectif est 200 000 $ de bénéfice après ce salaire. Coûts tirés des vrais chiffres de 2026 (gymnase 35 $/h, synthétique 214 $/h, Club des Recrues 75 $/h, éducateurs 25 à 40 $/h, frais Stripe 3,6 %).
+
+| Saison | Revenus potentiels | Bénéfice avant salaire de JP | Ce qui le fait |
+| --- | --- | --- | --- |
+| Automne-hiver 2026-2027 (en cours) | ≈ 105 000 $ | ≈ 37 000 $ | 160 filles, garçons, camp de la relâche 2027 (30), premières commandites |
+| Été 2027 | ≈ 285 000 $ (≈ 450 000 $ avec 4 sites) | ≈ 150 000 $ (≈ 245 000 $ avec 4 sites) | Camps de jour 2 sites × 8 semaines × 30 jeunes, Valkyria Été (soir) 60 000 $, tournoi Valkyria, kits Valkyria Lab, garçons sous l'autre marque |
+| Automne-hiver 2027-2028 | ≈ 450 000 $ | ≈ 300 000 $ → ≈ 200 000 $ après les 100 000 $ de salaire | Académie 48, Pré-académie 90, semi-privés 12, parascolaire 12 écoles, camps des Fêtes et de la relâche, commandites 30 000 $, Valkyria Lab (kits et abonnement), tournoi d'hiver, boutique, Journées Valkyria |
+| Été 2028 | ≈ 400 000 $ (sans le voyage, refacturé au coût) | ≈ 230 000 $ | Camps 3 sites, Valkyria Été 90 000 $, voyage de juillet 2028 (fin juillet, choix du sondage), tournoi, commandites d'été |
+
+Détail de l'hiver 2027-2028 (bénéfice) : Académie ≈ 25 000 $ ; Pré-académie ≈ 38 000 $ ; semi-privés à 850 $ ≈ 4 700 $ ; parascolaire 12 écoles × 30 jeunes × 2 sessions ≈ 143 000 $ ; camps ≈ 10 100 $ ; commandites ≈ 27 000 $ ; kits Valkyria Lab (120 à 149 $) ≈ 10 000 $ ; abonnement Valkyria Lab (150 familles à 15 $ par mois) ≈ 14 000 $ ; tournoi Valkyria (30 équipes à 500 $) ≈ 5 700 $ ; boutique et kits ≈ 9 600 $ ; Journées Valkyria ≈ 6 200 $ ; garçons, solos, Sport-Études ≈ 8 000 $.
+
+#### P7.8 Structure et rémunération de JP
+
+- [ ] `P7.8.08` ⭐ N4 — Inscrire le salaire de dirigeant de JP (100 000 $) comme charge dans le budget de l'hiver 2027-2028 et viser 200 000 $ de bénéfice après ce salaire (valider avec le CPA). — 31 août 2027 · JP + CPA · A04
+
+#### P2.4 Échelle d'offres sur 5 générations
+
+- [ ] `P2.4.07` ⭐ N3 — Ouvrir la structure 2027-2028 : Académie (3 groupes de 16 : 2015, 2016, 2017, à 950 $, matchs et tournois) et Pré-académie (3 villes, 30 filles par ville, 2018-2017 et 2016-2015, à 690 $) ; prévente en mai et juin. — 30 juin 2027 · JP
+
+#### P5.1 Parascolaire (≈ 160 000 $ en 2028)
+
+- [ ] `P5.1.06` ⭐ N3 — Signer 8 à 12 écoles de parascolaire pour 2027-2028 (30 jeunes au plus par école, 250 $ pour 10 semaines, 2 sessions). — 31 mai 2027 · JP · A08
+
+#### P5.4 Home Lab et analyse vidéo à distance
+
+- [ ] `P5.4.04` ➜ N4 — Vendre le kit Valkyria Lab (ballon, tapis, routines par code QR) à 149 $ aux familles, au parascolaire et aux camps : 120 kits. — 31 oct. 2027 · JP
+- [ ] `P5.4.05` ➜ N5 — Lancer l'abonnement Valkyria Lab à 15 $ par mois (routine du mois et retour vidéo) : 150 familles. — 31 déc. 2027 · JP + Claude Code
+
+#### P5.5 Événements payants
+
+- [ ] `P5.5.05` ➜ N5 — Tenir 2 tournois Valkyria par année (été et hiver), 30 équipes à 500 $, avec commanditaires et boutique sur place. — 31 mars 2028 · JP
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |

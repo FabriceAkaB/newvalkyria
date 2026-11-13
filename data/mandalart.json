@@ -1942,6 +1942,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P2.4.07",
+       "priority": "star",
+       "level": 3,
+       "title": "Ouvrir la structure 2027-2028 : Académie (3 groupes de 16 : 2015, 2016, 2017, à 950 $, matchs et tournois) et Pré-académie (3 villes, 30 filles par ville, 2018-2017 et 2016-2015, à 690 $) ; prévente en mai et juin.",
+       "due": "2027-06-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)"
       }
      ]
     },
@@ -3526,6 +3538,20 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.1.06",
+       "priority": "star",
+       "level": 3,
+       "title": "Signer 8 à 12 écoles de parascolaire pour 2027-2028 (30 jeunes au plus par école, 250 $ pour 10 semaines, 2 sessions).",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [
+        "A08"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)"
       }
      ]
     },
@@ -3706,6 +3732,30 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.4.04",
+       "priority": "progressive",
+       "level": 4,
+       "title": "Vendre le kit Valkyria Lab (ballon, tapis, routines par code QR) à 149 $ aux familles, au parascolaire et aux camps : 120 kits.",
+       "due": "2027-10-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)"
+      },
+      {
+       "code": "P5.4.05",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Lancer l'abonnement Valkyria Lab à 15 $ par mois (routine du mois et retour vidéo) : 150 familles.",
+       "due": "2027-12-31",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)"
       }
      ]
     },
@@ -3756,6 +3806,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Préparations à l'avance"
+      },
+      {
+       "code": "P5.5.05",
+       "priority": "progressive",
+       "level": 5,
+       "title": "Tenir 2 tournois Valkyria par année (été et hiver), 30 équipes à 500 $, avec commanditaires et boutique sur place.",
+       "due": "2028-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)"
       }
      ]
     },
@@ -4731,6 +4793,20 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.8.08",
+       "priority": "star",
+       "level": 4,
+       "title": "Inscrire le salaire de dirigeant de JP (100 000 $) comme charge dans le budget de l'hiver 2027-2028 et viser 200 000 $ de bénéfice après ce salaire (valider avec le CPA).",
+       "due": "2027-08-31",
+       "owner": "JP + CPA",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)"
       }
      ]
     }
@@ -6227,6 +6303,10 @@
    {
     "title": "Espace création de contenu (13 nov. 2026)",
     "text": "Un espace à part dans l'admin, comme le Coaching : tout ce qui sert à filmer, raconter et publier, centralisé. La personne caméra (William pour l'instant) filme au maximum pendant que les coachs coachent. À chaque pratique en gymnase, le ball mastery se filme à 360° (caméra au centre sur un trépied solide, les filles en arc de cercle sur leur pastille) pour voir les progrès des gestes techniques ; la Veo filme l'ensemble de la pratique pour l'analyse ; à chaque match, chaque joueuse est prise en photo. Les entrevues des filles et des parents se font au club des recrues dès la semaine du 21 novembre, sur invitation (les familles choisissent leur heure), avec des questions tirées des sondages (plaisir, progrès, confiance). Le calendrier de publication (organique, reels d'essai, publicités, angle marketing) et la portée des réseaux vivent au même endroit."
+   },
+   {
+    "title": "Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)",
+    "text": "Décisions de JP : l'académie devient **Académie** (le groupe avancé : 3 groupes de 16, un 2015, un 2016, un 2017, 950 $, seuls à avoir les pratiques d'équipe, les matchs et les tournois) et **Pré-académie** (3 villes, 30 filles par ville en deux groupes 2018-2017 et 2016-2015, 690 $, sans matchs). Semi-privés de 6 au Club des Recrues la fin de semaine. Parascolaire à 250 $ pour 10 semaines, 30 jeunes au plus par école. Camps des Fêtes et de la relâche : 30 jeunes au plus par camp. **Salaire de dirigeant de JP : 100 000 $ inscrits en charge** dans le budget de l'hiver 2027-2028 ; l'objectif est 200 000 $ de bénéfice après ce salaire. Coûts tirés des vrais chiffres de 2026 (gymnase 35 $/h, synthétique 214 $/h, Club des Recrues 75 $/h, éducateurs 25 à 40 $/h, frais Stripe 3,6 %). Détail de l'hiver 2027-2028 (bénéfice) : Académie ≈ 25 000 $ ; Pré-académie ≈ 38 000 $ ; semi-privés à 850 $ ≈ 4 700 $ ; parascolaire 12 écoles × 30 jeunes × 2 sessions ≈ 143 000 $ ; camps ≈ 10 100 $ ; commandites ≈ 27 000 $ ; kits Valkyria Lab (120 à 149 $) ≈ 10 000 $ ; abonnement Valkyria Lab (150 familles à 15 $ par mois) ≈ 14 000 $ ; tournoi Valkyria (30 équipes à 500 $) ≈ 5 700 $ ; boutique et kits ≈ 9 600 $ ; Journées Valkyria ≈ 6 200 $ ; garçons, solos, Sport-Études ≈ 8 000 $."
    }
   ]
  },

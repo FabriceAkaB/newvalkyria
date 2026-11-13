@@ -404,6 +404,36 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     done: "La liste des vidéos est validée avec la gérante, une phrase clé par vidéo.",
     link: { href: "/admin/moi/tournages", label: "Mes tournages" }
   },
+  "P7.8.08": {
+    how: ["Avec le CPA : fixer le salaire de dirigeant (100 000 $) et la façon de le verser (salaire, dividendes).", "L'inscrire comme charge dans le budget annuel (Revenus › Budget annuel).", "Vérifier chaque mois que le bénéfice après salaire suit le plan de l'hiver 2027-2028."],
+    done: "Le salaire est dans le budget et le CPA a validé la façon de le verser.",
+    link: { href: "/admin/revenus/budget", label: "Budget annuel" }
+  },
+  "P2.4.07": {
+    how: ["Créer les programmes Académie (3 groupes de 16) et Pré-académie (3 villes, 2 groupes de 15) dans l'admin, aux prix de 950 $ et 690 $.", "Réserver les 3 gymnases de la pré-académie au printemps.", "Prévente en mai et juin aux familles actuelles, avant la fin de la saison."],
+    done: "Les deux programmes sont en vente et la prévente est lancée.",
+    link: { href: "/admin/revenus/calculateur", label: "Calculateur de lancement" }
+  },
+  "P5.1.06": {
+    how: ["Liste de 50 écoles et services de garde, 100 contacts par semaine.", "Une démo gratuite par école intéressée.", "Signer l'entente : 30 jeunes au plus, 250 $ pour 10 semaines, 2 sessions."],
+    done: "8 à 12 ententes signées pour l'automne 2027.",
+    link: { href: "/admin/mandalart/piliers", label: "Pilier P5" }
+  },
+  "P5.4.04": {
+    how: ["Choisir le ballon et le tapis (échantillons P1.6.05), calculer le coût (environ 60 $).", "Monter la page de vente à 149 $ avec les routines par code QR.", "Le proposer aux familles, au parascolaire et aux camps."],
+    done: "120 kits vendus.",
+    link: { href: "/admin/valkyria-lab", label: "Valkyria Lab" }
+  },
+  "P5.4.05": {
+    how: ["Ajouter le paiement mensuel de 15 $ au Valkyria Lab (routine du mois + retour vidéo de l'éducatrice).", "L'offrir d'abord aux familles qui envoient déjà leurs vidéos.", "Suivre le nombre d'abonnées chaque mois."],
+    done: "150 familles abonnées.",
+    link: { href: "/admin/valkyria-lab", label: "Valkyria Lab" }
+  },
+  "P5.5.05": {
+    how: ["Réserver le terrain 4 mois avant (P5.5.04).", "Inviter 30 équipes à 500 $, trouver un commanditaire principal.", "Boutique et kits Valkyria Lab sur place."],
+    done: "Deux tournois tenus dans l'année, chacun avec 30 équipes.",
+    link: { href: "/admin/sponsors-2027", label: "Commandites" }
+  },
   "P3.2.18": {
     how: ["Avant la pratique : trépied au centre de la zone de ball mastery, caméra 360° au sommet, pastilles en arc de cercle à 3 ou 4 mètres.", "Lancer l'enregistrement avant le premier exercice, filmer tout le bloc sans arrêter.", "Après : téléverser la vidéo et coller le lien dans Contenu › Ball mastery 360° et photos."],
     done: "Chaque pratique en gymnase de la semaine est cochée « Filmé » avec son lien.",
