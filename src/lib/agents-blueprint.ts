@@ -163,13 +163,13 @@ export const AGENT_BLUEPRINTS: AgentBlueprint[] = [
     id: "A05",
     scope: "Le contenu et l'image : quoi filmer, quand, avec quelles joueuses (consentement), quoi publier.",
     missions: [
-      { title: "Plan de captation de la semaine : pratiques, matchs, événements", when: "Chaque dimanche", mode: "brouillon", state: "a_construire", validation: "JP approuve", existing: "Calendrier du mois (pratiques et matchs MonClubSportif)" },
+      { title: "Plan de captation de la semaine : pratiques, matchs, événements", when: "Chaque dimanche", mode: "brouillon", state: "partiel", validation: "JP approuve", existing: "Espace Contenu /admin/contenu : quotas, ball mastery 360° à chaque pratique, photos à chaque match (content_captures), calendrier de publication" },
       { title: "Brouillons de publications et de légendes", when: "Vidéo ou photo prête", mode: "brouillon", state: "partiel", validation: "JP publie", existing: "Publications et réseaux /admin/reseaux (marketing_posts)" },
       { title: "Vérifier le consentement à l'image avant toute publication d'une joueuse", when: "Avant chaque publication", mode: "regle", state: "partiel", validation: null, existing: "players.image_consent" },
-      { title: "Projet entrevues avant/après et études des meilleurs clubs", when: "Chaque mois", mode: "brouillon", state: "a_construire", validation: "JP" }
+      { title: "Projet entrevues avant/après et études des meilleurs clubs", when: "Chaque mois", mode: "brouillon", state: "partiel", validation: "JP", existing: "Entrevues /admin/contenu/entrevues : journées, invitations, suivi (content_interviews)" }
     ],
-    reads: ["coach_activities", "mcs_events", "match_slots", "marketing_posts", "marketing_channel_stats", "players"],
-    writes: ["marketing_posts", "audit_log"],
+    reads: ["coach_activities", "mcs_events", "match_slots", "marketing_posts", "marketing_channel_stats", "players", "jp_video_shoots", "content_captures", "content_interviews", "content_interview_slots"],
+    writes: ["marketing_posts", "jp_video_shoots", "audit_log"],
     forbidden: ["registrations", "registration_payment_plans", "revenue_income", "lab_submissions", "player_evaluations"],
     tools: [AUDIT, { module: "marketing-posts", fn: "listPosts", why: "Publications prévues et faites." }, { module: "marketing-posts", fn: "addPost", why: "Déposer un brouillon de publication." }, { module: "mcs-teams-repo", fn: "getEventsBetween", why: "Matchs et événements à filmer." }],
     channels: ["Réseaux sociaux (publication par JP)"],

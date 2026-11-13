@@ -288,7 +288,9 @@ export const PILLAR_MODULES: PillarModule[] = [
       "En place : meilleurs contenus par vues et par essais, comparaison par thème, par type et par réseau, coût par essai et par inscription de la pub",
       "Plus tard : l'agent statistiques (A06) remplit ces chiffres seul",
       "En place (11 nov. 2026) : Mes tournages (/admin/moi/tournages, Espace JP) : la vidéo du lendemain planifiée la veille, idée → planifiée → tournée → montée → publiée, 21 idées déjà prêtes",
-      "Vidéos explicatives pour les parents (P3.2.12 à P3.2.17) : qui est New Valkyria, nos programmes, nos projets, preuves et témoignages, puis la page « Découvrir New Valkyria » pour le 15 janv. 2027"
+      "Vidéos explicatives pour les parents (P3.2.12 à P3.2.17) : qui est New Valkyria, nos programmes, nos projets, preuves et témoignages, puis la page « Découvrir New Valkyria » pour le 15 janv. 2027",
+      "En place (13 nov. 2026) : l'espace Création de contenu (/admin/contenu) : quotas de la personne caméra, calendrier de publication (organique, reel d'essai, pub, angle), tournages, ball mastery filmé à 360° à chaque pratique, photos des joueuses aux matchs",
+      "Plus tard (P3.2.21) : Instagram, Facebook et YouTube reliés pour que la portée arrive toute seule"
     ],
     next: "P3.2.12 : écrire avec la gérante la liste des vidéos explicatives (30 nov.), puis tourner les 4 vidéos « Qui est New Valkyria » (P3.2.13, 20 déc.) depuis Mes tournages."
   },
@@ -509,11 +511,16 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P8",
     title: "Projet entrevues avant/après",
     question: "Combien de filles ont leur entrevue de début et de fin de saison ?",
-    status: "a-construire",
+    status: "partiel",
+    href: "/admin/contenu/entrevues",
     objectives: ["P8.1"],
     kpis: ["entrevues_saison"],
-    planned: ["Liste des filles avec consentement à l'image", "Entrevue de début et de fin filmées", "Montage avant/après pour le marketing (P3.2)"],
-    next: "P8.2.01 : embaucher la personne caméra ; P8.1.02 : filmer 30 à 40 entrevues (30 nov.)."
+    planned: [
+      "En place (13 nov. 2026) : journées d'entrevues, choix des filles, invitation aux familles avec un lien personnel pour choisir l'heure, suivi invitée → heure choisie → filmée → montée → publiée, guide de questions (joueuse début et fin, parent)",
+      "Entrevue de début et de fin filmées",
+      "Montage avant/après pour le marketing (P3.2)"
+    ],
+    next: "P8.1.04 : ouvrir les journées d'entrevues dès la semaine du 21 nov. et envoyer les invitations ; 30 filles d'ici la fin de la saison."
   }
 ];
 

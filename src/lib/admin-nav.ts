@@ -32,14 +32,14 @@ export interface AdminNavSection {
   hubs: AdminHub[];
   /** Section repliée par défaut (dépliée d'office quand on y est). */
   collapsible?: boolean;
-  /** Espace de l'admin : « academie » (le business, par défaut), « coaching » (seulement le foot) ou « jp » (JP comme ressource). */
+  /** Espace de l'admin : « academie » (le business, par défaut), « coaching » (seulement le foot), « contenu » (création de contenu) ou « jp » (JP comme ressource). */
   space?: AdminSpace;
 }
 
-export type AdminSpace = "academie" | "coaching" | "jp";
+export type AdminSpace = "academie" | "coaching" | "contenu" | "jp";
 
 /** Page d'entrée de chaque espace (le sélecteur en haut du menu y mène). */
-export const SPACE_HOME: Record<AdminSpace, string> = { academie: "/admin/aujourdhui", coaching: "/admin/coaching", jp: "/admin/moi" };
+export const SPACE_HOME: Record<AdminSpace, string> = { academie: "/admin/aujourdhui", coaching: "/admin/coaching", contenu: "/admin/contenu", jp: "/admin/moi" };
 
 export const TODAY_HUB: AdminHub = {
   key: "aujourdhui",
@@ -191,11 +191,8 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "marketing",
         label: "Marketing & réseaux",
         icon: "chart",
-        description: "Est-ce que nos réseaux grandissent, quel contenu amène des familles et d'où elles viennent : abonnés, vidéos par semaine, publications, organique ou payant, sources d'acquisition.",
-        tabs: [
-          { href: "/admin/reseaux", label: "Réseaux sociaux", adminOnly: true },
-          { href: "/admin/acquisition", label: "D'où viennent nos familles" }
-        ]
+        description: "D'où viennent nos familles (la question obligatoire de tous les formulaires). Les réseaux sociaux et le contenu sont dans l'espace Contenu.",
+        tabs: [{ href: "/admin/acquisition", label: "D'où viennent nos familles" }]
       }
     ]
   },
@@ -373,6 +370,48 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/entraineurs/suivi", label: "Suivi des éducateurs", adminOnly: true },
           { href: "/admin/coaching/observations", label: "Observations du mois", adminOnly: true }
         ]
+      }
+    ]
+  },
+  {
+    key: "contenu",
+    label: "Création de contenu",
+    dotColor: "#f59ac8",
+    space: "contenu",
+    hubs: [
+      {
+        key: "contenu",
+        label: "Cette semaine",
+        icon: "sun",
+        description: "Les quotas de la personne caméra, ce qu'il reste à capter, les entrevues, ce qui se publie dans les 14 prochains jours, la portée et les tâches du plan.",
+        tabs: [
+          { href: "/admin/contenu", label: "Cette semaine" },
+          { href: "/admin/contenu/calendrier", label: "Calendrier de publication" }
+        ]
+      },
+      {
+        key: "contenu-captation",
+        label: "Tournages et captation",
+        icon: "flask",
+        description: "Les vidéos à tourner (message, accroche, plans, qui filme, jour de publication), le ball mastery filmé à 360° à chaque pratique, les photos des joueuses aux matchs et la Veo.",
+        tabs: [
+          { href: "/admin/contenu/tournages", label: "Tournages" },
+          { href: "/admin/contenu/captation", label: "Ball mastery 360° et photos" }
+        ]
+      },
+      {
+        key: "contenu-entrevues",
+        label: "Entrevues",
+        icon: "users",
+        description: "Le projet entrevues avant/après : 30 filles d'ici la fin de la saison, les journées d'entrevues, les invitations aux familles (elles choisissent leur heure) et le guide de questions.",
+        tabs: [{ href: "/admin/contenu/entrevues", label: "Entrevues" }]
+      },
+      {
+        key: "contenu-portee",
+        label: "Portée et réseaux",
+        icon: "chart",
+        description: "Est-ce que nos réseaux grandissent et quel contenu amène des familles : abonnés, vidéos par semaine, publications, organique ou payant.",
+        tabs: [{ href: "/admin/reseaux", label: "Réseaux sociaux", adminOnly: true }]
       }
     ]
   },

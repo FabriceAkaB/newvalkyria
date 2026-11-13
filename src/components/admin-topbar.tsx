@@ -169,7 +169,7 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
   // Repérage sur tous les onglets : une page réservée à l'admin garde son en-tête
   // même avant que le rôle soit connu (la gérante, elle, est redirigée côté serveur).
   const active = findActive(pathname, "admin");
-  // Trois espaces : l'Académie (le business), le Coaching (seulement le foot) et JP (JP comme ressource, admin seulement).
+  // Quatre espaces : l'Académie (le business), le Coaching (seulement le foot), le Contenu (filmer, publier, entrevues) et JP (admin seulement).
   // L'espace suit la page affichée.
   const space: AdminSpace = active ? spaceOfHub(active.hub.key) : rememberedSpace;
   useEffect(() => {
@@ -207,19 +207,22 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
         <div className="admin-sidebar-brand">
           <div>
             <p className="admin-sidebar-brand-title">New Valkyria</p>
-            <p className="admin-sidebar-brand-sub">{space === "coaching" ? "Espace coaching" : space === "jp" ? "Espace JP" : "Administration"}{role === "gerante" ? " — Gérante" : ""}</p>
+            <p className="admin-sidebar-brand-sub">{space === "coaching" ? "Espace coaching" : space === "contenu" ? "Création de contenu" : space === "jp" ? "Espace JP" : "Administration"}{role === "gerante" ? " — Gérante" : ""}</p>
           </div>
           <button type="button" className="admin-sidebar-menu-btn" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? "Fermer" : "Menu"}
           </button>
         </div>
 
-        <nav className="admin-space-switch" aria-label="Espace" data-count={role === "admin" ? "3" : "2"}>
+        <nav className="admin-space-switch" aria-label="Espace" data-count={role === "admin" ? "4" : "3"}>
           <Link href={SPACE_HOME.academie} data-active={String(space === "academie")} aria-current={space === "academie" ? "page" : undefined}>
             Académie
           </Link>
           <Link href={SPACE_HOME.coaching} data-active={String(space === "coaching")} aria-current={space === "coaching" ? "page" : undefined}>
             Coaching
+          </Link>
+          <Link href={SPACE_HOME.contenu} data-active={String(space === "contenu")} aria-current={space === "contenu" ? "page" : undefined}>
+            Contenu
           </Link>
           {role === "admin" ? (
             <Link href={SPACE_HOME.jp} data-active={String(space === "jp")} aria-current={space === "jp" ? "page" : undefined}>

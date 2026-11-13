@@ -2486,6 +2486,62 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)"
+      },
+      {
+       "code": "P3.2.18",
+       "priority": "star",
+       "level": 1,
+       "title": "Filmer le ball mastery à 360° à chaque pratique en gymnase (caméra au centre sur un trépied solide, les filles en arc de cercle sur leur pastille) et ranger le lien de chaque vidéo dans l'espace Contenu.",
+       "due": "2026-11-30",
+       "owner": "Caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Espace création de contenu (13 nov. 2026)"
+      },
+      {
+       "code": "P3.2.19",
+       "priority": "star",
+       "level": 1,
+       "title": "Prendre en photo chaque joueuse à chaque match (portrait en chandail et en action) et ranger le dossier de photos dans l'espace Contenu.",
+       "due": "2026-11-30",
+       "owner": "Caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Espace création de contenu (13 nov. 2026)"
+      },
+      {
+       "code": "P3.2.20",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Tenir le calendrier de publication 2 semaines d'avance : organique, reels d'essai et publicités, chacun avec son angle marketing et ses réseaux.",
+       "due": "2026-12-15",
+       "owner": "JP + caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Espace création de contenu (13 nov. 2026)"
+      },
+      {
+       "code": "P3.2.21",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Relier Instagram, Facebook et YouTube au site pour que la portée de chaque publication arrive toute seule dans l'espace Contenu.",
+       "due": "2027-01-31",
+       "owner": "Claude Code",
+       "links": [
+        "A06"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Espace création de contenu (13 nov. 2026)"
       }
      ]
     },
@@ -4733,6 +4789,20 @@
        "owner": "Caméra",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P8.1.04",
+       "priority": "star",
+       "level": 1,
+       "title": "Ouvrir les journées d'entrevues au club des recrues dès la semaine du 21 novembre et inviter les familles (elles choisissent leur heure) ; viser 30 filles d'ici la fin de la saison.",
+       "due": "2026-11-21",
+       "owner": "JP + caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Espace création de contenu (13 nov. 2026)"
       }
      ]
     },
@@ -6153,6 +6223,10 @@
    {
     "title": "Vidéos explicatives, boutique, matériel et ligue d'hiver (11 nov. 2026)",
     "text": "Idée centrale : ne pas vendre des séances d'entraînement, faire comprendre toute l'expérience New Valkyria. Un parent découvre l'académie par une série de vidéos (qui nous sommes, nos programmes, nos projets, les preuves, ce qui se passe après l'inscription) et comprend notre identité, notre fonctionnement et la valeur de notre accompagnement avant même de poser ses questions. Rattaché aux trois concepts discutés avec la gérante : Valkyria Family (l'appartenance), Valkyria Proof (les preuves) et Coaching OS (la méthode). Côté boutique : du matériel New Val à notre image, une offre qui récompense la fidélité, et le « prix de consolation » (une fille qui n'a rien gagné peut aller chercher quelque chose à la boutique). Chantiers à développer en 2027, visibles dans l'espace de JP et dans celui de la gérante."
+   },
+   {
+    "title": "Espace création de contenu (13 nov. 2026)",
+    "text": "Un espace à part dans l'admin, comme le Coaching : tout ce qui sert à filmer, raconter et publier, centralisé. La personne caméra (William pour l'instant) filme au maximum pendant que les coachs coachent. À chaque pratique en gymnase, le ball mastery se filme à 360° (caméra au centre sur un trépied solide, les filles en arc de cercle sur leur pastille) pour voir les progrès des gestes techniques ; la Veo filme l'ensemble de la pratique pour l'analyse ; à chaque match, chaque joueuse est prise en photo. Les entrevues des filles et des parents se font au club des recrues dès la semaine du 21 novembre, sur invitation (les familles choisissent leur heure), avec des questions tirées des sondages (plaisir, progrès, confiance). Le calendrier de publication (organique, reels d'essai, publicités, angle marketing) et la portée des réseaux vivent au même endroit."
    }
   ]
  },

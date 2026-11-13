@@ -3,12 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ANGLES, DEFAULT_FILMER, POST_KINDS, postKindLabel } from "@/lib/content-core";
+import { NETWORKS } from "@/lib/marketing-posts-core";
 import { missingForShoot, nextStatus, PLAN_STEPS, SERIES, SHOOT_STATUS, seriesOf, statusLabel, type Shoot } from "@/lib/video-shoots-core";
 
-/** Espace JP › Mes tournages : planifier la vidéo du lendemain, puis tourné → monté → publié. */
+/** Tournages : planifier la vidéo du lendemain, puis tourné → monté → publié. Servent à l'espace JP (Mes tournages,
+ *  /api/admin/moi) et à l'espace Contenu (calendrier de publication, /api/admin/contenu) : `endpoint` choisit la route. */
 
-async function post(body: Record<string, unknown>) {
-  const res = await fetch("/api/admin/moi", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+async function post(body: Record<string, unknown>, endpoint = "/api/admin/moi") {
+  const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const json = await res.json().catch(() => null);
   if (!res.ok) throw new Error(json?.error ?? "Erreur d'enregistrement");
   return json;
@@ -44,7 +47,7 @@ const shortDate = (iso: string) => {
 
 const label: React.CSSProperties = { fontSize: "0.78rem", color: "var(--adm-text-2)", display: "grid", gap: 4 };
 
-export function ShootForm({ shoot, defaultDate, onClose }: { shoot?: Shoot; defaultDate?: string; onClose?: () => void }) {
+export function ShootForm({ shoot, defaultDate, onClose, endpoint, calendar = false }: { shoot?: Shoot; defaultDate?: string; onClose?: () => void; endpoint?: string; calendar?: boolean }) {
   const { busy, error, run } = useAction();
   const [f, setF] = useState({
     title: shoot?.title ?? "",
@@ -58,8 +61,14 @@ export function ShootForm({ shoot, defaultDate, onClose }: { shoot?: Shoot; defa
     people: shoot?.people ?? "",
     gear: shoot?.gear ?? "",
     format: shoot?.format ?? "Reel 30-45 s",
-    note: shoot?.note ?? ""
+    note: shoot?.note ?? "",
+    publishOn: shoot?.publish_on ?? "",
+    postKind: shoot?.post_kind ?? "organique",
+    angle: shoot?.angle ?? "",
+    networks: (shoot?.networks ?? ["instagram", "facebook"]) as string[],
+    filmedBy: shoot?.filmed_by ?? (calendar ? DEFAULT_FILMER : "")
   });
+  const showCalendar = calendar || !!shoot?.publish_on;
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
   const save = () =>
     run(() =>
@@ -68,9 +77,11 @@ export function ShootForm({ shoot, defaultDate, onClose }: { shoot?: Shoot; defa
         id: shoot?.id,
         ...f,
         shootOn: f.shootOn || null,
+        publishOn: f.publishOn || null,
+        filmedBy: f.filmedBy || null,
         // Une vidéo déjà tournée garde son étape ; une idée qui reçoit un jour devient « planifiée ».
         status: shoot && shoot.status !== "idee" ? shoot.status : f.shootOn ? "planifie" : "idee"
-      })
+      }, endpoint)
     ).then((ok) => {
       if (!ok) return;
       if (onClose) onClose();
@@ -132,6 +143,48 @@ export function ShootForm({ shoot, defaultDate, onClose }: { shoot?: Shoot; defa
           <input className="admin-input" value={f.format} onChange={set("format")} />
         </label>
       </div>
+      {showCalendar ? (
+        <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", padding: 10, borderRadius: 12, border: "1px dashed var(--adm-line)" }}>
+          <label style={label}>
+            Publier le
+            <input className="admin-input" type="date" value={f.publishOn} onChange={set("publishOn")} />
+          </label>
+          <label style={label}>
+            Type
+            <select className="admin-input" value={f.postKind} onChange={set("postKind")}>
+              {POST_KINDS.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label style={label}>
+            Angle marketing
+            <input className="admin-input" list="content-angles" value={f.angle} onChange={set("angle")} placeholder="Preuve, coulisses, offre…" />
+            <datalist id="content-angles">
+              {ANGLES.map((a) => (
+                <option key={a} value={a} />
+              ))}
+            </datalist>
+          </label>
+          <label style={label}>
+            Qui filme
+            <input className="admin-input" value={f.filmedBy} onChange={set("filmedBy")} />
+          </label>
+          <div style={{ ...label, gridColumn: "1 / -1" }}>
+            Réseaux
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {NETWORKS.filter((n) => n.id !== "autre").map((n) => (
+                <label key={n.id} style={{ display: "flex", gap: 4, alignItems: "center", color: "var(--adm-text)" }}>
+                  <input type="checkbox" checked={f.networks.includes(n.id)} onChange={(e) => setF({ ...f, networks: e.target.checked ? [...f.networks, n.id] : f.networks.filter((x) => x !== n.id) })} />
+                  {n.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
       <label style={label}>
         Note (idées de montage, musique, texte à l&apos;écran)
         <textarea className="admin-input" rows={2} value={f.note} onChange={set("note")} />
@@ -152,7 +205,7 @@ export function ShootForm({ shoot, defaultDate, onClose }: { shoot?: Shoot; defa
 }
 
 /** Une vidéo : tout le plan lisible d'un coup d'œil, et le bouton de l'étape suivante. */
-export function ShootCard({ s, tomorrow, open = false }: { s: Shoot; tomorrow: string; open?: boolean }) {
+export function ShootCard({ s, tomorrow, open = false, endpoint, calendar = false }: { s: Shoot; tomorrow: string; open?: boolean; endpoint?: string; calendar?: boolean }) {
   const { busy, error, run } = useAction();
   const [editing, setEditing] = useState(false);
   const [planning, setPlanning] = useState(false);
@@ -163,7 +216,7 @@ export function ShootCard({ s, tomorrow, open = false }: { s: Shoot; tomorrow: s
   if (editing || planning) {
     return (
       <div className="mda-card" style={{ margin: 0 }}>
-        <ShootForm shoot={s} defaultDate={planning ? tomorrow : undefined} onClose={() => (setEditing(false), setPlanning(false))} />
+        <ShootForm shoot={s} defaultDate={planning ? tomorrow : undefined} onClose={() => (setEditing(false), setPlanning(false))} endpoint={endpoint} calendar={calendar} />
       </div>
     );
   }
@@ -185,6 +238,8 @@ export function ShootCard({ s, tomorrow, open = false }: { s: Shoot; tomorrow: s
           {s.shoot_on ? ` · ${shortDate(s.shoot_on)}` : ""}
           {s.shoot_time ? ` · ${s.shoot_time}` : ""}
           {s.place ? ` · ${s.place}` : ""}
+          {s.publish_on ? ` · publication ${shortDate(s.publish_on)} (${postKindLabel(s.post_kind)})` : ""}
+          {s.filmed_by ? ` · filmé par ${s.filmed_by}` : ""}
         </span>
       </summary>
       <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
@@ -194,6 +249,7 @@ export function ShootCard({ s, tomorrow, open = false }: { s: Shoot; tomorrow: s
         {line("Qui", s.people)}
         {line("Matériel", s.gear)}
         {line("Format", s.format)}
+        {line("Angle", s.angle ?? null)}
         {line("Note", s.note)}
         {missing.length ? <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--adm-warn)" }}>À écrire avant de tourner : {missing.join(", ")}.</p> : null}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
@@ -202,14 +258,14 @@ export function ShootCard({ s, tomorrow, open = false }: { s: Shoot; tomorrow: s
               Planifier pour demain
             </button>
           ) : next && stepLabel ? (
-            <button type="button" className="admin-btn-primary" disabled={busy} onClick={() => run(() => post({ action: "shoot-status", id: s.id, status: next }))}>
+            <button type="button" className="admin-btn-primary" disabled={busy} onClick={() => run(() => post({ action: "shoot-status", id: s.id, status: next }, endpoint))}>
               {stepLabel}
             </button>
           ) : null}
           <button type="button" className="admin-btn-ghost" onClick={() => setEditing(true)}>
             Modifier le plan
           </button>
-          <button type="button" className="admin-btn-ghost" disabled={busy} onClick={() => confirm("Effacer cette vidéo ?") && run(() => post({ action: "shoot-delete", id: s.id }))}>
+          <button type="button" className="admin-btn-ghost" disabled={busy} onClick={() => confirm("Effacer cette vidéo ?") && run(() => post({ action: "shoot-delete", id: s.id }, endpoint))}>
             Effacer
           </button>
         </div>

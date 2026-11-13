@@ -5,6 +5,7 @@ import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
 import { addMeal, deleteKnowledge, deleteMeal, logHabit, saveCalendarUrl, saveHabit, saveKnowledge } from "@/lib/jp-repo";
 import { deleteShoot, saveShoot, setShootStatus } from "@/lib/video-shoots-repo";
+import { shootActions } from "@/lib/video-shoots-schema";
 import { createTeamTask, getAssignees, setTeamTaskStatus, takeBackTeamTask } from "@/lib/team-tasks-repo";
 
 export const dynamic = "force-dynamic";
@@ -57,25 +58,7 @@ const schema = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("knowledge-delete"), id: z.string().uuid() }),
   z.object({ action: z.literal("calendar-url"), url: z.string().max(500).nullable() }),
-  z.object({
-    action: z.literal("shoot-save"),
-    id: z.string().uuid().optional(),
-    title: z.string().min(2).max(300),
-    series: z.string().min(2).max(40),
-    status: z.enum(["idee", "planifie", "tourne", "monte", "publie"]).optional(),
-    shootOn: date.nullable().optional(),
-    shootTime: z.string().max(40).nullable().optional(),
-    place: z.string().max(300).nullable().optional(),
-    message: z.string().max(1000).nullable().optional(),
-    hook: z.string().max(1000).nullable().optional(),
-    shots: z.string().max(4000).nullable().optional(),
-    people: z.string().max(500).nullable().optional(),
-    gear: z.string().max(500).nullable().optional(),
-    format: z.string().max(60).nullable().optional(),
-    note: z.string().max(2000).nullable().optional()
-  }),
-  z.object({ action: z.literal("shoot-status"), id: z.string().uuid(), status: z.enum(["idee", "planifie", "tourne", "monte", "publie"]) }),
-  z.object({ action: z.literal("shoot-delete"), id: z.string().uuid() })
+  ...shootActions
 ]);
 
 /** Les personnes à qui confier une tâche (menu « Confier à » du Mandalart et de Ma journée). */

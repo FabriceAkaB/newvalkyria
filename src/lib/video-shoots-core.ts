@@ -46,6 +46,12 @@ export interface Shoot {
   mandalart_code: string | null;
   note: string | null;
   sort_order: number;
+  /** Calendrier de publication (espace Contenu) : jour prévu, organique / essai / pub, angle, réseaux, qui filme. */
+  publish_on?: string | null;
+  post_kind?: string | null;
+  angle?: string | null;
+  networks?: string[] | null;
+  filmed_by?: string | null;
 }
 
 /** Ce qu'il faut avoir écrit la veille pour tourner sans réfléchir. */

@@ -1383,6 +1383,21 @@ Idée centrale : ne pas vendre des séances d'entraînement, faire comprendre to
 
 - [ ] `P7.2.04` ⭐ N1 — Faire l'analyse poussée de la ligue d'hiver : équipes et âges, vrais coûts (terrains, arbitres, matériel), revenus, ce que les familles en pensent, ce que font les autres ligues ; prix plancher et décision go/no-go avec le calculateur de lancement. — 15 déc. 2026 · JP + Claude Code · A04
 
+### Espace création de contenu (13 nov. 2026)
+
+Un espace à part dans l'admin, comme le Coaching : tout ce qui sert à filmer, raconter et publier, centralisé. La personne caméra (William pour l'instant) filme au maximum pendant que les coachs coachent. À chaque pratique en gymnase, le ball mastery se filme à 360° (caméra au centre sur un trépied solide, les filles en arc de cercle sur leur pastille) pour voir les progrès des gestes techniques ; la Veo filme l'ensemble de la pratique pour l'analyse ; à chaque match, chaque joueuse est prise en photo. Les entrevues des filles et des parents se font au club des recrues dès la semaine du 21 novembre, sur invitation (les familles choisissent leur heure), avec des questions tirées des sondages (plaisir, progrès, confiance). Le calendrier de publication (organique, reels d'essai, publicités, angle marketing) et la portée des réseaux vivent au même endroit.
+
+#### P3.2 Vidéos portfolio et avant-après
+
+- [ ] `P3.2.18` ⭐ N1 — Filmer le ball mastery à 360° à chaque pratique en gymnase (caméra au centre sur un trépied solide, les filles en arc de cercle sur leur pastille) et ranger le lien de chaque vidéo dans l'espace Contenu. — 30 nov. 2026 · Caméra · A05
+- [ ] `P3.2.19` ⭐ N1 — Prendre en photo chaque joueuse à chaque match (portrait en chandail et en action) et ranger le dossier de photos dans l'espace Contenu. — 30 nov. 2026 · Caméra · A05
+- [ ] `P3.2.20` ➜ N1 — Tenir le calendrier de publication 2 semaines d'avance : organique, reels d'essai et publicités, chacun avec son angle marketing et ses réseaux. — 15 déc. 2026 · JP + caméra · A05
+- [ ] `P3.2.21` ➜ N2 — Relier Instagram, Facebook et YouTube au site pour que la portée de chaque publication arrive toute seule dans l'espace Contenu. — 31 janv. 2027 · Claude Code · A06
+
+#### P8.1 Projet entrevues avant/après (priorité maintenant)
+
+- [ ] `P8.1.04` ⭐ N1 — Ouvrir les journées d'entrevues au club des recrues dès la semaine du 21 novembre et inviter les familles (elles choisissent leur heure) ; viser 30 filles d'ici la fin de la saison. — 21 nov. 2026 · JP + caméra · A05
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |

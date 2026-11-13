@@ -5,7 +5,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 /** Tournages de JP : jp_video_shoots. Règles et idées : video-shoots-core.ts. */
 
 const db = () => getSupabaseAdminClient() as any;
-const COLS = "id, title, series, status, shoot_on, shoot_time, place, message, hook, shots, people, gear, format, mandalart_code, note, sort_order";
+const COLS = "id, title, series, status, shoot_on, shoot_time, place, message, hook, shots, people, gear, format, mandalart_code, note, sort_order, publish_on, post_kind, angle, networks, filmed_by";
 
 /** Liste les tournages ; la première fois, range les idées du plan de vidéos explicatives. */
 export async function getShoots(): Promise<Shoot[]> {
@@ -33,6 +33,11 @@ export interface ShootInput {
   gear?: string | null;
   format?: string | null;
   note?: string | null;
+  publishOn?: string | null;
+  postKind?: string | null;
+  angle?: string | null;
+  networks?: string[] | null;
+  filmedBy?: string | null;
 }
 
 const clean = (v: string | null | undefined) => (v ?? "").trim() || null;
@@ -53,6 +58,11 @@ export async function saveShoot(input: ShootInput): Promise<void> {
     note: clean(input.note),
     updated_at: new Date().toISOString()
   };
+  if (input.publishOn !== undefined) row.publish_on = input.publishOn || null;
+  if (input.postKind !== undefined) row.post_kind = input.postKind || "organique";
+  if (input.angle !== undefined) row.angle = clean(input.angle);
+  if (input.networks !== undefined) row.networks = input.networks ?? [];
+  if (input.filmedBy !== undefined) row.filmed_by = clean(input.filmedBy);
   // Une idée qui reçoit un jour devient « planifiée ».
   if (input.status) row.status = input.status;
   else if (input.shootOn) row.status = "planifie";

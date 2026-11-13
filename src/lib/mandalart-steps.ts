@@ -404,6 +404,31 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     done: "La liste des vidéos est validée avec la gérante, une phrase clé par vidéo.",
     link: { href: "/admin/moi/tournages", label: "Mes tournages" }
   },
+  "P3.2.18": {
+    how: ["Avant la pratique : trépied au centre de la zone de ball mastery, caméra 360° au sommet, pastilles en arc de cercle à 3 ou 4 mètres.", "Lancer l'enregistrement avant le premier exercice, filmer tout le bloc sans arrêter.", "Après : téléverser la vidéo et coller le lien dans Contenu › Ball mastery 360° et photos."],
+    done: "Chaque pratique en gymnase de la semaine est cochée « Filmé » avec son lien.",
+    link: { href: "/admin/contenu/captation", label: "Ball mastery 360° et photos" }
+  },
+  "P3.2.19": {
+    how: ["Avant le match : un portrait de chaque joueuse en chandail, même cadrage pour toutes.", "Pendant : au moins une photo de chaque fille en action.", "Le soir même : trier, ranger le dossier et coller son lien dans le suivi du match."],
+    done: "Chaque match de la semaine est coché « Photos prises » avec le lien du dossier.",
+    link: { href: "/admin/contenu/captation", label: "Ball mastery 360° et photos" }
+  },
+  "P3.2.20": {
+    how: ["Chaque semaine, ouvre le calendrier de publication et remplis les 2 semaines suivantes.", "Pour chaque publication : le jour, organique, reel d'essai ou publicité, l'angle et les réseaux.", "Garde au moins 3 publications par semaine."],
+    done: "Les 14 prochains jours ont au moins 6 publications prévues, chacune avec son angle.",
+    link: { href: "/admin/contenu/calendrier", label: "Calendrier de publication" }
+  },
+  "P3.2.21": {
+    how: ["Créer l'application Meta pour développeurs et relier le compte Instagram professionnel à la page Facebook.", "Créer la clé d'API YouTube de la chaîne.", "Claude Code branche la lecture automatique des vues et des abonnés."],
+    done: "Les vues et les abonnés de chaque réseau arrivent sans saisie à la main.",
+    link: { href: "/admin/contenu/calendrier", label: "Brancher nos réseaux" }
+  },
+  "P8.1.04": {
+    how: ["Ajoute les journées d'entrevues (jour, heure, lieu, places) dans Contenu › Entrevues.", "Choisis les filles, puis envoie l'invitation : chaque famille choisit son heure.", "Le jour même, suis le guide de questions ; coche « Filmée » et colle le lien de la vidéo."],
+    done: "Les journées sont ouvertes, les invitations parties et les premières entrevues filmées.",
+    link: { href: "/admin/contenu/entrevues", label: "Entrevues" }
+  },
   "P3.2.13": {
     how: ["La veille de chaque tournage, planifie UNE vidéo « Qui est New Valkyria » dans Mes tournages (accroche, message, plans).", "Tourne-la le matin (bloc 🎥 du lundi et du jeudi).", "Passe-la à Tourné, puis Monté, puis Publié."],
     done: "Les 4 vidéos d'identité sont tournées et montées.",
