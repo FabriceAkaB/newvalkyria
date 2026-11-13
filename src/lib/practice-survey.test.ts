@@ -39,3 +39,22 @@ describe("sondage de fin de pratique", () => {
     expect(s.notes).toEqual(["Plus de jeux"]);
   });
 });
+
+describe("Borne iPad : 5 questions sur 10", () => {
+  it("accepte apprentissage, compréhension et confiance, et refuse une note hors échelle", async () => {
+    const { parseSurveyAnswer, KIOSK_QUESTIONS } = await import("@/lib/practice-survey");
+    expect(KIOSK_QUESTIONS.map((q) => q.field)).toEqual(["practiceRating", "fatigue", "learning", "understanding", "confidence"]);
+    const ok = parseSurveyAnswer({ practiceRating: 9, fatigue: 4, learning: 8, understanding: 10, confidence: 7 });
+    expect(ok).toMatchObject({ learning: 8, understanding: 10, confidence: 7 });
+    expect(typeof parseSurveyAnswer({ practiceRating: 9, fatigue: 4, learning: 12 })).toBe("string");
+    // Sans les nouvelles questions (portail des éducateurs), rien n'est écrasé.
+    expect(parseSurveyAnswer({ practiceRating: 9, fatigue: 4 })).not.toHaveProperty("learning");
+  });
+  it("le lien de la borne est signé par pratique", async () => {
+    const { kioskKey, checkKioskKey } = await import("@/lib/survey-kiosk");
+    const id = "230fcbaf-d5a1-4bd3-b0f8-d454005224e1";
+    expect(checkKioskKey(id, kioskKey(id))).toBe(true);
+    expect(checkKioskKey("f8e8d87a-82c5-4188-8658-90201d5b96ea", kioskKey(id))).toBe(false);
+    expect(checkKioskKey(id, "x")).toBe(false);
+  });
+});

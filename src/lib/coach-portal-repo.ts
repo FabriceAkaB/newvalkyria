@@ -238,6 +238,10 @@ export interface PlayerAttendance {
   /** Sondage de fin : ce qu'elle aimerait avoir plus (clés de WANTS_MORE) et un mot libre. */
   wants_more?: string[] | null;
   wants_more_note?: string | null;
+  /** Borne : apprentissage, compréhension, confiance (sur 10). */
+  learning?: number | null;
+  understanding?: number | null;
+  confidence?: number | null;
 }
 
 export async function getActivityAttendance(activityId: string): Promise<PlayerAttendance[]> {
@@ -270,6 +274,9 @@ export async function setPlayerFeedback(activityId: string, registrationId: stri
         fatigue: answer.fatigue,
         wants_more: answer.wantsMore,
         wants_more_note: answer.wantsMoreNote,
+        ...(answer.learning !== undefined ? { learning: answer.learning } : {}),
+        ...(answer.understanding !== undefined ? { understanding: answer.understanding } : {}),
+        ...(answer.confidence !== undefined ? { confidence: answer.confidence } : {}),
         feedback_at: now,
         updated_at: now
       },

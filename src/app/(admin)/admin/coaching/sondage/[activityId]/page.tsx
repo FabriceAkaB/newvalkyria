@@ -5,6 +5,7 @@ import { AdminTopbar } from "@/components/admin-topbar";
 import { PracticeSurvey, type SurveyPresence } from "@/components/practice-survey";
 import { requireAdmin } from "@/lib/admin-auth";
 import { answerOf, getSurveyData } from "@/lib/practice-survey-repo";
+import { kioskPath } from "@/lib/survey-kiosk";
 
 export const metadata = { title: "Sondage de fin — Coaching", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -32,6 +33,9 @@ export default async function SurveyPage({ params }: { params: Promise<{ activit
             <h1 className="mda-h1">{label} · {roster.length} joueuse{roster.length > 1 ? "s" : ""}</h1>
             <p className="mda-lead">Touche « Présente » ou « Absente », puis pour chaque fille : son plaisir et sa fatigue sur 10 et, si elle veut, ce qu&apos;elle aimerait avoir plus. Tout s&apos;enregistre à chaque touche.</p>
           </header>
+          <a href={kioskPath(activity.id)} target="_blank" rel="noreferrer" className="admin-btn-primary" style={{ textDecoration: "none", justifySelf: "start" }}>
+            📱 Ouvrir la borne sur l&apos;iPad
+          </a>
           <PracticeSurvey
             activityId={activity.id}
             players={roster}

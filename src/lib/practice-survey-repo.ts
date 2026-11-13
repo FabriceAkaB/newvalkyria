@@ -113,7 +113,10 @@ export const answerOf = (a: PlayerAttendance): SurveyAnswer => ({
   practiceRating: a.practice_rating ?? null,
   fatigue: a.fatigue ?? null,
   wantsMore: a.wants_more ?? [],
-  wantsMoreNote: a.wants_more_note ?? null
+  wantsMoreNote: a.wants_more_note ?? null,
+  learning: a.learning ?? null,
+  understanding: a.understanding ?? null,
+  confidence: a.confidence ?? null
 });
 
 /** Ce que les filles ont dit sur les 4 dernières semaines (plaisir, fatigue, ce qu'elles veulent plus). */
@@ -121,7 +124,7 @@ export async function getSurveyTrend(days = 28): Promise<SurveySummary & { pract
   const from = addDays(todayIso(), -days);
   const { data } = await db()
     .from("activity_player_attendance")
-    .select("activity_id, practice_rating, fatigue, wants_more, wants_more_note, activity:coach_activities!inner(activity_date)")
+    .select("activity_id, practice_rating, fatigue, learning, understanding, confidence, wants_more, wants_more_note, activity:coach_activities!inner(activity_date)")
     .gte("activity.activity_date", from)
     .not("feedback_at", "is", null);
   const rows = (data ?? []) as any[];

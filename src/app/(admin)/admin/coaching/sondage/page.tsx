@@ -6,6 +6,7 @@ import { OpenSurveyButton } from "@/components/practice-survey";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getRecentPracticesForSurvey, getSurveyTrend } from "@/lib/practice-survey-repo";
 import { todayIso } from "@/lib/practices-repo";
+import { kioskPath } from "@/lib/survey-kiosk";
 
 export const metadata = { title: "Sondage de fin — Coaching", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -36,13 +37,21 @@ export default async function SurveyListPage() {
           <header>
             <p className="mda-eyebrow">Espace coaching · à la fin de chaque pratique</p>
             <h1 className="mda-h1">{toDo.length ? `${toDo.length} pratique${toDo.length > 1 ? "s" : ""} d'hier ou d'aujourd'hui à sonder` : recent.length ? "Les pratiques d'hier et d'aujourd'hui sont sondées" : "Aucune pratique hier ni aujourd'hui"}</h1>
-            <p className="mda-lead">Les joueuses de chaque pratique sont déjà là, selon leur groupe et leur journée. Marque qui était présente, puis chaque fille donne son plaisir et sa fatigue sur 10 (et, si elle veut, ce qu&apos;elle aimerait avoir plus). Le plaisir alimente l&apos;indicateur « appréciation des joueuses » du Mandalart.</p>
+            <p className="mda-lead">Les joueuses de chaque pratique sont déjà là, selon leur groupe et leur journée. Marque qui était présente, puis chaque fille donne son plaisir et sa fatigue sur 10 (et, si elle veut, ce qu&apos;elle aimerait avoir plus). Ou ouvre la « Borne iPad » : chaque fille touche sa photo et répond seule à 5 questions (plaisir, fatigue, apprentissage, compréhension, confiance). Le plaisir alimente l&apos;indicateur « appréciation des joueuses » du Mandalart.</p>
           </header>
 
           {trend && trend.answered > 0 && (
             <section className="mda-cols-4" aria-label="Les 4 dernières semaines">
               <div className="mda-card"><p className="mda-num">{fr(trend.pleasure)}<span style={{ fontSize: "0.9rem", color: "var(--adm-text-3)" }}>/10</span></p><p className="mda-label">Plaisir moyen · 4 dernières semaines</p></div>
               <div className="mda-card"><p className="mda-num">{fr(trend.fatigue)}<span style={{ fontSize: "0.9rem", color: "var(--adm-text-3)" }}>/10</span></p><p className="mda-label">Fatigue moyenne</p></div>
+              {trend.learning !== null || trend.understanding !== null ? (
+                <div className="mda-card" style={{ gridColumn: "span 2" }}>
+                  <p className="mda-label" style={{ marginTop: 0 }}>Sur la borne (sur 10)</p>
+                  <p style={{ margin: "6px 0 0", color: "var(--adm-text)", fontWeight: 600 }}>
+                    Apprentissage {fr(trend.learning)} · Compréhension {fr(trend.understanding)} · Confiance {fr(trend.confidence)}
+                  </p>
+                </div>
+              ) : null}
               <div className="mda-card" style={{ gridColumn: "span 2" }}>
                 <p className="mda-label" style={{ marginTop: 0 }}>Elles veulent plus de</p>
                 <p style={{ margin: "6px 0 0", color: "var(--adm-text)", fontWeight: 600 }}>{trend.wants.length ? trend.wants.slice(0, 4).map((w) => `${w.label} (${w.count})`).join(" · ") : "Pas encore de demande"}</p>
@@ -74,9 +83,14 @@ export default async function SurveyListPage() {
                       </div>
                       <Pill tone={done ? "good" : p.answered ? "warn" : undefined}>{done ? "Sondée" : p.present ? `${p.answered}/${p.present} sondées` : "À faire"}</Pill>
                       {p.activityId ? (
-                        <Link href={`/admin/coaching/sondage/${p.activityId}`} className={done ? "admin-btn-ghost" : "admin-btn-primary"} style={{ textDecoration: "none", whiteSpace: "nowrap" }}>
-                          {done ? "Voir" : "Faire le sondage"}
-                        </Link>
+                        <>
+                          <a href={kioskPath(p.activityId)} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ textDecoration: "none", whiteSpace: "nowrap" }} title="Ouvre la page à laisser sur l'iPad : chaque fille touche sa photo et répond elle-même.">
+                            📱 Borne iPad
+                          </a>
+                          <Link href={`/admin/coaching/sondage/${p.activityId}`} className={done ? "admin-btn-ghost" : "admin-btn-primary"} style={{ textDecoration: "none", whiteSpace: "nowrap" }}>
+                            {done ? "Voir" : "Faire le sondage"}
+                          </Link>
+                        </>
                       ) : (
                         <OpenSurveyButton practiceKey={p.key} label="Faire le sondage" />
                       )}
