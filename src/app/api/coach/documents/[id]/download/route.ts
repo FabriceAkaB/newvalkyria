@@ -11,7 +11,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
 
   const ref = await getDocumentEntityRef(id);
-  if (!ref || ref.entity_type !== "coach_activity" || !(await getCoachActivityById(coachId, ref.entity_id))) {
+  const own = ref?.entity_type === "coach" && ref.entity_id === coachId;
+  if (!ref || (!own && (ref.entity_type !== "coach_activity" || !(await getCoachActivityById(coachId, ref.entity_id))))) {
     return jsonError("Document introuvable", 404);
   }
 

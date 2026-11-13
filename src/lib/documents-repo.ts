@@ -6,7 +6,7 @@ function db() {
 
 const BUCKET = "documents";
 
-export const DOCUMENT_CATEGORIES = ["Contrat", "Formulaire", "Certificat", "Autorisation", "Facture", "Reçu", "Autre"] as const;
+export const DOCUMENT_CATEGORIES = ["Contrat", "Formulaire", "Certificat", "Autorisation", "Facture", "Reçu", "Paie", "Autre"] as const;
 export type DocumentCategory = (typeof DOCUMENT_CATEGORIES)[number];
 
 export type DocumentEntityType = "registration" | "lead" | "coach" | "coach_activity" | "sponsor";

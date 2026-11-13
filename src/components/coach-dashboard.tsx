@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EntityDocuments } from "@/components/admin-entity-documents";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { computeHours, formatHoursMinutes } from "@/lib/coach-payroll";
 
@@ -42,6 +43,8 @@ interface Props {
   toComplete: ToComplete[];
   /** Dernier retour publié par JP après une séance observée (P1.4.03). */
   lastFeedback: CoachFeedback | null;
+  /** Pour « Mes relevés de paie » (documents d'employé de l'entraîneur, lecture seule). */
+  coachId?: string;
 }
 
 function FeedbackCard({ f }: { f: CoachFeedback }) {
@@ -100,7 +103,7 @@ function ActivityRow({ activity, right, warning }: { activity: DashboardActivity
   );
 }
 
-export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFeedback }: Props) {
+export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFeedback, coachId }: Props) {
   const next = upcoming[0];
   return (
     <>
@@ -152,6 +155,14 @@ export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFee
               </div>
             )}
           </section>
+
+          {coachId && (
+            <section style={{ marginTop: 24 }}>
+              <h2 className="coach-h2">Mes relevés de paie</h2>
+              <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>Ta présence dans MonClubSportif agit comme un punch : c&apos;est sur elle qu&apos;on calcule ta paie.</p>
+              <EntityDocuments entityType="coach" entityId={coachId} apiBase="/api/coach/documents" readOnly />
+            </section>
+          )}
         </div>
       </div>
     </>

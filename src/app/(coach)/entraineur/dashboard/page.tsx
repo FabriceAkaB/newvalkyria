@@ -73,6 +73,7 @@ export default async function CoachDashboardPage() {
 
   return (
     <CoachDashboard
+      coachId={coachId}
       coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"}
       today={view.filter((a) => a.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime))}
       upcoming={view.filter((a) => a.date > today).sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`))}
