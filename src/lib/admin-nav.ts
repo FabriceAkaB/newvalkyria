@@ -104,6 +104,13 @@ export const ADMIN_NAV: AdminNavSection[] = [
         ]
       },
       {
+        key: "parcours-client",
+        label: "Parcours client",
+        icon: "list",
+        description: "Le parcours d'une famille étape par étape (découverte, essai, inscription, programme, accueil, saison, suite) : ce qu'elle fait, ce à quoi elle a droit, ce que l'académie fait. À bonifier au fur et à mesure.",
+        tabs: [{ href: "/admin/parcours-client", label: "Parcours client" }]
+      },
+      {
         key: "uniformes",
         label: "Uniformes & boutique",
         icon: "bag",
