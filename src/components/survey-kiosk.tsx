@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { KIOSK_QUESTIONS, SCALE_VALUES } from "@/lib/practice-survey";
 
 /** Borne de sondage sur l'iPad : la joueuse touche sa photo, répond à 5 questions sur 10 (une par écran), puis la
- *  borne revient à la liste pour la suivante. Grands boutons, mots d'enfant, aucun clavier. */
+ *  borne revient à la liste pour la suivante. Grands boutons, mots d'enfant, aucun clavier. Une fille qui a fini
+ *  disparaît de la liste (personne ne peut revoir ni changer ses réponses) ; elle peut seulement les réviser tout de
+ *  suite, sur l'écran « Merci », avant que la borne revienne à la liste. */
 
 interface KioskPlayer {
   id: string;
@@ -39,7 +41,7 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
   // Une fille qui part sans finir : la borne revient seule à la liste après 60 secondes.
   useEffect(() => {
     if (!who) return;
-    const t = setTimeout(reset, state === "thanks" ? 2500 : 60000);
+    const t = setTimeout(reset, state === "thanks" ? 8000 : 60000);
     return () => clearTimeout(t);
   }, [who, step, state]);
 
@@ -66,6 +68,7 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
   const card: React.CSSProperties = { background: "#fff", borderRadius: 20, border: "1px solid #e6e0ee", padding: "1.4rem" };
 
   if (!who) {
+    const waiting = players.filter((p) => !done.has(p.id));
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <div style={{ ...card, textAlign: "center" }}>
@@ -74,9 +77,15 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
             {title} · Touche ta photo ({done.size}/{players.length} ont répondu)
           </p>
         </div>
+        {waiting.length === 0 ? (
+          <div style={{ ...card, textAlign: "center", padding: "2.4rem 1.4rem" }}>
+            <p style={{ fontSize: "3.2rem", margin: 0 }}>🎉</p>
+            <h2 style={{ margin: "0.4rem 0 0", fontSize: "1.6rem", fontWeight: 800, color: PURPLE }}>Tout le monde a répondu. Merci !</h2>
+          </div>
+        ) : null}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12 }}>
-          {players.map((p) => {
-            const ok = done.has(p.id);
+          {waiting.map((p) => {
+            const ok = false;
             return (
               <button
                 key={p.id}
@@ -104,10 +113,18 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
 
   if (state === "thanks") {
     return (
-      <div style={{ ...card, textAlign: "center", padding: "3rem 1.4rem" }}>
+      <div style={{ ...card, textAlign: "center", padding: "3rem 1.4rem", display: "grid", gap: 14, justifyItems: "center" }}>
         <p style={{ fontSize: "4rem", margin: 0 }}>🎉</p>
-        <h1 style={{ margin: "0.6rem 0 0", fontSize: "2rem", fontWeight: 800, color: PURPLE }}>Merci {who.first} !</h1>
-        <p style={{ color: "#5d566b", fontSize: "1.1rem" }}>Passe l&apos;iPad à la prochaine.</p>
+        <h1 style={{ margin: 0, fontSize: "2rem", fontWeight: 800, color: PURPLE }}>Merci {who.first} !</h1>
+        <p style={{ color: "#5d566b", fontSize: "1.1rem", margin: 0 }}>Tes réponses sont gardées secrètes. Passe l&apos;iPad à la prochaine.</p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          <button type="button" onClick={() => (setStep(0), setState("idle"))} style={{ minHeight: 56, padding: "0 22px", borderRadius: 14, border: `2px solid ${PURPLE}`, background: "#fff", color: PURPLE, fontSize: "1.1rem", fontWeight: 700, cursor: "pointer" }}>
+            ✏️ Changer mes réponses
+          </button>
+          <button type="button" onClick={reset} style={{ minHeight: 56, padding: "0 22px", borderRadius: 14, border: "none", background: PURPLE, color: "#fff", fontSize: "1.1rem", fontWeight: 700, cursor: "pointer" }}>
+            J&apos;ai fini
+          </button>
+        </div>
       </div>
     );
   }
