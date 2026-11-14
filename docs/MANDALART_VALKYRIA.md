@@ -1432,6 +1432,14 @@ Détail de l'hiver 2027-2028 (bénéfice) : Académie ≈ 25 000 $ ; Pré-acadé
 
 - [ ] `P5.5.05` ➜ N5 — Tenir 2 tournois Valkyria par année (été et hiver), 30 équipes à 500 $, avec commanditaires et boutique sur place. — 31 mars 2028 · JP
 
+### Boîte à idées de l'académie (13 nov. 2026)
+
+Une boîte à idées sur le site (page publique, nom et courriel facultatifs) et dans l'espace de chaque membre : chaque idée reçoit une réponse de l'académie et avance (nouvelle, à l'étude, retenue, réalisée) ; les idées réalisées se montrent sur le site (« Grâce à vous »). À faire avant la fin de novembre.
+
+#### P4.5 Communication aux parents
+
+- [ ] `P4.5.04` ⭐ N1 — Ouvrir la boîte à idées de l'académie sur le site et dans l'espace de chaque membre, avec une réponse à chaque idée. — 30 nov. 2026 · Claude Code · A01
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |

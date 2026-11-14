@@ -3172,6 +3172,20 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.5.04",
+       "priority": "star",
+       "level": 1,
+       "title": "Ouvrir la boîte à idées de l'académie sur le site et dans l'espace de chaque membre, avec une réponse à chaque idée.",
+       "due": "2026-11-30",
+       "owner": "Claude Code",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Boîte à idées de l'académie (13 nov. 2026)"
       }
      ]
     },
@@ -6307,6 +6321,10 @@
    {
     "title": "Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)",
     "text": "Décisions de JP : l'académie devient **Académie** (le groupe avancé : 3 groupes de 16, un 2015, un 2016, un 2017, 950 $, seuls à avoir les pratiques d'équipe, les matchs et les tournois) et **Pré-académie** (3 villes, 30 filles par ville en deux groupes 2018-2017 et 2016-2015, 690 $, sans matchs). Semi-privés de 6 au Club des Recrues la fin de semaine. Parascolaire à 250 $ pour 10 semaines, 30 jeunes au plus par école. Camps des Fêtes et de la relâche : 30 jeunes au plus par camp. **Salaire de dirigeant de JP : 100 000 $ inscrits en charge** dans le budget de l'hiver 2027-2028 ; l'objectif est 200 000 $ de bénéfice après ce salaire. Coûts tirés des vrais chiffres de 2026 (gymnase 35 $/h, synthétique 214 $/h, Club des Recrues 75 $/h, éducateurs 25 à 40 $/h, frais Stripe 3,6 %). Détail de l'hiver 2027-2028 (bénéfice) : Académie ≈ 25 000 $ ; Pré-académie ≈ 38 000 $ ; semi-privés à 850 $ ≈ 4 700 $ ; parascolaire 12 écoles × 30 jeunes × 2 sessions ≈ 143 000 $ ; camps ≈ 10 100 $ ; commandites ≈ 27 000 $ ; kits Valkyria Lab (120 à 149 $) ≈ 10 000 $ ; abonnement Valkyria Lab (150 familles à 15 $ par mois) ≈ 14 000 $ ; tournoi Valkyria (30 équipes à 500 $) ≈ 5 700 $ ; boutique et kits ≈ 9 600 $ ; Journées Valkyria ≈ 6 200 $ ; garçons, solos, Sport-Études ≈ 8 000 $."
+   },
+   {
+    "title": "Boîte à idées de l'académie (13 nov. 2026)",
+    "text": "Une boîte à idées sur le site (page publique, nom et courriel facultatifs) et dans l'espace de chaque membre : chaque idée reçoit une réponse de l'académie et avance (nouvelle, à l'étude, retenue, réalisée) ; les idées réalisées se montrent sur le site (« Grâce à vous »). À faire avant la fin de novembre."
    }
   ]
  },

@@ -511,6 +511,27 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
     );
   }
 
+  // ── Boîte à idées : chaque idée reçue attend une réponse ──
+  {
+    const { listIdeas } = await import("@/lib/idea-box-repo");
+    const fresh = (await listIdeas().catch(() => [])).filter((i) => i.status === "nouvelle");
+    sections.push(
+      section({
+        key: "idees",
+        title: "Idées reçues à lire",
+        level: "info",
+        emptyText: "Aucune nouvelle idée dans la boîte à idées.",
+        href: "/admin/idees",
+        hrefLabel: "Boîte à idées",
+        items: fresh.map((i) => ({
+          title: i.message.length > 90 ? `${i.message.slice(0, 90)}…` : i.message,
+          detail: `${i.author_name ?? "Anonyme"}${i.player_name ? ` (${i.player_name})` : ""} · ${i.source === "espace" ? "espace parent" : "site"}`,
+          href: "/admin/idees"
+        }))
+      })
+    );
+  }
+
   // ── Sondage de fin des pratiques d'hier et d'aujourd'hui (plaisir, fatigue) : un bouton qui l'ouvre directement ──
   {
     const recent = (await getRecentPracticesForSurvey().catch(() => [])).filter((p) => p.daysLeft >= -1 && p.daysLeft <= 0 && (!p.present || p.answered < p.present));

@@ -184,8 +184,11 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "voix",
         label: "Voix des familles",
         icon: "chart",
-        description: "Sondages avec un lien par famille : qui a répondu quoi, satisfaction, familles à rappeler et familles intéressées par un projet.",
-        tabs: [{ href: "/admin/sondages", label: "Sondages", adminOnly: true }]
+        description: "Sondages avec un lien par famille (qui a répondu quoi, satisfaction, familles à rappeler) et la boîte à idées du site et des espaces parents.",
+        tabs: [
+          { href: "/admin/sondages", label: "Sondages", adminOnly: true },
+          { href: "/admin/idees", label: "Boîte à idées" }
+        ]
       },
       {
         key: "marketing",

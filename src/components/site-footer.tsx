@@ -98,6 +98,9 @@ export function SiteFooter() {
             </a>
           </p>
           <div className="flex gap-4 text-xs text-white/60">
+            <Link href="/boite-a-idees" className="hover:text-white transition-colors">
+              Boîte à idées
+            </Link>
             <Link href="/politique-confidentialite" className="hover:text-white transition-colors">
               Confidentialité
             </Link>

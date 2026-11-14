@@ -404,6 +404,11 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     done: "La liste des vidéos est validée avec la gérante, une phrase clé par vidéo.",
     link: { href: "/admin/moi/tournages", label: "Mes tournages" }
   },
+  "P4.5.04": {
+    how: ["La boîte à idées est en ligne : page publique /boite-a-idees et espace parent (Mon espace › Boîte à idées).", "Chaque nouvelle idée apparaît dans « Aujourd'hui » : répondre dans Voix des familles › Boîte à idées.", "Annoncer la boîte à idées aux familles (courriel ou publication MonClubSportif)."],
+    done: "La boîte à idées est annoncée et chaque idée reçue a une réponse.",
+    link: { href: "/admin/idees", label: "Boîte à idées" }
+  },
   "P7.8.08": {
     how: ["Avec le CPA : fixer le salaire de dirigeant (100 000 $) et la façon de le verser (salaire, dividendes).", "L'inscrire comme charge dans le budget annuel (Revenus › Budget annuel).", "Vérifier chaque mois que le bénéfice après salaire suit le plan de l'hiver 2027-2028."],
     done: "Le salaire est dans le budget et le CPA a validé la façon de le verser.",
