@@ -128,6 +128,11 @@ export const PLAN: PlanWeek[] = [
         codes: ["P3.2.06"],
         steps: [
           { id: "s2-v1", text: "Vidéo 1 publiée (lundi)." },
+          {
+            id: "s2-formation",
+            text: "⭐ Formation prioritaire : regarde la vidéo sur le personal branding (lundi et mardi, 21 h 30). Note 3 idées dans Mes connaissances et choisis celle que tu appliques au tournage de jeudi.",
+            link: { label: "la formation", href: "https://youtu.be/Ch4Sl0POBhU" }
+          },
           { id: "s2-v2", text: "Vidéo 2 publiée (mercredi)." },
           { id: "s2-v3", text: "Vidéo 3 publiée (vendredi)." }
         ]
