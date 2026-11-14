@@ -134,6 +134,11 @@ export const PLAN: PlanWeek[] = [
             link: { label: "la formation", href: "https://youtu.be/Ch4Sl0POBhU" }
           },
           { id: "s2-v2", text: "Vidéo 2 publiée (mercredi)." },
+          {
+            id: "s2-storytelling",
+            text: "⭐ Formation prioritaire : regarde la vidéo sur le storytelling (mercredi, 21 h 30). Note 3 idées et écris en 3 lignes l'histoire du tournage de jeudi (début, problème, ce qui a changé).",
+            link: { label: "la formation", href: "https://youtu.be/hNuAv-42jzY" }
+          },
           { id: "s2-v3", text: "Vidéo 3 publiée (vendredi)." }
         ]
       }
