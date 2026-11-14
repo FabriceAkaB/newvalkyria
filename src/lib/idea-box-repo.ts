@@ -35,18 +35,23 @@ export async function addIdea(input: IdeaInput & { source: "site" | "espace"; pa
     message: input.message
   });
   if (error) throw error;
-  // Avis à l'académie : une idée ne doit jamais dormir (elle apparaît aussi dans « Aujourd'hui »).
-  try {
-    const { getResendClient } = await import("@/lib/resend");
-    const who = [input.authorName, input.playerName ? `(${input.playerName})` : null].filter(Boolean).join(" ") || "Anonyme";
-    await getResendClient().emails.send({
-      to: "info@newvalkyria.com",
-      subject: `💡 Nouvelle idée : ${categoryLabel(input.category)}`,
-      text: `${who}${input.authorEmail ? ` · ${input.authorEmail}` : ""}\n\n${input.message}\n\nRépondre : https://www.newvalkyria.com/admin/idees`
-    } as never);
-  } catch {
-    /* l'idée est enregistrée même si l'avis ne part pas */
-  }
+}
+
+/** Résumé de la semaine (chaque lundi, cron mandalart-lundi) : seulement s'il y a eu des idées dans les 7 derniers
+ *  jours. Aucune idée n'envoie de courriel sur le coup : elles attendent dans la boîte et dans « Aujourd'hui ». */
+export async function sendIdeasDigest(to: string, cc?: string): Promise<number> {
+  const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const { data, error } = await db().from("idea_box").select(COLS).eq("club_id", CLUB_ID).gte("created_at", since).order("created_at");
+  if (error) throw error;
+  const ideas = (data ?? []) as Idea[];
+  if (!ideas.length) return 0;
+  const { getResendClient } = await import("@/lib/resend");
+  const items = ideas
+    .map((i) => `<li style="margin-bottom:10px"><strong>${categoryLabel(i.category)}</strong> · ${escapeHtml(i.author_name ?? "Anonyme")}${i.player_name ? ` (${escapeHtml(i.player_name)})` : ""} · ${i.source === "espace" ? "espace parent" : "site"}<br/>${escapeHtml(i.message)}</li>`)
+    .join("");
+  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1d1730;line-height:1.6;max-width:640px"><p>Bonjour,</p><p>${ideas.length} idée${ideas.length > 1 ? "s" : ""} reçue${ideas.length > 1 ? "s" : ""} dans la boîte à idées cette semaine :</p><ul>${items}</ul><p>Répondre à chacune : <a href="https://www.newvalkyria.com/admin/idees">https://www.newvalkyria.com/admin/idees</a></p></div>`;
+  await getResendClient().emails.send({ to, ...(cc ? { cc } : {}), subject: `💡 Boîte à idées : ${ideas.length} idée${ideas.length > 1 ? "s" : ""} cette semaine`, html } as never);
+  return ideas.length;
 }
 
 export async function listIdeas(): Promise<Idea[]> {

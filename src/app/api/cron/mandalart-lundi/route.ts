@@ -50,7 +50,10 @@ export async function GET(request: Request) {
     { onConflict: "club_id,week" }
   );
 
-  if (!send || !isEmailConfigured()) return NextResponse.json({ ok: true, emailed: false });
+  // Boîte à idées : le résumé de la semaine, seulement s'il y a eu des idées (jamais un courriel par idée).
+  const ideas = send && isEmailConfigured() ? await import("@/lib/idea-box-repo").then((m) => m.sendIdeasDigest(OWNER_NOTIFY_EMAIL, "Christinedurand.2@hotmail.com")).catch(() => 0) : 0;
+
+  if (!send || !isEmailConfigured()) return NextResponse.json({ ok: true, emailed: false, ideas });
 
   const level = o.levels.find((l) => l.id === o.currentLevel)!;
   const gap = await computeGap(o.figures, o.today).catch(() => null);

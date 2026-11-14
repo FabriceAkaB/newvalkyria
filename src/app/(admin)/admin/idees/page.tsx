@@ -17,7 +17,7 @@ export default async function AdminIdeesPage() {
           <h1 className="mda-h1">Boîte à idées</h1>
           <p className="mda-lead">
             Chaque idée reçoit une réponse. Nouvelle → à l&apos;étude → retenue → réalisée. Une idée réalisée peut être montrée sur la page publique (« Grâce à vous ») : les familles voient qu&apos;on les écoute.
-            Lien public : www.newvalkyria.com/boite-a-idees.
+            Lien public : www.newvalkyria.com/boite-a-idees. Aucun courriel à chaque idée : elles arrivent ici et dans « Aujourd'hui », et un résumé part le lundi s'il y en a eu dans la semaine.
           </p>
         </header>
         <AdminIdeas ideas={ideas} />
