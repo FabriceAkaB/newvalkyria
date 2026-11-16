@@ -129,6 +129,8 @@ interface Props {
   initialMatchLineup: MatchLineupSlot[];
   initialMatchPlaytime: PlaytimeSegment[];
   initialMatchEvaluations: MatchPlayerEvaluation[];
+  /** Prise de connaissance de la pratique par éducateur (portail) : libellé et confirmation. */
+  practiceReads?: Record<string, { label: string; confirmed: boolean }>;
 }
 
 const STATUS_LABELS: Record<AssignmentStatus, string> = {
@@ -197,8 +199,10 @@ function AssignmentRow({
   defaultRateCents,
   typeRateCents,
   onUpdate,
-  onRemove
+  onRemove,
+  read
 }: {
+  read?: { label: string; confirmed: boolean };
   assignment: AssignmentWithCoach;
   activity: CoachActivity;
   defaultRateCents: number;
@@ -239,6 +243,7 @@ function AssignmentRow({
         <div>
           <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", margin: 0 }}>{assignment.coach.first_name} {assignment.coach.last_name}</p>
           <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: "0.1rem 0 0" }}>{assignment.coach.role}</p>
+          {read ? <p style={{ fontSize: "0.72rem", margin: "0.25rem 0 0", color: read.confirmed ? "var(--adm-good)" : "var(--adm-warn)" }}>📖 {read.label}</p> : null}
         </div>
         <button onClick={() => onRemove(assignment.id)} className="admin-btn-danger" style={{ padding: "0.25rem 0.5rem", fontSize: "0.65rem" }}>Retirer</button>
       </div>
@@ -296,7 +301,7 @@ function AssignmentRow({
   );
 }
 
-export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches, typeRates, initialBlocks, exercises, matchRoster, initialMatchDetails, initialMatchConvocations, initialMatchLineup, initialMatchPlaytime, initialMatchEvaluations }: Props) {
+export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches, typeRates, initialBlocks, exercises, matchRoster, initialMatchDetails, initialMatchConvocations, initialMatchLineup, initialMatchPlaytime, initialMatchEvaluations, practiceReads }: Props) {
   const [assignments, setAssignments] = useState(initialAssignments);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -510,6 +515,7 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
                 typeRateCents={typeRateFor(a.coach_id)}
                 onUpdate={updateAssignment}
                 onRemove={removeAssignment}
+                read={practiceReads?.[a.coach_id]}
               />
             ))}
           </div>

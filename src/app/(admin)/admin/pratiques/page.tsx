@@ -4,6 +4,7 @@ import { AdminTopbar } from "@/components/admin-topbar";
 import { Pill } from "@/components/mandalart/ui";
 import { ExternalPracticeForm, PrepareButton } from "@/components/practices-admin";
 import { requireAdmin } from "@/lib/admin-auth";
+import { getPracticeReads, type PracticeReadRow } from "@/lib/coach-portal-repo";
 import { listPractices, summarize, type Practice, type Readiness } from "@/lib/practices-repo";
 
 export const metadata = { title: "Pratiques — Admin New Valkyria", robots: "noindex" };
@@ -29,7 +30,7 @@ const weekStart = (iso: string) => {
   return d.toISOString().slice(0, 10);
 };
 
-function Row({ p }: { p: Practice }) {
+function Row({ p, reads = [] }: { p: Practice; reads?: PracticeReadRow[] }) {
   const t = TONE[p.readiness];
   return (
     <li className="mda-task" style={{ alignItems: "center", boxShadow: p.readiness === "rouge" ? "inset 3px 0 0 var(--adm-bad)" : p.readiness === "jaune" ? "inset 3px 0 0 var(--adm-warn)" : undefined }}>
@@ -44,6 +45,11 @@ function Row({ p }: { p: Practice }) {
           {p.activityType !== "Pratique" ? <span>{p.activityType}</span> : null}
           {p.theme ? <span>Thème : {p.theme}</span> : null}
           {p.blocks ? <span style={{ color: "var(--adm-good)" }}>{p.blocks} bloc{p.blocks > 1 ? "s" : ""}{p.preparedDaysAhead !== null ? ` · prête ${p.preparedDaysAhead} j d'avance` : ""}</span> : null}
+          {reads.map((r) => (
+            <span key={r.coachId} style={{ color: r.status.confirmed ? "var(--adm-good)" : "var(--adm-warn)" }}>
+              📖 {r.coachName.split(" ")[0]} : {r.status.confirmed ? "lue" : r.status.hasContent ? `pas lue (${r.status.seen}/${r.status.total})` : "rien à lire"}
+            </span>
+          ))}
           {p.readiness !== "prete" && p.readiness !== "passee" ? <span style={{ color: t.color }}>{p.daysLeft === 0 ? "aujourd'hui" : `dans ${p.daysLeft} jour${p.daysLeft > 1 ? "s" : ""}`}</span> : null}
         </div>
       </div>
@@ -67,6 +73,8 @@ export default async function PracticesPage() {
   const academy = upcoming.filter((p) => !p.organization);
   const external = upcoming.filter((p) => p.organization);
   const weeks = [...new Set(academy.map((p) => weekStart(p.date)))];
+  const reads = await getPracticeReads(upcoming.filter((p) => p.daysLeft <= 14 && p.activityId).map((p) => p.activityId!)).catch(() => []);
+  const readsOf = (p: Practice) => (p.activityId ? reads.filter((r) => r.activityId === p.activityId) : []);
   const urgent = s.rouge + s.jaune;
 
   return (
@@ -112,7 +120,7 @@ export default async function PracticesPage() {
                 </div>
                 <ul className="mda-tasks">
                   {list.map((p) => (
-                    <Row key={p.key} p={p} />
+                    <Row key={p.key} p={p} reads={readsOf(p)} />
                   ))}
                 </ul>
               </section>

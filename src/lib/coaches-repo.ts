@@ -73,6 +73,9 @@ export interface CoachAssignment {
   confirmed_by?: "educateur" | "admin" | null;
   /** Relance envoyée à l'éducateur 24 h après l'activité (présence ou rapport manquant). */
   reminder_sent_at?: string | null;
+  /** Prise de connaissance de la pratique dans le portail : éléments vus (deck:…, block:…) et confirmation. */
+  practice_read_items?: string[] | null;
+  practice_read_at?: string | null;
   paid: boolean;
   paid_on: string | null;
   payment_method: string | null;

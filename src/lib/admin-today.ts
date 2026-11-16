@@ -13,6 +13,7 @@ import { getRobotStatus } from "@/lib/mcs-robot-config";
 import { getPendingMcsPlayers } from "@/lib/mcs-robot-runner";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { getLaunchAlerts } from "@/lib/launch-scenarios-repo";
+import { getPracticeReads } from "@/lib/coach-portal-repo";
 import { listPractices } from "@/lib/practices-repo";
 import { dateLong, getRefereesToPay, listMatches } from "@/lib/referees-repo";
 import { getFamiliesToCall } from "@/lib/surveys-repo";
@@ -591,6 +592,32 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
           meta: p.daysLeft === 0 ? "Aujourd'hui" : `Dans ${p.daysLeft} jour${p.daysLeft > 1 ? "s" : ""}`,
           href: p.activityId ? `/admin/entraineurs/activites/${p.activityId}` : "/admin/pratiques"
         }))
+      })
+    );
+  }
+
+  // ── Pratiques d'aujourd'hui et de demain que l'éducateur assigné n'a pas encore lues (portail, étape « Avant ») ──
+  {
+    const soon = (await listPractices({ from: today, to: localDay(new Date(now + DAY_MS)) }).catch(() => [])).filter((p) => p.activityId && p.activityType === "Pratique");
+    const reads = (await getPracticeReads(soon.map((p) => p.activityId!)).catch(() => [])).filter((r) => r.status.hasContent && !r.status.confirmed);
+    const items = reads.map((r) => {
+      const p = soon.find((x) => x.activityId === r.activityId)!;
+      return {
+        title: `${r.coachName} n'a pas lu la pratique`,
+        detail: `${p.daysLeft === 0 ? "Aujourd'hui" : "Demain"} · ${p.start} · ${p.group} · ${r.status.seen}/${r.status.total} vus`,
+        href: `/admin/entraineurs/activites/${r.activityId}`,
+        today: p.daysLeft === 0
+      };
+    });
+    sections.push(
+      section({
+        key: "pratiques-a-lire",
+        title: "Pratiques pas encore lues par les éducateurs",
+        level: items.some((i) => i.today) ? "orange" : "info",
+        emptyText: "Les éducateurs d'aujourd'hui et de demain ont lu leur pratique.",
+        href: "/admin/pratiques",
+        hrefLabel: "Pratiques",
+        items: items.map(({ today: _t, ...i }) => i)
       })
     );
   }

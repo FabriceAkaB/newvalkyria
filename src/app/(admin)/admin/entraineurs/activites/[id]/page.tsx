@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AdminCoachActiviteDetail } from "@/components/admin-coach-activite-detail";
 import { requireAdmin } from "@/lib/admin-auth";
+import { getPracticeReads } from "@/lib/coach-portal-repo";
 import { getActivity, getActivityAssignments, getAllCoachTypeRates, getCoaches } from "@/lib/coaches-repo";
 import { getExercisesForPlanning } from "@/lib/exercises-repo";
 import { getConvocations, getLineup, getMatchDetails, getMatchEvaluations, getMatchRoster, getPlaytimeSegments } from "@/lib/match-repo";
@@ -35,8 +36,12 @@ export default async function AdminCoachActiviteDetailPage({ params }: { params:
     isMatch ? getMatchEvaluations(id) : Promise.resolve([])
   ]);
 
+  const reads = isMatch ? [] : await getPracticeReads([id]).catch(() => []);
+  const practiceReads = Object.fromEntries(reads.map((r) => [r.coachId, { label: r.label, confirmed: r.status.confirmed }]));
+
   return (
     <AdminCoachActiviteDetail
+      practiceReads={practiceReads}
       activity={activity}
       initialAssignments={assignments}
       coaches={coaches}

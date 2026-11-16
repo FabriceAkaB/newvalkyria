@@ -1,5 +1,6 @@
 import { cleanNote, computeReport, feedbackByWeek, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, watchReasons, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
 import type { CoachActivity, CoachAssignment } from "@/lib/coaches-repo";
+import { addSeen, practiceReadItems, practiceReadStatus, readLabel, type ReadItem, type ReadStatus } from "@/lib/practice-read";
 import type { SurveyAnswer } from "@/lib/practice-survey";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -686,4 +687,88 @@ export async function getBriefing(activity: { id: string; activity_date: string 
 export async function setSurpriseMoment(activityId: string, text: string | null): Promise<void> {
   const { error } = await db().from("coach_activities").update({ surprise_moment: text?.trim().slice(0, 1000) || null, updated_at: new Date().toISOString() }).eq("id", activityId);
   if (error) throw new Error(error.message);
+}
+
+/* ── Prise de connaissance de la pratique (étape « Avant ») ──────── */
+
+/** Ce que l'éducateur doit voir pour une activité : les diapos « Pratique » déposées et chaque exercice du plan. */
+export async function getPracticeReadItems(activityIds: string[]): Promise<Map<string, ReadItem[]>> {
+  const out = new Map<string, ReadItem[]>();
+  if (!activityIds.length) return out;
+  const [{ data: docs }, { data: blocks }] = await Promise.all([
+    db().from("documents").select("id, entity_id, file_name, uploaded_at").eq("entity_type", "coach_activity").eq("category", "Pratique").in("entity_id", activityIds).order("uploaded_at"),
+    db().from("activity_session_blocks").select("id, activity_id, block_order, block_type, custom_title, exercise_id").in("activity_id", activityIds).order("block_order")
+  ]);
+  const exerciseIds = [...new Set(((blocks ?? []) as any[]).map((b) => b.exercise_id).filter(Boolean))];
+  const { data: exercises } = exerciseIds.length ? await db().from("exercises").select("id, title").in("id", exerciseIds) : { data: [] };
+  const title = new Map(((exercises ?? []) as any[]).map((e) => [e.id, String(e.title)]));
+  for (const id of activityIds) {
+    out.set(
+      id,
+      practiceReadItems({
+        decks: ((docs ?? []) as any[]).filter((d) => d.entity_id === id).map((d) => ({ id: d.id, fileName: String(d.file_name) })),
+        blocks: ((blocks ?? []) as any[]).filter((b) => b.activity_id === id).map((b) => ({ id: b.id, title: b.custom_title || title.get(b.exercise_id) || b.block_type }))
+      })
+    );
+  }
+  return out;
+}
+
+/** Note qu'un élément (diapos ou exercice) a été vu par l'éducateur de cette assignation. */
+export async function markPracticeSeen(assignmentId: string, key: string): Promise<string[]> {
+  const { data, error } = await db().from("coach_assignments").select("practice_read_items").eq("id", assignmentId).single();
+  if (error) throw new Error(error.message);
+  const next = addSeen(data?.practice_read_items, key);
+  const { error: e2 } = await db().from("coach_assignments").update({ practice_read_items: next, updated_at: new Date().toISOString() }).eq("id", assignmentId);
+  if (e2) throw new Error(e2.message);
+  return next;
+}
+
+/** « J'ai pris connaissance de la pratique » : seulement une fois les diapos et chaque exercice vus. */
+export async function confirmPracticeRead(assignmentId: string, activityId: string): Promise<string> {
+  const [items, { data, error }] = await Promise.all([
+    getPracticeReadItems([activityId]).then((m) => m.get(activityId) ?? []),
+    db().from("coach_assignments").select("practice_read_items, practice_read_at").eq("id", assignmentId).single()
+  ]);
+  if (error) throw new Error(error.message);
+  if (data?.practice_read_at) return data.practice_read_at as string;
+  const status = practiceReadStatus(items, (data?.practice_read_items ?? []) as string[], null);
+  if (!status.hasContent) throw new Error("La pratique n'est pas encore déposée : rien à confirmer pour l'instant.");
+  if (!status.canConfirm) throw new Error(`Il reste à voir : ${status.missing.map((m) => m.label).join(", ")}.`);
+  const now = new Date().toISOString();
+  const { error: e2 } = await db().from("coach_assignments").update({ practice_read_at: now, updated_at: now }).eq("id", assignmentId);
+  if (e2) throw new Error(e2.message);
+  return now;
+}
+
+export interface PracticeReadRow {
+  activityId: string;
+  coachId: string;
+  coachName: string;
+  status: ReadStatus;
+  readAt: string | null;
+  label: string;
+}
+
+/** Pour JP : qui a pris connaissance de quelle pratique (éducateurs assignés, présence non annulée). */
+export async function getPracticeReads(activityIds: string[]): Promise<PracticeReadRow[]> {
+  if (!activityIds.length) return [];
+  const [items, { data, error }] = await Promise.all([
+    getPracticeReadItems(activityIds),
+    db().from("coach_assignments").select("activity_id, coach_id, status, practice_read_items, practice_read_at, coach:coaches(first_name, last_name)").in("activity_id", activityIds)
+  ]);
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as any[])
+    .filter((a) => a.status !== "cancelled" && a.status !== "replaced")
+    .map((a) => {
+      const status = practiceReadStatus(items.get(a.activity_id) ?? [], (a.practice_read_items ?? []) as string[], a.practice_read_at);
+      return {
+        activityId: a.activity_id,
+        coachId: a.coach_id,
+        coachName: `${a.coach?.first_name ?? ""} ${a.coach?.last_name ?? ""}`.trim() || "Éducateur",
+        status,
+        readAt: a.practice_read_at ?? null,
+        label: readLabel(status, a.practice_read_at ?? null)
+      };
+    });
 }

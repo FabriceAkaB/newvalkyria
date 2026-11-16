@@ -20,6 +20,8 @@ export interface DashboardActivity {
   blocks: number;
   minutes: number;
   theme: string | null;
+  /** Prise de connaissance : « a-lire » (diapos ou exercices pas encore confirmés), « lue », ou rien à lire. */
+  read?: "a-lire" | "lue" | null;
 }
 
 export interface ToComplete {
@@ -82,7 +84,7 @@ function TodayHero({ activity }: { activity: DashboardActivity }) {
         {activity.otherCoaches.length > 0 && <span>Avec {activity.otherCoaches.join(", ")}</span>}
         <span>{activity.blocks > 0 ? `Plan prêt · ${activity.blocks} bloc${activity.blocks > 1 ? "s" : ""}, ${activity.minutes} min` : "Plan pas encore prêt"}</span>
       </div>
-      <span className="coach-hero__cta">Voir la pratique du jour</span>
+      <span className="coach-hero__cta">{activity.read === "a-lire" ? "📖 Lire la pratique et confirmer" : activity.read === "lue" ? "✓ Pratique lue · la revoir" : "Voir la pratique du jour"}</span>
     </Link>
   );
 }
@@ -150,7 +152,15 @@ export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFee
             ) : (
               <div className="coach-list">
                 {upcoming.slice(0, 10).map((a) => (
-                  <ActivityRow key={a.id} activity={a} right={<span className="coach-pill" data-tone={a.blocks > 0 ? "good" : "info"}>{a.blocks > 0 ? "Plan prêt" : "Plan à venir"}</span>} />
+                  <ActivityRow key={a.id} activity={a} right={
+                      a.read === "a-lire" ? (
+                        <span className="coach-pill" data-tone="warn">📖 À lire</span>
+                      ) : a.read === "lue" ? (
+                        <span className="coach-pill" data-tone="good">✓ Lue</span>
+                      ) : (
+                        <span className="coach-pill" data-tone={a.blocks > 0 ? "good" : "info"}>{a.blocks > 0 ? "Plan prêt" : "Plan à venir"}</span>
+                      )
+                    } />
                 ))}
               </div>
             )}

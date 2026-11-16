@@ -1,6 +1,7 @@
 import { CoachDashboard, type DashboardActivity, type ToComplete } from "@/components/coach-dashboard";
 import { requireCoach } from "@/lib/coach-auth";
-import { cleanCategory, getActivityReports, getCoachActivities, loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
+import { cleanCategory, getActivityReports, getCoachActivities, getPracticeReadItems, loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
+import { practiceReadStatus } from "@/lib/practice-read";
 import { hasStarted, REPORT_RULE_START } from "@/lib/coach-report";
 import { listObservations } from "@/lib/coach-observations-repo";
 import { getCoach } from "@/lib/coaches-repo";
@@ -27,6 +28,12 @@ export default async function CoachDashboardPage() {
   const { data: blocks } = ids.length
     ? await (getSupabaseAdminClient() as any).from("activity_session_blocks").select("activity_id, duration_minutes").in("activity_id", ids)
     : { data: [] };
+  const readItems = await getPracticeReadItems(activities.filter((a) => a.activity.activity_type !== "Match").map((a) => a.activity.id)).catch(() => new Map());
+  const readOf = (a: (typeof activities)[number]) => {
+    const items = readItems.get(a.activity.id) ?? [];
+    if (!items.length) return null;
+    return practiceReadStatus(items, (a.assignment.practice_read_items ?? []) as string[], a.assignment.practice_read_at ?? null).confirmed ? ("lue" as const) : ("a-lire" as const);
+  };
   const themeOf = (date: string, category: string | null) => themeFor(themes.find((t) => String(t.week_start_date).slice(0, 10) === mondayOfWeek(new Date(`${date}T12:00:00`))), cleanCategory(category));
 
   const view: DashboardActivity[] = activities.map((a) => {
@@ -47,7 +54,8 @@ export default async function CoachDashboardPage() {
       trialCount: roster.filter((p) => p.isTrial).length,
       blocks: own.length,
       minutes: own.reduce((s, b) => s + (b.duration_minutes ?? 0), 0),
-      theme: themeOf(date, a.activity.category)
+      theme: themeOf(date, a.activity.category),
+      read: readOf(a)
     };
   });
 

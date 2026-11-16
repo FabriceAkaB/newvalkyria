@@ -17,6 +17,7 @@ import { computeHours, formatHoursMinutes, timeToMinutes } from "@/lib/coach-pay
 import { planningLabel } from "@/lib/exercise-bank";
 import type { BriefingPlayer, PlayerAttendance, PlayerAttendanceStatus, PlayerEvaluation, RosterPlayer } from "@/lib/coach-portal-repo";
 import { MAX_WINNERS, POINTS, WIN_LABEL, type WinKind } from "@/lib/player-points";
+import { blockKey, practiceReadStatus, type ReadItem } from "@/lib/practice-read";
 import { isAnswered, type SurveyAnswer } from "@/lib/practice-survey";
 import { cleanNote, isQuickEvaluationComplete, NOTE_MIN_CHARS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START } from "@/lib/coach-report";
 import type { AssignmentStatus, CoachActivity } from "@/lib/coaches-repo";
@@ -267,7 +268,7 @@ function setupForGroup(exercise: Record<string, unknown> | undefined, players: n
   return typeof v === "string" && v.trim() ? v : null;
 }
 
-function PracticeOfTheDay({ activity, theme, blocks, exercises, players }: { activity: CoachActivity; theme: Props["theme"]; blocks: SessionBlock[]; exercises: Exercise[]; players: number }) {
+function PracticeOfTheDay({ activity, theme, blocks, exercises, players, seen, onSeen }: { activity: CoachActivity; theme: Props["theme"]; blocks: SessionBlock[]; exercises: Exercise[]; players: number; seen: string[]; onSeen: (key: string) => void }) {
   const total = blocks.reduce((s, b) => s + b.duration_minutes, 0);
   const startAt = timeToMinutes(String(activity.start_time).slice(0, 5));
   // Heure de début de chaque bloc : début de l'activité + durée des blocs précédents.
@@ -333,9 +334,57 @@ function PracticeOfTheDay({ activity, theme, blocks, exercises, players }: { act
                 {exercise?.video_url && (
                   <a href={exercise.video_url} target="_blank" rel="noreferrer" className="coach-secondary" style={{ marginTop: 12 }}>Voir la vidéo de l&apos;exercice ↗</a>
                 )}
+                {seen.includes(blockKey(b.id)) ? (
+                  <p className="coach-ok" style={{ margin: "12px 0 0" }}>✓ Exercice lu</p>
+                ) : (
+                  <button type="button" className="coach-secondary" style={{ marginTop: 12, width: "100%" }} onClick={() => onSeen(blockKey(b.id))}>
+                    J&apos;ai lu cet exercice
+                  </button>
+                )}
               </div>
             );
           })}
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ── Avant : la prise de connaissance de la pratique ─────────────── */
+
+function PracticeReadCard({ items, seen, readAt, onConfirm }: { items: ReadItem[]; seen: string[]; readAt: string | null; onConfirm: () => Promise<string | null> }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const status = practiceReadStatus(items, seen, readAt);
+  if (!status.hasContent) return null;
+  const when = readAt
+    ? new Date(readAt).toLocaleString("fr-CA", { timeZone: "America/Toronto", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })
+    : null;
+  const confirm = async () => {
+    setBusy(true);
+    setError(await onConfirm());
+    setBusy(false);
+  };
+  return (
+    <div className="coach-card" style={{ marginTop: 12, borderColor: status.confirmed ? "var(--adm-good)" : undefined }}>
+      <p className="coach-card__label">J&apos;ai pris connaissance de la pratique</p>
+      {status.confirmed ? (
+        <p className="coach-ok" style={{ margin: 0 }}>✓ Confirmé {when ? `le ${when}` : ""}. JP le voit dans l&apos;admin.</p>
+      ) : (
+        <>
+          <p className="coach-sub" style={{ marginTop: 0 }}>Ouvre les diapos et lis chaque exercice avant d&apos;arriver au terrain, puis confirme. JP voit qui l&apos;a fait.</p>
+          <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 6 }}>
+            {items.map((i) => (
+              <li key={i.key} style={{ display: "flex", gap: 8, color: seen.includes(i.key) ? "var(--adm-good)" : "var(--adm-text-2)" }}>
+                <span aria-hidden>{seen.includes(i.key) ? "✓" : "○"}</span>
+                <span>{i.label}</span>
+              </li>
+            ))}
+          </ul>
+          <button className="coach-primary" style={{ marginTop: 12 }} disabled={!status.canConfirm || busy} onClick={confirm}>
+            {busy ? "Enregistrement…" : status.canConfirm ? "Je confirme avoir pris connaissance de la pratique" : `Encore ${status.missing.length} à voir`}
+          </button>
+          {error && <p className="coach-error" role="alert">{error}</p>}
         </>
       )}
     </div>
@@ -669,9 +718,36 @@ export function CoachActiviteDetail({
   initialMatchPlaytime,
   initialMatchEvaluations,
   musts = [],
-  videos = []
-}: Props & { defaultStep: Step; briefing: BriefingPlayer[]; initialWinners: { registration_id: string; kind: WinKind }[]; musts?: { title: string; text: string }[]; videos?: { id: string; title: string }[] }) {
+  videos = [],
+  readItems = [],
+  initialReadSeen = [],
+  initialReadAt = null
+}: Props & {
+  defaultStep: Step;
+  briefing: BriefingPlayer[];
+  initialWinners: { registration_id: string; kind: WinKind }[];
+  musts?: { title: string; text: string }[];
+  videos?: { id: string; title: string }[];
+  readItems?: ReadItem[];
+  initialReadSeen?: string[];
+  initialReadAt?: string | null;
+}) {
   const [step, setStep] = useState<Step>(defaultStep);
+  const [readSeen, setReadSeen] = useState<string[]>(initialReadSeen);
+  const [readAt, setReadAt] = useState<string | null>(initialReadAt);
+  const markSeen = async (key: string) => {
+    if (readSeen.includes(key)) return;
+    setReadSeen((s) => (s.includes(key) ? s : [...s, key]));
+    const r = await postJson(`/api/coach/activities/${activity.id}/lecture`, { item: key });
+    if (r.ok && Array.isArray(r.data?.seen)) setReadSeen(r.data.seen);
+  };
+  const confirmRead = async () => {
+    const r = await postJson(`/api/coach/activities/${activity.id}/lecture`, { confirm: true });
+    if (!r.ok) return r.error ?? "Pas enregistré.";
+    setReadAt(r.data?.readAt ?? new Date().toISOString());
+    return null;
+  };
+  const read = practiceReadStatus(readItems, readSeen, readAt);
   const [showEditor, setShowEditor] = useState(false);
   const [attendance, setAttendance] = useState<Record<string, PlayerAttendanceStatus>>(Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status])));
   const [feedback, setFeedback] = useState<Record<string, SurveyAnswer>>(
@@ -707,7 +783,7 @@ export function CoachActiviteDetail({
   const ruleApplies = String(activity.activity_date).slice(0, 10) >= REPORT_RULE_START;
   const reportComplete = !reportNeeded || (marked === roster.length && evaluated === participants.length);
   const hoursCount = presence.confirmed && (reportComplete || !ruleApplies);
-  const afterDone = [presence.confirmed, !reportNeeded || marked === roster.length, !reportNeeded || evaluated === participants.length].filter(Boolean).length;
+  const afterDone = reportNeeded ? [presence.confirmed, marked === roster.length, evaluated === participants.length].filter(Boolean).length : Number(presence.confirmed);
 
   const openNext = (afterId: string) => {
     const order = participants.map((p) => p.registrationId);
@@ -717,7 +793,7 @@ export function CoachActiviteDetail({
 
   const date = new Date(`${String(activity.activity_date).slice(0, 10)}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" });
   const steps: { key: Step; label: string; detail: string }[] = [
-    { key: "avant", label: "Avant", detail: "La pratique" },
+    { key: "avant", label: "Avant", detail: activity.activity_type === "Match" || !read.hasContent ? "La pratique" : read.confirmed ? "Pratique lue ✓" : `À lire ${read.seen}/${read.total}` },
     { key: "pendant", label: "Pendant", detail: roster.length ? `Présences ${marked}/${roster.length}` : "Présences" },
     { key: "apres", label: "Après", detail: `Rapport ${afterDone}/${reportNeeded ? 3 : 1}` }
   ];
@@ -775,8 +851,9 @@ export function CoachActiviteDetail({
                   </ol>
                 </details>
               )}
-              <CoachPracticeDeck activityId={activity.id} />
-              <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} />
+              <CoachPracticeDeck decks={readItems.filter((i) => i.kind === "deck")} seen={readSeen} onOpened={markSeen} />
+              <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} seen={readSeen} onSeen={markSeen} />
+              {activity.activity_type !== "Match" && <PracticeReadCard items={readItems} seen={readSeen} readAt={readAt} onConfirm={confirmRead} />}
 
               {(activity.notes || activity.video_url) && (
                 <div className="coach-card" style={{ marginTop: 12 }}>

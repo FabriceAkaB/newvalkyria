@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { CoachActiviteDetail } from "@/components/coach-activite-detail";
 import { getComponents } from "@/lib/coaching-method-repo";
 import { requireCoach } from "@/lib/coach-auth";
-import { cleanCategory, getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityById } from "@/lib/coach-portal-repo";
+import { cleanCategory, getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityById, getPracticeReadItems } from "@/lib/coach-portal-repo";
 import { defaultStepFor } from "@/lib/coach-report";
 import { getCoach } from "@/lib/coaches-repo";
 import { getActivityWinners } from "@/lib/player-points-repo";
@@ -44,11 +44,12 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
     isMatch ? getMatchEvaluations(id) : Promise.resolve([])
   ]);
 
-  const [briefing, winners, components, videos] = await Promise.all([
+  const [briefing, winners, components, videos, readItems] = await Promise.all([
     getBriefing(entry.activity, roster).catch(() => []),
     getActivityWinners(id).catch(() => []),
     getComponents().catch(() => null),
-    videosForActivity(id).catch(() => [])
+    videosForActivity(id).catch(() => []),
+    getPracticeReadItems([id]).then((m) => m.get(id) ?? []).catch(() => [])
   ]);
 
   // Accès limité : la présence de l'éducateur sans son taux ni les champs de paiement.
@@ -92,6 +93,9 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       initialMatchPlaytime={matchPlaytime}
       initialMatchEvaluations={matchEvaluations}
       videos={videos}
+      readItems={readItems}
+      initialReadSeen={(assignment.practice_read_items ?? []) as string[]}
+      initialReadAt={assignment.practice_read_at ?? null}
     />
   );
 }
