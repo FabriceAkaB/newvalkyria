@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AdminTopbar } from "@/components/admin-topbar";
-import { DISTRIBUTION_STATUS_LABELS, type OrderWithDistribution } from "@/lib/shop-repo";
+import { DISTRIBUTION_STATUS_LABELS } from "@/lib/shop-labels";
+import type { OrderWithDistribution } from "@/lib/shop-repo";
 
 interface Props {
   orders: OrderWithDistribution[];

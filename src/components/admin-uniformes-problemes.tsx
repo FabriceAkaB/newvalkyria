@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
-import { PROBLEM_TYPE_LABELS, type ProblemWithOrder } from "@/lib/shop-repo";
+import { PROBLEM_TYPE_LABELS } from "@/lib/shop-labels";
+import type { ProblemWithOrder } from "@/lib/shop-repo";
 
 interface Props {
   problems: ProblemWithOrder[];

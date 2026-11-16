@@ -7,7 +7,8 @@ import { AdminTopbar } from "@/components/admin-topbar";
 import { ExpenseAttachments } from "@/components/admin-expense-attachments";
 import type { Season } from "@/lib/season-admin-repo";
 import { formatCAD } from "@/lib/season-2027";
-import { GENERAL_KEY, type AccountBalance, type FinancialAlert, type FinancialDashboard, type FinancialHealth, type MonthlyBucket, type RevenueSummary, type SeasonRevenue } from "@/lib/revenue-calc";
+import type { AccountBalance, FinancialAlert, FinancialDashboard, FinancialHealth, MonthlyBucket, RevenueSummary, SeasonRevenue } from "@/lib/revenue-calc";
+import { GENERAL_KEY } from "@/lib/revenue-keys";
 import { EXPENSE_CATEGORIES, PAYMENT_ACCOUNTS, type RevenueExpense } from "@/lib/revenue-repo";
 
 interface Props {

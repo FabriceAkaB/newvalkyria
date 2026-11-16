@@ -5,15 +5,8 @@ import { useEffect, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { Season } from "@/lib/season-admin-repo";
-import {
-  DISTRIBUTION_STATUS_LABELS,
-  PROBLEM_TYPE_LABELS,
-  type DistributionStatus,
-  type OrderWithDistribution,
-  type ProblemType,
-  type ShopOrderEvent,
-  type ShopOrderProblem
-} from "@/lib/shop-repo";
+import { DISTRIBUTION_STATUS_LABELS, PROBLEM_TYPE_LABELS, type DistributionStatus, type ProblemType } from "@/lib/shop-labels";
+import type { OrderWithDistribution, ShopOrderEvent, ShopOrderProblem } from "@/lib/shop-repo";
 
 interface Props {
   order: OrderWithDistribution;

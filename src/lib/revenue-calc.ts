@@ -37,7 +37,8 @@ export const BOUTIQUE_KEY = "boutique";
 export const BOUTIQUE_LABEL = "Boutique";
 export const SPORT_ETUDES_KEY = "sport-etudes";
 export const SPORT_ETUDES_LABEL = "Sport-Études";
-export const GENERAL_KEY = "general";
+import { GENERAL_KEY } from "@/lib/revenue-keys";
+export { GENERAL_KEY };
 export const GENERAL_LABEL = "Charges générales";
 /** Toute la trésorerie de l'académie transite par Stripe vers le compte
  *  bancaire — les revenus sont donc toujours attribués à ce compte. Les

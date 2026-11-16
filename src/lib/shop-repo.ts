@@ -1,3 +1,4 @@
+import { DISTRIBUTION_STATUS_LABELS, PROBLEM_TYPE_LABELS, type DistributionStatus, type ProblemType } from "@/lib/shop-labels";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 function db() {
@@ -55,16 +56,7 @@ export type OrderStatus = "pending" | "paid" | "fulfilled" | "cancelled";
 /** Cycle de vie de la distribution — distinct du statut de paiement. Une
  *  commande payée démarre à "a_commander" (on ne sait pas encore où elle en
  *  est réellement chez le fournisseur). */
-export type DistributionStatus = "a_commander" | "en_production" | "recu" | "pret_a_remettre" | "partiellement_remis" | "remis";
-
-export const DISTRIBUTION_STATUS_LABELS: Record<DistributionStatus, string> = {
-  a_commander: "À commander",
-  en_production: "En production",
-  recu: "Reçu par l'académie",
-  pret_a_remettre: "Prêt à remettre",
-  partiellement_remis: "Partiellement remis",
-  remis: "Remis"
-};
+export { DISTRIBUTION_STATUS_LABELS, PROBLEM_TYPE_LABELS, type DistributionStatus, type ProblemType } from "@/lib/shop-labels";
 
 export interface ShopOrder {
   id: string;
@@ -107,21 +99,6 @@ export interface ShopOrderEvent {
   created_at: string;
 }
 
-export type ProblemType =
-  | "mauvaise_taille" | "article_manquant" | "mauvais_article" | "quantite_incorrecte"
-  | "article_endommage" | "commande_incomplete" | "echange_demande" | "retour_fournisseur" | "autre";
-
-export const PROBLEM_TYPE_LABELS: Record<ProblemType, string> = {
-  mauvaise_taille: "Mauvaise taille",
-  article_manquant: "Article manquant",
-  mauvais_article: "Mauvais article",
-  quantite_incorrecte: "Quantité incorrecte",
-  article_endommage: "Article endommagé",
-  commande_incomplete: "Commande incomplète",
-  echange_demande: "Échange demandé",
-  retour_fournisseur: "Retour fournisseur",
-  autre: "Autre"
-};
 
 export interface ShopOrderProblem {
   id: string;
