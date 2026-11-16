@@ -91,7 +91,8 @@ export default async function CoachDashboardPage() {
     title: a.title || (a.category ? `${a.activity_type} ${a.category}` : a.activity_type),
     location: a.location,
     mine: ids.includes(a.id),
-    blocks: ((teamBlocks ?? []) as any[]).filter((b) => b.activity_id === a.id).length
+    blocks: ((teamBlocks ?? []) as any[]).filter((b) => b.activity_id === a.id).length,
+    theme: themeOf(today, a.category)
   }));
 
   return (

@@ -30,7 +30,7 @@ export function DocumentViewerModal({ fileName, signedUrl, onClose }: { fileName
   );
 }
 
-export function EntityDocuments({ entityType, entityId, apiBase = "/api/admin/documents", readOnly = false, hideCategory }: { entityType: DocumentEntityType; entityId: string; apiBase?: string; readOnly?: boolean; hideCategory?: string }) {
+export function EntityDocuments({ entityType, entityId, apiBase = "/api/admin/documents", readOnly = false, hideCategory, hideEmpty = false }: { entityType: DocumentEntityType; entityId: string; apiBase?: string; readOnly?: boolean; hideCategory?: string; hideEmpty?: boolean }) {
   const [documents, setDocuments] = useState<EntityDocument[] | null>(null);
   const [category, setCategory] = useState<string>(DOCUMENT_CATEGORIES[DOCUMENT_CATEGORIES.length - 1]);
   const [uploading, setUploading] = useState(false);
@@ -76,6 +76,7 @@ export function EntityDocuments({ entityType, entityId, apiBase = "/api/admin/do
     if (data?.signedUrl) setViewing({ fileName: d.file_name, signedUrl: data.signedUrl });
   };
 
+  if (hideEmpty && !documents?.length) return null;
   return (
     <div>
       <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Documents</p>

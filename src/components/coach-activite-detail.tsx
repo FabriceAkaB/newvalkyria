@@ -855,13 +855,13 @@ export function CoachActiviteDetail({
     <>
       <CoachTopbar coachName={coachName} />
       <div className="admin-content">
-        <div className="coach-page">
+        <div className="coach-page coach-page--wide">
           <Link href="/entraineur/dashboard" className="coach-muted" style={{ textDecoration: "none", display: "inline-block", marginBottom: 12 }}>← Mes pratiques</Link>
-          <h1 className="coach-title">{activity.title ? activity.title : activity.activity_type}</h1>
-          <p className="coach-sub">
-            <span style={{ textTransform: "capitalize" }}>{date}</span> · {String(activity.start_time).slice(0, 5)}–{String(activity.end_time).slice(0, 5)}
-            {activity.location && ` · ${activity.location}`}
+          <p className="coach-eyebrow">
+            {date} · {String(activity.start_time).slice(0, 5).replace(":", " h ")} à {String(activity.end_time).slice(0, 5).replace(":", " h ")}
           </p>
+          <h1 className="coach-title coach-title--xl">{activity.title ? activity.title : activity.activity_type}</h1>
+          {activity.location && <p className="coach-sub">{activity.location.split(/\s[–-]\s/)[0]}</p>}
           {otherCoaches.length > 0 && <p className="coach-muted" style={{ margin: "4px 0 0" }}>Avec {otherCoaches.map((c) => c.first_name).join(", ")}</p>}
 
           <nav ref={stepsRef} className="coach-steps" aria-label="Étapes de la pratique">
@@ -890,46 +890,48 @@ export function CoachActiviteDetail({
                   />
                 </div>
               )}
-              {activity.activity_type !== "Match" && <BriefingCard activity={activity} players={briefing} expected={roster.length} />}
-              {activity.activity_type !== "Match" && musts.length > 0 && (
-                <details className="coach-card" style={{ marginBottom: 12 }}>
-                  <summary className="coach-card__label" style={{ cursor: "pointer", marginBottom: 0 }}>Obligatoire dans chaque entraînement · {musts.length} point{musts.length > 1 ? "s" : ""}</summary>
-                  <ol className="coach-musts" style={{ marginTop: 12 }}>
-                    {musts.map((m, i) => (
-                      <li key={i}>
-                        <strong>{m.title}</strong>
-                        {m.text ? <span>{m.text}</span> : null}
-                      </li>
-                    ))}
-                  </ol>
-                </details>
-              )}
-              <CoachPracticeDeck decks={readItems.filter((i) => i.kind === "deck")} seen={readSeen} onOpened={markSeen} />
-              <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} seen={readSeen} onSeen={markSeen} />
-              {activity.activity_type !== "Match" && !guest && <PracticeReadCard items={readItems} seen={readSeen} readAt={readAt} onConfirm={confirmRead} />}
-
-              {(activity.notes || activity.video_url) && (
-                <div className="coach-card" style={{ marginTop: 12 }}>
-                  <p className="coach-card__label">Ressources</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {activity.notes && /^https?:\/\//.test(activity.notes) && <a href={activity.notes} target="_blank" rel="noreferrer" className="coach-secondary">Ouvrir le document ↗</a>}
-                    {activity.video_url && <a href={activity.video_url} target="_blank" rel="noreferrer" className="coach-secondary">Ouvrir la vidéo ↗</a>}
+              <div className="coach-avant">
+                <div className="coach-avant__main">
+                  <CoachPracticeDeck decks={readItems.filter((i) => i.kind === "deck")} seen={readSeen} onOpened={markSeen} />
+                  <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} seen={readSeen} onSeen={markSeen} />
+                  <div>
+                    <button type="button" className="coach-secondary" onClick={() => setShowEditor(!showEditor)}>{showEditor ? "Fermer" : "Modifier le plan"}</button>
+                    {showEditor && (
+                      <div style={{ marginTop: 16 }}>
+                        <SessionPlanEditor activityId={activity.id} initialBlocks={sessionBlocks} initialExercises={initialExercises} />
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-              <div style={{ marginTop: 12 }}>
-                <EntityDocuments entityType="coach_activity" entityId={activity.id} apiBase="/api/coach/documents" readOnly hideCategory="Pratique" />
+                <aside className="coach-avant__side">
+                  {activity.activity_type !== "Match" && !guest && <PracticeReadCard items={readItems} seen={readSeen} readAt={readAt} onConfirm={confirmRead} />}
+                  {activity.activity_type !== "Match" && <BriefingCard activity={activity} players={briefing} expected={roster.length} />}
+                  {activity.activity_type !== "Match" && musts.length > 0 && (
+                    <details className="coach-card">
+                      <summary className="coach-card__label" style={{ cursor: "pointer", marginBottom: 0 }}>Obligatoire dans chaque entraînement · {musts.length} point{musts.length > 1 ? "s" : ""}</summary>
+                      <ol className="coach-musts" style={{ marginTop: 12 }}>
+                        {musts.map((m, i) => (
+                          <li key={i}>
+                            <strong>{m.title}</strong>
+                            {m.text ? <span>{m.text}</span> : null}
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
+                  )}
+                  {(activity.notes || activity.video_url) && (
+                    <div className="coach-card">
+                      <p className="coach-card__label">Ressources</p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {activity.notes && /^https?:\/\//.test(activity.notes) && <a href={activity.notes} target="_blank" rel="noreferrer" className="coach-secondary">Ouvrir le document ↗</a>}
+                        {activity.video_url && <a href={activity.video_url} target="_blank" rel="noreferrer" className="coach-secondary">Ouvrir la vidéo ↗</a>}
+                      </div>
+                    </div>
+                  )}
+                  <EntityDocuments entityType="coach_activity" entityId={activity.id} apiBase="/api/coach/documents" readOnly hideCategory="Pratique" hideEmpty />
+                  <button type="button" className="coach-primary" style={{ marginTop: 0 }} onClick={() => goTo("pendant")}>Commencer : les présences</button>
+                </aside>
               </div>
-
-              <div style={{ marginTop: 24 }}>
-                <button type="button" className="coach-secondary" onClick={() => setShowEditor(!showEditor)}>{showEditor ? "Fermer" : "Modifier le plan"}</button>
-                {showEditor && (
-                  <div style={{ marginTop: 16 }}>
-                    <SessionPlanEditor activityId={activity.id} initialBlocks={sessionBlocks} initialExercises={initialExercises} />
-                  </div>
-                )}
-              </div>
-              <button type="button" className="coach-primary" onClick={() => goTo("pendant")}>Commencer : les présences</button>
             </>
           )}
 

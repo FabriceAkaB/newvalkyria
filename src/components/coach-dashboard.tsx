@@ -48,7 +48,7 @@ interface Props {
   /** Pour « Mes relevés de paie » (documents d'employé de l'entraîneur, lecture seule). */
   coachId?: string;
   /** Pratiques du jour de l'Académie, pour toute l'équipe (même sans y être assignée). */
-  teamToday?: { id: string; startTime: string; endTime: string; title: string; location: string | null; mine: boolean; blocks: number }[];
+  teamToday?: { id: string; startTime: string; endTime: string; title: string; location: string | null; mine: boolean; blocks: number; theme?: string | null }[];
 }
 
 function FeedbackCard({ f }: { f: CoachFeedback }) {
@@ -107,97 +107,127 @@ function ActivityRow({ activity, right, warning }: { activity: DashboardActivity
   );
 }
 
+const placeOf = (l: string | null) => (l ? l.split(/\s[–-]\s|\(/)[0].trim() : null);
+const hm = (t: string) => t.replace(":", " h ").replace(" h 00", " h");
+
+/** Une pratique du jour : l'heure en grand, le groupe, le lieu, le thème, et on l'ouvre. */
+function TodayCard({ p }: { p: NonNullable<Props["teamToday"]>[number] }) {
+  return (
+    <Link href={`/entraineur/activites/${p.id}`} className="coach-tcard">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+        <p className="coach-tcard__time">
+          {hm(p.startTime)} <span className="coach-tcard__end">à {hm(p.endTime)}</span>
+        </p>
+        {p.mine ? <span className="coach-pill" data-tone="info">Ma pratique</span> : null}
+      </div>
+      <div>
+        <p className="coach-tcard__title">{p.title}</p>
+        {placeOf(p.location) ? <p className="coach-tcard__place">{placeOf(p.location)}</p> : null}
+      </div>
+      {p.theme ? <p className="coach-tcard__theme">{p.theme}</p> : null}
+      <p className="coach-tcard__cta">{p.blocks > 0 ? `Ouvrir la pratique · ${p.blocks} exercices` : "Ouvrir la pratique"} →</p>
+    </Link>
+  );
+}
+
 export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFeedback, coachId, teamToday = [] }: Props) {
   const next = upcoming[0];
+  // Aujourd'hui : les pratiques de l'Académie (toute l'équipe) et mes autres activités du jour.
+  const cards = [
+    ...teamToday,
+    ...today.filter((a) => !teamToday.some((t) => t.id === a.id)).map((a) => ({ id: a.id, startTime: a.startTime, endTime: a.endTime, title: titleOf(a), location: a.location, mine: true, blocks: a.blocks, theme: a.theme }))
+  ].sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const date = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
   return (
     <>
       <CoachTopbar coachName={coachName} />
       <div className="admin-content">
-        <div className="coach-page">
-          <h1 className="coach-title">Bonjour {coachName.split(" ")[0]}</h1>
-          <p className="coach-sub" style={{ textTransform: "capitalize" }}>{dayLabel(new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" }))}</p>
+        <div className="coach-page coach-page--wide">
+          <header>
+            <p className="coach-eyebrow">{dayLabel(date)}</p>
+            <h1 className="coach-title coach-title--xl">Bonjour {coachName.split(" ")[0]}</h1>
+          </header>
 
-          {teamToday.length > 0 && (
-            <section style={{ marginTop: 24 }}>
-              <h2 className="coach-h2">Pratiques du jour · toute l&apos;équipe</h2>
-              <p className="coach-muted" style={{ margin: "0 0 8px" }}>Ouvre la pratique pour voir les diapos et les exercices, noter chaque exercice et écrire tes notes sur les filles.</p>
-              <div className="coach-list">
-                {teamToday.map((p) => (
-                  <Link key={p.id} href={`/entraineur/activites/${p.id}`} className="coach-row">
-                    <div style={{ minWidth: 0 }}>
-                      <p className="coach-row__title">{p.title}</p>
-                      <p className="coach-row__meta">
-                        {p.startTime}–{p.endTime}
-                        {p.location ? ` · ${p.location}` : ""}
-                      </p>
-                    </div>
-                    <span className="coach-pill" data-tone={p.blocks > 0 ? "good" : "info"}>
-                      {p.mine ? "Ma pratique" : p.blocks > 0 ? `${p.blocks} exercices` : "Plan à venir"}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {toComplete.length > 0 && (
-            <section style={{ marginTop: 24 }}>
-              <h2 className="coach-h2">À compléter ({toComplete.length})</h2>
-              <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>Tes heures comptent pour la paie quand ta présence et ton rapport sont faits.</p>
-              <div className="coach-list">
-                {toComplete.map((t) => (
-                  <ActivityRow key={t.activity.id} activity={t.activity} warning={`À faire : ${t.missing.join(", ")}`} right={<span className="coach-pill" data-tone="warn">Compléter</span>} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section style={{ marginTop: 24 }}>
+          <section style={{ marginTop: 28 }}>
             <h2 className="coach-h2">Aujourd&apos;hui</h2>
-            {today.length === 0 ? (
-              <div className="coach-card">
-                <p style={{ margin: 0, color: "var(--adm-text)" }}>Pas d&apos;activité aujourd&apos;hui.</p>
-                {next && <p className="coach-sub">Prochaine : <span style={{ textTransform: "capitalize" }}>{dayLabel(next.date)}</span> à {next.startTime}.</p>}
-              </div>
-            ) : (
-              <div className="coach-list">{today.map((a) => <TodayHero key={a.id} activity={a} />)}</div>
-            )}
-          </section>
-
-          {lastFeedback && (
-            <section style={{ marginTop: 24 }}>
-              <FeedbackCard f={lastFeedback} />
-            </section>
-          )}
-
-          <section style={{ marginTop: 24 }}>
-            <h2 className="coach-h2">À venir</h2>
-            {upcoming.length === 0 ? (
-              <p className="coach-muted">Aucune activité à venir.</p>
-            ) : (
-              <div className="coach-list">
-                {upcoming.slice(0, 10).map((a) => (
-                  <ActivityRow key={a.id} activity={a} right={
-                      a.read === "a-lire" ? (
-                        <span className="coach-pill" data-tone="warn">📖 À lire</span>
-                      ) : a.read === "lue" ? (
-                        <span className="coach-pill" data-tone="good">✓ Lue</span>
-                      ) : (
-                        <span className="coach-pill" data-tone={a.blocks > 0 ? "good" : "info"}>{a.blocks > 0 ? "Plan prêt" : "Plan à venir"}</span>
-                      )
-                    } />
+            {cards.length ? (
+              <div className="coach-today">
+                {cards.map((p) => (
+                  <TodayCard key={p.id} p={p} />
                 ))}
               </div>
+            ) : (
+              <div className="coach-card">
+                <p style={{ margin: 0, color: "var(--adm-text)", fontWeight: 600 }}>Pas de pratique aujourd&apos;hui.</p>
+                {next ? (
+                  <p className="coach-sub">
+                    Prochaine : <span style={{ textTransform: "capitalize" }}>{dayLabel(next.date)}</span> à {hm(next.startTime)}.
+                  </p>
+                ) : null}
+              </div>
             )}
           </section>
 
-          {coachId && (
-            <section style={{ marginTop: 24 }}>
-              <h2 className="coach-h2">Mes relevés de paie</h2>
-              <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>Ta présence dans MonClubSportif agit comme un punch : c&apos;est sur elle qu&apos;on calcule ta paie.</p>
-              <EntityDocuments entityType="coach" entityId={coachId} apiBase="/api/coach/documents" readOnly />
+          <div className="coach-cols">
+            <section>
+              <h2 className="coach-h2">À venir</h2>
+              {upcoming.length === 0 ? (
+                <p className="coach-muted">Aucune activité à venir.</p>
+              ) : (
+                <div className="coach-list">
+                  {upcoming.slice(0, 8).map((a) => (
+                    <ActivityRow
+                      key={a.id}
+                      activity={a}
+                      right={
+                        a.read === "a-lire" ? (
+                          <span className="coach-pill" data-tone="warn">À lire</span>
+                        ) : a.read === "lue" ? (
+                          <span className="coach-pill" data-tone="good">Lue</span>
+                        ) : a.blocks > 0 ? (
+                          <span className="coach-pill" data-tone="good">Prête</span>
+                        ) : null
+                      }
+                    />
+                  ))}
+                </div>
+              )}
             </section>
-          )}
+
+            <aside style={{ display: "grid", gap: 12, alignContent: "start" }}>
+              {toComplete.length > 0 && (
+                <details className="coach-fold">
+                  <summary>
+                    <span>
+                      <strong>{toComplete.length} rapport{toComplete.length > 1 ? "s" : ""} à compléter</strong>
+                      <small>Tes heures comptent quand ta présence et ton rapport sont faits.</small>
+                    </span>
+                    <span className="coach-pill" data-tone="warn">Voir</span>
+                  </summary>
+                  <div className="coach-list" style={{ marginTop: 12 }}>
+                    {toComplete.map((t) => (
+                      <ActivityRow key={t.activity.id} activity={t.activity} warning={`À faire : ${t.missing.join(", ")}`} />
+                    ))}
+                  </div>
+                </details>
+              )}
+              {lastFeedback && <FeedbackCard f={lastFeedback} />}
+              {coachId && (
+                <details className="coach-fold">
+                  <summary>
+                    <span>
+                      <strong>Mes relevés de paie</strong>
+                      <small>Ta présence dans MonClubSportif sert de punch pour la paie.</small>
+                    </span>
+                    <span className="coach-pill">Ouvrir</span>
+                  </summary>
+                  <div style={{ marginTop: 12 }}>
+                    <EntityDocuments entityType="coach" entityId={coachId} apiBase="/api/coach/documents" readOnly />
+                  </div>
+                </details>
+              )}
+            </aside>
+          </div>
         </div>
       </div>
     </>
