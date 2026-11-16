@@ -6,7 +6,7 @@ function db() {
 
 const BUCKET = "documents";
 
-export const DOCUMENT_CATEGORIES = ["Contrat", "Formulaire", "Certificat", "Autorisation", "Facture", "Reçu", "Paie", "Autre"] as const;
+export const DOCUMENT_CATEGORIES = ["Contrat", "Formulaire", "Certificat", "Autorisation", "Facture", "Reçu", "Paie", "Pratique", "Autre"] as const;
 export type DocumentCategory = (typeof DOCUMENT_CATEGORIES)[number];
 
 export type DocumentEntityType = "registration" | "lead" | "coach" | "coach_activity" | "sponsor";
@@ -57,11 +57,55 @@ export async function addDocument(input: { entityType: DocumentEntityType; entit
   return data.id as string;
 }
 
+/** Lien de dépôt signé : le navigateur envoie le fichier directement au stockage (pas de limite de 4,5 Mo du serveur). */
+export async function createDocumentUpload(folder: string, fileName: string): Promise<{ path: string; signedUrl: string }> {
+  const path = `${folder}/${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  const { data, error } = await db().storage.from(BUCKET).createSignedUploadUrl(path);
+  if (error || !data?.signedUrl) throw new Error(error?.message ?? "Lien de dépôt impossible à créer");
+  return { path, signedUrl: data.signedUrl };
+}
+
+/** Inscrit un fichier déjà envoyé au stockage (après vérification qu'il est bien arrivé). */
+export async function registerDocument(input: { entityType: DocumentEntityType; entityId: string; category: string; fileName: string; storagePath: string; uploadedBy: string | null }): Promise<string> {
+  const slash = input.storagePath.lastIndexOf("/");
+  const folder = input.storagePath.slice(0, slash);
+  const name = input.storagePath.slice(slash + 1);
+  if (!name || input.storagePath.includes("..")) throw new Error("Fichier invalide");
+  const { data: found, error: listErr } = await db().storage.from(BUCKET).list(folder, { search: name, limit: 5 });
+  if (listErr) throw new Error(listErr.message);
+  if (!(found ?? []).some((o: any) => o.name === name)) throw new Error("Le fichier n'est pas arrivé. Recommencez le dépôt.");
+  const { data, error } = await db()
+    .from("documents")
+    .insert({ entity_type: input.entityType, entity_id: input.entityId, category: input.category, file_name: input.fileName, storage_path: input.storagePath, uploaded_by: input.uploadedBy })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data.id as string;
+}
+
+/** Rattache un document déjà déposé à une autre fiche (ex. la même pratique pour une autre date), sans recopier le fichier. */
+export async function linkDocument(sourceId: string, target: { entityType: DocumentEntityType; entityId: string; uploadedBy: string | null }): Promise<string> {
+  const { data: doc, error: fetchErr } = await db().from("documents").select("category, file_name, storage_path").eq("id", sourceId).maybeSingle();
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!doc) throw new Error("Document introuvable");
+  const { data, error } = await db()
+    .from("documents")
+    .insert({ entity_type: target.entityType, entity_id: target.entityId, category: doc.category, file_name: doc.file_name, storage_path: doc.storage_path, uploaded_by: target.uploadedBy })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data.id as string;
+}
+
 export async function deleteDocument(id: string): Promise<void> {
   const supabase = db();
   const { data: doc, error: fetchErr } = await supabase.from("documents").select("storage_path").eq("id", id).maybeSingle();
   if (fetchErr) throw new Error(fetchErr.message);
-  if (doc?.storage_path) await supabase.storage.from(BUCKET).remove([doc.storage_path]);
+  // Une pratique réutilisée à plusieurs dates partage le même fichier : on ne l'efface qu'au dernier document.
+  if (doc?.storage_path) {
+    const { count } = await supabase.from("documents").select("id", { count: "exact", head: true }).eq("storage_path", doc.storage_path);
+    if ((count ?? 0) <= 1) await supabase.storage.from(BUCKET).remove([doc.storage_path]);
+  }
   const { error } = await supabase.from("documents").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }

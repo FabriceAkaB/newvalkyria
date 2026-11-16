@@ -294,6 +294,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         tabs: [
           { href: "/admin/coaching/calendrier", label: "Calendrier" },
           { href: "/admin/pratiques", label: "À préparer" },
+          { href: "/admin/pratiques/saison", label: "Toute la saison" },
           { href: "/admin/coaching/historique", label: "Historique" },
           { href: "/admin/coaching/plan", label: "Plan de l'année", adminOnly: true },
           { href: "/admin/entraineurs/activites", label: "Entraînements", adminOnly: true },

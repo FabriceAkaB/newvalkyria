@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
 import { EntityDocuments } from "@/components/admin-entity-documents";
+import { CoachPracticeDeck } from "@/components/coach-practice-deck";
 import { exerciseGuideFallback } from "@/components/admin-block-guide";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { CoachTopbar } from "@/components/coach-topbar";
@@ -774,6 +775,7 @@ export function CoachActiviteDetail({
                   </ol>
                 </details>
               )}
+              <CoachPracticeDeck activityId={activity.id} />
               <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} />
 
               {(activity.notes || activity.video_url) && (
@@ -786,7 +788,7 @@ export function CoachActiviteDetail({
                 </div>
               )}
               <div style={{ marginTop: 12 }}>
-                <EntityDocuments entityType="coach_activity" entityId={activity.id} apiBase="/api/coach/documents" readOnly />
+                <EntityDocuments entityType="coach_activity" entityId={activity.id} apiBase="/api/coach/documents" readOnly hideCategory="Pratique" />
               </div>
 
               <div style={{ marginTop: 24 }}>

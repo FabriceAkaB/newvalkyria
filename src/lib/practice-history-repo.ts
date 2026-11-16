@@ -1,6 +1,8 @@
 import { HISTORY_START, type PracticeRecord } from "@/lib/practice-history";
 import { groupName, together } from "@/lib/practice-survey-repo";
-import { createActivityFor, listPractices, todayIso, type Practice } from "@/lib/practices-repo";
+import { createDocumentUpload, linkDocument, registerDocument } from "@/lib/documents-repo";
+import type { Venue } from "@/lib/practice-venue";
+import { createActivityFor, listPractices, SEASON, todayIso, type Practice } from "@/lib/practices-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 /** Historique exact de chaque pratique de l'Académie depuis le 1er novembre 2026 : déposée ou non, présences,
@@ -47,6 +49,7 @@ export async function getPracticeHistory(): Promise<HistoryRow[]> {
     const main: Practice = [...mates].sort((a, b) => Number(Boolean(b.activityId)) - Number(Boolean(a.activityId)) || b.blocks - a.blocks)[0];
     const here = rows.filter((r) => withAct.some((q) => q.activityId === r.activity_id) && HERE.includes(r.status));
     const deck = withAct.map((q) => act.get(q.activityId!)?.deck_url).find(Boolean) ?? null;
+    const deposited = mates.some((q) => q.deposited > 0);
     const analysis = withAct.map((q) => act.get(q.activityId!)?.analysis).find(Boolean) ?? null;
     const score = withAct.map((q) => act.get(q.activityId!)?.theme_score).find((v) => v !== null && v !== undefined) ?? null;
     out.push({
@@ -57,7 +60,7 @@ export async function getPracticeHistory(): Promise<HistoryRow[]> {
       group: `${mates.map((q) => groupName(q.group)).join(" et ")}`,
       activityId: main.activityId,
       planned: mates.some((q) => q.blocks > 0),
-      deck: Boolean(deck),
+      deck: Boolean(deck) || deposited,
       deckUrl: deck,
       present: here.length,
       answered: here.filter((r) => r.practice_rating != null && r.fatigue != null).length,
@@ -107,4 +110,79 @@ export async function getModelPractices(): Promise<ModelPractice[]> {
       .filter((b) => b.activity_id === r.activityId)
       .map((b) => ({ order: b.block_order, type: b.block_type, title: b.custom_title || b.exercise?.title || b.block_type, minutes: b.duration_minutes }))
   }));
+}
+
+/* ── Toute la saison : déposer d'avance les diapos de chaque pratique (PDF), les voir en aperçu ── */
+
+export interface SeasonPractice {
+  key: string;
+  date: string;
+  start: string;
+  end: string | null;
+  location: string;
+  group: string;
+  venue: Venue;
+  theme: string | null;
+  activityId: string | null;
+  blocks: number;
+  docs: { id: string; fileName: string; uploadedAt: string }[];
+}
+
+const isAcademyPractice = (p: Practice) => !p.organization && p.source !== "programme" && p.activityType === "Pratique" && p.venue !== "autre";
+
+/** Les pratiques de l'Académie d'aujourd'hui à la fin de la saison, une par gymnase et par heure (groupes réunis). */
+export async function getSeasonPractices(from = todayIso()): Promise<SeasonPractice[]> {
+  const practices = (await listPractices({ from, to: SEASON.end })).filter(isAcademyPractice);
+  const ids = practices.map((p) => p.activityId).filter((x): x is string => Boolean(x));
+  const { data: docs } = ids.length
+    ? await db().from("documents").select("id, entity_id, file_name, uploaded_at").eq("entity_type", "coach_activity").eq("category", "Pratique").in("entity_id", ids).order("uploaded_at")
+    : { data: [] };
+  const used = new Set<string>();
+  const out: SeasonPractice[] = [];
+  for (const p of practices) {
+    if (used.has(p.key)) continue;
+    const mates = practices.filter((q) => !used.has(q.key) && together(p, q));
+    mates.forEach((q) => used.add(q.key));
+    const main = [...mates].sort((a, b) => Number(Boolean(b.activityId)) - Number(Boolean(a.activityId)) || b.deposited - a.deposited || b.blocks - a.blocks)[0];
+    const actIds = new Set(mates.map((q) => q.activityId).filter(Boolean));
+    out.push({
+      key: main.key,
+      date: main.date,
+      start: main.start,
+      end: main.end,
+      location: main.location,
+      group: mates.map((q) => groupName(q.group)).join(" et "),
+      venue: main.venue,
+      theme: main.theme,
+      activityId: main.activityId,
+      blocks: mates.reduce((n, q) => n + q.blocks, 0),
+      docs: ((docs ?? []) as any[]).filter((d) => actIds.has(d.entity_id)).map((d) => ({ id: d.id, fileName: d.file_name, uploadedAt: d.uploaded_at }))
+    });
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
+}
+
+const DECK_TYPES = /^(application\/pdf|image\/(png|jpe?g|webp))$/;
+const DECK_FOLDER = "coach_activity/pratiques";
+export const DECK_HELP = "Déposez la pratique en PDF : dans claude.ai, ouvrez les diapos, puis Télécharger → PDF.";
+
+/** Étape 1 du dépôt : un lien pour envoyer le PDF directement au stockage. */
+export async function startDeckUpload(file: { fileName: string; contentType: string }): Promise<{ path: string; signedUrl: string }> {
+  if (!DECK_TYPES.test(file.contentType) && !/\.pdf$/i.test(file.fileName)) throw new Error(DECK_HELP);
+  return createDocumentUpload(DECK_FOLDER, file.fileName);
+}
+
+/** Étape 2 : relie les diapos (fichier envoyé, ou pratique déjà déposée qu'on réutilise) à la pratique de l'horaire.
+ *  L'activité est créée au besoin : c'est elle que l'éducateur assigné voit dans son portail (étape « Avant »). */
+export async function attachPracticeDeck(input: { key: string; path?: string | null; fileName?: string | null; reuseDocumentId?: string | null; uploadedBy: string | null }): Promise<{ activityId: string; documentId: string }> {
+  const practices = (await listPractices({ from: HISTORY_START, to: SEASON.end })).filter((p) => !p.organization);
+  const p = practices.find((q) => q.key === input.key);
+  if (!p) throw new Error("Pratique introuvable dans l'horaire");
+  const withAct = practices.find((q) => q.activityId && together(p, q));
+  const activityId = withAct?.activityId ?? (await createActivityFor({ date: p.date, start: p.start, end: p.end, location: p.location, group: p.group }));
+  const target = { entityType: "coach_activity" as const, entityId: activityId, uploadedBy: input.uploadedBy };
+  if (input.reuseDocumentId) return { activityId, documentId: await linkDocument(input.reuseDocumentId, target) };
+  if (!input.path || !input.path.startsWith(`${DECK_FOLDER}/`)) throw new Error("Fichier manquant");
+  const documentId = await registerDocument({ ...target, category: "Pratique", fileName: input.fileName || input.path.split("/").pop()!, storagePath: input.path });
+  return { activityId, documentId };
 }

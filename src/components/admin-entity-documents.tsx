@@ -7,7 +7,7 @@ import { DOCUMENT_CATEGORIES, type DocumentEntityType, type EntityDocument } fro
 /** Visionneuse intégrée — un document (PDF, image...) s'ouvre dans un
  *  panneau superposé plutôt que dans un nouvel onglet, pour ne jamais
  *  forcer l'utilisateur à quitter le site. */
-function DocumentViewerModal({ fileName, signedUrl, onClose }: { fileName: string; signedUrl: string; onClose: () => void }) {
+export function DocumentViewerModal({ fileName, signedUrl, onClose }: { fileName: string; signedUrl: string; onClose: () => void }) {
   return (
     <div className="admin-modal-overlay" onClick={onClose}>
       <div
@@ -15,8 +15,14 @@ function DocumentViewerModal({ fileName, signedUrl, onClose }: { fileName: strin
         style={{ width: "92vw", height: "88vh", maxWidth: "1100px", background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", display: "flex", flexDirection: "column", overflow: "hidden" }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0.9rem", borderBottom: "1px solid var(--adm-line)" }}>
-          <span style={{ fontSize: "0.8rem", color: "var(--adm-text-2)" }}>📄 {fileName}</span>
-          <button onClick={onClose} className="admin-drawer-close" aria-label="Fermer">×</button>
+          <span style={{ fontSize: "0.8rem", color: "var(--adm-text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>📄 {fileName}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            {/* Sur téléphone et iPad, l'aperçu intégré ne montre parfois que la 1re page : le plein écran ouvre toutes les diapos. */}
+            <a href={signedUrl} target="_blank" rel="noreferrer" style={{ fontSize: "0.78rem", color: "var(--adm-info)" }}>
+              Plein écran ↗
+            </a>
+            <button onClick={onClose} className="admin-drawer-close" aria-label="Fermer">×</button>
+          </span>
         </div>
         <iframe src={signedUrl} title={fileName} style={{ flex: 1, border: "none", background: "#fff" }} />
       </div>
@@ -24,7 +30,7 @@ function DocumentViewerModal({ fileName, signedUrl, onClose }: { fileName: strin
   );
 }
 
-export function EntityDocuments({ entityType, entityId, apiBase = "/api/admin/documents", readOnly = false }: { entityType: DocumentEntityType; entityId: string; apiBase?: string; readOnly?: boolean }) {
+export function EntityDocuments({ entityType, entityId, apiBase = "/api/admin/documents", readOnly = false, hideCategory }: { entityType: DocumentEntityType; entityId: string; apiBase?: string; readOnly?: boolean; hideCategory?: string }) {
   const [documents, setDocuments] = useState<EntityDocument[] | null>(null);
   const [category, setCategory] = useState<string>(DOCUMENT_CATEGORIES[DOCUMENT_CATEGORIES.length - 1]);
   const [uploading, setUploading] = useState(false);
@@ -34,9 +40,9 @@ export function EntityDocuments({ entityType, entityId, apiBase = "/api/admin/do
   useEffect(() => {
     fetch(`${apiBase}?entityType=${entityType}&entityId=${entityId}`)
       .then((r) => r.json())
-      .then((data) => setDocuments(data.documents ?? []))
+      .then((data) => setDocuments(((data.documents ?? []) as EntityDocument[]).filter((d) => d.category !== hideCategory)))
       .catch(() => setDocuments([]));
-  }, [apiBase, entityType, entityId]);
+  }, [apiBase, entityType, entityId, hideCategory]);
 
   const upload = async (file: File | undefined) => {
     if (!file) return;

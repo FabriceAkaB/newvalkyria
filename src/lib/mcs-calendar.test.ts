@@ -184,6 +184,8 @@ describe("calendrier de l'admin", () => {
     activityId: null,
     activityType: "Pratique",
     blocks: 0,
+    deposited: 0,
+    venue: "gym-double",
     theme: null,
     preparedDaysAhead: null,
     readiness: "vert",

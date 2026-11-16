@@ -1,10 +1,12 @@
+import { venueOf, type Venue } from "@/lib/practice-venue";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 /** Pratiques préparées d'avance (Mandalart P1.3.18, automatisation AU21).
  *  Les pratiques attendues viennent de l'horaire réel : créneaux hebdomadaires de la saison filles
  *  (time_slot_templates), dates des programmes garçons et privés (session_program_dates), et toute
  *  activité entrée dans Équipe → Entraînements (dont les pratiques de JP hors Académie).
- *  Une pratique est « prête » quand son activité a un plan de séance (au moins un bloc).
+ *  Une pratique est « prête » quand son activité a un plan de séance (au moins un bloc) ou sa pratique déposée
+ *  (diapos en PDF, document « Pratique » de l'activité, page Pratiques → Toute la saison).
  *  Couleur d'une pratique pas prête selon le temps qui reste (règle de JP) :
  *  vert = encore 8 à 14 jours, jaune = 4 à 7 jours, rouge = 3 jours ou moins. */
 
@@ -45,6 +47,10 @@ export interface Practice {
   activityId: string | null;
   activityType: string;
   blocks: number;
+  /** Diapos de la pratique déposées (documents « Pratique » de l'activité). */
+  deposited: number;
+  /** Gymnase double, deux tiers du gymnase ou synthétique à 7 (practice-venue.ts). */
+  venue: Venue;
   theme: string | null;
   /** Jours d'avance avec lesquels le plan a été prêt (premier bloc créé). */
   preparedDaysAhead: number | null;
@@ -81,7 +87,12 @@ export async function listPractices(opts: { from?: string; to?: string } = {}): 
     db().from("season_themes").select("week_start_date, theme").gte("week_start_date", addDays(from, -7)).lte("week_start_date", to)
   ]);
   const actIds = (acts ?? []).map((a: any) => a.id);
-  const { data: blocks } = actIds.length ? await db().from("activity_session_blocks").select("activity_id, created_at").in("activity_id", actIds) : { data: [] };
+  const [{ data: blocks }, { data: decks }] = actIds.length
+    ? await Promise.all([
+        db().from("activity_session_blocks").select("activity_id, created_at").in("activity_id", actIds),
+        db().from("documents").select("entity_id, uploaded_at").eq("entity_type", "coach_activity").eq("category", "Pratique").in("entity_id", actIds)
+      ])
+    : [{ data: [] }, { data: [] }];
 
   const themeFor = (d: string) => {
     const ws = (themes ?? []).filter((t: any) => String(t.week_start_date).slice(0, 10) <= d).sort((a: any, b: any) => String(b.week_start_date).localeCompare(String(a.week_start_date)))[0];
@@ -89,7 +100,7 @@ export async function listPractices(opts: { from?: string; to?: string } = {}): 
   };
 
   // 1) Pratiques attendues selon l'horaire
-  const expected: Omit<Practice, "activityId" | "blocks" | "preparedDaysAhead" | "readiness" | "daysLeft" | "theme" | "activityType">[] = [];
+  const expected: Omit<Practice, "activityId" | "blocks" | "deposited" | "venue" | "preparedDaysAhead" | "readiness" | "daysLeft" | "theme" | "activityType">[] = [];
   for (const t of templates ?? []) {
     const cats = (tplCats ?? []).filter((c: any) => c.time_slot_template_id === t.id).map((c: any) => c.category_id);
     const progs = (tplProgs ?? []).filter((p: any) => p.time_slot_template_id === t.id).map((p: any) => p.program?.name ?? "");
@@ -115,16 +126,19 @@ export async function listPractices(opts: { from?: string; to?: string } = {}): 
   const blocksOf = (id: string) => (blocks ?? []).filter((b: any) => b.activity_id === id);
   const toPractice = (e: (typeof expected)[number], a: any | null): Practice => {
     const bl = a ? blocksOf(a.id) : [];
-    const first = bl.map((b: any) => String(b.created_at).slice(0, 10)).sort()[0] ?? null;
+    const dk = a ? (decks ?? []).filter((d: any) => d.entity_id === a.id) : [];
+    const first = [...bl.map((b: any) => String(b.created_at).slice(0, 10)), ...dk.map((d: any) => String(d.uploaded_at).slice(0, 10))].sort()[0] ?? null;
     const daysLeft = daysBetween(today, e.date);
     return {
       ...e,
       activityId: a?.id ?? null,
       activityType: a?.activity_type ?? "Pratique",
       blocks: bl.length,
+      deposited: dk.length,
+      venue: venueOf(e),
       theme: themeFor(e.date),
       preparedDaysAhead: first ? daysBetween(first, e.date) : null,
-      readiness: readinessOf(daysLeft, bl.length > 0),
+      readiness: readinessOf(daysLeft, bl.length > 0 || dk.length > 0),
       daysLeft
     };
   };
