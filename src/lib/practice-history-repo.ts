@@ -155,7 +155,7 @@ export async function getSeasonPractices(from = todayIso()): Promise<SeasonPract
       venue: main.venue,
       theme: main.theme,
       activityId: main.activityId,
-      blocks: mates.reduce((n, q) => n + q.blocks, 0),
+      blocks: [...new Map(mates.map((q) => [q.activityId ?? q.key, q.blocks])).values()].reduce((n, b) => n + b, 0),
       docs: ((docs ?? []) as any[]).filter((d) => actIds.has(d.entity_id)).map((d) => ({ id: d.id, fileName: d.file_name, uploadedAt: d.uploaded_at }))
     });
   }

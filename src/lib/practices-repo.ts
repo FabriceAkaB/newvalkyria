@@ -150,6 +150,13 @@ export async function listPractices(opts: { from?: string; to?: string } = {}): 
     if (a) used.add(a.id);
     out.push(toPractice(e, a));
   }
+  // 2 b) Deux groupes au même gymnase à la même heure = une seule pratique : le groupe sans activité prend celle de son
+  //      jumeau (même plan, mêmes diapos, mêmes éducateurs), sinon il reste « à préparer » alors que la pratique est prête.
+  for (const p of out) {
+    if (p.activityId || p.source !== "saison") continue;
+    const twin = out.find((q) => q !== p && q.activityId && q.source === "saison" && q.date === p.date && q.location === p.location && Math.abs(minutes(q.start) - minutes(p.start)) <= 15);
+    if (twin) Object.assign(p, { activityId: twin.activityId, activityType: twin.activityType, blocks: twin.blocks, deposited: twin.deposited, preparedDaysAhead: twin.preparedDaysAhead, readiness: twin.readiness });
+  }
   // 3) Activités entrées qui ne correspondent à aucun créneau (pratiques hors Académie, dimanche, tournois…)
   for (const a of acts ?? []) {
     if (used.has(a.id)) continue;
