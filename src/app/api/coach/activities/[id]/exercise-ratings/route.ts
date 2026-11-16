@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentCoachId } from "@/lib/coach-auth";
-import { getCoachActivityById } from "@/lib/coach-portal-repo";
+import { getCoachActivityAccess } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { APPROVAL_SCORE, parseScores } from "@/lib/exercise-bank";
 import { getActivityExercisesToRate, saveRating } from "@/lib/exercises-repo";
@@ -15,7 +15,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const coachId = await getCurrentCoachId();
   if (!coachId) return jsonError("Non autorisé", 401);
   const { id } = await params;
-  const entry = await getCoachActivityById(coachId, id);
+  const entry = await getCoachActivityAccess(coachId, id);
   if (!entry) return jsonError("Activité introuvable", 404);
   const exercises = await getActivityExercisesToRate(id, coachId);
   return NextResponse.json({ exercises, canRate: entry.activity.activity_date <= todayToronto() });
@@ -25,7 +25,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const coachId = await getCurrentCoachId();
   if (!coachId) return jsonError("Non autorisé", 401);
   const { id } = await params;
-  const entry = await getCoachActivityById(coachId, id);
+  const entry = await getCoachActivityAccess(coachId, id);
   if (!entry) return jsonError("Activité introuvable", 404);
   if (entry.activity.activity_date > todayToronto()) return jsonError("On note les exercices après la séance.", 400);
 

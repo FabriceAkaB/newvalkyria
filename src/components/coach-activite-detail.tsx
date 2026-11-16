@@ -42,7 +42,8 @@ interface Props {
   initialAttendance: PlayerAttendance[];
   initialEvaluations: PlayerEvaluation[];
   coachNames: Record<string, string>;
-  myPresence: MyPresence;
+  /** null : accès d'équipe (pratique de l'Académie sans y être assignée) ; pas de présence ni de paie. */
+  myPresence: MyPresence | null;
   theme: { theme: string; notes: string | null } | null;
   sessionBlocks: SessionBlock[];
   initialExercises: Exercise[];
@@ -408,6 +409,7 @@ function BriefingCard({ activity, players, expected }: { activity: CoachActivity
               {p.watch.map((w) => <span key={w} className="coach-brief__line" style={{ color: "var(--adm-warn)" }}>{w}</span>)}
               {p.absentLastTime && <span className="coach-brief__line">Absente la dernière fois</span>}
               {p.objectives.map((o) => <span key={o} className="coach-brief__line">Objectif : {o}</span>)}
+              {p.gestures?.length ? <span className="coach-brief__line">Geste à retravailler : {p.gestures.join(", ")}</span> : null}
             </li>
           ))}
         </ul>
@@ -503,6 +505,20 @@ function AttendanceStep({
 
 /* ── Après : évaluation rapide, routine de fin, ma présence ──────── */
 
+/** Les gestes du ball mastery du jour (« 1. Right Foot Weave : … » dans le déroulement de l'exercice). */
+function ballMasteryMoves(blocks: SessionBlock[], exercises: Exercise[]): string[] {
+  const out: string[] = [];
+  for (const b of blocks) {
+    const ex = exercises.find((e) => e.id === b.exercise_id) as (Exercise & { exercise_type?: string | null; instructions?: string | null }) | undefined;
+    if (!ex || (ex.exercise_type !== "ball-mastery" && b.block_type !== "Ball mastery")) continue;
+    for (const line of String(ex.instructions ?? "").split("\n")) {
+      const m = line.match(/^\s*\d+[.)]\s*([^:]{3,60}?)\s*:/);
+      if (m) out.push(m[1].trim());
+    }
+  }
+  return [...new Set(out)];
+}
+
 function QuickEvaluation({
   activityId,
   player,
@@ -510,8 +526,10 @@ function QuickEvaluation({
   others,
   open,
   onToggle,
-  onSaved
+  onSaved,
+  gestureChoices = []
 }: {
+  gestureChoices?: string[];
   activityId: string;
   player: RosterPlayer;
   mine: PlayerEvaluation | undefined;
@@ -522,6 +540,9 @@ function QuickEvaluation({
 }) {
   const [ratings, setRatings] = useState<Record<string, number>>(mine?.ratings ?? {});
   const [note, setNote] = useState(mine?.comment ?? "");
+  const [gestures, setGestures] = useState<string[]>(mine?.gestures ?? []);
+  const [otherGesture, setOtherGesture] = useState("");
+  const toggleGesture = (g: string) => setGestures((list) => (list.includes(g) ? list.filter((x) => x !== g) : [...list, g]));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const done = isQuickEvaluationComplete(mine);
@@ -532,10 +553,10 @@ function QuickEvaluation({
   const save = async () => {
     setSaving(true);
     setError(null);
-    const r = await postJson("/api/coach/evaluations", { activityId, registrationId: player.registrationId, ratings, comment: note });
+    const r = await postJson("/api/coach/evaluations", { activityId, registrationId: player.registrationId, ratings, comment: note, gestures });
     setSaving(false);
     if (!r.ok) return setError(r.error ?? null);
-    onSaved({ id: mine?.id ?? "", activity_id: activityId, registration_id: player.registrationId, coach_id: "", ratings: r.data.ratings, comment: r.data.comment, created_at: new Date().toISOString() });
+    onSaved({ id: mine?.id ?? "", activity_id: activityId, registration_id: player.registrationId, coach_id: "", ratings: r.data.ratings, comment: r.data.comment, gestures: r.data.gestures ?? [], created_at: new Date().toISOString() });
   };
 
   return (
@@ -545,6 +566,7 @@ function QuickEvaluation({
         <div style={{ flex: 1, minWidth: 0 }}>
           <p className="coach-player__name">{fullName(player)}</p>
           {done && !open && <p className="coach-muted" style={{ margin: 0 }}>{QUICK_CRITERIA.map((c) => `${c} ${mine?.ratings?.[c]}`).join(" · ")}</p>}
+          {!open && mine?.gestures?.length ? <p className="coach-muted" style={{ margin: 0, color: "var(--adm-warn)" }}>Difficile : {mine.gestures.join(", ")}</p> : null}
           {!done && doneByOther && <p className="coach-muted" style={{ margin: 0 }}>Évaluée par {doneByOther.coach}</p>}
         </div>
         <span className="coach-pill" data-tone={done || doneByOther ? "good" : "warn"}>{done || doneByOther ? "✓ Évaluée" : "À évaluer"}</span>
@@ -567,6 +589,35 @@ function QuickEvaluation({
               </div>
             </div>
           ))}
+          <div className="coach-field">
+            <p className="coach-field__label">
+              Gestes difficiles pour {player.firstName}
+              <span>facultatif · touche ceux qu&apos;elle a du mal à faire</span>
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {[...new Set([...gestureChoices, ...gestures])].map((g) => (
+                <button key={g} type="button" className="coach-pill" data-tone={gestures.includes(g) ? "warn" : undefined} aria-pressed={gestures.includes(g)} onClick={() => toggleGesture(g)} style={{ cursor: "pointer", border: gestures.includes(g) ? undefined : "1px solid var(--adm-line)" }}>
+                  {gestures.includes(g) ? "✗ " : ""}
+                  {g}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+              <input className="coach-time" style={{ flex: 1 }} value={otherGesture} placeholder="Autre geste (ex. contrôle orienté pied gauche)" onChange={(e) => setOtherGesture(e.target.value)} />
+              <button
+                type="button"
+                className="coach-secondary"
+                disabled={!otherGesture.trim()}
+                onClick={() => {
+                  const g = otherGesture.trim().slice(0, 60);
+                  if (g && !gestures.includes(g)) setGestures((list) => [...list, g]);
+                  setOtherGesture("");
+                }}
+              >
+                Ajouter
+              </button>
+            </div>
+          </div>
           <div className="coach-field">
             <p className="coach-field__label">
               Note sur {player.firstName}
@@ -748,6 +799,7 @@ export function CoachActiviteDetail({
     return null;
   };
   const read = practiceReadStatus(readItems, readSeen, readAt);
+  const bmMoves = useMemo(() => ballMasteryMoves(sessionBlocks, initialExercises), [sessionBlocks, initialExercises]);
   const [showEditor, setShowEditor] = useState(false);
   const [attendance, setAttendance] = useState<Record<string, PlayerAttendanceStatus>>(Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status])));
   const [feedback, setFeedback] = useState<Record<string, SurveyAnswer>>(
@@ -756,7 +808,8 @@ export function CoachActiviteDetail({
     )
   );
   const [mine, setMine] = useState<Record<string, PlayerEvaluation>>(Object.fromEntries(initialEvaluations.filter((e) => e.coach_id === coachId).map((e) => [e.registration_id, e])));
-  const [presence, setPresence] = useState(myPresence);
+  const guest = myPresence === null;
+  const [presence, setPresence] = useState<MyPresence>(myPresence ?? { status: "present" as AssignmentStatus, confirmed: false, arrivalTime: null, departureTime: null, locked: true });
   const [openId, setOpenId] = useState<string | null>(() => {
     const done = (id: string) => initialEvaluations.some((e) => e.registration_id === id && isQuickEvaluationComplete(e));
     return roster.find((p) => PARTICIPATED.includes(attendance[p.registrationId] ?? "") && !done(p.registrationId))?.registrationId ?? null;
@@ -793,7 +846,7 @@ export function CoachActiviteDetail({
 
   const date = new Date(`${String(activity.activity_date).slice(0, 10)}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" });
   const steps: { key: Step; label: string; detail: string }[] = [
-    { key: "avant", label: "Avant", detail: activity.activity_type === "Match" || !read.hasContent ? "La pratique" : read.confirmed ? "Pratique lue ✓" : `À lire ${read.seen}/${read.total}` },
+    { key: "avant", label: "Avant", detail: activity.activity_type === "Match" || !read.hasContent || guest ? "La pratique" : read.confirmed ? "Pratique lue ✓" : `À lire ${read.seen}/${read.total}` },
     { key: "pendant", label: "Pendant", detail: roster.length ? `Présences ${marked}/${roster.length}` : "Présences" },
     { key: "apres", label: "Après", detail: `Rapport ${afterDone}/${reportNeeded ? 3 : 1}` }
   ];
@@ -853,7 +906,7 @@ export function CoachActiviteDetail({
               )}
               <CoachPracticeDeck decks={readItems.filter((i) => i.kind === "deck")} seen={readSeen} onOpened={markSeen} />
               <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} seen={readSeen} onSeen={markSeen} />
-              {activity.activity_type !== "Match" && <PracticeReadCard items={readItems} seen={readSeen} readAt={readAt} onConfirm={confirmRead} />}
+              {activity.activity_type !== "Match" && !guest && <PracticeReadCard items={readItems} seen={readSeen} readAt={readAt} onConfirm={confirmRead} />}
 
               {(activity.notes || activity.video_url) && (
                 <div className="coach-card" style={{ marginTop: 12 }}>
@@ -911,10 +964,12 @@ export function CoachActiviteDetail({
                   {reportNeeded && <li data-done={String(marked === roster.length)}>Présences des joueuses · {marked}/{roster.length}</li>}
                   {reportNeeded && <li data-done={String(participants.length > 0 && evaluated === participants.length)}>Évaluation de chaque joueuse présente · {evaluated}/{participants.length}</li>}
                   {reportNeeded && <li data-done={String(participants.length > 0 && routineDone === participants.length)}>Sondage de fin · {routineDone}/{participants.length}</li>}
-                  <li data-done={String(presence.confirmed)}>Ma présence confirmée</li>
+                  {!guest && <li data-done={String(presence.confirmed)}>Ma présence confirmée</li>}
                 </ul>
                 <p className="coach-sub" style={{ marginTop: 12, color: hoursCount ? "var(--adm-good)" : undefined }}>
-                  {hoursCount
+                  {guest
+                    ? "Accès d'équipe : tu n'es pas assignée à cette pratique dans le site. Ta présence et tes heures arrivent de MonClubSportif."
+                    : hoursCount
                     ? "Rapport complet : tes heures comptent pour la paie."
                     : ruleApplies
                       ? "Tes heures comptent pour la paie quand ta présence est confirmée et que les présences et les évaluations sont faites."
@@ -942,6 +997,7 @@ export function CoachActiviteDetail({
                       others={others[p.registrationId] ?? []}
                       open={openId === p.registrationId}
                       onToggle={() => setOpenId(openId === p.registrationId ? null : p.registrationId)}
+                      gestureChoices={bmMoves}
                       onSaved={(ev) => {
                         setMine((prev) => ({ ...prev, [p.registrationId]: ev }));
                         openNext(p.registrationId);
@@ -976,7 +1032,7 @@ export function CoachActiviteDetail({
                 <CoachExerciseRatings activityId={activity.id} />
               </div>
 
-              <MyPresenceCard activity={activity} initial={presence} onChange={setPresence} />
+              {!guest && <MyPresenceCard activity={activity} initial={presence} onChange={setPresence} />}
             </>
           )}
         </div>

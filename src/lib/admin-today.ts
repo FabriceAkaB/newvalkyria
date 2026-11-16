@@ -14,7 +14,7 @@ import { getPendingMcsPlayers } from "@/lib/mcs-robot-runner";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { getLaunchAlerts } from "@/lib/launch-scenarios-repo";
 import { getPracticeReads } from "@/lib/coach-portal-repo";
-import { listPractices } from "@/lib/practices-repo";
+import { listPractices, mergeSameSlot } from "@/lib/practices-repo";
 import { dateLong, getRefereesToPay, listMatches } from "@/lib/referees-repo";
 import { getFamiliesToCall } from "@/lib/surveys-repo";
 import { getOutreachSummary, type OutreachPerson } from "@/lib/outreach";
@@ -576,7 +576,7 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
 
   // ── Pratiques à préparer (rouge ≤ 3 jours, jaune ≤ 7, vert ≤ 14) — admin et gérante ──
   {
-    const practices = (await listPractices().catch(() => [])).filter((p) => ["rouge", "jaune", "vert"].includes(p.readiness));
+    const practices = mergeSameSlot(await listPractices().catch(() => [])).filter((p) => ["rouge", "jaune", "vert"].includes(p.readiness));
     const dot = { rouge: "🔴", jaune: "🟡", vert: "🟢" } as Record<string, string>;
     sections.push(
       section({

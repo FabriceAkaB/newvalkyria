@@ -8,6 +8,7 @@ import { AdminBlockGuide } from "@/components/admin-block-guide";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { SurpriseMomentEditor } from "@/components/surprise-moment";
 import { EntityDocuments } from "@/components/admin-entity-documents";
+import { PracticeDeckViewer } from "@/components/practice-deck-viewer";
 import { MatchPanel } from "@/components/match-panel";
 import { computeAssignment, computeHours, formatHours } from "@/lib/coach-payroll";
 import type { AssignmentStatus, Coach, CoachActivity, CoachAssignment, CoachTypeRate } from "@/lib/coaches-repo";
@@ -131,6 +132,8 @@ interface Props {
   initialMatchEvaluations: MatchPlayerEvaluation[];
   /** Prise de connaissance de la pratique par éducateur (portail) : libellé et confirmation. */
   practiceReads?: Record<string, { label: string; confirmed: boolean }>;
+  /** Diapos de la pratique déposées : affichées déjà ouvertes en haut de la page. */
+  decks?: { id: string; fileName: string }[];
 }
 
 const STATUS_LABELS: Record<AssignmentStatus, string> = {
@@ -301,7 +304,7 @@ function AssignmentRow({
   );
 }
 
-export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches, typeRates, initialBlocks, exercises, matchRoster, initialMatchDetails, initialMatchConvocations, initialMatchLineup, initialMatchPlaytime, initialMatchEvaluations, practiceReads }: Props) {
+export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches, typeRates, initialBlocks, exercises, matchRoster, initialMatchDetails, initialMatchConvocations, initialMatchLineup, initialMatchPlaytime, initialMatchEvaluations, practiceReads, decks = [] }: Props) {
   const [assignments, setAssignments] = useState(initialAssignments);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -422,6 +425,8 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
           </div>
 
           {error && <p className="admin-error">{error}</p>}
+
+          <PracticeDeckViewer decks={decks} downloadUrl={(id) => `/api/admin/documents/${id}/download`} />
 
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", margin: "1.25rem 0" }}>
             <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.8rem 1.1rem" }}>

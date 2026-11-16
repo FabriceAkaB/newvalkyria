@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentCoachId } from "@/lib/coach-auth";
-import { getCoachActivityById } from "@/lib/coach-portal-repo";
+import { getCoachActivityAccess } from "@/lib/coach-portal-repo";
 import { getDocumentsForEntity } from "@/lib/documents-repo";
 import { jsonError } from "@/lib/http";
 
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ documents: await getDocumentsForEntity("coach", coachId) });
   }
   if (entityType !== "coach_activity") return jsonError("Paramètres invalides", 400);
-  if (!(await getCoachActivityById(coachId, entityId))) return jsonError("Activité introuvable", 404);
+  if (!(await getCoachActivityAccess(coachId, entityId))) return jsonError("Activité introuvable", 404);
 
   const documents = await getDocumentsForEntity("coach_activity", entityId);
   return NextResponse.json({ documents });

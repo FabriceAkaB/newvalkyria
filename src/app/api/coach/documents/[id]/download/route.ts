@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentCoachId } from "@/lib/coach-auth";
-import { getCoachActivityById } from "@/lib/coach-portal-repo";
+import { getCoachActivityAccess } from "@/lib/coach-portal-repo";
 import { getDocumentEntityRef, getDocumentSignedUrl } from "@/lib/documents-repo";
 import { jsonError } from "@/lib/http";
 
@@ -12,7 +12,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const ref = await getDocumentEntityRef(id);
   const own = ref?.entity_type === "coach" && ref.entity_id === coachId;
-  if (!ref || (!own && (ref.entity_type !== "coach_activity" || !(await getCoachActivityById(coachId, ref.entity_id))))) {
+  if (!ref || (!own && (ref.entity_type !== "coach_activity" || !(await getCoachActivityAccess(coachId, ref.entity_id))))) {
     return jsonError("Document introuvable", 404);
   }
 

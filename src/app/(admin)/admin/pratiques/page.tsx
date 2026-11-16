@@ -5,7 +5,7 @@ import { Pill } from "@/components/mandalart/ui";
 import { ExternalPracticeForm, PrepareButton } from "@/components/practices-admin";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getPracticeReads, type PracticeReadRow } from "@/lib/coach-portal-repo";
-import { listPractices, summarize, type Practice, type Readiness } from "@/lib/practices-repo";
+import { listPractices, mergeSameSlot, summarize, type Practice, type Readiness } from "@/lib/practices-repo";
 
 export const metadata = { title: "Pratiques — Admin New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -67,7 +67,7 @@ function Row({ p, reads = [] }: { p: Practice; reads?: PracticeReadRow[] }) {
 /** « Mes prochaines pratiques sont-elles prêtes, deux semaines d'avance ? » */
 export default async function PracticesPage() {
   await requireAdmin();
-  const all = await listPractices();
+  const all = mergeSameSlot(await listPractices());
   const s = summarize(all);
   const upcoming = all.filter((p) => p.daysLeft >= 0);
   const academy = upcoming.filter((p) => !p.organization);

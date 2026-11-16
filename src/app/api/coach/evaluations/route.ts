@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     registrationId?: string;
     ratings?: Record<string, number>;
     comment?: string | null;
+    gestures?: unknown;
   } | null;
 
   if (!body?.activityId || !body.registrationId) {
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
   const check = checkNote({ note: comment, playerFirstName: player.firstName, sameActivity, previous });
   if (!check.ok) return NextResponse.json({ error: check.message, code: check.code }, { status: 422 });
 
-  await saveEvaluation({ activityId: body.activityId, registrationId: body.registrationId, coachId, ratings, comment });
-  return NextResponse.json({ ok: true, ratings, comment });
+  const gestures = Array.isArray(body.gestures) ? [...new Set(body.gestures.filter((g): g is string => typeof g === "string").map((g) => g.trim().slice(0, 60)).filter(Boolean))].slice(0, 12) : undefined;
+  await saveEvaluation({ activityId: body.activityId, registrationId: body.registrationId, coachId, ratings, comment, gestures });
+  return NextResponse.json({ ok: true, ratings, comment, gestures: gestures ?? [] });
 }

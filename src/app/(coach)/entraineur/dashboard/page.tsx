@@ -1,6 +1,6 @@
 import { CoachDashboard, type DashboardActivity, type ToComplete } from "@/components/coach-dashboard";
 import { requireCoach } from "@/lib/coach-auth";
-import { cleanCategory, getActivityReports, getCoachActivities, getPracticeReadItems, loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
+import { cleanCategory, getActivityReports, getCoachActivities, getPracticeReadItems, getTeamPracticesOn, loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
 import { practiceReadStatus } from "@/lib/practice-read";
 import { hasStarted, REPORT_RULE_START } from "@/lib/coach-report";
 import { listObservations } from "@/lib/coach-observations-repo";
@@ -79,8 +79,24 @@ export default async function CoachDashboardPage() {
     .filter((x) => x.missing.length > 0)
     .sort((x, y) => `${x.activity.date} ${x.activity.startTime}`.localeCompare(`${y.activity.date} ${y.activity.startTime}`));
 
+  // Pratiques du jour : toute l'équipe voit les pratiques de l'Académie d'aujourd'hui, assignée ou non.
+  const teamActs = await getTeamPracticesOn(today).catch(() => []);
+  const { data: teamBlocks } = teamActs.length
+    ? await (getSupabaseAdminClient() as any).from("activity_session_blocks").select("activity_id").in("activity_id", teamActs.map((a) => a.id))
+    : { data: [] };
+  const teamToday = teamActs.map((a) => ({
+    id: a.id,
+    startTime: String(a.start_time).slice(0, 5),
+    endTime: String(a.end_time).slice(0, 5),
+    title: a.title || (a.category ? `${a.activity_type} ${a.category}` : a.activity_type),
+    location: a.location,
+    mine: ids.includes(a.id),
+    blocks: ((teamBlocks ?? []) as any[]).filter((b) => b.activity_id === a.id).length
+  }));
+
   return (
     <CoachDashboard
+      teamToday={teamToday}
       coachId={coachId}
       coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"}
       today={view.filter((a) => a.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime))}

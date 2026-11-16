@@ -51,6 +51,48 @@ export async function getCoachActivityById(coachId: string, activityId: string):
   return all.find((a) => a.activity.id === activityId) ?? null;
 }
 
+/* ── Pratiques du jour : accès de toute l'équipe ─────────────────── */
+
+/** Fenêtre où toute l'équipe d'éducateurs (et JP) voit une pratique de l'Académie, même sans y être assignée :
+ *  de 2 jours avant (rapport des 24 heures) à 14 jours après (préparer d'avance). */
+export const TEAM_ACCESS_DAYS = { before: 2, after: 14 };
+const TEAM_ACCESS_TYPES = ["Pratique", "Camp"];
+const isoDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+const shiftDay = (iso: string, n: number) => {
+  const d = new Date(`${iso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+
+/** Une pratique de l'Académie (pas une activité hors Académie, pas un match) dans la fenêtre d'accès d'équipe. */
+export function isTeamPractice(a: { activity_date: string; activity_type: string; organization?: string | null }, today = isoDay(new Date())): boolean {
+  const d = String(a.activity_date).slice(0, 10);
+  return !a.organization && TEAM_ACCESS_TYPES.includes(a.activity_type) && d >= shiftDay(today, -TEAM_ACCESS_DAYS.before) && d <= shiftDay(today, TEAM_ACCESS_DAYS.after);
+}
+
+export type CoachActivityAccess = Omit<CoachActivityWithAssignment, "assignment"> & { assignment: CoachAssignment | null; guest: boolean };
+
+/** L'activité si l'éducateur y est assigné, ou, pour une pratique de l'Académie proche, en accès d'équipe
+ *  (voir la pratique, la lire, noter les exercices et les joueuses ; pas de présence ni de paie). */
+export async function getCoachActivityAccess(coachId: string, activityId: string): Promise<CoachActivityAccess | null> {
+  const mine = await getCoachActivityById(coachId, activityId);
+  if (mine) return { ...mine, guest: false };
+  const [{ data: activity }, { data: coach }] = await Promise.all([
+    db().from("coach_activities").select("*").eq("id", activityId).maybeSingle(),
+    db().from("coaches").select("id, status").eq("id", coachId).maybeSingle()
+  ]);
+  if (!activity || !coach || coach.status === "inactive" || !isTeamPractice(activity)) return null;
+  const { data: others } = await db().from("coach_assignments").select("coach:coaches(id, first_name, last_name)").eq("activity_id", activityId);
+  return { activity: activity as CoachActivity, assignment: null, guest: true, otherCoaches: ((others ?? []) as any[]).map((o) => o.coach).filter(Boolean) };
+}
+
+/** Les pratiques de l'Académie d'aujourd'hui, pour toute l'équipe (« Pratiques du jour » du portail). */
+export async function getTeamPracticesOn(date: string): Promise<CoachActivity[]> {
+  const { data, error } = await db().from("coach_activities").select("*").eq("activity_date", date).is("organization", null).in("activity_type", TEAM_ACCESS_TYPES).order("start_time");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as CoachActivity[];
+}
+
 /* ── Joueuses des groupes de ce coach ─────────────────────────────── */
 
 /** Catégorie d'une activité sans le préfixe « Filles » ni le suffixe « avancé » (activités créées depuis Pratiques). */
@@ -295,6 +337,8 @@ export interface PlayerEvaluation {
   coach_id: string;
   ratings: Record<string, number>;
   comment: string | null;
+  /** Gestes que la joueuse trouve difficiles (ball mastery du jour ou autre). */
+  gestures?: string[] | null;
   created_at: string;
 }
 
@@ -328,6 +372,7 @@ export async function saveEvaluation(input: {
   coachId: string;
   ratings: Record<string, number>;
   comment: string | null;
+  gestures?: string[];
 }): Promise<void> {
   const { error } = await db()
     .from("player_evaluations")
@@ -338,6 +383,7 @@ export async function saveEvaluation(input: {
         coach_id: input.coachId,
         ratings: input.ratings,
         comment: input.comment,
+        ...(input.gestures ? { gestures: input.gestures } : {}),
         updated_at: new Date().toISOString()
       },
       { onConflict: "activity_id,registration_id,coach_id" }
@@ -537,8 +583,8 @@ export async function registrationOfItem(table: "player_objectives" | "player_ro
 }
 
 /** L'activité de ce coach et ses joueuses attendues, ou null si l'activité ne lui appartient pas. */
-export async function getCoachActivityWithRoster(coachId: string, activityId: string): Promise<(CoachActivityWithAssignment & { roster: RosterPlayer[] }) | null> {
-  const entry = await getCoachActivityById(coachId, activityId);
+export async function getCoachActivityWithRoster(coachId: string, activityId: string): Promise<(CoachActivityAccess & { roster: RosterPlayer[] }) | null> {
+  const entry = await getCoachActivityAccess(coachId, activityId);
   if (!entry) return null;
   return { ...entry, roster: await getActivityRoster(entry.activity) };
 }
@@ -649,6 +695,8 @@ export interface BriefingPlayer {
   objectives: string[];
   watch: string[];
   absentLastTime: boolean;
+  /** Gestes difficiles notés à sa dernière pratique. */
+  gestures?: string[];
 }
 
 export async function getBriefing(activity: { id: string; activity_date: string }, roster: RosterPlayer[]): Promise<BriefingPlayer[]> {
@@ -657,7 +705,7 @@ export async function getBriefing(activity: { id: string; activity_date: string 
   const date = String(activity.activity_date).slice(0, 10);
   const [{ data: objectives }, { data: evals }, { data: att }] = await Promise.all([
     db().from("player_objectives").select("registration_id, objective").in("registration_id", ids).eq("active", true),
-    db().from("player_evaluations").select("registration_id, ratings, activity:coach_activities(activity_date)").in("registration_id", ids),
+    db().from("player_evaluations").select("registration_id, ratings, gestures, activity:coach_activities(activity_date)").in("registration_id", ids),
     db().from("activity_player_attendance").select("registration_id, status, practice_rating, fatigue, activity_id, activity:coach_activities(activity_date)").in("registration_id", ids)
   ]);
   const before = (r: any) => {
@@ -677,10 +725,14 @@ export async function getBriefing(activity: { id: string; activity_date: string 
           evaluations: ev.map((e) => ({ date: before(e)!, ratings: e.ratings })),
           feedback: at.filter((a) => a.practice_rating != null || a.fatigue != null).map((a) => ({ date: before(a)!, practice_rating: a.practice_rating, fatigue: a.fatigue }))
         }),
-        absentLastTime: at.length > 0 && at[at.length - 1].status === "absent"
+        absentLastTime: at.length > 0 && at[at.length - 1].status === "absent",
+        gestures: (() => {
+          const last = ev.length ? before(ev[ev.length - 1]) : null;
+          return [...new Set(ev.filter((e) => before(e) === last).flatMap((e) => (Array.isArray(e.gestures) ? (e.gestures as string[]) : [])))];
+        })()
       };
     })
-    .filter((p) => p.isTrial || p.objectives.length || p.watch.length || p.absentLastTime)
+    .filter((p) => p.isTrial || p.objectives.length || p.watch.length || p.absentLastTime || p.gestures.length)
     .sort((a, b) => b.watch.length - a.watch.length || Number(b.isTrial) - Number(a.isTrial) || a.name.localeCompare(b.name, "fr"));
 }
 

@@ -1,7 +1,7 @@
 import type { AdminRole } from "@/lib/admin-auth";
 import { isOpen } from "@/lib/mandalart-core";
 import { getLiveTasks } from "@/lib/mandalart-repo";
-import { listPractices } from "@/lib/practices-repo";
+import { listPractices, mergeSameSlot } from "@/lib/practices-repo";
 import { listMatches } from "@/lib/referees-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -61,7 +61,7 @@ export async function getAgenda(from: string, to: string, role: AdminRole): Prom
   const items: AgendaItem[] = [];
 
   const [practices, matches, tasks, boysTrials, girlsTrials, surveys, offers] = await Promise.all([
-    listPractices({ from, to }).catch(() => []),
+    listPractices({ from, to }).then(mergeSameSlot).catch(() => []),
     isAdmin ? listMatches({ from, to }).catch(() => []) : Promise.resolve([]),
     isAdmin ? getLiveTasks(today).catch(() => []) : Promise.resolve([]),
     rows(db().from("boys_trials").select("trial_date, player_first_name, player_last_name, program_slug, status").gte("trial_date", from).lte("trial_date", to).eq("status", "confirmed")),

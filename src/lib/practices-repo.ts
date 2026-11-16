@@ -86,6 +86,17 @@ export async function listPractices(opts: { from?: string; to?: string } = {}): 
     db().from("coach_activities").select("id, activity_date, start_time, end_time, location, category, activity_type, title, organization").gte("activity_date", from).lte("activity_date", to),
     db().from("season_themes").select("week_start_date, theme").gte("week_start_date", addDays(from, -7)).lte("week_start_date", to)
   ]);
+  // MonClubSportif fait foi pour le lieu et l'heure de fin d'une pratique de la saison (JP, 16 nov. 2026) :
+  // l'événement de l'équipe MCS qui porte cette plage, le même jour, à 15 minutes près.
+  const [{ data: mcsTeams }, { data: mcsEvents }] = await Promise.all([
+    db().from("mcs_teams").select("id, name, slot_ids").eq("active", true),
+    db().from("mcs_events").select("team_id, event_date, start_time, end_time, location, title, type").gte("event_date", from).lte("event_date", to)
+  ]).catch(() => [{ data: [] }, { data: [] }] as any);
+  const mcsFor = (templateId: string, date: string, start: string) => {
+    const teamIds = ((mcsTeams ?? []) as any[]).filter((t) => (t.slot_ids ?? []).includes(templateId)).map((t) => t.id);
+    if (!teamIds.length) return null;
+    return ((mcsEvents ?? []) as any[]).find((e) => teamIds.includes(e.team_id) && String(e.event_date).slice(0, 10) === date && e.type !== "Match" && !/annul/i.test(String(e.title ?? "")) && Math.abs(minutes(hhmm(e.start_time) || "0:0") - minutes(start)) <= 15) ?? null;
+  };
   const actIds = (acts ?? []).map((a: any) => a.id);
   const [{ data: blocks }, { data: decks }] = actIds.length
     ? await Promise.all([
@@ -105,12 +116,18 @@ export async function listPractices(opts: { from?: string; to?: string } = {}): 
     const cats = (tplCats ?? []).filter((c: any) => c.time_slot_template_id === t.id).map((c: any) => c.category_id);
     const progs = (tplProgs ?? []).filter((p: any) => p.time_slot_template_id === t.id).map((p: any) => p.program?.name ?? "");
     const advancedOnly = progs.length > 0 && progs.every((n: string) => /avancé/i.test(n));
-    const group = `Filles ${cats.join(", ") || "—"}${advancedOnly ? " avancé" : ""}`;
+    // Le nom du groupe vient de l'équipe MonClubSportif qui porte la plage (« Lundi 2016-2017 AV » → « Filles 2016-2017 avancé »).
+    const team = ((mcsTeams ?? []) as any[]).find((x) => (x.slot_ids ?? []).includes(t.id));
+    const teamYears = team ? String(team.name).match(/\d{4}(?:-\d{4})?/)?.[0] : null;
+    const group = teamYears
+      ? `Filles ${teamYears}${/\bAV\b|avancé/i.test(team.name) ? " avancé" : ""}`
+      : `Filles ${cats.join(", ") || "—"}${advancedOnly ? " avancé" : ""}`;
     const dow = DAY_INDEX[t.day];
     if (dow === undefined) continue;
     for (let d = from; d <= to; d = addDays(d, 1)) {
       if (new Date(`${d}T12:00:00Z`).getUTCDay() !== dow || inBreak(d)) continue;
-      expected.push({ key: `tpl-${t.id}-${d}`, date: d, start: hhmm(t.start_time), end: hhmm(t.end_time) || null, group, location: t.location, source: "saison", organization: null });
+      const mcs = mcsFor(t.id, d, hhmm(t.start_time));
+      expected.push({ key: `tpl-${t.id}-${d}`, date: d, start: hhmm(t.start_time), end: (mcs?.end_time ? hhmm(mcs.end_time) : hhmm(t.end_time)) || null, group, location: mcs?.location || t.location, source: "saison", organization: null });
     }
   }
   const progName = new Map<string, string>((programs ?? []).filter((p: any) => p.published && p.active).map((p: any) => [p.slug, p.name] as [string, string]));
@@ -208,4 +225,29 @@ export function summarize(practices: Practice[]) {
     preparedTwoWeeks: past.filter((p) => (p.preparedDaysAhead ?? 0) >= 14).length,
     preparedPast: past.length
   };
+}
+
+/** Les années principales d'un groupe (« Filles 2014-2013, 2015 » → 2014, 2015). */
+const groupYears = (g: string) => [...g.matchAll(/(\d{4})(?:-\d{4})?/g)].map((m) => Number(m[1]));
+
+/** Deux groupes au même gymnase à la même heure = une seule pratique, comme dans MonClubSportif (JP, 16 nov. 2026) :
+ *  une seule ligne « Filles 2014-2015 » pour l'affichage (Pratiques, Aujourd'hui, rappels). La synchro MCS garde les plages. */
+export function mergeSameSlot(list: Practice[]): Practice[] {
+  const out: Practice[] = [];
+  const rank: Record<Readiness, number> = { prete: 0, passee: 1, "plus-tard": 2, vert: 3, jaune: 4, rouge: 5 };
+  for (const p of list) {
+    const twin = p.source === "saison" ? out.find((q) => q.source === "saison" && q.date === p.date && q.location === p.location && Math.abs(minutes(q.start) - minutes(p.start)) <= 15) : undefined;
+    if (!twin) {
+      out.push({ ...p });
+      continue;
+    }
+    const years = [...groupYears(twin.group), ...groupYears(p.group)];
+    const advanced = /avancé/.test(twin.group) && /avancé/.test(p.group);
+    if (years.length && twin.group !== p.group) twin.group = `Filles ${Math.min(...years)}${Math.max(...years) !== Math.min(...years) ? `-${Math.max(...years)}` : ""}${advanced ? " avancé" : ""}`;
+    twin.activityId ??= p.activityId;
+    twin.blocks = Math.max(twin.blocks, p.blocks);
+    twin.deposited = Math.max(twin.deposited, p.deposited);
+    if (rank[p.readiness] < rank[twin.readiness]) twin.readiness = p.readiness;
+  }
+  return out;
 }

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { CoachActiviteDetail } from "@/components/coach-activite-detail";
 import { getComponents } from "@/lib/coaching-method-repo";
 import { requireCoach } from "@/lib/coach-auth";
-import { cleanCategory, getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityById, getPracticeReadItems } from "@/lib/coach-portal-repo";
+import { cleanCategory, getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityAccess, getPracticeReadItems } from "@/lib/coach-portal-repo";
 import { defaultStepFor } from "@/lib/coach-report";
 import { getCoach } from "@/lib/coaches-repo";
 import { getActivityWinners } from "@/lib/player-points-repo";
@@ -21,7 +21,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
   const coachId = await requireCoach();
   const { id } = await params;
 
-  const entry = await getCoachActivityById(coachId, id);
+  const entry = await getCoachActivityAccess(coachId, id);
   if (!entry) notFound();
 
   const isMatch = entry.activity.activity_type === "Match";
@@ -53,14 +53,17 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
   ]);
 
   // Accès limité : la présence de l'éducateur sans son taux ni les champs de paiement.
+  // Accès d'équipe (pratique de l'Académie sans y être assignée) : pas de présence ni de paie ici.
   const { assignment } = entry;
-  const myPresence = {
-    status: assignment.status,
-    confirmed: assignment.confirmed,
-    arrivalTime: assignment.arrival_time ? String(assignment.arrival_time).slice(0, 5) : null,
-    departureTime: assignment.departure_time ? String(assignment.departure_time).slice(0, 5) : null,
-    locked: assignment.paid
-  };
+  const myPresence = assignment
+    ? {
+        status: assignment.status,
+        confirmed: assignment.confirmed,
+        arrivalTime: assignment.arrival_time ? String(assignment.arrival_time).slice(0, 5) : null,
+        departureTime: assignment.departure_time ? String(assignment.departure_time).slice(0, 5) : null,
+        locked: assignment.paid
+      }
+    : null;
   // Étape ouverte par défaut selon l'heure (Montréal) : avant, pendant ou après l'activité.
   const defaultStep = defaultStepFor(activityDate, String(entry.activity.start_time).slice(0, 5), String(entry.activity.end_time).slice(0, 5));
   const coachNames: Record<string, string> = Object.fromEntries([
@@ -94,8 +97,8 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       initialMatchEvaluations={matchEvaluations}
       videos={videos}
       readItems={readItems}
-      initialReadSeen={(assignment.practice_read_items ?? []) as string[]}
-      initialReadAt={assignment.practice_read_at ?? null}
+      initialReadSeen={(assignment?.practice_read_items ?? []) as string[]}
+      initialReadAt={assignment?.practice_read_at ?? null}
     />
   );
 }

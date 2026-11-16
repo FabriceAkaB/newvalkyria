@@ -47,6 +47,8 @@ interface Props {
   lastFeedback: CoachFeedback | null;
   /** Pour « Mes relevés de paie » (documents d'employé de l'entraîneur, lecture seule). */
   coachId?: string;
+  /** Pratiques du jour de l'Académie, pour toute l'équipe (même sans y être assignée). */
+  teamToday?: { id: string; startTime: string; endTime: string; title: string; location: string | null; mine: boolean; blocks: number }[];
 }
 
 function FeedbackCard({ f }: { f: CoachFeedback }) {
@@ -105,7 +107,7 @@ function ActivityRow({ activity, right, warning }: { activity: DashboardActivity
   );
 }
 
-export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFeedback, coachId }: Props) {
+export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFeedback, coachId, teamToday = [] }: Props) {
   const next = upcoming[0];
   return (
     <>
@@ -114,6 +116,29 @@ export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFee
         <div className="coach-page">
           <h1 className="coach-title">Bonjour {coachName.split(" ")[0]}</h1>
           <p className="coach-sub" style={{ textTransform: "capitalize" }}>{dayLabel(new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" }))}</p>
+
+          {teamToday.length > 0 && (
+            <section style={{ marginTop: 24 }}>
+              <h2 className="coach-h2">Pratiques du jour · toute l&apos;équipe</h2>
+              <p className="coach-muted" style={{ margin: "0 0 8px" }}>Ouvre la pratique pour voir les diapos et les exercices, noter chaque exercice et écrire tes notes sur les filles.</p>
+              <div className="coach-list">
+                {teamToday.map((p) => (
+                  <Link key={p.id} href={`/entraineur/activites/${p.id}`} className="coach-row">
+                    <div style={{ minWidth: 0 }}>
+                      <p className="coach-row__title">{p.title}</p>
+                      <p className="coach-row__meta">
+                        {p.startTime}–{p.endTime}
+                        {p.location ? ` · ${p.location}` : ""}
+                      </p>
+                    </div>
+                    <span className="coach-pill" data-tone={p.blocks > 0 ? "good" : "info"}>
+                      {p.mine ? "Ma pratique" : p.blocks > 0 ? `${p.blocks} exercices` : "Plan à venir"}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {toComplete.length > 0 && (
             <section style={{ marginTop: 24 }}>
