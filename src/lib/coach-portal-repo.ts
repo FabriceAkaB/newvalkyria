@@ -800,6 +800,8 @@ export interface PracticeReadRow {
   status: ReadStatus;
   readAt: string | null;
   label: string;
+  /** « present » (prévu ou venu) ou « absent » (absent dans MonClubSportif : pas payé). */
+  attendance: string;
 }
 
 /** Pour JP : qui a pris connaissance de quelle pratique (éducateurs assignés, présence non annulée). */
@@ -820,7 +822,8 @@ export async function getPracticeReads(activityIds: string[]): Promise<PracticeR
         coachName: `${a.coach?.first_name ?? ""} ${a.coach?.last_name ?? ""}`.trim() || "Éducateur",
         status,
         readAt: a.practice_read_at ?? null,
-        label: readLabel(status, a.practice_read_at ?? null)
+        label: readLabel(status, a.practice_read_at ?? null),
+        attendance: String(a.status ?? "present")
       };
     });
 }

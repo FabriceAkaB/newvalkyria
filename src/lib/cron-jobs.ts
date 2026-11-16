@@ -7,7 +7,7 @@ export const CRON_JOBS = {
   "mcs-robot": { label: "Courriels programmés et robot MonClubSportif (chaque heure)", vercel: ["5 * * * *"], backup: ["25 * * * *"], windowMinutes: 50, maxGapHours: 2 },
   "charge-installments": { label: "Prélèvement des versements (chaque nuit)", vercel: ["0 4 * * *"], backup: ["20 4 * * *"], windowMinutes: 600, maxGapHours: 26 },
   "mandalart-lundi": { label: "Courriel Mandalart du lundi", vercel: ["0 11 * * 1"], backup: ["20 11 * * 1"], windowMinutes: 600, maxGapHours: 7 * 24 + 3 },
-  pratiques: { label: "Rappel des pratiques à préparer (8 h et 16 h)", vercel: ["0 13 * * *", "0 21 * * *"], backup: ["20 13 * * *", "20 21 * * *"], windowMinutes: 180, maxGapHours: 15 },
+  pratiques: { label: "Éducateurs d'après MonClubSportif et rappel des pratiques à préparer (8 h et 16 h)", vercel: ["0 13 * * *", "0 21 * * *"], backup: ["20 13 * * *", "20 21 * * *"], windowMinutes: 180, maxGapHours: 15 },
   "presences-educateurs": { label: "Rappel des présences aux éducateurs", vercel: ["0 14 * * *", "0 23 * * *"], backup: ["20 14 * * *", "20 23 * * *"], windowMinutes: 180, maxGapHours: 17 },
   "mandalart-report": { label: "Report des tâches Mandalart (chaque matin)", vercel: ["0 9 * * *"], backup: ["20 9 * * *"], windowMinutes: 600, maxGapHours: 26 },
   "mcs-sync": { label: "Relecture des calendriers MonClubSportif (chaque matin)", vercel: ["0 10 * * *"], backup: ["20 10 * * *"], windowMinutes: 600, maxGapHours: 26 },

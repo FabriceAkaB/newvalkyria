@@ -68,12 +68,15 @@ export interface CoachPayrollTotal {
   /** Heures et montant retenus tant que la présence ou le rapport manque. */
   heldHours: number;
   heldPayCents: number;
+  /** Activités où l'éducateur était assigné mais absent (absent dans MonClubSportif) : 0 $. */
+  absences: number;
 }
 
 export function groupPayrollByCoach(rows: PayrollRow[]): CoachPayrollTotal[] {
-  const map = new Map<string, { name: string; hours: number; payCents: number; paidCents: number; heldHours: number; heldPayCents: number }>();
+  const map = new Map<string, { name: string; hours: number; payCents: number; paidCents: number; heldHours: number; heldPayCents: number; absences: number }>();
   for (const r of rows) {
-    const entry = map.get(r.coachId) ?? { name: r.coachName, hours: 0, payCents: 0, paidCents: 0, heldHours: 0, heldPayCents: 0 };
+    const entry = map.get(r.coachId) ?? { name: r.coachName, hours: 0, payCents: 0, paidCents: 0, heldHours: 0, heldPayCents: 0, absences: 0 };
+    if (r.attendance === "absent") entry.absences++;
     entry.hours += r.hours;
     entry.payCents += r.payCents;
     if (r.paid) entry.paidCents += r.payCents;
@@ -89,8 +92,12 @@ export function groupPayrollByCoach(rows: PayrollRow[]): CoachPayrollTotal[] {
   }));
 }
 
+/** Les lignes de paie : seulement les activités déjà passées (aujourd'hui compris). Les éducateurs assignés d'avance
+ *  d'après MonClubSportif (pratiques à venir) n'entrent dans la paie qu'une fois l'activité faite. */
 export async function getPayrollRows(): Promise<PayrollRow[]> {
-  const [coaches, assignments, typeRates] = await Promise.all([getCoaches(), getAllAssignments(), getAllCoachTypeRates()]);
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const [coaches, all, typeRates] = await Promise.all([getCoaches(), getAllAssignments(), getAllCoachTypeRates()]);
+  const assignments = all.filter((a) => String(a.activity.activity_date).slice(0, 10) <= today);
   const typeRateMap = new Map(typeRates.map((r) => [`${r.coach_id}:${r.activity_type}`, r.hourly_rate_cents]));
   const activities = new Map(assignments.map((a) => [a.activity_id, a.activity]));
   const reports = await getActivityReports([...activities.values()]).catch(() => new Map());

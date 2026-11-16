@@ -4,6 +4,7 @@ import { AdminTopbar } from "@/components/admin-topbar";
 import { Pill } from "@/components/mandalart/ui";
 import { ExternalPracticeForm, PrepareButton } from "@/components/practices-admin";
 import { requireAdmin } from "@/lib/admin-auth";
+import { MIN_EDUCATORS, STAFFING_HORIZON_DAYS } from "@/lib/coach-staffing";
 import { getPracticeReads, type PracticeReadRow } from "@/lib/coach-portal-repo";
 import { listPractices, mergeSameSlot, summarize, type Practice, type Readiness } from "@/lib/practices-repo";
 
@@ -30,6 +31,23 @@ const weekStart = (iso: string) => {
   return d.toISOString().slice(0, 10);
 };
 
+/** Éducateurs de la pratique d'après MonClubSportif : il en faut 2 (tâche pour JP sinon, due 3 jours avant). */
+function Educators({ p, reads }: { p: Practice; reads: PracticeReadRow[] }) {
+  if (p.organization || p.daysLeft < 0 || p.daysLeft > STAFFING_HORIZON_DAYS) return null;
+  const coming = reads.filter((r) => r.attendance !== "absent");
+  const absent = reads.filter((r) => r.attendance === "absent");
+  const first = (r: PracticeReadRow) => r.coachName.split(" ")[0];
+  const ok = coming.length >= MIN_EDUCATORS;
+  return (
+    <span style={{ color: ok ? "var(--adm-good)" : "var(--adm-bad)", fontWeight: ok ? undefined : 600 }}>
+      👥 {ok ? `${coming.length} éducateurs` : `${coming.length}/${MIN_EDUCATORS} éducateur${coming.length > 1 ? "s" : ""}`}
+      {coming.length ? ` : ${coming.map(first).join(", ")}` : ""}
+      {ok ? "" : ` · il en manque ${MIN_EDUCATORS - coming.length}`}
+      {absent.length ? <span className="mda-muted" style={{ fontWeight: 400 }}> · absent{absent.length > 1 ? "s" : ""} : {absent.map(first).join(", ")}</span> : null}
+    </span>
+  );
+}
+
 function Row({ p, reads = [] }: { p: Practice; reads?: PracticeReadRow[] }) {
   const t = TONE[p.readiness];
   return (
@@ -45,7 +63,8 @@ function Row({ p, reads = [] }: { p: Practice; reads?: PracticeReadRow[] }) {
           {p.activityType !== "Pratique" ? <span>{p.activityType}</span> : null}
           {p.theme ? <span>Thème : {p.theme}</span> : null}
           {p.blocks ? <span style={{ color: "var(--adm-good)" }}>{p.blocks} bloc{p.blocks > 1 ? "s" : ""}{p.preparedDaysAhead !== null ? ` · prête ${p.preparedDaysAhead} j d'avance` : ""}</span> : null}
-          {reads.map((r) => (
+          {p.source !== "activite" || p.activityType === "Pratique" ? <Educators p={p} reads={reads} /> : null}
+          {reads.filter((r) => r.attendance !== "absent").map((r) => (
             <span key={r.coachId} style={{ color: r.status.confirmed ? "var(--adm-good)" : "var(--adm-warn)" }}>
               📖 {r.coachName.split(" ")[0]} : {r.status.confirmed ? "lue" : r.status.hasContent ? `pas lue (${r.status.seen}/${r.status.total})` : "rien à lire"}
             </span>
@@ -73,7 +92,7 @@ export default async function PracticesPage() {
   const academy = upcoming.filter((p) => !p.organization);
   const external = upcoming.filter((p) => p.organization);
   const weeks = [...new Set(academy.map((p) => weekStart(p.date)))];
-  const reads = await getPracticeReads(upcoming.filter((p) => p.daysLeft <= 14 && p.activityId).map((p) => p.activityId!)).catch(() => []);
+  const reads = await getPracticeReads(upcoming.filter((p) => p.daysLeft <= STAFFING_HORIZON_DAYS && p.activityId).map((p) => p.activityId!)).catch(() => []);
   const readsOf = (p: Practice) => (p.activityId ? reads.filter((r) => r.activityId === p.activityId) : []);
   const urgent = s.rouge + s.jaune;
 

@@ -740,3 +740,110 @@ export async function syncCalendar(session: McsSession, teams: TeamTarget[], dry
   }
   return { done, extras };
 }
+
+/* ── Éducateurs : MonClubSportif → horaire du site (assignés d'avance, 2 par pratique) ─────────── */
+
+/** Deux fois par jour (cron « pratiques ») : pour chaque pratique des 3 prochaines semaines, les éducateurs « présents »
+ *  dans MonClubSportif sont assignés à la pratique du site (portail, horaire, paie), ceux qui se mettent absents passent
+ *  à « absent » (pas payés). S'il n'y a pas 2 éducateurs présents, une tâche pour JP, due 3 jours avant la pratique,
+ *  cochée toute seule quand le 2e dit présent ; un courriel à JP pour chaque nouveau manque. Règles : coach-staffing.ts. */
+export async function syncCoachSchedule(opts: { days?: number; now?: number; dryRun?: boolean } = {}): Promise<{ slots: number; inserted: number; absent: number; present: number; removed: number; short: string[]; newShort: string[]; skipped?: string }> {
+  const { ASSIGNED_BY_MCS, STAFFING_HORIZON_DAYS, assignmentPlan, coachIntent, mergeSlotCoaches, shortageDue, shortageRef, shortageTask, staffingOf } = await import("@/lib/coach-staffing");
+  const out = { slots: 0, inserted: 0, absent: 0, present: 0, removed: 0, short: [] as string[], newShort: [] as string[] };
+  const rules = await getMcsRules();
+  if (!rules.robotActive) return { ...out, skipped: "Robot pas encore activé (mode assistant)." };
+  const session = await openRobotSession();
+  if (!session) return { ...out, skipped: "Compte robot pas encore enregistré." };
+  const dry = opts.dryRun ?? false;
+  const now = opts.now ?? Date.now();
+  const today = dayIso(now);
+  const until = dayIso(now + (opts.days ?? STAFFING_HORIZON_DAYS) * 86_400_000);
+  // Les équipes de l'académie (pas « Vendredi Solo », l'horaire personnel de JP).
+  const teams = (await loadTeamTargets()).filter((t) => t.mcs_team_id && t.mcs_season_id && (t.kind !== "programme" || (t.session_program_slugs ?? []).length > 0));
+  const [{ data: coaches }, { data: events }] = await Promise.all([
+    db().from("coaches").select("id, first_name, last_name").eq("status", "active"),
+    db().from("mcs_events").select("team_id, key, event_date, start_time, end_time, title, type").eq("type", "Pratique").gte("event_date", today).lte("event_date", until)
+  ]);
+  const { listPractices, mergeSameSlot, createActivityFor } = await import("@/lib/practices-repo");
+  const practices = mergeSameSlot(await listPractices({ from: today, to: until })).filter((p) => !p.organization);
+  const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  type Slot = { practice: (typeof practices)[number]; rows: import("@/lib/coach-staffing").SlotCoach[]; read: boolean };
+  const slots = new Map<string, Slot>();
+  for (const t of teams) {
+    const evs = ((events ?? []) as any[]).filter((e) => e.team_id === t.id && !/annul/i.test(String(e.title ?? "")) && Number(String(e.key).split("|")[1]) > now);
+    if (!evs.length) continue;
+    let grid: PresenceGrid;
+    try {
+      grid = await session.presences(t.mcs_team_id!, t.mcs_season_id!, 5);
+    } catch {
+      continue;
+    }
+    for (const e of evs) {
+      const id = mcsIdOf(String(e.key))?.id;
+      const date = String(e.event_date).slice(0, 10);
+      const start = String(e.start_time).slice(0, 5);
+      const practice = practices.find((p) => p.date === date && Math.abs(toMin(p.start) - toMin(start)) <= 15);
+      if (!id || !practice) continue;
+      const slot = slots.get(practice.key) ?? { practice, rows: [], read: false };
+      if (grid.events.some((x) => x.id === id)) slot.read = true;
+      for (const row of grid.rows) {
+        const coach = ((coaches ?? []) as any[]).find((c) => sameMemberName(row.name, c.first_name, c.last_name));
+        if (coach && row.states[id] !== undefined) slot.rows.push({ coachId: coach.id, name: `${coach.first_name} ${coach.last_name}`, intent: coachIntent(row.states[id]) });
+      }
+      slots.set(practice.key, slot);
+    }
+  }
+  const { data: openTasks } = await db().from("team_tasks").select("ref").eq("club_id", CLUB_ID).like("ref", "educateurs:%").in("status", ["a_faire", "en_cours"]);
+  const openRefs = new Set(((openTasks ?? []) as any[]).map((r) => r.ref));
+  const { syncRefTask } = await import("@/lib/team-tasks-repo");
+  for (const { practice: p, rows, read } of slots.values()) {
+    if (!read) continue; // la grille MCS de cette pratique n'a pas pu être lue : on ne conclut rien
+    out.slots++;
+    const merged = mergeSlotCoaches(rows);
+    let activityId = p.activityId;
+    const { data: existing } = activityId
+      ? await db().from("coach_assignments").select("id, coach_id, status, assigned_by, confirmed, paid").eq("activity_id", activityId)
+      : { data: [] };
+    const plan = assignmentPlan(((existing ?? []) as any[]).map((a) => ({ id: a.id, coachId: a.coach_id, status: a.status, assignedBy: a.assigned_by, confirmed: !!a.confirmed, paid: !!a.paid })), merged);
+    if (!dry) {
+      if (plan.insert.length && !activityId) activityId = await createActivityFor({ date: p.date, start: p.start, end: p.end, location: p.location, group: p.group });
+      if (plan.insert.length) {
+        const { error } = await db().from("coach_assignments").insert(plan.insert.map((coachId) => ({ activity_id: activityId, coach_id: coachId, status: "present", arrival_time: p.start, departure_time: p.end, assigned_by: ASSIGNED_BY_MCS })));
+        if (error) throw new Error(`Assignation refusée par la base : ${error.message}`);
+      }
+      const stamp = new Date().toISOString();
+      if (plan.absent.length) await db().from("coach_assignments").update({ status: "absent", updated_at: stamp }).in("id", plan.absent);
+      if (plan.present.length) await db().from("coach_assignments").update({ status: "present", updated_at: stamp }).in("id", plan.present);
+      if (plan.remove.length) await db().from("coach_assignments").delete().in("id", plan.remove);
+    }
+    out.inserted += plan.insert.length;
+    out.absent += plan.absent.length;
+    out.present += plan.present.length;
+    out.removed += plan.remove.length;
+    const s = staffingOf(merged);
+    const ref = shortageRef(p.date, p.start);
+    if (s.ok) {
+      if (!dry && openRefs.has(ref)) await syncRefTask(ref, { title: "", done: true, doneNote: `${s.coming.length} éducateurs présents dans MonClubSportif` });
+      continue;
+    }
+    const task = shortageTask({ date: p.date, start: p.start, group: p.group, coaches: merged });
+    out.short.push(task.title);
+    if (!openRefs.has(ref)) out.newShort.push(`${task.title}\n${task.details}`);
+    if (!dry) await syncRefTask(ref, { ...task, due: shortageDue(p.date, today) });
+  }
+  if (!dry && out.newShort.length && isEmailConfigured()) {
+    const n = out.newShort.length;
+    await getResendClient()
+      .emails.send({
+        from: env.resendFrom,
+        to: OWNER_NOTIFY_EMAIL,
+        subject: `Éducateurs : ${n} pratique${n > 1 ? "s" : ""} sans 2 éducateurs présents`,
+        html: `<div style="font-family:-apple-system,Arial,sans-serif;line-height:1.55;color:#161419;max-width:620px"><p>Il faut 2 éducateurs par pratique. D'après MonClubSportif, ${n > 1 ? "ces pratiques n'en ont" : "cette pratique n'en a"} pas encore 2 présents :</p><ul style="padding-left:18px">${out.newShort.map((s) => { const [t, ...d] = s.split("\n"); return `<li style="margin-bottom:8px"><strong>${esc(t)}</strong><br><span style="color:#555">${d.map(esc).join("<br>")}</span></li>`; }).join("")}</ul><p>Une tâche par pratique est dans Mes tâches (Aujourd'hui), due 3 jours avant ; elle se coche toute seule quand le 2e éducateur met « présent » dans MonClubSportif.</p><p><a href="${env.publicSiteUrl}/admin/aujourdhui" style="display:inline-block;background:#5b2a86;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Ouvrir Aujourd'hui</a></p></div>`
+      } as never)
+      .catch(() => null);
+  }
+  if (!dry && (out.inserted || out.absent || out.present || out.removed || out.newShort.length)) {
+    await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_coach_schedule", entityType: "coach_assignments", entityId: CLUB_ID, entityLabel: `${out.inserted} assignations, ${out.absent} absences, ${out.short.length} pratiques sans 2 éducateurs`, after: out }).catch(() => null);
+  }
+  return out;
+}

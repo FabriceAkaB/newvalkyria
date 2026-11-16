@@ -175,6 +175,7 @@ export function AdminEntraineursPaie({ rows, coaches, missing }: Props) {
                   <th>Payé</th>
                   <th>Reste</th>
                   <th>Retenu</th>
+                  <th>Absences</th>
                 </tr>
               </thead>
               <tbody>
@@ -189,10 +190,13 @@ export function AdminEntraineursPaie({ rows, coaches, missing }: Props) {
                     <td style={{ color: r.heldPayCents > 0 ? "var(--adm-warn)" : "var(--adm-text-3)" }}>
                       {r.heldPayCents > 0 ? `${formatHours(r.heldHours)} · ${formatCAD(r.heldPayCents / 100)}` : "—"}
                     </td>
+                    <td style={{ color: r.absences > 0 ? "var(--adm-bad)" : "var(--adm-text-3)" }} title="Absent dans MonClubSportif : pas payé">
+                      {r.absences > 0 ? `${r.absences} · 0 $` : "—"}
+                    </td>
                   </tr>
                 ))}
                 {payrollRows.length === 0 && (
-                  <tr><td colSpan={7} className="admin-empty-text">Aucun résultat pour ces filtres.</td></tr>
+                  <tr><td colSpan={8} className="admin-empty-text">Aucun résultat pour ces filtres.</td></tr>
                 )}
               </tbody>
               {payrollRows.length > 0 && (
@@ -205,6 +209,7 @@ export function AdminEntraineursPaie({ rows, coaches, missing }: Props) {
                     <td>{formatCAD(totalPaid / 100)}</td>
                     <td style={{ color: totalRemaining > 0 ? "var(--adm-warn)" : "var(--adm-good)" }}>{formatCAD(totalRemaining / 100)}</td>
                     <td>{formatCAD(payrollRows.reduce((s, r) => s + r.heldPayCents, 0) / 100)}</td>
+                    <td>{payrollRows.reduce((s, r) => s + r.absences, 0) || "—"}</td>
                   </tr>
                 </tfoot>
               )}
