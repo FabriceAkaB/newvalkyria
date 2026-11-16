@@ -11508,3 +11508,60 @@ img { max-width: 100%; height: auto; }
 .admin-space-switch[data-count="3"] { grid-template-columns: 1fr 1fr 1fr; }
 .admin-shell .mda-task-edit { min-width: 0; max-width: 100%; }
 .admin-shell .mda-task-edit .admin-input { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+
+/* ── Fiche d'exercice en diapo (banque d'exercices, comme les diapos des pratiques) ── */
+.admin-shell .xc-card { --xc-ink: #1d1730; --xc-ink-2: #4a4458; --xc-violet: #5b2a86; --xc-violet-2: #7a4bb0; --xc-lilac: #e6dcf5; --xc-lilac-2: #efe8f8; --xc-paper: #f7f4fb;
+  background: var(--xc-paper); color: var(--xc-ink); border-radius: 16px; padding: 32px 36px 20px; margin: 16px 0; box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 18px 40px rgba(0,0,0,0.35); }
+.admin-shell .xc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.admin-shell .xc-title { font-family: var(--font-display), "Oswald", sans-serif; font-weight: 700; text-transform: uppercase; font-size: clamp(1.6rem, 3.2vw, 2.4rem); line-height: 1.05; letter-spacing: 0.005em; margin: 0; color: var(--xc-ink); flex: 1 1 320px; }
+.admin-shell .xc-theme { background: var(--xc-lilac); color: var(--xc-violet); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.02em; padding: 8px 18px; border-radius: 999px; white-space: nowrap; }
+.admin-shell .xc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 24px; }
+.admin-shell .xc-chip { background: var(--xc-lilac); color: var(--xc-violet); font-weight: 700; font-size: 0.85rem; padding: 7px 16px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.admin-shell .xc-chip--dark { background: var(--xc-ink); color: #fff; display: inline-flex; align-items: center; gap: 8px; }
+.admin-shell .xc-dots { display: inline-flex; gap: 4px; }
+.admin-shell .xc-dots i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #c9b3f0; display: block; }
+.admin-shell .xc-dots i[data-on] { background: #c9b3f0; }
+.admin-shell .xc-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 32px; align-items: start; }
+.admin-shell .xc-left { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.admin-shell .xc-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.admin-shell .xc-sec { border-left: 4px solid var(--xc-violet-2); padding-left: 18px; }
+.admin-shell .xc-sec h3, .admin-shell .xc-behave h3 { font-family: var(--font-display), "Oswald", sans-serif; font-weight: 700; text-transform: uppercase; font-size: 1.25rem; margin: 0 0 6px; color: var(--xc-violet); letter-spacing: 0.01em; }
+.admin-shell .xc-sec h4 { font-size: 0.9rem; font-weight: 700; color: var(--xc-violet); margin: 10px 0 4px; }
+.admin-shell .xc-sec ul, .admin-shell .xc-sec ol, .admin-shell .xc-behave ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.admin-shell .xc-sec li { font-size: 0.95rem; line-height: 1.5; color: var(--xc-ink-2); }
+.admin-shell .xc-sec ul li::marker { content: "•  "; color: var(--xc-ink-2); }
+.admin-shell .xc-sec ol li::marker { color: var(--xc-violet); font-weight: 700; }
+.admin-shell .xc-tips { background: var(--xc-lilac-2); border-radius: 0 14px 14px 0; padding: 16px 20px 18px 20px; }
+.admin-shell .xc-tips h4:first-of-type { margin-top: 2px; }
+.admin-shell .xc-visual { border-radius: 10px; overflow: hidden; background: #2f7d43; }
+.admin-shell .xc-visual img { display: block; width: 100%; height: auto; }
+.admin-shell .xc-empty { background: var(--xc-lilac-2); color: var(--xc-ink-2); min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; }
+.admin-shell .xc-empty p { margin: 0; }
+.admin-shell .xc-empty-btn { background: var(--xc-violet); color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; font-weight: 600; cursor: pointer; min-height: 44px; }
+.admin-shell .xc-behave { background: #18151f; color: #fff; border-radius: 12px; padding: 18px 22px; }
+.admin-shell .xc-behave h3 { color: #c9b3f0; }
+.admin-shell .xc-behave li { font-size: 0.98rem; line-height: 1.55; }
+.admin-shell .xc-behave ul li::marker { content: "•  "; }
+.admin-shell .xc-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 24px; padding-top: 12px; border-top: 1px solid rgba(29, 23, 48, 0.08); font-size: 0.85rem; color: var(--xc-ink-2); }
+.admin-shell .xc-foot a { color: var(--xc-violet); font-weight: 600; text-decoration: none; }
+.admin-shell .xc-details { margin: 8px 0 16px; }
+.admin-shell .xc-details > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-radius: var(--adm-radius); background: var(--adm-surface); border: 1px solid var(--adm-border); font-weight: 600; color: var(--adm-text); min-height: 44px; }
+.admin-shell .xc-details > summary::-webkit-details-marker { display: none; }
+.admin-shell .xc-details > summary::after { content: "▾"; color: var(--adm-text-3); transition: transform 0.15s; }
+.admin-shell .xc-details[open] > summary::after { transform: rotate(180deg); }
+.admin-shell .xc-details > summary small { font-weight: 400; color: var(--adm-text-3); margin-left: 8px; }
+.admin-shell .xc-details[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.admin-shell .xc-details-body { border: 1px solid var(--adm-border); border-top: 0; border-radius: 0 0 var(--adm-radius) var(--adm-radius); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+@media (max-width: 900px) {
+  .admin-shell .xc-card { padding: 20px 16px 14px; border-radius: 14px; }
+  .admin-shell .xc-body { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .admin-shell .xc-right { display: contents; }
+  .admin-shell .xc-visual { order: -1; }
+  .admin-shell .xc-behave { order: 1; }
+  .admin-shell .xc-theme { white-space: normal; }
+}
+/* L'admin force sa police et enlève les majuscules (!important) : la fiche en diapo garde Oswald et ses titres en majuscules. */
+.admin-shell .xc-card .xc-title, .admin-shell .xc-card .xc-sec h3, .admin-shell .xc-card .xc-behave h3 { font-family: var(--font-display), "Oswald", sans-serif !important; text-transform: uppercase !important; letter-spacing: 0.01em !important; }
+.admin-shell .xc-card .xc-theme { text-transform: uppercase !important; letter-spacing: 0.02em !important; }
+.admin-shell .xc-card .xc-sec ol { list-style: decimal outside; padding-left: 22px; }
+.admin-shell .xc-card .xc-sec ul, .admin-shell .xc-card .xc-behave ul { list-style: disc outside; }

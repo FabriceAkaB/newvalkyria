@@ -6,6 +6,7 @@ import { useRef, useState, useTransition } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { ExerciseDiagramEditor, ExerciseDiagramView } from "@/components/exercise-diagram";
+import { ExerciseSheetCard } from "@/components/exercise-sheet-card";
 import { Pill, dayLabel, shortDay } from "@/components/mandalart/ui";
 import {
   AGE_GROUPS,
@@ -207,6 +208,9 @@ function ExerciseForm({ entry, onDone, startAsNewVersion }: { entry: BankEntry |
               <input className="admin-input" value={versionNote} onChange={(e) => setVersionNote(e.target.value)} placeholder="Ex. : 2 ballons de plus, plus de file d'attente" />
             </div>
           ) : null}
+        </section>
+      ) : null}
+
       <section className="mda-card">
         <h2 className="mda-h2">L’essentiel</h2>
         <div className="xb-grid" style={{ marginTop: 12 }}>
@@ -354,9 +358,6 @@ function ExerciseForm({ entry, onDone, startAsNewVersion }: { entry: BankEntry |
           </Field>
         </div>
       </section>
-
-        </section>
-      ) : null}
 
       <div className="xb-savebar">
         <span className="xb-savebar-info">
@@ -569,9 +570,17 @@ export function AdminExerciceFiche({ entry, ratings }: { entry: BankEntry | null
             </section>
           ) : null}
 
-          <section className="mda-card">
-            <h2 className="mda-h2">La fiche</h2>
-            <div className="xb-blocks" style={{ marginTop: 16 }}>
+          <ExerciseSheetCard entry={e} onAddPhoto={() => fileInput.current?.click()} />
+
+          <details className="xc-details">
+            <summary>
+              <span>
+                Détails de la fiche technique
+                <small>organisation selon le nombre, variantes, progression, matériel, liste de vérification</small>
+              </span>
+            </summary>
+            <div className="xc-details-body">
+            <div className="xb-blocks">
               <dl className="xb-facts">
                 <div><dt>Geste ou thème</dt><dd>{e.category ?? "—"}</dd></div>
                 <div><dt>Âge</dt><dd>{e.age_groups?.length ? e.age_groups.join(", ") : "—"}</dd></div>
@@ -611,34 +620,14 @@ export function AdminExerciceFiche({ entry, ratings }: { entry: BankEntry | null
               {e.variants ? <Block title="Autres variantes" text={e.variants} /> : null}
               <Block title="Progression" text={e.progression} />
               {e.exercise_type === "physique" || e.physical_metrics ? <Block title="Métriques" text={e.physical_metrics} /> : null}
-              {e.diagram_data && !editingDiagram ? (
+              {e.diagram_data && e.image_url && !editingDiagram ? (
                 <div className="xb-block">
                   <h3>Schéma</h3>
                   <ExerciseDiagramView diagram={e.diagram_data} />
                 </div>
               ) : null}
-              {e.image_url ? (
-                <div className="xb-block">
-                  <h3>Photo</h3>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={e.image_url} alt={e.title} style={{ maxWidth: "min(100%, 420px)", borderRadius: 8 }} />
-                </div>
-              ) : null}
-              {e.video_url ? (
-                <div className="xb-block">
-                  <h3>Vidéo</h3>
-                  <p>
-                    <a href={e.video_url} target="_blank" rel="noreferrer" style={{ color: "var(--adm-accent)" }}>
-                      Voir la vidéo ↗
-                    </a>
-                  </p>
-                </div>
-              ) : null}
             </div>
-          </section>
-
-          <div className="mda-cols-2" style={{ alignItems: "start" }}>
-            <section className="mda-card">
+            <section>
               <h2 className="mda-h2">Liste de vérification Valkyria</h2>
               <p className="mda-sub">{sheet.complete ? "Tout y est." : `Il manque ${sheet.missing.length} élément${sheet.missing.length > 1 ? "s" : ""}.`}</p>
               <ul className="xb-check">
@@ -653,6 +642,8 @@ export function AdminExerciceFiche({ entry, ratings }: { entry: BankEntry | null
                 ))}
               </ul>
             </section>
+            </div>
+          </details>
 
             <section className="mda-card-flush">
               <div className="mda-card-head">
@@ -699,7 +690,6 @@ export function AdminExerciceFiche({ entry, ratings }: { entry: BankEntry | null
                 </p>
               )}
             </section>
-          </div>
 
           {e.version_history?.length ? (
             <section className="mda-card">

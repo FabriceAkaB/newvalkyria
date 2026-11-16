@@ -360,3 +360,110 @@ export function planningLabel(e: { title: string; bank?: BankSummary }): string 
   if (s.status === "a-valider") return `${e.title} · ${fmtScore(s.average)}/10`;
   return `${e.title} · ${STATUS_LABEL[s.status].toLowerCase()}`;
 }
+
+/* ── Fiche en diapo (page d'un exercice) ─────────────────────────────────────
+   Découpe les textes libres de la fiche comme les diapos des pratiques : pastilles, but du jeu,
+   règles, comportements attendus (encadré noir) et conseils de l'éducateur. Pur, testé. */
+
+export interface ExerciseCard {
+  chips: string[];
+  difficulty: 1 | 2 | 3;
+  theme: string | null;
+  goals: string[];
+  rules: string[];
+  /** Règles numérotées (ball mastery : les 7 gestes). */
+  numbered: boolean;
+  behaviours: string[];
+  objectives: string[];
+  animation: { label: string; items: string[] }[];
+}
+
+const TIP_LABELS = ["À répéter", "Questions", "En attente", "Station", "Temps"] as const;
+
+function sentences(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+(?=[A-ZÀ-Ý0-9«])/u)
+    .map((s) => s.trim().replace(/\.$/, ""))
+    .filter(Boolean);
+}
+
+function splitList(text: string): string[] {
+  const quotes = text.match(/«[^»]+»/g);
+  if (quotes && quotes.length > 1) return quotes.map((q) => q.trim());
+  return text.split(/\s*;\s*/).map((s) => s.trim().replace(/\.$/, "")).filter(Boolean);
+}
+
+export function exerciseCard(e: {
+  instructions?: string | null;
+  coaching_points?: string | null;
+  objective?: string | null;
+  dimensions?: string | null;
+  min_players?: number | null;
+  max_players?: number | null;
+  duration_minutes?: number | null;
+  level?: string | null;
+  category?: string | null;
+  exercise_type?: string | null;
+}): ExerciseCard {
+  const goals: string[] = [];
+  const rules: string[] = [];
+  const animation: { label: string; items: string[] }[] = [];
+  let numbered = false;
+  let section: "rules" | "goals" | null = null;
+
+  for (const raw of (e.instructions ?? "").split(/\n+/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const head = line.match(/^(Règles|Points|Temps|Formats)\s*:\s*(.*)$/);
+    if (head) {
+      const [, label, rest] = head;
+      if (label === "Règles") section = "rules";
+      else if (label === "Points") section = "goals";
+      else {
+        section = null;
+        if (rest) animation.push({ label: label === "Temps" ? "Temps" : "Formats", items: [rest.replace(/\.$/, "")] });
+        continue;
+      }
+      if (rest) (section === "goals" ? goals : rules).push(...(section === "goals" ? splitList(rest) : sentences(rest)));
+      continue;
+    }
+    const bullet = line.replace(/^[•\-–]\s*/, "");
+    if (/^\d+\.\s/.test(line)) {
+      numbered = true;
+      rules.push(line.replace(/^\d+\.\s*/, ""));
+      continue;
+    }
+    if (bullet !== line && section) {
+      (section === "goals" ? goals : rules).push(bullet);
+      continue;
+    }
+    if (section === "goals") goals.push(...splitList(line));
+    else rules.push(...sentences(line));
+  }
+
+  const behaviours: string[] = [];
+  for (const raw of (e.coaching_points ?? "").split(/\n+/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const tip = TIP_LABELS.find((l) => line.startsWith(`${l} :`));
+    if (tip) {
+      const items = splitList(line.slice(tip.length + 2).trim());
+      if (tip === "À répéter") behaviours.push(...items.filter((i) => !behaviours.includes(i)));
+      else animation.push({ label: tip, items });
+    } else behaviours.push(line.replace(/^[•\-–]\s*/, "").replace(/\.$/, ""));
+  }
+
+  const objective = (e.objective ?? "").trim();
+  const objectives = objective.startsWith("À répéter") ? [] : objective ? splitList(objective) : [];
+
+  const players =
+    e.min_players && e.max_players && e.min_players !== e.max_players ? `${e.min_players} à ${e.max_players} joueuses`
+    : e.max_players || e.min_players ? `${e.max_players ?? e.min_players} joueuses`
+    : null;
+  const space = e.dimensions ? e.dimensions.split(/\.\s|\(/)[0].replace(/\.$/, "").trim() : null;
+  const chips = [space && space.length <= 32 ? space : null, players, e.duration_minutes ? `${e.duration_minutes} min` : null].filter((c): c is string => Boolean(c));
+  const difficulty = e.level === "Avancé" ? 3 : e.level === "Développement" ? 1 : 2;
+  const theme = [...new Set([typeLabel(e.exercise_type), e.category].filter(Boolean))].join(" · ") || null;
+
+  return { chips, difficulty, theme, goals, rules, numbered, behaviours, objectives, animation };
+}
