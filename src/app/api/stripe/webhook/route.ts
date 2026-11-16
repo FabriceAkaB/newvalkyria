@@ -611,6 +611,8 @@ export async function POST(request: Request) {
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
       const order = await markOrderPaidByCheckoutSession(session.id, paymentIntentId);
       if (order) {
+        // Toute commande payée devient une tâche de JP (demande de JP, 15 nov. 2026).
+        await import("@/lib/shop-repo").then((m) => m.syncOrderTask(order.id)).catch((error) => console.error("Unable to create the order task", error));
         try {
           await sendShopOrderConfirmationEmail({
             to: order.customer_email,

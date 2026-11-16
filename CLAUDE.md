@@ -106,6 +106,10 @@ Le webhook gère aussi `checkout.session.expired` (libère les réservations) et
   espaces ignorés ; prénoms composés) **et** par **courriel parent** dans toutes les inscriptions payées : `registrations`,
   `session_program_registrations`, `sport_etudes_registrations`, `special_offers` payées. L'autre parent a pu l'inscrire
   avec un autre courriel. Montrer la liste finale des destinataires à JP **avant** un envoi de masse. Skill `relance`.
+- **Tout ce qui reste à faire va dans les tâches de JP** (règle du 15 nov. 2026) : chaque demande de JP qui laisse une suite
+  (payer, répondre, décider, monter, commander) devient une ligne `team_tasks` (`createTeamTask`, assignee « JP » ou un employé avec
+  son courriel), visible dans « Mes tâches » d'Aujourd'hui et dans Ma journée. Les commandes boutique le font toutes seules
+  (`syncOrderTask`, `team_tasks.ref`, cochée à la remise).
 - **Noter chaque relance, offre, réponse ou excuse** envoyée à une famille dans `outreach_log` (`logOutreach`), une ligne par joueuse.
 - **Christine Durand** (gérante, `Christinedurand.2@hotmail.com`) en copie (`cc`) des courriels aux partenaires
   et des annonces aux familles. Skill `courriel-familles`.

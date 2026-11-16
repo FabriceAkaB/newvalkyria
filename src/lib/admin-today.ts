@@ -805,6 +805,24 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
         ...late.map((t) => ({ title: `${t.assignee} : ${t.title}`, detail: t.seen_at ? (t.status === "en_cours" ? "S'en occupe, pas terminée" : "Vue, pas commencée") : "Pas encore ouverte", meta: `En retard · prévue ${shortDay(`${t.due}T12:00:00Z`)}`, href: "/admin/moi/confiees" })),
         ...done.map((t) => ({ title: `Fait par ${t.assignee} : ${t.title}`, detail: t.done_note, meta: dayTime(t.done_at!), href: "/admin/moi/confiees" }))
       ];
+      // Mes tâches (demande de JP, 15 nov. 2026 : tout ce qu'il demande et qui reste à faire doit être ici) :
+      // en retard, du jour et de la semaine, avec celles sans date.
+      const limit = new Date(Date.parse(`${today}T12:00:00Z`) + 7 * DAY_MS).toISOString().slice(0, 10);
+      const mine = tasks
+        .filter((t) => t.assignee === "JP" && open(t) && !t.mandalart_code && (!t.due || t.due <= limit))
+        .sort((x, y) => (x.due ?? "9999").localeCompare(y.due ?? "9999"));
+      if (mine.length)
+        sections.push(
+          section({
+            key: "mes-taches-jp",
+            title: "Mes tâches",
+            level: mine.some((t) => t.due && t.due < today) ? "rouge" : mine.some((t) => t.due && t.due <= today) ? "orange" : "info",
+            emptyText: "Rien à faire cette semaine.",
+            href: "/admin/moi",
+            hrefLabel: "Ma journée",
+            items: mine.map((t) => ({ title: t.title, detail: t.details, meta: t.due ? `${t.due < today ? "En retard · " : t.due === today ? "Aujourd'hui · " : ""}pour ${shortDay(`${t.due}T12:00:00Z`)}` : "Sans date", href: "/admin/moi" }))
+          })
+        );
       if (items.length)
         sections.push(section({ key: "taches-confiees", title: "Tâches confiées", level: late.length ? "orange" : "info", emptyText: "Rien en retard.", href: "/admin/moi/confiees", hrefLabel: "Tâches confiées", items }));
     } else {

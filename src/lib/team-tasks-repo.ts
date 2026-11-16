@@ -350,3 +350,20 @@ export async function sendJpMonthlyList(opts: { today?: string; force?: boolean 
   await db().from("app_settings").upsert({ club_id: CLUB_ID, key: KEY, value: monthOf(today), updated_at: new Date().toISOString() }, { onConflict: "club_id,key" });
   return { sent: true };
 }
+
+/** Tâche de JP reliée à une chose du site (ex. « shop_order:<id> ») : créée ou mise à jour tant que c'est à faire,
+ *  cochée toute seule quand c'est réglé (done). Règle de JP (15 nov. 2026) : toute commande doit être dans ses tâches. */
+export async function syncRefTask(ref: string, input: { title: string; details?: string | null; due?: string | null; done?: boolean; doneNote?: string | null }): Promise<void> {
+  const { data: open } = await db().from("team_tasks").select("id, title, details").eq("club_id", CLUB_ID).eq("ref", ref).in("status", ["a_faire", "en_cours"]).limit(1).maybeSingle();
+  const now = new Date().toISOString();
+  if (input.done) {
+    if (open) await db().from("team_tasks").update({ status: "fait", done_at: now, done_note: input.doneNote ?? null, updated_at: now }).eq("id", open.id);
+    return;
+  }
+  if (open) {
+    if (open.title !== input.title || (open.details ?? null) !== (input.details ?? null)) await db().from("team_tasks").update({ title: input.title, details: input.details ?? null, updated_at: now }).eq("id", open.id);
+    return;
+  }
+  const { error } = await db().from("team_tasks").insert({ club_id: CLUB_ID, ref, title: input.title, details: input.details ?? null, due: input.due ?? null, assignee: JP, created_by: "Site" });
+  if (error && !/duplicate/i.test(error.message)) throw error;
+}

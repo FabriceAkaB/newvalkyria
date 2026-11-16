@@ -746,6 +746,25 @@ export async function updateDistributionStatus(orderId: string, status: Distribu
   const { error } = await db().from("shop_orders").update({ distribution_status: status, updated_at: new Date().toISOString() }).eq("id", orderId);
   if (error) throw new Error(error.message);
   await logOrderEvent(orderId, "statut_change", DISTRIBUTION_STATUS_LABELS[status], null);
+  await syncOrderTask(orderId).catch((e) => console.error("Tâche de commande", e));
+}
+
+/** Chaque commande payée est une tâche de JP (« Mes tâches », Ma journée) jusqu'à ce qu'elle soit remise : le titre
+ *  suit l'étape (à commander, en production, reçue…), et la tâche se coche toute seule à la remise. */
+export async function syncOrderTask(orderId: string): Promise<void> {
+  const { data: o } = await db().from("shop_orders").select("id, status, distribution_status, customer_name, created_at, items:shop_order_items(product_name, variant_label, quantity, delivered_quantity)").eq("id", orderId).maybeSingle();
+  if (!o || o.status !== "paid") return;
+  const { syncRefTask } = await import("@/lib/team-tasks-repo");
+  const ref = `shop_order:${o.id}`;
+  if (o.distribution_status === "remis") return syncRefTask(ref, { title: "", done: true, doneNote: "Commande remise" });
+  const items = ((o.items ?? []) as any[]).map((i) => `${i.quantity > 1 ? `${i.quantity} × ` : ""}${i.product_name}${i.variant_label ? ` (${i.variant_label})` : ""}`).join(", ");
+  const step = DISTRIBUTION_STATUS_LABELS[o.distribution_status as DistributionStatus] ?? o.distribution_status;
+  const due = new Date(Date.parse(o.created_at) + 2 * 86_400_000).toISOString().slice(0, 10);
+  await syncRefTask(ref, {
+    title: `Commande boutique : ${items} pour ${String(o.customer_name ?? "").trim() || "un client"} (${String(step).toLowerCase()})`,
+    details: `https://www.newvalkyria.com/admin/uniformes/commande/${o.id}`,
+    due
+  });
 }
 
 /** Confirme la remise (totale ou partielle) d'une commande — enregistre la
@@ -784,6 +803,7 @@ export async function recordDelivery(
     `${summary}${parentConfirmed ? " · Parent a confirmé la réception" : ""}`,
     deliveredBy
   );
+  await syncOrderTask(orderId).catch((e) => console.error("Tâche de commande", e));
 }
 
 export async function addOrderProblem(orderId: string, problemType: ProblemType, description: string | null): Promise<void> {
