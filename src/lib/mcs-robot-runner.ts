@@ -437,6 +437,9 @@ const mcsIdOf = (key: string) => {
   const m = key.match(/^(event|game)-(\d+)@/);
   return m ? { type: m[1] as "event" | "game", id: Number(m[2]) } : null;
 };
+/** Le lien iCal de MonClubSportif nomme tout « event-N », même un match : un Match ou un Tournoi est un « game » chez MCS
+ *  (page /calendar/games/N). Sans ça, le robot ne trouvait jamais le match pour y écrire l'adversaire. */
+const isGame = (e: { type?: string | null }) => e.type === "Match" || e.type === "Tournoi";
 
 /** Plages payées → nom du club adverse écrit sur le match MCS à la même heure (équipe concernée). */
 async function syncOpponents(session: McsSession, teams: TeamTarget[], dry = false): Promise<string[]> {
@@ -453,7 +456,7 @@ async function syncOpponents(session: McsSession, teams: TeamTarget[], dry = fal
     if (!date || date < today || sent.has(b.id)) continue;
     const name = String(b.org_name ?? "").trim();
     if (!name) continue;
-    const ev = ((events ?? []) as any[]).find((e) => String(e.event_date).slice(0, 10) === date && Math.abs(toMin(e.start_time) - toMin(String(b.slot.start_time))) <= 15 && (e.type === "Match" || e.type === "Tournoi") && mcsIdOf(e.key)?.type === "game");
+    const ev = ((events ?? []) as any[]).find((e) => String(e.event_date).slice(0, 10) === date && Math.abs(toMin(e.start_time) - toMin(String(b.slot.start_time))) <= 15 && isGame(e) && mcsIdOf(e.key) !== null);
     if (!ev) continue;
     if (ev.opponent && ev.opponent.toLowerCase().includes(name.toLowerCase().slice(0, 6))) {
       if (!dry) await mark("adversaire", b.id, name);
@@ -499,7 +502,7 @@ export async function sendPresenceReminders(now = Date.now(), rules?: McsRules):
       const start = Number(String(e.key).split("|")[1]);
       if (!id || !start) return null;
       const stage = dueReminder(start, localDayStartMs(String(e.event_date).slice(0, 10)), now, r);
-      return stage ? { ...e, mcsId: id.id, mcsType: id.type, start, stage } : null;
+      return stage ? { ...e, mcsId: id.id, mcsType: isGame(e) ? "game" : id.type, start, stage } : null;
     })
     .filter(Boolean) as any[];
   if (!due.length) return { sent: 0 };

@@ -306,6 +306,9 @@ export class McsSession {
     const existing = [...known].find(([n]) => n.toLowerCase() === name.toLowerCase())?.[1];
     const f = new URLSearchParams();
     for (const [k, v] of fields) if (k !== MCS_FIELDS.game.opponentId && k !== MCS_FIELDS.game.opponentName) f.append(k, v);
+    // MCS a deux champs « durée », dont un vide : garder la vraie valeur, sinon le match perdrait sa durée.
+    const duration = fields.find(([k, v]) => k === "game[duration_minutes]" && v !== "")?.[1];
+    if (duration) f.set("game[duration_minutes]", duration);
     f.set(MCS_FIELDS.game.opponentId, existing ?? MCS_FIELDS.game.newOpponent);
     if (!existing) f.set(MCS_FIELDS.game.opponentName, name);
     const res = await this.request(MCS_PATHS.game(team, season, gameId), { method: "POST", body: f });
