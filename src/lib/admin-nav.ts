@@ -64,6 +64,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/mandalart", label: "Ce mois-ci", adminOnly: true },
           { href: "/admin/mandalart/semaine", label: "Bilan de la semaine", adminOnly: true },
           { href: "/admin/mandalart/piliers", label: "Les 8 piliers", adminOnly: true },
+          { href: "/admin/mandalart/arbre", label: "L'arbre", adminOnly: true },
           { href: "/admin/mandalart/niveaux", label: "Niveaux", adminOnly: true },
           { href: "/admin/mandalart/trajectoire", label: "Trajectoire $", adminOnly: true },
           { href: "/admin/mandalart/indicateurs", label: "Indicateurs", adminOnly: true },

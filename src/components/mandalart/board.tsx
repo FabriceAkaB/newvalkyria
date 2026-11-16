@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { PillarProgress } from "@/lib/mandalart-core";
 
 /** Une couleur par pilier, toutes de même clarté pour un ensemble harmonieux (teinte en degrés). */
-const HUES = [268, 222, 186, 150, 42, 18, 340, 300];
+export const HUES = [268, 222, 186, 150, 42, 18, 340, 300];
 /** Positions de la grille 3 × 3 (4 = le centre) occupées par les 8 piliers, dans l'ordre du plan. */
 const AROUND = [0, 1, 2, 3, 5, 6, 7, 8];
 const MEDAL: Record<string, string> = { bronze: "🥉", argent: "🥈", or: "🥇", mauve: "💜" };
