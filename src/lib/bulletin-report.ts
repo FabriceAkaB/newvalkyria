@@ -36,12 +36,13 @@ export function currentPeriod(seasonId: string | null | undefined, today: string
 }
 
 /** L'échelle de l'évaluation rapide (1 à 5), avec ses couleurs. */
+/** Échelle aux couleurs New Valkyria : du corail (à travailler) jusqu'au violet de l'académie (excellent). */
 export const LEVELS = [
-  { value: 1, label: "À travailler", color: "#d64545" },
-  { value: 2, label: "Fragile", color: "#f08c2e" },
-  { value: 3, label: "Correct", color: "#e8c22c" },
-  { value: 4, label: "Bien", color: "#3fae5a" },
-  { value: 5, label: "Excellent", color: "#2f6fd6" }
+  { value: 1, label: "À travailler", color: "#d9534f" },
+  { value: 2, label: "Fragile", color: "#e8893a" },
+  { value: 3, label: "Correct", color: "#c9a227" },
+  { value: 4, label: "Bien", color: "#8a5cd0" },
+  { value: 5, label: "Excellent", color: "#4b1f78" }
 ] as const;
 
 export function levelOf(value: number | null): (typeof LEVELS)[number] | null {
