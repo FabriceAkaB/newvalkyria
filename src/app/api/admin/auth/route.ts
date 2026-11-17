@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { clientIp, sessionCookie } from "@/lib/login-guard";
+
 import {
   ADMIN_COOKIE_NAME,
   ADMIN_SESSION_TTL_SECONDS,
@@ -11,21 +13,15 @@ import {
   recordLoginAttempt
 } from "@/lib/admin-auth";
 
-function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return "unknown";
-}
-
 export async function POST(request: Request) {
-  const ip = getClientIp(request);
+  const ip = clientIp(request);
 
   if (await isIpRateLimited(ip)) {
     return NextResponse.json({ error: "Trop de tentatives — réessayez dans quelques minutes." }, { status: 429 });
   }
 
-  const { password } = (await request.json()) as { password?: string };
-  const role = password ? checkAdminPassword(password) : null;
+  const { password } = ((await request.json().catch(() => null)) ?? {}) as { password?: string };
+  const role = typeof password === "string" && password ? await checkAdminPassword(password) : null;
 
   await recordLoginAttempt(ip, role !== null);
 
@@ -36,12 +32,7 @@ export async function POST(request: Request) {
   const token = await createAdminSession(role);
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(ADMIN_COOKIE_NAME, token, {
-    httpOnly: true,
-    path: "/",
-    maxAge: ADMIN_SESSION_TTL_SECONDS,
-    sameSite: "lax"
-  });
+  response.cookies.set(ADMIN_COOKIE_NAME, token, sessionCookie(ADMIN_SESSION_TTL_SECONDS));
   return response;
 }
 

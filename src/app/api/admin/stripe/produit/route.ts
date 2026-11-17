@@ -11,7 +11,7 @@ import { getStripeClient } from "@/lib/stripe";
  *  base de données (les inscrits pour ce genre d'offre ponctuelle sont à
  *  suivre manuellement dans le Dashboard Stripe). */
 export async function POST(request: Request) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
 
   const body = (await request.json().catch(() => null)) as {
     name?: string;

@@ -27,7 +27,13 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
   ]);
   const p = billing.payments.find((x) => x.id === decodeURIComponent(id));
   if (!p) notFound();
-  const issuer = { name: "New Valkyria", line: "Académie de soccer féminin · Laurentides, Québec", email: "info@newvalkyria.com", neq: null as string | null, ...(setting?.value ?? {}) };
+  let saved: Record<string, string> = {};
+  try {
+    saved = typeof setting?.value === "string" ? JSON.parse(setting.value) : (setting?.value ?? {});
+  } catch {
+    saved = {};
+  }
+  const issuer = { name: "New Valkyria", line: "Académie de soccer féminin · Laurentides, Québec", email: "info@newvalkyria.com", neq: null as string | null, ...saved };
   const ink = "#1d1730";
   return (
     <div style={{ background: "#fff", color: ink, maxWidth: 720, margin: "2rem auto", padding: "2rem", borderRadius: 12, fontFamily: "Arial, sans-serif" }}>

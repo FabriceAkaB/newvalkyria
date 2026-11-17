@@ -16,7 +16,7 @@ import { getStripeClient } from "@/lib/stripe";
  *  nouvelle carte remplace l'ancienne sur le plan pour les versements
  *  suivants. Lien à usage unique (se désactive après un paiement réussi). */
 export async function POST(request: Request, { params }: { params: Promise<{ installmentId: string }> }) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
   const { installmentId } = await params;
 
   const installment = await getInstallmentWithContext(installmentId);

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { sessionCookie } from "@/lib/login-guard";
+
 import { isAdminRequest } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
 import { PARENT_COOKIE_NAME } from "@/lib/parent-auth";
@@ -14,6 +16,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!account) return jsonError("Compte introuvable", 404);
   const token = await createPreviewSession("famille", id, account.fullName || account.email);
   const response = NextResponse.redirect(new URL("/compte", request.url));
-  response.cookies.set(PARENT_COOKIE_NAME, token, { httpOnly: true, path: "/", maxAge: PREVIEW_TTL_SECONDS, sameSite: "lax" });
+  response.cookies.set(PARENT_COOKIE_NAME, token, sessionCookie(PREVIEW_TTL_SECONDS));
   return response;
 }

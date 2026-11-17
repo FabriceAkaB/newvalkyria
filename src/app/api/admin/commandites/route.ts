@@ -15,7 +15,7 @@ import {
 } from "@/lib/sponsors-repo";
 
 export async function GET() {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
   const [sponsors, payments] = await Promise.all([getSponsors(), getSponsorPayments()]);
   return NextResponse.json({ sponsors, payments });
 }

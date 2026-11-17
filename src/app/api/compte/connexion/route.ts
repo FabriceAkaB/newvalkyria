@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+
+import { clientIp, loginBlocked, recordLogin, sessionCookie } from "@/lib/login-guard";
 import { ZodError } from "zod";
 
 import { jsonError } from "@/lib/http";
@@ -10,19 +12,17 @@ import { parentSignInSchema } from "@/lib/validations";
 export async function POST(request: Request) {
   try {
     const payload = parentSignInSchema.parse(await request.json());
+    const ip = clientIp(request);
+    if (await loginBlocked("famille", ip, payload.email)) return jsonError("Trop de tentatives : réessayez dans 15 minutes.", 429);
 
     const result = await signInParent(payload.email, payload.password);
+    await recordLogin("famille", ip, payload.email, !("error" in result));
     if ("error" in result) return jsonError(result.error, 401);
 
     const token = await createParentSession(result.userId);
 
     const response = NextResponse.json({ ok: true });
-    response.cookies.set(PARENT_COOKIE_NAME, token, {
-      httpOnly: true,
-      path: "/",
-      maxAge: PARENT_COOKIE_MAX_AGE,
-      sameSite: "lax"
-    });
+    response.cookies.set(PARENT_COOKIE_NAME, token, sessionCookie(PARENT_COOKIE_MAX_AGE));
     return response;
   } catch (error) {
     if (error instanceof ZodError) {

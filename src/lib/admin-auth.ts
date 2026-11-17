@@ -2,6 +2,8 @@ import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { sameSecret } from "@/lib/login-guard";
+import { verifyPassword } from "@/lib/password";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const ADMIN_COOKIE_NAME = "nv_admin_session";
@@ -10,8 +12,10 @@ export const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 8; // 8 heures
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_WINDOW_MINUTES = 15;
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "180180";
-const GERANTE_PASSWORD = process.env.GERANTE_PASSWORD ?? "125125";
+// Aucun mot de passe par défaut dans le code (le dépôt a été public) : ceux de Vercel (ADMIN_PASSWORD, GERANTE_PASSWORD)
+// s'ils existent, et ceux rangés chiffrés (scrypt) dans app_settings « admin_password_hashes ».
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD?.trim() || null;
+const GERANTE_PASSWORD = process.env.GERANTE_PASSWORD?.trim() || null;
 
 /** "admin" = accès complet (dont finances). "gerante" = inscriptions,
  *  essais, groupes/horaire — jamais les données financières. Étendre
@@ -24,10 +28,20 @@ function db() {
   return getSupabaseAdminClient() as any;
 }
 
-/** Retourne le rôle associé au mot de passe saisi, ou null s'il est invalide. */
-export function checkAdminPassword(password: string): AdminRole | null {
-  if (password === ADMIN_PASSWORD) return "admin";
-  if (password === GERANTE_PASSWORD) return "gerante";
+/** Retourne le rôle associé au mot de passe saisi, ou null s'il est invalide (comparaisons en temps constant). */
+export async function checkAdminPassword(password: string): Promise<AdminRole | null> {
+  if (!password) return null;
+  if (ADMIN_PASSWORD && sameSecret(password, ADMIN_PASSWORD)) return "admin";
+  if (GERANTE_PASSWORD && sameSecret(password, GERANTE_PASSWORD)) return "gerante";
+  const { data } = await db().from("app_settings").select("value").eq("key", "admin_password_hashes").maybeSingle();
+  let hashes: Partial<Record<AdminRole, string>> = {};
+  try {
+    hashes = typeof data?.value === "string" ? JSON.parse(data.value) : (data?.value ?? {});
+  } catch {
+    hashes = {};
+  }
+  if (hashes.admin && verifyPassword(password, hashes.admin)) return "admin";
+  if (hashes.gerante && verifyPassword(password, hashes.gerante)) return "gerante";
   return null;
 }
 

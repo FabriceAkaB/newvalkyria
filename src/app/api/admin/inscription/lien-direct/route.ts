@@ -28,7 +28,7 @@ import { getStripeClient } from "@/lib/stripe";
  *  exposé publiquement, car il saute la validation/anti-abus du tunnel
  *  normal. */
 export async function POST(request: Request) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
 
   const body = (await request.json().catch(() => null)) as {
     programCode?: ProgramCode;

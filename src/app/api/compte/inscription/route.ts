@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+import { sessionCookie } from "@/lib/login-guard";
 import { ZodError } from "zod";
 
 import { jsonError } from "@/lib/http";
@@ -17,12 +19,7 @@ export async function POST(request: Request) {
     await sendParentEmailCheck(result.userId).catch(() => null); // lien de confirmation du courriel
 
     const response = NextResponse.json({ ok: true }, { status: 201 });
-    response.cookies.set(PARENT_COOKIE_NAME, token, {
-      httpOnly: true,
-      path: "/",
-      maxAge: PARENT_COOKIE_MAX_AGE,
-      sameSite: "lax"
-    });
+    response.cookies.set(PARENT_COOKIE_NAME, token, sessionCookie(PARENT_COOKIE_MAX_AGE));
     return response;
   } catch (error) {
     if (error instanceof ZodError) {

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { sessionCookie } from "@/lib/login-guard";
+
 import { isAdminRequest } from "@/lib/admin-auth";
 import { COACH_COOKIE_NAME } from "@/lib/coach-auth";
 import { jsonError } from "@/lib/http";
@@ -14,6 +16,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!coach) return jsonError("Éducateur introuvable", 404);
   const token = await createPreviewSession("coach", id, `${coach.first_name} ${coach.last_name}`);
   const response = NextResponse.redirect(new URL("/entraineur/dashboard", request.url));
-  response.cookies.set(COACH_COOKIE_NAME, token, { httpOnly: true, path: "/", maxAge: PREVIEW_TTL_SECONDS, sameSite: "lax" });
+  response.cookies.set(COACH_COOKIE_NAME, token, sessionCookie(PREVIEW_TTL_SECONDS));
   return response;
 }

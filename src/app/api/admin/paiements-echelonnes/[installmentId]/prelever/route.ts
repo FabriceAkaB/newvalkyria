@@ -13,7 +13,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase-admin";
  *  voir /lien-paiement) — sans attendre le prochain passage du cron ni
  *  retoucher aux autres versements d'autres familles. */
 export async function POST(_request: Request, { params }: { params: Promise<{ installmentId: string }> }) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
   const { installmentId } = await params;
 
   const installment = await getInstallmentWithContext(installmentId);
