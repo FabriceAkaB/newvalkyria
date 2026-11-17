@@ -13,6 +13,7 @@ const LINKS = [
   { href: "/entraineur/sondage", label: "Sondage des jeunes" },
   { href: "/entraineur/joueuses", label: "Joueuses" },
   { href: "/entraineur/exercices", label: "Exercices" },
+  { href: "/entraineur/laboratoire", label: "Laboratoire" },
   { href: "/entraineur/methode", label: "Méthode" }
 ];
 

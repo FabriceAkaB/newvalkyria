@@ -320,7 +320,8 @@ export const ADMIN_NAV: AdminNavSection[] = [
         tabs: [
           { href: "/admin/coaching/parcours", label: "Parcours Valkyria" },
           { href: "/admin/coaching/methode", label: "Séance et principes", adminOnly: true },
-          { href: "/admin/coaching/gestes", label: "Gestes", adminOnly: true }
+          { href: "/admin/coaching/gestes", label: "Gestes", adminOnly: true },
+          { href: "/admin/coaching/laboratoire", label: "Laboratoire" }
         ]
       },
       {
