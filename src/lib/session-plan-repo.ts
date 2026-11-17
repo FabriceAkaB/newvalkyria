@@ -17,6 +17,7 @@ export interface SessionBlock {
   custom_title: string | null;
   duration_minutes: number;
   notes: string | null;
+  created_at?: string;
   /** Pratique du jour (P1.4.08) : ce que l'éducateur doit savoir en arrivant, pour ce bloc précis.
    *  Vide = on affiche ce que dit la fiche de l'exercice lié. */
   setup?: string | null;

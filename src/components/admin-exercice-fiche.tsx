@@ -32,7 +32,7 @@ import {
   type ExerciseSheetFields,
   type ExerciseType
 } from "@/lib/exercise-bank";
-import type { BankEntry, ExerciseDiagram, ExerciseRating } from "@/lib/exercises-repo";
+import type { BankEntry, ExerciseDiagram, ExerciseRating, ExerciseUse } from "@/lib/exercises-repo";
 
 interface FormState {
   title: string;
@@ -392,7 +392,63 @@ function Block({ title, text, missing }: { title: string; text: string | null | 
   );
 }
 
-export function AdminExerciceFiche({ entry, ratings }: { entry: BankEntry | null; ratings: ExerciseRating[] }) {
+const LABEL_OVERRIDE: Record<string, string> = { setup: "montage", material: "matériel", roles: "qui fait quoi", key_points: "points clés", variants: "variantes", progressions: "progressions" };
+
+/** Où l'exercice est utilisé : la fiche modifiée change tout de suite dans chaque pratique (portail compris) ; les
+ *  ajustements faits bloc par bloc passent avant la fiche, « Reprendre la fiche partout » les efface (à venir seulement). */
+function ExerciseUses({ exerciseId, uses }: { exerciseId: string; uses: { upcoming: ExerciseUse[]; pastCount: number } }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const adjusted = uses.upcoming.filter((u) => u.overrides.length);
+  const reset = async () => {
+    if (!confirm(`Les ${adjusted.length} pratique(s) à venir ajustées reprendront la fiche de la banque. Continuer ?`)) return;
+    setBusy(true);
+    const res = await fetch(`/api/admin/exercises/${exerciseId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "reprendre-partout" }) }).catch(() => null);
+    const data = await res?.json().catch(() => null);
+    setMsg(res?.ok ? `${data?.blocks ?? 0} pratique(s) reprennent la fiche.` : "Ça n'a pas fonctionné. Réessaie.");
+    setBusy(false);
+    router.refresh();
+  };
+  const total = uses.upcoming.length + uses.pastCount;
+  return (
+    <section className="mda-card">
+      <h2 className="mda-h2">Où cet exercice est utilisé</h2>
+      <p className="mda-sub" style={{ marginTop: 4 }}>
+        {total
+          ? `${uses.upcoming.length} pratique${uses.upcoming.length > 1 ? "s" : ""} à venir · ${uses.pastCount} passée${uses.pastCount > 1 ? "s" : ""}. Quand tu modifies la fiche, le changement s'applique tout de suite à chaque pratique et au portail des éducateurs (les diapos déjà déposées, elles, ne changent pas : le portail l'indique).`
+          : "Pas encore utilisé dans une pratique."}
+      </p>
+      {uses.upcoming.length ? (
+        <ul className="xb-check" style={{ marginTop: 8 }}>
+          {uses.upcoming.slice(0, 12).map((u) => (
+            <li key={u.blockId} data-ok="true">
+              <span className="xb-check-mark" aria-hidden>•</span>
+              <span>
+                <Link href={`/admin/entraineurs/activites/${u.activityId}`} style={{ color: "inherit" }}>
+                  {shortDay(u.date)} {u.start.replace(":", " h ")} · {u.title}
+                </Link>
+                {u.overrides.length ? <span style={{ color: "var(--adm-warn)" }}> · ajusté dans cette pratique ({u.overrides.map((o) => LABEL_OVERRIDE[o] ?? o).join(", ")})</span> : null}
+              </span>
+            </li>
+          ))}
+          {uses.upcoming.length > 12 ? <li data-ok="true"><span className="xb-check-mark" aria-hidden>…</span><span>et {uses.upcoming.length - 12} autres</span></li> : null}
+        </ul>
+      ) : null}
+      {adjusted.length ? (
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginTop: 12 }}>
+          <button type="button" className="admin-btn-ghost" onClick={reset} disabled={busy}>
+            {busy ? "Un instant…" : `Reprendre la fiche partout (${adjusted.length})`}
+          </button>
+          <span className="mda-muted" style={{ fontSize: "0.82rem" }}>Efface les ajustements faits pratique par pratique : la fiche de la banque fait foi.</span>
+        </div>
+      ) : null}
+      {msg ? <p className="mda-sub" style={{ marginTop: 8 }}>{msg}</p> : null}
+    </section>
+  );
+}
+
+export function AdminExerciceFiche({ entry, ratings, uses = null }: { entry: BankEntry | null; ratings: ExerciseRating[]; uses?: { upcoming: ExerciseUse[]; pastCount: number } | null }) {
   const router = useRouter();
   const [editing, setEditing] = useState(entry === null);
   const [asNewVersion, setAsNewVersion] = useState(false);
@@ -571,6 +627,8 @@ export function AdminExerciceFiche({ entry, ratings }: { entry: BankEntry | null
           ) : null}
 
           <ExerciseSheetCard entry={e} onAddPhoto={() => fileInput.current?.click()} />
+
+          {uses ? <ExerciseUses exerciseId={e.id} uses={uses} /> : null}
 
           <details className="xc-details">
             <summary>

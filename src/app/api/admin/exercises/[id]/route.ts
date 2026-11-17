@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
-import { deleteExercise, parseExerciseBody, setBankDecision, updateExercise } from "@/lib/exercises-repo";
+import { deleteExercise, parseExerciseBody, resetBlockOverrides, setBankDecision, updateExercise } from "@/lib/exercises-repo";
 import { jsonError } from "@/lib/http";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -31,6 +31,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   const body = (await request.json().catch(() => null)) as { action?: string; reason?: string } | null;
   const action = body?.action;
+  // Toutes les pratiques à venir reprennent la fiche de la banque (ajustements bloc par bloc effacés).
+  if (action === "reprendre-partout") {
+    const { blocks } = await resetBlockOverrides(id);
+    return NextResponse.json({ ok: true, blocks });
+  }
   if (action !== "valider" && action !== "annuler-validation" && action !== "retirer" && action !== "remettre") return jsonError("Action invalide", 400);
 
   try {

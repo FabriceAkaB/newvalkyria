@@ -319,6 +319,12 @@ function PracticeOfTheDay({ activity, theme, blocks, exercises, players, seen, o
                   </div>
                   <span className="coach-block__time">{hhmm(from)}–{hhmm(from + b.duration_minutes)} · {b.duration_minutes} min</span>
                 </div>
+                {exercise?.content_updated_at && b.created_at && Date.parse(exercise.content_updated_at) > Date.parse(b.created_at) + 60_000 ? (
+                  <p className="coach-sub" style={{ margin: "0 0 8px", color: "var(--adm-warn)" }}>
+                    ✏️ Exercice modifié le{" "}
+                    {new Date(exercise.content_updated_at).toLocaleDateString("fr-CA", { timeZone: "America/Toronto", day: "numeric", month: "long" })}, après la préparation de cette pratique : suis ce qui est écrit ici (la diapo peut montrer l&apos;ancienne version).
+                  </p>
+                ) : null}
                 <dl>
                   {rows.filter((r) => r.value && String(r.value).trim()).map((r) => (
                     <div key={r.label}>

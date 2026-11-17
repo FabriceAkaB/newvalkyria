@@ -34,6 +34,9 @@ export function AdminBlockGuide({ activityId, block, exercise }: { activityId: s
     Object.fromEntries(BLOCK_GUIDE_FIELDS.map((f) => [f.key, (block[f.key] as string | null | undefined) ?? ""])) as Record<BlockGuideKey, string>
   );
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [everywhere, setEverywhere] = useState(false);
+  const [spread, setSpread] = useState<number | null>(null);
+  const exerciseId = block.exercise_id;
   const filled = BLOCK_GUIDE_FIELDS.filter((f) => values[f.key].trim() || fallback[f.key]).length;
 
   const save = async () => {
@@ -41,8 +44,10 @@ export function AdminBlockGuide({ activityId, block, exercise }: { activityId: s
     const res = await fetch(`/api/admin/coach-activities/${activityId}/blocks/${block.id}/guide`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values)
+      body: JSON.stringify({ ...values, everywhere: everywhere && Boolean(exerciseId) })
     }).catch(() => null);
+    const data = res?.ok ? await res.json().catch(() => null) : null;
+    setSpread(typeof data?.everywhere === "number" ? data.everywhere : null);
     setState(res?.ok ? "saved" : "error");
   };
 
@@ -68,11 +73,24 @@ export function AdminBlockGuide({ activityId, block, exercise }: { activityId: s
               />
             </label>
           ))}
+          {exerciseId ? (
+            <label style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
+              <input type="checkbox" checked={everywhere} onChange={(e) => (setEverywhere(e.target.checked), setState("idle"))} style={{ marginTop: 2 }} />
+              <span>
+                <strong style={{ color: "var(--adm-text)" }}>Appliquer partout</strong> : la fiche de l&apos;exercice dans la banque et toutes les pratiques à venir qui l&apos;utilisent (les pratiques passées ne changent pas).{" "}
+                <a href={`/admin/exercices/${exerciseId}`} style={{ color: "var(--adm-accent)" }}>Modifier toute la fiche ↗</a>
+              </span>
+            </label>
+          ) : null}
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <button type="button" className="admin-btn-primary" onClick={save} disabled={state === "saving"} style={{ fontSize: "0.78rem" }}>
               {state === "saving" ? "Enregistrement…" : "Enregistrer"}
             </button>
-            {state === "saved" && <span style={{ fontSize: "0.78rem", color: "var(--adm-good)" }}>Enregistré : l&apos;éducateur le verra en arrivant.</span>}
+            {state === "saved" && (
+              <span style={{ fontSize: "0.78rem", color: "var(--adm-good)" }}>
+                {spread !== null ? `Appliqué partout : la fiche de la banque et ${spread} pratique${spread > 1 ? "s" : ""} à venir.` : "Enregistré : l'éducateur le verra en arrivant."}
+              </span>
+            )}
             {state === "error" && <span style={{ fontSize: "0.78rem", color: "var(--adm-bad)" }}>Pas enregistré. Réessaie.</span>}
           </div>
           <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--adm-text-3)" }}>Un champ vide reprend la fiche de l&apos;exercice.</p>

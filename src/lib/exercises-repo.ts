@@ -56,6 +56,8 @@ export interface Exercise {
   diagram_data: ExerciseDiagram | null;
   created_at: string;
   updated_at: string;
+  /** Dernier changement du contenu (pas des notes ni de la validation). */
+  content_updated_at?: string | null;
   /** Calculé à partir des notes des éducateurs (pas une colonne), voir exercise-bank.ts. */
   bank?: BankSummary;
   /** Calculé pour une séance donnée : peut-on le mettre dans le plan ? */
@@ -198,7 +200,7 @@ export async function createExercise(input: ExerciseInput, opts: { coachId?: str
 /** `newVersion` : l'exercice a été changé (après une note sous 8, par exemple) ; la version
  *  augmente et les notes repartent à zéro. Sans `newVersion` : petite correction, mêmes notes. */
 export async function updateExercise(id: string, input: ExerciseInput, opts: { newVersion?: boolean; versionNote?: string | null } = {}): Promise<{ version: number }> {
-  const columns: Record<string, unknown> = { ...toColumns(input), updated_at: new Date().toISOString() };
+  const columns: Record<string, unknown> = { ...toColumns(input), updated_at: new Date().toISOString(), content_updated_at: new Date().toISOString() };
   const current = await getExercise(id);
   if (!current) throw new Error("Exercice introuvable");
   let version = current.version ?? 1;
@@ -439,4 +441,84 @@ export async function getActivityExercisesToRate(activityId: string, coachId: st
         bank: computeBankStatus(e, ratings.filter((r) => r.exercise_id === e.id))
       };
     });
+}
+
+/* ── Un exercice modifié change partout (JP, 17 nov. 2026) ──────────────────────────────────
+   Les pratiques ne copient pas l'exercice : chaque bloc pointe vers la fiche de la banque, donc une fiche modifiée
+   change tout de suite dans chaque pratique et dans le portail. Seuls les champs « Pratique du jour » remplis à la main
+   dans un bloc (montage, matériel, points clés…) restent propres à ce bloc : `applyGuideEverywhere` et
+   `resetBlockOverrides` les ramènent à la fiche pour toutes les pratiques à venir. Les pratiques passées ne bougent pas. */
+
+const GUIDE_TO_EXERCISE = { material: "material", key_points: "coaching_points", variants: "variants", progressions: "progression" } as const;
+const GUIDE_KEYS = ["setup", "material", "roles", "key_points", "variants", "progressions"] as const;
+type GuideKey = (typeof GUIDE_KEYS)[number];
+
+const todayMontreal = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+
+export interface ExerciseUse {
+  blockId: string;
+  activityId: string;
+  date: string;
+  start: string;
+  title: string;
+  /** Champs « Pratique du jour » remplis à la main dans ce bloc (ils passent avant la fiche). */
+  overrides: string[];
+}
+
+/** Les pratiques où l'exercice est utilisé : à venir (aujourd'hui compris) et le nombre de passées. */
+export async function getExerciseUses(exerciseId: string): Promise<{ upcoming: ExerciseUse[]; pastCount: number }> {
+  const { data, error } = await db()
+    .from("activity_session_blocks")
+    .select(`id, activity_id, ${GUIDE_KEYS.join(", ")}, activity:coach_activities(activity_date, start_time, title, category)`)
+    .eq("exercise_id", exerciseId);
+  if (error) throw new Error(error.message);
+  const today = todayMontreal();
+  const all = ((data ?? []) as any[])
+    .filter((b) => b.activity)
+    .map((b) => ({
+      blockId: b.id,
+      activityId: b.activity_id,
+      date: String(b.activity.activity_date).slice(0, 10),
+      start: String(b.activity.start_time ?? "").slice(0, 5),
+      title: b.activity.title || b.activity.category || "Pratique",
+      overrides: GUIDE_KEYS.filter((k) => typeof b[k] === "string" && b[k].trim())
+    }));
+  const upcoming = all.filter((u) => u.date >= today).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+  return { upcoming, pastCount: all.length - upcoming.length };
+}
+
+/** Une modification faite dans « Pratique du jour » d'un bloc devient la règle partout : matériel, points clés,
+ *  variantes et progressions vont dans la fiche de la banque (et les blocs à venir reprennent la fiche) ; montage
+ *  du terrain et « qui fait quoi » (pas de champ dans la fiche) sont recopiés dans chaque pratique à venir. */
+export async function applyGuideEverywhere(exerciseId: string, guide: Partial<Record<GuideKey, string | null>>): Promise<{ blocks: number }> {
+  const bank: Record<string, unknown> = {};
+  for (const [k, col] of Object.entries(GUIDE_TO_EXERCISE)) {
+    const v = guide[k as GuideKey];
+    if (typeof v === "string" && v.trim()) bank[col] = v.trim();
+  }
+  if (Object.keys(bank).length) {
+    const now = new Date().toISOString();
+    const { error } = await db().from("exercises").update({ ...bank, updated_at: now, content_updated_at: now }).eq("id", exerciseId);
+    if (error) throw new Error(error.message);
+  }
+  const { upcoming } = await getExerciseUses(exerciseId);
+  if (!upcoming.length) return { blocks: 0 };
+  const patch: Record<string, string | null> = {};
+  for (const k of Object.keys(GUIDE_TO_EXERCISE)) if (k in bank || (typeof guide[k as GuideKey] === "string" && guide[k as GuideKey]!.trim())) patch[k] = null;
+  for (const k of ["setup", "roles"] as const) if (guide[k] !== undefined) patch[k] = guide[k] ?? null;
+  if (Object.keys(patch).length) {
+    const { error } = await db().from("activity_session_blocks").update(patch).in("id", upcoming.map((u) => u.blockId));
+    if (error) throw new Error(error.message);
+  }
+  return { blocks: upcoming.length };
+}
+
+/** Toutes les pratiques à venir reprennent la fiche de la banque (on efface les ajustements faits bloc par bloc). */
+export async function resetBlockOverrides(exerciseId: string): Promise<{ blocks: number }> {
+  const { upcoming } = await getExerciseUses(exerciseId);
+  const ids = upcoming.filter((u) => u.overrides.length).map((u) => u.blockId);
+  if (!ids.length) return { blocks: 0 };
+  const { error } = await db().from("activity_session_blocks").update(Object.fromEntries(GUIDE_KEYS.map((k) => [k, null]))).in("id", ids);
+  if (error) throw new Error(error.message);
+  return { blocks: ids.length };
 }
