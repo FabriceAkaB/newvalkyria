@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from "react";
 
 import { EntityDocuments } from "@/components/admin-entity-documents";
 import { CoachPracticeDeck } from "@/components/coach-practice-deck";
+import { CoachTeamsCard } from "@/components/coach-teams-card";
 import { exerciseGuideFallback } from "@/components/admin-block-guide";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { CoachTopbar } from "@/components/coach-topbar";
@@ -18,6 +19,7 @@ import { planningLabel } from "@/lib/exercise-bank";
 import type { BriefingPlayer, PlayerAttendance, PlayerAttendanceStatus, PlayerEvaluation, RosterPlayer } from "@/lib/coach-portal-repo";
 import { MAX_WINNERS, POINTS, WIN_LABEL, type WinKind } from "@/lib/player-points";
 import { blockKey, practiceReadStatus, type ReadItem } from "@/lib/practice-read";
+import { themeForGroup } from "@/lib/practice-teams-core";
 import { isAnswered, type SurveyAnswer } from "@/lib/practice-survey";
 import { cleanNote, isQuickEvaluationComplete, NOTE_MIN_CHARS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START } from "@/lib/coach-report";
 import type { AssignmentStatus, CoachActivity } from "@/lib/coaches-repo";
@@ -949,7 +951,14 @@ export function CoachActiviteDetail({
                 attendance={attendance}
                 onChange={(ids, status) => setAttendance((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, status])) }))}
               />
-              <button type="button" className="coach-primary" onClick={() => goTo("apres")}>Fin de la pratique : le rapport</button>
+              {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
+                <CoachTeamsCard
+                  activityId={activity.id}
+                  players={participants.length ? participants : roster}
+                  theme={themeForGroup(theme?.theme, activity.category ?? activity.title)}
+                />
+              ) : null}
+              <button type="button" className="coach-primary" style={{ marginTop: 12 }} onClick={() => goTo("apres")}>Fin de la pratique : le rapport</button>
             </>
           )}
 

@@ -350,6 +350,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/coaching/joueuses", label: "Progression" },
           { href: "/admin/coaching/tests", label: "Tests et passeport" },
           { href: "/admin/coaching/points", label: "Points et récompenses" },
+          { href: "/admin/coaching/capitaines", label: "Capitaines et leadership" },
           { href: "/admin/photos", label: "Photos des joueuses" },
           { href: "/admin/evaluations", label: "Journées d'évaluation" }
         ]
