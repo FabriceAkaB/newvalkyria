@@ -42,7 +42,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         status: reg.status,
         isTrial: reg.isTrial,
         attendance,
-        evaluations,
+        // Les notes des éducateurs sont internes (elles peuvent parler d'autres enfants) : jamais envoyées aux parents,
+        // comme dans le bulletin.
+        evaluations: (evaluations as any[]).map((e) => ({ ...e, comment: null })),
         objectives,
         paymentPlan,
         points: points.get(reg.id) ? progressOf(points.get(reg.id)!.earned, activeRewards, points.get(reg.id)!.givenRewardIds) : null

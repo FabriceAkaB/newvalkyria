@@ -11565,3 +11565,21 @@ img { max-width: 100%; height: auto; }
 .admin-shell .xc-card .xc-theme { text-transform: uppercase !important; letter-spacing: 0.02em !important; }
 .admin-shell .xc-card .xc-sec ol { list-style: decimal outside; padding-left: 22px; }
 .admin-shell .xc-card .xc-sec ul, .admin-shell .xc-card .xc-behave ul { list-style: disc outside; }
+
+/* ── Espace parent : onglets (défilent sur téléphone) ── */
+.parent-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 0 1.25rem; padding: 4px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 999px; -webkit-overflow-scrolling: touch; }
+.parent-tabs::-webkit-scrollbar { display: none; }
+.parent-tab { flex: 0 0 auto; padding: 0.55rem 1rem; border-radius: 999px; color: rgba(255, 255, 255, 0.72); font-weight: 600; font-size: 0.9rem; text-decoration: none; white-space: nowrap; min-height: 40px; display: inline-flex; align-items: center; }
+.parent-tab:hover { color: #fff; }
+.parent-tab[data-active] { background: #fff; color: #1d1730; }
+.parent-card { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 1rem 1.1rem; color: #fff; }
+.parent-card h2 { margin: 0 0 0.6rem; font-size: 1.05rem; font-weight: 700; }
+.parent-muted { color: rgba(255, 255, 255, 0.62); }
+.parent-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 0.6rem 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.parent-row:first-of-type { border-top: 0; }
+.parent-amount { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.parent-link { color: #c9b3f0; font-weight: 600; text-decoration: none; white-space: nowrap; }
+@media print {
+  .no-print, header, footer, nav { display: none !important; }
+  body { background: #fff !important; }
+}

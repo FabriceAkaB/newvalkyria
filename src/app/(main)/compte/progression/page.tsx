@@ -1,0 +1,78 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+
+import { BulletinView } from "@/components/bulletin-view";
+import { Container } from "@/components/container";
+import { ParentTabs } from "@/components/parent-tabs";
+import { getBulletinData } from "@/lib/coach-portal-repo";
+import { requireParentUserId } from "@/lib/parent-auth";
+import { getChildrenForParent, getRegistrationsForPlayer, getVerifiedParentEmail } from "@/lib/parent-repo";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+
+export const metadata: Metadata = { title: "Progression | New Valkyria", robots: "noindex" };
+export const dynamic = "force-dynamic";
+
+/** Espace parent : où en est ma fille ? Le bulletin de sa saison en cours (présences, évaluations des éducateurs,
+ *  évolution, objectifs), sans les notes internes des éducateurs. */
+export default async function ProgressionPage() {
+  const userId = await requireParentUserId();
+  const [children, email] = await Promise.all([getChildrenForParent(userId), getVerifiedParentEmail(userId)]);
+  const linked = children.filter((c) => c.player_id);
+  // Les inscriptions de la famille : celles des profils reliés, et celles au courriel confirmé du compte (l'autre
+  // parent a pu relier l'enfant, ou personne ne l'a encore fait). Une seule par joueuse : la plus récente payée.
+  const regIds = new Map<string, string>();
+  for (const c of linked) {
+    const reg = (await getRegistrationsForPlayer(c.player_id!)).find((r) => r.status === "paid" && !r.isTrial);
+    if (reg) regIds.set(`${c.first_name} ${c.last_name}`.toLowerCase(), reg.id);
+  }
+  if (email) {
+    const { data } = await (getSupabaseAdminClient() as any)
+      .from("registrations")
+      .select("id, player_first_name, player_last_name, is_trial, status, created_at")
+      .ilike("parent_email", email)
+      .eq("status", "paid")
+      .eq("is_trial", false)
+      .order("created_at", { ascending: false });
+    for (const r of (data ?? []) as any[]) {
+      const k = `${String(r.player_first_name).trim()} ${String(r.player_last_name).trim()}`.toLowerCase();
+      if (!regIds.has(k)) regIds.set(k, r.id);
+    }
+  }
+  const bulletins = await Promise.all([...regIds.entries()].map(async ([k, id]) => ({ key: k, data: await getBulletinData(id, "parent").catch(() => null) })));
+  return (
+    <section className="insc-hero">
+      <Container className="max-w-2xl">
+        <ParentTabs />
+      </Container>
+      <Container className="max-w-2xl">
+        <div className="insc-hero-inner">
+          <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Espace parent</p>
+          <h1 className="insc-hero-title">Progression</h1>
+          <p className="insc-hero-sub">Où en est votre fille : ses présences, ce que les éducatrices observent après chaque pratique, son évolution et ses objectifs.</p>
+        </div>
+      </Container>
+      <Container className="max-w-2xl">
+        <div style={{ display: "grid", gap: "1.5rem" }}>
+          {bulletins.filter((b) => b.data).map((b) => (
+            <div key={b.key} className="parent-card">
+              <BulletinView data={b.data!} />
+            </div>
+          ))}
+          {!bulletins.some((b) => b.data) ? (
+            <div className="parent-card">
+              <h2>Pas encore de bulletin</h2>
+              <p className="parent-muted" style={{ margin: 0 }}>
+                {regIds.size
+                  ? "Le bulletin apparaît dès les premières évaluations de la saison."
+                  : email
+                    ? "Nous ne trouvons pas d'inscription à votre courriel : si l'autre parent a inscrit votre fille, reliez son profil dans l'onglet Accueil."
+                    : "Confirmez d'abord votre courriel (onglet Accueil) : le bulletin de votre fille apparaîtra ici."}{" "}
+                {!regIds.size ? <Link href="/compte/espace" className="parent-link">Aller à l&apos;accueil →</Link> : null}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </Container>
+    </section>
+  );
+}

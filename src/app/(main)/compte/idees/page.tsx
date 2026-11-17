@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { Container } from "@/components/container";
+import { ParentTabs } from "@/components/parent-tabs";
 import { IdeaForm, MyIdeas } from "@/components/idea-box";
 import { listIdeasForParent } from "@/lib/idea-box-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
@@ -17,8 +17,10 @@ export default async function MesIdeesPage() {
   return (
     <section className="insc-hero">
       <Container className="max-w-2xl">
+        <ParentTabs />
+      </Container>
+      <Container className="max-w-2xl">
         <div className="insc-hero-inner">
-          <Link href="/compte/espace" className="text-sm text-white/60">← Mon espace</Link>
           <h1 className="insc-hero-title">💡 Boîte à idées</h1>
           <p className="insc-hero-sub">Une idée pour l&apos;académie ? Proposez-la ici : l&apos;équipe la lit et vous répond dans cette page.</p>
         </div>

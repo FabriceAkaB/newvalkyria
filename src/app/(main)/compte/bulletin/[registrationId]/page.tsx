@@ -29,8 +29,8 @@ export default async function ParentBulletinPage({ params }: { params: Promise<{
 
   return (
     <div className="nv27-step" style={{ maxWidth: "760px", margin: "0 auto", padding: "2rem 1rem" }}>
-      <Link href="/compte/espace" className="nv27-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1.5rem" }}>
-        ← Mon espace
+      <Link href="/compte/progression" className="nv27-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1.5rem" }}>
+        ← Progression
       </Link>
       <BulletinView data={data} seasonLabel={season?.label} />
     </div>

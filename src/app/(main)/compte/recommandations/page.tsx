@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Container } from "@/components/container";
+import { ParentTabs } from "@/components/parent-tabs";
 import { ParentRecommandations } from "@/components/parent-recommandations";
 import { requireParentUserId } from "@/lib/parent-auth";
 
@@ -11,6 +12,9 @@ export default async function RecommandationsPage() {
   await requireParentUserId();
   return (
     <section className="insc-hero">
+      <Container className="max-w-2xl">
+        <ParentTabs />
+      </Container>
       <Container className="max-w-2xl">
         <div className="insc-hero-inner">
           <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Espace parent</p>

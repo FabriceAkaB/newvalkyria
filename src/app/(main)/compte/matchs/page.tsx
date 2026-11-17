@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 
 import { Container } from "@/components/container";
+import { ParentTabs } from "@/components/parent-tabs";
 import { EmailCheckBanner } from "@/components/email-check-banner";
 import { MatchPlayer } from "@/components/match-player";
 import { requireParentUserId } from "@/lib/parent-auth";
-import { videosForParent } from "@/lib/match-videos";
+import { matchesForParent, videosForParent } from "@/lib/match-videos";
 import { durationLabel } from "@/lib/match-videos-core";
 
 export const metadata: Metadata = { title: "Nos matchs filmés | New Valkyria", robots: "noindex" };
@@ -16,18 +17,46 @@ const day = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("fr
 export default async function MatchsFilmesPage() {
   const userId = await requireParentUserId();
   const { verified, videos } = await videosForParent(userId);
+  const matches = verified ? await matchesForParent(userId).catch(() => []) : [];
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const upcoming = matches.filter((m) => m.date >= today);
+  const past = matches.filter((m) => m.date < today).reverse();
   return (
     <section className="insc-hero">
       <Container className="max-w-2xl">
+        <ParentTabs />
+      </Container>
+      <Container className="max-w-2xl">
         <div className="insc-hero-inner">
           <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Espace parent</p>
-          <h1 className="insc-hero-title">Matchs filmés</h1>
-          <p className="insc-hero-sub">Les matchs de l&apos;équipe de votre fille, en haute qualité : sautez directement aux buts, aux tirs et à chaque période. Seules les familles de l&apos;équipe y ont accès.</p>
+          <h1 className="insc-hero-title">Matchs</h1>
+          <p className="insc-hero-sub">Le calendrier des matchs de l&apos;équipe de votre fille, et les matchs filmés en haute qualité : sautez directement aux buts, aux tirs et à chaque période. Seules les familles de l&apos;équipe y ont accès.</p>
         </div>
       </Container>
       <Container className="max-w-2xl">
         <div style={{ display: "grid", gap: "1rem", paddingBottom: "3rem" }}>
           {!verified ? <EmailCheckBanner /> : null}
+          {verified && matches.length ? (
+            <div className="parent-card">
+              <h2>Calendrier des matchs de l&apos;équipe</h2>
+              {[...upcoming.map((m) => ({ m, next: true })), ...past.slice(0, 6).map((m) => ({ m, next: false }))].map(({ m, next }, i) => (
+                <div key={`${m.date}-${i}`} className="parent-row" style={{ opacity: next ? 1 : 0.7 }}>
+                  <div>
+                    <div style={{ fontWeight: 600, textTransform: "capitalize" }}>
+                      {day(m.date)}
+                      {m.start ? ` · ${m.start.replace(":", " h ")}` : ""}
+                    </div>
+                    <div className="parent-muted" style={{ fontSize: "0.88rem" }}>
+                      {m.teamName}
+                      {m.opponent ? ` contre ${m.opponent}` : ""}
+                      {m.location ? ` · ${m.location.split(",")[0]}` : ""}
+                    </div>
+                  </div>
+                  <span className="parent-muted" style={{ fontSize: "0.82rem", whiteSpace: "nowrap" }}>{next ? "À venir" : "Joué"}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
           {verified && !videos.length ? <p style={{ color: "#b9a9cf", margin: 0 }}>Aucun match filmé pour l&apos;instant. Ils apparaissent ici quelques jours après chaque match.</p> : null}
           {videos.map((v) => (
             <article key={v.id} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "1rem", display: "grid", gap: "0.6rem" }}>

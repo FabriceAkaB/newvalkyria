@@ -315,3 +315,38 @@ export async function checkVideoFiles(): Promise<{ checked: number; broken: numb
   }
   return { checked: (data ?? []).length, broken, back };
 }
+
+/* ── Familles : les matchs de l'équipe de leur fille (calendrier MonClubSportif) ─────────────── */
+
+export interface FamilyMatch {
+  date: string;
+  start: string | null;
+  teamName: string;
+  opponent: string | null;
+  location: string | null;
+  title: string;
+}
+
+/** Les matchs des équipes de la famille (MonClubSportif fait foi), du mois passé aux 2 prochains mois. */
+export async function matchesForParent(userId: string): Promise<FamilyMatch[]> {
+  const family = await familyOf(userId);
+  if (!family.teamIds.length) return [];
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const from = new Date(Date.parse(`${today}T12:00:00Z`) - 31 * 86_400_000).toISOString().slice(0, 10);
+  const to = new Date(Date.parse(`${today}T12:00:00Z`) + 62 * 86_400_000).toISOString().slice(0, 10);
+  const [{ data: events }, { data: teams }] = await Promise.all([
+    db().from("mcs_events").select("team_id, event_date, start_time, title, location, opponent, type").in("team_id", family.teamIds).in("type", ["Match", "Tournoi"]).gte("event_date", from).lte("event_date", to).order("event_date"),
+    db().from("mcs_teams").select("id, name").in("id", family.teamIds)
+  ]);
+  const teamName = new Map(((teams ?? []) as any[]).map((t) => [t.id, t.name]));
+  return ((events ?? []) as any[])
+    .filter((e) => !/annul/i.test(String(e.title ?? "")))
+    .map((e) => ({
+      date: String(e.event_date).slice(0, 10),
+      start: e.start_time ? String(e.start_time).slice(0, 5) : null,
+      teamName: teamName.get(e.team_id) ?? "",
+      opponent: e.opponent && !/déterminer/i.test(e.opponent) ? e.opponent : null,
+      location: e.location ?? null,
+      title: String(e.title ?? "Match")
+    }));
+}
