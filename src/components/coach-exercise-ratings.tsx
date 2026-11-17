@@ -20,7 +20,7 @@ export function CoachExerciseRatings({ activityId }: { activityId: string }) {
         if (!alive || !data) return;
         setItems(data.exercises);
         setCanRate(data.canRate);
-        const first = (data.exercises as ExerciseToRate[]).find((e) => !e.myRating);
+        const first = (data.exercises as ExerciseToRate[]).find((e) => !e.myRating && !e.notDone);
         if (data.canRate && first) setOpenId(first.exerciseId);
       })
       .catch(() => setItems([]));
@@ -30,7 +30,7 @@ export function CoachExerciseRatings({ activityId }: { activityId: string }) {
   }, [activityId]);
 
   if (!items || items.length === 0) return null;
-  const rated = items.filter((e) => e.myRating).length;
+  const rated = items.filter((e) => e.myRating || e.notDone).length;
 
   return (
     <section className="xb-rate" aria-labelledby="xb-rate-title">
@@ -43,7 +43,7 @@ export function CoachExerciseRatings({ activityId }: { activityId: string }) {
               : "Après la séance, tu noteras ici chaque exercice utilisé (30 secondes par exercice)."}
           </p>
         </div>
-        {canRate ? <span className="mda-pill" data-tone={rated === items.length ? "good" : "warn"}>{rated}/{items.length} notés</span> : null}
+        {canRate ? <span className="mda-pill" data-tone={rated === items.length ? "good" : "warn"}>{rated}/{items.length} faits</span> : null}
       </div>
       <ul className="xb-rate-list">
         {items.map((e) => (
@@ -57,7 +57,7 @@ export function CoachExerciseRatings({ activityId }: { activityId: string }) {
             onSaved={(updated) => {
               const next = items.map((x) => (x.exerciseId === updated.exerciseId ? updated : x));
               setItems(next);
-              setOpenId(next.find((x) => !x.myRating)?.exerciseId ?? null);
+              setOpenId(next.find((x) => !x.myRating && !x.notDone)?.exerciseId ?? null);
             }}
           />
         ))}
@@ -76,6 +76,15 @@ function ExerciseRow({ item, activityId, canRate, open, onToggle, onSaved }: { i
   const total = RATING_CRITERIA.reduce((s, c) => s + (scores[c.key] ?? 0), 0);
   const low = complete && total < APPROVAL_SCORE;
   const needsComment = low && comment.trim().length < 10;
+
+  const markNotDone = async (notDone: boolean) => {
+    setSaving(true);
+    setError(null);
+    const res = await fetch(`/api/coach/activities/${activityId}/exercise-ratings`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ exerciseId: item.exerciseId, notDone }) }).catch(() => null);
+    setSaving(false);
+    if (!res?.ok) return setError("Pas enregistré. Réessaie.");
+    onSaved({ ...item, notDone });
+  };
 
   const save = async () => {
     setSaving(true);
@@ -107,7 +116,9 @@ function ExerciseRow({ item, activityId, canRate, open, onToggle, onSaved }: { i
             {item.objective ? ` · ${item.objective}` : ""}
           </span>
         </span>
-        {item.myRating ? (
+        {item.notDone ? (
+          <span className="mda-pill">Pas fait</span>
+        ) : item.myRating ? (
           <span className="xb-rate-score" data-low={item.myRating.total < APPROVAL_SCORE || undefined}>
             {item.myRating.total}
             <small>/10</small>
@@ -119,7 +130,19 @@ function ExerciseRow({ item, activityId, canRate, open, onToggle, onSaved }: { i
         )}
       </button>
 
-      {open && canRate ? (
+      {open && canRate && item.notDone ? (
+        <div className="xb-rate-form">
+          <p className="mda-sub" style={{ margin: 0 }}>Marqué « pas fait » pour cette pratique : il n&apos;est ni noté ni compté.</p>
+          <div className="xb-rate-foot">
+            <span />
+            <button type="button" className="admin-btn-ghost" onClick={() => markNotDone(false)} disabled={saving}>
+              On l&apos;a fait finalement
+            </button>
+          </div>
+          {error ? <p className="xb-error">{error}</p> : null}
+        </div>
+      ) : null}
+      {open && canRate && !item.notDone ? (
         <div className="xb-rate-form">
           {RATING_CRITERIA.map((c) => (
             <div key={c.key} className="xb-crit">
@@ -155,9 +178,14 @@ function ExerciseRow({ item, activityId, canRate, open, onToggle, onSaved }: { i
               {complete ? `${total}/10` : `${RATING_CRITERIA.filter((c) => scores[c.key] !== undefined).length}/5 critères`}
               {low ? <small> · l’exercice passera « à changer »</small> : null}
             </span>
+            <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" className="admin-btn-ghost" onClick={() => markNotDone(true)} disabled={saving} title="L'exercice était prévu mais n'a pas été joué">
+              On ne l&apos;a pas fait
+            </button>
             <button type="button" className="admin-btn-primary" onClick={save} disabled={saving || !complete || needsComment}>
               {saving ? "Enregistrement…" : item.myRating ? "Mettre à jour" : "Enregistrer la note"}
             </button>
+            </span>
           </div>
           {error ? <p className="xb-error">{error}</p> : null}
         </div>

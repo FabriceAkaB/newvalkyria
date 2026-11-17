@@ -4,7 +4,7 @@ import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getCoachActivityAccess } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { APPROVAL_SCORE, parseScores } from "@/lib/exercise-bank";
-import { getActivityExercisesToRate, saveRating } from "@/lib/exercises-repo";
+import { getActivityExercisesToRate, saveRating, setExerciseNotDone } from "@/lib/exercises-repo";
 import { jsonError } from "@/lib/http";
 
 const todayToronto = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
@@ -51,4 +51,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   });
   const after = (await getActivityExercisesToRate(id, coachId)).find((e) => e.exerciseId === body.exerciseId);
   return NextResponse.json({ ok: true, total: parsed.total, bank: after?.bank ?? null });
+}
+
+/** « On ne l'a pas fait » : l'exercice prévu n'a pas été joué (ou on annule : il a été fait). */
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const coachId = await getCurrentCoachId();
+  if (!coachId) return jsonError("Non autorisé", 401);
+  const { id } = await params;
+  const entry = await getCoachActivityAccess(coachId, id);
+  if (!entry) return jsonError("Activité introuvable", 404);
+  const body = (await request.json().catch(() => null)) as { exerciseId?: string; notDone?: boolean; note?: string } | null;
+  if (!body?.exerciseId || typeof body.notDone !== "boolean") return jsonError("Paramètres invalides", 400);
+  const used = await getActivityExercisesToRate(id, coachId);
+  if (!used.some((e) => e.exerciseId === body.exerciseId)) return jsonError("Cet exercice n'est pas dans le plan de cette séance.", 400);
+  await setExerciseNotDone(id, body.exerciseId, body.notDone, coachId, typeof body.note === "string" ? body.note.trim() : null);
+  return NextResponse.json({ ok: true });
 }

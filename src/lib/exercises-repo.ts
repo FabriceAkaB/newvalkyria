@@ -416,11 +416,23 @@ export interface ExerciseToRate {
   blockTypes: string[];
   myRating: { scores: RatingScores; total: number; comment: string | null } | null;
   bank: BankSummary;
+  /** Prévu dans le plan mais pas joué (« On ne l'a pas fait ») : ni noté ni compté. */
+  notDone: boolean;
+}
+
+/** « On ne l'a pas fait » : l'exercice prévu n'a pas été joué pendant cette pratique (ou on annule). */
+export async function setExerciseNotDone(activityId: string, exerciseId: string, notDone: boolean, coachId: string, note: string | null): Promise<void> {
+  const { error } = await db()
+    .from("activity_session_blocks")
+    .update({ not_done: notDone, not_done_note: notDone ? note?.slice(0, 500) || null : null, not_done_by: notDone ? coachId : null })
+    .eq("activity_id", activityId)
+    .eq("exercise_id", exerciseId);
+  if (error) throw new Error(error.message);
 }
 
 /** Exercices de la banque utilisés dans le plan d'une séance, avec la note déjà donnée par cet éducateur. */
 export async function getActivityExercisesToRate(activityId: string, coachId: string): Promise<ExerciseToRate[]> {
-  const { data: blocks, error } = await db().from("activity_session_blocks").select("exercise_id, block_type, block_order").eq("activity_id", activityId).not("exercise_id", "is", null).order("block_order");
+  const { data: blocks, error } = await db().from("activity_session_blocks").select("exercise_id, block_type, block_order, not_done").eq("activity_id", activityId).not("exercise_id", "is", null).order("block_order");
   if (error) throw new Error(error.message);
   const ids = [...new Set<string>((blocks ?? []).map((b: any) => b.exercise_id as string))];
   if (!ids.length) return [];
@@ -438,7 +450,8 @@ export async function getActivityExercisesToRate(activityId: string, coachId: st
         version: e.version ?? 1,
         blockTypes: (blocks ?? []).filter((b: any) => b.exercise_id === e.id).map((b: any) => b.block_type as string),
         myRating: mine ? { scores: mine.scores, total: mine.total, comment: mine.comment } : null,
-        bank: computeBankStatus(e, ratings.filter((r) => r.exercise_id === e.id))
+        bank: computeBankStatus(e, ratings.filter((r) => r.exercise_id === e.id)),
+        notDone: (blocks ?? []).filter((b: any) => b.exercise_id === e.id).every((b: any) => b.not_done)
       };
     });
 }
