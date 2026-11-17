@@ -545,7 +545,8 @@ export async function syncFamilies(today = todayIso()): Promise<{ created: numbe
     if (error) throw new Error(error.message);
   }
   const current = new Set(families.map((f) => f.email));
-  const stale = existing.filter((a) => a.active && !current.has(a.parent_email.toLowerCase()));
+  // Le compte de démonstration (saison « demo ») garde son accès : il n'est jamais une famille inscrite.
+  const stale = existing.filter((a) => a.active && a.season_id !== "demo" && !current.has(a.parent_email.toLowerCase()));
   if (stale.length) {
     const { error } = await db().from("lab_access").update({ active: false, updated_at: now }).in("id", stale.map((a) => a.id));
     if (error) throw new Error(error.message);

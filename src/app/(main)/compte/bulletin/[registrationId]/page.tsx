@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { BulletinView } from "@/components/bulletin-view";
-import { getBulletinData } from "@/lib/coach-portal-repo";
+import { BulletinReport } from "@/components/bulletin-report";
+import { getBulletinReport } from "@/lib/bulletin-repo";
 import { getParentUserId } from "@/lib/parent-auth";
 import { getChildrenForParent } from "@/lib/parent-repo";
-import { getRegistrationById, getSeason } from "@/lib/season-admin-repo";
+import { getRegistrationById } from "@/lib/season-admin-repo";
 
 export const metadata = { title: "Bulletin — New Valkyria" };
 export const dynamic = "force-dynamic";
 
-export default async function ParentBulletinPage({ params }: { params: Promise<{ registrationId: string }> }) {
+export default async function ParentBulletinPage({ params, searchParams }: { params: Promise<{ registrationId: string }>; searchParams: Promise<{ bulletin?: string }> }) {
+  const sp = await searchParams;
+  const period = sp.bulletin === "mi-saison" || sp.bulletin === "fin-saison" ? sp.bulletin : null;
   const userId = await getParentUserId();
   if (!userId) redirect("/compte");
   const { registrationId } = await params;
@@ -24,7 +26,7 @@ export default async function ParentBulletinPage({ params }: { params: Promise<{
   const owns = registration.player_id && children.some((c) => c.player_id === registration.player_id);
   if (!owns) notFound();
 
-  const [data, season] = await Promise.all([getBulletinData(registrationId, "parent"), getSeason(registration.season_id)]);
+  const data = await getBulletinReport(registrationId, { period, audience: "parent" });
   if (!data) notFound();
 
   return (
@@ -32,7 +34,7 @@ export default async function ParentBulletinPage({ params }: { params: Promise<{
       <Link href="/compte/progression" className="nv27-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1.5rem" }}>
         ← Progression
       </Link>
-      <BulletinView data={data} seasonLabel={season?.label} />
+      <BulletinReport data={data} periodHref={(p) => `/compte/bulletin/${registrationId}?bulletin=${p}`} />
     </div>
   );
 }

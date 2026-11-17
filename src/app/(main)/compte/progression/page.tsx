@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { BulletinView } from "@/components/bulletin-view";
+import { BulletinReport } from "@/components/bulletin-report";
 import { Container } from "@/components/container";
 import { ParentTabs } from "@/components/parent-tabs";
-import { getBulletinData } from "@/lib/coach-portal-repo";
+import { getBulletinReport } from "@/lib/bulletin-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { getChildrenForParent, getRegistrationsForPlayer, getVerifiedParentEmail } from "@/lib/parent-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -14,7 +14,9 @@ export const dynamic = "force-dynamic";
 
 /** Espace parent : où en est ma fille ? Le bulletin de sa saison en cours (présences, évaluations des éducateurs,
  *  évolution, objectifs), sans les notes internes des éducateurs. */
-export default async function ProgressionPage() {
+export default async function ProgressionPage({ searchParams }: { searchParams: Promise<{ bulletin?: string }> }) {
+  const sp = await searchParams;
+  const period = sp.bulletin === "mi-saison" || sp.bulletin === "fin-saison" ? sp.bulletin : null;
   const userId = await requireParentUserId();
   const [children, email] = await Promise.all([getChildrenForParent(userId), getVerifiedParentEmail(userId)]);
   const linked = children.filter((c) => c.player_id);
@@ -38,7 +40,7 @@ export default async function ProgressionPage() {
       if (!regIds.has(k)) regIds.set(k, r.id);
     }
   }
-  const bulletins = await Promise.all([...regIds.entries()].map(async ([k, id]) => ({ key: k, data: await getBulletinData(id, "parent").catch(() => null) })));
+  const bulletins = await Promise.all([...regIds.entries()].map(async ([k, id]) => ({ key: k, data: await getBulletinReport(id, { period, audience: "parent" }).catch(() => null) })));
   return (
     <section className="insc-hero">
       <Container className="max-w-2xl">
@@ -48,15 +50,13 @@ export default async function ProgressionPage() {
         <div className="insc-hero-inner">
           <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Espace parent</p>
           <h1 className="insc-hero-title">Progression</h1>
-          <p className="insc-hero-sub">Où en est votre fille : ses présences, ce que les éducatrices observent après chaque pratique, son évolution et ses objectifs.</p>
+          <p className="insc-hero-sub">Le bulletin de votre fille, deux fois par saison (mi-saison et fin de saison) : ses présences, ce que les éducatrices observent après chaque pratique, son bien-être, son leadership et ses objectifs.</p>
         </div>
       </Container>
       <Container className="max-w-2xl">
         <div style={{ display: "grid", gap: "1.5rem" }}>
           {bulletins.filter((b) => b.data).map((b) => (
-            <div key={b.key} className="parent-card">
-              <BulletinView data={b.data!} />
-            </div>
+            <BulletinReport key={b.key} data={b.data!} periodHref={(p) => `/compte/progression?bulletin=${p}`} />
           ))}
           {!bulletins.some((b) => b.data) ? (
             <div className="parent-card">
