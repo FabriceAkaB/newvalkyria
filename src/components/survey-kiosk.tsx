@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { dequeue, enqueue, parseQueue, queueKey, sendOutcome, type QueuedAnswer } from "@/lib/kiosk-queue";
 import { KIOSK_QUESTIONS, SCALE_VALUES } from "@/lib/practice-survey";
 
 /** Borne de sondage sur l'iPad : la joueuse touche sa photo, répond à 5 questions sur 10 (une par écran), puis la
  *  borne revient à la liste pour la suivante. Grands boutons, mots d'enfant, aucun clavier. Une fille qui a fini
  *  disparaît de la liste (personne ne peut revoir ni changer ses réponses) ; elle peut seulement les réviser tout de
- *  suite, sur l'écran « Merci », avant que la borne revienne à la liste. */
+ *  suite, sur l'écran « Merci », avant que la borne revienne à la liste.
+ *  Hors ligne (JP, 17 nov. 2026) : une fois la page ouverte, tout marche sans réseau. Chaque réponse est gardée sur
+ *  l'iPad (file d'attente, kiosk-queue.ts) et part toute seule dès que le réseau revient. */
 
 interface KioskPlayer {
   id: string;
@@ -29,6 +32,80 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
   const [answers, setAnswers] = useState<Answers>({});
   const [state, setState] = useState<"idle" | "saving" | "thanks">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<QueuedAnswer[]>([]);
+  const [rejected, setRejected] = useState<string[]>([]);
+  const [online, setOnline] = useState(true);
+  const queueRef = useRef<QueuedAnswer[]>([]);
+  const flushing = useRef(false);
+
+  const persist = useCallback(
+    (q: QueuedAnswer[]) => {
+      queueRef.current = q;
+      setPending(q);
+      try {
+        localStorage.setItem(queueKey(activityId), JSON.stringify(q));
+      } catch {
+        /* stockage indisponible : la réponse reste en mémoire tant que la page est ouverte */
+      }
+    },
+    [activityId]
+  );
+
+  /** Envoie les réponses gardées sur l'iPad, une à la fois ; s'arrête au premier échec réseau (on réessaie plus tard). */
+  const flush = useCallback(async () => {
+    if (flushing.current) return;
+    flushing.current = true;
+    try {
+      for (const item of [...queueRef.current]) {
+        const res = await fetch(`/api/borne/${activityId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cle, registrationId: item.registrationId, ...item.answers }) }).catch(() => null);
+        const outcome = sendOutcome(res ? res.status : null);
+        if (outcome === "retry") break;
+        if (outcome === "rejected") {
+          const data = await res?.json().catch(() => null);
+          const name = players.find((p) => p.id === item.registrationId)?.first ?? "Une joueuse";
+          setRejected((r) => [...r, `${name} : ${data?.error ?? "réponse refusée"}`]);
+        }
+        persist(dequeue(queueRef.current, item));
+      }
+    } finally {
+      flushing.current = false;
+    }
+  }, [activityId, cle, players, persist]);
+
+  // Au chargement : les réponses restées sur l'iPad (page rechargée) comptent comme faites et repartent.
+  useEffect(() => {
+    let saved: QueuedAnswer[] = [];
+    try {
+      saved = parseQueue(localStorage.getItem(queueKey(activityId)));
+    } catch {
+      saved = [];
+    }
+    if (saved.length) {
+      persist(saved);
+      setDone((d) => new Set([...d, ...saved.map((q) => q.registrationId)]));
+    }
+    setOnline(typeof navigator === "undefined" ? true : navigator.onLine);
+    const up = () => {
+      setOnline(true);
+      void flush();
+    };
+    const down = () => setOnline(false);
+    window.addEventListener("online", up);
+    window.addEventListener("offline", down);
+    void flush();
+    return () => {
+      window.removeEventListener("online", up);
+      window.removeEventListener("offline", down);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activityId]);
+
+  // Tant qu'il reste des réponses à envoyer : un essai toutes les 15 secondes.
+  useEffect(() => {
+    if (!pending.length) return;
+    const t = setInterval(() => void flush(), 15000);
+    return () => clearInterval(t);
+  }, [pending.length, flush]);
 
   const reset = () => {
     setWho(null);
@@ -53,16 +130,11 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
       setStep(step + 1);
       return;
     }
-    setState("saving");
-    const res = await fetch(`/api/borne/${activityId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cle, registrationId: who!.id, ...next }) }).catch(() => null);
-    if (!res?.ok) {
-      const data = await res?.json().catch(() => null);
-      setError(data?.error ?? "Oups, ce n'est pas enregistré. Demande à ton éducatrice.");
-      setState("idle");
-      return;
-    }
+    // La réponse est d'abord gardée sur l'iPad, puis envoyée : sans réseau, elle partira toute seule plus tard.
+    persist(enqueue(queueRef.current, { registrationId: who!.id, answers: next as Record<string, number>, at: Date.now() }));
     setDone(new Set([...done, who!.id]));
     setState("thanks");
+    void flush();
   };
 
   const card: React.CSSProperties = { background: "#fff", borderRadius: 20, border: "1px solid #e6e0ee", padding: "1.4rem" };
@@ -77,6 +149,18 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
             {title} · Touche ta photo ({done.size}/{players.length} ont répondu)
           </p>
         </div>
+        {pending.length || !online ? (
+          <div role="status" style={{ ...card, padding: "0.9rem 1.2rem", background: "#fff8e6", borderColor: "#f2d48a", color: "#6b4e00", fontWeight: 600, textAlign: "center" }}>
+            {online ? "📶 Envoi en cours" : "📶 Pas de réseau : la borne continue de fonctionner"}
+            {pending.length ? ` · ${pending.length} réponse${pending.length > 1 ? "s" : ""} gardée${pending.length > 1 ? "s" : ""} sur l'iPad, elle${pending.length > 1 ? "s partiront" : " partira"} toute${pending.length > 1 ? "s" : ""} seule${pending.length > 1 ? "s" : ""} dès que le réseau revient.` : "."}
+            {pending.length ? <span style={{ display: "block", fontWeight: 400, marginTop: 4 }}>Ne ferme pas cette page avant que tout soit envoyé.</span> : null}
+          </div>
+        ) : null}
+        {rejected.length ? (
+          <div role="alert" style={{ ...card, padding: "0.9rem 1.2rem", borderColor: "#f1b5b0", color: "#b3261e" }}>
+            Réponse non enregistrée : {rejected.join(" · ")}. Montre ce message à ton éducatrice.
+          </div>
+        ) : null}
         {waiting.length === 0 ? (
           <div style={{ ...card, textAlign: "center", padding: "2.4rem 1.4rem" }}>
             <p style={{ fontSize: "3.2rem", margin: 0 }}>🎉</p>
@@ -117,6 +201,7 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
         <p style={{ fontSize: "4rem", margin: 0 }}>🎉</p>
         <h1 style={{ margin: 0, fontSize: "2rem", fontWeight: 800, color: PURPLE }}>Merci {who.first} !</h1>
         <p style={{ color: "#5d566b", fontSize: "1.1rem", margin: 0 }}>Tes réponses sont gardées secrètes. Passe l&apos;iPad à la prochaine.</p>
+        {pending.some((q) => q.registrationId === who.id) && !online ? <p style={{ color: "#6b4e00", fontSize: "0.95rem", margin: 0 }}>📶 Pas de réseau : tes réponses sont gardées sur l&apos;iPad et partiront toutes seules.</p> : null}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
           <button type="button" onClick={() => (setStep(0), setState("idle"))} style={{ minHeight: 56, padding: "0 22px", borderRadius: 14, border: `2px solid ${PURPLE}`, background: "#fff", color: PURPLE, fontSize: "1.1rem", fontWeight: 700, cursor: "pointer" }}>
             ✏️ Changer mes réponses
