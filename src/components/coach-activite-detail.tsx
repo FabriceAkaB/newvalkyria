@@ -6,6 +6,7 @@ import { useMemo, useRef, useState } from "react";
 import { EntityDocuments } from "@/components/admin-entity-documents";
 import { CoachPracticeDeck } from "@/components/coach-practice-deck";
 import { CoachTeamsCard } from "@/components/coach-teams-card";
+import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrief";
 import { exerciseGuideFallback } from "@/components/admin-block-guide";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { CoachTopbar } from "@/components/coach-topbar";
@@ -914,6 +915,7 @@ export function CoachActiviteDetail({
                 <aside className="coach-avant__side">
                   {activity.activity_type !== "Match" && !guest && <PracticeReadCard items={readItems} seen={readSeen} readAt={readAt} onConfirm={confirmRead} />}
                   {activity.activity_type !== "Match" && <BriefingCard activity={activity} players={briefing} expected={roster.length} />}
+                  {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? <PreviousDebriefCard activityId={activity.id} /> : null}
                   {activity.activity_type !== "Match" && musts.length > 0 && (
                     <details className="coach-card">
                       <summary className="coach-card__label" style={{ cursor: "pointer", marginBottom: 0 }}>Obligatoire dans chaque entraînement · {musts.length} point{musts.length > 1 ? "s" : ""}</summary>
@@ -1048,6 +1050,12 @@ export function CoachActiviteDetail({
               <div style={{ marginBottom: 16 }}>
                 <CoachExerciseRatings activityId={activity.id} />
               </div>
+
+              {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
+                <div style={{ marginBottom: 16 }}>
+                  <CoachDebriefCard activityId={activity.id} />
+                </div>
+              ) : null}
 
               {!guest && <MyPresenceCard activity={activity} initial={presence} onChange={setPresence} />}
             </>

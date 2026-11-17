@@ -6,6 +6,7 @@ import { getPracticeReads } from "@/lib/coach-portal-repo";
 import { getDocumentsForEntity } from "@/lib/documents-repo";
 import { getActivity, getActivityAssignments, getAllCoachTypeRates, getCoaches } from "@/lib/coaches-repo";
 import { getExercisesForPlanning } from "@/lib/exercises-repo";
+import { getDebriefs } from "@/lib/practice-debriefs-repo";
 import { getConvocations, getLineup, getMatchDetails, getMatchEvaluations, getMatchRoster, getPlaytimeSegments } from "@/lib/match-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getBlocksForActivity } from "@/lib/session-plan-repo";
@@ -39,9 +40,11 @@ export default async function AdminCoachActiviteDetailPage({ params }: { params:
 
   const reads = isMatch ? [] : await getPracticeReads([id]).catch(() => []);
   const decks = ((await getDocumentsForEntity("coach_activity", id).catch(() => [])) as any[]).filter((d) => d.category === "Pratique").map((d) => ({ id: d.id as string, fileName: d.file_name as string }));
+  const debriefs = isMatch ? [] : await getDebriefs([id]).catch(() => []);
   const practiceReads = Object.fromEntries(reads.map((r) => [r.coachId, { label: r.label, confirmed: r.status.confirmed }]));
 
   return (
+    <>
     <AdminCoachActiviteDetail
       practiceReads={practiceReads}
       decks={decks}
@@ -58,5 +61,23 @@ export default async function AdminCoachActiviteDetailPage({ params }: { params:
       initialMatchPlaytime={matchPlaytime}
       initialMatchEvaluations={matchEvaluations}
     />
+    {debriefs.length ? (
+      <div className="admin-content" style={{ paddingTop: 0 }}>
+        <section className="admin-section">
+          <p className="admin-section-title">Retour des éducateurs sur la pratique</p>
+          <div style={{ display: "grid", gap: "0.75rem" }}>
+            {debriefs.map((d) => (
+              <div key={d.id} className="admin-stat-card" style={{ display: "grid", gap: "0.35rem" }}>
+                <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>{d.coachName}</p>
+                {d.wentWell ? <p style={{ margin: 0, color: "var(--adm-text-2)" }}><strong style={{ color: "var(--adm-good)" }}>Bien fait :</strong> {d.wentWell}</p> : null}
+                {d.toImprove ? <p style={{ margin: 0, color: "var(--adm-text-2)" }}><strong style={{ color: "var(--adm-warn)" }}>Moins bien :</strong> {d.toImprove}</p> : null}
+                {d.nextTime ? <p style={{ margin: 0, color: "var(--adm-text-2)" }}><strong style={{ color: "var(--adm-info)" }}>On change :</strong> {d.nextTime}</p> : null}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    ) : null}
+    </>
   );
 }
