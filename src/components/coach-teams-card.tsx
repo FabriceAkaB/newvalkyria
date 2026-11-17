@@ -123,7 +123,7 @@ export function CoachTeamsCard({ activityId, players, theme }: { activityId: str
               </div>
               {kind === "equipe" ? (
                 <label style={{ display: "grid", gap: 4, marginTop: 8 }}>
-                  <span className="coach-muted">Tâche de la capitaine ({theme ? `thème : ${theme}` : "tâche de base"})</span>
+                  <span className="coach-muted">Tâche de communication de la capitaine ({theme ? `thème : ${theme}` : "tâche de base"}) · brassard · pouvoir : 1 temps mort pour ajuster son équipe</span>
                   <textarea className="admin-input" rows={2} value={t.captainTask ?? ""} onChange={(e) => setDraft((d) => d!.map((x, j) => (j === i ? { ...x, captainTask: e.target.value } : x)))} />
                 </label>
               ) : null}

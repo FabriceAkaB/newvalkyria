@@ -7,6 +7,7 @@ import { EntityDocuments } from "@/components/admin-entity-documents";
 import { CoachPracticeDeck } from "@/components/coach-practice-deck";
 import { CoachTeamsCard } from "@/components/coach-teams-card";
 import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrief";
+import { CoachGuideCard, PracticeTimer } from "@/components/coach-guide";
 import { exerciseGuideFallback } from "@/components/admin-block-guide";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { CoachTopbar } from "@/components/coach-topbar";
@@ -809,6 +810,12 @@ export function CoachActiviteDetail({
   };
   const read = practiceReadStatus(readItems, readSeen, readAt);
   const bmMoves = useMemo(() => ballMasteryMoves(sessionBlocks, initialExercises), [sessionBlocks, initialExercises]);
+  // Guide de l'éducateur et minuteur : les blocs du plan dans l'ordre, avec leur durée.
+  const guideBlocks = useMemo(
+    () => sessionBlocks.map((b) => ({ title: b.custom_title || initialExercises.find((e) => e.id === b.exercise_id)?.title || b.block_type, minutes: b.duration_minutes })),
+    [sessionBlocks, initialExercises]
+  );
+  const isPractice = activity.activity_type === "Pratique" || activity.activity_type === "Camp";
   const [showEditor, setShowEditor] = useState(false);
   const [attendance, setAttendance] = useState<Record<string, PlayerAttendanceStatus>>(Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status])));
   const [feedback, setFeedback] = useState<Record<string, SurveyAnswer>>(
@@ -915,7 +922,8 @@ export function CoachActiviteDetail({
                 <aside className="coach-avant__side">
                   {activity.activity_type !== "Match" && !guest && <PracticeReadCard items={readItems} seen={readSeen} readAt={readAt} onConfirm={confirmRead} />}
                   {activity.activity_type !== "Match" && <BriefingCard activity={activity} players={briefing} expected={roster.length} />}
-                  {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? <PreviousDebriefCard activityId={activity.id} /> : null}
+                  {isPractice ? <CoachGuideCard activityId={activity.id} start={String(activity.start_time).slice(0, 5)} blocks={guideBlocks} /> : null}
+                  {isPractice ? <PreviousDebriefCard activityId={activity.id} /> : null}
                   {activity.activity_type !== "Match" && musts.length > 0 && (
                     <details className="coach-card">
                       <summary className="coach-card__label" style={{ cursor: "pointer", marginBottom: 0 }}>Obligatoire dans chaque entraînement · {musts.length} point{musts.length > 1 ? "s" : ""}</summary>
@@ -947,6 +955,7 @@ export function CoachActiviteDetail({
 
           {step === "pendant" && (
             <>
+              {isPractice ? <PracticeTimer activityId={activity.id} blocks={guideBlocks} /> : null}
               <AttendanceStep
                 activityId={activity.id}
                 roster={roster}

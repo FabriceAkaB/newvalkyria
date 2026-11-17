@@ -40,7 +40,7 @@ export async function getDebriefs(activityIds: string[]): Promise<PracticeDebrie
   if (!activityIds.length) return [];
   const { data, error } = await db().from("practice_debriefs").select("*, coach:coaches(first_name, last_name)").in("activity_id", activityIds).order("updated_at");
   if (error) throw new Error(error.message);
-  return ((data ?? []) as any[]).map(map);
+  return ((data ?? []) as any[]).filter((r) => r.went_well || r.to_improve || r.next_time).map(map);
 }
 
 export async function saveDebrief(activityId: string, coachId: string, input: { wentWell?: unknown; toImprove?: unknown; nextTime?: unknown }): Promise<void> {
@@ -67,7 +67,22 @@ export async function getPreviousGroupDebriefs(activity: { id: string; activity_
   if (!ids.length) return [];
   const { data, error } = await db().from("practice_debriefs").select("*, coach:coaches(first_name, last_name), activity:coach_activities(activity_date)").in("activity_id", ids);
   if (error) throw new Error(error.message);
-  const all = ((data ?? []) as any[]).map(map);
+  const all = ((data ?? []) as any[]).filter((r) => r.went_well || r.to_improve || r.next_time).map(map);
   const latest = all.map((d) => d.date ?? "").sort().pop();
   return latest ? all.filter((d) => d.date === latest) : [];
+}
+
+/** Guide de l'éducateur : les cases cochées avant la pratique (coach-guide.ts). */
+export async function getChecklist(activityId: string, coachId: string): Promise<string[]> {
+  const { data } = await db().from("practice_debriefs").select("checklist").eq("activity_id", activityId).eq("coach_id", coachId).maybeSingle();
+  return Array.isArray(data?.checklist) ? (data.checklist as string[]) : [];
+}
+
+export async function saveChecklist(activityId: string, coachId: string, items: string[]): Promise<void> {
+  const now = new Date().toISOString();
+  const { data: row } = await db().from("practice_debriefs").select("id").eq("activity_id", activityId).eq("coach_id", coachId).maybeSingle();
+  const { error } = row
+    ? await db().from("practice_debriefs").update({ checklist: items, checklist_at: now }).eq("id", row.id)
+    : await db().from("practice_debriefs").insert({ activity_id: activityId, coach_id: coachId, checklist: items, checklist_at: now });
+  if (error) throw new Error(error.message);
 }
