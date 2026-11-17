@@ -10,6 +10,7 @@ interface Props {
 
 const LINKS = [
   { href: "/entraineur/dashboard", label: "Mes pratiques" },
+  { href: "/entraineur/sondage", label: "Sondage des jeunes" },
   { href: "/entraineur/joueuses", label: "Joueuses" },
   { href: "/entraineur/exercices", label: "Exercices" },
   { href: "/entraineur/methode", label: "Méthode" }

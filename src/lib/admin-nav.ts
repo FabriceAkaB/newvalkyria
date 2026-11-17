@@ -491,6 +491,13 @@ export const ADMIN_NAV: AdminNavSection[] = [
         tabs: [{ href: "/admin/historique", label: "Historique", adminOnly: true }]
       },
       {
+        key: "apercu",
+        label: "Aperçu des portails",
+        icon: "list",
+        description: "Voir le portail d'un éducateur ou l'espace d'une famille exactement comme la personne le voit.",
+        tabs: [{ href: "/admin/apercu", label: "Aperçu des portails", adminOnly: true }]
+      },
+      {
         key: "audit",
         label: "Journal d'audit",
         icon: "shield",
