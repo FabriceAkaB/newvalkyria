@@ -238,6 +238,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         tabs: [
           { href: "/admin/revenus", label: "Vue d'ensemble", adminOnly: true },
           { href: "/admin/revenus/responsable", label: "Responsable financier", adminOnly: true },
+          { href: "/admin/revenus/rapprochement", label: "Rapprochement Stripe", adminOnly: true },
           { href: "/admin/revenus/paiements", label: "Paiements échelonnés", adminOnly: true },
           { href: "/admin/revenus/tresorerie", label: "Trésorerie", adminOnly: true },
           { href: "/admin/revenus/budget", label: "Budget annuel", adminOnly: true },

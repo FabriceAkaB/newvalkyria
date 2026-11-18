@@ -443,7 +443,7 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P7",
     title: "Contrôle comptable (rapprochement)",
     question: "L'argent qui entre et l'argent qui sort concordent-ils ?",
-    status: "a-construire",
+    status: "partiel",
     objectives: ["P7.7", "P7.6"],
     links: ["AU18", "A04"],
     planned: ["Chaque lundi : Stripe et virements contre inscriptions payées", "Paie, terrains et fournisseurs contre budget", "Tout écart signalé à JP, puis suivi par l'agent financier (A04) avec le CPA"],
