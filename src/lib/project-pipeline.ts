@@ -14,16 +14,18 @@ export interface Project {
   start: string | null;
   /** Projet qui existe déjà (la saison) : on mesure l'intention de rester, pas un lancement. */
   existing?: boolean;
+  /** Financement possible en dehors des inscriptions (proposition Azimut Nexus Conseil du 6 nov. 2026). */
+  funding?: string;
 }
 
 export const PROJECTS_2027: Project[] = [
-  { key: "camp-fetes-2026", label: "Camp des Fêtes", when: "entre Noël et le jour de l'An (décembre 2026)", start: "2026-12-28" },
+  { key: "camp-fetes-2026", label: "Camp des Fêtes", when: "entre Noël et le jour de l'An (décembre 2026)", start: "2026-12-28", funding: "Fondation Bon départ (Canadian Tire) : jusqu'à 300 $ par joueuse par année, demandé par la famille." },
   { key: "camp-releche-2027", label: "Camp de la semaine de relâche", when: "semaine de relâche, mars 2027", start: "2027-03-01" },
-  { key: "camp-ete-2027", label: "Camp de jour de l'été", when: "été 2027, à la semaine", start: "2027-06-28" },
+  { key: "camp-ete-2027", label: "Camp de jour de l'été", when: "été 2027, à la semaine", start: "2027-06-28", funding: "Emplois d'été Canada : jusqu'à 50 % du salaire minimum des moniteurs de 15 à 30 ans salariés (demande l'hiver d'avant). Bon départ pour les familles." },
   { key: "haute-performance", label: "Programme haute performance", when: "pour les joueuses qui veulent aller plus loin, dès 2027", start: null },
   { key: "roses", label: "Camp ou séances avec les Roses de Montréal", when: "en partenariat avec le club professionnel, 2027", start: null },
-  { key: "ontario-ete-2027", label: "Tournée de tournois en Ontario (été)", when: "été 2027", start: null },
-  { key: "ontario-automne-2027", label: "Tournée de tournois en Ontario (automne)", when: "automne 2027", start: null },
+  { key: "ontario-ete-2027", label: "Tournée de tournois en Ontario (été)", when: "été 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
+  { key: "ontario-automne-2027", label: "Tournée de tournois en Ontario (automne)", when: "automne 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
   { key: "prep-sport-etudes", label: "Programme préparatoire au Sport-Études", when: "avant les tests d'admission", start: null },
   { key: "saison-2027-2028", label: "Rester avec nous la saison prochaine", when: "automne-hiver 2027-2028", start: "2027-09-07", existing: true }
 ];
@@ -82,6 +84,8 @@ export interface ProjectEvaluation {
   /** Bénéfice si les inscrites probables paient (avant le salaire de JP). */
   profitCents: number | null;
   profitPerJpHourCents: number | null;
+  /** Bénéfice probable + subvention attendue (bonus, hors verdict). */
+  profitWithGrantCents: number | null;
   sentence: string;
 }
 
@@ -97,6 +101,7 @@ export function evaluateProject(interest: Interest, scenario: { inputs: LaunchIn
       breakEven: null,
       profitCents: null,
       profitPerJpHourCents: null,
+      profitWithGrantCents: null,
       sentence: interest.answered
         ? `${who} famille${who > 1 ? "s" : ""} intéressée${who > 1 ? "s" : ""} : mettre le prix, les places et les coûts pour savoir s'il vaut la peine.`
         : "Aucune réponse pour l'instant : le chiffrer quand même, l'intérêt viendra du sondage."
@@ -106,7 +111,7 @@ export function evaluateProject(interest: Interest, scenario: { inputs: LaunchIn
   const probable = probableSignups(interest, inputs.capacity);
   const profit = probable * results.contributionCents - results.fixedCents;
   const perHour = inputs.jpHours > 0 ? Math.round(profit / inputs.jpHours) : null;
-  const base = { probable, breakEven: results.breakEvenCount, profitCents: profit, profitPerJpHourCents: perHour };
+  const base = { probable, breakEven: results.breakEvenCount, profitCents: profit, profitPerJpHourCents: perHour, profitWithGrantCents: inputs.grantCents ? profit + inputs.grantCents : null };
   if (results.economicVerdict === "no-go" || results.breakEvenCount === null) {
     return { ...base, decision: "non", sentence: "Même à 70 % de remplissage, la marge n'y est pas : monter le prix, baisser les coûts ou laisser tomber." };
   }

@@ -61,6 +61,8 @@ export interface LaunchInputs {
   startDate: string | null;
   /** Heures de JP pour ce projet (préparation, vente, présence) : sert au bénéfice par heure de JP (page Projets). */
   jpHours: number;
+  /** Subvention attendue pour ce projet (ex. Emplois d'été Canada) : un bonus montré à part, jamais compté dans le verdict. */
+  grantCents: number;
 }
 
 export const EMPTY_INPUTS: LaunchInputs = {
@@ -84,7 +86,8 @@ export const EMPTY_INPUTS: LaunchInputs = {
   otherVariableCents: 0,
   presales: null,
   startDate: null,
-  jpHours: 0
+  jpHours: 0,
+  grantCents: 0
 };
 
 export interface FixedLine {
@@ -205,7 +208,8 @@ export function normalizeInputs(raw: Partial<LaunchInputs> | null | undefined): 
     otherVariableCents: cents(r.otherVariableCents),
     presales,
     startDate,
-    jpHours: nonNeg(r.jpHours)
+    jpHours: nonNeg(r.jpHours),
+    grantCents: cents(r.grantCents)
   };
 }
 

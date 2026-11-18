@@ -58,6 +58,7 @@ interface Form {
   payments: string;
   otherVariable: string;
   jpHours: string;
+  grant: string;
 }
 
 const parse = (s: string): number => {
@@ -92,7 +93,8 @@ function toInputs(f: Form): LaunchInputs {
     otherVariableCents: toCents(f.otherVariable),
     presales: f.presales.trim() === "" ? null : parse(f.presales),
     startDate: f.startDate || null,
-    jpHours: parse(f.jpHours)
+    jpHours: parse(f.jpHours),
+    grantCents: toCents(f.grant)
   });
 }
 
@@ -119,7 +121,8 @@ function toForm(i: LaunchInputs, name: string): Form {
     kit: showCents(i.kitCents),
     payments: showNum(i.paymentsPerFamily),
     otherVariable: showCents(i.otherVariableCents),
-    jpHours: i.jpHours ? showNum(i.jpHours) : ""
+    jpHours: i.jpHours ? showNum(i.jpHours) : "",
+    grant: showCents(i.grantCents)
   };
 }
 
@@ -390,6 +393,7 @@ export function LaunchCalculator({
                 hint={source ? "Préventes du programme, comptées en direct pour l'alerte" : "Préventes (vide si pas encore en vente)"}
               />
               <Field label="Heures de JP" unit="h" value={form.jpHours} onChange={set("jpHours")} placeholder="0" hint="Préparation, vente et présence : donne le bénéfice par heure de JP" />
+              <Field label="Subvention attendue" unit="$" value={form.grant} onChange={set("grant")} placeholder="0" hint="Bonus montré à part : le projet doit tenir sans elle" />
             </div>
             {source ? (
               <p className="lc-hint" style={{ marginTop: 12 }}>

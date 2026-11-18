@@ -65,6 +65,7 @@ export default async function ProjectsPage() {
                       <strong>{project.label}</strong>
                       <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{project.when}</span>
                       <span style={{ display: "block", fontSize: "0.8125rem", color: "var(--adm-text-2)", marginTop: 4 }}>{evaluation.sentence}</span>
+                      {project.funding ? <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-text-3)", marginTop: 4 }}>Financement : {project.funding}</span> : null}
                       {interestedNames.length ? (
                         <details style={{ marginTop: 4, fontSize: "0.75rem", color: "var(--adm-text-3)" }}>
                           <summary style={{ cursor: "pointer" }}>Qui est intéressé</summary>
@@ -76,7 +77,9 @@ export default async function ProjectsPage() {
                     <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{interest.maybe}</td>
                     <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{evaluation.probable}</td>
                     <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{evaluation.breakEven ?? "—"}</td>
-                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: (evaluation.profitCents ?? 0) < 0 ? "var(--adm-bad)" : "var(--adm-text)" }}>{money(evaluation.profitCents)}</td>
+                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: (evaluation.profitCents ?? 0) < 0 ? "var(--adm-bad)" : "var(--adm-text)" }}>{money(evaluation.profitCents)}
+                      {evaluation.profitWithGrantCents !== null ? <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-good)" }}>{money(evaluation.profitWithGrantCents)} avec subvention</span> : null}
+                    </td>
                     <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{evaluation.profitPerJpHourCents === null ? (scenario?.results.ready ? "heures à mettre" : "—") : money(evaluation.profitPerJpHourCents)}</td>
                     <td><span className="mda-pill" data-tone={TONE[evaluation.decision] || undefined}>{DECISION_LABEL[evaluation.decision]}</span></td>
                     <td>

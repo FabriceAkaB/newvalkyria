@@ -31,7 +31,8 @@ const inputs = z.object({
   otherVariableCents: cents,
   presales: z.number().int().min(0).max(10_000).nullable(),
   startDate: z.string().refine(isIsoDate, "Date de début invalide.").nullable(),
-  jpHours: hours.optional()
+  jpHours: hours.optional(),
+  grantCents: cents.optional()
 });
 
 const schema = z.discriminatedUnion("action", [
