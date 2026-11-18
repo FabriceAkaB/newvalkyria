@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { SurveyForm } from "@/components/survey-form";
-import { getInviteByToken } from "@/lib/surveys-repo";
+import { getInviteByToken, questionsForInvite } from "@/lib/surveys-repo";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +49,7 @@ export default async function SurveyPublicPage({ params }: { params: Promise<{ t
         </p>
         {invite.player_names ? <p style={{ color: "#5b2a86", fontWeight: 600, margin: "0.6rem 0 0" }}>Pour : {invite.player_names}</p> : null}
       </div>
-      <SurveyForm token={token} questions={survey.questions} initial={response?.answers ?? null} />
+      <SurveyForm token={token} questions={questionsForInvite(survey.questions, invite.segment)} initial={response?.answers ?? null} />
     </>
   );
 }

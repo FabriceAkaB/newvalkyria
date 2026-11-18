@@ -1,4 +1,4 @@
-import { INTEREST_OPTIONS, PROJECTS_2027 } from "@/lib/project-pipeline";
+import { PROJECTS_2027, PROJECT_CHECKLIST_ID, projectOption } from "@/lib/project-pipeline";
 import { randomBytes } from "node:crypto";
 
 import { CLUB_ID } from "@/lib/club";
@@ -26,6 +26,15 @@ export interface SurveyQuestion {
   required?: boolean;
   /** recommandation : note sur 10 qui alimente l'indicateur ; interet : réponse qui classe la famille intéressée ou non. */
   role?: "recommandation" | "interet" | "educatrice" | "educatrice_mot";
+  /** Choix montrés seulement aux familles dont l'invitation porte ce repère (ex. « Entrée en 6e en 2027 »). */
+  optionSegments?: Record<string, string>;
+}
+
+/** Les questions telles qu'une famille les voit : un choix réservé à un repère n'apparaît que si son invitation le porte. */
+export function questionsForInvite(questions: SurveyQuestion[], segment: string | null): SurveyQuestion[] {
+  return questions.map(({ optionSegments, ...q }) =>
+    optionSegments && q.options ? { ...q, options: q.options.filter((o) => !optionSegments[o] || String(segment ?? "").includes(optionSegments[o])) } : q
+  );
 }
 
 export type SurveyKind = "mi-saison" | "fin-saison" | "bulletin" | "changement" | "interet" | "lab" | "autre";
@@ -127,18 +136,16 @@ export const SURVEY_TEMPLATES: SurveyTemplate[] = [
     projectLabel: "Projets 2027",
     // Une question par projet (project-pipeline.ts) : la page Projets à lancer croise ces réponses avec le calculateur.
     questions: [
-      ...PROJECTS_2027.map(
-        (p): SurveyQuestion => ({
-          id: p.key,
-          type: "choix",
-          label: p.existing ? `${p.label} (${p.when}) : comptez-vous continuer ?` : `${p.label} (${p.when})`,
-          options: p.existing ? ["Oui", "Peut-être", "Non"] : [...INTEREST_OPTIONS],
-          role: "interet"
-        })
-      ),
-      { id: "semaines", type: "choix", label: "Pour les camps, combien de semaines envisagez-vous dans l'année ?", options: ["1", "2", "3", "4 ou plus", "Je ne sais pas"] },
-      { id: "important", type: "choix_multiple", label: "Qu'est-ce qui compte le plus pour vous ?", options: ["Prix", "Horaire", "Proximité", "Encadrement par un club professionnel", "Niveau de jeu", "Amies dans le groupe"] },
-      { id: "idees", type: "texte", label: "Une idée de projet que vous aimeriez voir chez Valkyria ?" }
+      {
+        id: PROJECT_CHECKLIST_ID,
+        type: "choix_multiple",
+        label: "Cochez tout ce qui pourrait intéresser votre fille (ou vos filles)",
+        options: PROJECTS_2027.map(projectOption),
+        optionSegments: Object.fromEntries(PROJECTS_2027.filter((p) => p.segment).map((p) => [projectOption(p), p.segment!])),
+        required: true,
+        role: "interet"
+      },
+      { id: "idees", type: "texte", label: "Autre chose qui vous intéresserait ?" }
     ]
   },
   {

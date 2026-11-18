@@ -18,18 +18,27 @@ export interface Project {
   funding?: string;
   /** Prix du marché relevés (sites des concurrents, 17 nov. 2026) et prix visé pour 50 % de marge. */
   market?: string;
+  /** Proposé seulement aux familles dont l'invitation porte ce repère (sinon à toutes). */
+  segment?: string;
 }
 
+/** Repère des familles d'une fille née du 1er oct. 2015 au 30 sept. 2016 (âge au 30 septembre) : 6e année en 2027-2028,
+ *  tests Sport-Études à l'automne 2027 pour le secondaire 1 en 2028. */
+export const SEGMENT_6E_2027 = "Entrée en 6e en 2027";
+/** Une seule question à cocher pour tous les projets (JP, 17 nov. 2026 : un seul formulaire, pas un sondage par projet). */
+export const PROJECT_CHECKLIST_ID = "interets";
+export const projectOption = (p: Project) => `${p.label} (${p.when})`;
+
 export const PROJECTS_2027: Project[] = [
-  { key: "camp-fetes-2026", label: "Camp des Fêtes", when: "entre Noël et le jour de l'An (décembre 2026)", start: "2026-12-28", funding: "Fondation Bon départ (Canadian Tire) : jusqu'à 300 $ par joueuse par année, demandé par la famille." },
-  { key: "camp-releche-2027", label: "Camp de la semaine de relâche", when: "semaine de relâche, mars 2027", start: "2027-03-01" },
+  { key: "camp-fetes-2026", label: "Camp des Fêtes", when: "entre Noël et le jour de l'An 2026", start: "2026-12-28", funding: "Fondation Bon départ (Canadian Tire) : jusqu'à 300 $ par joueuse par année, demandé par la famille." },
+  { key: "camp-releche-2027", label: "Camp de la semaine de relâche", when: "mars 2027", start: "2027-03-01" },
   { key: "camp-ete-2027", label: "Camp de jour de l'été", when: "été 2027, à la semaine", start: "2027-06-28", funding: "Emplois d'été Canada : jusqu'à 50 % du salaire minimum des moniteurs de 15 à 30 ans salariés (demande l'hiver d'avant). Bon départ pour les familles.", market: "Écoles de Soccer Montréal : 249 $ la semaine (9 h à 12 h), 349 $ la journée complète ; camp féminin Roses FC × EDSM : 529 $ la semaine (filles de 7 à 13 ans, 9 h à 15 h, Laval et Brossard), + 50 $ d'équipement. Pour nous (journée de 6 h, 24 filles, 2 éducatrices, synthétique à 41,53 $/h) : GO à partir de 504 $ ; 529 $ + équipement = environ 4 400 $ de bénéfice par semaine à 70 % de remplissage. Avec la TPS/TVQ (prochaine saison), 504 $ gardés = 579 $ payés par la famille, alors que leurs camps sont exonérés : se démarquer par la valeur, ou voir avec le CPA si un camp d'enfants peut être exonéré (piste OBNL d'Azimut)." },
   { key: "haute-performance", label: "Programme haute performance", when: "pour les joueuses qui veulent aller plus loin, dès 2027", start: null },
   { key: "roses", label: "Camp ou séances avec les Roses de Montréal", when: "en partenariat avec le club professionnel, 2027", start: null, market: "Les Roses ont déjà un camp féminin avec Écoles de Soccer Montréal (529 $ la semaine, Laval et Brossard). Notre angle : leur ouvrir les Laurentides, où elles n'ont pas de camp." },
-  { key: "ontario-ete-2027", label: "Tournée de tournois en Ontario (été)", when: "été 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
-  { key: "ontario-automne-2027", label: "Tournée de tournois en Ontario (automne)", when: "automne 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
-  { key: "prep-sport-etudes", label: "Programme préparatoire au Sport-Études", when: "avant les tests d'admission", start: null },
-  { key: "saison-2027-2028", label: "Rester avec nous la saison prochaine", when: "automne-hiver 2027-2028", start: "2027-09-07", existing: true }
+  { key: "ontario-ete-2027", label: "Tournée de tournois en Ontario", when: "été 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
+  { key: "ontario-automne-2027", label: "Tournée de tournois en Ontario", when: "automne 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
+  { key: "prep-sport-etudes", label: "Programme préparatoire au Sport-Études", when: "pour les tests de l'automne 2027, entrée au secondaire en 2028", start: null, segment: "Entrée en 6e en 2027" },
+  { key: "saison-2027-2028", label: "Continuer avec New Valkyria la saison prochaine", when: "automne-hiver 2027-2028", start: "2027-09-07", existing: true }
 ];
 
 export const INTEREST_OPTIONS = ["Oui, très intéressée", "Peut-être", "Non"] as const;

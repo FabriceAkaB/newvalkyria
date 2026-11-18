@@ -1,6 +1,6 @@
 import { CLUB_ID } from "@/lib/club";
 import { listScenarios, saveScenario, torontoToday, type LaunchScenario } from "@/lib/launch-scenarios-repo";
-import { PROJECTS_2027, agendaSteps, countInterest, evaluateProject, sortByDecision, type Interest, type Project, type ProjectEvaluation } from "@/lib/project-pipeline";
+import { PROJECTS_2027, PROJECT_CHECKLIST_ID, agendaSteps, projectOption, countInterest, evaluateProject, sortByDecision, type Interest, type Project, type ProjectEvaluation } from "@/lib/project-pipeline";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { syncRefTask } from "@/lib/team-tasks-repo";
 
@@ -25,7 +25,7 @@ export interface ProjectBoard {
 }
 
 export async function getProjectBoard(): Promise<ProjectBoard> {
-  const keys = new Set(PROJECTS_2027.map((p) => p.key));
+  const keys = new Set([...PROJECTS_2027.map((p) => p.key), PROJECT_CHECKLIST_ID]);
   const [{ data: surveys }, scenarios, { data: tasks }] = await Promise.all([
     db().from("surveys").select("id, title, status, questions").eq("club_id", CLUB_ID).eq("kind", "interet").order("created_at", { ascending: false }),
     listScenarios(200),
@@ -36,7 +36,7 @@ export async function getProjectBoard(): Promise<ProjectBoard> {
   const [{ data: responses }, { data: invites }] = ids.length
     ? await Promise.all([
         db().from("survey_responses").select("survey_id, invite_id, answers, created_at").in("survey_id", ids).order("created_at", { ascending: false }),
-        db().from("survey_invites").select("id, survey_id, parent_email, player_names, parent_name, responded_at").in("survey_id", ids)
+        db().from("survey_invites").select("id, survey_id, parent_email, player_names, parent_name, responded_at, segment").in("survey_id", ids)
       ])
     : [{ data: [] }, { data: [] }];
   const inviteById = new Map(((invites ?? []) as any[]).map((i) => [i.id, i]));
@@ -47,14 +47,16 @@ export async function getProjectBoard(): Promise<ProjectBoard> {
     // Une famille qui répond à deux sondages (ex. projets 2027 puis préparatoire Sport-Études) compte une fois : sa réponse la plus récente.
     const seen = new Set<string>();
     for (const r of (responses ?? []) as any[]) {
-      const a = r.answers?.[project.key];
+      const inv = r.invite_id ? inviteById.get(r.invite_id) : null;
+      const list = r.answers?.[PROJECT_CHECKLIST_ID];
+      // Liste à cocher : cochée = oui ; pas cochée = non, seulement si le choix était proposé à cette famille.
+      const a = r.answers?.[project.key] ?? (Array.isArray(list) ? (list.includes(projectOption(project)) ? "Oui" : !project.segment || String(inv?.segment ?? "").includes(project.segment) ? "Non" : undefined) : undefined);
       if (a === undefined) continue;
-      const fam = String((r.invite_id ? inviteById.get(r.invite_id)?.parent_email : null) ?? `réponse:${r.invite_id ?? Math.random()}`).toLowerCase();
+      const fam = String(inv?.parent_email ?? `réponse:${r.invite_id ?? Math.random()}`).toLowerCase();
       if (seen.has(fam)) continue;
       seen.add(fam);
       answers.push(a);
       if (/^(oui|peut)/i.test(String(Array.isArray(a) ? a[0] : a))) {
-        const inv = r.invite_id ? inviteById.get(r.invite_id) : null;
         const who = inv?.player_names || inv?.parent_name;
         if (who) names.push(`${who}${/^peut/i.test(String(a)) ? " (peut-être)" : ""}`);
       }
