@@ -340,7 +340,7 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
                 <div key={product.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "12px", padding: "1.1rem 1.25rem", opacity: busy === product.id ? 0.6 : 1 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
                     <div>
-                      <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "#fff", margin: 0 }}>{product.name}</p>
+                      <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--adm-text)", margin: 0 }}>{product.name}</p>
                       <p style={{ fontSize: "0.8rem", color: "var(--adm-accent)", margin: "2px 0 0" }}>{formatPrice(product.price_cents)}</p>
                       {product.description && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "2px 0 0", maxWidth: "26rem" }}>{product.description}</p>}
                       {product.is_signup_bonus && (
@@ -360,7 +360,7 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
                         <select
                           value={product.uniform_bundle_role ?? ""}
                           onChange={(e) => handleSetBundleRole(product.id, e.target.value as "" | "jersey" | "short" | "socks")}
-                          style={{ padding: "0.25rem 0.4rem", fontSize: "0.72rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff" }}
+                          style={{ padding: "0.25rem 0.4rem", fontSize: "0.72rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)" }}
                         >
                           <option value="">Aucun</option>
                           <option value="jersey">Chandail</option>
@@ -393,7 +393,7 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
                           <Image src={photo.url} alt={product.name} fill sizes="4.2rem" style={{ objectFit: "cover" }} />
                           <button
                             onClick={() => handleDeletePhoto(product.id, photo.id)}
-                            style={{ position: "absolute", top: 2, right: 2, width: "1.2rem", height: "1.2rem", borderRadius: "50%", background: "rgba(0,0,0,0.7)", color: "var(--adm-bad)", border: "none", cursor: "pointer", fontSize: "0.7rem", lineHeight: 1 }}
+                            style={{ position: "absolute", top: 2, right: 2, width: "1.2rem", height: "1.2rem", borderRadius: "50%", background: "var(--adm-surface)", color: "var(--adm-bad)", border: "none", cursor: "pointer", fontSize: "0.7rem", lineHeight: 1 }}
                             title="Retirer cette photo"
                           >
                             ×
@@ -402,7 +402,7 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
                       ))}
                       <button
                         onClick={() => fileInputs.current[product.id]?.click()}
-                        style={{ width: "4.2rem", height: "4.2rem", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.2)", background: "transparent", color: "var(--adm-text-3)", cursor: "pointer", fontSize: "0.65rem" }}
+                        style={{ width: "4.2rem", height: "4.2rem", borderRadius: "8px", border: "1px dashed var(--adm-border)", background: "transparent", color: "var(--adm-text-3)", cursor: "pointer", fontSize: "0.65rem" }}
                       >
                         + Ajouter
                       </button>
@@ -425,7 +425,7 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
                         min={0}
                         value={product.inventory_count}
                         onChange={(e) => handleProductInventoryChange(product.id, Math.max(0, parseInt(e.target.value, 10) || 0))}
-                        style={{ width: "4rem", padding: "0.25rem 0.4rem", fontSize: "0.78rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", textAlign: "center" }}
+                        style={{ width: "4rem", padding: "0.25rem 0.4rem", fontSize: "0.78rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)", textAlign: "center" }}
                       />
                     </label>
                     {hasVariants && (
@@ -450,26 +450,26 @@ export function AdminBoutiqueProduits({ initialProducts }: { initialProducts: Pr
                               min={0}
                               value={v.inventory_count}
                               onChange={(e) => handleVariantInventoryChange(product.id, v.id, Math.max(0, parseInt(e.target.value, 10) || 0))}
-                              style={{ width: "3.6rem", padding: "0.2rem 0.4rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", textAlign: "center" }}
+                              style={{ width: "3.6rem", padding: "0.2rem 0.4rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)", textAlign: "center" }}
                             />
                           </label>
                           <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
                             <input type="checkbox" checked={v.active} onChange={(e) => handleToggleVariantActive(product.id, v.id, e.target.checked)} />
                             Actif
                           </label>
-                          <button onClick={() => handleDeleteVariant(product.id, v.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.6)", cursor: "pointer", fontSize: "0.72rem" }}>
+                          <button onClick={() => handleDeleteVariant(product.id, v.id)} style={{ background: "none", border: "none", color: "var(--adm-bad)", cursor: "pointer", fontSize: "0.72rem" }}>
                             Retirer
                           </button>
                         </div>
                       ))}
-                      {product.variants.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-border)", fontStyle: "italic" }}>Aucune variante — le produit se vend tel quel.</p>}
+                      {product.variants.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", fontStyle: "italic" }}>Aucune variante — le produit se vend tel quel.</p>}
                     </div>
 
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-                      <input placeholder="Étiquette (ex. Petit)" value={vForm.label} onChange={(e) => setVariantField(product.id, "label", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", width: "9rem" }} />
-                      <input placeholder="Taille" value={vForm.size} onChange={(e) => setVariantField(product.id, "size", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", width: "6rem" }} />
-                      <input placeholder="Couleur" value={vForm.color} onChange={(e) => setVariantField(product.id, "color", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", width: "6rem" }} />
-                      <input placeholder="Inventaire" type="number" min={0} value={vForm.inventoryCount} onChange={(e) => setVariantField(product.id, "inventoryCount", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", width: "5.5rem" }} />
+                      <input placeholder="Étiquette (ex. Petit)" value={vForm.label} onChange={(e) => setVariantField(product.id, "label", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)", width: "9rem" }} />
+                      <input placeholder="Taille" value={vForm.size} onChange={(e) => setVariantField(product.id, "size", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)", width: "6rem" }} />
+                      <input placeholder="Couleur" value={vForm.color} onChange={(e) => setVariantField(product.id, "color", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)", width: "6rem" }} />
+                      <input placeholder="Inventaire" type="number" min={0} value={vForm.inventoryCount} onChange={(e) => setVariantField(product.id, "inventoryCount", e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)", width: "5.5rem" }} />
                       <button onClick={() => handleAddVariant(product.id)} disabled={busy === `variant-${product.id}`} className="admin-btn-ghost" style={{ padding: "0.35rem 0.7rem", fontSize: "0.72rem" }}>
                         + Ajouter
                       </button>

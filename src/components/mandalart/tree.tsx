@@ -145,7 +145,7 @@ export function MandalartTree({ pillars, results, execution }: { pillars: TreePi
           <strong>{grown}</strong> feuille{grown > 1 ? "s" : ""} poussée{grown > 1 ? "s" : ""} sur {all.length}
         </span>
         <span>
-          <strong style={{ color: GOLD }}>{golden}</strong> dorée{golden > 1 ? "s" : ""}
+          <strong style={{ color: "var(--adm-warn)" }}>{golden}</strong> dorée{golden > 1 ? "s" : ""}
         </span>
         <span>
           exécution <strong>{pct(execution)}</strong>
@@ -279,7 +279,7 @@ export function MandalartTree({ pillars, results, execution }: { pillars: TreePi
               </ul>
               <p className={s.legend}>
                 <span>
-                  <i style={{ border: "1px solid rgba(235,235,245,0.35)" }} /> pas commencée
+                  <i style={{ border: "1px solid var(--adm-border)" }} /> pas commencée
                 </span>
                 <span>
                   <i style={{ background: "linear-gradient(90deg, hsl(268 70% 62%) 50%, transparent 50%)" }} /> se remplit

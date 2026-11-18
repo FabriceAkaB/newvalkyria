@@ -215,7 +215,7 @@ export function ExerciseDiagramEditor({ initial, onSave, saving }: { initial: Ex
       </div>
 
       {tool.startsWith("arrow-") && (
-        <p style={{ fontSize: "0.68rem", color: "#c9a8e3", margin: 0 }}>
+        <p style={{ fontSize: "0.68rem", color: "var(--adm-accent)", margin: 0 }}>
           {arrowStart ? "Cliquez le point d'arrivée de la flèche." : "Cliquez le point de départ de la flèche."}
         </p>
       )}

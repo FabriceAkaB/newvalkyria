@@ -510,7 +510,7 @@ function RevenueCard({
   return (
     <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "12px", padding: "1.1rem 1.25rem", minWidth: "240px", flex: "1 1 240px" }}>
       <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0 0 0.3rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>{card.label}</p>
-      <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>{formatCAD(card.totalCents / 100)}</p>
+      <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>{formatCAD(card.totalCents / 100)}</p>
       {card.taxCents > 0 && (
         <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: "0 0 0.2rem" }}>
           Net avant taxe : {formatCAD(card.netCents / 100)} · Taxe : {formatCAD(card.taxCents / 100)}
@@ -707,7 +707,7 @@ function AccountsPanel({ accounts }: { accounts: AccountBalance[] }) {
         {accounts.map((a) => (
           <div key={a.account} style={{ flex: "1 1 180px", minWidth: "180px" }}>
             <p style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", margin: "0 0 0.2rem", fontWeight: 600 }}>{a.account}</p>
-            <p style={{ fontSize: "1.15rem", fontWeight: 700, color: a.balanceCents < 0 ? "var(--adm-bad)" : "#fff", margin: "0 0 0.2rem" }}>{formatCAD(a.balanceCents / 100)}</p>
+            <p style={{ fontSize: "1.15rem", fontWeight: 700, color: a.balanceCents < 0 ? "var(--adm-bad)" : "var(--adm-text)", margin: "0 0 0.2rem" }}>{formatCAD(a.balanceCents / 100)}</p>
             <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: 0 }}>
               Revenus {formatCAD(a.revenueCents / 100)} · Charges {formatCAD(a.expenseCents / 100)}
             </p>
@@ -783,7 +783,7 @@ export function AdminRevenus({ summary, dashboard, seasons }: Props) {
 
           <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1.1rem 1.25rem" }}>
             <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.3rem", textTransform: "uppercase", letterSpacing: "0.03em" }}>Total — toutes saisons et boutique</p>
-            <p style={{ fontSize: "1.8rem", fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>{formatCAD(grandTotalCents / 100)}</p>
+            <p style={{ fontSize: "1.8rem", fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>{formatCAD(grandTotalCents / 100)}</p>
             <p style={{ fontSize: "0.85rem", color: grandNetCents < 0 ? "var(--adm-bad)" : "var(--adm-good)", margin: "0 0 0.4rem" }}>
               Profit : {formatCAD(grandNetCents / 100)}
               {grandExpenseCents > 0 && <span style={{ color: "var(--adm-text-2)" }}> (-{formatCAD(grandExpenseCents / 100)} de charges)</span>}

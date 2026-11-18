@@ -72,12 +72,12 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
 
           {/* ── Terrains ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.7rem" }}>Terrains</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.7rem" }}>Terrains</p>
             {data.terrains.length === 0 && <p className="admin-empty-text">Aucun terrain. Ajoutez-en dans la section Calendrier → Terrains.</p>}
             {data.terrains.map((t) => (
               <div key={t.id} style={{ borderBottom: "1px solid var(--adm-line)", padding: "0.6rem 0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ color: "#fff", fontWeight: 600 }}>{t.name}<span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}>{t.address ? ` — ${t.address}` : ""}</span></span>
+                  <span style={{ color: "var(--adm-text)", fontWeight: 600 }}>{t.name}<span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}>{t.address ? ` — ${t.address}` : ""}</span></span>
                   <label style={{ fontSize: "0.76rem", color: "var(--adm-text-2)", display: "flex", gap: "0.4rem", alignItems: "center" }}>
                     <input type="checkbox" checked={t.rentable} disabled={busy} onChange={(e) => call({ action: "terrain_update", terrainId: t.id, rentable: e.target.checked }, e.target.checked ? "Terrain offert à la location." : "Terrain retiré de la location.")} />
                     À louer
@@ -93,7 +93,7 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
 
           {/* ── Plages ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.7rem" }}>Plages horaires offertes</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.7rem" }}>Plages horaires offertes</p>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end", marginBottom: "0.9rem" }}>
               <label style={{ fontSize: "0.66rem", color: "var(--adm-text-2)" }}>Terrain
                 <select className="admin-group-select" value={win.terrainId} onChange={(e) => setWin({ ...win, terrainId: e.target.value })}>
@@ -161,7 +161,7 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
 
           {/* ── Dates bloquées ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.7rem" }}>Dates bloquées</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.7rem" }}>Dates bloquées</p>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end", marginBottom: "0.8rem" }}>
               <select className="admin-group-select" value={block.terrainId} onChange={(e) => setBlock({ ...block, terrainId: e.target.value })}>
                 {data.terrains.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -182,7 +182,7 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
 
           {/* ── Réservations et paiements ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.7rem" }}>Réservations et paiements ({data.rentals.length})</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.7rem" }}>Réservations et paiements ({data.rentals.length})</p>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "820px" }}>
                 <thead><tr>{["Date", "Terrain", "Organisation / contact", "Montant", "Statut", ""].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", fontWeight: 600, textAlign: "left" }}>{h}</th>)}</tr></thead>
@@ -191,7 +191,7 @@ export function AdminLocationTerrains({ initial, origin }: { initial: Data; orig
                     <tr key={r.id} style={{ opacity: r.status === "cancelled" ? 0.5 : 1 }}>
                       <td style={cell}>{r.rental_date}<br />{r.start_time} – {r.end_time}</td>
                       <td style={cell}>{r.terrain_name}</td>
-                      <td style={cell}><strong style={{ color: "#fff" }}>{r.organization_name}</strong><br />{r.contact_name} · {r.contact_email} · {r.contact_phone}{r.notes ? <><br /><em>{r.notes}</em></> : null}</td>
+                      <td style={cell}><strong style={{ color: "var(--adm-text)" }}>{r.organization_name}</strong><br />{r.contact_name} · {r.contact_email} · {r.contact_phone}{r.notes ? <><br /><em>{r.notes}</em></> : null}</td>
                       <td style={cell}>{formatMoney(r.price_cents)}</td>
                       <td style={cell}><span style={{ color: STATUS[r.status][1], fontWeight: 700 }}>{STATUS[r.status][0]}</span>{r.cancelled_reason ? <><br /><span style={{ color: "var(--adm-text-3)" }}>{r.cancelled_reason}</span></> : null}</td>
                       <td style={cell}>

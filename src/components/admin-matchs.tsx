@@ -278,7 +278,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
           </p>
           {msg && <p style={{ fontSize: "0.78rem", color: "var(--adm-good)" }}>{msg}</p>}
           {shown && (
-            <div style={{ position: "sticky", top: 8, zIndex: 5, display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap", padding: "0.6rem 0.7rem", marginBottom: "0.8rem", borderRadius: 10, border: "1px solid var(--adm-accent)", background: "var(--adm-surface, #14111c)" }}>
+            <div style={{ position: "sticky", top: 8, zIndex: 5, display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap", padding: "0.6rem 0.7rem", marginBottom: "0.8rem", borderRadius: 10, border: "1px solid var(--adm-accent)", background: "var(--adm-surface)" }}>
               <input className="admin-input" readOnly value={shown.url} onFocus={(e) => e.currentTarget.select()} style={{ flex: "1 1 260px", fontSize: "0.72rem" }} aria-label="Lien à envoyer" />
               <a href={shown.url} target="_blank" rel="noreferrer" className="admin-btn-ghost" style={{ fontSize: "0.68rem" }}>Ouvrir</a>
               <button className="admin-btn-ghost" style={{ fontSize: "0.68rem" }} onClick={() => setShown(null)}>Fermer</button>
@@ -299,7 +299,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
 
           {/* ── Demandes de match à approuver ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>
               Demandes de match ({data.requests.filter((r) => r.status === "pending").length} à traiter)
             </p>
             <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: "0 0 0.6rem" }}>Équipes qui voient une plage sans y être admissibles d&apos;office. Approuvée : elle peut payer la plage (premier arrivé, premier servi). Un courriel lui est envoyé dans les deux cas.</p>
@@ -314,7 +314,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                       <tr key={r.id}>
                         <td style={cell}>{r.slot.slot_date}<br />{r.slot.start_time} – {r.slot.end_time}<br /><span style={{ color: "var(--adm-text-3)" }}>{r.slot.opponent ?? ""}</span></td>
                         <td style={cell}>
-                          <strong style={{ color: "#fff" }}>{r.profile.org_name}</strong><br />{r.profile.team_label}
+                          <strong style={{ color: "var(--adm-text)" }}>{r.profile.org_name}</strong><br />{r.profile.team_label}
                           <br />{GENDER_LABEL[r.profile.team_gender]} · {r.profile.team_birth_year_to && r.profile.team_birth_year_to !== r.profile.team_birth_year ? `groupe ${r.profile.team_birth_year}-${r.profile.team_birth_year_to}` : `nés en ${r.profile.team_birth_year}`} · {r.profile.team_level}
                         </td>
                         <td style={cell}>{r.profile.contact_name}<br />{r.profile.contact_email}<br />{r.profile.contact_phone}</td>
@@ -334,7 +334,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
 
           {/* ── Équipes ayant rempli le formulaire ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Équipes ayant rempli le formulaire ({data.profiles.length})</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>Équipes ayant rempli le formulaire ({data.profiles.length})</p>
             <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: "0 0 0.6rem" }}>Une équipe doit remplir ce formulaire avant de pouvoir choisir une plage. Utile pour relancer celles qui n&apos;ont pas réservé.</p>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
@@ -346,7 +346,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                       <tr key={p.id}>
                         <td style={cell}>
                           {logoImg(p.logo_url ?? null, 36)}
-                          <strong style={{ color: "#fff" }}>{p.org_name}</strong><br />{p.team_label}{p.notes ? <><br /><em>{p.notes}</em></> : null}
+                          <strong style={{ color: "var(--adm-text)" }}>{p.org_name}</strong><br />{p.team_label}{p.notes ? <><br /><em>{p.notes}</em></> : null}
                           <br />
                           <label className="admin-btn-ghost" style={{ fontSize: "0.62rem", cursor: "pointer", display: "inline-block", marginTop: 4 }}>
                             {p.logo_url ? "Changer le logo" : "+ Ajouter le logo"}
@@ -374,7 +374,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
 
           {/* ── Réservations ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Réservations ({data.bookings.length})</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem" }}>Réservations ({data.bookings.length})</p>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
                 <thead><tr>{["Match", "Académie / équipe", "Contact", "Acompte", "Solde jour du match", "Statut", ""].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
@@ -383,7 +383,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                     <tr key={b.id} style={{ opacity: b.status === "cancelled" ? 0.5 : 1 }}>
                       <td style={cell}>{b.slot.slot_date}<br />{b.slot.start_time} – {b.slot.end_time}{b.slot.double_group ? <><br /><span style={{ color: "var(--adm-accent)" }}>Double cédule</span></> : null}</td>
                       <td style={cell}>
-                        {logoImg(logoOf(b.org_key))}<strong style={{ color: "#fff" }}>{b.org_name}</strong><br />{b.team_label}
+                        {logoImg(logoOf(b.org_key))}<strong style={{ color: "var(--adm-text)" }}>{b.org_name}</strong><br />{b.team_label}
                         {b.team_gender ? <><br />{GENDER_LABEL[b.team_gender]}{b.team_birth_year ? (b.team_birth_year_to && b.team_birth_year_to !== b.team_birth_year ? ` · groupe ${b.team_birth_year}-${b.team_birth_year_to}` : ` · nés en ${b.team_birth_year}`) : ""}{b.team_level ? ` · ${b.team_level}` : ""}</> : null}
                         {b.notes ? <><br /><em>{b.notes}</em></> : null}
                       </td>
@@ -416,7 +416,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
           {/* ── Plages ── */}
           <div style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.7rem" }}>
-              <p style={{ fontWeight: 700, color: "#fff", margin: 0 }}>Plages de match ({slots.length})</p>
+              <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>Plages de match ({slots.length})</p>
               <label style={{ fontSize: "0.72rem", color: "var(--adm-text-2)" }}><input type="checkbox" checked={showPast} onChange={(e) => setShowPast(e.target.checked)} /> Afficher les plages passées</label>
             </div>
 
@@ -431,8 +431,8 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             </div>
 
             {checked.length > 0 && (
-              <div style={{ border: "1px solid #3a2f4d", borderRadius: "10px", padding: "0.8rem", marginBottom: "0.9rem", background: "#14111c" }}>
-                <p style={{ margin: "0 0 0.5rem", fontWeight: 700, color: "#fff", fontSize: "0.82rem" }}>
+              <div style={{ border: "1px solid #3a2f4d", borderRadius: "10px", padding: "0.8rem", marginBottom: "0.9rem", background: "var(--adm-surface)" }}>
+                <p style={{ margin: "0 0 0.5rem", fontWeight: 700, color: "var(--adm-text)", fontSize: "0.82rem" }}>
                   {checked.length} plage{checked.length > 1 ? "s" : ""} cochée{checked.length > 1 ? "s" : ""} — cochez les champs à appliquer, puis validez
                 </p>
                 {fields(bulk, setBulk, true)}
@@ -473,9 +473,9 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                             {s.double_group && <><br /><span style={{ color: "var(--adm-accent)", fontWeight: 700 }}>Double cédule</span></>}
                           </td>
                           <td style={cell}>
-                            <strong style={{ color: "#fff" }}>{s.match_format ?? "Format à préciser"}</strong>
+                            <strong style={{ color: "var(--adm-text)" }}>{s.match_format ?? "Format à préciser"}</strong>
                             <br />Adversaire : {s.opponent ?? <em style={{ color: "var(--adm-warn)" }}>à préciser</em>}
-                            <br /><strong style={{ color: "#fff" }}>📍 {placeName(s.location)}</strong>{s.field_label ? ` · ${s.field_label}` : ""}
+                            <br /><strong style={{ color: "var(--adm-text)" }}>📍 {placeName(s.location)}</strong>{s.field_label ? ` · ${s.field_label}` : ""}
                           </td>
                           <td style={cell}>{restr ?? <span style={{ color: "var(--adm-text-3)" }}>Aucune restriction</span>}{s.preferred_note ? <><br /><span style={{ color: "var(--adm-good)" }}>{s.preferred_note}</span></> : null}</td>
                           <td style={cell}>Acompte {formatMoney(s.price_cents)}<br />Solde {formatMoney(s.balance_due_cents)}</td>
@@ -498,7 +498,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                         </tr>
                         {open && draft && (
                           <tr>
-                            <td colSpan={7} style={{ ...cell, background: "#14111c" }}>
+                            <td colSpan={7} style={{ ...cell, background: "var(--adm-surface)" }}>
                               {fields(draft, setDraft)}
                               <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.7rem" }}>
                                 <button

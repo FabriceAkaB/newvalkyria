@@ -230,7 +230,7 @@ export function AdminCalendrier({
                           <span style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", minWidth: "5.5rem" }}>
                             {e.startTime ? `${e.startTime.slice(0, 5)}–${e.endTime?.slice(0, 5) ?? ""}` : e.kind === "essai" ? "Essai" : "Heure à confirmer"}
                           </span>
-                          <span style={{ fontSize: "0.82rem", color: "#fff", flex: 1 }}>{e.title}</span>
+                          <span style={{ fontSize: "0.82rem", color: "var(--adm-text)", flex: 1 }}>{e.title}</span>
                           {e.coachNames && <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>{e.coachNames}</span>}
                           {(terrainName(e.terrainId) || e.location) && (
                             <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>{terrainName(e.terrainId) ?? e.location}</span>

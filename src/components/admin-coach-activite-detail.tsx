@@ -244,7 +244,7 @@ function AssignmentRow({
     <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", opacity: saving ? 0.6 : 1 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.6rem" }}>
         <div>
-          <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", margin: 0 }}>{assignment.coach.first_name} {assignment.coach.last_name}</p>
+          <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{assignment.coach.first_name} {assignment.coach.last_name}</p>
           <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: "0.1rem 0 0" }}>{assignment.coach.role}</p>
           {read ? <p style={{ fontSize: "0.72rem", margin: "0.25rem 0 0", color: read.confirmed ? "var(--adm-good)" : "var(--adm-warn)" }}>📖 {read.label}</p> : null}
         </div>
@@ -287,7 +287,7 @@ function AssignmentRow({
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.6rem" }}>
         <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: 0 }}>
-          {formatHours(computed.hours)} × {formatCAD(computed.rateCents / 100)} = <strong style={{ color: "#fff" }}>{formatCAD(computed.payCents / 100)}</strong>
+          {formatHours(computed.hours)} × {formatCAD(computed.rateCents / 100)} = <strong style={{ color: "var(--adm-text)" }}>{formatCAD(computed.payCents / 100)}</strong>
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
           <button
@@ -431,11 +431,11 @@ export function AdminCoachActiviteDetail({ activity, initialAssignments, coaches
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", margin: "1.25rem 0" }}>
             <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.8rem 1.1rem" }}>
               <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.2rem" }}>Total heures assignées</p>
-              <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatHours(totals.hours)}</p>
+              <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{formatHours(totals.hours)}</p>
             </div>
             <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.8rem 1.1rem" }}>
               <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.2rem" }}>Total à payer</p>
-              <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatCAD(totals.payCents / 100)}</p>
+              <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{formatCAD(totals.payCents / 100)}</p>
             </div>
           </div>
 

@@ -88,8 +88,8 @@ export function AdminSaisonEssais({ season, categories, programs, slots, initial
       <div key={r.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", opacity: isSaving ? 0.6 : 1 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.65rem" }}>
           <div>
-            <p style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff", margin: 0 }}>{playerName(r)}</p>
-            <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: "0.15rem 0 0" }}>{r.parent_name} · {r.parent_email} · {r.parent_phone}</p>
+            <p style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{playerName(r)}</p>
+            <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.15rem 0 0" }}>{r.parent_name} · {r.parent_email} · {r.parent_phone}</p>
           </div>
           <span style={{ fontSize: "0.6rem", color: "var(--adm-info)", background: "var(--adm-info-soft)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>Essai</span>
         </div>

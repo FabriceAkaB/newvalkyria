@@ -198,7 +198,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
             </p>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
               {lastRefreshed && (
-                <span style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.3)" }}>
+                <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)" }}>
                   Mis à jour {lastRefreshed.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                 </span>
               )}
@@ -235,8 +235,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                   style={{
                     background: "var(--adm-surface)",
                     border: isFull
-                      ? "1px solid var(--adm-bad-soft)"
-                      : "1px solid var(--adm-line)",
+                      ? "1px solid var(--adm-bad-soft)" : "1px solid var(--adm-line)",
                     borderRadius: "12px",
                     padding: "1rem 1.2rem",
                   }}
@@ -244,7 +243,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                   {/* Slot header */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
                     <div>
-                      <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "#fff", margin: 0 }}>{slot.day}</p>
+                      <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--adm-text)", margin: 0 }}>{slot.day}</p>
                       <p style={{ fontSize: "0.8rem", color: "var(--adm-accent)", margin: "2px 0 0 0" }}>{slot.horaire}</p>
                       <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: "2px 0 0 0" }}>{slot.category} · {slot.practices} pratiques</p>
                     </div>
@@ -272,7 +271,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                             background: "var(--adm-surface-2)",
                             border: "1px solid var(--adm-border)",
                             borderRadius: "4px",
-                            color: "#fff",
+                            color: "var(--adm-text)",
                             textAlign: "center",
                           }}
                         />
@@ -283,7 +282,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                   {/* Players list */}
                   <div style={{ minHeight: "2rem" }}>
                     {slotLeads.length === 0 ? (
-                      <p style={{ fontSize: "0.75rem", color: "var(--adm-border)", fontStyle: "italic", padding: "0.5rem 0" }}>
+                      <p style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", fontStyle: "italic", padding: "0.5rem 0" }}>
                         Aucune joueuse assignée
                       </p>
                     ) : (
@@ -299,7 +298,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                               gap: "0.4rem",
                               padding: "0.5rem 0.6rem",
                               marginBottom: "0.3rem",
-                              background: "#121019",
+                              background: "var(--adm-surface)",
                               borderRadius: "6px",
                               border: "1px solid var(--adm-surface-2)",
                               opacity: isMoving ? 0.5 : 1,
@@ -308,8 +307,8 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                             {/* Nom */}
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <div>
-                                <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff" }}>{childName}</span>
-                                <span style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.3)", marginLeft: "0.4rem" }}>{lead.parent_name}</span>
+                                <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--adm-text)" }}>{childName}</span>
+                                <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", marginLeft: "0.4rem" }}>{lead.parent_name}</span>
                               </div>
                               <button
                                 onClick={() => handleRemoveFromSlot(lead.id)}
@@ -318,7 +317,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                                 style={{
                                   background: "none",
                                   border: "none",
-                                  color: "rgba(255,100,100,0.5)",
+                                  color: "var(--adm-bad)",
                                   cursor: "pointer",
                                   fontSize: "1rem",
                                   lineHeight: 1,
@@ -338,10 +337,10 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                                 width: "100%",
                                 padding: "0.3rem 0.5rem",
                                 fontSize: "0.7rem",
-                                background: "rgba(255,255,255,0.04)",
-                                border: "1px solid rgba(255,255,255,0.12)",
+                                background: "var(--adm-surface-2)",
+                                border: "1px solid var(--adm-border)",
                                 borderRadius: "4px",
-                                color: "rgba(255,255,255,0.6)",
+                                color: "var(--adm-text-3)",
                                 cursor: "pointer",
                               }}
                             >
@@ -379,19 +378,19 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                         flexDirection: "column",
                         gap: "0.5rem",
                         padding: "0.65rem 0.8rem",
-                        background: "rgba(255,255,255,0.03)",
+                        background: "var(--adm-surface-2)",
                         borderRadius: "8px",
-                        border: "1px solid rgba(255,255,255,0.07)",
+                        border: "1px solid var(--adm-line)",
                         opacity: isMoving ? 0.5 : 1,
                       }}
                     >
                       {/* Infos joueuse */}
                       <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff" }}>{childName}</span>
-                        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>— {lead.parent_name}</span>
+                        <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--adm-text)" }}>{childName}</span>
+                        <span style={{ fontSize: "0.72rem", color: "var(--adm-text-3)" }}>— {lead.parent_name}</span>
                         <span style={{
                           fontSize: "0.62rem",
-                          color: "rgba(196,164,228,0.8)",
+                          color: "var(--adm-accent)",
                           background: "rgba(196,164,228,0.1)",
                           border: "1px solid rgba(196,164,228,0.2)",
                           borderRadius: "4px",
@@ -412,7 +411,7 @@ export function AdminPlages({ leads: initialLeads }: Props) {
                           background: "rgba(196,164,228,0.08)",
                           border: "1px solid rgba(196,164,228,0.3)",
                           borderRadius: "6px",
-                          color: "rgba(196,164,228,0.9)",
+                          color: "var(--adm-accent)",
                           cursor: isMoving ? "not-allowed" : "pointer",
                           appearance: "auto",
                         }}

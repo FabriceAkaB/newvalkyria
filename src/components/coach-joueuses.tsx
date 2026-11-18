@@ -17,7 +17,7 @@ export function CoachJoueuses({ coachName, players }: Props) {
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Joueuses ({players.length})</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.5rem" }}>
             Joueuses de vos groupes.
           </p>
 
@@ -34,7 +34,7 @@ export function CoachJoueuses({ coachName, players }: Props) {
                 {players.map((p) => (
                   <tr key={p.registrationId}>
                     <td>
-                      <Link href={`/entraineur/joueuses/${p.registrationId}`} style={{ color: "#c3a6ff", textDecoration: "none" }}>
+                      <Link href={`/entraineur/joueuses/${p.registrationId}`} style={{ color: "var(--adm-accent)", textDecoration: "none" }}>
                         {p.firstName} {p.lastName}
                       </Link>
                     </td>

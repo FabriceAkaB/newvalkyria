@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { AdminTopbar } from "@/components/admin-topbar";
 import { Bar } from "@/components/mandalart/ui";
+import { PulseFeed, PulseStats } from "@/components/admin-pulse";
+import { getPulse } from "@/lib/admin-pulse";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getTodayActions, type TodaySection } from "@/lib/admin-today";
 import { Vision2027Board } from "@/components/vision-2027-board";
@@ -35,7 +37,7 @@ export default async function AdminTodayPage({ searchParams }: { searchParams: P
   const today = todayIso();
   const monday = addDays(today, -((dayOf(today).getUTCDay() + 6) % 7) + offset * 7);
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-  const [sections, agenda, projects] = await Promise.all([getTodayActions(role), getAgenda(days[0], days[6], role).catch(() => []), getStepProjects(role).catch(() => [])]);
+  const [sections, agenda, projects, pulse] = await Promise.all([getTodayActions(role), getAgenda(days[0], days[6], role).catch(() => []), getStepProjects(role).catch(() => []), getPulse(role).catch(() => ({ stats: [], events: [] }))]);
   // La gérante voit les chantiers de 2027 ici (JP les voit dans Espace JP › Mon plan).
   const vision = role === "gerante" ? await getLiveTasks().then((t) => buildVision(t)).catch(() => []) : [];
   const byDay = (d: string) => agenda.filter((i) => i.date === d);
@@ -56,7 +58,7 @@ export default async function AdminTodayPage({ searchParams }: { searchParams: P
         <div className="admin-section" style={{ maxWidth: 1100 }}>
           {/* Héros : la réponse à « qu'est-ce que je dois faire aujourd'hui ? » */}
           <p style={{ fontSize: "0.9rem", color: "var(--adm-text-3)", margin: 0 }}>{dateLabel}</p>
-          <h1 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.02em", margin: "0.2rem 0 0.4rem", color: "var(--adm-text)" }}>
+          <h1 style={{ fontSize: "clamp(1.5rem, 5vw, 2rem)", fontWeight: 700, letterSpacing: "-0.025em", lineHeight: 1.15, margin: "0.2rem 0 0.4rem", color: "var(--adm-text)" }}>
             {todo.length === 0 ? "Tout est à jour." : `${todo.length} sujet${todo.length > 1 ? "s" : ""} demande${todo.length > 1 ? "nt" : ""} ton attention`}
           </h1>
           <p style={{ fontSize: "0.95rem", color: "var(--adm-text-2)", margin: "0 0 1.4rem" }}>
@@ -67,17 +69,24 @@ export default async function AdminTodayPage({ searchParams }: { searchParams: P
                 : "Rien d'urgent. Une fois une tâche faite dans sa section, elle disparaît d'ici."}
           </p>
 
+          {pulse.stats.length ? <PulseStats stats={pulse.stats} /> : null}
+
+          <div className="adm-today-top">
+            <div style={{ minWidth: 0 }}>
           {/* La prochaine action : le premier élément du sujet le plus urgent */}
-          {next && (
-            <section className="agd-next" style={{ borderColor: LEVEL[next.section.level].color }}>
-              <p className="agd-next-label" style={{ color: LEVEL[next.section.level].color }}>Ta prochaine action · {next.section.title}</p>
-              <p className="agd-next-title">{next.item.title}</p>
-              {next.item.detail ? <p className="agd-next-detail">{next.item.detail}</p> : null}
-              <Link href={next.item.href ?? next.section.href} className="admin-btn-primary agd-next-btn">
-                {next.item.href ? "Ouvrir" : next.section.hrefLabel}
-              </Link>
-            </section>
-          )}
+            {next && (
+              <section className="agd-next" style={{ borderColor: LEVEL[next.section.level].color }}>
+                <p className="agd-next-label" style={{ color: LEVEL[next.section.level].color }}>Ta prochaine action · {next.section.title}</p>
+                <p className="agd-next-title">{next.item.title}</p>
+                {next.item.detail ? <p className="agd-next-detail">{next.item.detail}</p> : null}
+                <Link href={next.item.href ?? next.section.href} className="admin-btn-primary agd-next-btn">
+                  {next.item.href ? "Ouvrir" : next.section.hrefLabel}
+                </Link>
+              </section>
+            )}
+            </div>
+            <PulseFeed events={pulse.events} />
+          </div>
 
           <h2 style={{ fontSize: "1.1rem", fontWeight: 600, margin: "0 0 10px", color: "var(--adm-text)" }}>Suivis à faire</h2>
           {/* Sommaire : une pastille par sujet */}

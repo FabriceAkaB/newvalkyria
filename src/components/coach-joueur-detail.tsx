@@ -89,16 +89,16 @@ function ObjectivesPanel({ registrationId, objectives: initial }: { registration
   };
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
       <p className="admin-drawer-section-title">Objectifs individuels</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.6rem" }}>
         {objectives.map((o) => (
-          <div key={o.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "#c3c2c8" }}>
+          <div key={o.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
             <span>• {o.objective}</span>
-            <button onClick={() => remove(o.id)} style={{ background: "none", border: "none", color: "#6d6b71", cursor: "pointer" }}>×</button>
+            <button onClick={() => remove(o.id)} style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer" }}>×</button>
           </div>
         ))}
-        {objectives.length === 0 && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Aucun objectif fixé.</p>}
+        {objectives.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Aucun objectif fixé.</p>}
       </div>
       <div style={{ display: "flex", gap: "0.4rem" }}>
         <input className="admin-input" placeholder="Nouvel objectif..." value={newObjective} onChange={(e) => setNewObjective(e.target.value)} style={{ flex: 1, fontSize: "0.75rem" }} />
@@ -147,24 +147,24 @@ function RoutinesPanel({ registrationId, routines: initial, exercises }: { regis
   };
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "1.1rem" }}>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
       <p className="admin-drawer-section-title">Routine maison</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "0.6rem" }}>
         {routines.map((r) => (
-          <div key={r.id} style={{ background: "#0d0b13", border: "1px solid #1a1820", borderRadius: "8px", padding: "0.6rem 0.8rem" }}>
+          <div key={r.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.8rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <strong style={{ fontSize: "0.78rem", color: "#fff" }}>{r.title}</strong>
-              <button onClick={() => remove(r.id)} style={{ background: "none", border: "none", color: "#6d6b71", cursor: "pointer" }}>×</button>
+              <strong style={{ fontSize: "0.78rem", color: "var(--adm-text)" }}>{r.title}</strong>
+              <button onClick={() => remove(r.id)} style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer" }}>×</button>
             </div>
             {r.exercise_ids.length > 0 && (
-              <p style={{ fontSize: "0.7rem", color: "#9d9da0", margin: "0.3rem 0 0" }}>
+              <p style={{ fontSize: "0.7rem", color: "var(--adm-text-2)", margin: "0.3rem 0 0" }}>
                 {r.exercise_ids.map((id) => exercises.find((e) => e.id === id)?.title ?? "Exercice").join(" · ")}
               </p>
             )}
-            {r.notes && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.3rem 0 0", fontStyle: "italic" }}>{r.notes}</p>}
+            {r.notes && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.3rem 0 0", fontStyle: "italic" }}>{r.notes}</p>}
           </div>
         ))}
-        {routines.length === 0 && <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: 0 }}>Aucune routine assignée.</p>}
+        {routines.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Aucune routine assignée.</p>}
       </div>
 
       {showForm ? (
@@ -181,7 +181,7 @@ function RoutinesPanel({ registrationId, routines: initial, exercises }: { regis
                 {ex.title}
               </button>
             ))}
-            {exercises.length === 0 && <p style={{ fontSize: "0.7rem", color: "#6d6b71", margin: 0 }}>Aucun exercice dans la bibliothèque pour l&apos;instant.</p>}
+            {exercises.length === 0 && <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: 0 }}>Aucun exercice dans la bibliothèque pour l&apos;instant.</p>}
           </div>
           <textarea className="admin-input" placeholder="Notes (optionnel)" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} style={{ fontSize: "0.75rem" }} />
           <div style={{ display: "flex", gap: "0.4rem" }}>
@@ -204,10 +204,10 @@ export function CoachJoueurDetail({ coachName, player, evaluations, objectives, 
       <CoachTopbar coachName={coachName} />
       <div className="admin-content">
         <div className="admin-section">
-          <p className="admin-section-title" style={{ margin: "0 0 0.3rem", fontSize: "1.1rem", textTransform: "none", letterSpacing: 0, color: "#fff" }}>
+          <p className="admin-section-title" style={{ margin: "0 0 0.3rem", fontSize: "1.1rem", textTransform: "none", letterSpacing: 0, color: "var(--adm-text)" }}>
             {player.firstName} {player.lastName}
           </p>
-          <p style={{ fontSize: "0.8rem", color: "#9d9da0", marginBottom: "0.5rem" }}>
+          <p style={{ fontSize: "0.8rem", color: "var(--adm-text-2)", marginBottom: "0.5rem" }}>
             Née {player.birthYear ?? "—"}{player.advancedGroup ? " · Groupe avancé" : ""} · {presentCount}/{attendanceHistory.length} présence(s)
           </p>
           <Link href={`/entraineur/joueuses/${player.registrationId}/bulletin`} className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1.5rem", fontSize: "0.75rem" }}>
@@ -242,19 +242,19 @@ export function CoachJoueurDetail({ coachName, player, evaluations, objectives, 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
             {evaluations.length === 0 && <p className="admin-empty-text">Aucune évaluation enregistrée.</p>}
             {evaluations.map((ev) => (
-              <div key={ev.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-                <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0 0 0.4rem" }}>
+              <div key={ev.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
+                <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0 0 0.4rem" }}>
                   {new Date(ev.activity.activity_date + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}
                   {" · "}{ev.activity.activity_type} · {ev.coach.first_name} {ev.coach.last_name}
                 </p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.5rem" }}>
                   {Object.entries(ev.ratings).map(([crit, val]) => (
-                    <span key={crit} style={{ fontSize: "0.65rem", color: "#c3a6ff", background: "rgba(150,100,255,0.1)", padding: "0.15rem 0.45rem", borderRadius: "4px" }}>
+                    <span key={crit} style={{ fontSize: "0.65rem", color: "var(--adm-accent)", background: "rgba(150,100,255,0.1)", padding: "0.15rem 0.45rem", borderRadius: "4px" }}>
                       {crit}: {val}/5
                     </span>
                   ))}
                 </div>
-                {ev.comment && <p style={{ fontSize: "0.78rem", color: "#c3c2c8", margin: 0, fontStyle: "italic" }}>&quot;{ev.comment}&quot;</p>}
+                {ev.comment && <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: 0, fontStyle: "italic" }}>&quot;{ev.comment}&quot;</p>}
               </div>
             ))}
           </div>

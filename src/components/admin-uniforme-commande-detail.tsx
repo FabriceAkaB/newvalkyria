@@ -201,7 +201,7 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.25rem" }}>
             <div>
-              <p className="admin-section-title" style={{ margin: 0, fontSize: "1.1rem", textTransform: "none", letterSpacing: 0, color: "#fff" }}>Commande #{order.id.slice(0, 8)}</p>
+              <p className="admin-section-title" style={{ margin: 0, fontSize: "1.1rem", textTransform: "none", letterSpacing: 0, color: "var(--adm-text)" }}>Commande #{order.id.slice(0, 8)}</p>
               <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", margin: "0.2rem 0 0" }}>
                 {new Date(order.created_at).toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}
                 {seasonLabel && ` · ${seasonLabel}`}
@@ -223,7 +223,7 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
               <p className="admin-drawer-section-title">Joueuse</p>
               {order.registration ? (
                 <div>
-                  <p style={{ fontSize: "0.9rem", color: "#fff", margin: "0 0 0.2rem" }}>
+                  <p style={{ fontSize: "0.9rem", color: "var(--adm-text)", margin: "0 0 0.2rem" }}>
                     {order.registration.playerFirstName} {order.registration.playerLastName}
                   </p>
                   <p style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", margin: 0 }}>

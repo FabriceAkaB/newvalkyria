@@ -45,7 +45,7 @@ function ManualBookingModal({ slot, onClose, onBooked }: { slot: PrivateSessionS
     <div className="admin-modal-overlay">
       <div className="admin-modal-box">
         <p className="admin-modal-title">Réserver manuellement</p>
-        <p style={{ fontSize: "0.75rem", color: "#6d6b71", marginBottom: "1rem" }}>
+        <p style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", marginBottom: "1rem" }}>
           {slot.slot_date} · {slot.public_start_time.slice(0, 5)}–{slot.public_end_time.slice(0, 5)}
         </p>
         {error && <p className="admin-error" style={{ marginBottom: "0.75rem" }}>{error}</p>}
@@ -174,7 +174,7 @@ export function AdminSeancesPrivees({
       <div className="admin-content">
         <div className="admin-section">
           <p className="admin-section-title" style={{ marginBottom: "0.3rem" }}>Séances privées / One-on-One</p>
-          <p style={{ fontSize: "0.78rem", color: "#6d6b71", marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Créneaux de réservation individuelle pour l&apos;Espace membre — 1h vendue au parent, 1h30 bloquée en interne (rangement/préparation).
           </p>
 
@@ -216,23 +216,23 @@ export function AdminSeancesPrivees({
             {slots.map((s) => {
               const booking = activeBookingBySlot.get(s.id);
               return (
-                <div key={s.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.7rem 0.9rem" }}>
+                <div key={s.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.7rem 0.9rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem", flexWrap: "wrap" }}>
                     <div>
-                      <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: 0 }}>
+                      <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--adm-text)", margin: 0 }}>
                         {s.slot_date} · {s.public_start_time.slice(0, 5)}–{s.public_end_time.slice(0, 5)}
-                        <span style={{ fontSize: "0.68rem", color: "#6d6b71", marginLeft: "0.5rem" }}>
+                        <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", marginLeft: "0.5rem" }}>
                           (bloc admin {s.admin_start_time.slice(0, 5)}–{s.admin_end_time.slice(0, 5)})
                         </span>
                       </p>
-                      <p style={{ fontSize: "0.72rem", color: "#6d6b71", margin: "0.15rem 0 0" }}>
+                      <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.15rem 0 0" }}>
                         {[terrainName(s.terrain_id) ?? s.location, coachName(s.coach_id)].filter(Boolean).join(" · ") || "—"}
                       </p>
                       {s.status === "closed" && s.closed_reason && (
-                        <p style={{ fontSize: "0.7rem", color: "#ff9999", margin: "0.15rem 0 0" }}>Fermé : {s.closed_reason}</p>
+                        <p style={{ fontSize: "0.7rem", color: "var(--adm-bad)", margin: "0.15rem 0 0" }}>Fermé : {s.closed_reason}</p>
                       )}
                       {booking && (
-                        <p style={{ fontSize: "0.75rem", color: "#c3a6ff", margin: "0.4rem 0 0" }}>
+                        <p style={{ fontSize: "0.75rem", color: "var(--adm-accent)", margin: "0.4rem 0 0" }}>
                           Réservé par {booking.parent_name} ({booking.parent_email}){booking.notes ? ` — ${booking.notes}` : ""}
                         </p>
                       )}
@@ -255,7 +255,7 @@ export function AdminSeancesPrivees({
                         </>
                       )}
                       {s.status === "booked" && booking && (
-                        <button onClick={() => cancelBooking(booking.id)} style={{ fontSize: "0.7rem", color: "#ff9999", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}>
+                        <button onClick={() => cancelBooking(booking.id)} style={{ fontSize: "0.7rem", color: "var(--adm-bad)", background: "none", border: "1px solid rgba(255,100,100,0.3)", borderRadius: "6px", padding: "0.35rem 0.7rem", cursor: "pointer" }}>
                           Annuler la réservation
                         </button>
                       )}

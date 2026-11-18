@@ -105,7 +105,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
           </div>
 
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Par forfait</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem" }}>Par forfait</p>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead><tr>{["Forfait", "Tarif", "Places", "Vendues", "Disponibles"].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
               <tbody>
@@ -113,7 +113,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
                   const list = slots.filter((s) => s.tier === tier);
                   return (
                     <tr key={tier}>
-                      <td style={cell}><strong style={{ color: "#fff" }}>{label}</strong></td>
+                      <td style={cell}><strong style={{ color: "var(--adm-text)" }}>{label}</strong></td>
                       <td style={cell}>{formatMoney(list[0].price_cents)}</td>
                       <td style={cell}>{list.length}</td>
                       <td style={cell}>{list.filter((s) => s.status !== "available").length}</td>
@@ -126,7 +126,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
           </div>
 
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Emplacements ({slots.length})</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem" }}>Emplacements ({slots.length})</p>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "820px" }}>
                 <thead><tr>{["Emplacement", "Tarif", "Statut", "Commanditaire", "Lien de paiement", ""].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
@@ -136,7 +136,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
                     return (
                       <tr key={s.slot_key}>
                         <td style={cell}>
-                          <strong style={{ color: "#fff" }}>{s.tier_label}</strong>
+                          <strong style={{ color: "var(--adm-text)" }}>{s.tier_label}</strong>
                           <br />{s.placement}
                           <br /><span style={{ color: "var(--adm-text-3)" }}>{s.slot_key}</span>
                         </td>
@@ -153,7 +153,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
                         <td style={cell}>
                           {s.company_name ? (
                             <>
-                              <strong style={{ color: "#fff" }}>{s.company_name}</strong>
+                              <strong style={{ color: "var(--adm-text)" }}>{s.company_name}</strong>
                               {s.contact_name ? <><br />{s.contact_name}</> : null}
                               {s.contact_email ? <><br />{s.contact_email}</> : null}
                             </>
@@ -218,7 +218,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
 
           {/* ── Propositions personnalisées ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>Propositions personnalisées ({offers.length})</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>Propositions personnalisées ({offers.length})</p>
             <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: "0 0 0.8rem" }}>
               Chaque entreprise a sa page privée avec ses options et un bouton de paiement par option. Une option chandail est liée à un emplacement : dès que l&apos;emplacement est vendu (à elle ou à quelqu&apos;un d&apos;autre), toutes les autres offres sur cet emplacement se ferment automatiquement.
             </p>
@@ -230,7 +230,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
                 <div key={o.id} style={{ borderTop: "1px solid var(--adm-line)", padding: "0.8rem 0" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", flexWrap: "wrap" }}>
                     <div>
-                      <strong style={{ color: "#fff" }}>{o.company_name}</strong>
+                      <strong style={{ color: "var(--adm-text)" }}>{o.company_name}</strong>
                       <span style={{ color, fontWeight: 700, fontSize: "0.74rem", marginLeft: "0.5rem" }}>{label}</span>
                       <br />
                       <span style={{ fontSize: "0.74rem", color: "var(--adm-text-2)" }}>
@@ -252,7 +252,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
                       return (
                         <div key={x.id} style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
                           <span style={{ minWidth: "230px" }}>{x.slot_key ? `Chandail (${x.slot_key}) — ` : ""}{x.label}</span>
-                          <strong style={{ color: "#fff" }}>{x.price_cents != null ? formatMoney(x.price_cents) : "à convenir"}</strong>
+                          <strong style={{ color: "var(--adm-text)" }}>{x.price_cents != null ? formatMoney(x.price_cents) : "à convenir"}</strong>
                           <span style={{ color: oc, fontWeight: 600 }}>{ol}</span>
                           {x.payment_link_url && x.status === "open" && (
                             <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} onClick={() => navigator.clipboard.writeText(x.payment_link_url!).then(() => flash(`Lien de paiement copié : ${x.label}`))}>Copier le lien de paiement</button>
@@ -275,7 +275,7 @@ export function AdminSponsors2027({ initialSlots, role, initialOffers = [], orig
           </div>
 
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Ce qui est offert par forfait</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem" }}>Ce qui est offert par forfait</p>
             {tiers.map(([tier, label]) => (
               <div key={tier} style={{ marginBottom: "0.8rem" }}>
                 <p style={{ margin: "0 0 0.25rem", fontSize: "0.8rem", fontWeight: 700, color: "var(--adm-accent)" }}>{label}</p>

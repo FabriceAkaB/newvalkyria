@@ -7,7 +7,7 @@
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
 
-.svg { width: 100%; height: auto; display: block; background: radial-gradient(ellipse at 50% 40%, rgba(180, 155, 242, 0.07), transparent 65%); border-radius: var(--adm-radius); -webkit-tap-highlight-color: transparent; user-select: none; }
+.svg { width: 100%; height: auto; display: block; background: radial-gradient(ellipse at 50% 38%, rgba(180, 155, 242, 0.16), transparent 62%), #15131b; border-radius: var(--adm-radius); box-shadow: var(--adm-shadow); -webkit-tap-highlight-color: transparent; user-select: none; }
 
 .trunk { fill: hsl(28 22% 36%); }
 .branch, .leaf, .crown { cursor: pointer; transition: opacity 0.2s; }

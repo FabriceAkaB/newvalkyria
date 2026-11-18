@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminThemeToggle } from "@/components/admin-theme-toggle";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -31,9 +32,13 @@ export function CoachTopbar({ coachName }: Props) {
   return (
     <aside className="admin-sidebar" data-menu-open={String(menuOpen)}>
       <div className="admin-sidebar-brand">
-        <div>
-          <p className="admin-sidebar-brand-title">Espace Technique</p>
-          <p className="admin-sidebar-brand-sub">{coachName}</p>
+        <div className="admin-sidebar-brand-id coach-brand">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" width={26} height={31} className="admin-sidebar-logo" />
+          <div>
+            <p className="admin-sidebar-brand-title">Espace Technique</p>
+            <p className="admin-sidebar-brand-sub">{coachName}</p>
+          </div>
         </div>
         <button type="button" className="admin-sidebar-menu-btn" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? "Fermer" : "Menu"}
@@ -54,6 +59,7 @@ export function CoachTopbar({ coachName }: Props) {
       </nav>
 
       <div className="admin-sidebar-footer">
+        <AdminThemeToggle />
         <button onClick={handleLogout} className="admin-logout-btn">
           Déconnexion
         </button>

@@ -221,7 +221,7 @@ function CredentialsSection({ coachId, username: initialUsername }: { coachId: s
         <button className="admin-btn-ghost" onClick={save} disabled={saving || !username || !password} style={{ fontSize: "0.75rem", alignSelf: "flex-start" }}>
           {saving ? "Enregistrement..." : "Enregistrer les identifiants"}
         </button>
-        {message && <p style={{ fontSize: "0.72rem", color: msgError ? "#ff8a8a" : "var(--adm-good)", margin: 0 }}>{message}</p>}
+        {message && <p style={{ fontSize: "0.72rem", color: msgError ? "var(--adm-bad)" : "var(--adm-good)", margin: 0 }}>{message}</p>}
       </div>
     </div>
   );
@@ -295,7 +295,7 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
           </Link>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.25rem" }}>
-            <p className="admin-section-title" style={{ margin: 0, fontSize: "1.1rem", textTransform: "none", letterSpacing: 0, color: "#fff" }}>
+            <p className="admin-section-title" style={{ margin: 0, fontSize: "1.1rem", textTransform: "none", letterSpacing: 0, color: "var(--adm-text)" }}>
               {coach.first_name} {coach.last_name}
             </p>
             <button className="admin-btn-danger" onClick={() => setConfirming(true)}>Supprimer l&apos;entraîneur</button>
@@ -366,10 +366,10 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
 
               <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1.1rem" }}>
                 <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.5rem" }}>Solde</p>
-                <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 0.25rem" }}>Heures totales : <strong style={{ color: "#fff" }}>{formatHours(totalHours)}</strong></p>
-                <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 0.25rem" }}>Montant gagné : <strong style={{ color: "#fff" }}>{formatCAD(totalEarned / 100)}</strong></p>
+                <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 0.25rem" }}>Heures totales : <strong style={{ color: "var(--adm-text)" }}>{formatHours(totalHours)}</strong></p>
+                <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 0.25rem" }}>Montant gagné : <strong style={{ color: "var(--adm-text)" }}>{formatCAD(totalEarned / 100)}</strong></p>
                 <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: "0 0 0.25rem" }}>Montant payé : <strong style={{ color: "var(--adm-good)" }}>{formatCAD(totalPaid / 100)}</strong></p>
-                <p style={{ fontSize: "0.85rem", color: "var(--adm-text-2)", margin: 0 }}>Reste à payer : <strong style={{ color: totalOwed > 0 ? "var(--adm-warn)" : "#fff" }}>{formatCAD(totalOwed / 100)}</strong></p>
+                <p style={{ fontSize: "0.85rem", color: "var(--adm-text-2)", margin: 0 }}>Reste à payer : <strong style={{ color: totalOwed > 0 ? "var(--adm-warn)" : "var(--adm-text)" }}>{formatCAD(totalOwed / 100)}</strong></p>
               </div>
             </div>
           </div>

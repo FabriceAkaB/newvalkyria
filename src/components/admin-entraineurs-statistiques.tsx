@@ -19,7 +19,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
   return (
     <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", flex: "1 1 200px" }}>
       <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.3rem" }}>{label}</p>
-      <p style={{ fontSize: "1.3rem", fontWeight: 700, color: color ?? "#fff", margin: 0 }}>{value}</p>
+      <p style={{ fontSize: "1.3rem", fontWeight: 700, color: color ?? "var(--adm-text)", margin: 0 }}>{value}</p>
     </div>
   );
 }

@@ -111,7 +111,7 @@ function MatchDetailsForm({ activityId, initial, role }: { activityId: string; i
         {(status === "live" || status === "completed") && (
           <>
             <input className="admin-input" type="number" min={0} placeholder="Nous" value={scoreUs} onChange={(e) => setScoreUs(e.target.value)} style={{ width: "5rem" }} />
-            <span style={{ color: "#6d6b71" }}>—</span>
+            <span style={{ color: "var(--adm-text-3)" }}>—</span>
             <input className="admin-input" type="number" min={0} placeholder="Eux" value={scoreThem} onChange={(e) => setScoreThem(e.target.value)} style={{ width: "5rem" }} />
             <button
               className="admin-btn-ghost"
@@ -122,7 +122,7 @@ function MatchDetailsForm({ activityId, initial, role }: { activityId: string; i
             </button>
           </>
         )}
-        {saved && <span style={{ fontSize: "0.72rem", color: "#7fd88f" }}>✓ Enregistré</span>}
+        {saved && <span style={{ fontSize: "0.72rem", color: "var(--adm-good)" }}>✓ Enregistré</span>}
       </div>
     </div>
   );
@@ -222,7 +222,7 @@ function LineupBoard({ activityId, roster, convocations, initial, role }: { acti
         {bench.length === 0 && convokedIds.length === 0 && <p className="admin-empty-text">Convoquez des joueuses pour construire l&apos;alignement.</p>}
       </div>
       {slots.filter((s) => s.x !== null).length > 0 && (
-        <p style={{ fontSize: "0.68rem", color: "#6d6b71", marginTop: "0.5rem" }}>
+        <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", marginTop: "0.5rem" }}>
           Glissez une joueuse sur le terrain pour la repositionner.{" "}
           {slots.filter((s) => s.x !== null).map((s) => (
             <button key={s.id} onClick={() => removeFromPitch(s.registration_id)} className="admin-btn-ghost" style={{ fontSize: "0.6rem", padding: "0.1rem 0.4rem", marginRight: "0.3rem" }}>
@@ -255,7 +255,7 @@ function LiveTimer({ activityId, roster, convocations, lineup, initial, role }: 
       <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>Temps de jeu</p>
       <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.75rem" }}>
         <button className="admin-btn-ghost" onClick={() => setMinute((m) => Math.max(0, m - 1))} style={{ fontSize: "0.8rem", padding: "0.3rem 0.7rem" }}>−1</button>
-        <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fff", minWidth: "3.5rem", textAlign: "center" }}>{minute}&apos;</span>
+        <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--adm-text)", minWidth: "3.5rem", textAlign: "center" }}>{minute}&apos;</span>
         <button className="admin-btn-primary" onClick={() => setMinute((m) => m + 1)} style={{ fontSize: "0.8rem", padding: "0.3rem 0.7rem" }}>+1 min</button>
         <input className="admin-input" type="number" min={0} value={minute} onChange={(e) => setMinute(parseInt(e.target.value, 10) || 0)} style={{ width: "5rem", fontSize: "0.75rem" }} />
       </div>
@@ -265,12 +265,12 @@ function LiveTimer({ activityId, roster, convocations, lineup, initial, role }: 
           const onField = isOnField(id);
           const player = roster.find((r) => r.registrationId === id);
           return (
-            <div key={id} style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.4rem 0.7rem" }}>
+            <div key={id} style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.4rem 0.7rem" }}>
               <Avatar firstName={player?.firstName} lastName={player?.lastName} photoUrl={player?.photoUrl} size={24} />
-              <span style={{ fontSize: "0.78rem", color: "#c3c2c8", flex: 1 }}>
-                {playerName(roster, id)} {onField && <span style={{ color: "#7fd88f" }}>· sur le terrain</span>}
+              <span style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", flex: 1 }}>
+                {playerName(roster, id)} {onField && <span style={{ color: "var(--adm-good)" }}>· sur le terrain</span>}
               </span>
-              <span style={{ fontSize: "0.7rem", color: "#6d6b71" }}>{total} min</span>
+              <span style={{ fontSize: "0.7rem", color: "var(--adm-text-3)" }}>{total} min</span>
               <button
                 onClick={() => substitute(id, onField ? "out" : "in")}
                 className={onField ? "admin-btn-ghost" : "admin-btn-primary"}
@@ -283,7 +283,7 @@ function LiveTimer({ activityId, roster, convocations, lineup, initial, role }: 
         })}
         {convokedIds.length === 0 && <p className="admin-empty-text">Convoquez des joueuses pour suivre leur temps de jeu.</p>}
       </div>
-      {lineup.length === 0 && <p style={{ fontSize: "0.68rem", color: "#6d6b71", marginTop: "0.4rem" }}>Astuce : placez d&apos;abord les titulaires dans l&apos;alignement ci-dessus.</p>}
+      {lineup.length === 0 && <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", marginTop: "0.4rem" }}>Astuce : placez d&apos;abord les titulaires dans l&apos;alignement ci-dessus.</p>}
     </div>
   );
 }
@@ -299,11 +299,11 @@ function EvaluationsPanel({ activityId, roster, convocations, evaluations, setEv
         {evaluations.length === 0 && <p className="admin-empty-text">Aucune évaluation saisie pour l&apos;instant.</p>}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           {evaluations.map((e) => (
-            <div key={e.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.5rem 0.7rem", fontSize: "0.75rem", color: "#c3c2c8" }}>
+            <div key={e.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.5rem 0.7rem", fontSize: "0.75rem", color: "var(--adm-text-2)" }}>
               <strong>{playerName(roster, e.registration_id)}</strong>
               {e.position_code && ` · ${POSITION_LABELS[e.position_code] ?? e.position_code}`}
               {e.score !== null && ` · ${e.score}/${e.scale}`}
-              {e.comment && <p style={{ margin: "0.2rem 0 0", color: "#9d9da0" }}>{e.comment}</p>}
+              {e.comment && <p style={{ margin: "0.2rem 0 0", color: "var(--adm-text-2)" }}>{e.comment}</p>}
             </div>
           ))}
         </div>
@@ -369,8 +369,8 @@ function MatchEvalRow({ activityId, registrationId, coachId, playerLabel, existi
   };
 
   return (
-    <div style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.6rem 0.8rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-      <strong style={{ fontSize: "0.8rem", color: "#fff" }}>{playerLabel}</strong>
+    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.8rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+      <strong style={{ fontSize: "0.8rem", color: "var(--adm-text)" }}>{playerLabel}</strong>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
         <select className="admin-input" value={position} onChange={(e) => setPosition(e.target.value)} style={{ width: "auto", fontSize: "0.72rem" }}>
           <option value="">Poste joué</option>
@@ -431,13 +431,13 @@ function ConvocationsPanelWithSync({ activityId, roster, initial, role, onChange
   return (
     <div style={{ marginBottom: "1.5rem" }}>
       <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>
-        Convocations <span style={{ color: "#6d6b71", fontWeight: 400 }}>· {Object.values(map).filter(Boolean).length}/{roster.length}</span>
+        Convocations <span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}>· {Object.values(map).filter(Boolean).length}/{roster.length}</span>
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
         {roster.map((p) => (
-          <div key={p.registrationId} style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.4rem 0.7rem" }}>
+          <div key={p.registrationId} style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.4rem 0.7rem" }}>
             <Avatar firstName={p.firstName} lastName={p.lastName} photoUrl={p.photoUrl} size={26} />
-            <span style={{ fontSize: "0.78rem", color: "#c3c2c8", flex: 1 }}>{p.firstName} {p.lastName}</span>
+            <span style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", flex: 1 }}>{p.firstName} {p.lastName}</span>
             <select className="admin-input" value={map[p.registrationId] ?? "none"} onChange={(e) => setStatus(p.registrationId, e.target.value as ConvocationStatus | "none")} style={{ fontSize: "0.72rem", width: "auto" }}>
               <option value="none">Non convoquée</option>
               {(Object.keys(CONVOCATION_LABELS) as ConvocationStatus[]).map((s) => <option key={s} value={s}>{CONVOCATION_LABELS[s]}</option>)}

@@ -164,7 +164,7 @@ export function AdminCommandites({ initial }: { initial: { sponsors: Sponsor[]; 
                   return (
                     <Fragment key={s.id}>
                       <tr onClick={() => setOpenId(open ? null : s.id)} style={{ cursor: "pointer" }}>
-                        <td style={cell}><strong style={{ color: "#fff" }}>{s.company_name}</strong><br /><span style={{ color: "var(--adm-text-3)" }}>{[s.contact_name, s.contact_phone, s.contact_email].filter(Boolean).join(" · ")}</span></td>
+                        <td style={cell}><strong style={{ color: "var(--adm-text)" }}>{s.company_name}</strong><br /><span style={{ color: "var(--adm-text-3)" }}>{[s.contact_name, s.contact_phone, s.contact_email].filter(Boolean).join(" · ")}</span></td>
                         <td style={cell}>{label(SPONSOR_CATEGORIES, s.category)}<br /><span style={{ color: "var(--adm-text-3)" }}>{s.partnership_type ?? ""}</span></td>
                         <td style={cell}>{formatMoney(s.proposed_amount_cents)}</td>
                         <td style={cell}><span style={{ color: STATUS_COLOR[s.status], fontWeight: 700 }}>{label(SPONSOR_STATUSES, s.status)}</span></td>
@@ -187,7 +187,7 @@ export function AdminCommandites({ initial }: { initial: { sponsors: Sponsor[]; 
                               <label style={field}>Montant ($)<input className="admin-input" style={{ width: "110px" }} defaultValue={(s.proposed_amount_cents / 100).toString()} onBlur={(e) => { const v = Math.round((parseFloat(e.target.value.replace(",", ".")) || 0) * 100); if (v !== s.proposed_amount_cents) call({ action: "update", id: s.id, sponsor: { proposedAmountCents: v } }, "Montant mis à jour."); }} /></label>
                             </div>
 
-                            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.4rem", fontSize: "0.78rem" }}>Paiements</p>
+                            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.4rem", fontSize: "0.78rem" }}>Paiements</p>
                             {pays.map((p) => (
                               <div key={p.id} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", padding: "0.25rem 0", borderBottom: "1px solid var(--adm-line)" }}>
                                 <span>{formatMoney(p.amount_cents)}{p.due_date ? ` · dû le ${p.due_date}` : ""}{p.method ? ` · ${p.method}` : ""}{p.note ? ` — ${p.note}` : ""}</span>
@@ -216,7 +216,7 @@ export function AdminCommandites({ initial }: { initial: { sponsors: Sponsor[]; 
                               </button>
                             </div>
 
-                            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.4rem", fontSize: "0.78rem" }}>Documents (contrats, factures…)</p>
+                            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.4rem", fontSize: "0.78rem" }}>Documents (contrats, factures…)</p>
                             <EntityDocuments entityType="sponsor" entityId={s.id} />
 
                             <p style={{ margin: "0.8rem 0 0" }}>

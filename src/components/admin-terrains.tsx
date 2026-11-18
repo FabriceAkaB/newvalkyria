@@ -78,7 +78,7 @@ export function AdminTerrains({ initialTerrains }: { initialTerrains: Terrain[] 
             {terrains.map((t) => (
               <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.7rem 0.9rem", opacity: t.active ? 1 : 0.5 }}>
                 <div>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: 0 }}>{t.name}</p>
+                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--adm-text)", margin: 0 }}>{t.name}</p>
                   {t.address && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.15rem 0 0" }}>{t.address}</p>}
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>

@@ -133,7 +133,7 @@ export default async function ContenuPage() {
           {d.tasks.length ? (
             <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 4, fontSize: "0.88rem" }}>
               {d.tasks.map((t) => (
-                <li key={t.code} style={{ color: t.overdue ? "var(--adm-bad, #d9534f)" : "var(--adm-text)" }}>
+                <li key={t.code} style={{ color: t.overdue ? "var(--adm-bad)" : "var(--adm-text)" }}>
                   <strong>{t.code}</strong> {t.title} <span style={{ color: "var(--adm-text-3)" }}>· {t.due ? shortDate(t.due) : "sans date"} · {t.owner ?? "à attribuer"}</span>
                 </li>
               ))}

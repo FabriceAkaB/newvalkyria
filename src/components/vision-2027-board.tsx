@@ -51,7 +51,7 @@ export function Vision2027Board({ projects, intro }: { projects: VisionView[]; i
                   <li key={s.code} style={{ fontSize: "0.82rem", lineHeight: 1.4, color: s.done ? "var(--adm-text-3)" : "var(--adm-text)", textDecoration: s.done ? "line-through" : "none" }}>
                     {s.done ? "✓ " : ""}
                     {s.title}{" "}
-                    <span style={{ color: s.late && !s.done ? "var(--adm-bad, #d9534f)" : "var(--adm-text-3)", textDecoration: "none" }}>
+                    <span style={{ color: s.late && !s.done ? "var(--adm-bad)" : "var(--adm-text-3)", textDecoration: "none" }}>
                       · {short(s.due)} · {s.owner ?? "à attribuer"}
                     </span>
                   </li>

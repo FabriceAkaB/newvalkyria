@@ -42,7 +42,7 @@ export function AdminUniformesProblemes({ problems: initialProblems, seasonLabel
             {problems.map((p) => (
               <div key={p.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.6rem" }}>
                 <div>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>
+                  <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>
                     🔴 {PROBLEM_TYPE_LABELS[p.problem_type]}
                   </p>
                   <p style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", margin: 0 }}>

@@ -14,7 +14,9 @@ export default async function CoachLoginPage() {
   return (
     <div className="admin-login-shell">
       <div className="admin-login-card">
-        <p className="admin-login-brand">New Valkyria</p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" width={44} height={53} className="admin-login-logo" />
+        <h1 className="admin-login-brand">New Valkyria</h1>
         <p className="admin-login-sub">Espace Technique</p>
         <CoachLoginForm />
       </div>

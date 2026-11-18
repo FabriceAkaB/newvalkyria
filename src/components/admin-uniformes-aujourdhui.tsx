@@ -39,7 +39,7 @@ export function AdminUniformesAujourdhui({ orders, seasonKeys, seasonLabelByKey,
             <p className="admin-section-title" style={{ margin: 0 }}>Distribution aujourd&apos;hui</p>
           </div>
           <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
-            Commandes prêtes à remettre ou partiellement remises, groupées par groupe — total : <strong style={{ color: "#fff" }}>{orders.length}</strong>.
+            Commandes prêtes à remettre ou partiellement remises, groupées par groupe — total : <strong style={{ color: "var(--adm-text)" }}>{orders.length}</strong>.
           </p>
 
           <select
@@ -57,7 +57,7 @@ export function AdminUniformesAujourdhui({ orders, seasonKeys, seasonLabelByKey,
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             {sortedGroups.map(([group, list]) => (
               <div key={group}>
-                <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", marginBottom: "0.5rem" }}>
+                <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--adm-text)", marginBottom: "0.5rem" }}>
                   {group} <span style={{ color: "var(--adm-text-2)", fontWeight: 400 }}>({list.length} joueuse{list.length > 1 ? "s" : ""})</span>
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>

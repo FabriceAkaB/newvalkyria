@@ -158,12 +158,12 @@ export function AdminEssaisDates({ initialSlots }: { initialSlots: TrialSlot[] }
               </label>
               <div>
                 <span style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", display: "block", marginBottom: "0.4rem" }}>Niveaux admissibles</span>
-                <label style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", color: "#fff", marginRight: "1rem" }}>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", color: "var(--adm-text)", marginRight: "1rem" }}>
                   <input type="checkbox" checked={form.allLevels} onChange={(e) => setForm({ ...form, allLevels: e.target.checked })} />
                   Tous niveaux
                 </label>
                 {!form.allLevels && LEVEL_OPTIONS.map((lvl) => (
-                  <label key={lvl} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", color: "#fff", marginRight: "1rem" }}>
+                  <label key={lvl} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", color: "var(--adm-text)", marginRight: "1rem" }}>
                     <input
                       type="checkbox"
                       checked={form.eligibleLevels.includes(lvl)}
@@ -188,10 +188,10 @@ export function AdminEssaisDates({ initialSlots }: { initialSlots: TrialSlot[] }
           {slots.length === 0 && <p className="admin-empty-text">Aucune date d&apos;essai pour l&apos;instant.</p>}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {slots.map((s) => (
-              <div key={s.id} style={{ background: "var(--adm-surface)", border: `1px solid ${s.active ? "var(--adm-border)" : "#1a1a1a"}`, borderRadius: "8px", padding: "0.7rem 1rem", opacity: s.active ? 1 : 0.5 }}>
+              <div key={s.id} style={{ background: "var(--adm-surface)", border: `1px solid ${s.active ? "var(--adm-border)" : "var(--adm-line)"}`, borderRadius: "8px", padding: "0.7rem 1rem", opacity: s.active ? 1 : 0.5 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
                   <div>
-                    <p style={{ fontSize: "0.85rem", color: "#fff", fontWeight: 600, margin: 0, textTransform: "capitalize" }}>
+                    <p style={{ fontSize: "0.85rem", color: "var(--adm-text)", fontWeight: 600, margin: 0, textTransform: "capitalize" }}>
                       {formatDate(s.slot_date)} · {s.start_time}–{s.end_time}
                     </p>
                     <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0.2rem 0 0" }}>

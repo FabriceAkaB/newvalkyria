@@ -70,7 +70,7 @@ function ContractCard({ c, origin }: { c: ContractRow; origin: string }) {
     <div style={card}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", alignItems: "baseline" }}>
         <div>
-          <p style={{ fontWeight: 700, color: "#fff", margin: 0, fontSize: "1.05rem" }}>{c.employeeName}</p>
+          <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: 0, fontSize: "1.05rem" }}>{c.employeeName}</p>
           <p style={{ color: "var(--adm-text-3)", margin: "0.15rem 0 0", fontSize: "0.8rem" }}>{c.title}</p>
         </div>
         <span style={{ fontSize: "0.75rem", fontWeight: 700, color: status.color }}>
@@ -172,13 +172,13 @@ function ContractCard({ c, origin }: { c: ContractRow; origin: string }) {
                   const past = r.payDate < today;
                   return (
                     <tr key={r.payDate} style={{ background: isNext ? "rgba(195,166,255,0.1)" : undefined, opacity: past ? 0.55 : 1 }}>
-                      <td style={{ ...cell, color: isNext ? "#fff" : cell.color, fontWeight: isNext ? 700 : 400 }}>
+                      <td style={{ ...cell, color: isNext ? "var(--adm-text)" : cell.color, fontWeight: isNext ? 700 : 400 }}>
                         {day(r.payDate)}
                         {isNext ? " ← prochaine" : ""}
                       </td>
                       <td style={cell}>{r.period}</td>
                       <td style={cell}>{r.hours}</td>
-                      <td style={{ ...cell, textAlign: "right", color: "#fff" }}>{money(r.amountCents)}</td>
+                      <td style={{ ...cell, textAlign: "right", color: "var(--adm-text)" }}>{money(r.amountCents)}</td>
                     </tr>
                   );
                 })}

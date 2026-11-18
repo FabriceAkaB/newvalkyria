@@ -56,7 +56,7 @@ export function CalendarWeekGrid({
                 <div key={`${e.kind}-${e.id}`} style={{ display: "flex", alignItems: "flex-start", gap: "0.35rem" }}>
                   <span style={{ width: "0.4rem", height: "0.4rem", borderRadius: "50%", background: dotColor(e), flexShrink: 0, marginTop: "0.25rem" }} />
                   <div>
-                    <p style={{ fontSize: "0.68rem", color: "#fff", margin: 0, lineHeight: 1.3 }}>{e.title}</p>
+                    <p style={{ fontSize: "0.68rem", color: "var(--adm-text)", margin: 0, lineHeight: 1.3 }}>{e.title}</p>
                     <p style={{ fontSize: "0.62rem", color: "var(--adm-text-3)", margin: 0 }}>
                       {e.startTime ? `${e.startTime.slice(0, 5)}–${e.endTime?.slice(0, 5) ?? ""}` : e.kind === "essai" ? "Essai" : "Heure à confirmer"}
                       {(terrainName(e.terrainId) || e.location) ? ` · ${terrainName(e.terrainId) ?? e.location}` : ""}
@@ -64,7 +64,7 @@ export function CalendarWeekGrid({
                   </div>
                 </div>
               ))}
-              {dayEvents.length === 0 && <p style={{ fontSize: "0.65rem", color: "#3d3b42", margin: 0 }}>—</p>}
+              {dayEvents.length === 0 && <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", margin: 0 }}>—</p>}
             </div>
           </div>
         );

@@ -32,13 +32,22 @@ export interface AdminNavSection {
   hubs: AdminHub[];
   /** Section repliée par défaut (dépliée d'office quand on y est). */
   collapsible?: boolean;
-  /** Espace de l'admin : « academie » (le business, par défaut), « coaching » (seulement le foot), « contenu » (création de contenu) ou « jp » (JP comme ressource). */
+  /** Espace de l'admin : « academie » (le business, par défaut), « coaching » (seulement le foot), « contenu » (marketing et création de contenu) ou « jp » (JP comme ressource). */
   space?: AdminSpace;
 }
 
 export type AdminSpace = "academie" | "coaching" | "contenu" | "jp";
 
 /** Page d'entrée de chaque espace (le sélecteur en haut du menu y mène). */
+/** Nom de chaque espace (sélecteur en haut du menu). */
+export const SPACE_LABEL: Record<AdminSpace, string> = { academie: "Académie", coaching: "Coaching", contenu: "Marketing et création de contenu", jp: "Espace JP" };
+export const SPACE_HINT: Record<AdminSpace, string> = {
+  academie: "Familles, programmes, finances, équipe",
+  coaching: "Le terrain : pratiques, exercices, joueuses",
+  contenu: "Réseaux, tournages, entrevues, acquisition",
+  jp: "Ma journée, mon plan, mes habitudes"
+};
+
 export const SPACE_HOME: Record<AdminSpace, string> = { academie: "/admin/aujourdhui", coaching: "/admin/coaching", contenu: "/admin/contenu", jp: "/admin/moi" };
 
 export const TODAY_HUB: AdminHub = {
@@ -197,13 +206,6 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/sondages", label: "Sondages", adminOnly: true },
           { href: "/admin/idees", label: "Boîte à idées" }
         ]
-      },
-      {
-        key: "marketing",
-        label: "Marketing & réseaux",
-        icon: "chart",
-        description: "D'où viennent nos familles (la question obligatoire de tous les formulaires). Les réseaux sociaux et le contenu sont dans l'espace Contenu.",
-        tabs: [{ href: "/admin/acquisition", label: "D'où viennent nos familles" }]
       }
     ]
   },
@@ -388,6 +390,28 @@ export const ADMIN_NAV: AdminNavSection[] = [
     ]
   },
   {
+    key: "marketing",
+    label: "Marketing",
+    dotColor: "#f59ac8",
+    space: "contenu",
+    hubs: [
+      {
+        key: "contenu-portee",
+        label: "Portée et réseaux",
+        icon: "chart",
+        description: "Est-ce que nos réseaux grandissent et quel contenu amène des familles : abonnés, vidéos par semaine, publications, organique ou payant.",
+        tabs: [{ href: "/admin/reseaux", label: "Réseaux sociaux", adminOnly: true }]
+      },
+      {
+        key: "marketing",
+        label: "D'où viennent nos familles",
+        icon: "chart",
+        description: "D'où viennent nos familles (la question obligatoire de tous les formulaires). Les réseaux sociaux sont juste en dessous.",
+        tabs: [{ href: "/admin/acquisition", label: "D'où viennent nos familles" }]
+      }
+    ]
+  },
+  {
     key: "contenu",
     label: "Création de contenu",
     dotColor: "#f59ac8",
@@ -419,13 +443,6 @@ export const ADMIN_NAV: AdminNavSection[] = [
         icon: "users",
         description: "Le projet entrevues avant/après : 30 filles d'ici la fin de la saison, les journées d'entrevues, les invitations aux familles (elles choisissent leur heure) et le guide de questions.",
         tabs: [{ href: "/admin/contenu/entrevues", label: "Entrevues" }]
-      },
-      {
-        key: "contenu-portee",
-        label: "Portée et réseaux",
-        icon: "chart",
-        description: "Est-ce que nos réseaux grandissent et quel contenu amène des familles : abonnés, vidéos par semaine, publications, organique ou payant.",
-        tabs: [{ href: "/admin/reseaux", label: "Réseaux sociaux", adminOnly: true }]
       }
     ]
   },

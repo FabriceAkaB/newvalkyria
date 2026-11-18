@@ -80,7 +80,7 @@ export function AdminSaisonCapacite({ season, categories, programs, programCateg
             return (
               <div key={program.id} style={{ marginBottom: "2rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.85rem" }}>
-                  <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fff", margin: 0 }}>{program.name}</p>
+                  <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{program.name}</p>
                   <span style={{ fontSize: "0.62rem", color: "var(--adm-accent)", background: "rgba(159,133,186,0.1)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>{program.id}</span>
                   {program.invitation && (
                     <span style={{ fontSize: "0.6rem", color: "var(--adm-warn)", background: "var(--adm-warn-soft)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>Sur invitation</span>

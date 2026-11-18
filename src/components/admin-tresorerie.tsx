@@ -21,7 +21,7 @@ function MovementList({ title, items, color }: { title: string; items: CashMovem
             <span style={{ color, fontWeight: 600, whiteSpace: "nowrap", marginLeft: "0.5rem" }}>{formatCAD(m.amountCents / 100)}</span>
           </div>
         ))}
-        {items.length === 0 && <p style={{ fontSize: "0.75rem", color: "var(--adm-border)", fontStyle: "italic", margin: 0 }}>Rien à venir.</p>}
+        {items.length === 0 && <p style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", fontStyle: "italic", margin: 0 }}>Rien à venir.</p>}
       </div>
     </div>
   );
@@ -42,13 +42,13 @@ export function AdminTresorerie({ dashboard, movements }: Props) {
 
           <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1.25rem", marginBottom: "1.5rem" }}>
             <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.4rem", textTransform: "uppercase" }}>Encaisse actuelle</p>
-            <p style={{ fontSize: "1.8rem", fontWeight: 700, color: "#fff", margin: "0 0 1rem" }}>{formatCAD(dashboard.cashAvailableCents / 100)}</p>
+            <p style={{ fontSize: "1.8rem", fontWeight: 700, color: "var(--adm-text)", margin: "0 0 1rem" }}>{formatCAD(dashboard.cashAvailableCents / 100)}</p>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
               {dashboard.cashFlow.map((c) => (
                 <div key={c.horizonDays} style={{ flex: "1 1 200px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
                   <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Solde prévu dans {c.horizonDays} jours</p>
-                  <p style={{ fontSize: "1.25rem", fontWeight: 700, color: c.projectedBalanceCents < 0 ? "var(--adm-bad)" : "#fff", margin: "0 0 0.3rem" }}>
+                  <p style={{ fontSize: "1.25rem", fontWeight: 700, color: c.projectedBalanceCents < 0 ? "var(--adm-bad)" : "var(--adm-text)", margin: "0 0 0.3rem" }}>
                     {formatCAD(c.projectedBalanceCents / 100)}
                   </p>
                   <p style={{ fontSize: "0.68rem", color: "var(--adm-text-3)", margin: 0 }}>

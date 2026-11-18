@@ -21,6 +21,7 @@ Chaque ajout doit garder cette structure.
 | Familles & inscriptions | Saison en cours, essais, uniformes & boutique |
 | Programmes & horaires | Garçons & Sport-Études, calendrier & terrains, évaluations |
 | Communications | Messages aux familles, relances, références, Voix des familles (sondages) |
+| Espace « Marketing et création de contenu » | Réseaux sociaux, d'où viennent nos familles, tournages, captation, entrevues |
 | Finances | Revenus & paiements (admin seulement) |
 | Équipe & partenaires | Entraîneurs, contrats, commandites, vente de matchs |
 | Outils (replié) | Historique, audit, exports, saisons passées |
@@ -29,6 +30,9 @@ Si l'ajout produit quelque chose que JP doit **traiter** (réponse, échéance, 
 une ligne dans `getTodayActions` pour que ça apparaisse dans « Aujourd'hui ».
 
 ## 3. Format d'une page
+- **Charte visuelle : `docs/DESIGN_ADMIN.md`** (Stripe + Linear, jour et nuit). Couleurs seulement par les jetons
+  `var(--adm-…)` (jamais `#fff`, `rgba(255,255,255,…)` ni une couleur de fond foncée écrite à la main) : sinon l'écran casse
+  dans un des deux modes. Icônes : `lucide-react`. Vérifier le contraste en mode jour **et** en mode nuit (bouton Jour / Nuit).
 - Le menu (`admin-topbar.tsx`) affiche automatiquement le titre du hub, sa phrase d'explication et ses onglets
   (`AdminPageHeader`, `AdminTabs` dans `src/components/admin-page-header.tsx`) : ne pas recréer d'en-tête ni de lien « ← retour ».
 - Réutiliser les classes existantes : `admin-content`, `admin-section`, `admin-stats` / `admin-stat-card`, `admin-table-wrap`,

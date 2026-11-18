@@ -28,13 +28,13 @@ export function Avatar({
         width: `${size}px`,
         height: `${size}px`,
         borderRadius: "50%",
-        background: colorHex ?? "#342b40",
+        background: colorHex ?? "var(--adm-surface)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontSize: `${Math.max(0.6, size * 0.32) / 16}rem`,
         fontWeight: 700,
-        color: "#fff",
+        color: "var(--adm-text)",
         flexShrink: 0
       }}
     >

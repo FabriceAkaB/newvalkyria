@@ -77,8 +77,8 @@ export default async function LabRoutinePage({ searchParams }: { searchParams: P
                   textDecoration: "none",
                   fontSize: "0.85rem",
                   fontWeight: on ? 600 : 500,
-                  background: on ? "var(--adm-accent)" : "var(--adm-surface-2)",
-                  color: on ? "#fff" : "var(--adm-text-2)"
+                  background: on ? "var(--adm-accent-strong)" : "var(--adm-surface-2)",
+                  color: on ? "var(--adm-on-accent)" : "var(--adm-text-2)"
                 }}
               >
                 {capitalize(monthTitle(m))}

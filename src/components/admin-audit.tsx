@@ -61,7 +61,7 @@ export function AdminAudit({ initialEntries }: { initialEntries: AuditLogEntry[]
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
             {!loading && entries.map((e) => (
               <div key={e.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.65rem 0.9rem" }}>
-                <p style={{ fontSize: "0.8rem", color: "#fff", margin: "0 0 0.2rem" }}>
+                <p style={{ fontSize: "0.8rem", color: "var(--adm-text)", margin: "0 0 0.2rem" }}>
                   <strong>{e.actor_label}</strong> — {ACTION_LABELS[e.action] ?? e.action} · {ENTITY_LABELS[e.entity_type] ?? e.entity_type}
                   {e.entity_label ? ` — ${e.entity_label}` : ""}
                 </p>

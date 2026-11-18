@@ -180,7 +180,7 @@ export function VideoCard({ v, commentMax }: { v: VideoCardData; commentMax: num
             autoPlay
             preload="metadata"
             onError={() => setPlayError(true)}
-            style={{ width: "100%", maxHeight: "70vh", background: "#000", borderRadius: "var(--adm-radius-sm)" }}
+            style={{ width: "100%", maxHeight: "70vh", background: "var(--adm-surface)", borderRadius: "var(--adm-radius-sm)" }}
           />
           {playError ? (
             <p style={{ ...msgStyle(false), margin: 0 }}>

@@ -306,9 +306,9 @@ function CategoryGrid({ title, rows, totalByMonth, monthLabels, color }: {
               </tr>
             ))}
             <tr>
-              <td style={{ fontWeight: 700, color: "#fff" }}>Total</td>
-              {totalByMonth.map((c, i) => <td key={i} style={{ textAlign: "right", fontWeight: 700, color: "#fff" }}>{formatCAD(c / 100)}</td>)}
-              <td style={{ textAlign: "right", fontWeight: 700, color: "#fff" }}>{formatCAD(grandTotal / 100)}</td>
+              <td style={{ fontWeight: 700, color: "var(--adm-text)" }}>Total</td>
+              {totalByMonth.map((c, i) => <td key={i} style={{ textAlign: "right", fontWeight: 700, color: "var(--adm-text)" }}>{formatCAD(c / 100)}</td>)}
+              <td style={{ textAlign: "right", fontWeight: 700, color: "var(--adm-text)" }}>{formatCAD(grandTotal / 100)}</td>
             </tr>
           </tbody>
         </table>
@@ -381,7 +381,7 @@ export function AdminRevenusAnnuel({ breakdown, expenses: initialExpenses, incom
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.75rem" }}>
             <div style={{ flex: "1 1 200px", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
               <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Revenus {breakdown.year}</p>
-              <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatCAD(breakdown.annualIncomeCents / 100)}</p>
+              <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{formatCAD(breakdown.annualIncomeCents / 100)}</p>
             </div>
             <div style={{ flex: "1 1 200px", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
               <p style={{ fontSize: "0.65rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.3rem" }}>Dépenses {breakdown.year}</p>
@@ -447,7 +447,7 @@ export function AdminRevenusAnnuel({ breakdown, expenses: initialExpenses, incom
                   {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", color: c.expenseCents > 0 ? "var(--adm-bad)" : undefined }}>{formatCAD(c.expenseCents / 100)}</td>)}
                 </tr>
                 <tr>
-                  <td style={{ fontWeight: 600, color: "#fff" }}>Profit du mois</td>
+                  <td style={{ fontWeight: 600, color: "var(--adm-text)" }}>Profit du mois</td>
                   {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", fontWeight: 600, color: c.profitCents < 0 ? "var(--adm-bad)" : "var(--adm-good)" }}>{formatCAD(c.profitCents / 100)}</td>)}
                 </tr>
                 <tr>
@@ -463,7 +463,7 @@ export function AdminRevenusAnnuel({ breakdown, expenses: initialExpenses, incom
                   ))}
                 </tr>
                 <tr>
-                  <td style={{ fontWeight: 600, color: "#fff" }}>Profit cumulé (YTD)</td>
+                  <td style={{ fontWeight: 600, color: "var(--adm-text)" }}>Profit cumulé (YTD)</td>
                   {breakdown.cashFlow.map((c) => <td key={c.month} style={{ textAlign: "right", fontWeight: 600, color: c.ytdProfitCents < 0 ? "var(--adm-bad)" : "var(--adm-good)" }}>{formatCAD(c.ytdProfitCents / 100)}</td>)}
                 </tr>
                 <tr>

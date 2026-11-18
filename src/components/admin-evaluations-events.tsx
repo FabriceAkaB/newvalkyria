@@ -133,7 +133,7 @@ export function AdminEvaluationsEvents({
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: STATUS_COLORS[ev.status], display: "inline-block" }} />
-                    <Link href={`/admin/evaluations/${ev.id}`} style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fff", textDecoration: "none" }}>{ev.name}</Link>
+                    <Link href={`/admin/evaluations/${ev.id}`} style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--adm-text)", textDecoration: "none" }}>{ev.name}</Link>
                   </div>
                   <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0.3rem 0 0" }}>
                     {new Date(ev.event_date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}

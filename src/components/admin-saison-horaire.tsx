@@ -221,9 +221,9 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
                         fontSize: "0.78rem",
                         padding: "0.4rem 0.8rem",
                         borderRadius: "999px",
-                        border: form.categoryIds.includes(c.id) ? "1px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.12)",
-                        background: form.categoryIds.includes(c.id) ? "rgba(196,164,228,0.15)" : "transparent",
-                        color: form.categoryIds.includes(c.id) ? "#fff" : "var(--adm-text-2)",
+                        border: form.categoryIds.includes(c.id) ? "1px solid var(--adm-accent)" : "1px solid var(--adm-border)",
+                        background: form.categoryIds.includes(c.id) ? "var(--adm-accent-soft)" : "transparent",
+                        color: form.categoryIds.includes(c.id) ? "var(--adm-accent)" : "var(--adm-text-2)",
                         cursor: "pointer"
                       }}
                     >
@@ -245,9 +245,9 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
                         fontSize: "0.78rem",
                         padding: "0.4rem 0.8rem",
                         borderRadius: "999px",
-                        border: form.programIds.includes(p.id) ? "1px solid rgba(196,164,228,0.7)" : "1px solid rgba(255,255,255,0.12)",
-                        background: form.programIds.includes(p.id) ? "rgba(196,164,228,0.15)" : "transparent",
-                        color: form.programIds.includes(p.id) ? "#fff" : "var(--adm-text-2)",
+                        border: form.programIds.includes(p.id) ? "1px solid var(--adm-accent)" : "1px solid var(--adm-border)",
+                        background: form.programIds.includes(p.id) ? "var(--adm-accent-soft)" : "transparent",
+                        color: form.programIds.includes(p.id) ? "var(--adm-accent)" : "var(--adm-text-2)",
                         cursor: "pointer"
                       }}
                     >
@@ -283,7 +283,7 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
                 <div key={slot.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "12px", padding: "1rem 1.2rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem" }}>
                     <div>
-                      <p style={{ fontWeight: 700, fontSize: "0.92rem", color: "#fff", margin: 0 }}>
+                      <p style={{ fontWeight: 700, fontSize: "0.92rem", color: "var(--adm-text)", margin: 0 }}>
                         {slot.day} {slot.start_time} – {slot.end_time}
                         {slot.recommended_for_advanced && <span style={{ color: "var(--adm-warn)", marginLeft: "0.4rem" }}>⭐</span>}
                         {slot.advanced_only && <span style={{ fontSize: "0.6rem", color: "var(--adm-warn)", background: "var(--adm-warn-soft)", padding: "0.1rem 0.4rem", borderRadius: "4px", marginLeft: "0.5rem" }}>Avancé uniquement</span>}
@@ -301,7 +301,7 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
                           min={1}
                           value={slot.max_places}
                           onChange={(e) => handleMaxPlacesChange(slot.id, parseInt(e.target.value) || 1)}
-                          style={{ width: "3.2rem", padding: "0.25rem 0.4rem", fontSize: "0.8rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff", textAlign: "center" }}
+                          style={{ width: "3.2rem", padding: "0.25rem 0.4rem", fontSize: "0.8rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)", textAlign: "center" }}
                         />
                       </label>
                       <button onClick={() => setExpandedDates(isExpanded ? null : slot.id)} className="admin-btn-ghost" style={{ padding: "0.4rem 0.75rem", fontSize: "0.72rem" }}>
@@ -320,23 +320,23 @@ export function AdminSaisonHoraire({ season, categories, programs, initialSlots,
                           type="date"
                           value={newDateInput[slot.id] ?? ""}
                           onChange={(e) => setNewDateInput((prev) => ({ ...prev, [slot.id]: e.target.value }))}
-                          style={{ padding: "0.4rem 0.6rem", fontSize: "0.78rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", color: "#fff" }}
+                          style={{ padding: "0.4rem 0.6rem", fontSize: "0.78rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", color: "var(--adm-text)" }}
                         />
                         <button onClick={() => handleAddDate(slot.id)} className="admin-btn-primary" style={{ padding: "0.4rem 0.9rem", fontSize: "0.75rem" }}>
                           Ajouter la date
                         </button>
                       </div>
                       {dates.length === 0 ? (
-                        <p style={{ fontSize: "0.75rem", color: "var(--adm-border)", fontStyle: "italic" }}>Aucune date ajoutée pour cette plage.</p>
+                        <p style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", fontStyle: "italic" }}>Aucune date ajoutée pour cette plage.</p>
                       ) : (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
                           {dates.map((d) => (
                             <span
                               key={d.id}
-                              style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "999px", padding: "0.3rem 0.6rem" }}
+                              style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "999px", padding: "0.3rem 0.6rem" }}
                             >
                               {new Date(d.occurs_on + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short" })}
-                              <button onClick={() => handleRemoveDate(slot.id, d.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.6)", cursor: "pointer", fontSize: "0.85rem", padding: 0, lineHeight: 1 }}>×</button>
+                              <button onClick={() => handleRemoveDate(slot.id, d.id)} style={{ background: "none", border: "none", color: "var(--adm-bad)", cursor: "pointer", fontSize: "0.85rem", padding: 0, lineHeight: 1 }}>×</button>
                             </span>
                           ))}
                         </div>

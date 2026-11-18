@@ -176,7 +176,7 @@ function SessionPlanEditor({ activityId, initialBlocks, initialExercises }: { ac
           const exercise = exercises.find((e) => e.id === b.exercise_id) ?? null;
           const title = b.custom_title || exercise?.title || b.block_type;
           return (
-            <div key={b.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "8px", padding: "0.5rem 0.8rem" }}>
+            <div key={b.id} style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.5rem 0.8rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <button
                   onClick={() => setExpandedId(expanded ? null : b.id)}

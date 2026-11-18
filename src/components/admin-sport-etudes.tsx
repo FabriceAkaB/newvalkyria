@@ -84,7 +84,7 @@ function SessionRow({ session, onSaved }: { session: SportEtudesSession; onSaved
           <button onClick={confirmWarning} disabled={saving} className="admin-btn-ghost" style={{ fontSize: "0.68rem", padding: "0.25rem 0.6rem", flexShrink: 0 }}>Confirmé</button>
         </div>
       )}
-      <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#fff", margin: "0 0 0.5rem" }}>{session.label}</p>
+      <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--adm-text)", margin: "0 0 0.5rem" }}>{session.label}</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
         <input type="date" className="admin-input" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} style={{ width: "auto" }} />
         <input type="time" className="admin-input" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={{ width: "auto" }} placeholder="Heure à confirmer" />
@@ -270,7 +270,7 @@ function RegistrationRow({
     <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.7rem 0.9rem", marginBottom: "0.5rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
         <div>
-          <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: 0 }}>
+          <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--adm-text)", margin: 0 }}>
             {registration.player_first_name} {registration.player_last_name}
             <span style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", marginLeft: "0.5rem" }}>
               {registration.option_chosen === "full_program" ? "Programme complet" : "Diagnostic seulement"}
@@ -546,11 +546,11 @@ export function AdminSportEtudes({
             </button>
           </div>
 
-          <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: "0.6rem" }}>Séances</p>
+          <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--adm-text)", marginBottom: "0.6rem" }}>Séances</p>
           {sessions.map((s) => <SessionRow key={s.id} session={s} onSaved={refreshSessions} />)}
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "1.5rem 0 0.6rem", flexWrap: "wrap", gap: "0.5rem" }}>
-            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", margin: 0 }}>Inscrits ({registrations.length})</p>
+            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>Inscrits ({registrations.length})</p>
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <button className="admin-btn-ghost" onClick={copyEmails} disabled={copyingEmails} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>
                 {copyingEmails ? "..." : "📋 Copier tous les courriels"}

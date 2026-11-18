@@ -36,7 +36,7 @@ function StatusBadge({ row }: { row: BoysRegistrationRow }) {
   }
   if (row.status === "waitlist") return <span className="admin-badge admin-badge-waitlist">Liste d&apos;attente</span>;
   if (row.status === "paid") return <span className="admin-badge admin-badge-paid">✓ Payée</span>;
-  if (row.status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "var(--adm-info)", borderColor: "#465671" }}>✓ Confirmée</span>;
+  if (row.status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "var(--adm-surface)", color: "var(--adm-info)", borderColor: "#465671" }}>✓ Confirmée</span>;
   if (row.status === "cancelled") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,100,100,0.18)", color: "var(--adm-bad)" }}>{row.statusDetail ?? "Annulée"}</span>;
   return <span className="admin-badge admin-badge-pending">En attente</span>;
 }
@@ -291,7 +291,7 @@ export function BoysRegistrationsTable({
           <option value="parent_asc">A→Z Nom parent</option>
           <option value="child_asc">A→Z Nom joueur</option>
         </select>
-        <span style={{ fontSize: "0.62rem", color: "var(--adm-border)", marginLeft: "auto", letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: "0.62rem", color: "var(--adm-text-3)", marginLeft: "auto", letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
           {filtered.length} résultat{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>

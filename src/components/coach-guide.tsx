@@ -42,7 +42,7 @@ export function CoachGuideCard({ activityId, start, blocks }: { activityId: stri
                   role="checkbox"
                   aria-checked={on}
                   onClick={() => toggle(i.key)}
-                  style={{ flex: "none", width: 26, height: 26, borderRadius: 8, border: `2px solid ${on ? "var(--adm-good)" : "var(--adm-border)"}`, background: on ? "var(--adm-good)" : "transparent", color: "#0b0a0f", fontWeight: 800, cursor: "pointer", marginTop: 2 }}
+                  style={{ flex: "none", width: 26, height: 26, borderRadius: 8, border: `2px solid ${on ? "var(--adm-good)" : "var(--adm-border)"}`, background: on ? "var(--adm-good-soft)" : "transparent", color: "var(--adm-good)", fontWeight: 800, cursor: "pointer", marginTop: 2 }}
                 >
                   {on ? "✓" : ""}
                 </button>

@@ -164,7 +164,7 @@ export function AdminClubs({ allRawClubs }: Props) {
                     padding: "0.45rem 0.7rem",
                     background: "transparent",
                     border: "1px solid var(--adm-bad-soft)",
-                    color: "rgba(255,150,150,0.8)",
+                    color: "var(--adm-bad)",
                     borderRadius: "6px",
                     cursor: "pointer",
                     fontSize: "0.72rem",
@@ -194,11 +194,11 @@ export function AdminClubs({ allRawClubs }: Props) {
                         alignItems: "center",
                         gap: "0.4rem",
                         padding: "0.3rem 0.6rem",
-                        background: "#211c2b",
+                        background: "var(--adm-surface)",
                         border: "1px solid #393047",
                         borderRadius: "20px",
                         fontSize: "0.75rem",
-                        color: "#e0d4f0",
+                        color: "var(--adm-accent)",
                       }}
                     >
                       {alias}
@@ -227,7 +227,7 @@ export function AdminClubs({ allRawClubs }: Props) {
                         onClick={() => handleQuickAssign(idx, c)}
                         style={{
                           padding: "0.25rem 0.55rem",
-                          background: "#15131b",
+                          background: "var(--adm-surface)",
                           border: "1px solid var(--adm-surface-3)",
                           borderRadius: "12px",
                           fontSize: "0.7rem",
@@ -259,11 +259,11 @@ export function AdminClubs({ allRawClubs }: Props) {
                     key={c}
                     style={{
                       padding: "0.25rem 0.55rem",
-                      background: "#15131b",
+                      background: "var(--adm-surface)",
                       border: "1px solid var(--adm-surface-3)",
                       borderRadius: "12px",
                       fontSize: "0.72rem",
-                      color: "#919094",
+                      color: "var(--adm-text-3)",
                     }}
                   >
                     {c}

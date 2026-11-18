@@ -57,7 +57,7 @@ export default async function CalendrierPage({ searchParams }: { searchParams: P
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 6 }}>
               {w.days.map((d) => (
                 <div key={d.date} style={{ minHeight: 70, border: "1px solid var(--adm-line)", borderRadius: 10, padding: 6, background: d.date === today ? "rgba(180,155,242,0.08)" : "transparent" }}>
-                  <div style={{ fontSize: "0.72rem", color: d.date === today ? "var(--adm-accent-strong, #8b5cf6)" : "var(--adm-text-3)", fontWeight: 600 }}>{shortDate(d.date)}</div>
+                  <div style={{ fontSize: "0.72rem", color: d.date === today ? "var(--adm-accent-strong, var(--adm-accent))" : "var(--adm-text-3)", fontWeight: 600 }}>{shortDate(d.date)}</div>
                   <div style={{ display: "grid", gap: 4, marginTop: 4 }}>
                     {d.items.map((it, i) => (
                       <div

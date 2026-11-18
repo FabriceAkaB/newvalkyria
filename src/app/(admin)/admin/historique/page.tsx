@@ -10,7 +10,7 @@ const dateFr = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00`).toLocal
 const monthFr = (ym: string) => new Date(`${ym}-15T12:00:00`).toLocaleDateString("fr-CA", { month: "long", year: "numeric" });
 
 const card: React.CSSProperties = { background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: 12, padding: "1.1rem 1.2rem", marginBottom: "1.25rem" };
-const h2: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, color: "#fff", margin: "0 0 0.8rem" };
+const h2: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.8rem" };
 const p: React.CSSProperties = { fontSize: "0.88rem", lineHeight: 1.65, color: "var(--adm-text-2)", margin: "0 0 0.7rem" };
 const cell: React.CSSProperties = { padding: "0.45rem 0.5rem", borderBottom: "1px solid var(--adm-line)", fontSize: "0.82rem", color: "var(--adm-text-2)", textAlign: "left" };
 const th: React.CSSProperties = { ...cell, color: "var(--adm-text-3)", fontWeight: 600 };
@@ -23,10 +23,10 @@ function Bars({ items, total }: { items: Count[]; total?: number }) {
       {items.map((i) => (
         <div key={i.label} style={{ display: "grid", gridTemplateColumns: "minmax(120px, 38%) 1fr 64px", gap: 8, alignItems: "center", fontSize: "0.82rem" }}>
           <span style={{ color: "var(--adm-text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{i.label}</span>
-          <span style={{ background: "#1c1828", borderRadius: 4, height: 10 }}>
+          <span style={{ background: "var(--adm-surface)", borderRadius: 4, height: 10 }}>
             <span style={{ display: "block", width: `${(i.count / max) * 100}%`, height: 10, borderRadius: 4, background: "var(--adm-accent)" }} />
           </span>
-          <span style={{ color: "#fff", textAlign: "right" }}>
+          <span style={{ color: "var(--adm-text)", textAlign: "right" }}>
             {i.count} <span style={{ color: "var(--adm-text-3)" }}>({Math.round((i.count / Math.max(1, sum)) * 100)} %)</span>
           </span>
         </div>
@@ -81,7 +81,7 @@ export default async function AcademyHistoryPage() {
             {s.issues.length === 0 && <p style={p}>Rien à signaler.</p>}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {s.issues.map((i) => (
-                <div key={i.text} style={{ display: "flex", gap: 10, fontSize: "0.86rem", color: "#ddd", lineHeight: 1.5 }}>
+                <div key={i.text} style={{ display: "flex", gap: 10, fontSize: "0.86rem", color: "var(--adm-text)", lineHeight: 1.5 }}>
                   <span style={{ flex: "0 0 10px", height: 10, marginTop: 6, borderRadius: 5, background: i.level === "rouge" ? "#ff6b6b" : i.level === "orange" ? "var(--adm-warn)" : "var(--adm-info)" }} />
                   <span>{i.text}</span>
                 </div>
@@ -111,13 +111,13 @@ export default async function AcademyHistoryPage() {
                   <tbody>
                     {(lines as typeof s.programs.girls).map((l) => (
                       <tr key={l.name}>
-                        <td style={{ ...cell, color: "#fff" }}>{l.name}</td>
+                        <td style={{ ...cell, color: "var(--adm-text)" }}>{l.name}</td>
                         <td style={cell}>{l.audience}</td>
                         <td style={{ ...cell, textAlign: "right" }}>
                           {money(l.priceCents)}
                           {l.priceNote ? <span style={{ display: "block", color: "var(--adm-text-3)", fontSize: "0.75rem" }}>{l.priceNote}</span> : null}
                         </td>
-                        <td style={{ ...cell, textAlign: "right", color: "#fff" }}>
+                        <td style={{ ...cell, textAlign: "right", color: "var(--adm-text)" }}>
                           {l.enrolled}
                           {l.capacity ? <span style={{ color: "var(--adm-text-3)" }}> / {l.capacity}</span> : null}
                         </td>
@@ -183,7 +183,7 @@ export default async function AcademyHistoryPage() {
                   <tbody>
                     {s.revenue.seasons.map((r) => (
                       <tr key={r.label}>
-                        <td style={{ ...cell, color: "#fff" }}>{r.label}</td>
+                        <td style={{ ...cell, color: "var(--adm-text)" }}>{r.label}</td>
                         <td style={{ ...cell, textAlign: "right" }}>{money(r.totalCents)}</td>
                         <td style={{ ...cell, textAlign: "right" }}>{money(r.expenseCents)}</td>
                         <td style={{ ...cell, textAlign: "right", color: r.profitCents >= 0 ? "var(--adm-good)" : "var(--adm-bad)" }}>{money(r.profitCents)}</td>
@@ -211,7 +211,7 @@ export default async function AcademyHistoryPage() {
               </p>
               {s.margins.map((m) => (
                 <div key={m.key} style={{ marginBottom: "1.3rem" }}>
-                  <p style={{ fontSize: "0.9rem", color: "#fff", fontWeight: 700, margin: "0 0 0.5rem" }}>
+                  <p style={{ fontSize: "0.9rem", color: "var(--adm-text)", fontWeight: 700, margin: "0 0 0.5rem" }}>
                     {m.label}{" "}
                     <span style={{ color: m.marginCents >= 0 ? "var(--adm-good)" : "var(--adm-bad)" }}>
                       · marge {money(m.marginCents)}
@@ -229,11 +229,11 @@ export default async function AcademyHistoryPage() {
                           ["Marge", m.marginCents, m.hours ? `coût total ${money(Math.round((m.terrainCents + m.coachCents) / m.hours))} par heure de terrain` : null]
                         ].map(([label, cents, note]) => (
                           <tr key={label as string}>
-                            <td style={{ ...cell, color: label === "Marge" ? "#fff" : cell.color, fontWeight: label === "Marge" ? 700 : 400 }}>
+                            <td style={{ ...cell, color: label === "Marge" ? "var(--adm-text)" : cell.color, fontWeight: label === "Marge" ? 700 : 400 }}>
                               {label as string}
                               {note ? <span style={{ display: "block", color: "var(--adm-text-3)", fontSize: "0.75rem" }}>{note as string}</span> : null}
                             </td>
-                            <td style={{ ...cell, textAlign: "right", color: (cents as number) < 0 ? "var(--adm-bad)" : label === "Marge" ? "var(--adm-good)" : "#fff", fontWeight: label === "Marge" ? 700 : 400 }}>
+                            <td style={{ ...cell, textAlign: "right", color: (cents as number) < 0 ? "var(--adm-bad)" : label === "Marge" ? "var(--adm-good)" : "var(--adm-text)", fontWeight: label === "Marge" ? 700 : 400 }}>
                               {money(cents as number)}
                             </td>
                           </tr>
@@ -262,7 +262,7 @@ export default async function AcademyHistoryPage() {
               <p style={h2}>L&apos;équipe</p>
               {s.team.map((t) => (
                 <p key={t.name} style={{ ...p, margin: "0 0 0.5rem" }}>
-                  <strong style={{ color: "#fff" }}>{t.name}</strong> — {t.role}
+                  <strong style={{ color: "var(--adm-text)" }}>{t.name}</strong> — {t.role}
                   {t.contract ? <span style={{ color: "var(--adm-text-3)" }}> · contrat {t.contract === "signed" ? "signé" : t.contract === "sent" ? "à signer" : t.contract}</span> : null}
                 </p>
               ))}
@@ -272,7 +272,7 @@ export default async function AcademyHistoryPage() {
               {s.partners.length === 0 && <p style={p}>Aucun pour l&apos;instant.</p>}
               {s.partners.map((x) => (
                 <p key={x.name} style={{ ...p, margin: "0 0 0.5rem" }}>
-                  <strong style={{ color: "#fff" }}>{x.name}</strong> — {x.status}
+                  <strong style={{ color: "var(--adm-text)" }}>{x.name}</strong> — {x.status}
                   {x.detail ? <span style={{ color: "var(--adm-text-3)" }}> · {x.detail}</span> : null}
                 </p>
               ))}

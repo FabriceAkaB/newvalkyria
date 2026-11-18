@@ -33,11 +33,11 @@ function OrderRow({ order }: { order: OrderWithDistribution }) {
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.5rem" }}>
         <div>
-          <p style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff", margin: 0 }}>
+          <p style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>
             {reg ? `${reg.playerFirstName ?? ""} ${reg.playerLastName ?? ""}`.trim() : order.customer_name}
             {reg && <span style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", fontWeight: 400 }}> — {reg.categoryId}{reg.advancedGroup ? " Avancé" : ""}</span>}
           </p>
-          <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: "0.15rem 0 0" }}>
+          <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.15rem 0 0" }}>
             {reg ? reg.parentName : order.customer_name} · {reg?.parentPhone ?? order.customer_phone ?? "—"}
           </p>
           {!reg && <p style={{ fontSize: "0.68rem", color: "var(--adm-warn)", margin: "0.2rem 0 0" }}>⚠ Pas reliée à une joueuse</p>}

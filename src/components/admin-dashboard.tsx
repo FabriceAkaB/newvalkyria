@@ -92,8 +92,7 @@ export function AdminDashboard({ leads, capacity }: Props) {
                       style={{
                         width: `${pct}%`,
                         background: cap.isFull
-                          ? "rgba(248,113,113,0.7)"
-                          : "var(--adm-accent)",
+                          ? "rgba(248,113,113,0.7)" : "var(--adm-accent)",
                       }}
                     />
                   </div>

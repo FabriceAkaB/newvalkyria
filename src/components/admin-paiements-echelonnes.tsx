@@ -204,7 +204,7 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                               {p.installments.map((i) => (
                                 <div key={i.sequenceNo} style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "8px", padding: "0.5rem 0.75rem", fontSize: "0.75rem" }}>
-                                  <p style={{ margin: 0, color: "#fff" }}>Versement {i.sequenceNo}/{p.installmentCount} — {formatCAD(i.amountCents / 100)}</p>
+                                  <p style={{ margin: 0, color: "var(--adm-text)" }}>Versement {i.sequenceNo}/{p.installmentCount} — {formatCAD(i.amountCents / 100)}</p>
                                   <p style={{ margin: "0.2rem 0 0", color: "var(--adm-text-2)" }}>
                                     Dû le {new Date(i.dueDate + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short", year: "numeric" })}
                                     {" · "}{INSTALLMENT_STATUS_LABELS[i.status] ?? i.status}
@@ -235,11 +235,11 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1.25rem" }}>
             <div style={{ flex: "1 1 160px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
               <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Plans (sélection)</p>
-              <p style={{ fontSize: "1.1rem", color: "#fff", margin: 0, fontWeight: 700 }}>{filtered.length}</p>
+              <p style={{ fontSize: "1.1rem", color: "var(--adm-text)", margin: 0, fontWeight: 700 }}>{filtered.length}</p>
             </div>
             <div style={{ flex: "1 1 160px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
               <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Total des plans</p>
-              <p style={{ fontSize: "1.1rem", color: "#fff", margin: 0, fontWeight: 700 }}>{formatCAD(totalPlanned / 100)}</p>
+              <p style={{ fontSize: "1.1rem", color: "var(--adm-text)", margin: 0, fontWeight: 700 }}>{formatCAD(totalPlanned / 100)}</p>
             </div>
             <div style={{ flex: "1 1 160px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
               <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Déjà encaissé</p>
@@ -251,7 +251,7 @@ export function AdminPaiementsEchelonnes({ plans, seasonLabelById, programNameBy
             </div>
             <div style={{ flex: "1 1 160px", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
               <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", textTransform: "uppercase", margin: "0 0 0.4rem" }}>Versements en attente</p>
-              <p style={{ fontSize: "1.1rem", color: "#fff", margin: 0, fontWeight: 700 }}>{totalInstallmentsDue}</p>
+              <p style={{ fontSize: "1.1rem", color: "var(--adm-text)", margin: 0, fontWeight: 700 }}>{totalInstallmentsDue}</p>
             </div>
           </div>
         </div>

@@ -73,15 +73,15 @@ export function AdminBoysProgram({
 
           {/* ── Comparaison des 3 programmes : lequel promouvoir ── */}
           <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1rem", marginBottom: "1.4rem" }}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem", fontSize: "0.85rem" }}>Comparaison des programmes garçons</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem", fontSize: "0.85rem" }}>Comparaison des programmes garçons</p>
             <div style={{ display: "grid", gap: "0.55rem" }}>
               {comparison.map((c) => {
                 const left = Math.max(0, c.capacity - c.held);
                 const pct = c.capacity ? Math.min(100, Math.round((c.held / c.capacity) * 100)) : 0;
                 return (
-                  <Link key={c.slug} href={`/admin/programme/${c.slug}`} style={{ textDecoration: "none", display: "block", padding: "0.45rem 0.55rem", borderRadius: "8px", background: c.slug === program.slug ? "#1d1728" : "transparent" }}>
+                  <Link key={c.slug} href={`/admin/programme/${c.slug}`} style={{ textDecoration: "none", display: "block", padding: "0.45rem 0.55rem", borderRadius: "8px", background: c.slug === program.slug ? "var(--adm-surface)" : "transparent" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", fontSize: "0.78rem", color: "var(--adm-text-2)", flexWrap: "wrap" }}>
-                      <span style={{ color: "#fff", fontWeight: 600 }}>{c.name}</span>
+                      <span style={{ color: "var(--adm-text)", fontWeight: 600 }}>{c.name}</span>
                       <span>
                         {c.waitlistOnly ? `En attente · ${c.waitlist} sur la liste d'attente` : `${c.paid} payé${c.paid > 1 ? "s" : ""} · ${left} place${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""} sur ${c.capacity}${c.waitlist ? ` · ${c.waitlist} en attente` : ""}`}
                       </span>
@@ -100,7 +100,7 @@ export function AdminBoysProgram({
 
           {dates.length > 0 && (
             <>
-              <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: "0.6rem" }}>Séances ({dates.length})</p>
+              <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--adm-text)", marginBottom: "0.6rem" }}>Séances ({dates.length})</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "1.5rem" }}>
                 {dates.map((d) => (
                   <span key={d.id} style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", padding: "0.3rem 0.55rem" }}>

@@ -8,6 +8,10 @@ description: Dessiner et construire des écrans New Valkyria (admin, pages paren
 JP trouve souvent les sections « pas très belles ». Objectif : chaque écran doit sembler conçu, pas empilé.
 Si les plugins `frontend-design` / `Design` sont activés, les utiliser en plus de ce skill.
 
+## Charte de l'admin : `docs/DESIGN_ADMIN.md` (à lire d'abord)
+Direction de JP (17 nov. 2026) : clair et premium comme **Stripe** (puis Linear ; Hudl pour le sport). Fond blanc cassé,
+menu gris très clair, mauve Valkyria seulement pour l'action principale et l'état actif, Inter, icônes Lucide, peu de cartes bien espacées.
+
 ## Principes (inspirés des Human Interface Guidelines)
 1. **Clarté** : l'écran répond à UNE question de JP (ex. « qu'est-ce que je dois faire aujourd'hui ? », « combien j'ai encaissé ? »).
    Le titre dit cette question en langage simple ; la réponse est la plus grande chose à l'écran.

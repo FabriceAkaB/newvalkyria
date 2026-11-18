@@ -2,49 +2,39 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  Apple, Archive, Check, ChevronsUpDown, BookOpen, Brain, BriefcaseBusiness, CalendarCheck, CalendarDays, Camera, ChartColumn, ChartLine, ChevronRight, Clapperboard,
+  ClipboardCheck, Download, Dumbbell, Eye, FlaskConical, GraduationCap, Handshake, History, House, LayoutGrid, ListChecks, LogOut, Mail, MapPin,
+  Megaphone, MessageSquareHeart, Mic, Gauge, RefreshCw, Repeat, Route, Search, Shirt, ShieldCheck, ShoppingBag, Sun, Tag, Target, Ticket, TrendingUp, Trophy,
+  UserRound, Users, UsersRound, Wallet, type LucideIcon
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { AdminPageHeader, AdminTabs } from "@/components/admin-page-header";
-import { ADMIN_NAV, SPACE_HOME, TODAY_HUB, findActive, resolveHref, seasonFromPath, spaceOfHub, visibleTabs, type AdminHub, type AdminNavIcon, type AdminSpace } from "@/lib/admin-nav";
+import { AdminThemeToggle } from "@/components/admin-theme-toggle";
+import { ADMIN_NAV, SPACE_HINT, SPACE_HOME, SPACE_LABEL, TODAY_HUB, findActive, resolveHref, seasonFromPath, spaceOfHub, visibleTabs, type AdminHub, type AdminNavIcon, type AdminSpace } from "@/lib/admin-nav";
 
-type IconName = AdminNavIcon;
+/* Icônes Lucide (charte docs/DESIGN_ADMIN.md) : une icône propre à chaque hub, sinon celle de son type. */
+const BY_TYPE: Record<AdminNavIcon, LucideIcon> = {
+  home: House, list: ListChecks, users: Users, gauge: Gauge, grid: LayoutGrid, flask: FlaskConical, shield: ShieldCheck, tag: Tag,
+  bag: ShoppingBag, calendar: CalendarDays, chart: ChartColumn, user: UserRound, sun: Sun, chevron: ChevronRight, mail: Mail, archive: Archive
+};
+const BY_HUB: Record<string, LucideIcon> = {
+  aujourdhui: Sun, mandalart: Target, saison: Users, essais: ClipboardCheck, "parcours-client": Route, uniformes: Shirt, garcons: UsersRound,
+  lieux: MapPin, monclubsportif: RefreshCw, communications: Mail, voix: MessageSquareHeart, marketing: Megaphone, revenus: Wallet,
+  equipe: BriefcaseBusiness, partenaires: Handshake, matchs: Ticket, coaching: CalendarCheck, pratiques: CalendarDays, "nos-matchs": Trophy,
+  methode: BookOpen, exercices: Dumbbell, progression: TrendingUp, "valkyria-lab": FlaskConical, "suivi-educateurs": GraduationCap,
+  contenu: Clapperboard, "contenu-captation": Camera, "contenu-entrevues": Mic, "contenu-portee": ChartLine, "ma-journee": Sun,
+  "mon-calendrier": CalendarDays, "mes-habitudes": Repeat, "ma-nutrition": Apple, "mes-connaissances": Brain, historique: History,
+  apercu: Eye, audit: ShieldCheck, exports: Download, "ete-2026": Archive
+};
 
-function Icon({ name }: { name: IconName }) {
-  const common = { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  switch (name) {
-    case "home":
-      return <svg {...common}><path d="M3 11.5 12 4l9 7.5" /><path d="M5.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h3.5a1 1 0 0 0 1-1v-9" /></svg>;
-    case "list":
-      return <svg {...common}><path d="M8 6h13M8 12h13M8 18h13" /><path d="M3 6h.01M3 12h.01M3 18h.01" /></svg>;
-    case "users":
-      return <svg {...common}><circle cx="9" cy="8" r="3.2" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M16.5 4.5A3.2 3.2 0 0 1 17 11" /><path d="M21.5 20c0-3-2-5.2-5-5.8" /></svg>;
-    case "gauge":
-      return <svg {...common}><circle cx="12" cy="13" r="8" /><path d="M12 13 15.5 9" /><path d="M8.5 5.5 9.5 7M15.5 5.5 14.5 7" /></svg>;
-    case "grid":
-      return <svg {...common}><rect x="3.5" y="3.5" width="7" height="7" rx="1" /><rect x="13.5" y="3.5" width="7" height="7" rx="1" /><rect x="3.5" y="13.5" width="7" height="7" rx="1" /><rect x="13.5" y="13.5" width="7" height="7" rx="1" /></svg>;
-    case "flask":
-      return <svg {...common}><path d="M9.5 3h5" /><path d="M10.5 3v6l-5.5 9a1.5 1.5 0 0 0 1.3 2.3h11.4a1.5 1.5 0 0 0 1.3-2.3L13.5 9V3" /><path d="M7.5 15h9" /></svg>;
-    case "shield":
-      return <svg {...common}><path d="M12 3 5 6v6c0 4.2 3 7.5 7 9 4-1.5 7-4.8 7-9V6z" /><path d="m9.5 12 1.8 1.8L15 10" /></svg>;
-    case "tag":
-      return <svg {...common}><path d="M12.5 3.5H6a1 1 0 0 0-1 1v6.5a1 1 0 0 0 .3.7l9.5 9.5a1 1 0 0 0 1.4 0l6.5-6.5a1 1 0 0 0 0-1.4l-9.5-9.5a1 1 0 0 0-.7-.3Z" /><circle cx="9" cy="9" r="1.3" /></svg>;
-    case "bag":
-      return <svg {...common}><path d="M6 8h12l1 12.5a1 1 0 0 1-1 1.1H6a1 1 0 0 1-1-1.1L6 8Z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>;
-    case "calendar":
-      return <svg {...common}><rect x="3.5" y="5" width="17" height="15.5" rx="1.5" /><path d="M3.5 9.5h17" /><path d="M8 3v4M16 3v4" /><path d="m8.5 14 2 2 4-4" /></svg>;
-    case "chart":
-      return <svg {...common}><path d="M4 20V10M11 20V4M18 20v-7" /><path d="M2.5 20h19" /></svg>;
-    case "user":
-      return <svg {...common}><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7" /></svg>;
-    case "sun":
-      return <svg {...common}><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" /></svg>;
-    case "mail":
-      return <svg {...common}><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 6.5 8.5 6.5 8.5-6.5" /></svg>;
-    case "archive":
-      return <svg {...common}><rect x="3" y="4" width="18" height="4.5" rx="1" /><path d="M5 8.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5" /><path d="M10 12.5h4" /></svg>;
-    case "chevron":
-      return <svg {...common} width={12} height={12}><path d="m9 6 6 6-6 6" /></svg>;
-  }
+const SPACES: AdminSpace[] = ["academie", "coaching", "contenu", "jp"];
+const SPACE_ICON: Record<AdminSpace, LucideIcon> = { academie: House, coaching: Trophy, contenu: Megaphone, jp: UserRound };
+
+function Icon({ name, hub, size = 16 }: { name: AdminNavIcon; hub?: string; size?: number }) {
+  const C = (hub && BY_HUB[hub]) || BY_TYPE[name] || ListChecks;
+  return <C size={size} strokeWidth={1.75} aria-hidden />;
 }
 
 interface SearchPlayer {
@@ -80,23 +70,24 @@ function GlobalSearchBox() {
   const hasResults = hasQuery && results && (results.players.length > 0 || results.coaches.length > 0);
 
   return (
-    <div style={{ position: "relative", margin: "0 0 1rem" }}>
+    <div className="admin-sidebar-search">
+      <Search size={15} strokeWidth={1.75} aria-hidden className="admin-sidebar-search-icon" />
       <input
         className="admin-input"
-        placeholder="🔍 Rechercher une joueuse, un entraîneur..."
+        placeholder="Rechercher une joueuse, un éducateur…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        style={{ fontSize: "0.75rem", width: "100%" }}
+        aria-label="Rechercher une joueuse ou un éducateur"
       />
       {open && hasQuery && (
-        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "8px", marginTop: "0.3rem", maxHeight: "320px", overflowY: "auto", padding: "0.4rem" }}>
+        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "var(--adm-surface)", boxShadow: "0 8px 24px rgba(24,22,31,0.12)", border: "1px solid var(--adm-border)", borderRadius: "8px", marginTop: "0.3rem", maxHeight: "320px", overflowY: "auto", padding: "0.4rem" }}>
           {loading && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", padding: "0.4rem" }}>Recherche...</p>}
           {!loading && !hasResults && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", padding: "0.4rem" }}>Aucun résultat.</p>}
           {!loading && results?.players.map((p) => (
             <div key={p.playerId} style={{ padding: "0.4rem", borderBottom: "1px solid var(--adm-line)" }}>
-              <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 600, margin: "0 0 0.2rem" }}>{p.firstName} {p.lastName}</p>
+              <p style={{ fontSize: "0.75rem", color: "var(--adm-text)", fontWeight: 600, margin: "0 0 0.2rem" }}>{p.firstName} {p.lastName}</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
                 {p.registrations.map((r) => (
                   <Link key={r.id} href={`/admin/saison/${r.seasonId}/inscriptions`} className="admin-btn-ghost" style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", textDecoration: "none" }}>
@@ -150,6 +141,10 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
   const router = useRouter();
   const [role, setRole] = useState<"admin" | "gerante" | null>(rememberedRole);
   const [toolsOpen, setToolsOpen] = useState(false);
+  // Liste des espaces (se referme quand on change de page).
+  const [spaceOpenOn, setSpaceOpenOn] = useState<string | null>(null);
+  const spaceOpen = spaceOpenOn === pathname;
+  const setSpaceOpen = (open: boolean) => setSpaceOpenOn(open ? pathname : null);
   // Sur téléphone, le menu est replié derrière un bouton ; il se referme tout seul quand on change de page.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const menuOpen = openOn === pathname;
@@ -169,7 +164,7 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
   // Repérage sur tous les onglets : une page réservée à l'admin garde son en-tête
   // même avant que le rôle soit connu (la gérante, elle, est redirigée côté serveur).
   const active = findActive(pathname, "admin");
-  // Quatre espaces : l'Académie (le business), le Coaching (seulement le foot), le Contenu (filmer, publier, entrevues) et JP (admin seulement).
+  // Quatre espaces : l'Académie (le business), le Coaching (seulement le foot), Marketing et création de contenu (réseaux, filmer, publier, entrevues, acquisition) et JP (admin seulement).
   // L'espace suit la page affichée.
   const space: AdminSpace = active ? spaceOfHub(active.hub.key) : rememberedSpace;
   useEffect(() => {
@@ -190,7 +185,7 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
     if (!href) return null;
     return (
       <Link key={hub.key} href={href} data-active={String(active?.hub.key === hub.key)} className="admin-sidebar-link">
-        <Icon name={hub.icon} />
+        <Icon name={hub.icon} hub={hub.key} />
         <span>{hub.label}</span>
       </Link>
     );
@@ -205,31 +200,39 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
     <>
       <aside className="admin-sidebar" data-menu-open={String(menuOpen)}>
         <div className="admin-sidebar-brand">
-          <div>
-            <p className="admin-sidebar-brand-title">New Valkyria</p>
-            <p className="admin-sidebar-brand-sub">{space === "coaching" ? "Espace coaching" : space === "contenu" ? "Création de contenu" : space === "jp" ? "Espace JP" : "Administration"}{role === "gerante" ? " — Gérante" : ""}</p>
+          {/* Sélecteur d'espace façon Stripe / Linear : l'académie, puis l'espace affiché ; un clic ouvre la liste. */}
+          <div className="adm-space">
+            <button type="button" className="adm-space__btn" aria-haspopup="menu" aria-expanded={spaceOpen} onClick={() => setSpaceOpen(!spaceOpen)}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" width={26} height={31} className="admin-sidebar-logo" />
+              <span className="adm-space__text">
+                <span className="admin-sidebar-brand-title">New Valkyria</span>
+                <span className="admin-sidebar-brand-sub">{SPACE_LABEL[space]}{role === "gerante" ? " · Gérante" : ""}</span>
+              </span>
+              <ChevronsUpDown size={15} strokeWidth={1.75} aria-hidden className="adm-space__chev" />
+            </button>
+            {spaceOpen ? (
+              <div className="adm-space__menu" role="menu">
+                {SPACES.filter((sp) => sp !== "jp" || role === "admin").map((sp) => {
+                  const SpaceIcon = SPACE_ICON[sp];
+                  return (
+                    <Link key={sp} href={SPACE_HOME[sp]} role="menuitem" data-active={space === sp || undefined} onClick={() => setSpaceOpen(false)}>
+                      <span className="adm-space__icon" aria-hidden><SpaceIcon size={15} strokeWidth={1.75} /></span>
+                      <span className="adm-space__item">
+                        <strong>{SPACE_LABEL[sp]}</strong>
+                        <small>{SPACE_HINT[sp]}</small>
+                      </span>
+                      {space === sp ? <Check size={15} strokeWidth={2} aria-hidden className="adm-space__check" /> : null}
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
           <button type="button" className="admin-sidebar-menu-btn" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? "Fermer" : "Menu"}
           </button>
         </div>
-
-        <nav className="admin-space-switch" aria-label="Espace" data-count={role === "admin" ? "4" : "3"}>
-          <Link href={SPACE_HOME.academie} data-active={String(space === "academie")} aria-current={space === "academie" ? "page" : undefined}>
-            Académie
-          </Link>
-          <Link href={SPACE_HOME.coaching} data-active={String(space === "coaching")} aria-current={space === "coaching" ? "page" : undefined}>
-            Coaching
-          </Link>
-          <Link href={SPACE_HOME.contenu} data-active={String(space === "contenu")} aria-current={space === "contenu" ? "page" : undefined}>
-            Contenu
-          </Link>
-          {role === "admin" ? (
-            <Link href={SPACE_HOME.jp} data-active={String(space === "jp")} aria-current={space === "jp" ? "page" : undefined}>
-              JP
-            </Link>
-          ) : null}
-        </nav>
 
         <GlobalSearchBox />
 
@@ -243,7 +246,6 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
             const open = !section.collapsible || toolsOpen || containsActive;
             const head = (
               <>
-                <span className="admin-sidebar-dot" style={{ background: section.dotColor }} />
                 <span className="admin-sidebar-group-label">{section.label}</span>
               </>
             );
@@ -266,7 +268,9 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
         </nav>
 
         <div className="admin-sidebar-footer">
+          <AdminThemeToggle />
           <button onClick={handleLogout} className="admin-logout-btn">
+            <LogOut size={15} strokeWidth={1.75} aria-hidden />
             Déconnexion
           </button>
         </div>

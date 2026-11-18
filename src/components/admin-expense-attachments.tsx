@@ -82,7 +82,7 @@ export function ExpenseAttachments({ expenseId }: { expenseId: string }) {
               <button onClick={() => remove(d.id)} style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer", fontSize: "0.9rem", padding: 0 }} aria-label="Supprimer">×</button>
             </div>
           ))}
-          {(documents ?? []).length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-border)", fontStyle: "italic", margin: 0 }}>Aucune pièce jointe.</p>}
+          {(documents ?? []).length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", fontStyle: "italic", margin: 0 }}>Aucune pièce jointe.</p>}
         </div>
       )}
       <label className="admin-btn-ghost" style={{ fontSize: "0.7rem", padding: "0.35rem 0.6rem", textAlign: "center", cursor: "pointer", width: "fit-content" }}>

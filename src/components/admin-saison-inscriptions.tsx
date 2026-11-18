@@ -45,10 +45,10 @@ function isHalfSeasonExpiringSoon(r: Registration): boolean {
 }
 
 function StatusBadge({ status, isTrial, trialDate }: { status: RegistrationStatus; isTrial?: boolean; trialDate?: string | null }) {
-  if (status === "unavailable") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(150,150,170,0.18)", color: "#b4b4c8", borderColor: "rgba(150,150,170,0.45)" }}>Indisponible cette saison</span>;
+  if (status === "unavailable") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(150,150,170,0.18)", color: "var(--adm-text-2)", borderColor: "rgba(150,150,170,0.45)" }}>Indisponible cette saison</span>;
   if (status === "waitlist") return <span className="admin-badge admin-badge-waitlist">Liste d&apos;attente</span>;
   if (status === "paid") return <span className="admin-badge admin-badge-paid">✓ Payée</span>;
-  if (status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "#1f2b3d", color: "var(--adm-info)", borderColor: "#465671" }}>✓ Confirmée</span>;
+  if (status === "confirmed") return <span className="admin-badge admin-badge-paid" style={{ background: "var(--adm-info-soft)", color: "var(--adm-info)", borderColor: "transparent" }}>✓ Confirmée</span>;
   if (status === "cancelled") return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,100,100,0.18)", color: "var(--adm-bad)" }}>Annulée</span>;
   if (isTrial && !trialDate) {
     return <span className="admin-badge admin-badge-pending" style={{ background: "rgba(255,150,50,0.2)", color: "var(--adm-warn)", borderColor: "rgba(255,150,50,0.5)" }} title="Aucune date d'essai fixée">⚠ Essai — sans date</span>;
@@ -342,8 +342,8 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                         fontSize: "0.72rem",
                         borderRadius: "6px",
                         border: isActive ? "1px solid var(--adm-accent)" : "1px solid var(--adm-border)",
-                        background: isActive ? "#30283c" : "transparent",
-                        color: isActive ? "#fff" : "var(--adm-text-2)",
+                        background: isActive ? "var(--adm-accent-soft)" : "transparent",
+                        color: isActive ? "var(--adm-accent)" : "var(--adm-text-2)",
                         cursor: isActive ? "default" : "pointer",
                         fontWeight: isActive ? 600 : 400
                       }}
@@ -500,7 +500,7 @@ function RegistrationDrawer({ registration: r, categories, programs, slots, onCl
                     type="date"
                     value={r.half_season_ends_on ?? ""}
                     onChange={(e) => patch({ halfSeasonEndsOn: e.target.value || null }, { half_season_ends_on: e.target.value || null })}
-                    style={{ padding: "0.2rem 0.4rem", fontSize: "0.72rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff" }}
+                    style={{ padding: "0.2rem 0.4rem", fontSize: "0.72rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)" }}
                   />
                 </label>
               )}
@@ -777,7 +777,7 @@ export function AdminSaisonInscriptions({ season, categories, programs, slots, i
               <option value="parent_asc">A→Z Nom parent</option>
               <option value="child_asc">A→Z Nom joueuse</option>
             </select>
-            <span style={{ fontSize: "0.62rem", color: "var(--adm-border)", marginLeft: "auto", letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: "0.62rem", color: "var(--adm-text-3)", marginLeft: "auto", letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
               {filtered.length} résultat{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>

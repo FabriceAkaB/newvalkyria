@@ -74,7 +74,7 @@ export function CalendarMonthGrid({
                 {(expanded ? dayEvents : visible).map((e) => (
                   <div key={`${e.kind}-${e.id}`} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
                     <span style={{ width: "0.35rem", height: "0.35rem", borderRadius: "50%", background: dotColor(e), flexShrink: 0 }} />
-                    <span style={{ fontSize: "0.6rem", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.title}</span>
+                    <span style={{ fontSize: "0.6rem", color: "var(--adm-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.title}</span>
                   </div>
                 ))}
                 {!expanded && overflow > 0 && (

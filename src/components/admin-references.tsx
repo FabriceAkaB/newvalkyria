@@ -204,7 +204,7 @@ export function AdminReferences({
                       <Fragment key={r.id}>
                         <tr>
                           <td style={cell}>
-                            <strong style={{ color: "#fff" }}>{r.referrer_name ?? r.claimed_referrer_name ?? "—"}</strong>
+                            <strong style={{ color: "var(--adm-text)" }}>{r.referrer_name ?? r.claimed_referrer_name ?? "—"}</strong>
                             <br /><span style={{ color: "var(--adm-text-3)" }}>{r.referrer_email ?? "non identifié"}{r.referrer_code ? ` · ${r.referrer_code}` : ""}</span>
                             <br /><span style={{ color: "var(--adm-text-3)" }}>Reconnu par : {MATCH_LABELS[r.match_method] ?? r.match_method}</span>
                           </td>
@@ -269,7 +269,7 @@ export function AdminReferences({
           {tab === "credits" && (
             <>
               <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
-                <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>Corriger un crédit</p>
+                <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>Corriger un crédit</p>
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                   <input className="admin-input" placeholder="Courriel de la famille" style={{ width: "230px" }} value={adjust.email} onChange={(e) => setAdjust({ ...adjust, email: e.target.value })} />
                   <input className="admin-input" placeholder="Montant ($, négatif pour retirer)" style={{ width: "200px" }} value={adjust.amount} onChange={(e) => setAdjust({ ...adjust, amount: e.target.value })} />
@@ -298,7 +298,7 @@ export function AdminReferences({
                   {data.credits.map((c) => (
                     <Fragment key={c.email}>
                       <tr>
-                        <td style={cell}><strong style={{ color: "#fff" }}>{c.name ?? c.email}</strong><br /><span style={{ color: "var(--adm-text-3)" }}>{c.email}</span></td>
+                        <td style={cell}><strong style={{ color: "var(--adm-text)" }}>{c.name ?? c.email}</strong><br /><span style={{ color: "var(--adm-text-3)" }}>{c.email}</span></td>
                         <td style={cell}>{c.code ?? "—"}</td>
                         <td style={cell}>{formatMoney(c.grantedCents)}</td>
                         <td style={cell}>{formatMoney(c.usedCents)}</td>
@@ -362,7 +362,7 @@ export function AdminReferences({
                 <p style={{ color: "var(--adm-text-2)" }}>Chargement…</p>
               ) : (
                 <>
-                  <div style={{ background: "#1c1408", border: "1px solid #5a4410", borderRadius: "10px", padding: "0.8rem 1rem", marginBottom: "1rem", fontSize: "0.76rem", color: "var(--adm-warn)" }}>
+                  <div style={{ background: "var(--adm-surface)", border: "1px solid #5a4410", borderRadius: "10px", padding: "0.8rem 1rem", marginBottom: "1rem", fontSize: "0.76rem", color: "var(--adm-warn)" }}>
                     {camp.via === "gmail" ? (
                       <>Envoi depuis votre boîte courriel : <strong>{camp.from}</strong> — chaque famille reçoit un courriel personnalisé, les réponses arrivent dans votre boîte.</>
                     ) : (
@@ -412,7 +412,7 @@ export function AdminReferences({
                   </div>
 
                   <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
-                    <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>1. Recevoir un courriel de test</p>
+                    <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>1. Recevoir un courriel de test</p>
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                       <input className="admin-input" placeholder="Votre courriel" style={{ width: "260px" }} value={testTo} onChange={(e) => setTestTo(e.target.value)} />
                       <button className="admin-btn-primary" style={{ fontSize: "0.74rem" }} disabled={campBusy || !testTo.includes("@")} onClick={sendTest}>Envoyer le test</button>
@@ -421,12 +421,12 @@ export function AdminReferences({
                   </div>
 
                   <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
-                    <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem", fontSize: "0.82rem" }}>Aperçu (exemple avec une famille)</p>
+                    <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem", fontSize: "0.82rem" }}>Aperçu (exemple avec une famille)</p>
                     <iframe title="Aperçu du courriel" srcDoc={camp.preview.html} style={{ width: "100%", height: "640px", border: "1px solid var(--adm-border)", borderRadius: "8px", background: "#fff" }} />
                   </div>
 
                   <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem", marginBottom: "1rem" }}>
-                    <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>2. Envoyer à toutes les familles</p>
+                    <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.5rem", fontSize: "0.82rem" }}>2. Envoyer à toutes les familles</p>
                     <button className="admin-btn-primary" style={{ fontSize: "0.76rem" }} disabled={campBusy} onClick={sendAll}>
                       {campBusy ? "Envoi…" : `Envoyer à ${(includePast ? camp.audienceAll : camp.audienceCurrent) - camp.alreadySent} famille(s)`}
                     </button>
@@ -437,7 +437,7 @@ export function AdminReferences({
 
                   <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "0.9rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: "0.6rem", flexWrap: "wrap", marginBottom: "0.6rem", alignItems: "center" }}>
-                      <p style={{ fontWeight: 700, color: "#fff", margin: 0, fontSize: "0.82rem" }}>Envoi direct par WhatsApp / SMS (un clic par famille)</p>
+                      <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: 0, fontSize: "0.82rem" }}>Envoi direct par WhatsApp / SMS (un clic par famille)</p>
                       <a className="admin-export-btn" href={`/api/admin/references/campagne?format=csv&includePast=${includePast ? 1 : 0}`}>↓ Exporter CSV (liens + messages)</a>
                     </div>
                     <input type="search" className="admin-search-input" placeholder="Rechercher une famille…" value={famSearch} onChange={(e) => setFamSearch(e.target.value)} style={{ marginBottom: "0.6rem" }} />
@@ -446,7 +446,7 @@ export function AdminReferences({
                         .filter((x) => !famSearch.trim() || `${x.name} ${x.email}`.toLowerCase().includes(famSearch.trim().toLowerCase()))
                         .map((x) => (
                           <div key={x.email} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", alignItems: "center", padding: "0.4rem 0", borderBottom: "1px solid var(--adm-line)", fontSize: "0.76rem", flexWrap: "wrap" }}>
-                            <span style={{ color: "#fff" }}>
+                            <span style={{ color: "var(--adm-text)" }}>
                               {x.name || x.email} <span style={{ color: "var(--adm-text-3)" }}>· {x.code}{x.phone ? ` · ${x.phone}` : ""}</span>
                               {x.sent && <span style={{ color: "var(--adm-good)" }}> ✓ courriel envoyé</span>}
                             </span>
@@ -504,7 +504,7 @@ export function AdminReferences({
                 <tbody>
                   {f.programs.map((p) => (
                     <tr key={p.slug}>
-                      <td style={{ ...cell, color: "#fff", fontWeight: 600 }}>{p.name}</td>
+                      <td style={{ ...cell, color: "var(--adm-text)", fontWeight: 600 }}>{p.name}</td>
                       <td style={cell}>{p.registrations}/{p.capacity}</td>
                       <td style={cell}>{p.waitlist}</td>
                       <td style={cell}>{Math.round(p.fillRate * 100)} %</td>

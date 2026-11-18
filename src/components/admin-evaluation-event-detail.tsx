@@ -279,13 +279,13 @@ export function AdminEvaluationEventDetail({
             </div>
           </div>
 
-          <p style={{ fontSize: "0.85rem", color: "#fff", fontWeight: 600, margin: "1rem 0" }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--adm-text)", fontWeight: 600, margin: "1rem 0" }}>
             {participants.length} athlète{participants.length > 1 ? "s" : ""} · {presentCount} présente{presentCount > 1 ? "s" : ""}
           </p>
 
           {/* ── Recherche universelle ── */}
           <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
-            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Ajouter une athlète</p>
+            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem" }}>Ajouter une athlète</p>
             <input
               className="admin-input"
               placeholder="🔍 Rechercher par nom, prénom ou année de naissance..."
@@ -299,7 +299,7 @@ export function AdminEvaluationEventDetail({
                 <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                   <Avatar firstName={r.firstName} lastName={r.lastName} photoUrl={r.photoUrl} />
                   <div>
-                    <p style={{ fontSize: "0.8rem", color: "#fff", margin: 0 }}>{r.firstName} {r.lastName} <span style={{ color: "var(--adm-text-3)" }}>({birthYear(r.dob)})</span></p>
+                    <p style={{ fontSize: "0.8rem", color: "var(--adm-text)", margin: 0 }}>{r.firstName} {r.lastName} <span style={{ color: "var(--adm-text-3)" }}>({birthYear(r.dob)})</span></p>
                     <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", margin: 0 }}>{r.currentProgram ?? "Aucun programme actuel"}</p>
                   </div>
                 </div>
@@ -367,10 +367,10 @@ export function AdminEvaluationEventDetail({
 
           {/* ── Équipes / couleurs de dossard ── */}
           <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
-            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Équipes / couleurs de dossard</p>
+            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem" }}>Équipes / couleurs de dossard</p>
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: "0.6rem" }}>
               {teams.map((t) => (
-                <span key={t.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "#fff", background: "var(--adm-border)", borderRadius: "999px", padding: "0.25rem 0.5rem 0.25rem 0.7rem" }}>
+                <span key={t.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.72rem", color: "var(--adm-text)", background: "var(--adm-border)", borderRadius: "999px", padding: "0.25rem 0.5rem 0.25rem 0.7rem" }}>
                   <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: t.color_hex, display: "inline-block" }} />
                   {t.name}
                   <button onClick={() => removeTeam(t.id)} style={{ background: "none", border: "none", color: "var(--adm-text-2)", cursor: "pointer", fontSize: "0.75rem", padding: "0 0.2rem" }}>✕</button>
@@ -387,7 +387,7 @@ export function AdminEvaluationEventDetail({
                   className="admin-btn-ghost"
                   style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem", display: "flex", alignItems: "center", gap: "0.35rem" }}
                 >
-                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: c.colorHex, display: "inline-block", border: c.colorHex === "#f5f5f5" ? "1px solid #444" : "none" }} />
+                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: c.colorHex, display: "inline-block", border: c.colorHex === "#f5f5f5" ? "1px solid var(--adm-line)" : "none" }} />
                   + {c.name}
                 </button>
               ))}
@@ -396,10 +396,10 @@ export function AdminEvaluationEventDetail({
 
           {/* ── Évaluateurs ── */}
           <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
-            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Évaluateurs assignés</p>
+            <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem" }}>Évaluateurs assignés</p>
             <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginBottom: "0.6rem" }}>
               {evaluators.map((e) => (
-                <span key={e.id} style={{ fontSize: "0.72rem", color: "#fff", background: "var(--adm-border)", borderRadius: "999px", padding: "0.25rem 0.7rem" }}>
+                <span key={e.id} style={{ fontSize: "0.72rem", color: "var(--adm-text)", background: "var(--adm-border)", borderRadius: "999px", padding: "0.25rem 0.7rem" }}>
                   {e.guest_name ?? `${e.coach_first_name ?? ""} ${e.coach_last_name ?? ""}`.trim()}
                 </span>
               ))}
@@ -413,7 +413,7 @@ export function AdminEvaluationEventDetail({
 
           {/* ── Liste des participantes ── */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "1rem 0 0.6rem", flexWrap: "wrap", gap: "0.5rem" }}>
-            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", margin: 0 }}>Participantes ({participants.length})</p>
+            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>Participantes ({participants.length})</p>
             <button className="admin-btn-ghost" onClick={copyEmails} disabled={copyingEmails} style={{ fontSize: "0.7rem", padding: "0.3rem 0.6rem" }}>
               {copyingEmails ? "..." : "📋 Copier tous les courriels"}
             </button>
@@ -457,7 +457,7 @@ export function AdminEvaluationEventDetail({
                     </label>
                   </div>
                   <div style={{ minWidth: "160px" }}>
-                    <p style={{ fontSize: "0.8rem", color: "#fff", margin: 0 }}>{p.player_first_name} {p.player_last_name}</p>
+                    <p style={{ fontSize: "0.8rem", color: "var(--adm-text)", margin: 0 }}>{p.player_first_name} {p.player_last_name}</p>
                     <p style={{ fontSize: "0.68rem", color: "var(--adm-text-2)", margin: 0 }}>{birthYear(p.player_dob)}{p.is_trial ? " · Essai" : ""}</p>
                   </div>
                   <input

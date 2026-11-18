@@ -218,7 +218,7 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
                 <div key={group.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "12px", padding: "1rem 1.2rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem" }}>
                     <div>
-                      <p style={{ fontWeight: 700, fontSize: "0.92rem", color: "#fff", margin: 0 }}>{group.label}</p>
+                      <p style={{ fontWeight: 700, fontSize: "0.92rem", color: "var(--adm-text)", margin: 0 }}>{group.label}</p>
                       <p style={{ fontSize: "0.78rem", color: "var(--adm-accent)", margin: "0.2rem 0 0" }}>
                         {group.day} {group.start_time}–{group.end_time} · {group.location} · {members.length}/{group.max_places} places
                       </p>
@@ -237,20 +237,20 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
                         return (
                           <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
                             <span>{reg ? playerName(reg) : m.registration_id}</span>
-                            <button onClick={() => handleRemoveMember(group.id, m.id, m.registration_id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.6)", cursor: "pointer", fontSize: "0.72rem" }}>
+                            <button onClick={() => handleRemoveMember(group.id, m.id, m.registration_id)} style={{ background: "none", border: "none", color: "var(--adm-bad)", cursor: "pointer", fontSize: "0.72rem" }}>
                               Retirer
                             </button>
                           </div>
                         );
                       })}
-                      {members.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-border)", fontStyle: "italic" }}>Aucune joueuse assignée</p>}
+                      {members.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", fontStyle: "italic" }}>Aucune joueuse assignée</p>}
                     </div>
                     {unassigned.length > 0 && (
                       <div style={{ display: "flex", gap: "0.5rem" }}>
                         <select
                           value={assignSelect[group.id] ?? ""}
                           onChange={(e) => setAssignSelect((prev) => ({ ...prev, [group.id]: e.target.value }))}
-                          style={{ flex: 1, padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "#fff" }}
+                          style={{ flex: 1, padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "4px", color: "var(--adm-text)" }}
                         >
                           <option value="">Assigner une joueuse…</option>
                           {unassigned.map((r) => <option key={r.id} value={r.id}>{playerName(r)}</option>)}
@@ -268,13 +268,13 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
                       Dates ({dates.length})
                     </p>
                     {dates.length === 0 ? (
-                      <p style={{ fontSize: "0.72rem", color: "var(--adm-border)", fontStyle: "italic", marginBottom: "0.6rem" }}>Aucune date ajoutée.</p>
+                      <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", fontStyle: "italic", marginBottom: "0.6rem" }}>Aucune date ajoutée.</p>
                     ) : (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.6rem" }}>
                         {dates.map((d) => (
-                          <span key={d.id} style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "999px", padding: "0.3rem 0.6rem" }}>
+                          <span key={d.id} style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--adm-text-2)", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "999px", padding: "0.3rem 0.6rem" }}>
                             {new Date(d.occurs_on + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short" })}
-                            <button onClick={() => handleRemoveDate(group.id, d.id)} style={{ background: "none", border: "none", color: "rgba(255,100,100,0.6)", cursor: "pointer", fontSize: "0.85rem", padding: 0, lineHeight: 1 }}>×</button>
+                            <button onClick={() => handleRemoveDate(group.id, d.id)} style={{ background: "none", border: "none", color: "var(--adm-bad)", cursor: "pointer", fontSize: "0.85rem", padding: 0, lineHeight: 1 }}>×</button>
                           </span>
                         ))}
                       </div>
@@ -284,7 +284,7 @@ export function AdminSaisonSolo({ season, initialGroups, initialDatesByGroup, in
                         type="date"
                         value={newDateInput[group.id] ?? ""}
                         onChange={(e) => setNewDateInput((prev) => ({ ...prev, [group.id]: e.target.value }))}
-                        style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", color: "#fff" }}
+                        style={{ padding: "0.35rem 0.6rem", fontSize: "0.75rem", background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "6px", color: "var(--adm-text)" }}
                       />
                       <button onClick={() => handleAddDate(group.id)} className="admin-btn-ghost" style={{ padding: "0.35rem 0.75rem", fontSize: "0.72rem" }}>
                         Ajouter la date

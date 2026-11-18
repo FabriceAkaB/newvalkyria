@@ -151,11 +151,11 @@ export function AdminEntraineurs({ summaries: initial, notifications }: Props) {
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", flex: "1 1 160px" }}>
               <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.3rem" }}>Heures — semaine</p>
-              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatHours(totalWeekHours)}</p>
+              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{formatHours(totalWeekHours)}</p>
             </div>
             <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", flex: "1 1 160px" }}>
               <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.3rem" }}>Heures — mois</p>
-              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", margin: 0 }}>{formatHours(totalMonthHours)}</p>
+              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{formatHours(totalMonthHours)}</p>
             </div>
             <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", flex: "1 1 160px" }}>
               <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.3rem" }}>Masse salariale payée</p>
@@ -163,7 +163,7 @@ export function AdminEntraineurs({ summaries: initial, notifications }: Props) {
             </div>
             <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", flex: "1 1 160px" }}>
               <p style={{ fontSize: "0.65rem", color: "var(--adm-text-3)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.3rem" }}>Reste à payer</p>
-              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: totalOwed > 0 ? "var(--adm-warn)" : "#fff", margin: 0 }}>{formatCAD(totalOwed / 100)}</p>
+              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: totalOwed > 0 ? "var(--adm-warn)" : "var(--adm-text)", margin: 0 }}>{formatCAD(totalOwed / 100)}</p>
             </div>
           </div>
 

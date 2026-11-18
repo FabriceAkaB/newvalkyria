@@ -81,7 +81,7 @@ export function AdminThemes({ seasons, currentSeason, themes: initialThemes }: {
                   <span style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", minWidth: "7rem" }}>Sem. du {weekLabel}</span>
                   {existing ? (
                     <>
-                      <span style={{ fontSize: "0.85rem", color: "#fff", flex: 1 }}>{existing.theme}</span>
+                      <span style={{ fontSize: "0.85rem", color: "var(--adm-text)", flex: 1 }}>{existing.theme}</span>
                       <button onClick={() => remove(existing.id)} style={{ fontSize: "0.7rem", color: "var(--adm-bad)", background: "none", border: "1px solid var(--adm-bad-soft)", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer" }}>×</button>
                     </>
                   ) : (

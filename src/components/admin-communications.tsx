@@ -220,7 +220,7 @@ export function AdminCommunications({ seasonOptions, history: initialHistory }: 
             {history.length === 0 && <p className="admin-empty-text">Aucune communication envoyée pour l&apos;instant.</p>}
             {history.map((h) => (
               <div key={h.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.9rem" }}>
-                <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#fff", margin: "0 0 0.15rem" }}>{h.subject}</p>
+                <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--adm-text)", margin: "0 0 0.15rem" }}>{h.subject}</p>
                 <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: 0 }}>
                   {h.target_label} · {h.recipient_count} destinataire(s) · {new Date(h.sent_at).toLocaleString("fr-CA")}
                 </p>

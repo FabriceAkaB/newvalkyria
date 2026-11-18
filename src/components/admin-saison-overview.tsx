@@ -132,7 +132,7 @@ export function AdminSaisonOverview({ season, categories, programs, slots, regis
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
                     <div>
-                      <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "#fff", margin: 0 }}>
+                      <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--adm-text)", margin: 0 }}>
                         {slot.day} {slot.recommended_for_advanced && <span style={{ color: "var(--adm-warn)" }}>⭐</span>}
                       </p>
                       <p style={{ fontSize: "0.8rem", color: "var(--adm-accent)", margin: "2px 0 0 0" }}>
@@ -154,19 +154,19 @@ export function AdminSaisonOverview({ season, categories, programs, slots, regis
                   </div>
                   <div style={{ minHeight: "1.5rem" }}>
                     {slotRegs.length === 0 ? (
-                      <p style={{ fontSize: "0.75rem", color: "var(--adm-border)", fontStyle: "italic" }}>Aucune joueuse assignée</p>
+                      <p style={{ fontSize: "0.75rem", color: "var(--adm-text-3)", fontStyle: "italic" }}>Aucune joueuse assignée</p>
                     ) : (
                       slotRegs.map((r) => {
                         const isNew = new Date(r.created_at).getTime() > seenSince;
                         return (
                           <div key={r.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.35rem 0", borderBottom: "1px solid var(--adm-surface-2)" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
-                              <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#fff" }}>{playerName(r)}</span>
+                              <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--adm-text)" }}>{playerName(r)}</span>
                               {isNew && <span className="admin-badge-new">Nouveau</span>}
                               {r.is_half_season && <span style={{ fontSize: "0.6rem", color: "var(--adm-warn)", background: "var(--adm-warn-soft)", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>Demi-saison</span>}
                               {r.is_trial && <span style={{ fontSize: "0.6rem", color: "var(--adm-info)", background: "var(--adm-info-soft)", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>Essai</span>}
                             </div>
-                            <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.35)" }}>
+                            <span style={{ fontSize: "0.65rem", color: "var(--adm-text-3)" }}>
                               {r.program_id ?? "—"}
                             </span>
                           </div>
@@ -187,7 +187,7 @@ export function AdminSaisonOverview({ season, categories, programs, slots, regis
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
                 {unassigned.map((r) => (
-                  <p key={r.id} style={{ fontSize: "0.8rem", color: "#fff", margin: 0 }}>
+                  <p key={r.id} style={{ fontSize: "0.8rem", color: "var(--adm-text)", margin: 0 }}>
                     {playerName(r)} — {categoryById.get(r.category_id ?? "")?.label ?? r.category_id ?? "?"} · {programById.get(r.program_id ?? "")?.name ?? r.program_id ?? "?"}
                   </p>
                 ))}

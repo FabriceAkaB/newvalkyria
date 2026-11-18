@@ -38,7 +38,7 @@ function BudgetRow({ row, onSaved }: { row: BudgetVsActual; onSaved: (category: 
   return (
     <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
-        <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: 0 }}>{row.category}</p>
+        <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--adm-text)", margin: 0 }}>{row.category}</p>
         {editing ? (
           <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <input
@@ -100,7 +100,7 @@ export function AdminBudget({ initialRows }: Props) {
 
           <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem" }}>
             <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.3rem", textTransform: "uppercase" }}>Total</p>
-            <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>
+            <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>
               {formatCAD(totalActual / 100)} {totalBudget > 0 && <span style={{ fontSize: "0.9rem", color: "var(--adm-text-2)" }}>/ {formatCAD(totalBudget / 100)}</span>}
             </p>
             {totalPct !== null && (

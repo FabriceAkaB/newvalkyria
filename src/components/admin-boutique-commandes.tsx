@@ -96,10 +96,10 @@ export function AdminBoutiqueCommandes({ initialOrders, showPrices }: { initialO
               <div key={order.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem", opacity: saving === order.id ? 0.6 : 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.6rem" }}>
                   <div>
-                    <p style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff", margin: 0 }}>{order.customer_name}</p>
-                    <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: "0.15rem 0 0" }}>{order.customer_email}{order.customer_phone ? ` · ${order.customer_phone}` : ""}</p>
+                    <p style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{order.customer_name}</p>
+                    <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.15rem 0 0" }}>{order.customer_email}{order.customer_phone ? ` · ${order.customer_phone}` : ""}</p>
                     {(order.shipping_address || order.shipping_city) && (
-                      <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: "0.15rem 0 0" }}>
+                      <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.15rem 0 0" }}>
                         {[order.shipping_address, order.shipping_city, order.shipping_postal_code].filter(Boolean).join(", ")}
                       </p>
                     )}

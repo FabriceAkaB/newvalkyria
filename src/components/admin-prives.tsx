@@ -218,7 +218,7 @@ export function AdminPrives({
               const update = (patch: Partial<PrivateProgram>) => setPrograms((prev) => prev.map((x) => (x.slug === p.slug ? { ...x, ...patch } : x)));
               return (
                 <div key={p.slug} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-border)", borderRadius: "12px", padding: "1rem" }}>
-                  <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.2rem" }}>{p.name}</p>
+                  <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>{p.name}</p>
                   <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2)", margin: "0 0 0.7rem" }}>
                     {s.paid} payée{s.paid !== 1 ? "s" : ""} · {s.held} place{s.held !== 1 ? "s" : ""} prise{s.held !== 1 ? "s" : ""} sur {p.max_capacity} · {s.waitlist} en attente
                   </p>
@@ -381,7 +381,7 @@ export function AdminPrives({
                   {(trials ?? []).map((t) => (
                     <tr key={t.id} style={{ borderBottom: "1px solid var(--adm-line)", opacity: t.status === "cancelled" ? 0.5 : 1 }}>
                       <td style={{ padding: "0.4rem 0.5rem", color: "var(--adm-text-2)" }}>{t.trial_date}</td>
-                      <td style={{ padding: "0.4rem 0.5rem", color: "#fff", fontWeight: 600 }}>{t.player_first_name} {t.player_last_name} <span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}>({t.birth_year})</span></td>
+                      <td style={{ padding: "0.4rem 0.5rem", color: "var(--adm-text)", fontWeight: 600 }}>{t.player_first_name} {t.player_last_name} <span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}>({t.birth_year})</span></td>
                       <td style={{ padding: "0.4rem 0.5rem", color: "var(--adm-text-2)" }}>{t.program?.name ?? t.program_slug}</td>
                       <td style={{ padding: "0.4rem 0.5rem", color: "var(--adm-text-2)" }}>{t.parent_name} · {t.parent_phone} · {t.parent_email}</td>
                       <td style={{ padding: "0.4rem 0.5rem", color: "var(--adm-text-2)" }}>{t.status === "confirmed" ? "Confirmé" : t.status === "attended" ? "Présent" : t.status === "absent" ? "Absent" : "Annulé"}</td>
@@ -443,7 +443,7 @@ export function AdminPrives({
                   return (
                     <>
                       <tr key={r.id} onClick={() => setOpenId(open ? null : r.id)} style={{ cursor: "pointer", borderBottom: "1px solid var(--adm-line)", opacity: r.status === "cancelled" ? 0.5 : 1 }}>
-                        <td style={{ padding: "0.45rem 0.5rem", color: "#fff", fontWeight: 600 }}>{r.player_first_name} {r.player_last_name}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text)", fontWeight: 600 }}>{r.player_first_name} {r.player_last_name}</td>
                         <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{r.birth_year ?? "—"}</td>
                         <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{programName.get(r.program_slug) ?? r.program_slug}</td>
                         <td style={{ padding: "0.45rem 0.5rem", color: "var(--adm-text-2)" }}>{r.parent_name}<br /><span style={{ color: "var(--adm-text-3)" }}>{r.parent_email} · {r.parent_phone}</span></td>

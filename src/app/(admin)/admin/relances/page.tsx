@@ -54,13 +54,13 @@ export default async function OutreachPage() {
           </div>
 
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Par campagne</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem" }}>Par campagne</p>
             <div className="admin-table-wrap">
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 520 }}>
                 <thead><tr>{["Campagne", "Relances", "Joueuses", "Inscrites"].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-3)" }}>{h}</th>)}</tr></thead>
                 <tbody>
                   {s.campaigns.map((c) => (
-                    <tr key={c.campaign}><td style={{ ...cell, color: "#fff" }}>{c.campaign}</td><td style={cell}>{c.relances}</td><td style={cell}>{c.people}</td><td style={cell}>{c.inscrites}</td></tr>
+                    <tr key={c.campaign}><td style={{ ...cell, color: "var(--adm-text)" }}>{c.campaign}</td><td style={cell}>{c.relances}</td><td style={cell}>{c.people}</td><td style={cell}>{c.inscrites}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -68,7 +68,7 @@ export default async function OutreachPage() {
           </div>
 
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "#fff", margin: "0 0 0.6rem" }}>Par joueuse ({s.people.length})</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.6rem" }}>Par joueuse ({s.people.length})</p>
             <div className="admin-table-wrap">
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
                 <thead><tr>{["Joueuse", "Parent", "Relances", "Dernière", "Historique", "Statut"].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-3)" }}>{h}</th>)}</tr></thead>
@@ -77,9 +77,9 @@ export default async function OutreachPage() {
                     const chip = CHIP[p.status];
                     return (
                       <tr key={p.key}>
-                        <td style={{ ...cell, color: "#fff", fontWeight: 600 }}>{p.playerName ?? "—"}</td>
+                        <td style={{ ...cell, color: "var(--adm-text)", fontWeight: 600 }}>{p.playerName ?? "—"}</td>
                         <td style={cell}>{p.parentName}<span style={{ display: "block", color: "var(--adm-text-3)" }}>{p.parentEmail}</span></td>
-                        <td style={{ ...cell, color: "#fff", fontWeight: 700 }}>{p.relances}{p.excuses ? <span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}> + {p.excuses} excuse</span> : null}</td>
+                        <td style={{ ...cell, color: "var(--adm-text)", fontWeight: 700 }}>{p.relances}{p.excuses ? <span style={{ color: "var(--adm-text-3)", fontWeight: 400 }}> + {p.excuses} excuse</span> : null}</td>
                         <td style={cell}>{day(p.lastAt)}</td>
                         <td style={cell}>
                           {p.history.map((h, i) => (

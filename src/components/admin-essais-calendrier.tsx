@@ -173,7 +173,7 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <button className="admin-btn-ghost" style={{ padding: "0.35rem 0.7rem" }} onClick={goToPrevMonth}>←</button>
-              <p style={{ fontSize: "0.95rem", fontWeight: 700, color: "#fff", margin: 0, minWidth: "160px", textAlign: "center" }}>{monthLabel(year, month)}</p>
+              <p style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--adm-text)", margin: 0, minWidth: "160px", textAlign: "center" }}>{monthLabel(year, month)}</p>
               <button className="admin-btn-ghost" style={{ padding: "0.35rem 0.7rem" }} onClick={goToNextMonth}>→</button>
             </div>
             <button className="admin-export-btn" onClick={() => openForm(selectedDate)}>+ Ajouter un essai</button>
@@ -270,7 +270,7 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
                         </p>
                       )}
                       {dayEntries.slice(0, 4).map((e) => (
-                        <p key={e.id} style={{ fontSize: "0.62rem", color: "#d8d8e0", margin: 0, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.playerName}</p>
+                        <p key={e.id} style={{ fontSize: "0.62rem", color: "var(--adm-text)", margin: 0, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.playerName}</p>
                       ))}
                       {dayEntries.length > 4 && <p style={{ fontSize: "0.6rem", color: "var(--adm-text-2)", margin: 0 }}>+{dayEntries.length - 4} autres</p>}
                       {count === 0 && daySlots.length > 0 && <p style={{ fontSize: "0.6rem", color: "var(--adm-good)", margin: "0.2rem 0 0" }}>Plage ouverte · 0/{daySlots.reduce((n, sl) => n + sl.max, 0)}</p>}
@@ -310,8 +310,8 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
                     style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.9rem", textDecoration: "none" }}
                   >
                     <div>
-                      <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#fff", margin: 0 }}>{e.playerName}</p>
-                      <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", margin: "0.1rem 0 0" }}>{e.parentName} · {e.parentPhone}{e.slotId && slotById.get(e.slotId) ? ` · ${slotById.get(e.slotId)!.start}–${slotById.get(e.slotId)!.end}` : ""}</p>
+                      <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{e.playerName}</p>
+                      <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: "0.1rem 0 0" }}>{e.parentName} · {e.parentPhone}{e.slotId && slotById.get(e.slotId) ? ` · ${slotById.get(e.slotId)!.start}–${slotById.get(e.slotId)!.end}` : ""}</p>
                     </div>
                     <span style={{ fontSize: "0.6rem", color: "var(--adm-info)", background: "var(--adm-info-soft)", padding: "0.15rem 0.5rem", borderRadius: "4px", whiteSpace: "nowrap" }}>{e.seasonLabel}</span>
                   </Link>
@@ -329,8 +329,8 @@ export function AdminEssaisCalendrier({ entries, slots, categories }: Props) {
                 style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.9rem" }}
               >
                 <Link href={e.detailHref} style={{ textDecoration: "none" }}>
-                  <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#fff", margin: 0 }}>{e.playerName}</p>
-                  <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", margin: "0.1rem 0 0" }}>{e.parentName} · {e.parentPhone}</p>
+                  <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{e.playerName}</p>
+                  <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: "0.1rem 0 0" }}>{e.parentName} · {e.parentPhone}</p>
                 </Link>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   {e.seasonId && (

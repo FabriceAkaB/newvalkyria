@@ -237,7 +237,7 @@ export function AdminCapacite({ capacity }: Props) {
         {/* Info note */}
         <div
           style={{
-            background: "#120f1a",
+            background: "var(--adm-surface)",
             border: "1px solid #1e1927",
             borderRadius: "0.875rem",
             padding: "1.25rem 1.5rem",
@@ -250,7 +250,7 @@ export function AdminCapacite({ capacity }: Props) {
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.2em",
-              color: "#68577b",
+              color: "var(--adm-text-3)",
               margin: "0 0 0.5rem",
             }}
           >

@@ -104,7 +104,7 @@ export function AdminUniformesKitInscription({ initialRows, initialSeasonFilter 
           </div>
           <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
             Chandail + short + bas inclus avec chaque inscription payée (+ sac pour les 30 premières payantes en Automne/Hiver et saisons suivantes) —
-            {" "}<strong style={{ color: "#fff" }}>{delivered} / {total}</strong> remis sur la sélection actuelle.
+            {" "}<strong style={{ color: "var(--adm-text)" }}>{delivered} / {total}</strong> remis sur la sélection actuelle.
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.25rem" }}>

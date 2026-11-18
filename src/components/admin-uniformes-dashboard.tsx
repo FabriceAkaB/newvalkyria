@@ -28,7 +28,7 @@ function SeasonCard({ season }: { season: SeasonStat }) {
   return (
     <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "12px", padding: "1.1rem 1.25rem", flex: "1 1 300px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-        <p style={{ fontSize: "0.95rem", fontWeight: 700, color: "#fff", margin: 0 }}>{season.label}</p>
+        <p style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--adm-text)", margin: 0 }}>{season.label}</p>
         <span style={{ fontSize: "0.78rem" }}>{health.emoji} {health.label}</span>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", marginBottom: "0.9rem" }}>

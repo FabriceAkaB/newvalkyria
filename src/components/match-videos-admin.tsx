@@ -189,7 +189,7 @@ function VeoAccount({ status }: { status: { email: string; updatedAt: string | n
 function Thumb({ v }: { v: AdminVideoRow }) {
   return v.poster ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={v.poster} alt="" style={{ width: 112, aspectRatio: "16 / 9", objectFit: "cover", borderRadius: 8, flex: "none", background: "#000" }} />
+    <img src={v.poster} alt="" style={{ width: 112, aspectRatio: "16 / 9", objectFit: "cover", borderRadius: 8, flex: "none", background: "var(--adm-surface)" }} />
   ) : null;
 }
 
