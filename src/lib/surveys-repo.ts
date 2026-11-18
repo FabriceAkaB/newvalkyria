@@ -474,6 +474,10 @@ export async function submitResponse(token: string, raw: Record<string, unknown>
     if (e) throw e;
   }
   await db().from("survey_invites").update({ responded_at: new Date().toISOString() }).eq("id", found.invite.id);
+  // 9 ou 10 sur 10 : demande d'avis Google 2 h plus tard (éteint tant que le lien de la fiche n'est pas enregistré).
+  await import("@/lib/google-review")
+    .then((m) => m.maybeAskGoogleReview({ email: found.invite.parent_email, parentName: found.invite.parent_name, playerNames: found.invite.player_names, score }))
+    .catch(() => false);
   return { ok: true };
 }
 
