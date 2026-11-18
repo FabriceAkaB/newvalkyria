@@ -1406,8 +1406,8 @@ Décisions de JP : l'académie devient **Académie** (le groupe avancé : 3 grou
 | --- | --- | --- | --- |
 | Automne-hiver 2026-2027 (en cours) | ≈ 105 000 $ | ≈ 37 000 $ | 160 filles, garçons, camp de la relâche 2027 (30), premières commandites |
 | Été 2027 | ≈ 285 000 $ (≈ 450 000 $ avec 4 sites) | ≈ 150 000 $ (≈ 245 000 $ avec 4 sites) | Camps de jour 2 sites × 8 semaines × 30 jeunes, Valkyria Été (soir) 60 000 $, tournoi Valkyria, kits Valkyria Lab, garçons sous l'autre marque |
-| Automne-hiver 2027-2028 | ≈ 450 000 $ | ≈ 300 000 $ → ≈ 200 000 $ après les 100 000 $ de salaire | Académie 48, Pré-académie 90, semi-privés 12, parascolaire 12 écoles, camps des Fêtes et de la relâche, commandites 30 000 $, Valkyria Lab (kits et abonnement), tournoi d'hiver, boutique, Journées Valkyria |
-| Été 2028 | ≈ 400 000 $ (sans le voyage, refacturé au coût) | ≈ 230 000 $ | Camps 3 sites, Valkyria Été 90 000 $, voyage de juillet 2028 (fin juillet, choix du sondage), tournoi, commandites d'été |
+| Automne-hiver 2027-2028 | ≈ 450 000 $ | ≈ 300 000 $ → ≈ 200 000 $ après les 100 000 $ de salaire | Académie 48, Pré-académie 90, semi-privés 12, parascolaire 12 écoles, camps des Fêtes et de la relâche, commandites 30 000 $, Valkyria Lab (kits et abonnement), tournoi d'hiver, boutique, Journées Valkyria, voyage international de mars 2028 (décision de JP le 17 nov. 2026 ; payé par les parents, refacturé au coût) |
+| Été 2028 | ≈ 400 000 $ | ≈ 230 000 $ | Camps 3 sites, Valkyria Été 90 000 $, tournoi, commandites d'été |
 
 Détail de l'hiver 2027-2028 (bénéfice) : Académie ≈ 25 000 $ ; Pré-académie ≈ 38 000 $ ; semi-privés à 850 $ ≈ 4 700 $ ; parascolaire 12 écoles × 30 jeunes × 2 sessions ≈ 143 000 $ ; camps ≈ 10 100 $ ; commandites ≈ 27 000 $ ; kits Valkyria Lab (120 à 149 $) ≈ 10 000 $ ; abonnement Valkyria Lab (150 familles à 15 $ par mois) ≈ 14 000 $ ; tournoi Valkyria (30 équipes à 500 $) ≈ 5 700 $ ; boutique et kits ≈ 9 600 $ ; Journées Valkyria ≈ 6 200 $ ; garçons, solos, Sport-Études ≈ 8 000 $.
 
