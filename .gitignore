@@ -33,3 +33,6 @@ pnpm-debug.log*
 next-env.d.ts
 /data/*
 !/data/mandalart.json
+
+# Documents de personal branding (Caleb Ralston) : gardés sur la machine de JP, pas publiés
+docs/marketing/personal-branding/caleb-ralston/
