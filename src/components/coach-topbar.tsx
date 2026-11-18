@@ -16,6 +16,7 @@ const LINKS = [
   { href: "/entraineur/exercices", label: "Exercices" },
   { href: "/entraineur/laboratoire", label: "Laboratoire" },
   { href: "/entraineur/methode", label: "Méthode" },
+  { href: "/entraineur/formation", label: "Ma formation" },
   { href: "/entraineur/dossier", label: "Mon dossier" }
 ];
 

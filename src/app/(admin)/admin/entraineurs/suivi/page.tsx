@@ -8,6 +8,9 @@ import { getCoaches } from "@/lib/coaches-repo";
 import { getAllContracts } from "@/lib/employee-contracts";
 import { listPractices } from "@/lib/practices-repo";
 import { getCoachSatisfaction } from "@/lib/surveys-repo";
+import { ValidateModule } from "@/components/coach-training";
+import { TRAINING_MODULES, trainingProgress } from "@/lib/coach-training";
+import { getTraining } from "@/lib/coach-training-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const metadata = { title: "Suivi des éducateurs — Admin", robots: "noindex" };
@@ -49,6 +52,7 @@ export default async function CoachFollowUpPage() {
     getCoachSatisfaction().catch(() => new Map()),
     (getSupabaseAdminClient() as any).from("coaches").select("id, pro_goals").not("pro_goals", "is", null)
   ]);
+  const training = await getTraining(coaches.filter((c) => c.status === "active").map((c) => c.id)).catch(() => new Map());
   const recent = rows.filter((r) => String(r.activityDate).slice(0, 10) >= from && String(r.activityDate).slice(0, 10) <= t);
   const active = coaches.filter((c) => c.status === "active");
   const contractFor = (first: string) => contracts.find((k) => norm(k.employee_name).split(/\s+/)[0] === norm(first).split(/\s+/)[0] && k.status !== "cancelled");
@@ -82,6 +86,45 @@ export default async function CoachFollowUpPage() {
               <p className="mda-num">{recent.length ? Math.round(((recent.length - incomplete.length) / recent.length) * 100) : 0} %</p>
               <p className="mda-label">Rapports complets ({recent.length - incomplete.length} sur {recent.length} activités assignées)</p>
             </div>
+          </section>
+
+          <section className="mda-card-flush">
+            <div className="mda-card-head">
+              <h2 className="mda-h2">Formation des éducateurs</h2>
+              <Pill>○ à lire · ● lu, à valider · ✓ validé</Pill>
+            </div>
+            <div className="admin-table-wrap mda-scroll" style={{ margin: 0, border: 0, boxShadow: "none" }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Éducateur</th>
+                    {TRAINING_MODULES.map((m, i) => (
+                      <th key={m.key} title={m.title} style={{ textAlign: "center" }}>{i + 1}</th>
+                    ))}
+                    <th style={{ textAlign: "right" }}>Validés</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {active.map((c) => {
+                    const p = trainingProgress(training.get(c.id) ?? []);
+                    return (
+                      <tr key={c.id}>
+                        <td>{c.first_name} {c.last_name}{p.certified ? " ✓" : ""}</td>
+                        {p.states.map((s) => (
+                          <td key={s.module.key} style={{ textAlign: "center" }}>
+                            <ValidateModule coachId={c.id} module={s.module.key} state={s.state} title={s.module.title} />
+                          </td>
+                        ))}
+                        <td style={{ textAlign: "right", fontWeight: 600 }}>{p.validated}/{p.total}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="mda-sub" style={{ padding: "10px 20px 16px", margin: 0 }}>
+              {TRAINING_MODULES.map((m, i) => `${i + 1}. ${m.title}`).join(" · ")}. Touche un rond pour valider un module après avoir observé l&apos;éducateur. Tous validés = prêt à diriger un groupe seul.
+            </p>
           </section>
 
           <section className="mda-card-flush">

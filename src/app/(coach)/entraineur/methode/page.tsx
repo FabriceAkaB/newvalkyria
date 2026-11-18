@@ -23,7 +23,7 @@ export default async function CoachMethodPage() {
           <p className="coach-sub">Comment se déroule chaque séance, ce qu&apos;on défend et les gestes à enseigner à chaque niveau.</p>
 
           {components.items.length > 0 && (
-            <section style={{ marginTop: 24 }}>
+            <section id="obligatoire" style={{ marginTop: 24, scrollMarginTop: 80 }}>
               <h2 className="coach-h2">Obligatoire dans chaque entraînement</h2>
               <div className="coach-card">
                 <ol className="coach-musts">
@@ -38,7 +38,7 @@ export default async function CoachMethodPage() {
             </section>
           )}
 
-          <section style={{ marginTop: 24 }}>
+          <section id="seance" style={{ marginTop: 24, scrollMarginTop: 80 }}>
             <h2 className="coach-h2">Une séance · {total} min</h2>
             {structure.blocks.map((b, i) => (
               <div key={i} className="coach-block">
@@ -54,7 +54,7 @@ export default async function CoachMethodPage() {
             ))}
           </section>
 
-          <section style={{ marginTop: 24 }}>
+          <section id="principes" style={{ marginTop: 24, scrollMarginTop: 80 }}>
             <h2 className="coach-h2">Nos principes</h2>
             <div className="coach-card">
               <ul className="coach-checklist">
@@ -67,7 +67,7 @@ export default async function CoachMethodPage() {
             </div>
           </section>
 
-          <section style={{ marginTop: 24 }}>
+          <section id="gestes" style={{ marginTop: 24, scrollMarginTop: 80 }}>
             <h2 className="coach-h2">Les gestes du passeport</h2>
             {gestures.length === 0 && <p className="coach-muted">La bibliothèque des gestes arrive bientôt.</p>}
             {[...PASSPORT_LEVELS, null].map((level) => {

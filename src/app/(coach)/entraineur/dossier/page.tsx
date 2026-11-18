@@ -2,6 +2,8 @@ import { CoachDossierGoals } from "@/components/coach-dossier-goals";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { requireCoach } from "@/lib/coach-auth";
 import { listObservations } from "@/lib/coach-observations-repo";
+import { trainingProgress } from "@/lib/coach-training";
+import { getTraining } from "@/lib/coach-training-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getCoachSatisfaction } from "@/lib/surveys-repo";
@@ -28,6 +30,7 @@ export default async function CoachDossierPage() {
     getCoachSatisfaction().catch(() => new Map()),
     db.from("coach_assignments").select("activity_id, status, activity:coach_activities(activity_date)").eq("coach_id", coachId)
   ]);
+  const training = trainingProgress((await getTraining([coachId]).catch(() => new Map())).get(coachId) ?? []);
   const recentIds = ((assigns ?? []) as any[]).filter((a) => a.status !== "absent" && String(a.activity?.activity_date ?? "").slice(0, 10) >= since).map((a) => a.activity_id);
   const { data: ratings } = recentIds.length ? await db.from("activity_player_attendance").select("practice_rating").in("activity_id", recentIds).not("practice_rating", "is", null) : { data: [] };
   const rs = ((ratings ?? []) as any[]).map((r) => Number(r.practice_rating)).filter((v) => v >= 1 && v <= 10);
@@ -68,6 +71,13 @@ export default async function CoachDossierPage() {
               <p className="coach-muted" style={{ margin: 0 }}>Sondage de fin de tes pratiques, 60 derniers jours</p>
             </div>
           </div>
+
+          <a href="/entraineur/formation" className="coach-card" style={{ display: "block", marginTop: 16, textDecoration: "none", color: "inherit" }}>
+            <p className="coach-card__label">Ma formation</p>
+            <p className="coach-sub" style={{ margin: 0 }}>
+              {training.certified ? "Tous les modules sont validés : prête à diriger un groupe ✓" : `${training.validated} module${training.validated > 1 ? "s" : ""} validé${training.validated > 1 ? "s" : ""} sur ${training.total}${training.next ? ` · prochain : ${training.next.title}` : ""} →`}
+            </p>
+          </a>
 
           {latest && (latest.to_improve || latest.next_focus || latest.strengths) ? (
             <div className="coach-card" style={{ marginTop: 16 }}>
