@@ -367,6 +367,26 @@
    "source": "auto",
    "how": "Part des répondants qui donnent 8 sur 10 ou plus à la question de recommandation. Module Sondages.",
    "addedOn": "2026-11-02"
+  },
+  {
+   "id": "taches_confiees",
+   "label": "Tâches confiées à l'équipe et faites (par mois)",
+   "start": "0",
+   "target": "20 par mois",
+   "due": "2027-03-31",
+   "source": "auto",
+   "how": "Tâches de team_tasks confiées à quelqu'un d'autre que JP et marquées faites dans le mois (stade 3 d'Alex : JP forme au lieu de faire).",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "delai_reponse_familles",
+   "label": "Délai de réponse à une demande de famille",
+   "start": "à mesurer",
+   "target": "moins de 24 h",
+   "due": "2027-03-31",
+   "source": "manuel",
+   "how": "Temps entre une demande (formulaire, courriel, message) et la première réponse ; relevé chaque mois (stade 4 d'Alex : répondre vite aux demandes).",
+   "addedOn": "2026-11-02"
   }
  ],
  "levels": [
@@ -1994,6 +2014,18 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P2.5.04",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Préparer le stade 4 d'Alex : à la fin de la saison, identifier nos meilleures familles (assiduité, réinscription, références), ajuster l'offre et les prix pour elles et dire non aux demandes qui ne nous ressemblent pas.",
+       "due": "2027-05-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     },
@@ -2734,6 +2766,46 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.6.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Les familles intéressées achètent moins vite parce qu'elles ne nous connaissent pas encore : leur envoyer chaque semaine un courriel de valeur (conseil, vidéo, preuve, coulisses), jamais seulement une offre, jusqu'à l'inscription.",
+       "due": "2026-12-15",
+       "owner": "Claude Code + JP",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P3.6.07",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Écrire la fiche de la « famille idéale » (âge, ville, niveau, 2 séances par semaine, engagement des parents, budget) et classer chaque demande chaude, tiède ou froide pour appeler les bonnes d'abord.",
+       "due": "2026-12-31",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P3.6.08",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Script d'appel aux familles intéressées selon la méthode CLOSER d'Alex (clarifier, nommer le problème, raconter le parcours, vendre le résultat, régler les objections, rappeler l'essentiel) ; pratiqué jusqu'à ce qu'il soit naturel.",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     },
@@ -2932,6 +3004,20 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Présence sur Google et référencement local (6 nov. 2026)"
+      },
+      {
+       "code": "P3.8.13",
+       "priority": "star",
+       "level": 1,
+       "title": "Règle des 100 d'Alex : 100 minutes de marketing chaque jour, même quand c'est plein (publier, répondre, relancer, demander des références), notées dans Ma journée ; doubler le canal qui marche avant d'en essayer un autre.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     }
@@ -3052,6 +3138,20 @@
        "owner": "Coachs",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P4.2.03",
+       "priority": "star",
+       "level": 1,
+       "title": "Écrire et automatiser les 30 premiers jours d'une nouvelle famille, pour qu'aucune ne se sente perdue : jour 0 bienvenue et espace famille, 2 jours avant rappel de la 1re pratique, 7e jour appel « comment ça se passe ? », 14e jour première victoire (points, geste filmé), 30e jour mini-sondage.",
+       "due": "2027-01-31",
+       "owner": "Claude Code + gérante",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     },
@@ -3474,6 +3574,48 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Voix des familles : sondages et satisfaction"
+      },
+      {
+       "code": "P4.8.15",
+       "priority": "star",
+       "level": 1,
+       "title": "Chaque mois, choisir LE problème n°1 des familles (sondages, boîte à idées, plaintes, refus aux relances), le régler à fond, l'annoncer aux familles (« Vous avez dit, on a fait »), puis seulement passer au suivant.",
+       "due": "2026-12-15",
+       "owner": "JP",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P4.8.16",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Recueillir les témoignages avec le script « Epiphany » d'Alex : la situation avant, le déclic, le résultat, à qui la famille nous recommanderait ; dans chaque entrevue vidéo et à la fin des sondages (avec accord).",
+       "due": "2026-12-31",
+       "owner": "JP + caméra",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P4.8.17",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Écrire le protocole des plaintes (méthode « Angry Boat ») : écouter jusqu'au bout, reconnaître, s'excuser, réparer, rappeler une semaine plus tard ; chaque plainte notée dans le journal des relances avec ce qui a été fait.",
+       "due": "2026-12-31",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     }
@@ -4340,6 +4482,32 @@
        "owner": "JP + Claude Code",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.1.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Régulariser la paie avec le CPA : statut de chaque personne payée (employé ou travailleur autonome), retenues à la source et remises, relevés T4/RL-1 ou T4A ; service de paie si employés ; plus aucun paiement informel.",
+       "due": "2026-12-31",
+       "owner": "JP + CPA",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P7.1.07",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Logiciel comptable choisi avec le CPA, relié au compte bancaire ; chaque entrée et chaque dépense avec sa pièce ; mois fermé avant le 10 du mois suivant.",
+       "due": "2027-01-31",
+       "owner": "JP + CPA",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     },
@@ -4509,6 +4677,18 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P7.4.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Regarder le solde (banque + Stripe) chaque matin, 2 minutes, comme habitude de Ma journée ; mettre l'argent des taxes de côté à chaque encaissement.",
+       "due": "2026-11-30",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     },
@@ -4619,6 +4799,20 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Matchs, arbitres et bilan de chaque match"
+      },
+      {
+       "code": "P7.6.06",
+       "priority": "star",
+       "level": 1,
+       "title": "Faire la liste de tous les abonnements et logiciels (coût par mois, qui s'en sert), annuler ceux qui ne servent pas, négocier ou prolonger les essais des autres ; revoir chaque trimestre.",
+       "due": "2026-12-15",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A04"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     },
@@ -4969,6 +5163,46 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Structure de l'Académie et recrutement"
+      },
+      {
+       "code": "P8.2.07",
+       "priority": "star",
+       "level": 1,
+       "title": "Écrire les procédures des 10 tâches qui reviennent le plus (inscription, paiement en retard, remplacement d'un éducateur, MonClubSportif, uniformes, courriel aux familles, nouvelle famille, plainte, présences, fin de mois) : étapes, modèles, qui fait quoi.",
+       "due": "2027-01-31",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A01"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P8.2.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Passer de « faire » à « former » : chaque semaine, une tâche transférée selon la méthode montrer, faire ensemble, laisser faire, vérifier ; JP vérifie le travail les premières fois puis lâche prise.",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P8.2.09",
+       "priority": "progressive",
+       "level": 3,
+       "title": "Préparer le stade 4 d'Alex : guide de l'employé (horaires, absences, tenue, code de conduite, Loi 25, mots de passe).",
+       "due": "2027-05-31",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A10"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     },
@@ -5049,6 +5283,20 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Structure de l'Académie et recrutement"
+      },
+      {
+       "code": "P8.3.07",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Écrire les fiches de poste (éducateur, gérante, caméra, coordonnateur) et une grille pour trier les candidatures et mener les entrevues (références vérifiées).",
+       "due": "2027-01-31",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A10"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     },
@@ -5169,6 +5417,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Pratiques préparées 2 semaines d'avance"
+      },
+      {
+       "code": "P8.4.10",
+       "priority": "progressive",
+       "level": 2,
+       "title": "Gestionnaire de mots de passe partagé pour l'équipe (accès donnés par rôle, retirés au départ d'une personne).",
+       "due": "2027-03-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
       }
      ]
     },
@@ -6325,6 +6585,10 @@
    {
     "title": "Boîte à idées de l'académie (13 nov. 2026)",
     "text": "Une boîte à idées sur le site (page publique, nom et courriel facultatifs) et dans l'espace de chaque membre : chaque idée reçoit une réponse de l'académie et avance (nouvelle, à l'étude, retenue, réalisée) ; les idées réalisées se montrent sur le site (« Grâce à vous »). À faire avant la fin de novembre."
+   },
+   {
+    "title": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)",
+    "text": "Source : le guide personnalisé « $100M Scaling Roadmap » d'Acquisition.com remis à JP (stade 3 de 10 : **Stabiliser**). Fiche complète avec ce qui existe déjà : `docs/strategie/acq-stade-3-stabiliser.md`. Où en est l'académie selon Alex : 1 à 4 personnes à temps plein autour de JP ; **trop de travail pour une seule personne**. Le rôle de JP passe de « celui qui fait » à « **celui qui forme** ». Pour passer au stade 4 : **se faire aider**, c'est-à-dire bâtir une petite équipe qui sait faire tourner l'académie. On ne règle pas tout en même temps : on choisit **le plus gros problème**, on le règle bien, puis on passe au suivant. Les bases du stade 2 doivent tenir (marketing chaque jour, qualité constante, argent suivi chaque jour) et le stade 4 se prépare d'avance (choisir nos meilleures familles, dire non, mesurer, professionnaliser)."
    }
   ]
  },

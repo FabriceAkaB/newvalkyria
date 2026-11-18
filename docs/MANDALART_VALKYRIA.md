@@ -1440,6 +1440,63 @@ Une boîte à idées sur le site (page publique, nom et courriel facultatifs) et
 
 - [ ] `P4.5.04` ⭐ N1 — Ouvrir la boîte à idées de l'académie sur le site et dans l'espace de chaque membre, avec une réponse à chaque idée. — 30 nov. 2026 · Claude Code · A01
 
+### Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)
+
+Source : le guide personnalisé « $100M Scaling Roadmap » d'Acquisition.com remis à JP (stade 3 de 10 : **Stabiliser**). Fiche complète avec ce qui existe déjà : `docs/strategie/acq-stade-3-stabiliser.md`.
+
+Où en est l'académie selon Alex : 1 à 4 personnes à temps plein autour de JP ; **trop de travail pour une seule personne**. Le rôle de JP passe de « celui qui fait » à « **celui qui forme** ». Pour passer au stade 4 : **se faire aider**, c'est-à-dire bâtir une petite équipe qui sait faire tourner l'académie. On ne règle pas tout en même temps : on choisit **le plus gros problème**, on le règle bien, puis on passe au suivant. Les bases du stade 2 doivent tenir (marketing chaque jour, qualité constante, argent suivi chaque jour) et le stade 4 se prépare d'avance (choisir nos meilleures familles, dire non, mesurer, professionnaliser).
+
+#### P4.8 Réinscription, satisfaction et sortie U13
+
+- [ ] `P4.8.15` ⭐ N1 — Chaque mois, choisir LE problème n°1 des familles (sondages, boîte à idées, plaintes, refus aux relances), le régler à fond, l'annoncer aux familles (« Vous avez dit, on a fait »), puis seulement passer au suivant. — 15 déc. 2026 · JP · AU17
+- [ ] `P4.8.16` ➜ N1 — Recueillir les témoignages avec le script « Epiphany » d'Alex : la situation avant, le déclic, le résultat, à qui la famille nous recommanderait ; dans chaque entrevue vidéo et à la fin des sondages (avec accord). — 31 déc. 2026 · JP + caméra · A05
+- [ ] `P4.8.17` ➜ N1 — Écrire le protocole des plaintes (méthode « Angry Boat ») : écouter jusqu'au bout, reconnaître, s'excuser, réparer, rappeler une semaine plus tard ; chaque plainte notée dans le journal des relances avec ce qui a été fait. — 31 déc. 2026 · JP + Claude Code · A01
+
+#### P3.6 Liste chaude
+
+- [ ] `P3.6.06` ⭐ N1 — Les familles intéressées achètent moins vite parce qu'elles ne nous connaissent pas encore : leur envoyer chaque semaine un courriel de valeur (conseil, vidéo, preuve, coulisses), jamais seulement une offre, jusqu'à l'inscription. — 15 déc. 2026 · Claude Code + JP · A05
+- [ ] `P3.6.07` ➜ N1 — Écrire la fiche de la « famille idéale » (âge, ville, niveau, 2 séances par semaine, engagement des parents, budget) et classer chaque demande chaude, tiède ou froide pour appeler les bonnes d'abord. — 31 déc. 2026 · JP + Claude Code · A01
+- [ ] `P3.6.08` ➜ N2 — Script d'appel aux familles intéressées selon la méthode CLOSER d'Alex (clarifier, nommer le problème, raconter le parcours, vendre le résultat, régler les objections, rappeler l'essentiel) ; pratiqué jusqu'à ce qu'il soit naturel. — 31 janv. 2027 · JP
+
+#### P3.8 Publicité payante et mesure
+
+- [ ] `P3.8.13` ⭐ N1 — Règle des 100 d'Alex : 100 minutes de marketing chaque jour, même quand c'est plein (publier, répondre, relancer, demander des références), notées dans Ma journée ; doubler le canal qui marche avant d'en essayer un autre. — 30 nov. 2026 · JP · A05
+
+#### P4.2 Première victoire rapide
+
+- [ ] `P4.2.03` ⭐ N1 — Écrire et automatiser les 30 premiers jours d'une nouvelle famille, pour qu'aucune ne se sente perdue : jour 0 bienvenue et espace famille, 2 jours avant rappel de la 1re pratique, 7e jour appel « comment ça se passe ? », 14e jour première victoire (points, geste filmé), 30e jour mini-sondage. — 31 janv. 2027 · Claude Code + gérante · A01
+
+#### P7.1 Conformité (urgent)
+
+- [ ] `P7.1.06` ⭐ N1 — Régulariser la paie avec le CPA : statut de chaque personne payée (employé ou travailleur autonome), retenues à la source et remises, relevés T4/RL-1 ou T4A ; service de paie si employés ; plus aucun paiement informel. — 31 déc. 2026 · JP + CPA
+- [ ] `P7.1.07` ➜ N1 — Logiciel comptable choisi avec le CPA, relié au compte bancaire ; chaque entrée et chaque dépense avec sa pièce ; mois fermé avant le 10 du mois suivant. — 31 janv. 2027 · JP + CPA · A04
+
+#### P7.4 Trésorerie
+
+- [ ] `P7.4.06` ⭐ N1 — Regarder le solde (banque + Stripe) chaque matin, 2 minutes, comme habitude de Ma journée ; mettre l'argent des taxes de côté à chaque encaissement. — 30 nov. 2026 · JP
+
+#### P7.6 Contrôle des dépenses, fournisseurs et inventaire
+
+- [ ] `P7.6.06` ⭐ N1 — Faire la liste de tous les abonnements et logiciels (coût par mois, qui s'en sert), annuler ceux qui ne servent pas, négocier ou prolonger les essais des autres ; revoir chaque trimestre. — 15 déc. 2026 · JP + Claude Code · A04
+
+#### P8.2 Équipe humaine et rôles
+
+- [ ] `P8.2.07` ⭐ N1 — Écrire les procédures des 10 tâches qui reviennent le plus (inscription, paiement en retard, remplacement d'un éducateur, MonClubSportif, uniformes, courriel aux familles, nouvelle famille, plainte, présences, fin de mois) : étapes, modèles, qui fait quoi. — 31 janv. 2027 · JP + Claude Code · A01
+- [ ] `P8.2.08` ⭐ N1 — Passer de « faire » à « former » : chaque semaine, une tâche transférée selon la méthode montrer, faire ensemble, laisser faire, vérifier ; JP vérifie le travail les premières fois puis lâche prise. — 31 mars 2027 · JP
+- [ ] `P8.2.09` ➜ N3 — Préparer le stade 4 d'Alex : guide de l'employé (horaires, absences, tenue, code de conduite, Loi 25, mots de passe). — 31 mai 2027 · JP + Claude Code · A10
+
+#### P8.3 Recrutement et ressources humaines des coachs
+
+- [ ] `P8.3.07` ➜ N1 — Écrire les fiches de poste (éducateur, gérante, caméra, coordonnateur) et une grille pour trier les candidatures et mener les entrevues (références vérifiées). — 31 janv. 2027 · JP + Claude Code · A10
+
+#### P8.4 Les données avant les agents
+
+- [ ] `P8.4.10` ➜ N2 — Gestionnaire de mots de passe partagé pour l'équipe (accès donnés par rôle, retirés au départ d'une personne). — 31 mars 2027 · JP
+
+#### P2.5 Prix et hausses
+
+- [ ] `P2.5.04` ➜ N3 — Préparer le stade 4 d'Alex : à la fin de la saison, identifier nos meilleures familles (assiduité, réinscription, références), ajuster l'offre et les prix pour elles et dire non aux demandes qui ne nous ressemblent pas. — 31 mai 2027 · JP
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |
@@ -1450,6 +1507,8 @@ Une boîte à idées sur le site (page publique, nom et courriel facultatifs) et
 | `appreciation_joueuses` | Note des pratiques donnée par les joueuses (sur 10) | à mesurer | 9/10 | 31 mars 2027 | auto | Moyenne des notes données par les joueuses à la fin des pratiques (routine de fin), saisies par l'éducateur dans le portail entraîneur ; suivie chaque semaine. |
 | `avis_google` | Avis Google de l'académie | 0 (6 nov. 2026, pas de fiche) | 50 avis, moyenne 4,8 | 31 déc. 2027 | manuel | Nombre et moyenne des avis sur la fiche Google ; saisi chaque mois (tâche P3.8.12). |
 | `satisfaction` | Familles satisfaites (8 sur 10 et plus) | à mesurer | 90 % | 31 déc. 2027 | auto | Part des répondants qui donnent 8 sur 10 ou plus à la question de recommandation. Module Sondages. |
+| `taches_confiees` | Tâches confiées à l'équipe et faites (par mois) | 0 | 20 par mois | 31 mars 2027 | auto | Tâches de team_tasks confiées à quelqu'un d'autre que JP et marquées faites dans le mois (stade 3 d'Alex : JP forme au lieu de faire). |
+| `delai_reponse_familles` | Délai de réponse à une demande de famille | à mesurer | moins de 24 h | 31 mars 2027 | manuel | Temps entre une demande (formulaire, courriel, message) et la première réponse ; relevé chaque mois (stade 4 d'Alex : répondre vite aux demandes). |
 
 ### Automatisations ajoutées
 

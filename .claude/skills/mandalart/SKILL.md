@@ -7,6 +7,7 @@ description: Le plan de guerre de New Valkyria (1,5 M$ encaissés en 2028) et so
 
 ## Où est quoi
 - **Le plan écrit avec JP** : `docs/MANDALART_VALKYRIA.md` (sections 0 à 10 = plan d'origine ; section 11 = ajouts de JP).
+- **Où en est l'académie selon Alex Hormozi** : stade 3 « Stabiliser » (JP formateur, 1 à 4 personnes, se faire aider) ; fiche `docs/strategie/acq-stade-3-stabiliser.md` (chaque conseil, ce qui existe, la tâche ajoutée). Toute nouvelle idée de croissance se vérifie contre ce stade et le suivant (Prioriser).
 - **Le plan lu par le site** : `data/mandalart.json`, généré par `node scripts/mandalart-build.mjs` (relancer après toute modification du .md, puis `npx vitest run src/lib/mandalart-core.test.ts`).
 - **L'état** (cases cochées, notes, valeurs d'indicateurs, agents) : tables `mandalart_*` + `marketing_channel_stats`, toutes avec `club_id` (`src/lib/club.ts`) pour pouvoir dupliquer le système chez un autre club.
 - **Calculs purs** : `src/lib/mandalart-core.ts` (poids ⭐ ×2, médailles, niveau actuel, « Ce mois-ci », règle d'anticipation).

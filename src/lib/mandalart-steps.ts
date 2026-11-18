@@ -502,6 +502,161 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     ],
     done: "La décision go/no-go de la ligue d'hiver est prise, avec son prix plancher.",
     link: { href: "/admin/revenus/calculateur", label: "Calculateur de lancement" }
+  },
+  /* ── Stade 3 d'Alex Hormozi : stabiliser (guide Acquisition.com, 17 nov. 2026 ; docs/strategie/acq-stade-3-stabiliser.md) ── */
+  "P4.8.15": {
+    how: [
+      "Le 1er de chaque mois, ouvre Voix des familles (sondages et boîte à idées) et le journal des relances : note les plaintes qui reviennent.",
+      "Choisis UN seul problème : celui qui touche le plus de familles ou qui fait partir des familles.",
+      "Règle-le à fond (une personne responsable, une date), sans toucher au reste.",
+      "Annonce-le aux familles : « Vous avez dit, on a fait ». Le mois suivant, passe au problème suivant."
+    ],
+    done: "Le problème du mois est choisi, réglé et annoncé aux familles.",
+    link: { href: "/admin/sondages", label: "Voix des familles" }
+  },
+  "P4.8.16": {
+    how: [
+      "Dans chaque entrevue vidéo, pose les 4 questions dans l'ordre : comment c'était avant, le moment où ça a changé, le résultat aujourd'hui, à qui vous nous recommanderiez.",
+      "Ajoute les mêmes questions à la fin du sondage de fin de saison (avec la case d'accord pour publier).",
+      "Garde les meilleures réponses comme témoignages (site, réseaux, vidéos explicatives)."
+    ],
+    done: "Au moins 10 témoignages au script Epiphany, avec l'accord des familles.",
+    link: { href: "/admin/contenu/entrevues", label: "Entrevues" }
+  },
+  "P4.8.17": {
+    how: [
+      "Dis à Claude : « Écris le protocole des plaintes » (écouter, reconnaître, s'excuser, réparer, rappeler une semaine plus tard).",
+      "Donne-le à la gérante et aux éducateurs ; chaque plainte se note dans Relances et suivi (type excuse ou réponse).",
+      "Une semaine plus tard, rappelle la famille pour vérifier que c'est réglé."
+    ],
+    done: "Le protocole est écrit, connu de l'équipe, et chaque plainte est notée avec sa suite.",
+    link: { href: "/admin/relances", label: "Relances et suivi" }
+  },
+  "P3.6.06": {
+    how: [
+      "Dis à Claude : « Prépare 8 courriels de valeur pour les familles intéressées » (un conseil, une vidéo, une preuve, les coulisses, puis l'offre).",
+      "Relis-les et ajuste le ton ; Claude les programme, un par semaine, aux familles intéressées pas encore inscrites.",
+      "Chaque mois, regarde combien de ces familles se sont inscrites."
+    ],
+    done: "La série de courriels part chaque semaine aux familles intéressées.",
+    link: { href: "/admin/relances", label: "Relances et suivi" }
+  },
+  "P3.6.07": {
+    how: [
+      "Écris en 6 lignes la famille idéale : âge de la fille, ville, niveau, 2 séances par semaine, parents engagés, budget.",
+      "Dis à Claude de classer chaque nouvelle demande chaude, tiède ou froide selon cette fiche.",
+      "Appelle les chaudes d'abord, le jour même."
+    ],
+    done: "La fiche est écrite et chaque nouvelle demande arrive classée.",
+    link: { href: "/admin/acquisition", label: "D'où viennent nos familles" }
+  },
+  "P3.6.08": {
+    how: [
+      "Dis à Claude : « Écris mon script d'appel CLOSER pour une famille intéressée ».",
+      "Pratique-le à voix haute 5 fois, puis avec la gérante.",
+      "Après chaque appel, note ce qui a marché et ajuste le script."
+    ],
+    done: "Le script est écrit et tu l'utilises à chaque appel sans le lire.",
+    link: { href: "/admin/relances", label: "Relances et suivi" }
+  },
+  "P3.8.13": {
+    how: [
+      "Remplis chaque jour ton habitude « Actions de prospection (règle des 100) » dans Mes habitudes (100 actions, ou 100 minutes de marketing).",
+      "Bloque le créneau dans ton agenda (bloc 🧲).",
+      "Dans ces 100 minutes : publier, répondre aux messages, relancer, demander une référence. Un seul canal principal tant qu'il marche."
+    ],
+    done: "La règle des 100 est tenue au moins 25 jours sur 30.",
+    link: { href: "/admin/moi/habitudes", label: "Mes habitudes" }
+  },
+  "P4.2.03": {
+    how: [
+      "Ouvre Parcours client et relis les 30 premiers jours d'une nouvelle famille.",
+      "Dis à Claude d'automatiser les messages : jour 0 bienvenue + espace famille, rappel 2 jours avant la 1re pratique, mini-sondage au 30e jour.",
+      "Donne à la gérante l'appel du 7e jour ; la première victoire du 14e jour (points, geste filmé) revient aux éducateurs."
+    ],
+    done: "Chaque nouvelle famille reçoit les 5 étapes, sans oubli.",
+    link: { href: "/admin/parcours-client", label: "Parcours client" }
+  },
+  "P7.1.06": {
+    how: [
+      "Fais la liste de toutes les personnes payées (éducateurs, gérante, caméra, arbitres) et comment elles sont payées.",
+      "Avec le CPA : employé ou travailleur autonome pour chacune, retenues à la source, relevés de fin d'année.",
+      "S'il y a des employés, ouvre un service de paie recommandé par le CPA ; arrête tout paiement sans trace."
+    ],
+    done: "Chaque personne a son statut confirmé par le CPA et la paie passe par un système en règle.",
+    link: { href: "/admin/entraineurs/paie", label: "Paie des éducateurs" }
+  },
+  "P7.1.07": {
+    how: [
+      "Demande au CPA quel logiciel comptable il veut (ex. QuickBooks) et ouvre-le.",
+      "Relie-le au compte bancaire ; chaque dépense garde sa pièce dans Revenus.",
+      "Ferme chaque mois avant le 10 (dis à Claude : « fais la fin de mois »)."
+    ],
+    done: "Le logiciel est relié à la banque et le mois précédent est fermé avant le 10.",
+    link: { href: "/admin/revenus", label: "Revenus" }
+  },
+  "P7.4.06": {
+    how: [
+      "Coche chaque matin l'habitude « Solde du matin (banque + Stripe) » dans Mes habitudes.",
+      "Chaque matin : regarde le solde de la banque et de Stripe (2 minutes), note-le si quelque chose surprend.",
+      "À chaque gros encaissement, mets la part des taxes de côté."
+    ],
+    done: "L'habitude est cochée chaque jour depuis 30 jours.",
+    link: { href: "/admin/moi/habitudes", label: "Mes habitudes" }
+  },
+  "P7.6.06": {
+    how: [
+      "Dis à Claude : « Liste tous mes abonnements » ; il les sort des dépenses et des relevés Stripe.",
+      "Pour chacun : coût par mois, qui s'en sert, à garder ou à annuler.",
+      "Annule ceux qui ne servent pas ; demande un rabais ou une prolongation pour les autres. Refais-le chaque trimestre."
+    ],
+    done: "La liste est faite et les abonnements inutiles sont annulés.",
+    link: { href: "/admin/revenus", label: "Revenus" }
+  },
+  "P8.2.07": {
+    how: [
+      "Prends les 10 tâches qui reviennent le plus (inscription, paiement en retard, remplacement, MonClubSportif, uniformes, courriel aux familles, nouvelle famille, plainte, présences, fin de mois).",
+      "Pour chacune, explique à Claude comment tu la fais (dicté) ; il l'écrit en étapes avec les modèles de messages.",
+      "Fais-la faire une fois à la gérante avec la procédure, corrige la procédure là où elle a bloqué."
+    ],
+    done: "Les 10 procédures sont écrites et la gérante en a fait chacune au moins une fois.",
+    link: { href: "/admin/moi/confiees", label: "Tâches confiées" }
+  },
+  "P8.2.08": {
+    how: [
+      "Chaque lundi, choisis une tâche que tu fais encore toi-même.",
+      "Montre-la, faites-la ensemble, laisse la personne la faire, vérifie (et confie-la dans Tâches confiées).",
+      "Après 3 fois réussies, ne vérifie plus."
+    ],
+    done: "Au moins 12 tâches transférées et l'indicateur « Tâches confiées » à 20 par mois.",
+    link: { href: "/admin/moi/confiees", label: "Tâches confiées" }
+  },
+  "P8.2.09": {
+    how: ["Dis à Claude : « Écris le guide de l'employé » (horaires, absences, tenue, code de conduite, Loi 25, mots de passe).", "Relis-le, fais-le signer à chaque personne de l'équipe."],
+    done: "Le guide est signé par toute l'équipe.",
+    link: { href: "/admin/structure", label: "Structure et recrutement" }
+  },
+  "P8.3.07": {
+    how: [
+      "Dis à Claude : « Écris les fiches de poste éducateur, gérante, caméra, coordonnateur ».",
+      "Ajoute la grille : ce qu'on cherche dans une candidature, les questions d'entrevue, 2 références à appeler.",
+      "Utilise-les au prochain recrutement dans Structure et recrutement."
+    ],
+    done: "Les 4 fiches et la grille sont prêtes et utilisées.",
+    link: { href: "/admin/structure", label: "Structure et recrutement" }
+  },
+  "P8.4.10": {
+    how: ["Choisis un gestionnaire de mots de passe d'équipe (ex. 1Password ou Bitwarden).", "Range-y les accès partagés (MonClubSportif, Veo, réseaux) par rôle.", "Au départ d'une personne, retire ses accès le jour même."],
+    done: "Tous les accès partagés sont dans le gestionnaire, plus aucun mot de passe envoyé par message."
+  },
+  "P2.5.04": {
+    how: [
+      "En fin de saison, dis à Claude : « Sors nos meilleures familles » (assiduité, réinscription, références).",
+      "Regarde ce qu'elles ont en commun et ajuste l'offre et les prix de l'an prochain pour elles.",
+      "Écris ce qu'on refuse désormais (demandes qui ne nous ressemblent pas)."
+    ],
+    done: "Le portrait des meilleures familles est fait et l'offre 2027-2028 est ajustée.",
+    link: { href: "/admin/revenus/calculateur", label: "Calculateur de lancement" }
   }
 };
 

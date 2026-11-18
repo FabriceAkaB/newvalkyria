@@ -203,6 +203,16 @@ export async function computeRealFigures(today = new Date().toLocaleDateString("
     /* module sondages pas encore utilisé */
   }
 
+  // taches_confiees (stade 3 d'Alex Hormozi : JP forme au lieu de faire) : tâches confiées à quelqu'un d'autre que JP
+  // et faites ce mois-ci.
+  try {
+    const month = today.slice(0, 7);
+    const done = await rows(db().from("team_tasks").select("assignee, done_at").eq("status", "fait").neq("assignee", "JP").gte("done_at", `${month}-01T00:00:00`));
+    auto.taches_confiees = { value: done.length, note: `${done.length} tâche${done.length > 1 ? "s" : ""} confiée${done.length > 1 ? "s" : ""} et faite${done.length > 1 ? "s" : ""} en ${month}` };
+  } catch {
+    /* tâches de l'équipe pas encore utilisées */
+  }
+
   // source_connue : familles inscrites cette saison (filles, garçons, Sport-Études) qui ont répondu « Comment nous
   // avez-vous connus ? » (/admin/acquisition)
   try {
