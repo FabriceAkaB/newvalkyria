@@ -37,6 +37,8 @@ export interface LaunchScenario {
   sourceId: string | null;
   /** Projet du sondage d'intérêt relié (project-pipeline.ts), ex. « camp-fetes-2026 ». */
   projectKey: string | null;
+  /** Conditions cochées à la main avant le lancement (responsable financier). */
+  checks: Record<string, boolean>;
   startDate: string | null;
   inputs: LaunchInputs;
   results: LaunchResults;
@@ -57,6 +59,7 @@ function toScenario(row: any, today = torontoToday()): LaunchScenario {
     sourceKind: row.source_kind === "saison" || row.source_kind === "session" ? row.source_kind : null,
     sourceId: row.source_id ?? null,
     projectKey: row.project_key ?? null,
+    checks: row.checks && typeof row.checks === "object" ? row.checks : {},
     startDate: row.start_date ? String(row.start_date).slice(0, 10) : null,
     inputs,
     results,
@@ -107,6 +110,14 @@ export async function saveScenario(input: SaveScenarioInput): Promise<LaunchScen
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data ? toScenario(data) : null;
+}
+
+export async function setScenarioCheck(id: string, key: string, done: boolean): Promise<void> {
+  const { data, error } = await db().from("launch_scenarios").select("checks").eq("id", id).eq("club_id", CLUB_ID).maybeSingle();
+  if (error || !data) throw new Error(error?.message ?? "Scénario introuvable");
+  const checks = { ...(data.checks ?? {}), [key]: done };
+  const { error: e2 } = await db().from("launch_scenarios").update({ checks }).eq("id", id).eq("club_id", CLUB_ID);
+  if (e2) throw new Error(e2.message);
 }
 
 export async function deleteScenario(id: string): Promise<void> {
