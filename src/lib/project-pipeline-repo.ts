@@ -50,7 +50,7 @@ export async function getProjectBoard(): Promise<ProjectBoard> {
       const inv = r.invite_id ? inviteById.get(r.invite_id) : null;
       const list = r.answers?.[PROJECT_CHECKLIST_ID];
       // Liste à cocher : cochée = oui ; pas cochée = non, seulement si le choix était proposé à cette famille.
-      const a = r.answers?.[project.key] ?? (Array.isArray(list) ? (list.includes(projectOption(project)) ? "Oui" : !project.segment || String(inv?.segment ?? "").includes(project.segment) ? "Non" : undefined) : undefined);
+      const a = r.answers?.[project.key] ?? (Array.isArray(list) && !project.ownSurvey ? (list.includes(projectOption(project)) ? "Oui" : !project.segment || String(inv?.segment ?? "").includes(project.segment) ? "Non" : undefined) : undefined);
       if (a === undefined) continue;
       const fam = String(inv?.parent_email ?? `réponse:${r.invite_id ?? Math.random()}`).toLowerCase();
       if (seen.has(fam)) continue;

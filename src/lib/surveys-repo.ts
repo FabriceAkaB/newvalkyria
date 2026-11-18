@@ -140,8 +140,8 @@ export const SURVEY_TEMPLATES: SurveyTemplate[] = [
         id: PROJECT_CHECKLIST_ID,
         type: "choix_multiple",
         label: "Cochez tout ce qui pourrait intéresser votre fille (ou vos filles)",
-        options: PROJECTS_2027.map(projectOption),
-        optionSegments: Object.fromEntries(PROJECTS_2027.filter((p) => p.segment).map((p) => [projectOption(p), p.segment!])),
+        options: PROJECTS_2027.filter((p) => !p.ownSurvey).map(projectOption),
+        optionSegments: Object.fromEntries(PROJECTS_2027.filter((p) => p.segment && !p.ownSurvey).map((p) => [projectOption(p), p.segment!])),
         required: true,
         role: "interet"
       },

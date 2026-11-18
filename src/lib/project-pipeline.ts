@@ -20,6 +20,8 @@ export interface Project {
   market?: string;
   /** Proposé seulement aux familles dont l'invitation porte ce repère (sinon à toutes). */
   segment?: string;
+  /** Sondé à part (son propre sondage, ex. le tournoi des équipes avancées) : absent de la liste à cocher commune. */
+  ownSurvey?: boolean;
 }
 
 /** Repère des familles d'une fille née du 1er oct. 2015 au 30 sept. 2016 (âge au 30 septembre) : 6e année en 2027-2028,
@@ -39,7 +41,7 @@ export const PROJECTS_2027: Project[] = [
   { key: "roses", label: "Camp ou séances avec les Roses de Montréal", when: "en partenariat avec le club professionnel, 2027", start: null, market: "Les Roses ont déjà un camp féminin avec Écoles de Soccer Montréal (529 $ la semaine, Laval et Brossard). Notre angle : leur ouvrir les Laurentides, où elles n'ont pas de camp." },
   { key: "ontario-ete-2027", label: "Tournée de tournois en Ontario", when: "été 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
   { key: "ontario-automne-2027", label: "Tournée de tournois en Ontario", when: "automne 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
-  { key: "tournoi-av-ontario", label: "Tournoi en Ontario avec l'équipe avancée", when: "9 contre 9 pour les 2015, 7 contre 7 pour les 2016-2017, date à confirmer", start: null, segment: "Équipe avancée", funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
+  { key: "tournoi-av-ontario", label: "Tournoi Game Awareness avec l'équipe avancée", when: "Mississauga, 2027 (sondage à part des équipes 2015 AV et 2016-2017 AV)", start: null, segment: "Équipe avancée", ownSurvey: true, market: "Inscription par équipe, taxes incluses : 9 contre 9 de 757 $ à 1 100 $, 7 contre 7 de 616 $ à 894 $ selon le tournoi (Family Day Cup 14-15 févr., Easter Cup 29 mars, Youth World Cup 3-4 juill., Youth Gold Cup 4 sept., Thanksgiving Cup 11 oct.). Hôtel et transport en plus.", funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
   { key: "prep-sport-etudes", label: "Programme préparatoire au Sport-Études", when: "pour les tests de l'automne 2027, entrée au secondaire en 2028", start: null, segment: "Entrée en 6e en 2027" },
   { key: "saison-2027-2028", label: "Continuer avec New Valkyria la saison prochaine", when: "automne-hiver 2027-2028", start: "2027-09-07", existing: true }
 ];

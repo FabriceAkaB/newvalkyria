@@ -38,7 +38,7 @@ export default async function SurveyPublicPage({ params }: { params: Promise<{ t
     <>
       <div style={card}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0, color: "#1d1730" }}>{survey.title}</h1>
-        <p style={{ color: "#5d566b", lineHeight: 1.6, margin: "0.6rem 0 0" }}>
+        <p style={{ color: "#5d566b", lineHeight: 1.6, margin: "0.6rem 0 0", whiteSpace: "pre-line" }}>
           {first ? (
             <>
               Bonjour {first},
