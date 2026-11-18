@@ -19,13 +19,14 @@ describe("progression des points comme dans un jeu", () => {
     expect(p.pct).toBe(1);
   });
 
-  it("débloque les récompenses à leur seuil et montre la prochaine", () => {
+  it("le niveau suit les points gagnés, les récompenses suivent le solde à dépenser", () => {
     const rewards = [
       { id: "b", name: "Gourde", cost: 120 },
       { id: "a", name: "Choisir le jeu de fin", cost: 50 }
     ];
-    const p = progressOf(70, rewards, ["a"]);
-    expect(p.unlocked).toEqual([{ id: "a", name: "Choisir le jeu de fin", cost: 50, given: true }]);
+    const p = progressOf(170, rewards, 70);
+    expect(p.level.name).toBe("Capitaine");
+    expect(p.affordable).toEqual([{ id: "a", name: "Choisir le jeu de fin", cost: 50 }]);
     expect(p.nextReward).toEqual({ id: "b", name: "Gourde", cost: 120, toGo: 50 });
   });
 });

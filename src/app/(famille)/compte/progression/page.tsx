@@ -3,11 +3,9 @@ import Link from "next/link";
 
 import { BulletinReport } from "@/components/bulletin-report";
 import { Container } from "@/components/container";
-import { ParentTabs } from "@/components/parent-tabs";
 import { getBulletinReport } from "@/lib/bulletin-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
-import { getChildrenForParent, getRegistrationsForPlayer, getVerifiedParentEmail } from "@/lib/parent-repo";
-import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { getFamilyRegistrations, getVerifiedParentEmail } from "@/lib/parent-repo";
 
 export const metadata: Metadata = { title: "Progression | New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -18,34 +16,11 @@ export default async function ProgressionPage({ searchParams }: { searchParams: 
   const sp = await searchParams;
   const period = sp.bulletin === "mi-saison" || sp.bulletin === "fin-saison" ? sp.bulletin : null;
   const userId = await requireParentUserId();
-  const [children, email] = await Promise.all([getChildrenForParent(userId), getVerifiedParentEmail(userId)]);
-  const linked = children.filter((c) => c.player_id);
-  // Les inscriptions de la famille : celles des profils reliés, et celles au courriel confirmé du compte (l'autre
-  // parent a pu relier l'enfant, ou personne ne l'a encore fait). Une seule par joueuse : la plus récente payée.
-  const regIds = new Map<string, string>();
-  for (const c of linked) {
-    const reg = (await getRegistrationsForPlayer(c.player_id!)).find((r) => r.status === "paid" && !r.isTrial);
-    if (reg) regIds.set(`${c.first_name} ${c.last_name}`.toLowerCase(), reg.id);
-  }
-  if (email) {
-    const { data } = await (getSupabaseAdminClient() as any)
-      .from("registrations")
-      .select("id, player_first_name, player_last_name, is_trial, status, created_at")
-      .ilike("parent_email", email)
-      .eq("status", "paid")
-      .eq("is_trial", false)
-      .order("created_at", { ascending: false });
-    for (const r of (data ?? []) as any[]) {
-      const k = `${String(r.player_first_name).trim()} ${String(r.player_last_name).trim()}`.toLowerCase();
-      if (!regIds.has(k)) regIds.set(k, r.id);
-    }
-  }
+  const [family, email] = await Promise.all([getFamilyRegistrations(userId), getVerifiedParentEmail(userId)]);
+  const regIds = new Map(family.map((f) => [`${f.firstName} ${f.lastName}`.toLowerCase(), f.registrationId]));
   const bulletins = await Promise.all([...regIds.entries()].map(async ([k, id]) => ({ key: k, data: await getBulletinReport(id, { period, audience: "parent" }).catch(() => null) })));
   return (
     <section className="insc-hero">
-      <Container className="max-w-2xl">
-        <ParentTabs />
-      </Container>
       <Container className="max-w-2xl">
         <div className="insc-hero-inner">
           <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Espace parent</p>

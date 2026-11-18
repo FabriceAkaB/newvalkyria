@@ -39,7 +39,7 @@ export default async function PlayerSeasonPage({ params }: { params: Promise<{ i
               <h2 className="mda-h2">Points</h2>
               <section className="mda-card" style={{ marginTop: 12 }}>
                 <div style={{ color: "var(--adm-text)" }}>
-                  <PointsProgress p={progressOf(points.earned, rewards.filter((r) => r.active), points.givenRewardIds)} />
+                  <PointsProgress p={progressOf(points.earned, rewards.filter((r) => r.active), points.balance)} />
                 </div>
                 <p className="mda-lead" style={{ margin: "8px 0 0" }}>
                   {points.presences} présence{points.presences > 1 ? "s" : ""} · {points.victoires} victoire{points.victoires > 1 ? "s" : ""} · {points.attitudes} fois l&apos;attitude du jour. <Link href="/admin/coaching/points">Points et récompenses</Link>

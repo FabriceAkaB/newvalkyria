@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { Container } from "@/components/container";
-import { ParentTabs } from "@/components/parent-tabs";
 import { IdeaForm, MyIdeas } from "@/components/idea-box";
 import { listIdeasForParent } from "@/lib/idea-box-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
@@ -16,9 +15,6 @@ export default async function MesIdeesPage() {
   const [ideas, children] = await Promise.all([listIdeasForParent(userId), getChildrenForParent(userId)]);
   return (
     <section className="insc-hero">
-      <Container className="max-w-2xl">
-        <ParentTabs />
-      </Container>
       <Container className="max-w-2xl">
         <div className="insc-hero-inner">
           <h1 className="insc-hero-title">💡 Boîte à idées</h1>

@@ -175,6 +175,8 @@ export interface RosterPlayer {
   advancedGroup: boolean;
   /** Photo de la fiche joueuse (déposée par la famille), pour que l'éducateur reconnaisse chaque fille. */
   photoUrl: string | null;
+  /** Autorisation photo de la famille (players.image_consent) : sans elle, pas de photo de championne. */
+  imageConsent?: boolean | null;
 }
 
 export interface RosterSlot {
@@ -194,7 +196,7 @@ export interface RosterRegistration {
   advanced_group: boolean;
   status: string;
   time_slot_template_id: string | null;
-  players?: { photo_url: string | null } | null;
+  players?: { photo_url: string | null; image_consent?: boolean | null } | null;
 }
 
 const WEEK_DAYS = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
@@ -224,19 +226,25 @@ export function rosterForActivity(activity: { activity_date: string; start_time:
         ? String(r.trial_date ?? "").slice(0, 10) === date && !["cancelled", "unavailable"].includes(r.status) && inGroup(r)
         : ["paid", "confirmed"].includes(r.status) && inGroup(r)
     )
-    .map((r) => ({
-      registrationId: r.id,
-      firstName: r.player_first_name ?? "",
-      lastName: r.player_last_name ?? "",
-      birthYear: r.category_id,
-      isTrial: r.is_trial,
-      advancedGroup: r.advanced_group,
-      photoUrl: r.players?.photo_url ?? null
-    }))
+    .map(toRosterPlayer)
     .sort((a, b) => Number(a.isTrial) - Number(b.isTrial) || a.firstName.localeCompare(b.firstName, "fr"));
 }
 
-const ROSTER_COLUMNS = "id, player_first_name, player_last_name, category_id, is_trial, trial_date, advanced_group, status, time_slot_template_id, players(photo_url)";
+const toRosterPlayer = (r: RosterRegistration): RosterPlayer => ({
+  registrationId: r.id,
+  firstName: r.player_first_name ?? "",
+  lastName: r.player_last_name ?? "",
+  birthYear: r.category_id,
+  isTrial: r.is_trial,
+  advancedGroup: r.advanced_group,
+  photoUrl: r.players?.photo_url ?? null,
+  imageConsent: r.players?.image_consent ?? null
+});
+
+/** Activité des comptes de démonstration : son effectif vient seulement de la saison « demo » (jamais de vraies joueuses). */
+const isDemoActivity = (a: { organization?: string | null }) => /^Démo/.test(String(a.organization ?? ""));
+
+const ROSTER_COLUMNS = "id, player_first_name, player_last_name, category_id, is_trial, trial_date, advanced_group, status, time_slot_template_id, players(photo_url, image_consent)";
 
 export async function loadRosterSources(seasonId: string = SEASON_DB_ID): Promise<{ slots: RosterSlot[]; regs: RosterRegistration[] }> {
   const [{ data: templates, error: e1 }, { data: cats, error: e2 }, { data: regs, error: e3 }] = await Promise.all([
@@ -254,7 +262,11 @@ export async function loadRosterSources(seasonId: string = SEASON_DB_ID): Promis
   return { slots, regs: (regs ?? []) as RosterRegistration[] };
 }
 
-export async function getActivityRoster(activity: { activity_date: string; start_time: string; category: string | null }, seasonId: string = SEASON_DB_ID): Promise<RosterPlayer[]> {
+export async function getActivityRoster(activity: { activity_date: string; start_time: string; category: string | null; organization?: string | null }, seasonId: string = SEASON_DB_ID): Promise<RosterPlayer[]> {
+  if (isDemoActivity(activity)) {
+    const { regs } = await loadRosterSources("demo");
+    return regs.filter((r) => ["paid", "confirmed"].includes(r.status)).map(toRosterPlayer);
+  }
   if (!activity.category) return [];
   const { slots, regs } = await loadRosterSources(seasonId);
   return rosterForActivity(activity, slots, regs);

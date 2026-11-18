@@ -4,6 +4,7 @@ import { cronGate } from "@/lib/cron-gate";
 import { OWNER_NOTIFY_EMAIL } from "@/lib/email";
 import { env } from "@/lib/env";
 import { syncCoachSchedule } from "@/lib/mcs-robot-runner";
+import { runSeasonPointsEnd } from "@/lib/player-points-repo";
 import { listPractices, mergeSameSlot } from "@/lib/practices-repo";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
 import { sendDueEmails } from "@/lib/scheduled-emails";
@@ -24,10 +25,13 @@ export async function GET(request: Request) {
   const staffing = await syncCoachSchedule()
     .then((r) => ({ slots: r.slots, inserted: r.inserted, absent: r.absent, short: r.short.length, newShort: r.newShort.length, skipped: r.skipped }))
     .catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
+  // Points Valkyria (JP, 17 nov. 2026) : 21 jours avant la fin de saison, une tâche pour rappeler aux familles de
+  // dépenser leurs points ; après la saison, le solde devient le cadeau par défaut et une tâche dit à qui le remettre.
+  const points = await runSeasonPointsEnd().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
   const practices = mergeSameSlot(await listPractices());
   const red = practices.filter((p) => p.readiness === "rouge");
   const yellow = practices.filter((p) => p.readiness === "jaune");
-  if (!red.length || !isEmailConfigured()) return NextResponse.json({ ok: true, red: red.length, emailed: false, staffing });
+  if (!red.length || !isEmailConfigured()) return NextResponse.json({ ok: true, red: red.length, emailed: false, staffing, points });
   const li = (p: (typeof red)[number]) => `<li><strong>${p.date} ${p.start}</strong> — ${p.group}${p.organization ? ` (${p.organization})` : ""} · ${p.daysLeft === 0 ? "aujourd'hui" : `dans ${p.daysLeft} jour(s)`}</li>`;
   await getResendClient().emails.send({
     from: env.resendFrom,
@@ -42,5 +46,5 @@ export async function GET(request: Request) {
         <p style="color:#666;font-size:13px">Objectif : chaque pratique prête 2 semaines d'avance.</p>
       </div>`
   });
-  return NextResponse.json({ ok: true, red: red.length, emailed: true, staffing });
+  return NextResponse.json({ ok: true, red: red.length, emailed: true, staffing, points });
 }

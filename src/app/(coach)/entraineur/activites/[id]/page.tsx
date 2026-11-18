@@ -6,7 +6,7 @@ import { requireCoach } from "@/lib/coach-auth";
 import { cleanCategory, getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityAccess, getPracticeReadItems } from "@/lib/coach-portal-repo";
 import { defaultStepFor } from "@/lib/coach-report";
 import { getCoach } from "@/lib/coaches-repo";
-import { getActivityWinners } from "@/lib/player-points-repo";
+import { getActivityChampions, getRules } from "@/lib/player-points-repo";
 import { getExercisesForPlanning } from "@/lib/exercises-repo";
 import { videosForActivity } from "@/lib/match-videos";
 import { getConvocations, getLineup, getMatchDetails, getMatchEvaluations, getMatchRoster, getPlaytimeSegments } from "@/lib/match-repo";
@@ -44,9 +44,10 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
     isMatch ? getMatchEvaluations(id) : Promise.resolve([])
   ]);
 
-  const [briefing, winners, components, videos, readItems] = await Promise.all([
+  const [briefing, champions, pointsRules, components, videos, readItems] = await Promise.all([
     getBriefing(entry.activity, roster).catch(() => []),
-    getActivityWinners(id).catch(() => []),
+    getActivityChampions(id).catch(() => []),
+    getRules(),
     getComponents().catch(() => null),
     videosForActivity(id).catch(() => []),
     getPracticeReadItems([id]).then((m) => m.get(id) ?? []).catch(() => [])
@@ -84,7 +85,8 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       myPresence={myPresence}
       defaultStep={defaultStep}
       briefing={briefing}
-      initialWinners={winners}
+      initialChampions={champions}
+      pointsRules={pointsRules}
       musts={components?.items ?? []}
       theme={theme ? { theme: themeFor(theme, cleanCategory(entry.activity.category)) ?? theme.theme, notes: theme.notes } : null}
       sessionBlocks={blocks}

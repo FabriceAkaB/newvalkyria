@@ -314,3 +314,36 @@ export async function confirmParentEmailCheck(token: string): Promise<string | n
   }
   return data.user_id as string;
 }
+
+export interface FamilyRegistration {
+  registrationId: string;
+  playerId: string | null;
+  firstName: string;
+  lastName: string;
+  seasonId: string | null;
+}
+
+/** Les inscriptions de la saison de chaque fille de la famille (une par joueuse : la plus récente payée, hors essai) :
+ *  celles des profils reliés, et celles au courriel confirmé du compte (l'autre parent a pu relier l'enfant, ou
+ *  personne ne l'a encore fait). Sert au fil, aux points, au bulletin. */
+export async function getFamilyRegistrations(userId: string): Promise<FamilyRegistration[]> {
+  const [children, email] = await Promise.all([getChildrenForParent(userId), getVerifiedParentEmail(userId)]);
+  const playerIds = children.map((c) => c.player_id).filter((x): x is string => Boolean(x));
+  const cols = "id, player_id, player_first_name, player_last_name, season_id, created_at";
+  const [{ data: linked }, { data: byEmail }] = await Promise.all([
+    playerIds.length
+      ? db().from("registrations").select(cols).in("player_id", playerIds).eq("status", "paid").eq("is_trial", false).order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] }),
+    email
+      ? db().from("registrations").select(cols).ilike("parent_email", email).eq("status", "paid").eq("is_trial", false).order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] })
+  ]);
+  const out = new Map<string, FamilyRegistration>();
+  for (const r of [...((linked ?? []) as any[]), ...((byEmail ?? []) as any[])]) {
+    const first = String(r.player_first_name ?? "").trim();
+    const last = String(r.player_last_name ?? "").trim();
+    const key = `${first} ${last}`.toLowerCase();
+    if (!out.has(key)) out.set(key, { registrationId: r.id, playerId: r.player_id ?? null, firstName: first, lastName: last, seasonId: r.season_id ?? null });
+  }
+  return [...out.values()];
+}

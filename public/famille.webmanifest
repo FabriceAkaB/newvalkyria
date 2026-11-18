@@ -1,0 +1,11 @@
+{
+  "name": "New Valkyria — Espace famille",
+  "short_name": "New Valkyria",
+  "start_url": "/compte/espace",
+  "scope": "/compte",
+  "display": "standalone",
+  "background_color": "#09070e",
+  "theme_color": "#09070e",
+  "lang": "fr-CA",
+  "icons": [{ "src": "/logo.png", "sizes": "393x474", "type": "image/png", "purpose": "any" }]
+}

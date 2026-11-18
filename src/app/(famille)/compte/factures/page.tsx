@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { EmailCheckBanner } from "@/components/email-check-banner";
-import { ParentTabs } from "@/components/parent-tabs";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { money } from "@/lib/parent-billing";
 import { getFamilyBilling } from "@/lib/parent-billing-repo";
@@ -21,9 +20,6 @@ export default async function FacturesPage() {
   const billing = email ? await getFamilyBilling(email) : null;
   return (
     <section className="insc-hero">
-      <Container className="max-w-2xl">
-        <ParentTabs />
-      </Container>
       <Container className="max-w-2xl">
         <div className="insc-hero-inner">
           <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Espace parent</p>

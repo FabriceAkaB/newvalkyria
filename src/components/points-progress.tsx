@@ -1,6 +1,6 @@
 import { type Progress } from "@/lib/player-points";
 
-/** Barre de progression des points d'une joueuse, comme dans un jeu : niveau, points, prochain niveau, récompenses.
+/** Barre de progression des points d'une joueuse, comme dans un jeu : niveau (points gagnés), solde à dépenser, prochain niveau, récompenses à sa portée.
  *  Sans état : utilisée dans Coaching, sur la fiche de la joueuse et dans l'espace des familles. */
 export function PointsProgress({ p, compact = false }: { p: Progress; compact?: boolean }) {
   return (
@@ -9,7 +9,7 @@ export function PointsProgress({ p, compact = false }: { p: Progress; compact?: 
         <span className="pp-level" aria-label={`Niveau ${p.level.n}`}>{p.level.n}</span>
         <span className="pp-name">
           <strong>{p.level.name}</strong>
-          <small>{p.xp} point{p.xp > 1 ? "s" : ""}</small>
+          <small>{p.balance} point{p.balance > 1 ? "s" : ""} à dépenser{p.xp !== p.balance ? ` · ${p.xp} gagnés` : ""}</small>
         </span>
         {p.next ? <span className="pp-goal">{p.next.name} à {p.next.min}</span> : <span className="pp-goal">Niveau maximum 🏆</span>}
       </div>
@@ -22,12 +22,10 @@ export function PointsProgress({ p, compact = false }: { p: Progress; compact?: 
           {p.nextReward ? ` Prochaine récompense : ${p.nextReward.name} à ${p.nextReward.cost} points (encore ${p.nextReward.toGo}).` : ""}
         </p>
       )}
-      {p.unlocked.length > 0 && (
+      {!compact && p.affordable.length > 0 && (
         <p className="pp-rewards">
-          {p.unlocked.map((r) => (
-            <span key={r.id} data-given={r.given || undefined}>
-              {r.given ? "✓" : "🎁"} {r.name}
-            </span>
+          {p.affordable.map((r) => (
+            <span key={r.id}>🎁 {r.name}</span>
           ))}
         </p>
       )}

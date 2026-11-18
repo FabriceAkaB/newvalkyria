@@ -47,7 +47,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         evaluations: (evaluations as any[]).map((e) => ({ ...e, comment: null })),
         objectives,
         paymentPlan,
-        points: points.get(reg.id) ? progressOf(points.get(reg.id)!.earned, activeRewards, points.get(reg.id)!.givenRewardIds) : null
+        points: points.get(reg.id) ? progressOf(points.get(reg.id)!.earned, activeRewards, points.get(reg.id)!.balance) : null
       };
     })
   );

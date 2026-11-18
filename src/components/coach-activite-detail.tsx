@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from "react";
 
 import { EntityDocuments } from "@/components/admin-entity-documents";
 import { CoachPracticeDeck } from "@/components/coach-practice-deck";
+import { CoachChampionsCard } from "@/components/coach-champions-card";
 import { CoachTeamsCard } from "@/components/coach-teams-card";
 import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrief";
 import { CoachGuideCard, PracticeTimer } from "@/components/coach-guide";
@@ -19,7 +20,8 @@ import { PracticeSurvey } from "@/components/practice-survey";
 import { computeHours, formatHoursMinutes, timeToMinutes } from "@/lib/coach-payroll";
 import { planningLabel } from "@/lib/exercise-bank";
 import type { BriefingPlayer, PlayerAttendance, PlayerAttendanceStatus, PlayerEvaluation, RosterPlayer } from "@/lib/coach-portal-repo";
-import { MAX_WINNERS, POINTS, WIN_LABEL, type WinKind } from "@/lib/player-points";
+import type { PointsRules } from "@/lib/player-points";
+import type { ChampionPost } from "@/lib/player-points-repo";
 import { blockKey, practiceReadStatus, type ReadItem } from "@/lib/practice-read";
 import { themeForGroup } from "@/lib/practice-teams-core";
 import { isAnswered, type SurveyAnswer } from "@/lib/practice-survey";
@@ -658,48 +660,6 @@ function QuickEvaluation({
   );
 }
 
-/** Gagnantes du jour : l'éducateur touche le nom des gagnantes ; les points se comptent tout seuls. */
-function WinnersCard({ activityId, players, initial }: { activityId: string; players: RosterPlayer[]; initial: { registration_id: string; kind: WinKind }[] }) {
-  const [wins, setWins] = useState(initial);
-  const [error, setError] = useState<string | null>(null);
-  const has = (id: string, kind: WinKind) => wins.some((w) => w.registration_id === id && w.kind === kind);
-  const count = (kind: WinKind) => wins.filter((w) => w.kind === kind).length;
-
-  const toggle = async (id: string, kind: WinKind) => {
-    const on = !has(id, kind);
-    setError(null);
-    const r = await postJson(`/api/coach/activities/${activityId}/winners`, { registrationId: id, kind, on });
-    if (!r.ok) return setError(r.error ?? null);
-    setWins((prev) => (on ? [...prev, { registration_id: id, kind }] : prev.filter((w) => !(w.registration_id === id && w.kind === kind))));
-  };
-
-  return (
-    <div className="coach-card">
-      <p className="coach-card__label">
-        Gagnantes du jour · victoire {count("victoire")}/{MAX_WINNERS} · attitude {count("attitude")}/{MAX_WINNERS}
-      </p>
-      <p className="coach-sub" style={{ marginTop: 0 }}>
-        Touche les gagnantes : +{POINTS.victoire} points pour une victoire, +{POINTS.attitude} pour l&apos;attitude (la présence donne déjà {POINTS.presence} points). Prends-les en photo si la famille l&apos;a permis.
-      </p>
-      {error && <p className="coach-error" role="alert">{error}</p>}
-      <div style={{ marginTop: 8 }}>
-        {players.map((p) => (
-          <div key={p.registrationId} className="coach-win-row">
-            <span>{p.firstName} {p.lastName[0] ?? ""}.</span>
-            <div className="coach-seg">
-              {(["victoire", "attitude"] as WinKind[]).map((k) => (
-                <button key={k} type="button" data-active={String(has(p.registrationId, k))} aria-pressed={has(p.registrationId, k)} onClick={() => toggle(p.registrationId, k)} title={WIN_LABEL[k]}>
-                  {k === "victoire" ? "🏆 Victoire" : "⭐ Attitude"}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function MyPresenceCard({ activity, initial, onChange }: { activity: CoachActivity; initial: MyPresence; onChange: (p: MyPresence) => void }) {
   const start = String(activity.start_time).slice(0, 5);
   const end = String(activity.end_time).slice(0, 5);
@@ -771,7 +731,8 @@ export function CoachActiviteDetail({
   initialExercises,
   defaultStep,
   briefing,
-  initialWinners,
+  initialChampions,
+  pointsRules,
   matchRoster,
   initialMatchDetails,
   initialMatchConvocations,
@@ -786,7 +747,8 @@ export function CoachActiviteDetail({
 }: Props & {
   defaultStep: Step;
   briefing: BriefingPlayer[];
-  initialWinners: { registration_id: string; kind: WinKind }[];
+  initialChampions: ChampionPost[];
+  pointsRules: PointsRules;
   musts?: { title: string; text: string }[];
   videos?: { id: string; title: string }[];
   readItems?: ReadItem[];
@@ -1052,7 +1014,7 @@ export function CoachActiviteDetail({
 
               {participants.length > 0 && (
                 <div style={{ marginBottom: 16 }}>
-                  <WinnersCard activityId={activity.id} players={participants} initial={initialWinners} />
+                  <CoachChampionsCard activityId={activity.id} players={participants} initial={initialChampions} rules={pointsRules} />
                 </div>
               )}
 

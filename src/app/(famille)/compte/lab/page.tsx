@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { EmailCheckBanner } from "@/components/email-check-banner";
-import { ParentTabs } from "@/components/parent-tabs";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { getVerifiedParentEmail } from "@/lib/parent-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -33,9 +32,6 @@ export default async function ParentLabPage() {
   const picked = pickRoutine(routines, monthOf(today));
   return (
     <section className="insc-hero">
-      <Container className="max-w-2xl">
-        <ParentTabs />
-      </Container>
       <Container className="max-w-2xl">
         <div className="insc-hero-inner">
           <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Espace parent</p>
