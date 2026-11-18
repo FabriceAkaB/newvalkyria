@@ -169,14 +169,18 @@ export const ADMIN_NAV: AdminNavSection[] = [
         ]
       },
       {
-        key: "camps-parascolaire",
-        label: "Camps et parascolaire",
+        key: "camps",
+        label: "Camps de jour",
         icon: "sun",
-        description: "Camps de jour (relâche, Fêtes, été) et programmes parascolaires dans les écoles : chaque camp ou école est un programme à dates fixes, avec ses inscriptions et sa satisfaction.",
-        tabs: [
-          { href: "/admin/camps", label: "Camps de jour" },
-          { href: "/admin/parascolaire", label: "Parascolaire" }
-        ]
+        description: "Camps de jour de la relâche, des Fêtes et de l'été : chaque semaine de camp est un programme à dates fixes, avec ses inscriptions, ses paiements et sa satisfaction.",
+        tabs: [{ href: "/admin/camps", label: "Camps de jour" }]
+      },
+      {
+        key: "parascolaire",
+        label: "Parascolaire",
+        icon: "sun",
+        description: "Programmes parascolaires dans les écoles : chaque école et chaque groupe est un programme à dates fixes, avec ses inscriptions et sa satisfaction.",
+        tabs: [{ href: "/admin/parascolaire", label: "Parascolaire" }]
       },
       {
         key: "monclubsportif",
