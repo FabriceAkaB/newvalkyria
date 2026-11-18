@@ -65,6 +65,7 @@ export default async function ProjectsPage() {
                       <strong>{project.label}</strong>
                       <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{project.when}</span>
                       <span style={{ display: "block", fontSize: "0.8125rem", color: "var(--adm-text-2)", marginTop: 4 }}>{evaluation.sentence}</span>
+                      {project.market ? <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-text-3)", marginTop: 4 }}>Marché : {project.market}</span> : null}
                       {project.funding ? <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-text-3)", marginTop: 4 }}>Financement : {project.funding}</span> : null}
                       {interestedNames.length ? (
                         <details style={{ marginTop: 4, fontSize: "0.75rem", color: "var(--adm-text-3)" }}>

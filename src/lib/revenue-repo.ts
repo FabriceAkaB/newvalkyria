@@ -33,6 +33,7 @@ export const EXPENSE_CATEGORIES = [
   "Marketing / Pub",
   "Assurance",
   "Frais Stripe / Bancaires",
+  "Honoraires professionnels",
   "Autre"
 ] as const;
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];

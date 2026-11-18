@@ -9,7 +9,7 @@ const BUCKET = "documents";
 export const DOCUMENT_CATEGORIES = ["Contrat", "Formulaire", "Certificat", "Autorisation", "Facture", "Reçu", "Paie", "Pratique", "Autre"] as const;
 export type DocumentCategory = (typeof DOCUMENT_CATEGORIES)[number];
 
-export type DocumentEntityType = "registration" | "lead" | "coach" | "coach_activity" | "sponsor";
+export type DocumentEntityType = "registration" | "lead" | "coach" | "coach_activity" | "sponsor" | "expense";
 
 export interface EntityDocument {
   id: string;
