@@ -7,6 +7,8 @@ import { getPayrollRows, holdDetail, type PayrollRow } from "@/lib/coach-payroll
 import { getCoaches } from "@/lib/coaches-repo";
 import { getAllContracts } from "@/lib/employee-contracts";
 import { listPractices } from "@/lib/practices-repo";
+import { getCoachSatisfaction } from "@/lib/surveys-repo";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const metadata = { title: "Suivi des éducateurs — Admin", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -39,7 +41,14 @@ export default async function CoachFollowUpPage() {
   await requireAdmin({ roles: ["admin"] });
   const t = today();
   const from = addDays(t, -21);
-  const [coaches, contracts, rows, practices] = await Promise.all([getCoaches(), getAllContracts(), getPayrollRows().catch(() => []), listPractices({ from, to: t }).catch(() => [])]);
+  const [coaches, contracts, rows, practices, satisfaction, { data: goals }] = await Promise.all([
+    getCoaches(),
+    getAllContracts(),
+    getPayrollRows().catch(() => []),
+    listPractices({ from, to: t }).catch(() => []),
+    getCoachSatisfaction().catch(() => new Map()),
+    (getSupabaseAdminClient() as any).from("coaches").select("id, pro_goals").not("pro_goals", "is", null)
+  ]);
   const recent = rows.filter((r) => String(r.activityDate).slice(0, 10) >= from && String(r.activityDate).slice(0, 10) <= t);
   const active = coaches.filter((c) => c.status === "active");
   const contractFor = (first: string) => contracts.find((k) => norm(k.employee_name).split(/\s+/)[0] === norm(first).split(/\s+/)[0] && k.status !== "cancelled");
@@ -73,6 +82,44 @@ export default async function CoachFollowUpPage() {
               <p className="mda-num">{recent.length ? Math.round(((recent.length - incomplete.length) / recent.length) * 100) : 0} %</p>
               <p className="mda-label">Rapports complets ({recent.length - incomplete.length} sur {recent.length} activités assignées)</p>
             </div>
+          </section>
+
+          <section className="mda-card-flush">
+            <div className="mda-card-head">
+              <h2 className="mda-h2">Ce que les parents pensent de chaque éducatrice</h2>
+              <Pill>sondages des familles</Pill>
+            </div>
+            <div className="admin-table-wrap" style={{ margin: 0, border: 0, boxShadow: "none" }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Éducateur</th>
+                    <th style={{ textAlign: "right" }}>Satisfaction /10</th>
+                    <th style={{ textAlign: "right" }}>Réponses</th>
+                    <th>Derniers mots des parents</th>
+                    <th>Ses objectifs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {active.map((c) => {
+                    const sat = satisfaction.get(c.id);
+                    const g = ((goals ?? []) as any[]).find((x) => x.id === c.id)?.pro_goals as string | undefined;
+                    return (
+                      <tr key={c.id}>
+                        <td>{c.first_name} {c.last_name}</td>
+                        <td style={{ textAlign: "right", fontWeight: 600 }}>{sat?.average ?? "—"}</td>
+                        <td style={{ textAlign: "right" }}>{sat?.count ?? 0}</td>
+                        <td style={{ maxWidth: 320 }}>{sat?.comments.length ? sat.comments.slice(-2).map((x: string) => `« ${x} »`).join(" ") : <span style={{ color: "var(--adm-text-3)" }}>—</span>}</td>
+                        <td style={{ maxWidth: 260 }}>{g ?? <span style={{ color: "var(--adm-text-3)" }}>pas encore écrits</span>}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="mda-sub" style={{ padding: "10px 20px 16px", margin: 0 }}>
+              La note vient de la question « satisfaction envers l&apos;éducatrice » des sondages de mi-saison et de fin de saison ; elle va aux éducatrices qui ont coaché la fille (au moins 2 pratiques dans les 45 jours avant la réponse). Chaque éducatrice voit sa note et les mots, sans le nom des familles, dans « Mon dossier » de son portail.
+            </p>
           </section>
 
           {active.map((c) => {

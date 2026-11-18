@@ -5,7 +5,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 /** Boîte à idées : table idea_box. Règles : idea-box-core.ts. */
 
 const db = () => getSupabaseAdminClient() as any;
-const COLS = "id, source, parent_user_id, author_name, author_email, player_name, category, message, status, response, responded_at, shown_publicly, created_at";
+const COLS = "id, source, parent_user_id, author_name, author_email, player_name, category, message, status, response, responded_at, shown_publicly, owner, created_at";
 
 export interface Idea {
   id: string;
@@ -20,6 +20,8 @@ export interface Idea {
   response: string | null;
   responded_at: string | null;
   shown_publicly: boolean;
+  /** Responsable de la réponse (JP, Christine, Annie). */
+  owner: string | null;
   created_at: string;
 }
 
@@ -80,8 +82,9 @@ export async function countNewIdeas(): Promise<number> {
 }
 
 /** Statut, réponse et affichage public ; avec notify, la réponse part aussi par courriel à l'auteur. */
-export async function updateIdea(id: string, patch: { status?: IdeaStatus; response?: string | null; shownPublicly?: boolean; notify?: boolean }): Promise<{ notified: boolean }> {
+export async function updateIdea(id: string, patch: { status?: IdeaStatus; response?: string | null; shownPublicly?: boolean; notify?: boolean; owner?: string | null }): Promise<{ notified: boolean }> {
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.owner !== undefined) row.owner = patch.owner?.trim() || null;
   if (patch.status) row.status = patch.status;
   if (patch.response !== undefined) {
     row.response = patch.response?.trim() || null;

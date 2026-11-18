@@ -24,7 +24,7 @@ export interface SurveyQuestion {
   options?: string[];
   required?: boolean;
   /** recommandation : note sur 10 qui alimente l'indicateur ; interet : réponse qui classe la famille intéressée ou non. */
-  role?: "recommandation" | "interet";
+  role?: "recommandation" | "interet" | "educatrice" | "educatrice_mot";
 }
 
 export type SurveyKind = "mi-saison" | "fin-saison" | "bulletin" | "changement" | "interet" | "lab" | "autre";
@@ -48,6 +48,10 @@ const RECOMMEND: SurveyQuestion = {
   role: "recommandation"
 };
 const CALL_ME: SurveyQuestion = { id: "rappel", type: "oui_non", label: "Aimeriez-vous qu'on vous appelle pour en parler ?" };
+/** Satisfaction envers l'éducatrice (JP, 17 nov. 2026) : la note va aux éducatrices qui ont coaché la fille
+ *  (coach-satisfaction-core.ts) ; le mot est montré à l'éducatrice sans le nom de la famille. */
+const EDUCATRICE: SurveyQuestion = { id: "educatrice", type: "note10", role: "educatrice", label: "Sur 10, êtes-vous satisfaits de l'éducatrice de votre fille (attention, encadrement, communication) ?" };
+const EDUCATRICE_MOT: SurveyQuestion = { id: "educatrice_mot", type: "texte", role: "educatrice_mot", label: "Un mot pour son éducatrice : ce qu'elle fait bien, ce qu'elle pourrait améliorer (elle le lira, sans votre nom)" };
 
 export interface SurveyTemplate {
   kind: SurveyKind;
@@ -67,6 +71,8 @@ export const SURVEY_TEMPLATES: SurveyTemplate[] = [
       { id: "plaisir", type: "echelle5", label: "Votre fille a-t-elle du plaisir aux entraînements ?", required: true },
       { id: "progres", type: "echelle5", label: "Voyez-vous des progrès depuis le début de la saison (ballon, confiance, créativité) ?", required: true },
       { id: "coachs", type: "echelle5", label: "Les coachs : attention portée à votre fille, clarté, encadrement" },
+      EDUCATRICE,
+      EDUCATRICE_MOT,
       { id: "communication", type: "echelle5", label: "La communication de l'académie (courriels, réponses à vos questions)" },
       { id: "bulletins", type: "echelle5", label: "Les bulletins et le suivi de votre fille" },
       { id: "horaire", type: "echelle5", label: "L'horaire et les lieux d'entraînement" },
@@ -84,6 +90,8 @@ export const SURVEY_TEMPLATES: SurveyTemplate[] = [
       RECOMMEND,
       { id: "plaisir", type: "echelle5", label: "Votre fille a-t-elle eu du plaisir cette saison ?", required: true },
       { id: "progres", type: "echelle5", label: "Avez-vous vu des progrès au cours de la saison ?", required: true },
+      EDUCATRICE,
+      EDUCATRICE_MOT,
       { id: "retour", type: "choix", label: "Comptez-vous inscrire votre fille la saison prochaine ?", options: ["Oui, c'est certain", "Probablement", "Je ne sais pas encore", "Non"], required: true },
       { id: "pourquoi", type: "texte", label: "Si vous hésitez ou ne revenez pas, qu'est-ce qui pourrait vous faire changer d'idée ?" },
       { id: "moment", type: "texte", label: "Quel moment de la saison a le plus marqué votre fille ?" },
@@ -503,4 +511,51 @@ export async function getSurveyKpis(): Promise<{ responseRate: number | null; re
     recommend: scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : null,
     recommendNote: `Moyenne de ${scores.length} réponses (12 derniers mois).`
   };
+}
+
+/* ── Satisfaction des parents envers chaque éducatrice (JP, 17 nov. 2026) ── */
+
+/** Note et mots des parents pour chaque éducatrice, à partir de toutes les réponses qui ont la question « educatrice ». */
+export async function getCoachSatisfaction(): Promise<Map<string, import("@/lib/coach-satisfaction-core").CoachSatisfaction>> {
+  const { attributeScores, WINDOW_DAYS } = await import("@/lib/coach-satisfaction-core");
+  const { cleanCategory } = await import("@/lib/coach-portal-repo");
+  const { data: surveys } = await db().from("surveys").select("id, questions");
+  const keyed = new Map<string, { score: string | null; word: string | null }>();
+  for (const sv of (surveys ?? []) as any[]) {
+    const qs = (sv.questions ?? []) as SurveyQuestion[];
+    const score = qs.find((q) => q.role === "educatrice")?.id ?? null;
+    const word = qs.find((q) => q.role === "educatrice_mot")?.id ?? null;
+    if (score || word) keyed.set(sv.id, { score, word });
+  }
+  if (!keyed.size) return new Map();
+  const { data: responses } = await db().from("survey_responses").select("survey_id, answers, created_at, invite:survey_invites(parent_email)").in("survey_id", [...keyed.keys()]);
+  const rows = (responses ?? []) as any[];
+  if (!rows.length) return new Map();
+  const emails = [...new Set(rows.map((r) => String(r.invite?.parent_email ?? "").toLowerCase()).filter(Boolean))];
+  const { data: regs } = emails.length ? await db().from("registrations").select("parent_email, category_id").eq("status", "paid").in("parent_email", emails) : { data: [] };
+  const catsOf = new Map<string, string[]>();
+  for (const r of (regs ?? []) as any[]) if (r.category_id) catsOf.set(String(r.parent_email).toLowerCase(), [...(catsOf.get(String(r.parent_email).toLowerCase()) ?? []), r.category_id]);
+  const earliest = rows.map((r) => String(r.created_at).slice(0, 10)).sort()[0];
+  const since = new Date(Date.parse(`${earliest}T12:00:00Z`) - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const { data: assigns } = await db()
+    .from("coach_assignments")
+    .select("coach_id, status, activity:coach_activities(category, activity_date, organization, activity_type)")
+    .gte("activity.activity_date", since);
+  const sessions = ((assigns ?? []) as any[])
+    .filter((a) => a.activity && !a.activity.organization && a.status !== "absent" && a.status !== "cancelled")
+    .map((a) => ({ coachId: a.coach_id, category: cleanCategory(a.activity.category) ?? "", date: String(a.activity.activity_date).slice(0, 10) }))
+    .filter((s) => s.category);
+  return attributeScores(
+    rows.map((r) => {
+      const k = keyed.get(r.survey_id)!;
+      const raw = k.score ? Number(r.answers?.[k.score]) : NaN;
+      return {
+        respondedAt: String(r.created_at),
+        categories: catsOf.get(String(r.invite?.parent_email ?? "").toLowerCase()) ?? [],
+        score: Number.isFinite(raw) ? raw : null,
+        comment: k.word ? String(r.answers?.[k.word] ?? "") || null : null
+      };
+    }),
+    sessions
+  );
 }

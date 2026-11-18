@@ -14,7 +14,8 @@ const LINKS = [
   { href: "/entraineur/joueuses", label: "Joueuses" },
   { href: "/entraineur/exercices", label: "Exercices" },
   { href: "/entraineur/laboratoire", label: "Laboratoire" },
-  { href: "/entraineur/methode", label: "Méthode" }
+  { href: "/entraineur/methode", label: "Méthode" },
+  { href: "/entraineur/dossier", label: "Mon dossier" }
 ];
 
 export function CoachTopbar({ coachName }: Props) {

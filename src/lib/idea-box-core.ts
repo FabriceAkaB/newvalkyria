@@ -53,3 +53,16 @@ export function sortIdeas<T extends { status: string; created_at: string }>(idea
   const order: Record<string, number> = { nouvelle: 0, a_l_etude: 1, retenue: 2, realisee: 3, non_retenue: 4 };
   return [...ideas].sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9) || b.created_at.localeCompare(a.created_at));
 }
+
+/* ── Suivi : responsable et délai de réponse (JP, 17 nov. 2026) ── */
+
+/** Qui peut prendre une idée en charge. */
+export const IDEA_OWNERS = ["JP", "Christine", "Annie"] as const;
+export const RESPONSE_DAYS = 3;
+
+/** Jours depuis l'envoi, et en retard si personne n'a répondu après 3 jours (sauf idée close). */
+export function ideaDelay(idea: { created_at: string; responded_at: string | null; status: string }, now: Date = new Date()): { days: number; late: boolean } {
+  const days = Math.floor((now.getTime() - new Date(idea.created_at).getTime()) / 86_400_000);
+  const closed = idea.status === "realisee" || idea.status === "non_retenue";
+  return { days, late: !idea.responded_at && !closed && days >= RESPONSE_DAYS };
+}

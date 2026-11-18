@@ -23,3 +23,14 @@ describe("Boîte à idées", () => {
     expect(s.map((x) => x.id)).toEqual([3, 2, 1]);
   });
 });
+
+describe("délai de réponse aux idées", () => {
+  it("en retard après 3 jours sans réponse, sauf si l'idée est close", async () => {
+    const { ideaDelay } = await import("@/lib/idea-box-core");
+    const now = new Date("2026-11-17T12:00:00Z");
+    expect(ideaDelay({ created_at: "2026-11-14T11:00:00Z", responded_at: null, status: "nouvelle" }, now)).toEqual({ days: 3, late: true });
+    expect(ideaDelay({ created_at: "2026-11-15T11:00:00Z", responded_at: null, status: "nouvelle" }, now).late).toBe(false);
+    expect(ideaDelay({ created_at: "2026-11-01T11:00:00Z", responded_at: "2026-11-02T11:00:00Z", status: "a_l_etude" }, now).late).toBe(false);
+    expect(ideaDelay({ created_at: "2026-11-01T11:00:00Z", responded_at: null, status: "non_retenue" }, now).late).toBe(false);
+  });
+});

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { categoryLabel, IDEA_CATEGORIES, IDEA_STATUS, MESSAGE_MAX, MESSAGE_MIN, statusOf } from "@/lib/idea-box-core";
+import { categoryLabel, IDEA_CATEGORIES, IDEA_OWNERS, IDEA_STATUS, ideaDelay, MESSAGE_MAX, MESSAGE_MIN, statusOf } from "@/lib/idea-box-core";
 
 /* ── Formulaire : site public et espace parent (thème foncé du site) ── */
 
@@ -133,6 +133,8 @@ export interface AdminIdea {
   message: string;
   status: string;
   response: string | null;
+  responded_at?: string | null;
+  owner?: string | null;
   shown_publicly: boolean;
   created_at: string;
 }
@@ -182,14 +184,28 @@ function AdminIdeaCard({ idea }: { idea: AdminIdea }) {
           {idea.player_name ? ` (${idea.player_name})` : ""}
           {idea.author_email ? ` · ${idea.author_email}` : ""}
         </span>
-        <select className="admin-input" style={{ width: "auto" }} value={idea.status} disabled={busy} onChange={(e) => save({ status: e.target.value })}>
-          {IDEA_STATUS.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+        <span style={{ display: "inline-flex", gap: 6, flexWrap: "wrap" }}>
+          <select className="admin-input" style={{ width: "auto" }} value={idea.owner ?? ""} disabled={busy} onChange={(e) => save({ owner: e.target.value || null })} aria-label="Responsable">
+            <option value="">Responsable…</option>
+            {IDEA_OWNERS.map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+          <select className="admin-input" style={{ width: "auto" }} value={idea.status} disabled={busy} onChange={(e) => save({ status: e.target.value })}>
+            {IDEA_STATUS.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </span>
       </div>
+      {(() => {
+        const d = ideaDelay({ created_at: idea.created_at, responded_at: idea.responded_at ?? null, status: idea.status });
+        return d.late ? (
+          <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 600, color: "var(--adm-bad)" }}>Sans réponse depuis {d.days} jours{idea.owner ? ` · ${idea.owner}` : " · personne n'est responsable"}</p>
+        ) : null;
+      })()}
       <p style={{ margin: 0, color: "var(--adm-text)", whiteSpace: "pre-line" }}>{idea.message}</p>
       <textarea className="admin-input" rows={2} placeholder="Votre réponse à l'auteur (visible dans son espace)" value={response} onChange={(e) => setResponse(e.target.value)} />
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>

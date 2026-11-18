@@ -512,21 +512,27 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
     );
   }
 
-  // ── Boîte à idées : chaque idée reçue attend une réponse ──
+  // ── Voix des familles : chaque idée ou commentaire reçoit une réponse ; plus de 3 jours sans réponse = rouge ──
   {
     const { listIdeas } = await import("@/lib/idea-box-repo");
-    const fresh = (await listIdeas().catch(() => [])).filter((i) => i.status === "nouvelle");
+    const { ideaDelay } = await import("@/lib/idea-box-core");
+    const open = (await listIdeas().catch(() => []))
+      .map((i) => ({ i, d: ideaDelay(i) }))
+      .filter(({ i, d }) => i.status === "nouvelle" || d.late)
+      .sort((a, b) => Number(b.d.late) - Number(a.d.late) || b.d.days - a.d.days);
+    const late = open.filter((x) => x.d.late).length;
     sections.push(
       section({
         key: "idees",
-        title: "Idées reçues à lire",
-        level: "info",
-        emptyText: "Aucune nouvelle idée dans la boîte à idées.",
+        title: late ? `Idées et commentaires sans réponse depuis 3 jours (${late})` : "Idées reçues à lire",
+        level: late ? "rouge" : "info",
+        emptyText: "Aucune idée en attente de réponse.",
         href: "/admin/idees",
-        hrefLabel: "Boîte à idées",
-        items: fresh.map((i) => ({
+        hrefLabel: "Voix des familles",
+        items: open.map(({ i, d }) => ({
           title: i.message.length > 90 ? `${i.message.slice(0, 90)}…` : i.message,
-          detail: `${i.author_name ?? "Anonyme"}${i.player_name ? ` (${i.player_name})` : ""} · ${i.source === "espace" ? "espace parent" : "site"}`,
+          detail: `${i.author_name ?? "Anonyme"}${i.player_name ? ` (${i.player_name})` : ""} · ${i.source === "espace" ? "espace parent" : "site"} · ${i.owner ? `responsable : ${i.owner}` : "sans responsable"}`,
+          meta: d.late ? `${d.days} jours sans réponse` : d.days ? `il y a ${d.days} jour${d.days > 1 ? "s" : ""}` : "aujourd'hui",
           href: "/admin/idees"
         }))
       })

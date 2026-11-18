@@ -12,7 +12,8 @@ const schema = z.object({
   status: z.enum(["nouvelle", "a_l_etude", "retenue", "realisee", "non_retenue"]).optional(),
   response: z.string().max(2000).nullable().optional(),
   shownPublicly: z.boolean().optional(),
-  notify: z.boolean().optional()
+  notify: z.boolean().optional(),
+  owner: z.string().max(60).nullable().optional()
 });
 
 /** Boîte à idées (admin et gérante) : statut, réponse à l'auteur, affichage sur le site. */
