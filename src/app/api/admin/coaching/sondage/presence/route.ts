@@ -9,7 +9,7 @@ const VALID: readonly string[] = ["present", "absent", "injured", "late", "left_
 
 /** Présence des joueuses depuis le sondage de fin (espace Coaching). */
 export async function POST(request: Request) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin", "gerante", "borne"] }))) return jsonError("Non autorisé", 401);
   const body = (await request.json().catch(() => null)) as { activityId?: string; registrationIds?: string[]; status?: string } | null;
   const ids = Array.isArray(body?.registrationIds) ? body.registrationIds.map(String) : [];
   if (!body?.activityId || !ids.length || !body.status || !VALID.includes(body.status)) return jsonError("Paramètres invalides", 400);

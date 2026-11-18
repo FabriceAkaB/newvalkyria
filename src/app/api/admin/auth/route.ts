@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
   const token = await createAdminSession(role);
 
-  const response = NextResponse.json({ ok: true });
+  const response = NextResponse.json({ ok: true, role });
   response.cookies.set(ADMIN_COOKIE_NAME, token, sessionCookie(ADMIN_SESSION_TTL_SECONDS));
   return response;
 }

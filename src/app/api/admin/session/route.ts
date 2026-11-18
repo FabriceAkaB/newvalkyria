@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentAdminRole } from "@/lib/admin-auth";
+import { getSessionAdminRole } from "@/lib/admin-auth";
 
 export async function GET() {
-  const role = await getCurrentAdminRole();
+  const role = await getSessionAdminRole();
   return NextResponse.json({ role });
 }

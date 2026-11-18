@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 /** Sondage de fin d'une pratique, au bord du terrain sur le téléphone. */
 export default async function SurveyPage({ params }: { params: Promise<{ activityId: string }> }) {
-  await requireAdmin();
+  await requireAdmin({ roles: ["admin", "gerante", "borne"] });
   const { activityId } = await params;
   const data = await getSurveyData(activityId);
   if (!data) notFound();

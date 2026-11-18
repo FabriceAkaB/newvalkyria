@@ -6,7 +6,7 @@ import { openSurveyActivity } from "@/lib/practice-survey-repo";
 
 /** Ouvre le sondage de fin d'une pratique de l'horaire (crée son activité au besoin). */
 export async function POST(request: Request) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin", "gerante", "borne"] }))) return jsonError("Non autorisé", 401);
   const body = (await request.json().catch(() => null)) as { key?: string } | null;
   if (!body?.key) return jsonError("Paramètres invalides", 400);
   const activityId = await openSurveyActivity(body.key);

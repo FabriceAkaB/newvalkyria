@@ -21,7 +21,8 @@ export function AdminLoginForm() {
     });
 
     if (res.ok) {
-      router.push("/admin/aujourdhui");
+      const data = await res.json().catch(() => null);
+      router.push(data?.role === "borne" ? "/admin/sondage" : "/admin/aujourdhui");
     } else {
       const data = await res.json().catch(() => null);
       setError(data?.error ?? "Mot de passe incorrect");

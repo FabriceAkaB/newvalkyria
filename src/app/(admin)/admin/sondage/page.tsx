@@ -13,7 +13,7 @@ const nowMinutes = () => {
 /** Raccourci à garder sur l'écran d'accueil du téléphone : newvalkyria.com/admin/sondage ouvre tout de suite le
  *  sondage de fin de la pratique qui vient de commencer ou de finir (sinon la dernière pratique passée). */
 export default async function SurveyShortcut() {
-  await requireAdmin();
+  await requireAdmin({ roles: ["admin", "gerante", "borne"] });
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
   const practices = await getRecentPracticesForSurvey();
   const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));

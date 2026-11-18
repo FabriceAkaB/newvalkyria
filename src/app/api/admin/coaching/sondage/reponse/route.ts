@@ -8,7 +8,7 @@ import { getSurveyData } from "@/lib/practice-survey-repo";
 
 /** Réponse d'une joueuse au sondage de fin : plaisir, fatigue, ce qu'elle aimerait avoir plus. */
 export async function POST(request: Request) {
-  if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
+  if (!(await isAdminRequest({ roles: ["admin", "gerante", "borne"] }))) return jsonError("Non autorisé", 401);
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const activityId = typeof body?.activityId === "string" ? body.activityId : null;
   const registrationId = typeof body?.registrationId === "string" ? body.registrationId : null;

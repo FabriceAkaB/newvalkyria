@@ -22,7 +22,12 @@ const GERANTE_PASSWORD = process.env.GERANTE_PASSWORD?.trim() || null;
  *  cette liste (ex. "entraineur", "coordonnateur") pour de futurs rôles
  *  sans casser l'existant : chaque route/page choisit explicitement les
  *  rôles autorisés via `requireAdmin({ roles: [...] })`. */
-export type AdminRole = "admin" | "gerante";
+export type AdminRole = "admin" | "gerante" | "borne";
+/** « borne » (JP, 18 nov. 2026) : le code de la tablette au bord du terrain. Il n'ouvre que le sondage de fin de la
+ *  pratique du jour : toute autre page renvoie vers /admin/sondage, et aucune route ne l'accepte sans le nommer. */
+export const KIOSK_HOME = "/admin/sondage";
+/** Les rôles de l'équipe (tout sauf la borne). */
+export type StaffRole = Exclude<AdminRole, "borne">;
 
 function db() {
   return getSupabaseAdminClient() as any;
@@ -42,6 +47,7 @@ export async function checkAdminPassword(password: string): Promise<AdminRole | 
   }
   if (hashes.admin && verifyPassword(password, hashes.admin)) return "admin";
   if (hashes.gerante && verifyPassword(password, hashes.gerante)) return "gerante";
+  if (hashes.borne && verifyPassword(password, hashes.borne)) return "borne";
   return null;
 }
 
@@ -83,20 +89,33 @@ export async function deleteAdminSession(token: string): Promise<void> {
   await db().from("admin_sessions").delete().eq("token", token);
 }
 
-/** Rôle de la session en cours (route handlers — ne peut pas rediriger). */
-export async function getCurrentAdminRole(): Promise<AdminRole | null> {
+/** Rôle brut de la session, y compris « borne ». */
+export async function getSessionAdminRole(): Promise<AdminRole | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
   return getSessionRole(token);
+}
+
+/** Rôle de la session en cours (route handlers — ne peut pas rediriger). La borne n'est jamais un rôle d'admin :
+ *  null pour elle, pour que toute vérification existante la refuse. */
+export async function getCurrentAdminRole(): Promise<StaffRole | null> {
+  const role = await getSessionAdminRole();
+  return role === "borne" ? null : role;
 }
 
 /** À appeler en haut de chaque Server Component/Route admin. Redirige vers
  *  /admin si non connecté. Avec `roles`, redirige vers /admin/aujourdhui si
  *  le rôle de la session n'est pas autorisé pour cette page (ex. Revenus,
  *  réservé à "admin"). Retourne le rôle pour un usage éventuel dans la page. */
-export async function requireAdmin(options?: { roles?: AdminRole[] }): Promise<AdminRole> {
-  const role = await getCurrentAdminRole();
-  if (!role) redirect("/admin");
+export async function requireAdmin(options?: { roles?: AdminRole[] }): Promise<StaffRole> {
+  const raw = await getSessionAdminRole();
+  if (!raw) redirect("/admin");
+  if (raw === "borne") {
+    // Pages du sondage seulement : elles n'utilisent pas le rôle rendu.
+    if (options?.roles?.includes("borne")) return "gerante";
+    redirect(KIOSK_HOME);
+  }
+  const role: StaffRole = raw;
   if (options?.roles && !options.roles.includes(role)) redirect("/admin/aujourdhui");
   return role;
 }
@@ -106,8 +125,9 @@ export async function requireAdmin(options?: { roles?: AdminRole[] }): Promise<A
  *  autorisé — à utiliser sur TOUTE route API exposant des données
  *  financières, en plus du masquage de la navigation côté client. */
 export async function isAdminRequest(options?: { roles?: AdminRole[] }): Promise<boolean> {
-  const role = await getCurrentAdminRole();
+  const role = await getSessionAdminRole();
   if (!role) return false;
+  if (role === "borne") return !!options?.roles?.includes("borne");
   if (options?.roles && !options.roles.includes(role)) return false;
   return true;
 }

@@ -22,7 +22,7 @@ const fr = (n: number | null) => (n === null ? "—" : n.toLocaleString("fr-CA",
 
 /** « Comment les filles ont trouvé la pratique ? » : présence, plaisir, fatigue et ce qu'elles veulent plus. */
 export default async function SurveyListPage() {
-  await requireAdmin();
+  await requireAdmin({ roles: ["admin", "gerante", "borne"] });
   const today = todayIso();
   const [practices, trend] = await Promise.all([getRecentPracticesForSurvey().catch(() => []), getSurveyTrend().catch(() => null)]);
   // Le sondage se fait le soir même : le titre ne compte que les pratiques d'hier et d'aujourd'hui.

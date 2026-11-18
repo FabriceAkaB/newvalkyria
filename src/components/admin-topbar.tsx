@@ -115,7 +115,7 @@ function GlobalSearchBox() {
 
 /* Le rôle, gardé en mémoire, évite que les liens réservés à l'admin clignotent. Au premier chargement il vaut null,
  * côté serveur comme à l'hydratation. */
-let rememberedRole: "admin" | "gerante" | null = null;
+let rememberedRole: "admin" | "gerante" | "borne" | null = null;
 /* Dernier espace affiché (Académie, Coaching ou JP), pour une page qui n'appartient à aucun hub. */
 let rememberedSpace: AdminSpace = "academie";
 
@@ -139,7 +139,9 @@ export function AdminChrome() {
 
 function AdminChromeInner({ pathname }: { pathname: string }) {
   const router = useRouter();
-  const [role, setRole] = useState<"admin" | "gerante" | null>(rememberedRole);
+  const [sessionRole, setRole] = useState<"admin" | "gerante" | "borne" | null>(rememberedRole);
+  // La borne (tablette du sondage) ne voit aucun menu ; pour les onglets, elle compte comme sans rôle.
+  const role = sessionRole === "borne" ? null : sessionRole;
   const [toolsOpen, setToolsOpen] = useState(false);
   // Liste des espaces (se referme quand on change de page).
   const [spaceOpenOn, setSpaceOpenOn] = useState<string | null>(null);
@@ -153,7 +155,7 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
   useEffect(() => {
     fetch("/api/admin/session")
       .then((res) => res.json())
-      .then((data: { role: "admin" | "gerante" | null }) => {
+      .then((data: { role: "admin" | "gerante" | "borne" | null }) => {
         rememberedRole = data.role;
         setRole(data.role);
       })
@@ -195,6 +197,8 @@ function AdminChromeInner({ pathname }: { pathname: string }) {
   // vérifié le rôle, donc on affiche tout de suite les onglets de l'admin.
   const headerRole = role ?? (active?.tab.adminOnly ? "admin" : null);
   const headerTabs = active ? visibleTabs(active.hub, headerRole).map((t) => ({ href: resolveHref(t.href, seasonId), label: t.label })) : [];
+
+  if (sessionRole === "borne") return null;
 
   return (
     <>
