@@ -1,3 +1,4 @@
+import { photoPath } from "@/lib/player-photos";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 function db() {
@@ -13,7 +14,7 @@ export interface Player {
   created_at: string;
 }
 
-const ATHLETE_PHOTO_BUCKET = "athlete-photos";
+const ATHLETE_PHOTO_BUCKET = "athlete-photos" as const;
 
 /** Téléverse la photo permanente d'une athlète (profil canonique players,
  *  pas seulement l'événement du jour) — remplace la photo existante si
@@ -29,8 +30,8 @@ export async function uploadPlayerPhoto(playerId: string, file: File): Promise<s
     .upload(path, file, { contentType: file.type, upsert: true });
   if (uploadError) throw new Error(uploadError.message);
 
-  const { data } = supabase.storage.from(ATHLETE_PHOTO_BUCKET).getPublicUrl(path);
-  const publicUrl = data.publicUrl as string;
+  // Stockage privé (Loi 25) : on garde l'adresse du site qui vérifie qui regarde (player-photos.ts).
+  const publicUrl = photoPath(ATHLETE_PHOTO_BUCKET, path);
 
   const { error: updateError } = await supabase.from("players").update({ photo_url: publicUrl }).eq("id", playerId);
   if (updateError) throw new Error(updateError.message);

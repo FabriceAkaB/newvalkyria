@@ -1,3 +1,4 @@
+import { signedPhotoUrl } from "@/lib/player-photos";
 import { logAudit } from "@/lib/audit-repo";
 import { CLUB, CLUB_ID } from "@/lib/club";
 import { env } from "@/lib/env";
@@ -129,7 +130,10 @@ async function mark(kind: string, key: string, label: string) {
 
 async function fetchPicture(url: string): Promise<{ data: ArrayBuffer; type: string; name: string } | null> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    // Photos en stockage privé (Loi 25) : lien signé le temps de la récupérer.
+    const direct = await signedPhotoUrl(url);
+    if (!direct) return null;
+    const res = await fetch(direct, { signal: AbortSignal.timeout(15_000) });
     if (!res.ok) return null;
     const type = res.headers.get("content-type") ?? "image/jpeg";
     if (!/^image\/(jpeg|png|webp)/.test(type)) return null;

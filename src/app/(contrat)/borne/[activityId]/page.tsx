@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { SurveyKiosk } from "@/components/survey-kiosk";
 import { getSurveyData } from "@/lib/practice-survey-repo";
+import { signedPhotoUrl } from "@/lib/player-photos";
 import { checkKioskKey } from "@/lib/survey-kiosk";
 
 export const dynamic = "force-dynamic";
@@ -23,13 +24,15 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
   }
   // « JANIE » → « Janie », « LINA-ROSE » → « Lina-Rose » : les noms s'affichent pareil pour toutes.
   const nice = (s: string) => s.trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase());
+  // La borne s'ouvre avec une clé, sans connexion : liens signés de 4 heures pour les photos (stockage privé, Loi 25).
+  const photos = new Map(await Promise.all(data.roster.map(async (p) => [p.registrationId, await signedPhotoUrl(p.photoUrl, 4 * 3600).catch(() => null)] as const)));
   const done = data.attendance.filter((a) => a.practice_rating != null && a.fatigue != null && a.learning != null).map((a) => a.registration_id);
   return (
     <SurveyKiosk
       activityId={activityId}
       cle={cle!}
       title={data.label}
-      players={data.roster.map((p) => ({ id: p.registrationId, first: nice(p.firstName), initial: p.lastName.trim().charAt(0).toUpperCase(), photo: p.photoUrl }))}
+      players={data.roster.map((p) => ({ id: p.registrationId, first: nice(p.firstName), initial: p.lastName.trim().charAt(0).toUpperCase(), photo: photos.get(p.registrationId) ?? null }))}
       done={done}
     />
   );

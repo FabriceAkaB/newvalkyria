@@ -1,3 +1,4 @@
+import { photoPath } from "@/lib/player-photos";
 import { randomBytes } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
@@ -246,7 +247,7 @@ export async function getRegistrationsForPlayer(playerId: string): Promise<Playe
   }));
 }
 
-const CHILD_PHOTO_BUCKET = "child-photos";
+const CHILD_PHOTO_BUCKET = "child-photos" as const;
 
 export async function uploadChildPhoto(id: string, userId: string, file: File): Promise<string> {
   const supabase = getSupabaseAdminClient() as any;
@@ -258,8 +259,8 @@ export async function uploadChildPhoto(id: string, userId: string, file: File): 
     .upload(path, file, { contentType: file.type, upsert: true });
   if (uploadError) throw new Error(uploadError.message);
 
-  const { data } = supabase.storage.from(CHILD_PHOTO_BUCKET).getPublicUrl(path);
-  const publicUrl = data.publicUrl as string;
+  // Stockage privé (Loi 25) : l'adresse du site vérifie que c'est bien cette famille qui regarde.
+  const publicUrl = photoPath(CHILD_PHOTO_BUCKET, path);
 
   await setChildPhoto(id, userId, publicUrl);
   return publicUrl;
