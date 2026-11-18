@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BulletinReport } from "@/components/bulletin-report";
+import { CoachBulletinComment } from "@/components/coach-bulletin-comment";
 import { getBulletinReport } from "@/lib/bulletin-repo";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { requireCoach } from "@/lib/coach-auth";
@@ -29,6 +30,13 @@ export default async function CoachBulletinPage({ params, searchParams }: { para
           <Link href={`/entraineur/joueuses/${id}`} className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1rem" }}>
             ← Fiche joueuse
           </Link>
+          <CoachBulletinComment
+            key={data.range.period}
+            registrationId={id}
+            period={data.range.period}
+            firstName={data.player.firstName}
+            initial={data.familyComments.find((c) => c.coachId === coachId)?.text ?? ""}
+          />
           <BulletinReport data={data} periodHref={(p) => `/entraineur/joueuses/${id}/bulletin?bulletin=${p}`} />
         </div>
       </div>

@@ -1,4 +1,8 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+
+import { CoachTopbar } from "@/components/coach-topbar";
+import { isMethodOpen, opensOn } from "@/lib/coach-access-core";
 
 import { CoachActiviteDetail } from "@/components/coach-activite-detail";
 import { getComponents } from "@/lib/coaching-method-repo";
@@ -26,6 +30,32 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
 
   const isMatch = entry.activity.activity_type === "Match";
   const activityDate = String(entry.activity.activity_date).slice(0, 10);
+
+  // La méthode ne s'ouvre que semaine par semaine (JP, 17 nov. 2026) : plus loin, l'heure et le lieu seulement.
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  if (!isMethodOpen(entry.activity, today)) {
+    const coach = await getCoach(coachId);
+    const fr = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+    return (
+      <>
+        <CoachTopbar coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"} />
+        <div className="admin-content">
+          <div className="admin-section coach-page">
+            <Link href="/entraineur" className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1rem" }}>← Mes pratiques</Link>
+            <p className="coach-eyebrow">{fr(activityDate)} · {String(entry.activity.start_time).slice(0, 5).replace(":", " h ")} à {String(entry.activity.end_time).slice(0, 5).replace(":", " h ")}</p>
+            <h1 className="coach-title">{entry.activity.title || entry.activity.category || "Pratique"}</h1>
+            {entry.activity.location ? <p className="coach-sub">{entry.activity.location}</p> : null}
+            <div className="coach-card" style={{ marginTop: 20 }}>
+              <p className="coach-card__label">🔒 Le plan s&apos;ouvre le {fr(opensOn(activityDate))}</p>
+              <p className="coach-sub" style={{ marginTop: 0 }}>
+                La méthode Valkyria s&apos;ouvre semaine par semaine : les diapos, les exercices et le guide de cette pratique seront ici dès le samedi qui la précède. Tu as tout le temps de la lire avant.
+              </p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   const [coach, roster, attendance, evaluations, blocks, exercises, theme, matchRoster, matchDetails, matchConvocations, matchLineup, matchPlaytime, matchEvaluations] = await Promise.all([
     getCoach(coachId),

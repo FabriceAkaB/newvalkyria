@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import "./bulletin-lock.css";
+
 import { LEVELS, levelOf } from "@/lib/bulletin-report";
 import type { BulletinReportData } from "@/lib/bulletin-repo";
 
@@ -29,6 +31,33 @@ function Meter({ value, min, max, reverse = false, scaleOf }: { value: number | 
 }
 
 export function BulletinReport({ data, periodHref }: { data: BulletinReportData; periodHref?: (p: "mi-saison" | "fin-saison") => string }) {
+  if (!data.released) {
+    // Pas encore remis à la famille : le bulletin flou, avec la date de remise (JP, 17 nov. 2026).
+    return (
+      <div className="nvb-lock">
+        {periodHref ? (
+          <nav className="nvb-switch no-print" aria-label="Bulletins de la saison">
+            <Link href={periodHref("mi-saison")} data-on={data.range.period === "mi-saison" || undefined}>Mi-saison</Link>
+            <Link href={periodHref("fin-saison")} data-on={data.range.period === "fin-saison" || undefined}>Fin de saison</Link>
+          </nav>
+        ) : null}
+        <div className="nvb-lock__veil" aria-hidden inert>
+          <BulletinBody data={data} />
+        </div>
+        <div className="nvb-lock__card" role="status">
+          <span aria-hidden>🔒</span>
+          <strong>Bientôt disponible</strong>
+          <p>
+            {data.range.label} de {data.player.firstName} sera remis le {fr(data.range.to)}. Les éducatrices le remplissent après chaque pratique.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return <BulletinBody data={data} periodHref={periodHref} />;
+}
+
+function BulletinBody({ data, periodHref }: { data: BulletinReportData; periodHref?: (p: "mi-saison" | "fin-saison") => string }) {
   const { player, summary: s, range } = data;
   const level = levelOf(s.global);
   const on10 = (v: number) => 1 + ((v - 1) / 9) * 4; // une note sur 10 ramenée sur l'échelle 1 à 5
@@ -152,6 +181,20 @@ export function BulletinReport({ data, periodHref }: { data: BulletinReportData;
           )}
         </div>
       </section>
+
+      {data.familyComments.length ? (
+        <section className="nvb-sec">
+          <h3 className="nvb-h">Le mot des éducatrices</h3>
+          <ul className="nvb-words">
+            {data.familyComments.map((c, i) => (
+              <li key={i}>
+                <p>« {c.text} »</p>
+                <span className="nvb-small">{c.author} · {fr(c.date)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {data.notes.length ? (
         <section className="nvb-sec">

@@ -1,3 +1,4 @@
+import { methodWindow } from "@/lib/coach-access-core";
 import { cleanNote, computeReport, feedbackByWeek, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, watchReasons, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
 import type { CoachActivity, CoachAssignment } from "@/lib/coaches-repo";
 import { addSeen, practiceReadItems, practiceReadStatus, readLabel, type ReadItem, type ReadStatus } from "@/lib/practice-read";
@@ -54,7 +55,8 @@ export async function getCoachActivityById(coachId: string, activityId: string):
 /* ── Pratiques du jour : accès de toute l'équipe ─────────────────── */
 
 /** Fenêtre où toute l'équipe d'éducateurs (et JP) voit une pratique de l'Académie, même sans y être assignée :
- *  de 2 jours avant (rapport des 24 heures) à 14 jours après (préparer d'avance). */
+ *  de 2 jours avant (rapport des 24 heures) jusqu'à la fin de la semaine en cours (la suivante dès le samedi) :
+ *  la méthode ne s'ouvre que semaine par semaine (coach-access-core.ts). `after` ne sert plus que de plafond. */
 export const TEAM_ACCESS_DAYS = { before: 2, after: 14 };
 const TEAM_ACCESS_TYPES = ["Pratique", "Camp"];
 const isoDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
@@ -67,7 +69,7 @@ const shiftDay = (iso: string, n: number) => {
 /** Une pratique de l'Académie (pas une activité hors Académie, pas un match) dans la fenêtre d'accès d'équipe. */
 export function isTeamPractice(a: { activity_date: string; activity_type: string; organization?: string | null }, today = isoDay(new Date())): boolean {
   const d = String(a.activity_date).slice(0, 10);
-  return !a.organization && TEAM_ACCESS_TYPES.includes(a.activity_type) && d >= shiftDay(today, -TEAM_ACCESS_DAYS.before) && d <= shiftDay(today, TEAM_ACCESS_DAYS.after);
+  return !a.organization && TEAM_ACCESS_TYPES.includes(a.activity_type) && d >= shiftDay(today, -TEAM_ACCESS_DAYS.before) && d <= shiftDay(today, TEAM_ACCESS_DAYS.after) && d <= methodWindow(today).to;
 }
 
 export type CoachActivityAccess = Omit<CoachActivityWithAssignment, "assignment"> & { assignment: CoachAssignment | null; guest: boolean };
@@ -580,9 +582,11 @@ export async function getBulletinData(registrationId: string, audience: "equipe"
 export async function coachCanSeePlayer(coachId: string, registrationId: string): Promise<boolean> {
   const [activities, { data: reg }] = await Promise.all([
     getCoachActivities(coachId),
-    db().from("registrations").select("id, category_id, is_trial, trial_date").eq("id", registrationId).maybeSingle()
+    db().from("registrations").select("id, category_id, is_trial, trial_date, season_id").eq("id", registrationId).maybeSingle()
   ]);
   if (!reg) return false;
+  // Comptes de démo : les joueuses de la saison « demo » seulement, pour l'éducateur qui a une pratique de démo.
+  if (reg.season_id === "demo") return activities.some((a) => isDemoActivity(a.activity));
   const categories = new Set(activities.map((a) => cleanCategory(a.activity.category)).filter(Boolean));
   if (reg.category_id && categories.has(reg.category_id)) return true;
   return Boolean(reg.is_trial && reg.trial_date && activities.some((a) => String(a.activity.activity_date).slice(0, 10) === String(reg.trial_date).slice(0, 10)));

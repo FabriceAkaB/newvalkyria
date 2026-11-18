@@ -43,3 +43,18 @@ describe("bulletin de progression", () => {
     expect(levelOf(null)).toBeNull();
   });
 });
+
+describe("bulletin remis et mot pour la famille", () => {
+  it("la famille voit le bulletin flou avant sa date, l'équipe le voit toujours", async () => {
+    const { isReleased, periodRange } = await import("@/lib/bulletin-report");
+    const r = periodRange("automne-hiver-2026", "mi-saison", "2026-11-17");
+    expect(isReleased(r, "parent")).toBe(false);
+    expect(isReleased(r, "equipe")).toBe(true);
+    expect(isReleased(periodRange("automne-hiver-2026", "mi-saison", "2026-12-15"), "parent")).toBe(true);
+  });
+  it("le mot pour la famille a une longueur utile", async () => {
+    const { checkFamilyComment } = await import("@/lib/bulletin-report");
+    expect(checkFamilyComment("Bravo !", "Léa")).toMatch(/au moins 40/);
+    expect(checkFamilyComment("Léa garde la tête levée avec le ballon ; on travaille maintenant son pied gauche en conduite.", "Léa")).toBeNull();
+  });
+});

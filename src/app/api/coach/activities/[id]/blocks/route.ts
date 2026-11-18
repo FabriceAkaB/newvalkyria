@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isMethodOpen, opensOn } from "@/lib/coach-access-core";
 import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getCoachActivityById } from "@/lib/coach-portal-repo";
 import { assertExerciseUsable } from "@/lib/exercises-repo";
@@ -10,7 +11,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const coachId = await getCurrentCoachId();
   if (!coachId) return jsonError("Non autorisé", 401);
   const { id } = await params;
-  if (!(await getCoachActivityById(coachId, id))) return jsonError("Activité introuvable", 404);
+  const entry = await getCoachActivityById(coachId, id);
+  if (!entry) return jsonError("Activité introuvable", 404);
+  if (!isMethodOpen(entry.activity, new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" }))) return jsonError(`Le plan de cette pratique s'ouvre le ${opensOn(entry.activity.activity_date)}.`, 403);
   const blocks = await getBlocksForActivity(id);
   return NextResponse.json({ blocks });
 }

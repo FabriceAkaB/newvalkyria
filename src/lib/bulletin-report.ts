@@ -126,3 +126,22 @@ export function summarize(input: { evaluations: EvalRow[]; attendance: Attendanc
     practices: new Set(evals.map((e) => e.date)).size
   };
 }
+
+/* ── Bulletin remis ou pas encore, et mot des éducateurs pour la famille (JP, 17 nov. 2026) ── */
+
+/** Le bulletin est remis à la famille à la date de fin de sa période (mi-saison, fin de saison) ; avant, la famille
+ *  le voit flou avec « Bientôt disponible ». L'équipe le voit toujours. */
+export function isReleased(range: PeriodRange, audience: "equipe" | "parent"): boolean {
+  return audience === "equipe" || !range.provisional;
+}
+
+export const FAMILY_COMMENT_MIN = 40;
+export const FAMILY_COMMENT_MAX = 1200;
+
+/** Un mot pour la famille : assez long pour être utile, jamais une note interne copiée. Renvoie le problème, ou null. */
+export function checkFamilyComment(text: string, firstName: string): string | null {
+  const t = text.trim().replace(/\s+/g, " ");
+  if (t.length < FAMILY_COMMENT_MIN) return `Écris au moins ${FAMILY_COMMENT_MIN} caractères : une force de ${firstName}, puis un point à travailler et comment.`;
+  if (t.length > FAMILY_COMMENT_MAX) return `${FAMILY_COMMENT_MAX} caractères au plus : garde l'essentiel.`;
+  return null;
+}
