@@ -138,6 +138,17 @@ export const INTERVIEW_GUIDE: { who: string; when: string; questions: string[] }
       "Qu'est-ce qu'on fait de mieux que les autres ?",
       "Que diriez-vous à une famille qui hésite (horaire, encadrement, prix) ?"
     ]
+  },
+  {
+    // Script « Epiphany » d'Alex Hormozi (Mandalart P4.8.16) : le témoignage qui convainc raconte un déclic.
+    who: "Parent (témoignage Epiphany)",
+    when: "Fin de saison, avec l'accord écrit de la famille",
+    questions: [
+      "Avant New Valkyria, comment était votre fille avec le ballon et le soccer ?",
+      "Quel a été le moment où vous vous êtes dit : « ça change quelque chose » ?",
+      "Où en est-elle aujourd'hui (le ballon, la confiance, le plaisir) ?",
+      "À quelle famille autour de vous recommanderiez-vous New Valkyria, et pourquoi ?"
+    ]
   }
 ];
 

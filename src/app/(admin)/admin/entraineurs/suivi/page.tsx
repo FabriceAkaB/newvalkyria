@@ -8,7 +8,7 @@ import { getCoaches } from "@/lib/coaches-repo";
 import { getAllContracts } from "@/lib/employee-contracts";
 import { listPractices } from "@/lib/practices-repo";
 import { getCoachSatisfaction } from "@/lib/surveys-repo";
-import { ValidateModule } from "@/components/coach-training";
+import { DevelopmentPlanEditor, ValidateModule } from "@/components/coach-training";
 import { TRAINING_MODULES, trainingProgress } from "@/lib/coach-training";
 import { getTraining } from "@/lib/coach-training-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -50,7 +50,7 @@ export default async function CoachFollowUpPage() {
     getPayrollRows().catch(() => []),
     listPractices({ from, to: t }).catch(() => []),
     getCoachSatisfaction().catch(() => new Map()),
-    (getSupabaseAdminClient() as any).from("coaches").select("id, pro_goals").not("pro_goals", "is", null)
+    (getSupabaseAdminClient() as any).from("coaches").select("id, pro_goals, development_plan")
   ]);
   const training = await getTraining(coaches.filter((c) => c.status === "active").map((c) => c.id)).catch(() => new Map());
   const recent = rows.filter((r) => String(r.activityDate).slice(0, 10) >= from && String(r.activityDate).slice(0, 10) <= t);
@@ -141,12 +141,14 @@ export default async function CoachFollowUpPage() {
                     <th style={{ textAlign: "right" }}>Réponses</th>
                     <th>Derniers mots des parents</th>
                     <th>Ses objectifs</th>
+                    <th>Plan de développement</th>
                   </tr>
                 </thead>
                 <tbody>
                   {active.map((c) => {
                     const sat = satisfaction.get(c.id);
-                    const g = ((goals ?? []) as any[]).find((x) => x.id === c.id)?.pro_goals as string | undefined;
+                    const row = ((goals ?? []) as any[]).find((x) => x.id === c.id);
+                    const g = (row?.pro_goals as string | null) ?? undefined;
                     return (
                       <tr key={c.id}>
                         <td>{c.first_name} {c.last_name}</td>
@@ -154,6 +156,7 @@ export default async function CoachFollowUpPage() {
                         <td style={{ textAlign: "right" }}>{sat?.count ?? 0}</td>
                         <td style={{ maxWidth: 320 }}>{sat?.comments.length ? sat.comments.slice(-2).map((x: string) => `« ${x} »`).join(" ") : <span style={{ color: "var(--adm-text-3)" }}>—</span>}</td>
                         <td style={{ maxWidth: 260 }}>{g ?? <span style={{ color: "var(--adm-text-3)" }}>pas encore écrits</span>}</td>
+                        <td><DevelopmentPlanEditor coachId={c.id} name={c.first_name} initial={(row?.development_plan as string | null) ?? ""} /></td>
                       </tr>
                     );
                   })}

@@ -63,3 +63,31 @@ export function ValidateModule({ coachId, module, state, title }: { coachId: str
     </button>
   );
 }
+
+/** JP écrit le plan de développement d'un éducateur (Suivi des éducateurs) ; il le lit dans « Mon dossier ». */
+export function DevelopmentPlanEditor({ coachId, name, initial }: { coachId: string; name: string; initial: string }) {
+  const [open, setOpen] = useState(false);
+  const [plan, setPlan] = useState(initial);
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  if (!open)
+    return (
+      <button type="button" className="admin-btn-ghost" onClick={() => setOpen(true)}>
+        {initial ? "Voir / modifier" : "Écrire le plan"}
+      </button>
+    );
+  const save = async () => {
+    setState("saving");
+    const res = await fetch("/api/admin/entraineurs/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ coachId, plan }) }).catch(() => null);
+    setState(res?.ok ? "saved" : "error");
+  };
+  return (
+    <div style={{ display: "grid", gap: 6, minWidth: 260 }}>
+      <textarea className="admin-input" rows={4} value={plan} maxLength={3000} onChange={(e) => { setPlan(e.target.value); setState("idle"); }} placeholder={`Ex. pour ${name} : diplôme C d'ici l'été, animer seule le bloc ball mastery en décembre, observation filmée en janvier.`} />
+      <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <button type="button" className="admin-btn-primary" disabled={state === "saving"} onClick={save}>{state === "saving" ? "…" : "Enregistrer"}</button>
+        <button type="button" className="admin-btn-ghost" onClick={() => setOpen(false)}>Fermer</button>
+        <span style={{ fontSize: "0.8rem", color: state === "error" ? "var(--adm-bad)" : "var(--adm-good)" }}>{state === "saved" ? "Enregistré : visible dans son dossier" : state === "error" ? "Pas enregistré" : ""}</span>
+      </span>
+    </div>
+  );
+}
