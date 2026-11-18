@@ -204,6 +204,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         tabs: [
           { href: "/admin/communications", label: "Envoyer un message", adminOnly: true },
           { href: "/admin/relances", label: "Relances et suivi", adminOnly: true },
+          { href: "/admin/communications/programmes", label: "Messages et tâches programmés", adminOnly: true },
           { href: "/admin/references", label: "Références & crédits" }
         ]
       },

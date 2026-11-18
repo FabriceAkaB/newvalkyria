@@ -102,6 +102,49 @@ export async function scheduleEmails(rows: ScheduledEmailInput[]): Promise<numbe
   return rows.length;
 }
 
+export interface ScheduledCampaign {
+  campaign: string;
+  channel: "email" | "mcs";
+  sendAt: string;
+  status: "en_attente" | "envoye" | "echec" | "annule";
+  count: number;
+  failed: number;
+  subject: string;
+  preview: string;
+  who: string[];
+}
+
+const plain = (html: string) => html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\n{3,}/g, "\n\n").trim();
+
+/** Tout ce qui est programmé (courriels et publications MonClubSportif), regroupé par envoi, et ce qui est parti
+ *  ces 14 derniers jours : la page « Messages et tâches programmés ». */
+export async function listScheduledCampaigns(): Promise<{ upcoming: ScheduledCampaign[]; recent: ScheduledCampaign[] }> {
+  const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+  const { data } = await db()
+    .from("scheduled_emails")
+    .select("campaign, channel, send_at, status, subject, html, text_body, player_name, parent_name, sent_at")
+    .eq("club_id", CLUB_ID)
+    .or(`status.eq.en_attente,and(status.in.(envoye,echec),send_at.gte.${since})`)
+    .order("send_at");
+  const groups = new Map<string, ScheduledCampaign>();
+  for (const r of (data ?? []) as any[]) {
+    const pending = r.status === "en_attente";
+    const key = `${pending ? "a" : "b"}|${r.campaign ?? r.subject}|${r.channel ?? "email"}`;
+    const g: ScheduledCampaign = groups.get(key) ?? { campaign: r.campaign ?? r.subject, channel: r.channel === "mcs" ? "mcs" : "email", sendAt: r.send_at, status: r.status, count: 0, failed: 0, subject: r.subject, preview: r.text_body || plain(r.html ?? ""), who: [] as string[] };
+    if (r.status === "echec") g.failed++;
+    if (r.status !== "annule") g.count++;
+    if (r.send_at < g.sendAt) g.sendAt = r.send_at;
+    const who = r.player_name || r.parent_name;
+    if (who && g.who.length < 200) g.who.push(who);
+    groups.set(key, g);
+  }
+  const all = [...groups.entries()];
+  return {
+    upcoming: all.filter(([k]) => k.startsWith("a|")).map(([, g]) => g),
+    recent: all.filter(([k]) => k.startsWith("b|")).map(([, g]) => g).sort((a, b) => b.sendAt.localeCompare(a.sendAt))
+  };
+}
+
 export async function listPendingEmails() {
   const { data } = await db().from("scheduled_emails").select("id, send_at, to_email, subject, campaign, player_name").eq("club_id", CLUB_ID).eq("status", "en_attente").order("send_at");
   return (data ?? []) as { id: string; send_at: string; to_email: string; subject: string; campaign: string | null; player_name: string | null }[];
