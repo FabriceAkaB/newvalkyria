@@ -25,6 +25,8 @@ export interface Project {
 /** Repère des familles d'une fille née du 1er oct. 2015 au 30 sept. 2016 (âge au 30 septembre) : 6e année en 2027-2028,
  *  tests Sport-Études à l'automne 2027 pour le secondaire 1 en 2028. */
 export const SEGMENT_6E_2027 = "Entrée en 6e en 2027";
+/** Repère des familles d'une joueuse des équipes avancées de MonClubSportif (Équipe 2015 AV, Équipe 2016-2017 AV). */
+export const SEGMENT_AVANCEE = "Équipe avancée";
 /** Une seule question à cocher pour tous les projets (JP, 17 nov. 2026 : un seul formulaire, pas un sondage par projet). */
 export const PROJECT_CHECKLIST_ID = "interets";
 export const projectOption = (p: Project) => `${p.label} (${p.when})`;
@@ -37,6 +39,7 @@ export const PROJECTS_2027: Project[] = [
   { key: "roses", label: "Camp ou séances avec les Roses de Montréal", when: "en partenariat avec le club professionnel, 2027", start: null, market: "Les Roses ont déjà un camp féminin avec Écoles de Soccer Montréal (529 $ la semaine, Laval et Brossard). Notre angle : leur ouvrir les Laurentides, où elles n'ont pas de camp." },
   { key: "ontario-ete-2027", label: "Tournée de tournois en Ontario", when: "été 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
   { key: "ontario-automne-2027", label: "Tournée de tournois en Ontario", when: "automne 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
+  { key: "tournoi-av-ontario", label: "Tournoi en Ontario avec l'équipe avancée", when: "9 contre 9 pour les 2015, 7 contre 7 pour les 2016-2017, date à confirmer", start: null, segment: "Équipe avancée", funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
   { key: "prep-sport-etudes", label: "Programme préparatoire au Sport-Études", when: "pour les tests de l'automne 2027, entrée au secondaire en 2028", start: null, segment: "Entrée en 6e en 2027" },
   { key: "saison-2027-2028", label: "Continuer avec New Valkyria la saison prochaine", when: "automne-hiver 2027-2028", start: "2027-09-07", existing: true }
 ];
