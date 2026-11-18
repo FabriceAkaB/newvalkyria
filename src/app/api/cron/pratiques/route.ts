@@ -5,6 +5,7 @@ import { OWNER_NOTIFY_EMAIL } from "@/lib/email";
 import { env } from "@/lib/env";
 import { syncCoachSchedule } from "@/lib/mcs-robot-runner";
 import { sendEveReminders } from "@/lib/coach-eve-reminder";
+import { syncNewFamilyJourney } from "@/lib/new-family-journey";
 import { runSeasonPointsEnd } from "@/lib/player-points-repo";
 import { listPractices, mergeSameSlot } from "@/lib/practices-repo";
 import { getResendClient, isEmailConfigured } from "@/lib/resend";
@@ -33,10 +34,12 @@ export async function GET(request: Request) {
   // éducateur assigné à une pratique de demain, avec ce qu'il doit avoir repéré avant d'arriver.
   const hour = Number(new Date().toLocaleString("en-CA", { timeZone: "America/Toronto", hour: "2-digit", hour12: false }));
   const eve = hour >= 12 ? await sendEveReminders().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : { skipped: "matin" };
+  // Les 30 premiers jours d'une nouvelle famille (P4.2.03) : appel du 7e jour, mini-sondage des 30 jours (tâches).
+  const journey = await syncNewFamilyJourney().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
   const practices = mergeSameSlot(await listPractices());
   const red = practices.filter((p) => p.readiness === "rouge");
   const yellow = practices.filter((p) => p.readiness === "jaune");
-  if (!red.length || !isEmailConfigured()) return NextResponse.json({ ok: true, red: red.length, emailed: false, staffing, points, eve });
+  if (!red.length || !isEmailConfigured()) return NextResponse.json({ ok: true, red: red.length, emailed: false, staffing, points, eve, journey });
   const li = (p: (typeof red)[number]) => `<li><strong>${p.date} ${p.start}</strong> — ${p.group}${p.organization ? ` (${p.organization})` : ""} · ${p.daysLeft === 0 ? "aujourd'hui" : `dans ${p.daysLeft} jour(s)`}</li>`;
   await getResendClient().emails.send({
     from: env.resendFrom,
@@ -51,5 +54,5 @@ export async function GET(request: Request) {
         <p style="color:#666;font-size:13px">Objectif : chaque pratique prête 2 semaines d'avance.</p>
       </div>`
   });
-  return NextResponse.json({ ok: true, red: red.length, emailed: true, staffing, points, eve });
+  return NextResponse.json({ ok: true, red: red.length, emailed: true, staffing, points, eve, journey });
 }
