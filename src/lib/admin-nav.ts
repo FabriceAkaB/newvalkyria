@@ -169,6 +169,16 @@ export const ADMIN_NAV: AdminNavSection[] = [
         ]
       },
       {
+        key: "camps-parascolaire",
+        label: "Camps et parascolaire",
+        icon: "sun",
+        description: "Camps de jour (relâche, Fêtes, été) et programmes parascolaires dans les écoles : chaque camp ou école est un programme à dates fixes, avec ses inscriptions et sa satisfaction.",
+        tabs: [
+          { href: "/admin/camps", label: "Camps de jour" },
+          { href: "/admin/parascolaire", label: "Parascolaire" }
+        ]
+      },
+      {
         key: "monclubsportif",
         label: "MonClubSportif",
         icon: "calendar",
@@ -204,7 +214,8 @@ export const ADMIN_NAV: AdminNavSection[] = [
         description: "Sondages avec un lien par famille (qui a répondu quoi, satisfaction, familles à rappeler) et la boîte à idées du site et des espaces parents.",
         tabs: [
           { href: "/admin/sondages", label: "Sondages", adminOnly: true },
-          { href: "/admin/idees", label: "Boîte à idées" }
+          { href: "/admin/idees", label: "Boîte à idées" },
+          { href: "/admin/sondages/programmes", label: "Satisfaction par programme" }
         ]
       }
     ]
