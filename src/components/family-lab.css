@@ -1,0 +1,15 @@
+/* Valkyria Lab dans l'app famille : défi du jour, progression du mois (JP, 17 nov. 2026). */
+.fam-lab-day { display: grid; gap: 10px; padding: 18px; border-radius: 18px; background: linear-gradient(150deg, rgba(226, 191, 79, 0.16), rgba(138, 92, 208, 0.16) 60%, rgba(255, 255, 255, 0.04)); border: 1px solid rgba(226, 191, 79, 0.4); }
+.fam-lab-day__title { margin: 0; font-family: var(--font-display), sans-serif; font-size: 1.5rem; text-transform: uppercase; line-height: 1.1; }
+.fam-lab-day__how { margin: 0; white-space: pre-line; line-height: 1.55; color: rgba(255, 255, 255, 0.85); }
+.fam-lab-video { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
+.fam-lab-video[data-vertical] { aspect-ratio: 9 / 16; max-width: 320px; margin: 0 auto; }
+.fam-lab-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.fam-lab-track { display: grid; grid-template-columns: repeat(auto-fill, minmax(14px, 1fr)); gap: 4px; margin: 14px 0 12px; }
+.fam-lab-track span { aspect-ratio: 1; border-radius: 4px; background: rgba(255, 255, 255, 0.08); }
+.fam-lab-track span[data-state="fait"] { background: var(--fam-gold, #e2bf4f); }
+.fam-lab-track span[data-state="manque"] { background: rgba(255, 255, 255, 0.14); }
+.fam-lab-track span[data-state="aujourdhui"] { outline: 2px solid var(--fam-gold, #e2bf4f); outline-offset: -2px; }
+.fam-labday { width: 100%; min-height: 46px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.06); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.fam-labday[data-on] { background: #fff; color: #1d1730; border-color: #fff; }
+.fam-labday:disabled { opacity: 0.6; }

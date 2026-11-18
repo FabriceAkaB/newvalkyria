@@ -970,3 +970,34 @@ export async function getLabTodayItems(today = todayIso()): Promise<{ level: "or
   }
   return { level: items.length ? "orange" : "info", items };
 }
+
+/* ── Plateforme de formation : défi du jour et progression (JP, 17 nov. 2026, lab-progress-core.ts) ── */
+
+/** Accès Lab d'une famille par son courriel confirmé (espace famille). */
+export async function getAccessByEmail(email: string): Promise<LabAccess | null> {
+  const { data } = await db().from("lab_access").select("*").ilike("parent_email", email).maybeSingle();
+  return data ? accessFrom(data) : null;
+}
+
+/** Les jours de routine faits, par joueuse (nom complet), pour cet accès. */
+export async function getPracticeDays(accessId: string, since: string): Promise<Map<string, string[]>> {
+  const { data, error } = await db().from("lab_practice_days").select("player_name, day").eq("access_id", accessId).gte("day", since);
+  if (error) throw new Error(error.message);
+  const out = new Map<string, string[]>();
+  for (const r of (data ?? []) as any[]) out.set(r.player_name, [...(out.get(r.player_name) ?? []), String(r.day).slice(0, 10)]);
+  return out;
+}
+
+/** Coche (ou décoche) la routine du jour d'une joueuse de cette famille. */
+export async function setPracticeDay(access: LabAccess, player: string, day: string, on: boolean): Promise<string | null> {
+  if (!access.active) return "Le Lab est réservé aux familles inscrites à la saison.";
+  if (!access.players.some((p) => playerFullName(p) === player)) return "Choisissez la joueuse.";
+  if (on) {
+    const { error } = await db().from("lab_practice_days").upsert({ club_id: CLUB_ID, access_id: access.id, player_name: player, day }, { onConflict: "access_id,player_name,day", ignoreDuplicates: true });
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await db().from("lab_practice_days").delete().eq("access_id", access.id).eq("player_name", player).eq("day", day);
+    if (error) throw new Error(error.message);
+  }
+  return null;
+}
