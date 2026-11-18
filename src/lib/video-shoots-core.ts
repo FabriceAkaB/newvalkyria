@@ -52,6 +52,8 @@ export interface Shoot {
   angle?: string | null;
   networks?: string[] | null;
   filmed_by?: string | null;
+  /** Compte qui publie : New Valkyria ou JP Coach (marque personnelle de JP). */
+  account?: string | null;
 }
 
 /** Ce qu'il faut avoir écrit la veille pour tourner sans réfléchir. */

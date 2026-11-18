@@ -35,6 +35,8 @@ export interface LaunchScenario {
   name: string;
   sourceKind: SourceKind | null;
   sourceId: string | null;
+  /** Projet du sondage d'intérêt relié (project-pipeline.ts), ex. « camp-fetes-2026 ». */
+  projectKey: string | null;
   startDate: string | null;
   inputs: LaunchInputs;
   results: LaunchResults;
@@ -54,6 +56,7 @@ function toScenario(row: any, today = torontoToday()): LaunchScenario {
     name: row.name,
     sourceKind: row.source_kind === "saison" || row.source_kind === "session" ? row.source_kind : null,
     sourceId: row.source_id ?? null,
+    projectKey: row.project_key ?? null,
     startDate: row.start_date ? String(row.start_date).slice(0, 10) : null,
     inputs,
     results,
@@ -76,6 +79,8 @@ export interface SaveScenarioInput {
   sourceKind: SourceKind | null;
   sourceId: string | null;
   inputs: Partial<LaunchInputs>;
+  /** Seulement à la création depuis la page Projets ; une mise à jour garde le lien existant. */
+  projectKey?: string | null;
 }
 
 /** Enregistre (ou met à jour) un scénario. Les résultats sont toujours recalculés ici, jamais repris du navigateur.
@@ -93,7 +98,8 @@ export async function saveScenario(input: SaveScenarioInput): Promise<LaunchScen
     results,
     verdict: results.verdict,
     margin_at_70: results.margin70 === null ? null : Math.round(results.margin70 * 10_000) / 10_000,
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    ...(input.projectKey !== undefined ? { project_key: input.projectKey } : {})
   };
   const query = input.id
     ? db().from("launch_scenarios").update(row).eq("id", input.id).eq("club_id", CLUB_ID).select("*").maybeSingle()

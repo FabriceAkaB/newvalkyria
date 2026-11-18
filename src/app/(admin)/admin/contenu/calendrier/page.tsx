@@ -66,6 +66,7 @@ export default async function CalendrierPage({ searchParams }: { searchParams: P
                         style={{ fontSize: "0.74rem", lineHeight: 1.3, padding: "4px 6px", borderRadius: 6, borderLeft: `3px solid ${KIND_COLOR[it.postKind] ?? KIND_COLOR.organique}`, background: it.kind === "prevu" ? "var(--adm-surface)" : "transparent", opacity: it.kind === "publie" ? 0.7 : 1, color: "var(--adm-text)" }}
                       >
                         {it.kind === "publie" ? "✓ " : ""}
+                        {it.account === "jpcoach" ? <strong style={{ color: "var(--adm-accent)" }}>JP Coach · </strong> : null}
                         {it.title}
                         {it.kind === "publie" && it.views ? <span style={{ color: "var(--adm-text-3)" }}> · {fmtInt(it.views)} vues</span> : null}
                       </div>

@@ -57,6 +57,7 @@ interface Form {
   kit: string;
   payments: string;
   otherVariable: string;
+  jpHours: string;
 }
 
 const parse = (s: string): number => {
@@ -90,7 +91,8 @@ function toInputs(f: Form): LaunchInputs {
     paymentsPerFamily: f.payments.trim() === "" ? 1 : parse(f.payments),
     otherVariableCents: toCents(f.otherVariable),
     presales: f.presales.trim() === "" ? null : parse(f.presales),
-    startDate: f.startDate || null
+    startDate: f.startDate || null,
+    jpHours: parse(f.jpHours)
   });
 }
 
@@ -116,7 +118,8 @@ function toForm(i: LaunchInputs, name: string): Form {
     otherFixed: showCents(i.otherFixedCents),
     kit: showCents(i.kitCents),
     payments: showNum(i.paymentsPerFamily),
-    otherVariable: showCents(i.otherVariableCents)
+    otherVariable: showCents(i.otherVariableCents),
+    jpHours: i.jpHours ? showNum(i.jpHours) : ""
   };
 }
 
@@ -386,6 +389,7 @@ export function LaunchCalculator({
                 inputMode="numeric"
                 hint={source ? "Préventes du programme, comptées en direct pour l'alerte" : "Préventes (vide si pas encore en vente)"}
               />
+              <Field label="Heures de JP" unit="h" value={form.jpHours} onChange={set("jpHours")} placeholder="0" hint="Préparation, vente et présence : donne le bénéfice par heure de JP" />
             </div>
             {source ? (
               <p className="lc-hint" style={{ marginTop: 12 }}>

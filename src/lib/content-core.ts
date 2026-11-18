@@ -202,6 +202,8 @@ export interface CalendarItem {
   networks: string[];
   status?: string;
   views?: number | null;
+  /** « jpcoach » pour la marque personnelle de JP ; absent = New Valkyria. */
+  account?: string | null;
 }
 
 /** Les jours de la semaine (dimanche au samedi) avec ce qui est prévu et ce qui est publié. */

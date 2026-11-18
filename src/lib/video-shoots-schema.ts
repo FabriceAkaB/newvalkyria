@@ -25,7 +25,8 @@ export const shootActions = [
     postKind: z.enum(["organique", "essai", "pub"]).nullable().optional(),
     angle: z.string().max(200).nullable().optional(),
     networks: z.array(z.string().max(20)).max(6).nullable().optional(),
-    filmedBy: z.string().max(80).nullable().optional()
+    filmedBy: z.string().max(80).nullable().optional(),
+    account: z.enum(["newvalkyria", "jpcoach"]).optional()
   }),
   z.object({ action: z.literal("shoot-status"), id: z.string().uuid(), status }),
   z.object({ action: z.literal("shoot-delete"), id: z.string().uuid() })

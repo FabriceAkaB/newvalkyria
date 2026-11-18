@@ -1,3 +1,4 @@
+import { INTEREST_OPTIONS, PROJECTS_2027 } from "@/lib/project-pipeline";
 import { randomBytes } from "node:crypto";
 
 import { CLUB_ID } from "@/lib/club";
@@ -121,19 +122,21 @@ export const SURVEY_TEMPLATES: SurveyTemplate[] = [
   },
   {
     kind: "interet",
-    title: "L'été 2027 : qu'est-ce qui vous intéresse ?",
-    intro: "Nous préparons l'été 2027 et de nouveaux projets. Avant de les lancer, on veut savoir ce qui vous intéresse vraiment : les familles intéressées seront les premières informées, avec les meilleurs prix.",
-    projectLabel: "Été 2027 et nouveaux projets",
+    title: "Nos projets 2027 : qu'est-ce qui intéresse votre fille ?",
+    intro: "Nous préparons les camps et les nouveaux projets de 2027. Avant d'en lancer un, on veut savoir ce qui intéresse vraiment votre fille : 2 minutes, une réponse par projet. Les familles intéressées seront les premières informées, avec les meilleurs prix.",
+    projectLabel: "Projets 2027",
+    // Une question par projet (project-pipeline.ts) : la page Projets à lancer croise ces réponses avec le calculateur.
     questions: [
-      {
-        id: "offres",
-        type: "choix_multiple",
-        label: "Quelles offres de l'été 2027 vous intéressent ?",
-        options: ["Camp de jour (à la semaine)", "Valkyria Été (soirs)", "Sport-Études d'août", "Séances privées ou Solo", "Camp spécialisé avec un club professionnel", "Aucune pour l'instant"],
-        required: true,
-        role: "interet"
-      },
-      { id: "semaines", type: "choix", label: "Combien de semaines de camp envisagez-vous ?", options: ["1", "2", "3", "4 ou plus", "Je ne sais pas"] },
+      ...PROJECTS_2027.map(
+        (p): SurveyQuestion => ({
+          id: p.key,
+          type: "choix",
+          label: p.existing ? `${p.label} (${p.when}) : comptez-vous continuer ?` : `${p.label} (${p.when})`,
+          options: p.existing ? ["Oui", "Peut-être", "Non"] : [...INTEREST_OPTIONS],
+          role: "interet"
+        })
+      ),
+      { id: "semaines", type: "choix", label: "Pour les camps, combien de semaines envisagez-vous dans l'année ?", options: ["1", "2", "3", "4 ou plus", "Je ne sais pas"] },
       { id: "important", type: "choix_multiple", label: "Qu'est-ce qui compte le plus pour vous ?", options: ["Prix", "Horaire", "Proximité", "Encadrement par un club professionnel", "Niveau de jeu", "Amies dans le groupe"] },
       { id: "idees", type: "texte", label: "Une idée de projet que vous aimeriez voir chez Valkyria ?" }
     ]

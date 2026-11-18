@@ -66,7 +66,8 @@ export function ShootForm({ shoot, defaultDate, onClose, endpoint, calendar = fa
     postKind: shoot?.post_kind ?? "organique",
     angle: shoot?.angle ?? "",
     networks: (shoot?.networks ?? ["instagram", "facebook"]) as string[],
-    filmedBy: shoot?.filmed_by ?? (calendar ? DEFAULT_FILMER : "")
+    filmedBy: shoot?.filmed_by ?? (calendar ? DEFAULT_FILMER : ""),
+    account: (shoot?.account === "jpcoach" ? "jpcoach" : "newvalkyria") as "newvalkyria" | "jpcoach"
   });
   const showCalendar = calendar || !!shoot?.publish_on;
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
@@ -148,6 +149,13 @@ export function ShootForm({ shoot, defaultDate, onClose, endpoint, calendar = fa
           <label style={label}>
             Publier le
             <input className="admin-input" type="date" value={f.publishOn} onChange={set("publishOn")} />
+          </label>
+          <label style={label}>
+            Compte
+            <select className="admin-input" value={f.account} onChange={set("account")}>
+              <option value="newvalkyria">New Valkyria</option>
+              <option value="jpcoach">JP Coach (jamais de garçons filmés)</option>
+            </select>
           </label>
           <label style={label}>
             Type

@@ -30,7 +30,8 @@ const inputs = z.object({
   paymentsPerFamily: z.number().min(0).max(24),
   otherVariableCents: cents,
   presales: z.number().int().min(0).max(10_000).nullable(),
-  startDate: z.string().refine(isIsoDate, "Date de début invalide.").nullable()
+  startDate: z.string().refine(isIsoDate, "Date de début invalide.").nullable(),
+  jpHours: hours.optional()
 });
 
 const schema = z.discriminatedUnion("action", [

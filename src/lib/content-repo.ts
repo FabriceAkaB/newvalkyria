@@ -294,13 +294,13 @@ export async function chooseInterviewSlot(token: string, slotId: string | null):
 
 export async function getCalendarItems(from: string, to: string): Promise<CalendarItem[]> {
   const [{ data: shoots, error }, posts] = await Promise.all([
-    db().from("jp_video_shoots").select("title, status, publish_on, post_kind, angle, networks").eq("club_id", CLUB_ID).gte("publish_on", from).lte("publish_on", to),
+    db().from("jp_video_shoots").select("title, status, publish_on, post_kind, angle, networks, account").eq("club_id", CLUB_ID).gte("publish_on", from).lte("publish_on", to),
     listPosts()
   ]);
   if (error) throw error;
   const planned: CalendarItem[] = ((shoots ?? []) as any[])
     .filter((s) => s.status !== "publie")
-    .map((s) => ({ date: String(s.publish_on).slice(0, 10), kind: "prevu", title: s.title, postKind: s.post_kind ?? "organique", angle: s.angle, networks: s.networks ?? [], status: s.status }));
+    .map((s) => ({ date: String(s.publish_on).slice(0, 10), kind: "prevu", title: s.title, postKind: s.post_kind ?? "organique", angle: s.angle, networks: s.networks ?? [], status: s.status, account: s.account ?? null }));
   const seen = new Set<string>();
   const done: CalendarItem[] = [];
   for (const p of posts.filter((p) => p.posted_on >= from && p.posted_on <= to)) {

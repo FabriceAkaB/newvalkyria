@@ -59,6 +59,8 @@ export interface LaunchInputs {
   presales: number | null;
   /** Date de début (AAAA-MM-JJ) ; null = pas encore fixée. */
   startDate: string | null;
+  /** Heures de JP pour ce projet (préparation, vente, présence) : sert au bénéfice par heure de JP (page Projets). */
+  jpHours: number;
 }
 
 export const EMPTY_INPUTS: LaunchInputs = {
@@ -81,7 +83,8 @@ export const EMPTY_INPUTS: LaunchInputs = {
   paymentsPerFamily: 1,
   otherVariableCents: 0,
   presales: null,
-  startDate: null
+  startDate: null,
+  jpHours: 0
 };
 
 export interface FixedLine {
@@ -201,7 +204,8 @@ export function normalizeInputs(raw: Partial<LaunchInputs> | null | undefined): 
     paymentsPerFamily: nonNeg(r.paymentsPerFamily),
     otherVariableCents: cents(r.otherVariableCents),
     presales,
-    startDate
+    startDate,
+    jpHours: nonNeg(r.jpHours)
   };
 }
 
