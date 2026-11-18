@@ -4022,6 +4022,30 @@
        "owner": "JP",
        "links": [],
        "initialStatus": "a_faire"
+      },
+      {
+       "code": "P5.6.05",
+       "priority": "star",
+       "level": 2,
+       "title": "Préparer le financement du voyage 2 mois avant : comité de parents formé, calendrier des collectes de mars 2027 à février 2028, objectif par joueuse, règle du temps de jeu annoncée.",
+       "due": "2027-01-15",
+       "owner": "JP + comité de parents",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voyage international de la relâche 2028 (17 nov. 2026)"
+      },
+      {
+       "code": "P5.6.06",
+       "priority": "star",
+       "level": 2,
+       "title": "Lancer les activités de financement du voyage de la relâche 2028 (une collecte par mois au moins), suivies dans les tâches et annoncées aux familles.",
+       "due": "2027-03-01",
+       "owner": "Comité de parents + JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voyage international de la relâche 2028 (17 nov. 2026)"
       }
      ]
     },
@@ -6589,6 +6613,10 @@
    {
     "title": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)",
     "text": "Source : le guide personnalisé « $100M Scaling Roadmap » d'Acquisition.com remis à JP (stade 3 de 10 : **Stabiliser**). Fiche complète avec ce qui existe déjà : `docs/strategie/acq-stade-3-stabiliser.md`. Où en est l'académie selon Alex : 1 à 4 personnes à temps plein autour de JP ; **trop de travail pour une seule personne**. Le rôle de JP passe de « celui qui fait » à « **celui qui forme** ». Pour passer au stade 4 : **se faire aider**, c'est-à-dire bâtir une petite équipe qui sait faire tourner l'académie. On ne règle pas tout en même temps : on choisit **le plus gros problème**, on le règle bien, puis on passe au suivant. Les bases du stade 2 doivent tenir (marketing chaque jour, qualité constante, argent suivi chaque jour) et le stade 4 se prépare d'avance (choisir nos meilleures familles, dire non, mesurer, professionnaliser)."
+   },
+   {
+    "title": "Voyage international de la relâche 2028 (17 nov. 2026)",
+    "text": "Décisions de JP : l'académie ne paie pas le voyage, ce sont les parents ; le départ se fait pendant la **semaine de relâche de mars 2028** ; les **activités de financement commencent en mars 2027** (un an de collectes), organisées par un comité de parents ; groupes d'environ 20 joueuses ; c'est aussi un levier de rétention."
    }
   ]
  },

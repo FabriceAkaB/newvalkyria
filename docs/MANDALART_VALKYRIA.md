@@ -1497,6 +1497,17 @@ Où en est l'académie selon Alex : 1 à 4 personnes à temps plein autour de JP
 
 - [ ] `P2.5.04` ➜ N3 — Préparer le stade 4 d'Alex : à la fin de la saison, identifier nos meilleures familles (assiduité, réinscription, références), ajuster l'offre et les prix pour elles et dire non aux demandes qui ne nous ressemblent pas. — 31 mai 2027 · JP
 
+### Voyage international de la relâche 2028 (17 nov. 2026)
+
+Décisions de JP : l'académie ne paie pas le voyage, ce sont les parents ; le départ se fait pendant la **semaine de
+relâche de mars 2028** ; les **activités de financement commencent en mars 2027** (un an de collectes), organisées par
+un comité de parents ; groupes d'environ 20 joueuses ; c'est aussi un levier de rétention.
+
+#### P5.6 Projets pour les plus vieilles
+
+- [ ] `P5.6.05` ⭐ N2 — Préparer le financement du voyage 2 mois avant : comité de parents formé, calendrier des collectes de mars 2027 à février 2028, objectif par joueuse, règle du temps de jeu annoncée. — 15 janv. 2027 · JP + comité de parents
+- [ ] `P5.6.06` ⭐ N2 — Lancer les activités de financement du voyage de la relâche 2028 (une collecte par mois au moins), suivies dans les tâches et annoncées aux familles. — 1er mars 2027 · Comité de parents + JP
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |

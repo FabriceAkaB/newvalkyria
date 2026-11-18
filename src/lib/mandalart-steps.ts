@@ -503,6 +503,22 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     done: "La décision go/no-go de la ligue d'hiver est prise, avec son prix plancher.",
     link: { href: "/admin/revenus/calculateur", label: "Calculateur de lancement" }
   },
+  "P5.6.05": {
+    how: [
+      "Trouve 2 ou 3 parents responsables pour le comité (communiqué et collectes).",
+      "Avec eux, fixe l'objectif par joueuse et le calendrier des collectes, une par mois, de mars 2027 à février 2028.",
+      "Annonce la règle du temps de jeu avec le projet (matchs importants : les meilleures ; autres matchs : temps égal ; tournoi : tout le monde joue)."
+    ],
+    done: "Le comité est formé, le calendrier des collectes et l'objectif par joueuse sont écrits."
+  },
+  "P5.6.06": {
+    how: [
+      "Le comité lance la première collecte en mars 2027 (ex. emballage, vente, souper-bénéfice).",
+      "Chaque collecte devient une tâche avec sa date et son responsable ; le montant ramassé est noté.",
+      "Chaque mois, annonce aux familles où en est le financement."
+    ],
+    done: "La première collecte a eu lieu en mars 2027 et le calendrier suit son cours."
+  },
   /* ── Stade 3 d'Alex Hormozi : stabiliser (guide Acquisition.com, 17 nov. 2026 ; docs/strategie/acq-stade-3-stabiliser.md) ── */
   "P4.8.15": {
     how: [
