@@ -8,6 +8,7 @@ import {
   EMPTY_INPUTS,
   METHOD_FILL,
   STRIPE_FIXED_CENTS,
+  SALES_TAX_RATE,
   STRIPE_PERCENT,
   VERDICT_LABEL,
   VERDICT_TONE,
@@ -379,7 +380,7 @@ export function LaunchCalculator({
             <p className="mda-sub">Ce que la famille paie et combien de places vous ouvrez.</p>
             <div className="lc-fields">
               <Field wide label="Nom du scénario" value={form.name} onChange={set("name")} placeholder={`Ex. Camp des Fêtes · ${shortDate(today)}`} inputMode="text" />
-              <Field label="Prix par participante" unit="$" value={form.price} onChange={set("price")} placeholder="0" hint="Avant taxes, ce que l'académie garde" />
+              <Field label="Prix par participante" unit="$" value={form.price} onChange={set("price")} placeholder="0" hint={inputs.priceCents ? `Avant taxes, ce que l'académie garde. Avec TPS/TVQ, la famille paie ${money2(Math.round(inputs.priceCents * (1 + SALES_TAX_RATE)))}` : "Avant taxes, ce que l'académie garde"} />
               <Field label="Places" value={form.capacity} onChange={set("capacity")} placeholder="0" inputMode="numeric" hint="Capacité du groupe (N)" />
               <Field label="Séances" value={form.sessions} onChange={set("sessions")} placeholder="0" inputMode="numeric" />
               <Field label="Durée d'une séance" unit="h" value={form.hoursPerSession} onChange={set("hoursPerSession")} placeholder="0" hint={programHours ? `= ${hoursLabel(programHours)} de programme` : "Ex. 1,5 pour 1 h 30"} />

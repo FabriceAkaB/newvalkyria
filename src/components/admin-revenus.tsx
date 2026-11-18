@@ -553,10 +553,12 @@ function RevenueCard({
   );
 }
 
-function RevenueTaxSetting({ initialRate }: { initialRate: number }) {
+function RevenueTaxSetting({ initialRate, initialFrom }: { initialRate: number; initialFrom: string | null }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(String(initialRate * 100));
   const [rate, setRate] = useState(initialRate);
+  const [from, setFrom] = useState(initialFrom ?? "");
+  const [savedFrom, setSavedFrom] = useState(initialFrom);
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
@@ -567,9 +569,9 @@ function RevenueTaxSetting({ initialRate }: { initialRate: number }) {
       const res = await fetch("/api/admin/revenue-settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ revenueTaxRate: pct / 100 })
+        body: JSON.stringify({ revenueTaxRate: pct / 100, revenueTaxFrom: from || null })
       });
-      if (res.ok) { setRate(pct / 100); setEditing(false); }
+      if (res.ok) { setRate(pct / 100); setSavedFrom(from || null); setEditing(false); }
     } finally {
       setSaving(false);
     }
@@ -591,7 +593,8 @@ function RevenueTaxSetting({ initialRate }: { initialRate: number }) {
             onChange={(e) => setValue(e.target.value)}
             autoFocus
           />
-          <span>%</span>
+          <span>% à partir du</span>
+          <input type="date" className="admin-input" style={{ fontSize: "0.72rem", padding: "0.25rem 0.4rem" }} value={from} onChange={(e) => setFrom(e.target.value)} aria-label="Date d'inscription à la TPS/TVQ" />
           <button onClick={save} disabled={saving} className="admin-btn-primary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.66rem" }}>
             {saving ? "..." : "OK"}
           </button>
@@ -602,6 +605,7 @@ function RevenueTaxSetting({ initialRate }: { initialRate: number }) {
       ) : (
         <>
           <strong style={{ color: "var(--adm-text-2)" }}>{(rate * 100).toFixed(2)}%</strong>
+          {rate > 0 && savedFrom ? <span>à partir du {savedFrom} (TPS/TVQ remise à l&apos;État, hors objectifs)</span> : null}
           <button
             onClick={() => { setValue(String(rate * 100)); setEditing(true); }}
             style={{ color: "var(--adm-accent)", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}
@@ -761,7 +765,7 @@ export function AdminRevenus({ summary, dashboard, seasons }: Props) {
           <FinancialDashboardPanel dashboard={dashboard} seasonGoalCents={cards.find((c) => c.label === dashboard.activeSeasonLabel)?.goalCents ?? 0} />
 
           <DefaultSeasonSetting seasons={seasons} />
-          <RevenueTaxSetting initialRate={summary.revenueTaxRate} />
+          <RevenueTaxSetting initialRate={summary.revenueTaxRate} initialFrom={summary.revenueTaxFrom ?? null} />
 
           {hasUnknown && (
             <p style={{ fontSize: "0.75rem", color: "var(--adm-warn)", background: "var(--adm-warn-soft)", border: "1px solid rgba(255,180,100,0.3)", borderRadius: "8px", padding: "0.6rem 0.9rem", marginBottom: "1.25rem" }}>

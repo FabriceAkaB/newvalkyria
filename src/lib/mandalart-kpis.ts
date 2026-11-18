@@ -78,7 +78,7 @@ export async function computeRealFigures(today = new Date().toLocaleDateString("
   const monthsCents: Record<string, number> = {};
   try {
     const summary = await computeRevenueSummary();
-    for (const m of summary.months) monthsCents[m.month] = (monthsCents[m.month] ?? 0) + m.revenueCents;
+    for (const m of summary.months) monthsCents[m.month] = (monthsCents[m.month] ?? 0) + m.revenueExTaxCents; // sans la TPS/TVQ, qui revient à l'État
     const ym = today.slice(0, 7);
     const [y, mo] = ym.split("-").map(Number);
     const start12 = `${mo === 12 ? y : y - 1}-${String(mo === 12 ? 1 : mo + 1).padStart(2, "0")}`;

@@ -209,18 +209,20 @@ export async function setBudget(category: string, amountCents: number): Promise<
 
 export interface RevenueSettings {
   revenue_tax_rate: number;
+  /** Début de la perception de la TPS/TVQ (inscription aux taxes) ; null = le taux vaut pour tous les revenus. */
+  revenue_tax_from: string | null;
 }
 
 export async function getRevenueSettings(): Promise<RevenueSettings> {
   const supabase = db();
-  const { data, error } = await supabase.from("revenue_settings").select("revenue_tax_rate").eq("id", true).maybeSingle();
+  const { data, error } = await supabase.from("revenue_settings").select("revenue_tax_rate, revenue_tax_from").eq("id", true).maybeSingle();
   if (error) throw new Error(error.message);
-  return { revenue_tax_rate: data?.revenue_tax_rate ?? 0 };
+  return { revenue_tax_rate: Number(data?.revenue_tax_rate ?? 0), revenue_tax_from: data?.revenue_tax_from ? String(data.revenue_tax_from).slice(0, 10) : null };
 }
 
-export async function setRevenueTaxRate(rate: number): Promise<void> {
+export async function setRevenueTaxRate(rate: number, from?: string | null): Promise<void> {
   const supabase = db();
-  const { error } = await supabase.from("revenue_settings").update({ revenue_tax_rate: rate }).eq("id", true);
+  const { error } = await supabase.from("revenue_settings").update({ revenue_tax_rate: rate, ...(from !== undefined ? { revenue_tax_from: from } : {}) }).eq("id", true);
   if (error) throw new Error(error.message);
 }
 

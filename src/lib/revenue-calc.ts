@@ -88,6 +88,8 @@ export interface SeasonRevenue {
 export interface MonthlyBucket {
   month: string; // "2026-08"
   revenueCents: number;
+  /** Revenus sans la TPS/TVQ perçue pour l'État (égal à revenueCents avant l'inscription aux taxes). */
+  revenueExTaxCents: number;
   expenseCents: number;
   netCents: number;
   goalCents: number;
@@ -107,6 +109,8 @@ export interface RevenueSummary {
   months: MonthlyBucket[];
   accounts: AccountBalance[];
   revenueTaxRate: number;
+  /** Date (AAAA-MM-JJ) à partir de laquelle les revenus contiennent la TPS/TVQ ; null = le taux vaut pour tout. */
+  revenueTaxFrom: string | null;
   grandTotalCents: number;
   grandGoalCents: number;
   grandExpenseCents: number;
@@ -135,6 +139,13 @@ function childNameFromGoal(goal: string): string {
  *  facture Stripe) ; on en déduit le montant net et la taxe, exactement
  *  comme "NET AMOUNT" = TOTAL / (1 + TAX %) dans le gabarit comptable de
  *  référence. */
+/** Taux de taxe d'un revenu selon sa date : aucune taxe avant l'inscription à la TPS/TVQ (JP, 17 nov. 2026 :
+ *  la taxe perçue appartient à l'État et ne compte pas dans les objectifs). */
+export function taxRateOn(date: string, rate: number, from: string | null): number {
+  if (rate <= 0) return 0;
+  return from && date.slice(0, 10) < from ? 0 : rate;
+}
+
 function splitTax(totalCents: number, taxRate: number): { netCents: number; taxCents: number } {
   if (taxRate <= 0) return { netCents: totalCents, taxCents: 0 };
   const netCents = Math.round(totalCents / (1 + taxRate));
@@ -214,6 +225,8 @@ async function computeRevenueData(): Promise<{
   const goalCents = (key: string) => goals.find((g) => g.season_key === key)?.goal_cents ?? 0;
   const monthlyGoalCents = (month: string) => monthlyGoals.find((g) => g.month === month)?.goal_cents ?? 0;
   const revenueTaxRate = settings.revenue_tax_rate;
+  const revenueTaxFrom = settings.revenue_tax_from;
+  const taxOf = (e: { date: string; amountCents: number }) => splitTax(e.amountCents, taxRateOn(e.date, revenueTaxRate, revenueTaxFrom)).taxCents;
 
   const revenueEvents: RevenueEvent[] = [];
   const paidCountBySeasonKey = new Map<string, number>();
@@ -360,7 +373,8 @@ async function computeRevenueData(): Promise<{
     const expEvents = expenseEvents.filter((e) => e.seasonKey === key);
     const totalCents = revEvents.reduce((sum, e) => sum + e.amountCents, 0);
     const expenseCents = expEvents.reduce((sum, e) => sum + e.amountCents, 0);
-    const { netCents, taxCents } = splitTax(totalCents, revenueTaxRate);
+    const taxCents = revEvents.reduce((sum, e) => sum + taxOf(e), 0);
+    const netCents = totalCents - taxCents;
     return {
       key,
       label,
@@ -385,16 +399,17 @@ async function computeRevenueData(): Promise<{
   const boutique = buildCard(BOUTIQUE_KEY, BOUTIQUE_LABEL);
   const general = buildCard(GENERAL_KEY, GENERAL_LABEL);
 
-  const monthMap = new Map<string, { revenueCents: number; expenseCents: number }>();
+  const monthMap = new Map<string, { revenueCents: number; taxCents: number; expenseCents: number }>();
   for (const e of revenueEvents) {
     const month = e.date.slice(0, 7);
-    const bucket = monthMap.get(month) ?? { revenueCents: 0, expenseCents: 0 };
+    const bucket = monthMap.get(month) ?? { revenueCents: 0, taxCents: 0, expenseCents: 0 };
     bucket.revenueCents += e.amountCents;
+    bucket.taxCents += taxOf(e);
     monthMap.set(month, bucket);
   }
   for (const e of expenseEvents) {
     const month = e.date.slice(0, 7);
-    const bucket = monthMap.get(month) ?? { revenueCents: 0, expenseCents: 0 };
+    const bucket = monthMap.get(month) ?? { revenueCents: 0, taxCents: 0, expenseCents: 0 };
     bucket.expenseCents += e.amountCents;
     monthMap.set(month, bucket);
   }
@@ -402,6 +417,7 @@ async function computeRevenueData(): Promise<{
     .map(([month, b]) => ({
       month,
       revenueCents: b.revenueCents,
+      revenueExTaxCents: b.revenueCents - b.taxCents,
       expenseCents: b.expenseCents,
       netCents: b.revenueCents - b.expenseCents,
       goalCents: monthlyGoalCents(month)
@@ -434,6 +450,7 @@ async function computeRevenueData(): Promise<{
       months,
       accounts,
       revenueTaxRate,
+      revenueTaxFrom,
       grandTotalCents,
       grandGoalCents,
       grandExpenseCents,
@@ -680,7 +697,8 @@ export async function getRevenueExportRows(): Promise<ExportRow[]> {
   const { summary, revenueEvents, expenseEvents } = await computeRevenueData();
 
   const revenueRows: ExportRow[] = revenueEvents.map((e) => {
-    const { netCents, taxCents } = splitTax(e.amountCents, summary.revenueTaxRate);
+    const rate = taxRateOn(e.date, summary.revenueTaxRate, summary.revenueTaxFrom);
+    const { netCents, taxCents } = splitTax(e.amountCents, rate);
     return {
       date: e.date,
       type: "Revenu" as const,
@@ -688,7 +706,7 @@ export async function getRevenueExportRows(): Promise<ExportRow[]> {
       category: "",
       description: e.description,
       amountCents: e.amountCents,
-      taxRate: summary.revenueTaxRate,
+      taxRate: rate,
       netAmountCents: netCents,
       taxAmountCents: taxCents,
       paidWith: REVENUE_ACCOUNT

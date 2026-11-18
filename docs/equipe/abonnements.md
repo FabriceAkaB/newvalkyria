@@ -19,6 +19,7 @@ dépend ; JP ajoute le coût mensuel (relevé de carte), puis on décide.
 | Veo | Caméra et vidéos des matchs | Éducateurs, familles | à remplir | Oui |
 | MonClubSportif | Équipes, calendriers, présences | Familles, éducateurs | à remplir | Oui |
 | Claude (Anthropic) | Claude Code et les futurs agents | JP | à remplir | Oui |
+| QuickBooks Online | Comptabilité tenue par Pontbriand Lamarche CPA (frais en plus des honoraires) | Le comptable, JP | à demander à Félix | Oui (exigé par le comptable) |
 | Nom de domaine newvalkyria.com | L'adresse du site | Le site | à remplir (par année) | Oui |
 | Autres (Canva, CapCut, montage, etc.) | à lister depuis le relevé de carte | | | |
 

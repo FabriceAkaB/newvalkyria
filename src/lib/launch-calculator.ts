@@ -16,6 +16,8 @@
  *  (V = Vbase + 2,9 % × P), ce qui donne des prix planchers exacts.
  *  Ce fichier est pur (aucun accès à la base) : la page, la route API et les tests l'utilisent tels quels. */
 
+/** TPS 5 % + TVQ 9,975 % : perçues pour l'État dès l'inscription aux taxes, en plus du prix que l'académie garde. */
+export const SALES_TAX_RATE = 0.14975;
 export const STRIPE_PERCENT = 0.029;
 export const STRIPE_FIXED_CENTS = 30;
 export const TARGET_MARGIN = 0.5;
