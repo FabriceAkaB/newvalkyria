@@ -35,8 +35,8 @@ export async function getProjectBoard(): Promise<ProjectBoard> {
   const ids = projectSurveys.map((s) => s.id);
   const [{ data: responses }, { data: invites }] = ids.length
     ? await Promise.all([
-        db().from("survey_responses").select("survey_id, invite_id, answers").in("survey_id", ids),
-        db().from("survey_invites").select("id, survey_id, player_names, parent_name, responded_at").in("survey_id", ids)
+        db().from("survey_responses").select("survey_id, invite_id, answers, created_at").in("survey_id", ids).order("created_at", { ascending: false }),
+        db().from("survey_invites").select("id, survey_id, parent_email, player_names, parent_name, responded_at").in("survey_id", ids)
       ])
     : [{ data: [] }, { data: [] }];
   const inviteById = new Map(((invites ?? []) as any[]).map((i) => [i.id, i]));
@@ -44,9 +44,14 @@ export async function getProjectBoard(): Promise<ProjectBoard> {
   const rows: ProjectRow[] = PROJECTS_2027.map((project) => {
     const answers: unknown[] = [];
     const names: string[] = [];
+    // Une famille qui répond à deux sondages (ex. projets 2027 puis préparatoire Sport-Études) compte une fois : sa réponse la plus récente.
+    const seen = new Set<string>();
     for (const r of (responses ?? []) as any[]) {
       const a = r.answers?.[project.key];
       if (a === undefined) continue;
+      const fam = String((r.invite_id ? inviteById.get(r.invite_id)?.parent_email : null) ?? `réponse:${r.invite_id ?? Math.random()}`).toLowerCase();
+      if (seen.has(fam)) continue;
+      seen.add(fam);
       answers.push(a);
       if (/^(oui|peut)/i.test(String(Array.isArray(a) ? a[0] : a))) {
         const inv = r.invite_id ? inviteById.get(r.invite_id) : null;

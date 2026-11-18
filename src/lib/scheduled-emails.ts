@@ -21,6 +21,17 @@ export interface ScheduledEmailInput {
   campaign: string;
   parentName?: string | null;
   playerName?: string | null;
+  /** Ex. « survey_invite:<id> » : l'invitation du sondage est marquée envoyée à l'envoi. */
+  ref?: string | null;
+}
+
+/** Une invitation de sondage envoyée par un envoi programmé passe à « envoyée », et son sondage aussi. */
+async function markSurveyInviteSent(ref: unknown): Promise<void> {
+  if (!String(ref ?? "").startsWith("survey_invite:")) return;
+  const at = new Date().toISOString();
+  const { data: inv } = await db().from("survey_invites").update({ sent_at: at }).eq("id", String(ref).slice("survey_invite:".length)).is("sent_at", null).select("survey_id");
+  const surveyId = (inv as any[] | null)?.[0]?.survey_id;
+  if (surveyId) await db().from("surveys").update({ status: "envoye", sent_at: at }).eq("id", surveyId).eq("status", "brouillon");
 }
 
 export interface ScheduledMcsPostInput {
@@ -66,12 +77,7 @@ export async function sendDueMcsPosts(now = new Date()): Promise<{ posted: numbe
     try {
       await session.createPost(e.mcs_team_id, e.mcs_season_id, { subject: e.subject, html: e.html, to: e.mcs_member_ids ?? [], notify: true });
       posted++;
-      if (String(e.ref ?? "").startsWith("survey_invite:")) {
-        const at = new Date().toISOString();
-        const { data: inv } = await db().from("survey_invites").update({ sent_at: at }).eq("id", String(e.ref).slice("survey_invite:".length)).is("sent_at", null).select("survey_id");
-        const surveyId = (inv as any[] | null)?.[0]?.survey_id;
-        if (surveyId) await db().from("surveys").update({ status: "envoye", sent_at: at }).eq("id", surveyId).eq("status", "brouillon");
-      }
+      await markSurveyInviteSent(e.ref);
       const c = campaigns.get(e.campaign ?? e.subject) ?? { subject: e.subject, count: 0 };
       c.count++;
       campaigns.set(e.campaign ?? e.subject, c);
@@ -91,7 +97,7 @@ export async function scheduleEmails(rows: ScheduledEmailInput[]): Promise<numbe
   if (!rows.length) return 0;
   const { error } = await db()
     .from("scheduled_emails")
-    .insert(rows.map((r) => ({ club_id: CLUB_ID, send_at: r.sendAt, to_email: r.to, cc: r.cc ?? null, subject: r.subject, html: r.html, text_body: r.text ?? null, campaign: r.campaign, parent_name: r.parentName ?? null, player_name: r.playerName ?? null })));
+    .insert(rows.map((r) => ({ club_id: CLUB_ID, send_at: r.sendAt, to_email: r.to, cc: r.cc ?? null, subject: r.subject, html: r.html, text_body: r.text ?? null, campaign: r.campaign, parent_name: r.parentName ?? null, player_name: r.playerName ?? null, ref: r.ref ?? null })));
   if (error) throw new Error(error.message);
   return rows.length;
 }
@@ -124,6 +130,7 @@ export async function sendDueEmails(now = new Date()): Promise<{ sent: number; f
       const err = (res as { error?: { message: string } | null })?.error;
       if (err) throw new Error(err.message);
       sent++;
+      await markSurveyInviteSent(e.ref);
       const c = campaigns.get(e.campaign ?? e.subject) ?? { subject: e.subject, body: e.text_body ?? "", count: 0 };
       c.count++;
       campaigns.set(e.campaign ?? e.subject, c);
