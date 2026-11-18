@@ -761,6 +761,25 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
       sections.push(section({ key: "monclubsportif", title: "MonClubSportif", level: items.length ? "orange" : "info", emptyText: "MonClubSportif est à jour.", href: "/admin/monclubsportif", hrefLabel: "À faire dans MonClubSportif", items }));
     }
 
+    // ── Signes de départ (P4.7.01) : 2 pratiques manquées de suite ou fréquence en baisse → appeler la famille ──
+    const departures = await import("@/lib/departure-signals-repo").then((m) => m.getDepartureCalls(new Date(now).toLocaleDateString("en-CA", { timeZone: "America/Toronto" }))).catch(() => []);
+    sections.push(
+      section({
+        key: "signes-depart",
+        title: "Signes de départ : familles à appeler",
+        level: departures.length ? "orange" : "info",
+        emptyText: "Aucune joueuse ne décroche en ce moment.",
+        href: "/admin/relances",
+        hrefLabel: "Relances et suivi",
+        items: departures.map((d) => ({
+          title: `${d.playerName} : ${d.reason}`,
+          detail: `Appeler ${d.parentName ?? "la famille"}${d.parentPhone ? ` au ${d.parentPhone}` : ""} : « Comment ça va pour elle ? » Noter la réponse dans Relances et suivi.`,
+          meta: d.lastPresent ? `Dernière présence ${shortDay(`${d.lastPresent}T12:00:00`)}` : "Aucune présence récente",
+          href: "/admin/relances"
+        }))
+      })
+    );
+
     // ── Sondages : familles à rappeler (note sous 7 ou demande d'appel) ──
     const toCall = await getFamiliesToCall().catch(() => []);
     sections.push(

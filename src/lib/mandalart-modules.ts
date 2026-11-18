@@ -342,11 +342,11 @@ export const PILLAR_MODULES: PillarModule[] = [
     pillar: "P4",
     title: "Signes de départ",
     question: "Quelle famille risque de partir, avant qu'elle parte ?",
-    status: "a-construire",
+    status: "partiel",
     objectives: ["P4.7"],
     links: ["AU03", "AU16"],
     planned: ["Alerte de présence : 2 séances manquées de suite, ou passage de 2 à 1 séance par semaine", "Question de parent sans réponse depuis 20 h", "Note de sondage sous 7 (existe : Voix des familles)"],
-    next: "P4.7.01 : alerte de présence (15 déc.)."
+    next: "Alerte de présence active dans Aujourd'hui (departure-signals.ts) ; à ajouter : question de parent sans réponse depuis 20 h."
   },
   {
     slug: "accueil",
