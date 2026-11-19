@@ -71,7 +71,7 @@ export async function sendPasswordLink(email: string, purpose: "oubli" | "invita
   const { getResendClient } = await import("@/lib/resend");
   const url = `${env.publicSiteUrl}/entraineur/mot-de-passe/${token}`;
   const first = String(coach.first_name ?? "").trim();
-  const intro = purpose === "invitation" ? "Ton accès à l'Espace Technique de New Valkyria est prêt. Choisis ton mot de passe : tu te connecteras ensuite avec ce courriel." : "Tu as demandé un nouveau mot de passe pour l'Espace Technique de New Valkyria.";
+  const intro = purpose === "invitation" ? "Ton accès à l'Espace Technique de New Valkyria est prêt : tes pratiques et leur plan (à imprimer), le rapport après chaque pratique, ta paie, ton contrat, ta formation et une boîte à suggestions. Choisis ton mot de passe : tu te connecteras ensuite avec ce courriel, sur newvalkyria.com (Espace coach)." : "Tu as demandé un nouveau mot de passe pour l'Espace Technique de New Valkyria.";
   const until = purpose === "invitation" ? "Ce lien est valide 7 jours." : "Ce lien est valide 2 heures. Si ce n'est pas toi, ignore ce courriel.";
   const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1d1730;line-height:1.6;max-width:620px"><p>Bonjour${first ? ` ${first}` : ""},</p><p>${intro}</p><p><a href="${url}" style="display:inline-block;background:#5b2a86;color:#fff;text-decoration:none;padding:13px 24px;border-radius:10px;font-weight:bold">Choisir mon mot de passe</a></p><p style="font-size:13px;color:#666">Ou copie ce lien : <a href="${url}">${url}</a><br>${until}</p><p>L'équipe New Valkyria</p></div>`;
   const text = `Bonjour${first ? ` ${first}` : ""},\n\n${intro}\n\nChoisir mon mot de passe : ${url}\n${until}\n\nL'équipe New Valkyria`;
