@@ -286,11 +286,34 @@ export async function videosForActivity(activityId: string): Promise<{ id: strin
   return (data ?? []) as any[];
 }
 
-/** Lecteur pour un éducateur assigné à l'activité de la vidéo (l'appelant donne ses activités). */
+/** Vidéos des pratiques : ouvertes aux éducateurs pendant 14 jours après la pratique, puis fermées (JP, 18 nov. 2026).
+ *  Les matchs, eux, restent ouverts aux éducateurs en tout temps. */
+export const PRACTICE_VIDEO_DAYS = 14;
+
+const practiceOpen = (v: MatchVideo, now = Date.now()) => {
+  const d = v.match_date ?? String(v.created_at).slice(0, 10);
+  return now - Date.parse(`${d}T12:00:00Z`) <= PRACTICE_VIDEO_DAYS * 86_400_000;
+};
+
+/** Lecteur pour un éducateur : tous les matchs ; une pratique pendant 14 jours (l'appelant donne aussi ses activités). */
 export async function playerDataForCoach(videoId: string, allowedActivityIds: string[]): Promise<PlayerData | null> {
   const v = await getVideo(videoId);
-  if (!v || v.status !== "pret" || !v.activity_id || !allowedActivityIds.includes(v.activity_id)) return null;
+  if (!v || v.status !== "pret") return null;
+  if (v.kind === "match") return toPlayer(v);
+  if (!practiceOpen(v) && !(v.activity_id && allowedActivityIds.includes(v.activity_id) && practiceOpen(v))) return null;
   return toPlayer(v);
+}
+
+/** La vidéothèque du portail des éducateurs : tous les matchs, et les pratiques des 14 derniers jours. */
+export async function videosForCoach(): Promise<(FamilyVideo & { kind: "match" | "pratique"; closesOn: string | null })[]> {
+  const all = await listMatchVideos();
+  const open = all.filter((v) => v.status === "pret" && (v.kind === "match" || practiceOpen(v)));
+  return Promise.all(
+    open.map(async (v) => {
+      const d = v.match_date ?? String(v.created_at).slice(0, 10);
+      return { id: v.id, kind: v.kind, date: v.match_date, title: v.title, teamName: v.teamName, duration_s: v.duration_s, poster: await posterOf(v), goals: v.highlights.filter((h) => h.type === "goal").length, closesOn: v.kind === "pratique" ? new Date(Date.parse(`${d}T12:00:00Z`) + PRACTICE_VIDEO_DAYS * 86_400_000).toISOString().slice(0, 10) : null };
+    })
+  );
 }
 
 /** Toutes les heures : chaque vidéo répond-elle encore chez Veo ? Un fichier effacé chez Veo est lu dans la copie de

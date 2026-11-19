@@ -18,7 +18,9 @@ export default async function MesIdeesPage() {
       <Container className="max-w-2xl">
         <div className="insc-hero-inner">
           <h1 className="insc-hero-title">💡 Boîte à idées</h1>
-          <p className="insc-hero-sub">Une idée pour l&apos;académie ? Proposez-la ici : l&apos;équipe la lit et vous répond dans cette page.</p>
+          <p className="insc-hero-sub">
+            Ici, votre opinion compte. Cette boîte sert à améliorer l&apos;expérience de nos joueuses et de leurs familles à New Valkyria. Écrivez tout ce qui vous passe par la tête : une idée, ce que vous aimez, ce qui vous dérange. Positif comme négatif, chaque message est lu par notre équipe, et nous essayons de l&apos;appliquer le plus vite possible. La réponse de l&apos;équipe apparaît dans cette page.
+          </p>
         </div>
       </Container>
       <Container className="max-w-2xl">
