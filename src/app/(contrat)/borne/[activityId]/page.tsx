@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
+import { KioskPracticePlan, KioskTabs } from "@/components/kiosk-practice";
 import { SurveyKiosk } from "@/components/survey-kiosk";
+import { getKioskPlan } from "@/lib/kiosk-practice-repo";
 import { getSurveyData } from "@/lib/practice-survey-repo";
 import { signedPhotoUrl } from "@/lib/player-photos";
 import { checkKioskKey } from "@/lib/survey-kiosk";
@@ -10,9 +12,9 @@ export const metadata: Metadata = { title: "Comment était ta pratique ? | New V
 
 /** La borne de sondage : l'iPad reste ouvert sur cette page à la fin de la pratique ; chaque fille touche sa photo
  *  et répond elle-même à 5 questions sur 10. */
-export default async function KioskPage({ params, searchParams }: { params: Promise<{ activityId: string }>; searchParams: Promise<{ cle?: string }> }) {
+export default async function KioskPage({ params, searchParams }: { params: Promise<{ activityId: string }>; searchParams: Promise<{ cle?: string; vue?: string }> }) {
   const { activityId } = await params;
-  const { cle } = await searchParams;
+  const { cle, vue } = await searchParams;
   const data = checkKioskKey(activityId, cle) ? await getSurveyData(activityId) : null;
   if (!data) {
     return (
@@ -27,7 +29,8 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
   // La borne s'ouvre avec une clé, sans connexion : liens signés de 4 heures pour les photos (stockage privé, Loi 25).
   const photos = new Map(await Promise.all(data.roster.map(async (p) => [p.registrationId, await signedPhotoUrl(p.photoUrl, 4 * 3600).catch(() => null)] as const)));
   const done = data.attendance.filter((a) => a.practice_rating != null && a.fatigue != null && a.learning != null).map((a) => a.registration_id);
-  return (
+  const plan = await getKioskPlan(activityId).catch(() => null);
+  const survey = (
     <SurveyKiosk
       activityId={activityId}
       cle={cle!}
@@ -37,4 +40,8 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
       absent={data.attendance.filter((a) => a.status === "absent").map((a) => a.registration_id)}
     />
   );
+  if (!plan) return survey;
+  // La pratique et le sondage dans la même page (JP, 18 nov. 2026) : une fois ouverte, tout marche sans réseau.
+  const when = `${new Date(`${String(data.activity.activity_date).slice(0, 10)}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })} · ${String(data.activity.start_time).slice(0, 5)}${data.activity.location ? ` · ${data.activity.location}` : ""}`;
+  return <KioskTabs initial={vue === "pratique" ? "pratique" : "sondage"} plan={<KioskPracticePlan plan={plan} title={data.label} when={when} />} survey={survey} />;
 }

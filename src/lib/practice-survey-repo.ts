@@ -28,7 +28,7 @@ const toMin = (t: string) => {
 export const together = (a: Practice, b: Practice) => a.date === b.date && a.location === b.location && Math.abs(toMin(a.start) - toMin(b.start)) <= 15;
 export const groupName = (g: string) => g.replace(/^Filles\s+/i, "");
 
-async function academyPractices(from: string, to: string): Promise<Practice[]> {
+export async function academyPractices(from: string, to: string): Promise<Practice[]> {
   return (await listPractices({ from, to })).filter((p) => !p.organization && p.source !== "programme" && p.activityType !== "Match");
 }
 
@@ -69,7 +69,8 @@ export async function getRecentPracticesForSurvey(): Promise<SurveyPractice[]> {
 /** Ouvre le sondage d'une pratique de l'horaire : crée son activité si elle n'existe pas encore. */
 export async function openSurveyActivity(key: string): Promise<string | null> {
   const today = todayIso();
-  const practice = (await academyPractices(addDays(today, -7), today)).find((p) => p.key === key);
+  // Jusqu'à demain : la borne ouvre aussi la pratique de ce soir ou de demain matin, avant qu'elle commence.
+  const practice = (await academyPractices(addDays(today, -7), addDays(today, 1))).find((p) => p.key === key);
   if (!practice) return null;
   if (practice.activityId) return practice.activityId;
   return createActivityFor({ date: practice.date, start: practice.start, end: practice.end, location: practice.location, group: practice.group });

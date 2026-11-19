@@ -9,7 +9,7 @@ import { CoachChampionsCard } from "@/components/coach-champions-card";
 import { CoachTeamsCard } from "@/components/coach-teams-card";
 import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrief";
 import { CoachGuideCard, PracticeTimer } from "@/components/coach-guide";
-import { exerciseGuideFallback } from "@/components/admin-block-guide";
+import { exerciseGuideFallback, setupForGroup } from "@/lib/practice-plan-view";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { observerOf } from "@/lib/gesture-scores";
 import { CoachTopbar } from "@/components/coach-topbar";
@@ -267,14 +267,6 @@ function Avatar({ player, large = false }: { player: RosterPlayer; large?: boole
 }
 
 /* ── Avant : la pratique du jour ─────────────────────────────────── */
-
-/** Montage prévu dans la fiche selon le nombre de joueuses attendues (banque Valkyria : 5 à 7, 8 à 10, 11 à 16). */
-function setupForGroup(exercise: Record<string, unknown> | undefined, players: number): string | null {
-  if (!exercise) return null;
-  const key = players <= 7 ? "setup_5_7" : players <= 10 ? "setup_8_10" : "setup_11_16";
-  const v = exercise[key];
-  return typeof v === "string" && v.trim() ? v : null;
-}
 
 function PracticeOfTheDay({ activity, theme, blocks, exercises, players, seen, onSeen }: { activity: CoachActivity; theme: Props["theme"]; blocks: SessionBlock[]; exercises: Exercise[]; players: number; seen: string[]; onSeen: (key: string) => void }) {
   const total = blocks.reduce((s, b) => s + b.duration_minutes, 0);

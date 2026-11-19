@@ -23,9 +23,9 @@ const GERANTE_PASSWORD = process.env.GERANTE_PASSWORD?.trim() || null;
  *  sans casser l'existant : chaque route/page choisit explicitement les
  *  rôles autorisés via `requireAdmin({ roles: [...] })`. */
 export type AdminRole = "admin" | "gerante" | "borne";
-/** « borne » (JP, 18 nov. 2026) : le code de la tablette au bord du terrain. Il n'ouvre que le sondage de fin de la
- *  pratique du jour : toute autre page renvoie vers /admin/sondage, et aucune route ne l'accepte sans le nommer. */
-export const KIOSK_HOME = "/admin/sondage";
+/** « borne » (JP, 18 nov. 2026) : le code de la tablette au bord du terrain. Il n'ouvre que les pratiques du jour
+ *  (leur plan et le sondage des filles, /admin/borne) : toute autre page y renvoie, et aucune route ne l'accepte sans le nommer. */
+export const KIOSK_HOME = "/admin/borne";
 /** Les rôles de l'équipe (tout sauf la borne). */
 export type StaffRole = Exclude<AdminRole, "borne">;
 

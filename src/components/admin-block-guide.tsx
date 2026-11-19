@@ -2,29 +2,10 @@
 
 import { useState } from "react";
 
+import { exerciseGuideFallback } from "@/lib/practice-plan-view";
 import { BLOCK_GUIDE_FIELDS, type BlockGuideKey, type SessionBlock } from "@/lib/session-plan-repo";
 
-/** Ce que la fiche de l'exercice dit déjà pour chaque champ (affiché en indice : rien à recopier). */
-export function exerciseGuideFallback(exercise: Record<string, unknown> | null | undefined): Partial<Record<BlockGuideKey, string>> {
-  if (!exercise) return {};
-  const txt = (...keys: string[]) =>
-    keys
-      .map((k) => exercise[k])
-      .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
-      .join("\n") || undefined;
-  const variants = [
-    exercise.variant_easier ? `Plus facile : ${exercise.variant_easier}` : null,
-    exercise.variant_harder ? `Plus difficile : ${exercise.variant_harder}` : null,
-    exercise.variant_cognitive ? `Cognitive : ${exercise.variant_cognitive}` : null
-  ].filter(Boolean);
-  return {
-    setup: txt("dimensions", "setup_8_10"),
-    material: txt("material"),
-    key_points: txt("coaching_points"),
-    variants: variants.length ? variants.join("\n") : txt("variants"),
-    progressions: txt("progression", "progressions")
-  };
-}
+export { exerciseGuideFallback };
 
 /** Pratique du jour d'un bloc, préparée par JP : montage, matériel, qui fait quoi, points clés, variantes, progressions. */
 export function AdminBlockGuide({ activityId, block, exercise }: { activityId: string; block: SessionBlock; exercise?: Record<string, unknown> | null }) {

@@ -22,7 +22,7 @@ export function AdminLoginForm() {
 
     if (res.ok) {
       const data = await res.json().catch(() => null);
-      router.push(data?.role === "borne" ? "/admin/sondage" : "/admin/aujourdhui");
+      router.push(data?.role === "borne" ? "/admin/borne" : "/admin/aujourdhui");
     } else {
       const data = await res.json().catch(() => null);
       setError(data?.error ?? "Mot de passe incorrect");
