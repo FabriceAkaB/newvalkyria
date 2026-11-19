@@ -651,11 +651,12 @@ export interface ReportActivity {
   category: string | null;
   activity_type: string;
   organization?: string | null;
+  title?: string | null;
 }
 
 /** Rapport de chaque activité soumise à la règle (pratiques depuis REPORT_RULE_START). Les autres n'y sont pas. */
 export async function getActivityReports(activities: ReportActivity[]): Promise<Map<string, ReportStatus>> {
-  const concerned = activities.filter((a) => String(a.activity_date).slice(0, 10) >= REPORT_RULE_START && REPORT_REQUIRED_TYPES.includes(a.activity_type) && !a.organization);
+  const concerned = activities.filter((a) => String(a.activity_date).slice(0, 10) >= REPORT_RULE_START && REPORT_REQUIRED_TYPES.includes(a.activity_type) && !a.organization && !/gar[cç]on/i.test(`${a.title ?? ""} ${a.category ?? ""}`));
   const out = new Map<string, ReportStatus>();
   if (!concerned.length) return out;
   const ids = concerned.map((a) => a.id);

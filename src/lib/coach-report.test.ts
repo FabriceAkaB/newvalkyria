@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { activityEndMs, checkNote, computeReport, countWords, debriefPoints, feedbackByWeek, isDebriefComplete, isQuickEvaluationComplete, noteSimilarity, payHold, reportHour, reportMissing } from "@/lib/coach-report";
+import { activityEndMs, checkNote, computeReport, countWords, debriefPoints, feedbackByWeek, isDebriefComplete, isQuickEvaluationComplete, noteSimilarity, dailyReportHours, payHold, reportHour, reportMissing } from "@/lib/coach-report";
 
 const fullRatings = { "Ball mastery": 4, Prestation: 3, Attitude: 5 };
 
@@ -130,7 +130,7 @@ describe("payHold", () => {
   });
   it("retient les heures tant que la présence n'est pas confirmée, puis tant que le rapport est incomplet", () => {
     expect(payHold({ activityDate: "2026-11-09", status: "present", confirmed: false, report: { required: true, complete: true } })).toBe("presence");
-    expect(payHold({ activityDate: "2026-11-09", status: "present", confirmed: true, report: { required: true, complete: false } })).toBe("rapport");
+    expect(payHold({ activityDate: "2026-11-05", status: "present", confirmed: true, report: { required: true, complete: false } })).toBe("rapport");
     expect(payHold({ activityDate: "2026-11-09", status: "present", confirmed: true, report: { required: true, complete: true } })).toBeNull();
     expect(payHold({ activityDate: "2026-11-09", status: "absent", confirmed: false, report: null })).toBeNull();
   });
@@ -223,6 +223,33 @@ describe("règle du rapport complet du 19 nov. 2026", () => {
     expect(reportMissing(r, "c2")).toEqual(["ton retour : 2 choses qui ont bien marché et 2 à améliorer"]);
     // L'assistant n'a pas d'heure de rapport.
     expect(reportHour({ activityDate: "2026-11-20", status: "present", role: "Assistant", coachId: "c1", report: r })).toEqual({ due: false, earned: false });
+  });
+
+  it("pas de rapport pour les programmes de garçons", () => {
+    const roster = [{ registrationId: "a", name: "Léo" }];
+    expect(computeReport({ activity: { activity_type: "Pratique", title: "Programme intensif garçons 2015" }, roster, attendance: [], evaluations: [] }).required).toBe(false);
+    expect(computeReport({ activity: { activity_type: "Pratique", category: "Filles 2015" }, roster, attendance: [], evaluations: [] }).required).toBe(true);
+  });
+
+  it("une seule heure de rapport par coach et par jour, gagnée quand chaque pratique du jour a son rapport", () => {
+    const m = dailyReportHours([
+      { key: "a", coachId: "c1", date: "2026-11-25", start: "18:00", due: true, earned: true },
+      { key: "b", coachId: "c1", date: "2026-11-25", start: "19:30", due: true, earned: false },
+      { key: "c", coachId: "c2", date: "2026-11-25", start: "18:00", due: true, earned: true },
+      { key: "d", coachId: "c1", date: "2026-11-26", start: "18:30", due: false, earned: false }
+    ]);
+    expect(m.get("a")).toEqual({ due: false, earned: false });
+    expect(m.get("b")).toEqual({ due: true, earned: false });
+    expect(m.get("c")).toEqual({ due: true, earned: true });
+    expect(m.get("d")).toEqual({ due: false, earned: false });
+  });
+
+  it("du 8 au 18 nov. : heure de rapport donnée aux coachs et rien de retenu pour le rapport", () => {
+    const report = { required: true, complete: false, strict: false, debriefDone: [] };
+    expect(reportHour({ activityDate: "2026-11-11", status: "present", role: "Entraîneur principal", coachId: "c1", report })).toEqual({ due: true, earned: true });
+    expect(reportHour({ activityDate: "2026-11-11", status: "present", role: "Assistant", coachId: "c1", report })).toEqual({ due: false, earned: false });
+    expect(payHold({ activityDate: "2026-11-11", status: "present", confirmed: true, report })).toBeNull();
+    expect(payHold({ activityDate: "2026-11-05", status: "present", confirmed: true, report })).toBe("rapport");
   });
 
   it("garde la règle d'avant pour les pratiques jusqu'au 18 nov.", () => {

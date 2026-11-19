@@ -1,6 +1,6 @@
 import { computeAssignment } from "@/lib/coach-payroll";
 import { getActivityReports } from "@/lib/coach-portal-repo";
-import { activityEndMs, hasReportHour, payHold, REPORT_HOUR, REPORT_RULE_START, reportHour, reportMissing, type PayHold } from "@/lib/coach-report";
+import { activityEndMs, dailyReportHours, hasReportHour, payHold, REPORT_HOUR, REPORT_RULE_START, reportHour, reportMissing, type PayHold } from "@/lib/coach-report";
 import { getAllAssignments, getAllCoachTypeRates, getCoaches, type AssignmentStatus, type CoachActivity, type CoachStatus } from "@/lib/coaches-repo";
 import { formatCAD } from "@/lib/season-2027";
 
@@ -111,6 +111,14 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
   const activities = new Map(assignments.map((a) => [a.activity_id, a.activity]));
   const reports = await getActivityReports([...activities.values()]).catch(() => new Map());
 
+  // Heure de rapport des coachs : une seule par jour (JP, 18 nov. 2026), portée par la dernière pratique de la journée.
+  const daily = dailyReportHours(
+    assignments.map((a) => {
+      const r = a.paid ? { due: false, earned: false } : reportHour({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, role: a.coach.role, coachId: a.coach_id, report: reports.get(a.activity_id) ?? null });
+      return { key: a.id, coachId: a.coach_id, date: String(a.activity.activity_date).slice(0, 10), start: String(a.activity.start_time).slice(0, 5), ...r };
+    })
+  );
+
   return assignments.map((a) => {
     const computed = computeAssignment({
       status: a.status,
@@ -126,8 +134,8 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
     const report = reports.get(a.activity_id) ?? null;
     // Une activité déjà payée reste payée ; sinon les heures attendent la présence confirmée et le rapport complet.
     const hold = a.paid ? null : payHold({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, confirmed: a.confirmed, report, coachId: a.coach_id });
-    // Heure de rapport des coachs (depuis le 19 nov. 2026) : 1 h de plus, gagnée quand le rapport est fini.
-    const rh = a.paid ? { due: false, earned: false } : reportHour({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, role: a.coach.role, coachId: a.coach_id, report });
+    // Heure de rapport des coachs : 1 h de plus par jour, gagnée quand les rapports du jour sont finis.
+    const rh = daily.get(a.id) ?? { due: false, earned: false };
     const rhCents = Math.round(REPORT_HOUR * computed.rateCents);
     const rhCounts = rh.earned && !hold;
 

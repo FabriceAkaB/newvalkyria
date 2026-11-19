@@ -76,7 +76,7 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
             <ol style={{ margin: "4px 0 0", paddingLeft: 20, display: "grid", gap: 8, color: "var(--adm-text)" }}>
               <li><strong>Tes heures de terrain</strong> : payées dès que tu es « présent » dans MonClubSportif (c&apos;est ton punch).</li>
               <li>
-                <strong>L&apos;heure de rapport (coachs seulement) : 1 heure de plus</strong>, ajoutée toute seule à ta paie quand ton rapport est fini. Si le rapport n&apos;est pas fini, tu es payé pour tes heures de terrain seulement. Le rapport fini, c&apos;est :
+                <strong>L&apos;heure de rapport (coachs seulement) : 1 heure de plus par jour de pratique</strong>, une seule même s&apos;il y a deux pratiques ce jour-là, payée au complet. Elle s&apos;ajoute toute seule à ta paie quand tes rapports du jour sont finis ; sinon, tu es payé pour tes heures de terrain seulement. Le rapport fini, pour chaque pratique de filles :
                 <ul style={{ margin: "6px 0 0", paddingLeft: 18, display: "grid", gap: 4 }}>
                   <li>les présences de toutes les joueuses ;</li>
                   <li>l&apos;évaluation de chaque fille présente : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10, et une observation d&apos;au moins {NOTE_MIN_WORDS} mots (comment elle était aujourd&apos;hui, comment elle progresse, un exemple vu à la pratique) ; en bas de {NOTE_MIN_WORDS} mots, elle n&apos;est pas acceptée ;</li>
@@ -86,7 +86,7 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
               </li>
               <li><strong>Assistants</strong> : payés pour leurs heures de terrain ; ils aident au rapport, l&apos;heure de rapport va aux coachs.</li>
             </ol>
-            <p className="coach-muted" style={{ fontSize: "0.8rem", margin: "10px 0 0" }}>Pour les pratiques à partir du 19 novembre 2026. Ce qui manque est écrit à côté de chaque heure retenue et dans l&apos;étape « Après » de la pratique.</p>
+            <p className="coach-muted" style={{ fontSize: "0.8rem", margin: "10px 0 0" }}>Règle en place à partir du 19 novembre 2026 (pour la paie du 27 novembre, l&apos;heure de rapport des pratiques du 8 au 18 novembre est déjà comptée). Ce qui manque est écrit à côté de chaque heure retenue et dans l&apos;étape « Après » de la pratique.</p>
           </div>
         </div>
       </div>

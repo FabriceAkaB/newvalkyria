@@ -27,7 +27,7 @@ import type { ChampionPost } from "@/lib/player-points-repo";
 import { blockKey, practiceReadStatus, type ReadItem } from "@/lib/practice-read";
 import { themeForGroup } from "@/lib/practice-teams-core";
 import { isAnswered, type SurveyAnswer } from "@/lib/practice-survey";
-import { countWords, hasReportHour, isQuickEvaluationComplete, NOTE_MIN_WORDS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START, REPORT_RULE_V2_START } from "@/lib/coach-report";
+import { countWords, hasReportHour, isBoysActivity, isQuickEvaluationComplete, NOTE_MIN_WORDS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START, REPORT_RULE_V2_START } from "@/lib/coach-report";
 import type { AssignmentStatus, CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
 import type { MatchConvocation, MatchDetails, MatchLineupSlot, MatchPlayerEvaluation, MatchRosterPlayer, PlaytimeSegment } from "@/lib/match-repo";
@@ -847,7 +847,7 @@ export function CoachActiviteDetail({
   const marked = roster.filter((p) => attendance[p.registrationId]).length;
   const evaluated = participants.filter((p) => isEvaluated(p.registrationId)).length;
   const routineDone = participants.filter((p) => isAnswered(feedback[p.registrationId])).length;
-  const reportNeeded = REPORT_REQUIRED_TYPES.includes(activity.activity_type) && !activity.organization && roster.length > 0;
+  const reportNeeded = REPORT_REQUIRED_TYPES.includes(activity.activity_type) && !activity.organization && !isBoysActivity(activity) && roster.length > 0;
   const ruleApplies = activityDay >= REPORT_RULE_START;
   // Règle du 19 nov. 2026 : sondage du jour de chaque fille et retour de l'éducateur (2 bons coups, 2 à améliorer) aussi.
   const strict = activityDay >= REPORT_RULE_V2_START;
@@ -1005,7 +1005,7 @@ export function CoachActiviteDetail({
                 </div>
               )}
               <div className="coach-card" style={{ marginBottom: 16 }}>
-                <p className="coach-card__label">{strict && isCoach && reportNeeded ? "Ton rapport · 1 heure payée en plus quand il est fini" : "Ton rapport"}</p>
+                <p className="coach-card__label">{strict && isCoach && reportNeeded ? "Ton rapport · 1 heure payée en plus par jour quand il est fini" : "Ton rapport"}</p>
                 <ul className="coach-checklist">
                   {!guest && <li data-done={String(presence.confirmed)}>Ma présence (mets-toi « présent » dans MonClubSportif)</li>}
                   {reportNeeded && <li data-done={String(marked === roster.length)}>Présences des joueuses · {marked}/{roster.length}</li>}
@@ -1023,8 +1023,8 @@ export function CoachActiviteDetail({
                     : strict && reportNeeded
                       ? isCoach
                         ? presence.confirmed && reportComplete
-                          ? "Rapport fini : ton heure de rapport (1 h) est ajoutée à ta paie, en plus de tes heures de terrain."
-                          : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Ton heure de rapport (1 h de plus) s'ajoute toute seule à ta paie quand chaque case est cochée ; sinon, tu es payé pour tes heures de terrain seulement."
+                          ? "Rapport fini. Ton heure de rapport du jour (1 h, une seule même avec deux pratiques) s'ajoute à ta paie quand les rapports de toutes tes pratiques du jour sont finis."
+                          : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Ton heure de rapport du jour (1 h de plus, une seule même avec deux pratiques) s'ajoute toute seule quand chaque case est cochée pour chacune de tes pratiques du jour ; sinon, tu es payé pour tes heures de terrain seulement."
                         : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Comme assistant, tu aides au rapport (présences, sondage, évaluations) ; l'heure de rapport va aux coachs."
                     : hoursCount
                     ? "Rapport complet : tes heures comptent pour la paie."

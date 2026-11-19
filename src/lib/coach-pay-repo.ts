@@ -2,7 +2,7 @@ import { CLUB_ID } from "@/lib/club";
 import { parseDeductions, summarizePay, type PayLine, type PaySummary } from "@/lib/coach-pay";
 import { computeAssignment } from "@/lib/coach-payroll";
 import { getPayrollRows } from "@/lib/coach-payroll-data";
-import { hasReportHour, PAY_HOLD_LABEL, REPORT_HOUR, REPORT_REQUIRED_TYPES, REPORT_RULE_V2_START } from "@/lib/coach-report";
+import { hasReportHour, isBoysActivity, PAY_HOLD_LABEL, REPORT_HOUR, REPORT_REQUIRED_TYPES, REPORT_RULE_V2_START } from "@/lib/coach-report";
 import { getAllAssignments, getAllCoachTypeRates } from "@/lib/coaches-repo";
 import { nextPayPeriod, payPeriodOf, type PayPeriod } from "@/lib/pay-periods";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -35,7 +35,7 @@ export async function getCoachPay(coachId: string, today: string, offset = 0): P
       const earned = r.reportHourEarned && !r.hold;
       lines.push({
         ...base,
-        label: `Heure de rapport · ${r.activityLabel}`,
+        label: "Heure de rapport du jour",
         hours: REPORT_HOUR,
         cents: r.reportHourCents,
         state: earned ? "compte" : "retenu",
@@ -45,14 +45,17 @@ export async function getCoachPay(coachId: string, today: string, offset = 0): P
   }
   // Ce qui est prévu d'ici la fin de la période (assigné, pas encore fait) : estimé avec la durée et le taux.
   const rate = new Map(typeRates.map((t) => [`${t.coach_id}:${t.activity_type}`, t.hourly_rate_cents]));
+  const plannedReportDays = new Set<string>();
   for (const a of all) {
     const d = String(a.activity.activity_date).slice(0, 10);
     if (a.coach_id !== coachId || d <= today || !inPeriod(d) || a.status === "absent" || a.status === "cancelled") continue;
     const c = computeAssignment({ status: "present", arrivalTime: a.arrival_time, departureTime: a.departure_time, activityStartTime: a.activity.start_time, activityEndTime: a.activity.end_time, assignmentRateCents: a.hourly_rate_cents, typeRateCents: rate.get(`${a.coach_id}:${a.activity.activity_type}`) ?? null, defaultRateCents: a.coach.default_hourly_rate_cents });
     const label = a.activity.title || a.activity.category || a.activity.activity_type;
     lines.push({ activityId: a.activity_id, date: d, start: String(a.activity.start_time).slice(0, 5), end: String(a.activity.end_time).slice(0, 5), label, hours: c.hours, cents: c.payCents, state: "prevu" });
-    if (d >= REPORT_RULE_V2_START && hasReportHour(a.coach.role) && REPORT_REQUIRED_TYPES.includes(a.activity.activity_type) && !a.activity.organization) {
-      lines.push({ activityId: a.activity_id, date: d, start: String(a.activity.start_time).slice(0, 5), end: String(a.activity.end_time).slice(0, 5), label: `Heure de rapport · ${label}`, hours: REPORT_HOUR, cents: Math.round(REPORT_HOUR * c.rateCents), state: "prevu" });
+    // Une heure de rapport prévue par jour de pratique (pas une par pratique).
+    if (d >= REPORT_RULE_V2_START && hasReportHour(a.coach.role) && REPORT_REQUIRED_TYPES.includes(a.activity.activity_type) && !a.activity.organization && !isBoysActivity(a.activity) && !plannedReportDays.has(d)) {
+      plannedReportDays.add(d);
+      lines.push({ activityId: a.activity_id, date: d, start: String(a.activity.end_time).slice(0, 5), end: String(a.activity.end_time).slice(0, 5), label: "Heure de rapport du jour", hours: REPORT_HOUR, cents: Math.round(REPORT_HOUR * c.rateCents), state: "prevu" });
     }
   }
   lines.sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));

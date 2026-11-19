@@ -30,6 +30,10 @@ export const NOTE_MIN_CHARS = 30;
  *  4. retour du coach : 2 choses qui ont bien marché et 2 choses à améliorer. */
 export const REPORT_RULE_V2_START = "2026-11-19";
 
+/** Paie du 27 nov. 2026 (période du 8 au 21 nov.) : les pratiques du 8 au 18 nov. comptent comme si les rapports
+ *  étaient faits (heure de rapport donnée aux coachs, rien de retenu pour le rapport) ; la vraie règle part du 19. */
+export const REPORT_GRACE_FROM = "2026-11-08";
+
 /** Une petite observation complète tient en 3 phrases courtes : son état du jour (≈ 8 mots), comment elle progresse
  *  (≈ 8 mots) et un exemple vu à la pratique (≈ 10 mots). D'où 25 mots au minimum. */
 export const NOTE_MIN_WORDS = 25;
@@ -38,7 +42,8 @@ export const NOTE_MIN_WORDS = 25;
 export const DEBRIEF_MIN_POINTS = 2;
 export const DEBRIEF_POINT_MIN_WORDS = 4;
 
-/** L'heure de rapport : 1 h au taux de l'éducateur, pour les coachs seulement (JP, 18 nov. 2026). */
+/** L'heure de rapport : 1 h au taux de l'éducateur, pour les coachs seulement, UNE par jour de pratique même s'il y
+ *  a deux pratiques ce jour-là, payée au complet (JP, 18 nov. 2026). Toutes les pratiques de filles de l'Académie. */
 export const REPORT_HOUR = 1;
 export const REPORT_HOUR_ROLES = ["Entraîneur principal"];
 export const hasReportHour = (role: string | null | undefined) => REPORT_HOUR_ROLES.includes(String(role ?? ""));
@@ -228,12 +233,15 @@ export interface ReportStatus {
   debriefDone: string[];
 }
 
-export function reportRequired(activity: { activity_type: string; organization?: string | null }, rosterSize: number): boolean {
-  return REPORT_REQUIRED_TYPES.includes(activity.activity_type) && !activity.organization && rosterSize > 0;
+/** Programmes de garçons : pas de rapport ni d'heure de rapport (le rapport est pour les programmes de filles). */
+export const isBoysActivity = (a: { title?: string | null; category?: string | null }) => /gar[cç]on/i.test(`${a.title ?? ""} ${a.category ?? ""}`);
+
+export function reportRequired(activity: { activity_type: string; organization?: string | null; title?: string | null; category?: string | null }, rosterSize: number): boolean {
+  return REPORT_REQUIRED_TYPES.includes(activity.activity_type) && !activity.organization && !isBoysActivity(activity) && rosterSize > 0;
 }
 
 export function computeReport(input: {
-  activity: { activity_type: string; organization?: string | null; activity_date?: string | null };
+  activity: { activity_type: string; organization?: string | null; activity_date?: string | null; title?: string | null; category?: string | null };
   roster: ReportPlayer[];
   attendance: ReportAttendance[];
   evaluations: ReportEvaluation[];
@@ -292,12 +300,13 @@ export function payHold(input: {
 }): PayHold | null {
   if (input.activityDate < REPORT_RULE_START || input.status !== "present") return null;
   if (!input.confirmed) return "presence";
-  if (input.activityDate >= REPORT_RULE_V2_START) return null;
+  if (input.activityDate >= REPORT_GRACE_FROM) return null;
   if (input.report && input.report.required && !input.report.complete) return "rapport";
   return null;
 }
 
-/** L'heure de rapport d'un coach pour une pratique : due (il y a droit) et gagnée (rapport fini et son retour 2 + 2). */
+/** L'heure de rapport d'un coach pour une pratique : due (il y a droit) et gagnée (rapport fini et son retour 2 + 2 ;
+ *  du 8 au 18 nov. 2026, gagnée d'office). Une seule par jour : voir `dailyReportHours`. */
 export function reportHour(input: {
   activityDate: string;
   status: string;
@@ -305,9 +314,28 @@ export function reportHour(input: {
   coachId: string;
   report: (Pick<ReportStatus, "required" | "complete"> & Partial<Pick<ReportStatus, "strict" | "debriefDone">>) | null;
 }): { due: boolean; earned: boolean } {
-  const due = input.activityDate >= REPORT_RULE_V2_START && input.status === "present" && hasReportHour(input.role) && Boolean(input.report?.required);
-  const earned = due && Boolean(input.report?.complete) && (input.report?.debriefDone ?? []).includes(input.coachId);
-  return { due, earned };
+  const due = input.activityDate >= REPORT_GRACE_FROM && input.status === "present" && hasReportHour(input.role) && Boolean(input.report?.required);
+  if (!due) return { due: false, earned: false };
+  if (input.activityDate < REPORT_RULE_V2_START) return { due: true, earned: true };
+  return { due: true, earned: Boolean(input.report?.complete) && (input.report?.debriefDone ?? []).includes(input.coachId) };
+}
+
+/** Une heure de rapport par coach et par jour : portée par sa dernière pratique de la journée, gagnée quand le rapport
+ *  de chaque pratique de ce jour-là est fini. Les autres pratiques du jour n'ont pas d'heure de rapport. */
+export function dailyReportHours<T extends { key: string; coachId: string; date: string; start: string; due: boolean; earned: boolean }>(items: T[]): Map<string, { due: boolean; earned: boolean }> {
+  const out = new Map<string, { due: boolean; earned: boolean }>();
+  const days = new Map<string, T[]>();
+  for (const it of items) {
+    out.set(it.key, { due: false, earned: false });
+    if (!it.due) continue;
+    const k = `${it.coachId}|${it.date}`;
+    days.set(k, [...(days.get(k) ?? []), it]);
+  }
+  for (const list of days.values()) {
+    const last = [...list].sort((a, b) => a.start.localeCompare(b.start)).at(-1)!;
+    out.set(last.key, { due: true, earned: list.every((x) => x.earned) });
+  }
+  return out;
 }
 
 /** Ce qui manque au rapport d'un éducateur, en mots simples (portail, Ma paie, admin). */
