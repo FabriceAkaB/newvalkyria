@@ -70,11 +70,12 @@ export default async function PointsPage() {
                       <div className="fam-reward__body">
                         <p className="fam-reward__name">{r.name}{money(r.value_cents) ? ` · ${money(r.value_cents)}` : ""}</p>
                         <p className="fam-reward__how">{r.description || REWARD_KINDS[r.kind].how}</p>
+                        {r.stock !== null ? <p className="fam-reward__how" style={{ fontWeight: 700 }}>{r.left === 0 ? "Déjà gagné" : r.stock === 1 ? "Prix unique : une seule gagnante" : `Plus que ${r.left} à gagner`}</p> : null}
                       </div>
                       <div className="fam-reward__side">
                         <strong>{r.cost}</strong>
                         <small>points</small>
-                        {s.phase !== "expire" ? (
+                        {s.phase !== "expire" && r.left !== 0 ? (
                           <RewardRequestButton registrationId={f.registrationId} rewardId={r.id} name={r.name} cost={r.cost} firstName={f.firstName} missing={Math.max(0, r.cost - s.balance)} />
                         ) : null}
                       </div>

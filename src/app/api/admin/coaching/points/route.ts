@@ -46,7 +46,8 @@ export async function POST(request: Request) {
       description: typeof b.description === "string" ? b.description : null,
       isDefault: b.isDefault === true && kind === "cadeau",
       productId: typeof b.productId === "string" && b.productId ? b.productId : null,
-      active: b.active !== false
+      active: b.active !== false,
+      stock: b.stock === null || b.stock === undefined || b.stock === "" ? null : Math.round(Number(b.stock)) || null
     });
     return NextResponse.json({ ok: true });
   }

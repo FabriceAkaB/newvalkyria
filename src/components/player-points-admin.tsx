@@ -138,10 +138,11 @@ export function RewardsEditor({ rewards, products }: { rewards: PointReward[]; p
   const [description, setDescription] = useState("");
   const [isDefault, setIsDefault] = useState(false);
   const [productId, setProductId] = useState("");
+  const [stock, setStock] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const base = (r: PointReward) => ({ id: r.id, name: r.name, cost: r.cost, kind: r.kind, valueCents: r.value_cents, description: r.description, isDefault: r.is_default, productId: r.product_id, active: r.active });
+  const base = (r: PointReward) => ({ id: r.id, name: r.name, cost: r.cost, kind: r.kind, valueCents: r.value_cents, description: r.description, isDefault: r.is_default, productId: r.product_id, active: r.active, stock: r.stock });
   const add = async () => {
-    const problem = await post({ action: "reward", name, cost: Number(cost), kind, valueCents: value ? Math.round(Number(value.replace(",", ".")) * 100) : null, description, isDefault, productId: productId || null });
+    const problem = await post({ action: "reward", name, cost: Number(cost), kind, valueCents: value ? Math.round(Number(value.replace(",", ".")) * 100) : null, description, isDefault, productId: productId || null, stock: stock ? Number(stock) : null });
     if (problem) return setError(problem);
     setName("");
     setCost("");
@@ -167,6 +168,8 @@ export function RewardsEditor({ rewards, products }: { rewards: PointReward[]; p
             {r.value_cents ? ` · ${money(r.value_cents)}` : ""}
             {r.product_id ? ` · ${products.find((p) => p.id === r.product_id)?.name ?? "produit"}` : ""}
             {r.is_default ? <span style={{ marginLeft: 6, fontSize: "0.75rem", padding: "2px 8px", borderRadius: 999, background: "var(--adm-accent-soft)" }}>Cadeau de fin de saison</span> : null}
+            {r.stock !== null ? <span style={{ marginLeft: 6, fontSize: "0.75rem", padding: "2px 8px", borderRadius: 999, background: "var(--adm-surface-3)" }}>{r.stock === 1 ? "Prix unique" : `${r.stock} exemplaires`} · {r.left === 0 ? "déjà gagné" : `${r.left} à gagner`}</span> : null}
+            {r.product_id ? <span style={{ marginLeft: 6, fontSize: "0.75rem", color: "var(--adm-text-3)" }}>aussi en boutique</span> : <span style={{ marginLeft: 6, fontSize: "0.75rem", color: "var(--adm-text-3)" }}>seulement en le méritant</span>}
           </span>
           <span style={{ display: "inline-flex", gap: 6 }}>
             {!r.is_default && r.kind === "cadeau" && r.active ? <button type="button" className="admin-btn-ghost" onClick={() => update(r, { isDefault: true })}>Cadeau par défaut</button> : null}
@@ -186,6 +189,10 @@ export function RewardsEditor({ rewards, products }: { rewards: PointReward[]; p
         {kind !== "cadeau" && (
           <label className="ct-field"><span>Valeur en $</span><input className="admin-input" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value.replace(/[^\d.,]/g, ""))} placeholder="Ex. 10" /></label>
         )}
+        <label style={{ display: "grid", gap: 4, fontSize: "0.8125rem" }}>
+          Combien à gagner (vide = autant qu&apos;on veut, 1 = prix unique)
+          <input className="admin-input" inputMode="numeric" value={stock} onChange={(e) => setStock(e.target.value.replace(/[^0-9]/g, ""))} placeholder="ex. 1 pour la grosse peluche" />
+        </label>
         <label className="ct-field">
           <span>Produit de la boutique (facultatif)</span>
           <select className="admin-input" value={productId} onChange={(e) => setProductId(e.target.value)}>

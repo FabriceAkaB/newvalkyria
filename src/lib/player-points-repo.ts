@@ -330,12 +330,21 @@ export interface PointReward {
   is_default: boolean;
   product_id: string | null;
   active: boolean;
+  /** Exemplaires à gagner (ex. 1 = prix unique) ; null = autant qu'on veut. */
+  stock: number | null;
+  /** Exemplaires qui restent (null = illimité). */
+  left: number | null;
 }
 
 export async function getRewards(): Promise<PointReward[]> {
-  const { data, error } = await db().from("point_rewards").select("id, name, cost, kind, value_cents, description, is_default, product_id, active").eq("club_id", CLUB_ID).order("cost");
+  const { data, error } = await db().from("point_rewards").select("id, name, cost, kind, value_cents, description, is_default, product_id, active, stock").eq("club_id", CLUB_ID).order("cost");
   if (error) throw new Error(error.message);
-  return (data ?? []) as PointReward[];
+  const rows = (data ?? []) as Omit<PointReward, "left">[];
+  const limited = rows.filter((r) => r.stock !== null && r.stock !== undefined).map((r) => r.id);
+  const { data: taken } = limited.length ? await db().from("player_points").select("reward_id").in("reward_id", limited).neq("status", "annulee") : { data: [] };
+  const used = new Map<string, number>();
+  for (const t of (taken ?? []) as any[]) used.set(t.reward_id, (used.get(t.reward_id) ?? 0) + 1);
+  return rows.map((r) => ({ ...r, stock: r.stock ?? null, left: r.stock === null || r.stock === undefined ? null : Math.max(0, r.stock - (used.get(r.id) ?? 0)) }));
 }
 
 export async function saveReward(input: {
@@ -348,6 +357,7 @@ export async function saveReward(input: {
   isDefault: boolean;
   productId: string | null;
   active: boolean;
+  stock?: number | null;
 }): Promise<void> {
   const row = {
     club_id: CLUB_ID,
@@ -358,7 +368,8 @@ export async function saveReward(input: {
     description: input.description?.trim().slice(0, 300) || null,
     is_default: input.isDefault,
     product_id: input.productId,
-    active: input.active
+    active: input.active,
+    ...(input.stock !== undefined ? { stock: input.stock && input.stock > 0 ? Math.round(input.stock) : null } : {})
   };
   if (input.isDefault) await db().from("point_rewards").update({ is_default: false }).eq("club_id", CLUB_ID).neq("id", input.id ?? "00000000-0000-0000-0000-000000000000");
   const q = input.id ? db().from("point_rewards").update(row).eq("id", input.id).eq("club_id", CLUB_ID) : db().from("point_rewards").insert(row);
@@ -384,6 +395,7 @@ const rewardTaskTitle = (reward: string, name: string) => `Remettre « ${reward}
 export async function requestReward(input: { registrationId: string; rewardId: string; by: "famille" | "admin"; deliverNow?: boolean }): Promise<string | null> {
   const reward = (await getRewards()).find((r) => r.id === input.rewardId && r.active);
   if (!reward) return "Cette récompense n'est plus offerte.";
+  if (reward.left === 0) return reward.stock === 1 ? "Ce prix unique a déjà été gagné." : "Il n'en reste plus : tous les exemplaires ont été gagnés.";
   const [summary, meta] = await Promise.all([getPointsSummaries([input.registrationId]).then((m) => m.get(input.registrationId)), regMeta([input.registrationId]).then((m) => m.get(input.registrationId))]);
   if (!summary || !meta) return "Joueuse introuvable.";
   const problem = canRedeem({ balance: summary.balance, cost: reward.cost, expired: summary.phase === "expire" });
