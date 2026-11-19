@@ -209,6 +209,8 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/communications", label: "Envoyer un message", adminOnly: true },
           { href: "/admin/relances", label: "Relances et suivi", adminOnly: true },
           { href: "/admin/communications/programmes", label: "Messages et tâches programmés", adminOnly: true },
+          { href: "/admin/communications/message-hebdo", label: "Message de la semaine" },
+          { href: "/admin/communications/accueil-30-jours", label: "Accueil des nouvelles familles" },
           { href: "/admin/references", label: "Références & crédits" }
         ]
       },
@@ -222,6 +224,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/sondages/intentions", label: "Intentions des familles" },
           { href: "/admin/idees", label: "Boîte à idées" },
           { href: "/admin/avis", label: "Avis et témoignages" },
+          { href: "/admin/sondages/bulletins", label: "Avis sur les bulletins" },
           { href: "/admin/sondages/programmes", label: "Satisfaction par programme" }
         ]
       }

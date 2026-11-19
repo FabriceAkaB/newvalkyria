@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ChevronRight, MessageSquareHeart, MessageSquareQuote } from "lucide-react";
+import { CalendarClock, ChevronRight, ClipboardList, MessageSquareHeart, MessageSquareQuote } from "lucide-react";
 import Link from "next/link";
 
 import { Container } from "@/components/container";
@@ -7,8 +7,12 @@ import { EmailCheckBanner } from "@/components/email-check-banner";
 import { ChampionFeed, GirlPointsCard } from "@/components/family-champions";
 import { ChampionKindIcon } from "@/components/family-icons";
 import { getGirlPhotos } from "@/lib/family-photos";
+import { getSheetsForRegistrations } from "@/lib/player-sheet-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { progressOf } from "@/lib/player-points";
+import { CLUB } from "@/lib/club";
+import { getFamilySchedule } from "@/lib/family-schedule";
+import { fmtDay, fmtHours } from "@/lib/family-schedule-core";
 import { getFamilyFeed, getPointsHistory, getPointsSummaries, getRewards } from "@/lib/player-points-repo";
 import { getFamilyRegistrations, getParentAccount, isParentEmailVerified } from "@/lib/parent-repo";
 
@@ -22,13 +26,16 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
   const [account, family, sp] = await Promise.all([getParentAccount(userId), getFamilyRegistrations(userId), searchParams]);
   const verified = account?.email ? await isParentEmailVerified(userId, account.email) : false;
   const ids = family.map((f) => f.registrationId);
-  const [summaries, rewards, feed, histories, photos] = await Promise.all([
+  const [summaries, rewards, feed, histories, photos, schedules, sheets] = await Promise.all([
     getPointsSummaries(ids),
     getRewards(),
     getFamilyFeed(ids),
     Promise.all(ids.map((id) => getPointsHistory(id).catch(() => []))),
-    getGirlPhotos(ids).catch(() => new Map<string, string>())
+    getGirlPhotos(ids).catch(() => new Map<string, string>()),
+    getFamilySchedule(ids).catch(() => []),
+    getSheetsForRegistrations(ids).catch(() => new Map())
   ]);
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: CLUB.timezone });
   const active = rewards.filter((r) => r.active);
   const firstName = (account?.fullName ?? "").split(" ")[0];
 
@@ -74,6 +81,31 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
           </div>
         )}
 
+        {schedules.length ? (
+          <>
+            <h2 className="fam-h2">Prochaine pratique</h2>
+            <ul className="fam-list">
+              {schedules.map((s) => {
+                const n = s.next;
+                const hours = n ? fmtHours(n.start, n.end) : null;
+                return (
+                  <li key={s.registrationId}>
+                    <CalendarClock aria-hidden strokeWidth={1.75} />
+                    <span>
+                      <Link href="/compte/horaire" className="parent-link">
+                        {schedules.length > 1 ? `${s.firstName} : ` : ""}
+                        {n ? `${fmtDay(n.date, today)}${hours ? ` · ${hours}` : ""}` : "Aucune pratique dans les 14 prochains jours"}
+                      </Link>
+                      {n ? <small>{[n.group, n.place ?? n.address].filter(Boolean).join(" · ")}</small> : <small>Voir son horaire et ses matchs</small>}
+                    </span>
+                    <ChevronRight aria-hidden strokeWidth={1.75} />
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        ) : null}
+
         <h2 className="fam-h2">Championnes du jour</h2>
         <ChampionFeed posts={feed} empty={family.length ? "Les championnes de ses pratiques apparaîtront ici dès que les éducatrices les publieront, après chaque pratique." : "Le fil des championnes s'ouvre dès l'inscription de votre fille."} />
 
@@ -95,6 +127,17 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
             </div>
           );
         })}
+        {family.some((f) => !sheets.has(f.registrationId)) ? (
+          <div className="parent-card" style={{ marginTop: "1.5rem", display: "flex", gap: 12, alignItems: "center", boxShadow: "inset 3px 0 0 var(--adm-accent-strong)" }}>
+            <ClipboardList aria-hidden strokeWidth={1.75} style={{ color: "var(--adm-accent)", flex: "0 0 auto" }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>Aidez les éducatrices à connaître votre fille</p>
+              <p className="parent-muted" style={{ margin: "2px 0 0", fontSize: "0.9rem" }}>Deux minutes : ce qu&apos;elle aime, ce qui la stresse, comment l&apos;encourager. Elles la lisent avant la pratique.</p>
+            </div>
+            <Link href="/compte/fiche" className="parent-link">Remplir la fiche →</Link>
+          </div>
+        ) : null}
+
         <h2 className="fam-h2">Votre voix compte</h2>
         <ul className="fam-list">
           <li>

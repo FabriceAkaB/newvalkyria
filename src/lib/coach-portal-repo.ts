@@ -2,6 +2,8 @@ import { methodWindow } from "@/lib/coach-access-core";
 import { cleanNote, computeReport, feedbackByWeek, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, watchReasons, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
 import type { CoachActivity, CoachAssignment } from "@/lib/coaches-repo";
 import { addSeen, practiceReadItems, practiceReadStatus, readLabel, type ReadItem, type ReadStatus } from "@/lib/practice-read";
+import { briefingLines, type SheetAnswers } from "@/lib/player-sheet";
+import { getSheetsForRegistrations } from "@/lib/player-sheet-repo";
 import type { SurveyAnswer } from "@/lib/practice-survey";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -186,6 +188,8 @@ export interface RosterSlot {
   day: string;
   start_time: string;
   cats: string[];
+  /** Plage du groupe avancé (lundi 2016-2017, mercredi 2014-2015). */
+  advanced_only?: boolean;
 }
 
 export interface RosterRegistration {
@@ -220,7 +224,16 @@ export function rosterForActivity(activity: { activity_date: string; start_time:
   const atTime = slots.filter((s) => s.day === day && Math.abs(toMinutes(s.start_time) - start) <= 15);
   const matched = years.length ? atTime.filter((s) => s.cats.some((c) => years.some((y) => c.includes(y)))) : atTime;
   const slotIds = new Set(matched.map((s) => s.id));
-  const inGroup = (r: RosterRegistration) => (slotIds.size ? (r.time_slot_template_id ? slotIds.has(r.time_slot_template_id) : r.category_id === category) : r.category_id === category);
+  // Pratique d'équipe sans plage à cette heure (ex. « Équipe 2015 AV » le dimanche, JP 19 nov. 2026) : les filles de ces
+  // années, du groupe avancé (AV), intermédiaire (INT) ou des deux (« AV et INT »).
+  const team = !slotIds.size && /^équipe\b/i.test(category) && years.length > 0;
+  const wantAv = /\bAV\b/.test(category) || !/\bINT\b/.test(category);
+  const wantInt = /\bINT\b/.test(category) || !/\bAV\b/.test(category);
+  const advancedSlots = new Set(slots.filter((s) => s.advanced_only).map((s) => s.id));
+  const isAdvanced = (r: RosterRegistration) => Boolean(r.advanced_group) || (r.time_slot_template_id ? advancedSlots.has(r.time_slot_template_id) : false);
+  const inTeam = (r: RosterRegistration) => years.some((y) => String(r.category_id ?? "").includes(y)) && (isAdvanced(r) ? wantAv : wantInt);
+  const inGroup = (r: RosterRegistration) =>
+    team ? inTeam(r) : slotIds.size ? (r.time_slot_template_id ? slotIds.has(r.time_slot_template_id) : r.category_id === category) : r.category_id === category;
 
   return regs
     .filter((r) =>
@@ -250,7 +263,7 @@ const ROSTER_COLUMNS = "id, player_first_name, player_last_name, category_id, is
 
 export async function loadRosterSources(seasonId: string = SEASON_DB_ID): Promise<{ slots: RosterSlot[]; regs: RosterRegistration[] }> {
   const [{ data: templates, error: e1 }, { data: cats, error: e2 }, { data: regs, error: e3 }] = await Promise.all([
-    db().from("time_slot_templates").select("id, day, start_time, active").eq("active", true),
+    db().from("time_slot_templates").select("id, day, start_time, active, advanced_only").eq("active", true),
     db().from("time_slot_template_categories").select("time_slot_template_id, category_id"),
     db().from("registrations").select(ROSTER_COLUMNS).eq("season_id", seasonId).not("status", "in", "(cancelled,unavailable)")
   ]);
@@ -259,7 +272,8 @@ export async function loadRosterSources(seasonId: string = SEASON_DB_ID): Promis
     id: t.id,
     day: t.day,
     start_time: String(t.start_time),
-    cats: ((cats ?? []) as any[]).filter((c) => c.time_slot_template_id === t.id).map((c) => String(c.category_id))
+    cats: ((cats ?? []) as any[]).filter((c) => c.time_slot_template_id === t.id).map((c) => String(c.category_id)),
+    advanced_only: Boolean(t.advanced_only)
   }));
   return { slots, regs: (regs ?? []) as RosterRegistration[] };
 }
@@ -720,16 +734,20 @@ export interface BriefingPlayer {
   absentLastTime: boolean;
   /** Gestes difficiles notés à sa dernière pratique. */
   gestures?: string[];
+  /** Fiche joueuse remplie par le parent (P4.1.03) : « aime … · stressée par … », et la santé à part. */
+  sheet?: string | null;
+  health?: string | null;
 }
 
 export async function getBriefing(activity: { id: string; activity_date: string }, roster: RosterPlayer[]): Promise<BriefingPlayer[]> {
   const ids = roster.map((p) => p.registrationId);
   if (!ids.length) return [];
   const date = String(activity.activity_date).slice(0, 10);
-  const [{ data: objectives }, { data: evals }, { data: att }] = await Promise.all([
+  const [{ data: objectives }, { data: evals }, { data: att }, sheets] = await Promise.all([
     db().from("player_objectives").select("registration_id, objective").in("registration_id", ids).eq("active", true),
     db().from("player_evaluations").select("registration_id, ratings, gestures, activity:coach_activities(activity_date)").in("registration_id", ids),
-    db().from("activity_player_attendance").select("registration_id, status, practice_rating, fatigue, activity_id, activity:coach_activities(activity_date)").in("registration_id", ids)
+    db().from("activity_player_attendance").select("registration_id, status, practice_rating, fatigue, activity_id, activity:coach_activities(activity_date)").in("registration_id", ids),
+    getSheetsForRegistrations(ids).catch(() => new Map<string, SheetAnswers>())
   ]);
   const before = (r: any) => {
     const d = String(r.activity?.activity_date ?? "").slice(0, 10);
@@ -739,9 +757,12 @@ export async function getBriefing(activity: { id: string; activity_date: string 
     .map((p) => {
       const ev = ((evals ?? []) as any[]).filter((e) => e.registration_id === p.registrationId && before(e)).sort((a, b) => before(a)!.localeCompare(before(b)!));
       const at = ((att ?? []) as any[]).filter((a) => a.registration_id === p.registrationId && before(a) && a.activity_id !== activity.id).sort((a, b) => before(a)!.localeCompare(before(b)!));
+      const fiche = briefingLines(sheets.get(p.registrationId));
       return {
         registrationId: p.registrationId,
         name: `${p.firstName} ${p.lastName}`.trim(),
+        sheet: fiche.sheet,
+        health: fiche.health,
         isTrial: p.isTrial,
         objectives: ((objectives ?? []) as any[]).filter((o) => o.registration_id === p.registrationId).map((o) => String(o.objective)),
         watch: watchReasons({
@@ -755,8 +776,9 @@ export async function getBriefing(activity: { id: string; activity_date: string 
         })()
       };
     })
-    .filter((p) => p.isTrial || p.objectives.length || p.watch.length || p.absentLastTime || p.gestures.length)
-    .sort((a, b) => b.watch.length - a.watch.length || Number(b.isTrial) - Number(a.isTrial) || a.name.localeCompare(b.name, "fr"));
+    .filter((p) => p.isTrial || p.objectives.length || p.watch.length || p.absentLastTime || p.gestures.length || p.sheet || p.health)
+    // Les essais d'abord (à accueillir, souvent avec leur fiche), puis les filles à suivre.
+    .sort((a, b) => Number(b.isTrial) - Number(a.isTrial) || b.watch.length - a.watch.length || a.name.localeCompare(b.name, "fr"));
 }
 
 export async function setSurpriseMoment(activityId: string, text: string | null): Promise<void> {

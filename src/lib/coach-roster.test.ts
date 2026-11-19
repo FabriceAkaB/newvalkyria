@@ -46,3 +46,20 @@ describe("rosterForActivity", () => {
     expect(rosterForActivity({ activity_date: "2026-11-02", start_time: "18:00", category: null }, slots, regs)).toEqual([]);
   });
 });
+
+describe("pratique d'équipe sans plage (dimanche)", () => {
+  const teamSlots: RosterSlot[] = [...slots, { id: "lun-18-av", day: "Lundi", start_time: "18:00", cats: ["2016", "2017"], advanced_only: true }];
+  const regs = [
+    reg("av", { time_slot_template_id: "lun-18-av" }),
+    reg("av-flag", { advanced_group: true, time_slot_template_id: "mer-18-2016" }),
+    reg("int", { time_slot_template_id: "mer-18-2016" }),
+    reg("autre-age", { category_id: "2015", time_slot_template_id: "lun-1930-2015" })
+  ];
+  const ids = (category: string) => rosterForActivity({ activity_date: "2026-11-15", start_time: "16:30", category }, teamSlots, regs).map((p) => p.registrationId).sort();
+
+  it("AV : les avancées des années de l'équipe ; INT : les autres ; AV et INT : toutes", () => {
+    expect(ids("Équipe 2016-2017 AV")).toEqual(["av", "av-flag"]);
+    expect(ids("Équipe 2016-2017 INT")).toEqual(["int"]);
+    expect(ids("Équipe 2016-2017 AV et INT")).toEqual(["av", "av-flag", "int"]);
+  });
+});

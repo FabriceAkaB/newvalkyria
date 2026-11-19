@@ -20,6 +20,9 @@ export async function GET(request: Request) {
   const gate = await cronGate(request, "mcs-robot", { adminRoles: ["admin"] });
   if (!gate.ok) return gate.response;
   // D'abord les courriels programmés (ex. « prévenir les parents à 8 h ») : ils ne doivent pas attendre le robot.
+  // Accueil des nouvelles familles (30 premiers jours) : programmé avant l'envoi, pour que la bienvenue parte dans l'heure
+  // (éteint tant que « accueil_30_jours_actif » n'est pas activé dans l'admin).
+  const onboarding = await import("@/lib/onboarding-30-days-repo").then((m) => m.scheduleOnboardingForNewFamilies({})).then((r) => ({ ok: true, r })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
   const emails = await sendDueEmails().catch((e) => ({ sent: 0, failed: 0, error: e instanceof Error ? e.message : "erreur" }));
   // Puis les publications MonClubSportif programmées (ex. un sondage, un lien personnel par famille).
   const mcsPosts = await sendDueMcsPosts().catch((e) => ({ posted: 0, failed: 0, error: e instanceof Error ? e.message : "erreur" }));
@@ -40,6 +43,12 @@ export async function GET(request: Request) {
   // De 8 h à 21 h : les présences du jour indiquées dans MonClubSportif (absentes en X, joueuses ajoutées) entrent dans
   // le site avant la pratique, pour que la borne du sondage de fin n'affiche que les filles attendues.
   const todayPresences = hour >= 8 && hour < 22 ? await syncMcsAttendance({ today: true, pages: 1 }).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
+  // 18 h : le résumé du jour aux parents (nouvelle vidéo de progression, bulletin remis, championne), un par famille.
+  const hourNow = Number(new Date().toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "America/Toronto" }));
+  const parentNews = hourNow === 18 ? await import("@/lib/parent-notifications-repo").then((m) => m.runParentNotifications()).then((r) => ({ sent: r.sent, errors: r.errors.length })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
+  // Le message de la semaine aux parents : la fonction n'envoie que le jour et à l'heure réglés, une fois par semaine,
+  // et seulement s'il est activé dans l'admin (Communications › Message de la semaine).
+  const weeklyMessage = await import("@/lib/weekly-parent-message-repo").then((m) => m.runWeeklyParentMessage({ dryRun: false })).then(() => ({ ok: true })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
   // Une heure après chaque pratique : rappel aux éducateurs de noter les exercices (thème de la semaine).
   const exerciseRatings = await import("@/lib/exercise-rating-reminder").then((m) => m.remindExerciseRatings()).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
   // De 8 h à 21 h : absences annoncées à l'avancé (pratiques de semaine) → filles de l'intermédiaire proposées à JP ;
@@ -53,5 +62,5 @@ export async function GET(request: Request) {
   const archive = await archiveVideos({ deadline: started + (maxDuration - 20) * 1000 })
     .then((r) => ({ done: r.done.length, progress: r.progress, errors: r.errors.map((e) => e.error) }))
     .catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
-  return NextResponse.json({ ok: true, emails, mcsPosts, surveyReminders, todayPresences, practiceInvites, exerciseRatings, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
+  return NextResponse.json({ ok: true, onboarding, parentNews, weeklyMessage, emails, mcsPosts, surveyReminders, todayPresences, practiceInvites, exerciseRatings, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
 }

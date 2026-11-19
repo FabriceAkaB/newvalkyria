@@ -27,6 +27,7 @@ export type ExerciseType = (typeof EXERCISE_TYPES)[number]["key"];
 export const SESSION_PLACES = [
   { key: "jeu-entree", label: "Jeu d'entrée" },
   { key: "ball-mastery", label: "Ball mastery" },
+  { key: "rondo", label: "Rondo" },
   { key: "technique", label: "Technique" },
   { key: "forme-jouee", label: "Forme jouée" }
 ] as const;

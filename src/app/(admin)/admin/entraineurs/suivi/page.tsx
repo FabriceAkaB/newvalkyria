@@ -12,6 +12,8 @@ import { DevelopmentPlanEditor, ModuleOpenToggle, ValidateModule } from "@/compo
 import { TRAINING_MODULES, trainingProgress } from "@/lib/coach-training";
 import { getCoachAccounts } from "@/lib/coach-accounts-repo";
 import { getOpenModules, getTraining } from "@/lib/coach-training-repo";
+import { RULE_OF_TWO_TITLE } from "@/lib/rule-of-two";
+import { getRuleOfTwoPledges } from "@/lib/rule-of-two-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const metadata = { title: "Suivi des éducateurs — Admin", robots: "noindex" };
@@ -54,7 +56,12 @@ export default async function CoachFollowUpPage() {
     (getSupabaseAdminClient() as any).from("coaches").select("id, pro_goals, development_plan")
   ]);
   const activeIds = coaches.filter((c) => c.status === "active").map((c) => c.id);
-  const [training, openModules, accounts] = await Promise.all([getTraining(activeIds).catch(() => new Map()), getOpenModules().catch(() => [] as string[]), getCoachAccounts(activeIds).catch(() => new Map())]);
+  const [training, openModules, accounts, pledges] = await Promise.all([
+    getTraining(activeIds).catch(() => new Map()),
+    getOpenModules().catch(() => [] as string[]),
+    getCoachAccounts(activeIds).catch(() => new Map()),
+    getRuleOfTwoPledges(activeIds).catch(() => new Map())
+  ]);
   const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("fr-CA", { timeZone: "America/Toronto", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null);
   const recent = rows.filter((r) => String(r.activityDate).slice(0, 10) >= from && String(r.activityDate).slice(0, 10) <= t);
   const active = coaches.filter((c) => c.status === "active");
@@ -132,6 +139,47 @@ export default async function CoachFollowUpPage() {
             </div>
             <p className="mda-sub" style={{ padding: "10px 20px 16px", margin: 0 }}>
               « Activé » : l&apos;éducateur a choisi son mot de passe avec le lien reçu par courriel (renvoyer l&apos;invitation : fiche de l&apos;éducateur). « Lues avant le début » : diapos et chaque exercice vus, puis « J&apos;ai pris connaissance de la pratique » confirmé avant l&apos;heure de début.
+            </p>
+          </section>
+
+          <section className="mda-card-flush">
+            <div className="mda-card-head">
+              <h2 className="mda-h2">{RULE_OF_TWO_TITLE}</h2>
+              <Pill tone={active.every((c) => pledges.get(c.id)?.current) ? "good" : "warn"}>
+                {active.filter((c) => pledges.get(c.id)?.current).length}/{active.length} engagements signés
+              </Pill>
+            </div>
+            <div className="admin-table-wrap" style={{ margin: 0, border: 0, boxShadow: "none" }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Éducateur</th>
+                    <th>Engagement</th>
+                    <th>Signé le</th>
+                    <th>Nom tapé</th>
+                    <th>Adresse IP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {active.map((c) => {
+                    const p = pledges.get(c.id);
+                    return (
+                      <tr key={c.id}>
+                        <td>{c.first_name} {c.last_name}</td>
+                        <td>
+                          <Pill tone={p?.current ? "good" : p ? "warn" : "bad"}>{p?.current ? "Signé" : p ? "À signer de nouveau (texte modifié)" : "Pas encore signé"}</Pill>
+                        </td>
+                        <td>{when(p?.signedAt ?? null) ?? <span style={{ color: "var(--adm-text-3)" }}>—</span>}</td>
+                        <td>{p?.signerName ?? <span style={{ color: "var(--adm-text-3)" }}>—</span>}</td>
+                        <td style={{ color: "var(--adm-text-2)", fontVariantNumeric: "tabular-nums" }}>{p?.signerIp ?? "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="mda-sub" style={{ padding: "10px 20px 16px", margin: 0 }}>
+              Mandalart P8.3.01 : jamais un adulte seul avec une mineure. Chaque éducateur lit la règle dans « Mon dossier » de son portail et la signe (nom complet, date et adresse IP gardés). Si le texte change, tout le monde signe de nouveau.
             </p>
           </section>
 

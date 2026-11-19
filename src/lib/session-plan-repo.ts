@@ -5,7 +5,7 @@ function db() {
 }
 
 export const SESSION_BLOCK_TYPES = [
-  "Échauffement", "Ball mastery", "Exercice technique", "Exercice tactique", "Jeu réduit", "Match", "Retour au calme", "Autre"
+  "Échauffement", "Ball mastery", "Rondo", "Exercice technique", "Exercice tactique", "Jeu réduit", "Forme jouée", "Match", "Retour au calme", "Autre"
 ] as const;
 
 export interface SessionBlock {

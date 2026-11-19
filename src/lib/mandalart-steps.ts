@@ -136,7 +136,7 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
   // ── Méthode Valkyria (pilier 1) ──
   "P1.1.01": {
     how: [
-      "Prends une feuille : 4 blocs dans l'ordre (jeu d'entrée, ball mastery, technique, forme jouée).",
+      "Prends une feuille : les blocs dans l'ordre (ball mastery, rondo, technique, technique, forme jouée, routine de fin).",
       "Mets une durée à chaque bloc pour une séance de 75 et de 90 minutes.",
       "Pour chaque bloc, écris le but en une phrase.",
       "Envoie-la à Claude : il la range dans Coaching et l'utilise pour monter les pratiques."

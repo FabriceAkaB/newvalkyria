@@ -65,4 +65,4 @@ Une semaine type alterne contenu éducatif, volume et intensité (+, ++, +++). U
 4. un jeu (« game ») ;
 5. les étirements.
 
-C'est la même logique que la structure Valkyria : jeu d'entrée, ball mastery, technique, forme jouée, retour au calme.
+C'est la même logique que la structure Valkyria (JP, 19 nov. 2026) : ball mastery, rondo, technique, technique, forme jouée, retour au calme.

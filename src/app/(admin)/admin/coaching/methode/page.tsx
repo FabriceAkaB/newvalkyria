@@ -34,7 +34,7 @@ export default async function MethodPage() {
           <header>
             <p className="mda-eyebrow">Espace coaching · la méthode écrite noir sur blanc</p>
             <h1 className="mda-h1">Une séance Valkyria, du début à la fin</h1>
-            <p className="mda-lead">Les éducateurs voient cette page dans leur portail (Méthode). Les blocs reprennent les places de la banque d&apos;exercices : jeu d&apos;entrée, ball mastery, technique, forme jouée.</p>
+            <p className="mda-lead">Les éducateurs voient cette page dans leur portail (Méthode). Une séance : ball mastery, rondo, technique, technique, puis forme jouée et la routine de fin. Les blocs reprennent les places de la banque d&apos;exercices.</p>
           </header>
 
           <section className="mda-card">

@@ -17,20 +17,20 @@ export default async function CoachVideosPage() {
   const [coach, videos] = await Promise.all([getCoach(coachId), videosForCoach().catch(() => [])]);
   const matches = videos.filter((v) => v.kind === "match");
   const practices = videos.filter((v) => v.kind === "pratique");
+  // Un aperçu par vidéo (image, titre, date, durée) ; un clic ouvre le lecteur, ses périodes et ses temps forts.
   const Row = ({ v }: { v: (typeof videos)[number] }) => (
-    <div className="coach-card" style={{ padding: "12px 16px", display: "grid", gap: 8 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div>
-          <p style={{ margin: 0, fontWeight: 600 }}>{v.teamName ?? v.title}</p>
-          <p className="coach-muted" style={{ margin: 0, fontSize: "0.8rem" }}>
-            {day(v.date)} {mins(v.duration_s) ? `· ${mins(v.duration_s)}` : ""} {v.goals ? `· ${v.goals} but${v.goals > 1 ? "s" : ""}` : ""}
-            {v.closesOn ? ` · ouverte jusqu'au ${day(v.closesOn)}` : ""}
-          </p>
-        </div>
+    <div className="coach-card" style={{ padding: 12, display: "grid", gap: 10, alignContent: "start" }}>
+      <MatchPlayer id={v.id} endpoint={`/api/coach/videos/${v.id}`} label={`Regarder ${v.teamName ?? v.title}`} poster={v.poster} />
+      <div>
+        <p style={{ margin: 0, fontWeight: 600 }}>{v.teamName ?? v.title}</p>
+        <p className="coach-muted" style={{ margin: 0, fontSize: "0.8rem" }}>
+          {day(v.date)} {mins(v.duration_s) ? `· ${mins(v.duration_s)}` : ""} {v.goals ? `· ${v.goals} but${v.goals > 1 ? "s" : ""}` : ""}
+          {v.closesOn ? ` · ouverte jusqu'au ${day(v.closesOn)}` : ""}
+        </p>
       </div>
-      <MatchPlayer id={v.id} endpoint={`/api/coach/videos/${v.id}`} label="Regarder" />
     </div>
   );
+  const grid = { display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))" } as const;
   return (
     <>
       <CoachTopbar coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"} />
@@ -40,9 +40,9 @@ export default async function CoachVideosPage() {
           <h1 className="coach-title coach-title--xl">Nos matchs et les pratiques filmées</h1>
           <p className="coach-sub">Les matchs restent ici en tout temps. Une pratique filmée est ouverte {PRACTICE_VIDEO_DAYS} jours : regarde-la pour écrire tes notes sur tes joueuses, puis elle se ferme.</p>
           <h2 className="coach-h2" style={{ marginTop: 20 }}>Pratiques filmées ({practices.length})</h2>
-          <div style={{ display: "grid", gap: 10 }}>{practices.length ? practices.map((v) => <Row key={v.id} v={v} />) : <p className="coach-muted">Aucune pratique filmée ces {PRACTICE_VIDEO_DAYS} derniers jours.</p>}</div>
+          <div style={grid}>{practices.length ? practices.map((v) => <Row key={v.id} v={v} />) : <p className="coach-muted">Aucune pratique filmée ces {PRACTICE_VIDEO_DAYS} derniers jours.</p>}</div>
           <h2 className="coach-h2" style={{ marginTop: 24 }}>Matchs ({matches.length})</h2>
-          <div style={{ display: "grid", gap: 10 }}>{matches.length ? matches.map((v) => <Row key={v.id} v={v} />) : <p className="coach-muted">Aucun match filmé pour l&apos;instant.</p>}</div>
+          <div style={grid}>{matches.length ? matches.map((v) => <Row key={v.id} v={v} />) : <p className="coach-muted">Aucun match filmé pour l&apos;instant.</p>}</div>
         </div>
       </div>
     </>

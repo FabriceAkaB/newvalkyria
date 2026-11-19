@@ -1,7 +1,11 @@
 import { Lock } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import "./bulletin-lock.css";
+import "./bulletin-feedback.css";
+
+import { BulletinFeedback } from "@/components/bulletin-feedback";
 
 import { LEVELS, levelOf } from "@/lib/bulletin-report";
 import type { BulletinReportData } from "@/lib/bulletin-repo";
@@ -31,7 +35,16 @@ function Meter({ value, min, max, reverse = false, scaleOf }: { value: number | 
   );
 }
 
-export function BulletinReport({ data, periodHref }: { data: BulletinReportData; periodHref?: (p: "mi-saison" | "fin-saison") => string }) {
+export function BulletinReport({
+  data,
+  periodHref,
+  audience = data.audience
+}: {
+  data: BulletinReportData;
+  periodHref?: (p: "mi-saison" | "fin-saison") => string;
+  /** « parent » : sous le bulletin remis, le sondage court « Ce bulletin vous est-il utile ? » (P4.8.11). */
+  audience?: "equipe" | "parent";
+}) {
   if (!data.released) {
     // Pas encore remis à la famille : le bulletin flou, avec la date de remise (JP, 17 nov. 2026).
     return (
@@ -55,10 +68,12 @@ export function BulletinReport({ data, periodHref }: { data: BulletinReportData;
       </div>
     );
   }
-  return <BulletinBody data={data} periodHref={periodHref} />;
+  const feedback =
+    audience === "parent" ? <BulletinFeedback registrationId={data.registrationId} period={data.range.period} firstName={data.player.firstName || "votre fille"} /> : null;
+  return <BulletinBody data={data} periodHref={periodHref} feedback={feedback} />;
 }
 
-function BulletinBody({ data, periodHref }: { data: BulletinReportData; periodHref?: (p: "mi-saison" | "fin-saison") => string }) {
+function BulletinBody({ data, periodHref, feedback }: { data: BulletinReportData; periodHref?: (p: "mi-saison" | "fin-saison") => string; feedback?: ReactNode }) {
   const { player, summary: s, range } = data;
   const level = levelOf(s.global);
   const on10 = (v: number) => 1 + ((v - 1) / 9) * 4; // une note sur 10 ramenée sur l'échelle 1 à 5
@@ -207,6 +222,8 @@ function BulletinBody({ data, periodHref }: { data: BulletinReportData; periodHr
           </ul>
         </section>
       ) : null}
+
+      {feedback}
 
       <footer className="nvb-foot">
         <p className="nvb-motto">Former des joueuses plus techniques, intelligentes et confiantes.</p>

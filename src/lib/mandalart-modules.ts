@@ -63,7 +63,7 @@ export const PILLAR_MODULES: PillarModule[] = [
     href: "/admin/coaching/methode",
     objectives: ["P1.1", "P1.5", "P1.6"],
     planned: [
-      "En place : structure de séance en 4 blocs (jeu d'entrée, ball mastery, technique, forme jouée) avec durées et règles, proposition tirée du plan à valider par JP",
+      "En place : structure de séance décidée par JP le 19 nov. 2026 (ball mastery, rondo, technique, technique, forme jouée, routine de fin) avec durées et règles",
       "En place : principes de la pédagogie Valkyria (repris du plan) et page Méthode dans le portail des éducateurs",
       "En place : bibliothèque des gestes par famille et niveau du passeport (fiche, 3 points clés, erreurs, vidéo, progression en 4 étapes), compteur des 5 gestes de base par niveau",
       "À venir : curriculum U8 à U12 par génération et par niveau (P1.1.06)"

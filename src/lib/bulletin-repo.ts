@@ -21,6 +21,8 @@ export interface BulletinReportData {
   familyComments: { coachId: string | null; author: string; text: string; date: string }[];
   /** Remis à la famille (sinon montré flou avec « Bientôt disponible »). */
   released: boolean;
+  /** Pour qui le bulletin a été préparé : la famille voit en plus le sondage court (P4.8.11). */
+  audience: "equipe" | "parent";
 }
 
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
@@ -77,6 +79,7 @@ export async function getBulletinReport(registrationId: string, opts: { period?:
       .filter((c) => c.period === period)
       .map((c) => ({ coachId: c.coach_id ?? null, author: c.author, text: c.body, date: day(c.updated_at) })),
     released: isReleased(range, opts.audience),
+    audience: opts.audience,
     notes:
       opts.audience === "parent"
         ? []

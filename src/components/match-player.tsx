@@ -25,7 +25,7 @@ const PALETTE = {
 
 /** Le lecteur des matchs et pratiques filmés (vidéo lue chez Veo, 1080p) : on saute aux périodes et aux temps forts
  *  (buts, tirs… détectés par Veo), une frise montre où ils sont, et on reprend là où on s'était arrêté. */
-export function MatchPlayer({ id, endpoint, label = "Regarder", palette = "admin" }: { id: string; endpoint: string; label?: string; palette?: keyof typeof PALETTE }) {
+export function MatchPlayer({ id, endpoint, label = "Regarder", palette = "admin", poster = null }: { id: string; endpoint: string; label?: string; palette?: keyof typeof PALETTE; poster?: string | null }) {
   const c = PALETTE[palette];
   const [data, setData] = useState<PlayerPayload | null>(null);
   const [busy, setBusy] = useState(false);
@@ -74,6 +74,21 @@ export function MatchPlayer({ id, endpoint, label = "Regarder", palette = "admin
   const chip = (on: boolean): React.CSSProperties => ({ minHeight: 34, padding: "0 12px", borderRadius: 999, border: `1px solid ${on ? c.accent : c.line}`, background: on ? c.accent : "transparent", color: on ? c.accentText : c.text, fontSize: "0.82rem", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" });
 
   if (!data) {
+    // Avec un aperçu (JP, 19 nov. 2026) : l'image de la vidéo d'abord ; un clic ouvre le lecteur et ses détails.
+    if (poster) {
+      return (
+        <div style={{ display: "grid", gap: 6 }}>
+          <button type="button" onClick={open} disabled={busy} aria-label={label} style={{ position: "relative", display: "block", width: "100%", aspectRatio: "16 / 9", padding: 0, border: "none", borderRadius: 12, overflow: "hidden", background: "#000", cursor: "pointer" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={poster} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: busy ? 0.6 : 0.92 }} />
+            <span aria-hidden style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+              <span style={{ width: 56, height: 56, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: "1.4rem", paddingLeft: 4 }}>{busy ? "…" : "▶"}</span>
+            </span>
+          </button>
+          {error ? <span style={{ fontSize: "0.85rem", color: "var(--adm-bad, #e5484d)" }}>{error}</span> : null}
+        </div>
+      );
+    }
     return (
       <div style={{ display: "grid", gap: 6 }}>
         <button type="button" onClick={open} disabled={busy} style={{ minHeight: 44, padding: "0 18px", borderRadius: 10, border: "none", background: c.accent, color: c.accentText, fontWeight: 700, cursor: "pointer", justifySelf: "start" }}>
@@ -91,8 +106,9 @@ export function MatchPlayer({ id, endpoint, label = "Regarder", palette = "admin
       <video
         ref={video}
         src={data.url}
-        poster={data.poster ?? undefined}
+        poster={data.poster ?? poster ?? undefined}
         controls
+        autoPlay={Boolean(poster)}
         playsInline
         preload="metadata"
         style={{ width: "100%", aspectRatio: "16 / 9", background: "#000", borderRadius: 12 }}

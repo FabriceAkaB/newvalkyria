@@ -1,0 +1,16 @@
+/* Sondage court sous le bulletin (P4.8.11) : dans la carte blanche du bulletin (.nvb), aux couleurs du bulletin. */
+.nvb-feedback { padding: 18px 18px 16px; border: 1px solid var(--nvb-line); border-radius: 14px; background: var(--nvb-lilac); display: grid; gap: 10px; }
+.nvb-feedback .nvb-h { margin: 0; }
+.nvb-feedback__choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.nvb-feedback__choices button { min-height: 40px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--nvb-line); background: #fff; color: var(--nvb-ink); font: inherit; font-weight: 700; font-size: 0.92rem; cursor: pointer; }
+.nvb-feedback__choices button[data-on] { background: var(--nvb-violet); border-color: var(--nvb-violet); color: #fff; }
+.nvb-feedback__choices button:focus-visible, .nvb-feedback__send:focus-visible, .nvb-feedback textarea:focus-visible { outline: 2px solid var(--nvb-violet); outline-offset: 2px; }
+.nvb-feedback__label { font-weight: 700; font-size: 0.92rem; color: var(--nvb-ink); }
+.nvb-feedback textarea { width: 100%; box-sizing: border-box; resize: vertical; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--nvb-line); background: #fff; color: var(--nvb-ink); font: inherit; font-size: 0.95rem; line-height: 1.45; }
+.nvb-feedback textarea::placeholder { color: var(--nvb-muted); }
+.nvb-feedback__foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.nvb-feedback__send { min-height: 40px; padding: 0 20px; border-radius: 10px; border: 0; background: var(--nvb-violet); color: #fff; font: inherit; font-weight: 700; font-size: 0.92rem; cursor: pointer; }
+.nvb-feedback__send:disabled, .nvb-feedback__choices button:disabled { opacity: 0.55; cursor: default; }
+.nvb-feedback__ok { display: inline-flex; align-items: center; gap: 6px; color: #2f7a4a; font-weight: 700; font-size: 0.9rem; }
+.nvb-feedback__error { margin: 0; color: #b3261e; font-weight: 600; font-size: 0.9rem; }
+@media (max-width: 560px) { .nvb-feedback { padding: 16px 14px; } }

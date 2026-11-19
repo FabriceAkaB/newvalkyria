@@ -418,6 +418,8 @@ function BriefingCard({ activity, players, expected }: { activity: CoachActivity
               {p.absentLastTime && <span className="coach-brief__line">Absente la dernière fois</span>}
               {p.objectives.map((o) => <span key={o} className="coach-brief__line">Objectif : {o}</span>)}
               {p.gestures?.length ? <span className="coach-brief__line">Geste à retravailler : {p.gestures.join(", ")}</span> : null}
+              {p.health ? <span className="coach-brief__line" style={{ color: "var(--adm-bad)", fontWeight: 600 }}>Santé (dit par le parent) : {p.health}</span> : null}
+              {p.sheet ? <span className="coach-brief__line">Fiche joueuse : {p.sheet}</span> : null}
             </li>
           ))}
         </ul>

@@ -14,13 +14,15 @@ export interface StructureBlock {
   rules: string;
 }
 
-/** Proposition de départ pour une pratique de 1 h 25 (à ajuster et valider par JP, P1.1.01). */
+/** La séance Valkyria (JP, 19 nov. 2026), pour une pratique de 1 h 25 : ball mastery, rondo, deux blocs de technique,
+ *  puis la forme jouée, et la routine de fin. */
 export const DEFAULT_STRUCTURE: StructureBlock[] = [
-  { place: "jeu-entree", label: "Jeu d'entrée", minutes: 15, objective: "Activer et réveiller les filles par le jeu dès l'arrivée ; échauffement FIFA 11+ Kids intégré.", rules: "Un ballon par fille, aucune file d'attente." },
-  { place: "ball-mastery", label: "Ball mastery", minutes: 20, objective: "Maîtrise du ballon : les gestes du passeport de leur niveau, beaucoup de touches.", rules: "Viser 500 touches par fille dans la séance ; explications de moins de 30 secondes." },
-  { place: "technique", label: "Technique", minutes: 20, objective: "Le geste ou le thème de la semaine, en situation, avec sa progression (sur place, en mouvement, à vitesse, sous pression).", rules: "Dossards bicolores pour forcer la prise d'information." },
-  { place: "forme-jouee", label: "Forme jouée", minutes: 25, objective: "Jouer : petits jeux avec prises de décision (3 contre 3 sur 4 mini-buts) ; vérifier que le thème passe dans le jeu.", rules: "Le coach parle moins de 20 % du temps ; questions plutôt que réponses." },
-  { place: "retour", label: "Retour au calme et routine de fin", minutes: 5, objective: "Chaque fille donne sa note de la pratique et sa fatigue sur 10 ; un compliment précis à chacune.", rules: "Routine de fin saisie dans le portail." }
+  { place: "ball-mastery", label: "Ball mastery", minutes: 15, objective: "Maîtrise du ballon dès l'arrivée : les gestes du passeport de leur niveau, beaucoup de touches ; sert aussi d'échauffement (FIFA 11+ Kids intégré).", rules: "Un ballon par fille, chaque éducateur a ses joueuses (les plus faibles d'abord), explications de moins de 30 secondes." },
+  { place: "rondo", label: "Rondo", minutes: 10, objective: "Conserver le ballon sous pression : passes, appuis, prise d'information, réaction à la perte.", rules: "Petits groupes, beaucoup de touches ; la défenseure change vite." },
+  { place: "technique", label: "Technique 1", minutes: 15, objective: "Le geste ou le thème de la semaine, en situation, avec sa progression (sur place, en mouvement, à vitesse, sous pression).", rules: "Dossards bicolores pour forcer la prise d'information ; 3 interventions au plus, sur le thème seulement." },
+  { place: "technique", label: "Technique 2", minutes: 15, objective: "Le même thème un cran plus loin : une variante plus difficile ou avec opposition.", rules: "Ateliers en lignes plutôt qu'en cercle, aucune file d'attente." },
+  { place: "forme-jouee", label: "Forme jouée", minutes: 25, objective: "Jouer : petits jeux avec prises de décision (2 contre 2, 3 contre 3, 4 contre 4) ; vérifier que le thème passe dans le jeu.", rules: "Le coach parle moins de 20 % du temps ; questions plutôt que réponses." },
+  { place: "retour", label: "Retour au calme et routine de fin", minutes: 5, objective: "Chaque fille donne sa note de la pratique et sa fatigue sur 10 ; un compliment précis à chacune.", rules: "Sondage du jour sur la borne ou dans le portail." }
 ];
 
 export const structureTotal = (blocks: Pick<StructureBlock, "minutes">[]) => blocks.reduce((s, b) => s + (Number(b.minutes) || 0), 0);

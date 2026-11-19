@@ -1,11 +1,13 @@
 import { CoachDossierGoals } from "@/components/coach-dossier-goals";
 import { CoachChangePasswordForm } from "@/components/coach-password-forms";
+import { CoachRuleOfTwo } from "@/components/coach-rule-of-two";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { requireCoach } from "@/lib/coach-auth";
 import { listObservations } from "@/lib/coach-observations-repo";
 import { trainingProgress } from "@/lib/coach-training";
 import { getTraining } from "@/lib/coach-training-repo";
 import { getCoach } from "@/lib/coaches-repo";
+import { getRuleOfTwoPledges } from "@/lib/rule-of-two-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getCoachSatisfaction } from "@/lib/surveys-repo";
 
@@ -31,6 +33,7 @@ export default async function CoachDossierPage() {
     getCoachSatisfaction().catch(() => new Map()),
     db.from("coach_assignments").select("activity_id, status, activity:coach_activities(activity_date)").eq("coach_id", coachId)
   ]);
+  const pledge = (await getRuleOfTwoPledges([coachId]).catch(() => new Map())).get(coachId);
   const training = trainingProgress((await getTraining([coachId]).catch(() => new Map())).get(coachId) ?? []);
   const recentIds = ((assigns ?? []) as any[]).filter((a) => a.status !== "absent" && String(a.activity?.activity_date ?? "").slice(0, 10) >= since).map((a) => a.activity_id);
   const { data: ratings } = recentIds.length ? await db.from("activity_player_attendance").select("practice_rating").in("activity_id", recentIds).not("practice_rating", "is", null) : { data: [] };
@@ -78,6 +81,10 @@ export default async function CoachDossierPage() {
             <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>Ouvrir mon contrat signé (PDF) →</p>
             <p className="coach-muted" style={{ margin: "4px 0 0" }}>La copie signée, avec ton NAS masqué. Une question sur ton contrat : écris à JP.</p>
           </a>
+          <CoachRuleOfTwo
+            signed={pledge?.current ? { name: pledge.signerName, at: pledge.signedAt } : null}
+            expectedName={coach ? `${coach.first_name} ${coach.last_name}` : "Prénom Nom"}
+          />
           <a href="/entraineur/formation" className="coach-card" style={{ display: "block", marginTop: 16, textDecoration: "none", color: "inherit" }}>
             <p className="coach-card__label">Ma formation</p>
             <p className="coach-sub" style={{ margin: 0 }}>

@@ -77,7 +77,7 @@ pastilles `#E6DAF1`. Sections du `deck.json` : intro (couverture, clous, correct
 - Un ballon par fille autant que possible, aucune file d'attente ; viser beaucoup de touches.
 - Explications de moins de 30 secondes ; le coach parle moins de 20 % du temps ; questions plutôt que réponses.
 - Dossards de couleurs pour forcer la prise d'information ; une forme jouée avec prises de décision à chaque séance.
-- Échauffement FIFA 11+ Kids intégré au jeu d'entrée. Plan B pour le nombre de joueuses (« si vous êtes 15 : … »).
+- Structure de séance Valkyria (JP, 19 nov. 2026) : ball mastery (échauffement FIFA 11+ Kids intégré), rondo, technique, technique, forme jouée, retour au calme. Plan B pour le nombre de joueuses (« si vous êtes 15 : … »).
 - Points et petits tournois individuels pour l'engagement ; pas de classement humiliant (chaque fille comparée à elle-même).
 - Le thème ressort par les **paramètres** (doc conception par les paramètres), pas par des arrêts répétés.
 

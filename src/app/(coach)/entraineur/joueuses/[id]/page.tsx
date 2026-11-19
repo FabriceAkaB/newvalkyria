@@ -2,9 +2,10 @@ import { notFound } from "next/navigation";
 
 import { CoachJoueurDetail } from "@/components/coach-joueur-detail";
 import { requireCoach } from "@/lib/coach-auth";
-import { coachCanSeePlayer, getBulletinData, getPlayerAttendanceHistory, getPlayerEvaluations, getPlayerObjectives, getPlayerProfile, getPlayerRoutines } from "@/lib/coach-portal-repo";
+import { coachCanSeePlayer, getPlayerAttendanceHistory, getPlayerEvaluations, getPlayerObjectives, getPlayerProfile, getPlayerRoutines } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { getExercises } from "@/lib/exercises-repo";
+import { getSeasonSummary } from "@/lib/season-summary-repo";
 
 export const metadata = { title: "Joueuse — Espace Technique" };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function CoachJoueurDetailPage({ params }: { params: Promis
     getPlayerRoutines(id),
     getExercises(),
     getPlayerAttendanceHistory(id),
-    getBulletinData(id)
+    getSeasonSummary(id, { audience: "equipe" }).catch(() => null)
   ]);
 
   if (!player) notFound();
@@ -37,7 +38,7 @@ export default async function CoachJoueurDetailPage({ params }: { params: Promis
       routines={routines}
       exercises={exercises}
       attendanceHistory={attendanceHistory}
-      summary={summary}
+      seasonSummary={summary}
     />
   );
 }
