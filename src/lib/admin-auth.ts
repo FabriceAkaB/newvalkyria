@@ -131,3 +131,29 @@ export async function isAdminRequest(options?: { roles?: AdminRole[] }): Promise
   if (options?.roles && !options.roles.includes(role)) return false;
   return true;
 }
+
+/** Changer un code d'accès (JP, 19 nov. 2026) : JP le tape lui-même dans l'admin (Outils › Codes d'accès) ; seul le
+ *  hachage est gardé dans app_settings « admin_password_hashes ». Pour le code administrateur, le code actuel est
+ *  demandé. 8 caractères au moins (6 chiffres pour la borne). */
+export async function changeAccessCode(input: { target: AdminRole; current: string; next: string }): Promise<void> {
+  const { hashPassword } = await import("@/lib/password");
+  const next = input.next.trim();
+  const min = input.target === "borne" ? 6 : 8;
+  if (next.length < min) throw new Error(`Le nouveau code doit avoir au moins ${min} caractères.`);
+  if ((await checkAdminPassword(input.current)) !== "admin") throw new Error("Ton code administrateur actuel n'est pas le bon.");
+  const other = await checkAdminPassword(next);
+  if (other && other !== input.target) throw new Error("Ce code est déjà utilisé par un autre accès : choisis-en un autre.");
+  const { data } = await db().from("app_settings").select("value").eq("key", "admin_password_hashes").maybeSingle();
+  let hashes: Partial<Record<AdminRole, string>> = {};
+  try {
+    hashes = typeof data?.value === "string" ? JSON.parse(data.value) : (data?.value ?? {});
+  } catch {
+    hashes = {};
+  }
+  hashes[input.target] = hashPassword(next);
+  const { CLUB_ID } = await import("@/lib/club");
+  const row = { key: "admin_password_hashes", value: JSON.stringify(hashes), updated_at: new Date().toISOString() };
+  const { data: existing } = await db().from("app_settings").select("key").eq("key", "admin_password_hashes").maybeSingle();
+  const { error } = existing ? await db().from("app_settings").update(row).eq("key", "admin_password_hashes") : await db().from("app_settings").insert({ club_id: CLUB_ID, ...row });
+  if (error) throw new Error(error.message);
+}

@@ -533,6 +533,13 @@ export const ADMIN_NAV: AdminNavSection[] = [
         tabs: [{ href: "/admin/historique", label: "Historique", adminOnly: true }]
       },
       {
+        key: "codes",
+        label: "Codes d'accès",
+        icon: "shield",
+        description: "Changer ton code administrateur, celui de la gérante ou celui de la borne.",
+        tabs: [{ href: "/admin/codes", label: "Codes d'accès", adminOnly: true }]
+      },
+      {
         key: "apercu",
         label: "Aperçu des portails",
         icon: "list",
