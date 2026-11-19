@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BulletinReport } from "@/components/bulletin-report";
+import { FamilyProgressVideos } from "@/components/family-progress-videos";
 import { Container } from "@/components/container";
 import { getBulletinReport } from "@/lib/bulletin-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { getFamilyRegistrations, getVerifiedParentEmail } from "@/lib/parent-repo";
+import { getFamilyProgressVideos } from "@/lib/progress-videos-repo";
 
 export const metadata: Metadata = { title: "Progression | New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -18,18 +20,26 @@ export default async function ProgressionPage({ searchParams }: { searchParams: 
   const userId = await requireParentUserId();
   const [family, email] = await Promise.all([getFamilyRegistrations(userId), getVerifiedParentEmail(userId)]);
   const regIds = new Map(family.map((f) => [`${f.firstName} ${f.lastName}`.toLowerCase(), f.registrationId]));
-  const bulletins = await Promise.all([...regIds.entries()].map(async ([k, id]) => ({ key: k, data: await getBulletinReport(id, { period, audience: "parent" }).catch(() => null) })));
+  const [bulletins, progress] = await Promise.all([
+    Promise.all([...regIds.entries()].map(async ([k, id]) => ({ key: k, data: await getBulletinReport(id, { period, audience: "parent" }).catch(() => null) }))),
+    // Seulement les inscriptions de cette famille : les vidéos des autres filles ne sont jamais lues ici (Loi 25).
+    getFamilyProgressVideos(family.map((f) => f.registrationId)).catch(() => new Map())
+  ]);
   return (
     <section className="insc-hero">
       <Container className="max-w-2xl">
         <div className="insc-hero-inner">
           <p className="text-xs uppercase tracking-[0.2em] text-accent-soft">Espace parent</p>
           <h1 className="insc-hero-title">Progression</h1>
-          <p className="insc-hero-sub">Le bulletin de votre fille, deux fois par saison (mi-saison et fin de saison) : ses présences, ce que les éducatrices observent après chaque pratique, son bien-être, son leadership et ses objectifs.</p>
+          <p className="insc-hero-sub">Sa progression en vidéo (filmée au fil de la saison, avec un avant / après), puis son bulletin deux fois par saison : ses présences, ce que les éducatrices observent après chaque pratique, son bien-être, son leadership et ses objectifs.</p>
         </div>
       </Container>
       <Container className="max-w-2xl">
         <div style={{ display: "grid", gap: "1.5rem" }}>
+          {family.map((f) => {
+            const p = progress.get(f.registrationId);
+            return p ? <FamilyProgressVideos key={`v-${f.registrationId}`} firstName={f.firstName} checkpoints={p.checkpoints} videos={p.videos} /> : null;
+          })}
           {bulletins.filter((b) => b.data).map((b) => (
             <BulletinReport key={b.key} data={b.data!} periodHref={(p) => `/compte/progression?bulletin=${p}`} />
           ))}
