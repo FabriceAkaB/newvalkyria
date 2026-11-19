@@ -365,7 +365,7 @@ function inviteEmail(survey: Survey, invite: SurveyInvite, reminder: boolean) {
   const first = (invite.parent_name ?? "").trim().split(/\s+/)[0];
   const players = invite.player_names ? ` pour ${esc(invite.player_names)}` : "";
   const link = surveyLink(invite.token);
-  const subject = reminder ? `Rappel : ${survey.title}` : survey.title;
+  const subject = reminder ? `${invite.reminder_count >= 2 ? "Dernier rappel" : "Rappel"} : ${survey.title}` : survey.title;
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.6;color:#161419;max-width:600px">
       <p>Bonjour${first ? ` ${esc(first)}` : ""},</p>
@@ -380,6 +380,39 @@ function inviteEmail(survey: Survey, invite: SurveyInvite, reminder: boolean) {
 }
 
 /** Envoie le lien aux familles invitées. reminder = relance des familles qui n'ont pas répondu. */
+/** Relances automatiques (2, 5 et 7 jours après l'envoi) des sondages « auto_reminders » encore ouverts, aux familles
+ *  qui n'ont pas répondu ; au plus 60 par passage, le jour seulement. Appelé par le cron horaire `mcs-robot`. */
+export async function runSurveyReminders(now = new Date()): Promise<{ sent: number; failed: number }> {
+  const { isDaytime, reminderDue } = await import("@/lib/survey-reminders");
+  if (!isDaytime(now) || !isEmailConfigured()) return { sent: 0, failed: 0 };
+  const today = now.toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const { data: surveys } = await db().from("surveys").select("*").eq("club_id", CLUB_ID).eq("status", "envoye").eq("auto_reminders", true);
+  const open = ((surveys ?? []) as Survey[]).filter((s) => !s.closes_on || String(s.closes_on).slice(0, 10) >= today);
+  if (!open.length) return { sent: 0, failed: 0 };
+  const { data: invites } = await db().from("survey_invites").select("*").in("survey_id", open.map((s) => s.id)).is("responded_at", null).not("sent_at", "is", null);
+  const due = ((invites ?? []) as SurveyInvite[]).filter((i) => !/@newvalkyria\.com$/i.test(i.parent_email) && reminderDue(i.sent_at, i.reminder_count, now)).slice(0, 60);
+  const resend = getResendClient();
+  let sent = 0;
+  let failed = 0;
+  for (const inv of due) {
+    const survey = open.find((s) => s.id === inv.survey_id)!;
+    const { subject, html } = inviteEmail(survey, inv, true);
+    // Réservée avant l'envoi : un 2e passage en même temps ne relance pas deux fois.
+    const { data: claimed } = await db().from("survey_invites").update({ reminder_count: inv.reminder_count + 1, last_reminded_at: now.toISOString() }).eq("id", inv.id).eq("reminder_count", inv.reminder_count).is("responded_at", null).select("id");
+    if (!claimed?.length) continue;
+    try {
+      await resend.emails.send({ from: env.resendFrom, to: inv.parent_email, subject, html });
+      sent++;
+    } catch (err) {
+      console.error("Survey reminder failed", inv.parent_email, err);
+      await db().from("survey_invites").update({ reminder_count: inv.reminder_count }).eq("id", inv.id);
+      failed++;
+    }
+    await new Promise((r) => setTimeout(r, 800));
+  }
+  return { sent, failed };
+}
+
 export async function sendInvites(surveyId: string, opts: { reminder: boolean; inviteIds?: string[] }): Promise<{ sent: number; failed: number }> {
   if (!isEmailConfigured()) throw new Error("Courriel non configuré");
   const data = await getSurvey(surveyId);

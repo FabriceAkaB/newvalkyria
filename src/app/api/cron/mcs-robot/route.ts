@@ -23,6 +23,8 @@ export async function GET(request: Request) {
   const emails = await sendDueEmails().catch((e) => ({ sent: 0, failed: 0, error: e instanceof Error ? e.message : "erreur" }));
   // Puis les publications MonClubSportif programmées (ex. un sondage, un lien personnel par famille).
   const mcsPosts = await sendDueMcsPosts().catch((e) => ({ posted: 0, failed: 0, error: e instanceof Error ? e.message : "erreur" }));
+  // Relances des sondages : 2, 5 et 7 jours après l'envoi, aux familles qui n'ont pas répondu (le jour seulement).
+  const surveyReminders = await import("@/lib/surveys-repo").then((m) => m.runSurveyReminders()).catch((e) => ({ sent: 0, failed: 0, error: e instanceof Error ? e.message : "erreur" }));
   // Courriels refusés (rebonds dans info@) : rangés pour qu'Aujourd'hui les montre le jour même.
   const bounces = await syncBounces().catch((e) => ({ found: 0, added: 0, error: e instanceof Error ? e.message : "erreur" }));
   const synced = await syncStaleTeams(50, 8000).catch(() => 0);
@@ -43,5 +45,5 @@ export async function GET(request: Request) {
   const archive = await archiveVideos({ deadline: started + (maxDuration - 20) * 1000 })
     .then((r) => ({ done: r.done.length, progress: r.progress, errors: r.errors.map((e) => e.error) }))
     .catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
-  return NextResponse.json({ ok: true, emails, mcsPosts, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
+  return NextResponse.json({ ok: true, emails, mcsPosts, surveyReminders, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
 }

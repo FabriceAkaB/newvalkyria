@@ -219,6 +219,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         description: "Sondages avec un lien par famille (qui a répondu quoi, satisfaction, familles à rappeler) et la boîte à idées du site et des espaces parents.",
         tabs: [
           { href: "/admin/sondages", label: "Sondages", adminOnly: true },
+          { href: "/admin/sondages/intentions", label: "Intentions des familles" },
           { href: "/admin/idees", label: "Boîte à idées" },
           { href: "/admin/sondages/programmes", label: "Satisfaction par programme" }
         ]
