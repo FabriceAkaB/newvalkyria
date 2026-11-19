@@ -18,13 +18,16 @@ export const QUICK_SCALE: { value: number; label: string }[] = [
 
 export const NOTE_MIN_CHARS = 30;
 
-/** Règle du rapport complet (JP, 18 nov. 2026), pour les pratiques à partir du 19 nov. 2026 : les heures de la
- *  pratique (rapport compris) ne comptent pour la paie que quand les 4 parties sont faites :
- *  1. présences de toutes les joueuses (MonClubSportif fait foi) ;
+/** Paie et rapport à partir du 19 nov. 2026 (JP, 18 nov. 2026) :
+ *  - les heures de terrain sont payées dès que la présence de l'éducateur est confirmée (MonClubSportif fait foi) ;
+ *  - les coachs (« Entraîneur principal ») gagnent en plus 1 heure de rapport par pratique, payée seulement quand le
+ *    rapport est fini ; sinon ils sont payés pour leurs heures de terrain seulement. L'assistant n'a pas d'heure de rapport.
+ *  Le rapport fini :
+ *  1. présences de toutes les joueuses ;
  *  2. évaluation de chaque fille présente : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10 et une
  *     observation d'au moins NOTE_MIN_WORDS mots (son état aujourd'hui, comment elle progresse, un exemple vu) ;
  *  3. sondage du jour : plaisir et fatigue de chaque fille présente ;
- *  4. retour de l'éducateur : 2 choses qui ont bien marché et 2 choses à améliorer. */
+ *  4. retour du coach : 2 choses qui ont bien marché et 2 choses à améliorer. */
 export const REPORT_RULE_V2_START = "2026-11-19";
 
 /** Une petite observation complète tient en 3 phrases courtes : son état du jour (≈ 8 mots), comment elle progresse
@@ -34,6 +37,11 @@ export const NOTE_MIN_WORDS = 25;
 /** Retour sur la pratique : 2 points dans « bien marché » et 2 dans « à améliorer », d'au moins 4 mots chacun. */
 export const DEBRIEF_MIN_POINTS = 2;
 export const DEBRIEF_POINT_MIN_WORDS = 4;
+
+/** L'heure de rapport : 1 h au taux de l'éducateur, pour les coachs seulement (JP, 18 nov. 2026). */
+export const REPORT_HOUR = 1;
+export const REPORT_HOUR_ROLES = ["Entraîneur principal"];
+export const hasReportHour = (role: string | null | undefined) => REPORT_HOUR_ROLES.includes(String(role ?? ""));
 
 /** Nombre de mots d'un texte (un mot = une suite de lettres ou de chiffres ; « l'équipe » compte pour 2). */
 export const countWords = (s: string | null | undefined) => (String(s ?? "").match(/[\p{L}\p{N}]+/gu) ?? []).length;
@@ -268,12 +276,13 @@ export function computeReport(input: {
 export type PayHold = "presence" | "rapport";
 
 export const PAY_HOLD_LABEL: Record<PayHold, string> = {
-  presence: "Présence de l'éducateur pas confirmée",
+  presence: "Présence pas confirmée dans MonClubSportif",
   rapport: "Rapport pas fini (présences, évaluations, sondage du jour ou retour 2 + 2)"
 };
 
-/** Raison pour laquelle les heures d'une assignation ne comptent pas encore, ou null si elles comptent.
- *  `coachId` : depuis le 19 nov. 2026, le retour (2 + 2) de cet éducateur est demandé aussi. */
+/** Raison pour laquelle les heures de terrain d'une assignation ne comptent pas encore, ou null si elles comptent.
+ *  Jusqu'au 18 nov. 2026 : présence confirmée et rapport complet. À partir du 19 nov. : la présence seulement
+ *  (le rapport donne l'heure de rapport des coachs, voir `reportHour`). */
 export function payHold(input: {
   activityDate: string;
   status: string;
@@ -283,9 +292,22 @@ export function payHold(input: {
 }): PayHold | null {
   if (input.activityDate < REPORT_RULE_START || input.status !== "present") return null;
   if (!input.confirmed) return "presence";
+  if (input.activityDate >= REPORT_RULE_V2_START) return null;
   if (input.report && input.report.required && !input.report.complete) return "rapport";
-  if (input.report?.required && input.report.strict && input.coachId && !(input.report.debriefDone ?? []).includes(input.coachId)) return "rapport";
   return null;
+}
+
+/** L'heure de rapport d'un coach pour une pratique : due (il y a droit) et gagnée (rapport fini et son retour 2 + 2). */
+export function reportHour(input: {
+  activityDate: string;
+  status: string;
+  role: string | null | undefined;
+  coachId: string;
+  report: (Pick<ReportStatus, "required" | "complete"> & Partial<Pick<ReportStatus, "strict" | "debriefDone">>) | null;
+}): { due: boolean; earned: boolean } {
+  const due = input.activityDate >= REPORT_RULE_V2_START && input.status === "present" && hasReportHour(input.role) && Boolean(input.report?.required);
+  const earned = due && Boolean(input.report?.complete) && (input.report?.debriefDone ?? []).includes(input.coachId);
+  return { due, earned };
 }
 
 /** Ce qui manque au rapport d'un éducateur, en mots simples (portail, Ma paie, admin). */

@@ -105,6 +105,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
   return (
     <CoachActiviteDetail
       coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"}
+      coachRole={coach?.role ?? null}
       coachId={coachId}
       activity={entry.activity}
       otherCoaches={entry.otherCoaches}

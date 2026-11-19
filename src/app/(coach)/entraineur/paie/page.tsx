@@ -41,7 +41,7 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
           <p className="coach-sub">
             {hrs(s.hoursEarned)} comptées ({money(s.earnedCents)})
             {s.deductions.length ? ` · retenues : ${s.deductions.map((d) => `${d.label} ${money(d.cents)}`).join(", ")}` : " · aucune retenue"}
-            {s.heldCents ? ` · ${money(s.heldCents)} retenus tant que la présence ou le rapport n'est pas fait` : ""}
+            {s.heldCents ? ` · ${money(s.heldCents)} en attente (présence ou rapport à faire)` : ""}
             {s.plannedCents ? ` · ${money(s.plannedCents)} prévus d'ici la fin de la période` : ""}.
             {s.heldCents || s.plannedCents ? ` Si tout est fait : ${money(s.netIfAllCents)}.` : ""}
           </p>
@@ -72,18 +72,21 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
             {offset ? <Link href={offset > 1 ? `/entraineur/paie?avant=${offset - 1}` : "/entraineur/paie"}>Période suivante →</Link> : null}
           </p>
           <div className="coach-card" style={{ marginTop: 16 }}>
-            <p className="coach-card__label">Quand une pratique est-elle payée ?</p>
-            <p className="coach-sub" style={{ marginTop: 0 }}>
-              Les heures d&apos;une pratique (le temps du rapport compris) restent « Retenu » tant que ces 5 choses ne sont pas faites. Dès que la dernière est faite, elles passent toutes seules à « Compte » dans ta paie.
-            </p>
-            <ol style={{ margin: "8px 0 0", paddingLeft: 20, display: "grid", gap: 6, color: "var(--adm-text)" }}>
-              <li><strong>Ta présence</strong> : mets-toi « présent » dans MonClubSportif (c&apos;est ton punch).</li>
-              <li><strong>Les présences des joueuses</strong> : chaque fille présente ou absente.</li>
-              <li><strong>L&apos;évaluation de chaque fille présente</strong> : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10, et une observation d&apos;au moins {NOTE_MIN_WORDS} mots (comment elle était aujourd&apos;hui, comment elle progresse, un exemple vu à la pratique). En bas de {NOTE_MIN_WORDS} mots, l&apos;observation n&apos;est pas acceptée.</li>
-              <li><strong>Le sondage du jour</strong> : plaisir et fatigue de chaque fille présente (sur la borne ou dans ton portail).</li>
-              <li><strong>Ton retour</strong> : 2 choses qui ont bien marché et 2 choses à améliorer dans la pratique, {DEBRIEF_POINT_MIN_WORDS} mots ou plus chacune.</li>
+            <p className="coach-card__label">Comment une pratique est payée</p>
+            <ol style={{ margin: "4px 0 0", paddingLeft: 20, display: "grid", gap: 8, color: "var(--adm-text)" }}>
+              <li><strong>Tes heures de terrain</strong> : payées dès que tu es « présent » dans MonClubSportif (c&apos;est ton punch).</li>
+              <li>
+                <strong>L&apos;heure de rapport (coachs seulement) : 1 heure de plus</strong>, ajoutée toute seule à ta paie quand ton rapport est fini. Si le rapport n&apos;est pas fini, tu es payé pour tes heures de terrain seulement. Le rapport fini, c&apos;est :
+                <ul style={{ margin: "6px 0 0", paddingLeft: 18, display: "grid", gap: 4 }}>
+                  <li>les présences de toutes les joueuses ;</li>
+                  <li>l&apos;évaluation de chaque fille présente : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10, et une observation d&apos;au moins {NOTE_MIN_WORDS} mots (comment elle était aujourd&apos;hui, comment elle progresse, un exemple vu à la pratique) ; en bas de {NOTE_MIN_WORDS} mots, elle n&apos;est pas acceptée ;</li>
+                  <li>le sondage du jour de chaque fille présente (plaisir et fatigue) ;</li>
+                  <li>ton retour : 2 choses qui ont bien marché et 2 à améliorer, {DEBRIEF_POINT_MIN_WORDS} mots ou plus chacune.</li>
+                </ul>
+              </li>
+              <li><strong>Assistants</strong> : payés pour leurs heures de terrain ; ils aident au rapport, l&apos;heure de rapport va aux coachs.</li>
             </ol>
-            <p className="coach-muted" style={{ fontSize: "0.8rem", margin: "10px 0 0" }}>Pour les pratiques à partir du 19 novembre 2026. Ce qui manque est écrit à côté de chaque pratique retenue et dans l&apos;étape « Après » de la pratique.</p>
+            <p className="coach-muted" style={{ fontSize: "0.8rem", margin: "10px 0 0" }}>Pour les pratiques à partir du 19 novembre 2026. Ce qui manque est écrit à côté de chaque heure retenue et dans l&apos;étape « Après » de la pratique.</p>
           </div>
         </div>
       </div>

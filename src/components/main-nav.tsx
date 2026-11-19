@@ -73,7 +73,7 @@ export function MainNav() {
               href={item.href}
               className={`text-sm font-bold uppercase tracking-[0.16em] transition ${
                 active ? "text-accent" : "text-white/80 hover:text-white"
-              }`}
+              }${item.href === "/entraineur" ? " hidden xl:inline" : ""}`}
             >
               {item.label}
             </Link>

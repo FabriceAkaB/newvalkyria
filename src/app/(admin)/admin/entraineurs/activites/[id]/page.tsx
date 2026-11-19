@@ -45,6 +45,14 @@ export default async function AdminCoachActiviteDetailPage({ params }: { params:
 
   return (
     <>
+    {!isMatch ? (
+      <div className="admin-content" style={{ paddingBottom: 0 }}>
+        <div className="admin-stat-card" style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+          <p style={{ margin: 0, color: "var(--adm-text)" }}>Tu étais coach à cette pratique ? Remplis ton rapport (évaluations des filles, sondage, retour 2 + 2) dans l&apos;espace coach.</p>
+          <a href={`/api/admin/coach-portal?activite=${id}`} className="admin-btn-primary" style={{ textDecoration: "none" }}>Remplir mon rapport de coach</a>
+        </div>
+      </div>
+    ) : null}
     <AdminCoachActiviteDetail
       practiceReads={practiceReads}
       decks={decks}

@@ -357,9 +357,9 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
                     <option value="inactive">Inactif</option>
                   </select>
                 </ProfileField>
-                <ProfileField label="Poste">
+                <ProfileField label="Statut">
                   <select className="admin-input" value={coach.role} onChange={(e) => patch({ role: e.target.value }, { role: e.target.value })}>
-                    {COACH_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                    {COACH_ROLES.map((r) => <option key={r} value={r}>{r === "Entraîneur principal" ? "Coach (1 h de rapport payée par pratique)" : r === "Assistant" ? "Assistant (heures de terrain seulement)" : r}</option>)}
                   </select>
                 </ProfileField>
                 <ProfileField label="Taux horaire par défaut $">

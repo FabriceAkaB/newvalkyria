@@ -27,7 +27,7 @@ import type { ChampionPost } from "@/lib/player-points-repo";
 import { blockKey, practiceReadStatus, type ReadItem } from "@/lib/practice-read";
 import { themeForGroup } from "@/lib/practice-teams-core";
 import { isAnswered, type SurveyAnswer } from "@/lib/practice-survey";
-import { countWords, isQuickEvaluationComplete, NOTE_MIN_WORDS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START, REPORT_RULE_V2_START } from "@/lib/coach-report";
+import { countWords, hasReportHour, isQuickEvaluationComplete, NOTE_MIN_WORDS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START, REPORT_RULE_V2_START } from "@/lib/coach-report";
 import type { AssignmentStatus, CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
 import type { MatchConvocation, MatchDetails, MatchLineupSlot, MatchPlayerEvaluation, MatchRosterPlayer, PlaytimeSegment } from "@/lib/match-repo";
@@ -43,6 +43,8 @@ interface MyPresence {
 
 interface Props {
   coachName: string;
+  /** Statut : « Entraîneur principal » (coach, heure de rapport) ou « Assistant ». */
+  coachRole?: string | null;
   coachId: string;
   activity: CoachActivity;
   otherCoaches: { id: string; first_name: string; last_name: string }[];
@@ -747,6 +749,7 @@ function MyPresenceCard({ activity, initial, onChange }: { activity: CoachActivi
 
 export function CoachActiviteDetail({
   coachName,
+  coachRole = null,
   coachId,
   activity,
   otherCoaches,
@@ -850,10 +853,12 @@ export function CoachActiviteDetail({
   const strict = activityDay >= REPORT_RULE_V2_START;
   const surveyDone = participants.length > 0 && routineDone === participants.length;
   const reportChecks = reportNeeded
-    ? [marked === roster.length, participants.length > 0 && evaluated === participants.length, ...(strict ? [surveyDone, debriefDone] : [])]
+    ? [marked === roster.length, participants.length > 0 && evaluated === participants.length, ...(strict ? [surveyDone, ...(hasReportHour(coachRole) ? [debriefDone] : [])] : [])]
     : [];
   const reportComplete = !reportNeeded || reportChecks.every(Boolean);
-  const hoursCount = presence.confirmed && (reportComplete || !ruleApplies);
+  // Depuis le 19 nov. 2026 : terrain payé dès la présence ; le coach gagne 1 h de rapport quand tout est fait.
+  const isCoach = hasReportHour(coachRole);
+  const hoursCount = presence.confirmed && (reportComplete || !ruleApplies || (strict && !isCoach));
   const afterDone = [presence.confirmed, ...reportChecks].filter(Boolean).length;
   const afterTotal = 1 + reportChecks.length;
 
@@ -1000,7 +1005,7 @@ export function CoachActiviteDetail({
                 </div>
               )}
               <div className="coach-card" style={{ marginBottom: 16 }}>
-                <p className="coach-card__label">Ton rapport</p>
+                <p className="coach-card__label">{strict && isCoach && reportNeeded ? "Ton rapport · 1 heure payée en plus quand il est fini" : "Ton rapport"}</p>
                 <ul className="coach-checklist">
                   {!guest && <li data-done={String(presence.confirmed)}>Ma présence (mets-toi « présent » dans MonClubSportif)</li>}
                   {reportNeeded && <li data-done={String(marked === roster.length)}>Présences des joueuses · {marked}/{roster.length}</li>}
@@ -1010,15 +1015,21 @@ export function CoachActiviteDetail({
                     </li>
                   )}
                   {reportNeeded && <li data-done={String(surveyDone)}>Sondage du jour de chaque fille · {routineDone}/{participants.length}</li>}
-                  {reportNeeded && strict && <li data-done={String(debriefDone)}>Mon retour : 2 choses qui ont bien marché, 2 à améliorer</li>}
+                  {reportNeeded && strict && isCoach && <li data-done={String(debriefDone)}>Mon retour : 2 choses qui ont bien marché, 2 à améliorer</li>}
                 </ul>
                 <p className="coach-sub" style={{ marginTop: 12, color: hoursCount ? "var(--adm-good)" : undefined }}>
                   {guest
                     ? "Accès d'équipe : tu n'es pas assignée à cette pratique dans le site. Ta présence et tes heures arrivent de MonClubSportif."
+                    : strict && reportNeeded
+                      ? isCoach
+                        ? presence.confirmed && reportComplete
+                          ? "Rapport fini : ton heure de rapport (1 h) est ajoutée à ta paie, en plus de tes heures de terrain."
+                          : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Ton heure de rapport (1 h de plus) s'ajoute toute seule à ta paie quand chaque case est cochée ; sinon, tu es payé pour tes heures de terrain seulement."
+                        : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Comme assistant, tu aides au rapport (présences, sondage, évaluations) ; l'heure de rapport va aux coachs."
                     : hoursCount
-                    ? "Rapport complet : les heures de cette pratique (rapport compris) sont ajoutées à ta paie."
+                    ? "Rapport complet : tes heures comptent pour la paie."
                     : ruleApplies
-                      ? "Les heures de cette pratique (rapport compris) ne sont pas payées tant que chaque case n'est pas cochée. Dès que tout est fait, elles s'ajoutent toutes seules à ta paie (Ma paie)."
+                      ? "Tes heures comptent pour la paie quand ta présence est confirmée et que les présences et les évaluations sont faites."
                       : "Confirme ta présence pour que tes heures comptent."}
                 </p>
               </div>
@@ -1084,7 +1095,7 @@ export function CoachActiviteDetail({
 
               {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
                 <div style={{ marginBottom: 16 }}>
-                  <CoachDebriefCard activityId={activity.id} onStatus={setDebriefDone} />
+                  <CoachDebriefCard activityId={activity.id} onStatus={setDebriefDone} required={isCoach && strict} />
                 </div>
               ) : null}
 

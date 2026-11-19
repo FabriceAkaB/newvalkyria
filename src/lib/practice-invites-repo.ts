@@ -27,10 +27,16 @@ const frTime = (t: string) => t.slice(0, 5).replace(":", " h ");
 
 async function getSetting(key: string): Promise<unknown> {
   const { data } = await db().from("app_settings").select("value").eq("club_id", CLUB_ID).eq("key", key).maybeSingle();
-  return data?.value ?? null;
+  // La colonne est du texte : le réglage y est gardé en JSON.
+  if (typeof data?.value !== "string") return data?.value ?? null;
+  try {
+    return JSON.parse(data.value);
+  } catch {
+    return null;
+  }
 }
 async function setSetting(key: string, value: unknown): Promise<void> {
-  const { error } = await db().from("app_settings").upsert({ club_id: CLUB_ID, key, value, updated_at: new Date().toISOString() }, { onConflict: "club_id,key" });
+  const { error } = await db().from("app_settings").upsert({ club_id: CLUB_ID, key, value: JSON.stringify(value), updated_at: new Date().toISOString() }, { onConflict: "club_id,key" });
   if (error) throw new Error(error.message);
 }
 

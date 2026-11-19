@@ -53,7 +53,7 @@ function useDebriefs(activityId: string, onLoad?: (d: Loaded) => void) {
 
 const fr = (iso?: string) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }) : "");
 
-export function CoachDebriefCard({ activityId, onStatus }: { activityId: string; onStatus?: (complete: boolean) => void }) {
+export function CoachDebriefCard({ activityId, onStatus, required = true }: { activityId: string; onStatus?: (complete: boolean) => void; required?: boolean }) {
   const [values, setValues] = useState<Values>({ wentWell: ["", ""], toImprove: ["", ""], nextTime: "" });
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const data = useDebriefs(activityId, (d) => {
@@ -87,7 +87,7 @@ export function CoachDebriefCard({ activityId, onStatus }: { activityId: string;
     <div className="coach-card" style={{ marginTop: 16 }}>
       <p className="coach-card__label">Retour sur la pratique · {Math.min(okPoints, 4)}/4</p>
       <p className="coach-sub" style={{ marginTop: 0 }}>
-        Obligatoire pour que tes heures comptent : 2 choses qui ont bien marché et 2 à améliorer, au moins {DEBRIEF_POINT_MIN_WORDS} mots chacune. Ton retour revient au début de la prochaine pratique de ce groupe, et JP le lit.
+        {required ? "Obligatoire pour ton heure de rapport : " : ""}2 choses qui ont bien marché et 2 à améliorer, au moins {DEBRIEF_POINT_MIN_WORDS} mots chacune. Ton retour revient au début de la prochaine pratique de ce groupe, et JP le lit.
       </p>
       <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
         {POINTS.map((f) => (
@@ -123,7 +123,7 @@ export function CoachDebriefCard({ activityId, onStatus }: { activityId: string;
         </button>
         {state === "saved" ? (
           <p className={complete ? "coach-ok" : "coach-sub"} style={{ margin: 0 }}>
-            {complete ? "✓ Retour complet. Il reviendra avant la prochaine pratique de ce groupe." : `Enregistré, mais il manque ${4 - Math.min(okPoints, 4)} point${4 - okPoints > 1 ? "s" : ""} pour que tes heures comptent.`}
+            {complete ? "✓ Retour complet. Il reviendra avant la prochaine pratique de ce groupe." : `Enregistré, mais il manque ${4 - Math.min(okPoints, 4)} point${4 - okPoints > 1 ? "s" : ""}${required ? " pour ton heure de rapport" : ""}.`}
           </p>
         ) : null}
         {state === "error" ? <p className="coach-error" role="alert">Pas enregistré. Réessaie.</p> : null}

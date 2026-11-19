@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { activityEndMs, checkNote, computeReport, countWords, debriefPoints, feedbackByWeek, isDebriefComplete, isQuickEvaluationComplete, noteSimilarity, payHold, reportMissing } from "@/lib/coach-report";
+import { activityEndMs, checkNote, computeReport, countWords, debriefPoints, feedbackByWeek, isDebriefComplete, isQuickEvaluationComplete, noteSimilarity, payHold, reportHour, reportMissing } from "@/lib/coach-report";
 
 const fullRatings = { "Ball mastery": 4, Prestation: 3, Attitude: 5 };
 
@@ -204,19 +204,25 @@ describe("règle du rapport complet du 19 nov. 2026", () => {
     expect(isDebriefComplete({ wentWell: "Les transitions étaient rapides\nMia a bien guidé son équipe", toImprove: "Trop d'attente en file au rondo\nLe montage pas prêt à l'arrivée" })).toBe(true);
   });
 
-  it("retient les heures sans sondage du jour ou sans retour 2 + 2 de cet éducateur", () => {
+  it("paie le terrain dès la présence ; l'heure de rapport des coachs seulement quand le rapport est fini", () => {
     const activity = { activity_type: "Pratique", activity_date: "2026-11-20" };
     const evaluations = [{ registration_id: "a", ratings: fullRatings, comment: long }];
     const noSurvey = computeReport({ activity, roster, attendance: [{ registration_id: "a", status: "present" }], evaluations });
     expect(noSurvey.complete).toBe(false);
     expect(reportMissing(noSurvey, "c1")).toContain("1 fille sans sondage du jour");
+    // Le terrain est payé quand même.
+    expect(payHold({ activityDate: "2026-11-20", status: "present", confirmed: true, report: noSurvey, coachId: "c1" })).toBeNull();
+    expect(payHold({ activityDate: "2026-11-20", status: "present", confirmed: false, report: noSurvey, coachId: "c1" })).toBe("presence");
+    expect(reportHour({ activityDate: "2026-11-20", status: "present", role: "Entraîneur principal", coachId: "c1", report: noSurvey })).toEqual({ due: true, earned: false });
 
     const debriefs = [{ coachId: "c1", wentWell: "Les transitions étaient rapides\nMia a bien guidé son équipe", toImprove: "Trop d'attente en file au rondo\nLe montage pas prêt à l'arrivée" }];
     const r = computeReport({ activity, roster, attendance, evaluations, debriefs });
     expect(r.complete).toBe(true);
-    expect(payHold({ activityDate: "2026-11-20", status: "present", confirmed: true, report: r, coachId: "c1" })).toBeNull();
-    expect(payHold({ activityDate: "2026-11-20", status: "present", confirmed: true, report: r, coachId: "c2" })).toBe("rapport");
+    expect(reportHour({ activityDate: "2026-11-20", status: "present", role: "Entraîneur principal", coachId: "c1", report: r })).toEqual({ due: true, earned: true });
+    expect(reportHour({ activityDate: "2026-11-20", status: "present", role: "Entraîneur principal", coachId: "c2", report: r })).toEqual({ due: true, earned: false });
     expect(reportMissing(r, "c2")).toEqual(["ton retour : 2 choses qui ont bien marché et 2 à améliorer"]);
+    // L'assistant n'a pas d'heure de rapport.
+    expect(reportHour({ activityDate: "2026-11-20", status: "present", role: "Assistant", coachId: "c1", report: r })).toEqual({ due: false, earned: false });
   });
 
   it("garde la règle d'avant pour les pratiques jusqu'au 18 nov.", () => {

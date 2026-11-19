@@ -6,7 +6,8 @@ export const navItems = [
   { href: "/equipe", label: "À propos" },
   { href: "/boutique", label: "Boutique" },
   { href: "/inscription", label: "Inscription" },
-  { href: "/compte", label: "Connexion" }
+  { href: "/compte", label: "Connexion" },
+  { href: "/entraineur", label: "Espace coach" }
 ];
 
 export const hero = {

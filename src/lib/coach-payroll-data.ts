@@ -1,6 +1,6 @@
 import { computeAssignment } from "@/lib/coach-payroll";
 import { getActivityReports } from "@/lib/coach-portal-repo";
-import { activityEndMs, payHold, REPORT_RULE_START, reportMissing, type PayHold } from "@/lib/coach-report";
+import { activityEndMs, hasReportHour, payHold, REPORT_HOUR, REPORT_RULE_START, reportHour, reportMissing, type PayHold } from "@/lib/coach-report";
 import { getAllAssignments, getAllCoachTypeRates, getCoaches, type AssignmentStatus, type CoachActivity, type CoachStatus } from "@/lib/coaches-repo";
 import { formatCAD } from "@/lib/season-2027";
 
@@ -33,6 +33,13 @@ export interface PayrollRow {
   reportMissing: { attendance: number; evaluations: number; feedback: number } | null;
   /** Ce qui manque encore, en mots simples, pour cet éducateur (son retour 2 + 2 compris). */
   missingDetail: string[];
+  /** Heures de terrain (sans l'heure de rapport). */
+  fieldHours: number;
+  fieldPayCents: number;
+  /** Heure de rapport des coachs (depuis le 19 nov. 2026) : due, gagnée (rapport fini), montant. */
+  reportHourDue: boolean;
+  reportHourEarned: boolean;
+  reportHourCents: number;
   reminderSentAt: string | null;
   coachHasEmail: boolean;
 }
@@ -119,6 +126,10 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
     const report = reports.get(a.activity_id) ?? null;
     // Une activité déjà payée reste payée ; sinon les heures attendent la présence confirmée et le rapport complet.
     const hold = a.paid ? null : payHold({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, confirmed: a.confirmed, report, coachId: a.coach_id });
+    // Heure de rapport des coachs (depuis le 19 nov. 2026) : 1 h de plus, gagnée quand le rapport est fini.
+    const rh = a.paid ? { due: false, earned: false } : reportHour({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, role: a.coach.role, coachId: a.coach_id, report });
+    const rhCents = Math.round(REPORT_HOUR * computed.rateCents);
+    const rhCounts = rh.earned && !hold;
 
     return {
       assignmentId: a.id,
@@ -130,21 +141,26 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
       activityType: a.activity.activity_type,
       activityCategory: a.activity.category,
       attendance: a.status,
-      hours: hold ? 0 : computed.hours,
+      hours: (hold ? 0 : computed.hours) + (rhCounts ? REPORT_HOUR : 0),
       rateCents: computed.rateCents,
-      payCents: hold ? 0 : computed.payCents,
+      payCents: (hold ? 0 : computed.payCents) + (rhCounts ? rhCents : 0),
+      fieldHours: computed.hours,
+      fieldPayCents: computed.payCents,
+      reportHourDue: rh.due,
+      reportHourEarned: rh.earned,
+      reportHourCents: rh.due ? rhCents : 0,
       paid: a.paid,
       confirmed: a.confirmed,
       hold,
-      heldHours: hold ? computed.hours : 0,
-      heldPayCents: hold ? computed.payCents : 0,
+      heldHours: (hold ? computed.hours : 0) + (rh.due && !rhCounts ? REPORT_HOUR : 0),
+      heldPayCents: (hold ? computed.payCents : 0) + (rh.due && !rhCounts ? rhCents : 0),
       activityLabel: a.activity.title || a.activity.category || a.activity.activity_type,
       activityStart: String(a.activity.start_time).slice(0, 5),
       activityEnd: String(a.activity.end_time).slice(0, 5),
       reportMissing: report?.required
         ? { attendance: report.attendanceMissing.length, evaluations: report.evaluationsMissing.length, feedback: report.feedbackMissing.length }
         : null,
-      missingDetail: reportMissing(report, a.coach_id),
+      missingDetail: reportMissing(report, hasReportHour(a.coach.role) ? a.coach_id : undefined),
       reminderSentAt: a.reminder_sent_at ?? null,
       coachHasEmail: Boolean(a.coach.email)
     };
