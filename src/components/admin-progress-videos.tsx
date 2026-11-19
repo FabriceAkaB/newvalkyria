@@ -5,8 +5,8 @@ import { useState } from "react";
 
 import { checkpointLabel, type Checkpoint } from "@/lib/progress-videos";
 
-const post = async (body: Record<string, unknown>) => {
-  const res = await fetch("/api/admin/coaching/progression-video", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => null);
+const post = async (body: Record<string, unknown>, endpoint = "/api/admin/coaching/progression-video") => {
+  const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => null);
   const json = res ? await res.json().catch(() => null) : null;
   return { ok: !!res?.ok, json };
 };
@@ -31,7 +31,7 @@ function putFile(url: string, file: File, onProgress: (p: number) => void): Prom
 interface Video { id: string; checkpoint: Checkpoint; title: string; note: string | null }
 
 /** Une case « moment de la saison » d'une fille : ses vidéos (voir, retirer) et le dépôt d'une nouvelle. */
-export function ProgressCell({ registrationId, name, checkpoint, videos, current }: { registrationId: string; name: string; checkpoint: Checkpoint; videos: Video[]; current: boolean }) {
+export function ProgressCell({ registrationId, name, checkpoint, videos, current, endpoint }: { registrationId: string; name: string; checkpoint: Checkpoint; videos: Video[]; current: boolean; endpoint?: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("Ball mastery");
@@ -43,7 +43,7 @@ export function ProgressCell({ registrationId, name, checkpoint, videos, current
   const upload = async (file: File) => {
     setError(null);
     setBusy("Préparation…");
-    const start = await post({ action: "depot", registrationId, fileName: file.name, contentType: file.type || "video/mp4" });
+    const start = await post({ action: "depot", registrationId, fileName: file.name, contentType: file.type || "video/mp4" }, endpoint);
     if (!start.ok) {
       setBusy(null);
       return setError(start.json?.error ?? "Dépôt impossible.");
@@ -54,7 +54,7 @@ export function ProgressCell({ registrationId, name, checkpoint, videos, current
       setBusy(null);
       return setError(e instanceof Error ? e.message : "Envoi impossible.");
     }
-    const done = await post({ action: "relier", registrationId, checkpoint, title, note, path: start.json.path, fileName: file.name });
+    const done = await post({ action: "relier", registrationId, checkpoint, title, note, path: start.json.path, fileName: file.name }, endpoint);
     setBusy(null);
     if (!done.ok) return setError(done.json?.error ?? "La vidéo n'a pas été reliée.");
     setOpen(false);
@@ -67,10 +67,10 @@ export function ProgressCell({ registrationId, name, checkpoint, videos, current
       <div style={{ display: "grid", gap: 4 }}>
         {videos.map((v) => (
           <div key={v.id} style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-            <button type="button" className="admin-btn-ghost" style={{ padding: "2px 8px", fontSize: "0.8rem" }} onClick={async () => { const r = await post({ action: "voir", id: v.id }); setPreview(r.json?.url ?? null); }}>
+            <button type="button" className="admin-btn-ghost" style={{ padding: "2px 8px", fontSize: "0.8rem" }} onClick={async () => { const r = await post({ action: "voir", id: v.id }, endpoint); setPreview(r.json?.url ?? null); }}>
               ▶ {v.title}
             </button>
-            <button type="button" aria-label={`Retirer la vidéo ${v.title} de ${name}`} className="admin-btn-ghost" style={{ padding: "2px 6px", fontSize: "0.75rem" }} onClick={async () => { if (confirm(`Retirer la vidéo « ${v.title} » de ${name} ?`)) { await post({ action: "retirer", id: v.id }); router.refresh(); } }}>
+            <button type="button" aria-label={`Retirer la vidéo ${v.title} de ${name}`} className="admin-btn-ghost" style={{ padding: "2px 6px", fontSize: "0.75rem" }} onClick={async () => { if (confirm(`Retirer la vidéo « ${v.title} » de ${name} ?`)) { await post({ action: "retirer", id: v.id }, endpoint); router.refresh(); } }}>
               ✕
             </button>
           </div>

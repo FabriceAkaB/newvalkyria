@@ -8,9 +8,9 @@ import { getCoaches } from "@/lib/coaches-repo";
 import { getAllContracts } from "@/lib/employee-contracts";
 import { listPractices } from "@/lib/practices-repo";
 import { getCoachSatisfaction } from "@/lib/surveys-repo";
-import { DevelopmentPlanEditor, ValidateModule } from "@/components/coach-training";
+import { DevelopmentPlanEditor, ModuleOpenToggle, ValidateModule } from "@/components/coach-training";
 import { TRAINING_MODULES, trainingProgress } from "@/lib/coach-training";
-import { getTraining } from "@/lib/coach-training-repo";
+import { getOpenModules, getTraining } from "@/lib/coach-training-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const metadata = { title: "Suivi des éducateurs — Admin", robots: "noindex" };
@@ -52,7 +52,7 @@ export default async function CoachFollowUpPage() {
     getCoachSatisfaction().catch(() => new Map()),
     (getSupabaseAdminClient() as any).from("coaches").select("id, pro_goals, development_plan")
   ]);
-  const training = await getTraining(coaches.filter((c) => c.status === "active").map((c) => c.id)).catch(() => new Map());
+  const [training, openModules] = await Promise.all([getTraining(coaches.filter((c) => c.status === "active").map((c) => c.id)).catch(() => new Map()), getOpenModules().catch(() => [] as string[])]);
   const recent = rows.filter((r) => String(r.activityDate).slice(0, 10) >= from && String(r.activityDate).slice(0, 10) <= t);
   const active = coaches.filter((c) => c.status === "active");
   const contractFor = (first: string) => contracts.find((k) => norm(k.employee_name).split(/\s+/)[0] === norm(first).split(/\s+/)[0] && k.status !== "cancelled");
@@ -98,8 +98,14 @@ export default async function CoachFollowUpPage() {
                 <thead>
                   <tr>
                     <th>Éducateur</th>
+                    <th>Progression</th>
                     {TRAINING_MODULES.map((m, i) => (
-                      <th key={m.key} title={m.title} style={{ textAlign: "center" }}>{i + 1}</th>
+                      <th key={m.key} title={m.title} style={{ textAlign: "center" }}>
+                        <div style={{ display: "grid", gap: 4, justifyItems: "center" }}>
+                          {i + 1}
+                          <ModuleOpenToggle module={m.key} open={openModules.includes(m.key)} title={m.title} />
+                        </div>
+                      </th>
                     ))}
                     <th style={{ textAlign: "right" }}>Validés</th>
                   </tr>
@@ -110,6 +116,13 @@ export default async function CoachFollowUpPage() {
                     return (
                       <tr key={c.id}>
                         <td>{c.first_name} {c.last_name}{p.certified ? " ✓" : ""}</td>
+                        <td style={{ minWidth: 140 }}>
+                          <div role="progressbar" aria-label={`Formation de ${c.first_name}`} aria-valuemin={0} aria-valuemax={p.total} aria-valuenow={p.validated} style={{ position: "relative", height: 8, borderRadius: 999, background: "var(--adm-surface-3)", overflow: "hidden" }}>
+                            <div style={{ position: "absolute", inset: 0, width: `${(p.read / p.total) * 100}%`, background: "var(--adm-accent-soft)" }} />
+                            <div style={{ position: "absolute", inset: 0, width: `${(p.validated / p.total) * 100}%`, background: "var(--adm-accent-strong)" }} />
+                          </div>
+                          <span style={{ fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{p.read} lus · {p.validated} validés</span>
+                        </td>
                         {p.states.map((s) => (
                           <td key={s.module.key} style={{ textAlign: "center" }}>
                             <ValidateModule coachId={c.id} module={s.module.key} state={s.state} title={s.module.title} />
@@ -123,7 +136,7 @@ export default async function CoachFollowUpPage() {
               </table>
             </div>
             <p className="mda-sub" style={{ padding: "10px 20px 16px", margin: 0 }}>
-              {TRAINING_MODULES.map((m, i) => `${i + 1}. ${m.title}`).join(" · ")}. Touche un rond pour valider un module après avoir observé l&apos;éducateur. Tous validés = prêt à diriger un groupe seul.
+              {TRAINING_MODULES.map((m, i) => `${i + 1}. ${m.title}`).join(" · ")}. « Ouvert / Fermé » rend un module disponible à tous les éducateurs ; un module fermé reste « bientôt disponible » dans leur portail. Touche un rond pour valider un module après avoir observé l&apos;éducateur. La barre : clair = lus, foncé = validés. Tous validés = prêt à diriger un groupe seul.
             </p>
           </section>
 

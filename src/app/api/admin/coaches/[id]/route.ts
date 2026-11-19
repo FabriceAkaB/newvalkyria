@@ -19,6 +19,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     defaultHourlyRateCents?: number;
     hiredOn?: string | null;
     notes?: string | null;
+    isVideographer?: boolean;
   } | null;
 
   if (!body) return jsonError("Paramètres invalides", 400);

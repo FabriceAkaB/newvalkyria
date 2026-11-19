@@ -31,13 +31,15 @@ async function activeSeason(): Promise<{ id: string; starts_on: string; ends_on:
 export interface ProgressBoardRow {
   registrationId: string;
   name: string;
+  /** Photo de nos dossiers (lien signé d'une heure), seulement si demandée. */
+  photoUrl?: string | null;
   group: string;
   checkpoints: Checkpoint[];
   videos: ProgressVideo[];
 }
 
 /** Toutes les filles de la saison (par groupe) et leurs vidéos, pour l'admin. */
-export async function getProgressBoard(): Promise<{ season: { id: string; starts_on: string; ends_on: string } | null; rows: ProgressBoardRow[] }> {
+export async function getProgressBoard(opts: { withPhotos?: boolean } = {}): Promise<{ season: { id: string; starts_on: string; ends_on: string } | null; rows: ProgressBoardRow[] }> {
   const season = await activeSeason();
   if (!season) return { season: null, rows: [] };
   const [{ data: regs }, { data: vids }] = await Promise.all([
@@ -52,6 +54,11 @@ export async function getProgressBoard(): Promise<{ season: { id: string; starts
     videos: ((vids ?? []) as any[]).filter((v) => v.registration_id === r.id).map(map)
   }));
   rows.sort((a, b) => b.group.localeCompare(a.group) || a.name.localeCompare(b.name, "fr"));
+  if (opts.withPhotos) {
+    const { getGirlPhotos } = await import("@/lib/family-photos");
+    const photos = await getGirlPhotos(rows.map((r) => r.registrationId)).catch(() => new Map<string, string>());
+    for (const r of rows) (r as ProgressBoardRow).photoUrl = photos.get(r.registrationId) ?? null;
+  }
   return { season, rows };
 }
 

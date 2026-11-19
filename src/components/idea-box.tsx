@@ -180,7 +180,7 @@ function AdminIdeaCard({ idea }: { idea: AdminIdea }) {
     <div className="mda-card" style={{ margin: 0, display: "grid", gap: 8 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", fontSize: "0.8rem", color: "var(--adm-text-3)" }}>
         <span>
-          {categoryLabel(idea.category)} · {new Date(idea.created_at).toLocaleDateString("fr-CA", { day: "numeric", month: "short" })} · {idea.source === "espace" ? "espace parent" : "site"}
+          {categoryLabel(idea.category)} · {new Date(idea.created_at).toLocaleDateString("fr-CA", { day: "numeric", month: "short" })} · {idea.source === "espace" ? "espace parent" : idea.source === "coach" ? "coach" : "site"}
           {idea.author_name ? ` · ${idea.author_name}` : " · anonyme"}
           {idea.player_name ? ` (${idea.player_name})` : ""}
           {idea.author_email ? ` · ${idea.author_email}` : ""}

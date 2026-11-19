@@ -552,6 +552,15 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     ],
     done: "Les joueuses en difficulté sont repérées à chaque bloc de ball mastery et suivies à la pratique suivante."
   },
+  "P1.4.13": {
+    how: [
+      "Réécoute les formations de Rhéal Dazé ; à chaque idée utile pour nos éducateurs, note le moment (minute) et pourquoi c'est important.",
+      "Garde 3 à 6 extraits courts par sujet (moins de 5 minutes chacun) et relie chacun à un module de la formation (séance, principes, règle du coach…).",
+      "Pour chaque extrait, écris une question simple à laquelle l'éducateur répond après l'avoir regardé : Claude Code monte le module interactif dans « Ma formation ».",
+      "Ouvre le module aux éducateurs dans Suivi des éducateurs (« Ouvert ») et valide-le après les avoir observés."
+    ],
+    done: "Les modules Rhéal Dazé sont ouverts dans « Ma formation » et chaque éducateur les a terminés (barre de progression pleine)."
+  },
   /* ── Stade 3 d'Alex Hormozi : stabiliser (guide Acquisition.com, 17 nov. 2026 ; docs/strategie/acq-stade-3-stabiliser.md) ── */
   "P4.8.15": {
     how: [

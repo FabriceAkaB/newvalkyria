@@ -73,6 +73,11 @@ export default async function CoachDossierPage() {
             </div>
           </div>
 
+          <a href="/api/coach/contrat" target="_blank" rel="noreferrer" className="coach-card" style={{ display: "block", marginTop: 16, textDecoration: "none", color: "inherit" }}>
+            <p className="coach-card__label">Mon contrat</p>
+            <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>Ouvrir mon contrat signé (PDF) →</p>
+            <p className="coach-muted" style={{ margin: "4px 0 0" }}>La copie signée, avec ton NAS masqué. Une question sur ton contrat : écris à JP.</p>
+          </a>
           <a href="/entraineur/formation" className="coach-card" style={{ display: "block", marginTop: 16, textDecoration: "none", color: "inherit" }}>
             <p className="coach-card__label">Ma formation</p>
             <p className="coach-sub" style={{ margin: 0 }}>

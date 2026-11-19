@@ -3,7 +3,7 @@
 import { AdminThemeToggle } from "@/components/admin-theme-toggle";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   coachName: string;
@@ -19,13 +19,23 @@ const LINKS = [
   { href: "/entraineur/videos", label: "Vidéos" },
   { href: "/entraineur/paie", label: "Ma paie" },
   { href: "/entraineur/formation", label: "Ma formation" },
-  { href: "/entraineur/dossier", label: "Mon dossier" }
+  { href: "/entraineur/dossier", label: "Mon dossier" },
+  { href: "/entraineur/idees", label: "Boîte à suggestions" }
 ];
 
 export function CoachTopbar({ coachName }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  // L'espace vidéaste n'apparaît qu'à l'éducateur qui filme les joueuses (case « Vidéaste » de sa fiche).
+  const [videographer, setVideographer] = useState(false);
+  useEffect(() => {
+    fetch("/api/coach/moi")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setVideographer(Boolean(d?.videographer)))
+      .catch(() => null);
+  }, []);
+  const links = videographer ? [...LINKS.slice(0, 7), { href: "/entraineur/videos-joueuses", label: "Vidéos des joueuses" }, ...LINKS.slice(7)] : LINKS;
 
   const handleLogout = async () => {
     await fetch("/api/coach/auth", { method: "DELETE" });
@@ -50,7 +60,7 @@ export function CoachTopbar({ coachName }: Props) {
 
       <nav className="admin-sidebar-nav">
         <div className="admin-sidebar-group">
-          {LINKS.map((link) => {
+          {links.map((link) => {
             const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`) || (link.href === "/entraineur/dashboard" && pathname.startsWith("/entraineur/activites"));
             return (
               <Link key={link.href} href={link.href} data-active={String(isActive)} className="admin-sidebar-link">

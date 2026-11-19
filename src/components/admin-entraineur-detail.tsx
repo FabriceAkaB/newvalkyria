@@ -362,6 +362,12 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
                     {COACH_ROLES.map((r) => <option key={r} value={r}>{r === "Entraîneur principal" ? "Coach (1 h de rapport payée par pratique)" : r === "Assistant" ? "Assistant (heures de terrain seulement)" : r}</option>)}
                   </select>
                 </ProfileField>
+                <ProfileField label="Vidéaste">
+                  <label style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 38 }}>
+                    <input type="checkbox" checked={Boolean(coach.is_videographer)} onChange={(e) => patch({ isVideographer: e.target.checked }, { is_videographer: e.target.checked })} />
+                    Dépose les vidéos de progression des joueuses depuis son portail
+                  </label>
+                </ProfileField>
                 <ProfileField label="Taux horaire par défaut $">
                   <input
                     type="number" min={0} step="0.01" className="admin-input"

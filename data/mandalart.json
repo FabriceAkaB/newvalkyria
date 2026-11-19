@@ -1391,6 +1391,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Voyage international de la relâche 2028 (17 nov. 2026)"
+      },
+      {
+       "code": "P1.4.13",
+       "priority": "star",
+       "level": 2,
+       "title": "Réécouter les formations de Rhéal Dazé et en faire des modules vidéo interactifs de la formation des éducateurs (extraits courts, question après chaque extrait, lien avec la méthode Valkyria), ouverts un à un dans « Ma formation ».",
+       "due": "2027-01-15",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voyage international de la relâche 2028 (17 nov. 2026)"
       }
      ]
     },

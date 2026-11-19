@@ -1517,6 +1517,7 @@ un comité de parents ; groupes d'environ 20 joueuses ; c'est aussi un levier de
 
 - [ ] `P1.4.11` ⭐ N1 — Standard du coach en pratique : pratique lue la veille, minuteur lancé (quand c'est fini, on passe au suivant), 3 interventions au plus par exercice puis on laisse jouer, chaque coach corrige seulement le thème, tenue Valkyria complète (jamais en noir). — 25 nov. 2026 · JP + coachs
 - [ ] `P1.4.12` ⭐ N1 — Ball mastery : chaque éducateur a ses joueuses, les plus faibles d'abord ; des séquences plus difficiles pour repérer celles qui bloquent, qui sont alors encadrées de près ; pas de discussion entre coachs pendant le bloc. — 2 déc. 2026 · Coachs + Claude Code
+- [ ] `P1.4.13` ⭐ N2 — Réécouter les formations de Rhéal Dazé et en faire des modules vidéo interactifs de la formation des éducateurs (extraits courts, question après chaque extrait, lien avec la méthode Valkyria), ouverts un à un dans « Ma formation ». — 15 janv. 2027 · JP + Claude Code
 
 ### Indicateurs ajoutés
 

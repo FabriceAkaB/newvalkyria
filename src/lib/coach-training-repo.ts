@@ -36,3 +36,28 @@ export async function setModuleValidated(coachId: string, module: string, on: bo
     .upsert({ club_id: CLUB_ID, coach_id: coachId, module, read_at: cur?.read_at ?? now, validated_at: on ? now : null, validation_note: note, updated_at: now }, { onConflict: "coach_id,module" });
   if (error) throw new Error(error.message);
 }
+
+/* ── Modules ouverts (JP, 19 nov. 2026) : un module reste « bientôt disponible » tant que JP ne l'a pas ouvert. ── */
+
+const OPEN_KEY = "formation_modules_ouverts";
+
+export async function getOpenModules(): Promise<string[]> {
+  const { data } = await db().from("app_settings").select("value").eq("club_id", CLUB_ID).eq("key", OPEN_KEY).maybeSingle();
+  try {
+    const v = JSON.parse(String(data?.value ?? "[]"));
+    return Array.isArray(v) ? v.filter((x: unknown): x is string => typeof x === "string" && known(x)) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function setModuleOpen(module: string, on: boolean): Promise<string[]> {
+  if (!known(module)) throw new Error("Module inconnu");
+  const cur = new Set(await getOpenModules());
+  if (on) cur.add(module);
+  else cur.delete(module);
+  const next = TRAINING_MODULES.map((m) => m.key).filter((k) => cur.has(k));
+  const { error } = await db().from("app_settings").upsert({ club_id: CLUB_ID, key: OPEN_KEY, value: JSON.stringify(next), updated_at: new Date().toISOString() }, { onConflict: "club_id,key" });
+  if (error) throw new Error(error.message);
+  return next;
+}

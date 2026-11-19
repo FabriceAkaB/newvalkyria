@@ -9,7 +9,7 @@ const COLS = "id, source, parent_user_id, author_name, author_email, player_name
 
 export interface Idea {
   id: string;
-  source: "site" | "espace";
+  source: "site" | "espace" | "coach";
   parent_user_id: string | null;
   author_name: string | null;
   author_email: string | null;
@@ -25,7 +25,7 @@ export interface Idea {
   created_at: string;
 }
 
-export async function addIdea(input: IdeaInput & { source: "site" | "espace"; parentUserId?: string | null }): Promise<void> {
+export async function addIdea(input: IdeaInput & { source: "site" | "espace" | "coach"; parentUserId?: string | null }): Promise<void> {
   const { error } = await db().from("idea_box").insert({
     club_id: CLUB_ID,
     source: input.source,
@@ -49,7 +49,7 @@ export async function sendIdeasDigest(to: string, cc?: string): Promise<number> 
   if (!ideas.length) return 0;
   const { getResendClient } = await import("@/lib/resend");
   const items = ideas
-    .map((i) => `<li style="margin-bottom:10px"><strong>${categoryLabel(i.category)}</strong> · ${escapeHtml(i.author_name ?? "Anonyme")}${i.player_name ? ` (${escapeHtml(i.player_name)})` : ""} · ${i.source === "espace" ? "espace parent" : "site"}<br/>${escapeHtml(i.message)}</li>`)
+    .map((i) => `<li style="margin-bottom:10px"><strong>${categoryLabel(i.category)}</strong> · ${escapeHtml(i.author_name ?? "Anonyme")}${i.player_name ? ` (${escapeHtml(i.player_name)})` : ""} · ${i.source === "espace" ? "espace parent" : i.source === "coach" ? "coach" : "site"}<br/>${escapeHtml(i.message)}</li>`)
     .join("");
   const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1d1730;line-height:1.6;max-width:640px"><p>Bonjour,</p><p>${ideas.length} idée${ideas.length > 1 ? "s" : ""} reçue${ideas.length > 1 ? "s" : ""} dans la boîte à idées cette semaine :</p><ul>${items}</ul><p>Répondre à chacune : <a href="https://www.newvalkyria.com/admin/idees">https://www.newvalkyria.com/admin/idees</a></p></div>`;
   await getResendClient().emails.send({ to, ...(cc ? { cc } : {}), subject: `💡 Boîte à idées : ${ideas.length} idée${ideas.length > 1 ? "s" : ""} cette semaine`, html } as never);
@@ -104,4 +104,11 @@ export async function updateIdea(id: string, patch: { status?: IdeaStatus; respo
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/** Les idées envoyées par un éducateur depuis son portail (retrouvées par son courriel). */
+export async function listIdeasForCoach(email: string): Promise<Idea[]> {
+  const { data, error } = await db().from("idea_box").select(COLS).eq("club_id", CLUB_ID).eq("source", "coach").eq("author_email", email.toLowerCase()).order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Idea[];
 }

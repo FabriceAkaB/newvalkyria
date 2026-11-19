@@ -13,7 +13,7 @@ const STATE: Record<ModuleState, { label: string; tone: string }> = {
 };
 
 /** Un module de « Ma formation » (portail des éducateurs). */
-export function TrainingModuleCard({ module, state, index }: { module: TrainingModule; state: ModuleState; index: number }) {
+export function TrainingModuleCard({ module, state, index, open = true }: { module: TrainingModule; state: ModuleState; index: number; open?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const read = async () => {
@@ -23,6 +23,18 @@ export function TrainingModuleCard({ module, state, index }: { module: TrainingM
     if (!res?.ok) return alert("Pas enregistré : réessaie.");
     router.refresh();
   };
+  if (!open) {
+    return (
+      <div className="coach-card" style={{ display: "grid", gap: 6, opacity: 0.7 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
+          <p className="coach-card__label" style={{ margin: 0 }}>Module {index + 1}</p>
+          <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--adm-text-3)" }}>Bientôt disponible</span>
+        </div>
+        <h2 className="coach-h2" style={{ margin: 0 }}>{module.title}</h2>
+        <p className="coach-sub" style={{ margin: 0 }}>{module.why}</p>
+      </div>
+    );
+  }
   return (
     <div className="coach-card" style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
@@ -89,5 +101,23 @@ export function DevelopmentPlanEditor({ coachId, name, initial }: { coachId: str
         <span style={{ fontSize: "0.8rem", color: state === "error" ? "var(--adm-bad)" : "var(--adm-good)" }}>{state === "saved" ? "Enregistré : visible dans son dossier" : state === "error" ? "Pas enregistré" : ""}</span>
       </span>
     </div>
+  );
+}
+
+/** JP ouvre ou ferme un module pour tous les éducateurs (admin, Suivi des éducateurs). */
+export function ModuleOpenToggle({ module, open, title }: { module: string; open: boolean; title: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const toggle = async () => {
+    setBusy(true);
+    const res = await fetch("/api/admin/entraineurs/formation", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ module, open: !open }) }).catch(() => null);
+    setBusy(false);
+    if (!res?.ok) return alert("Pas enregistré : réessaie.");
+    router.refresh();
+  };
+  return (
+    <button type="button" className={open ? "admin-btn-primary" : "admin-btn-ghost"} style={{ padding: "2px 8px", fontSize: "0.72rem" }} disabled={busy} onClick={toggle} title={open ? `Fermer « ${title} »` : `Ouvrir « ${title} » à tous les éducateurs`}>
+      {open ? "Ouvert" : "Fermé"}
+    </button>
   );
 }

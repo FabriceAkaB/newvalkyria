@@ -19,6 +19,8 @@ export interface Coach {
   hired_on: string | null;
   notes: string | null;
   username: string | null;
+  /** Filme les joueuses et dépose leurs vidéos de progression depuis son portail (JP, 19 nov. 2026). */
+  is_videographer?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -26,7 +28,7 @@ export interface Coach {
 /** Colonnes sûres à renvoyer côté client — ne JAMAIS inclure password_hash
  *  ici (finirait dans les props envoyées au navigateur). */
 const COACH_SAFE_COLUMNS =
-  "id, first_name, last_name, phone, email, status, role, default_hourly_rate_cents, hired_on, notes, username, created_at, updated_at";
+  "id, first_name, last_name, phone, email, status, role, default_hourly_rate_cents, hired_on, notes, username, is_videographer, created_at, updated_at";
 
 export interface CoachTypeRate {
   id: string;
@@ -144,6 +146,7 @@ export async function updateCoach(
     defaultHourlyRateCents: number;
     hiredOn: string | null;
     notes: string | null;
+    isVideographer: boolean;
   }>
 ): Promise<void> {
   const columnPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -156,6 +159,7 @@ export async function updateCoach(
   if (patch.defaultHourlyRateCents !== undefined) columnPatch.default_hourly_rate_cents = patch.defaultHourlyRateCents;
   if (patch.hiredOn !== undefined) columnPatch.hired_on = patch.hiredOn;
   if (patch.notes !== undefined) columnPatch.notes = patch.notes;
+  if (typeof patch.isVideographer === "boolean") columnPatch.is_videographer = patch.isVideographer;
 
   const { error } = await db().from("coaches").update(columnPatch).eq("id", id);
   if (error) throw new Error(error.message);
