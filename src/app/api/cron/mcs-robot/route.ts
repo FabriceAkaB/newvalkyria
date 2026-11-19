@@ -40,6 +40,9 @@ export async function GET(request: Request) {
   // De 8 h à 21 h : les présences du jour indiquées dans MonClubSportif (absentes en X, joueuses ajoutées) entrent dans
   // le site avant la pratique, pour que la borne du sondage de fin n'affiche que les filles attendues.
   const todayPresences = hour >= 8 && hour < 22 ? await syncMcsAttendance({ today: true, pages: 1 }).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
+  // De 8 h à 21 h : absences annoncées à l'avancé (pratiques de semaine) → filles de l'intermédiaire proposées à JP ;
+  // les « oui » des parents sont ajoutés à la pratique dans MonClubSportif.
+  const practiceInvites = hour >= 8 && hour < 22 ? await import("@/lib/practice-invites-repo").then((m) => m.runPracticeInvites()).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
   // Toutes les heures : les enregistrements Veo « Newval … » prêts sont rangés (match → familles, pratique → éducateurs) ;
   // un match que Veo prépare encore est repris à l'heure suivante, jusqu'à ce qu'il soit disponible.
   const veo = await syncVeo().then((r) => ({ ok: r.ok, skipped: r.skipped, rangees: r.results.filter((x) => x.outcome === "rangee").length })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
@@ -48,5 +51,5 @@ export async function GET(request: Request) {
   const archive = await archiveVideos({ deadline: started + (maxDuration - 20) * 1000 })
     .then((r) => ({ done: r.done.length, progress: r.progress, errors: r.errors.map((e) => e.error) }))
     .catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
-  return NextResponse.json({ ok: true, emails, mcsPosts, surveyReminders, todayPresences, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
+  return NextResponse.json({ ok: true, emails, mcsPosts, surveyReminders, todayPresences, practiceInvites, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
 }
