@@ -8,6 +8,7 @@ import { CoachPracticeDeck } from "@/components/coach-practice-deck";
 import { CoachChampionsCard } from "@/components/coach-champions-card";
 import { CoachTeamsCard } from "@/components/coach-teams-card";
 import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrief";
+import { CoachIncidentCard } from "@/components/coach-incident-card";
 import { CoachGuideCard, PracticeTimer } from "@/components/coach-guide";
 import { exerciseGuideFallback, setupForGroup } from "@/lib/practice-plan-view";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
@@ -980,6 +981,7 @@ export function CoachActiviteDetail({
                   theme={themeForGroup(theme?.theme, activity.category ?? activity.title)}
                 />
               ) : null}
+              {activity.activity_type !== "Match" && <CoachIncidentCard activityId={activity.id} />}
               <button type="button" className="coach-primary" style={{ marginTop: 12 }} onClick={() => goTo("apres")}>Fin de la pratique : le rapport</button>
             </>
           )}
