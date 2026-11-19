@@ -19,12 +19,13 @@ const ICON: Record<string, string> = { goal: "⚽", shot_on_goal: "🎯", shot: 
 /** Palette selon l'écran : espace parent (sombre, violet), admin et portail (variables de l'admin). */
 const PALETTE = {
   famille: { text: "#fff", sub: "#b9a9cf", card: "rgba(255,255,255,0.05)", line: "rgba(255,255,255,0.12)", accent: "#c9a227", accentText: "#1d1730", track: "rgba(255,255,255,0.12)", period: "rgba(201,162,39,0.25)" },
-  admin: { text: "var(--adm-text, #1d1730)", sub: "var(--adm-text-3, #6b6478)", card: "var(--adm-surface-2, rgba(0,0,0,0.03))", line: "var(--adm-border, rgba(0,0,0,0.1))", accent: "#5b2a86", accentText: "#fff", track: "var(--adm-border, rgba(0,0,0,0.12))", period: "rgba(91,42,134,0.18)" }
+  // Jetons de l'admin : lisible en mode Jour comme en mode Nuit (admin, portail des éducateurs, espace famille).
+  admin: { text: "var(--adm-text, #1d1730)", sub: "var(--adm-text-2, #6b6478)", card: "var(--adm-surface-2, rgba(0,0,0,0.03))", line: "var(--adm-border, rgba(0,0,0,0.1))", accent: "var(--adm-accent-strong, #5b2a86)", accentText: "var(--adm-on-accent, #fff)", track: "var(--adm-surface-3, rgba(0,0,0,0.08))", period: "var(--adm-accent-soft, rgba(91,42,134,0.18))" }
 };
 
 /** Le lecteur des matchs et pratiques filmés (vidéo lue chez Veo, 1080p) : on saute aux périodes et aux temps forts
  *  (buts, tirs… détectés par Veo), une frise montre où ils sont, et on reprend là où on s'était arrêté. */
-export function MatchPlayer({ id, endpoint, label = "Regarder", palette = "famille" }: { id: string; endpoint: string; label?: string; palette?: keyof typeof PALETTE }) {
+export function MatchPlayer({ id, endpoint, label = "Regarder", palette = "admin" }: { id: string; endpoint: string; label?: string; palette?: keyof typeof PALETTE }) {
   const c = PALETTE[palette];
   const [data, setData] = useState<PlayerPayload | null>(null);
   const [busy, setBusy] = useState(false);

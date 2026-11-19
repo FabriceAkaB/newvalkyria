@@ -1,22 +1,23 @@
 "use client";
 
+import { Film, Video as VideoIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 /** « Envoyer ma vidéo » (Valkyria Lab, page famille) : la joueuse, le geste, la vidéo.
  *  Le fichier part directement du téléphone vers le stockage privé (lien signé), avec une barre de progression. */
 
-const INK = "#1d1730";
-const MUTED = "#5d566b";
-const ACCENT = "#5b2a86";
-const LINE = "#e0d8ea";
-const card: React.CSSProperties = { background: "#fff", borderRadius: 16, padding: "1.25rem", border: "1px solid #e6e0ee" };
+const INK = "var(--adm-text, #1d1730)";
+const MUTED = "var(--adm-text-2, #5d566b)";
+const ACCENT = "var(--adm-accent-strong, #5b2a86)";
+const LINE = "var(--adm-line, #e0d8ea)";
+const card: React.CSSProperties = { background: "var(--adm-surface, #fff)", borderRadius: 12, padding: "1.25rem", border: "1px solid var(--adm-line, #e6e0ee)" };
 const chip = (on: boolean): React.CSSProperties => ({
   minHeight: 44,
   padding: "0.55rem 0.95rem",
   borderRadius: 999,
   border: `2px solid ${on ? ACCENT : LINE}`,
-  background: on ? ACCENT : "#fff",
+  background: on ? ACCENT : "var(--adm-surface, #fff)",
   color: on ? "#fff" : INK,
   fontWeight: 600,
   fontSize: "0.95rem",
@@ -203,13 +204,13 @@ export function LabUpload({
             minHeight: 64,
             padding: "0.9rem 1rem",
             borderRadius: 12,
-            border: `2px dashed ${file ? ACCENT : "#cfc3df"}`,
-            background: file ? "#f5f0fb" : "#faf8fc",
+            border: `2px dashed ${file ? ACCENT : "var(--adm-border, #cfc3df)"}`,
+            background: file ? "var(--adm-accent-soft, #f5f0fb)" : "var(--adm-surface-2, #faf8fc)",
             cursor: busy || preview ? "default" : "pointer"
           }}
         >
           <span aria-hidden style={{ fontSize: "1.6rem", lineHeight: 1 }}>
-            {file ? "🎬" : "🎥"}
+            {file ? <Film size={28} strokeWidth={1.5} aria-hidden /> : <VideoIcon size={28} strokeWidth={1.5} aria-hidden />}
           </span>
           <span style={{ display: "grid", gap: 2, minWidth: 0 }}>
             <span style={{ fontWeight: 700, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file ? file.name : "Choisir ou filmer la vidéo"}</span>
@@ -220,7 +221,7 @@ export function LabUpload({
 
       {busy ? (
         <div role="status" aria-live="polite" style={{ display: "grid", gap: 6 }}>
-          <div style={{ height: 10, borderRadius: 999, background: "#eee7f5", overflow: "hidden" }}>
+          <div style={{ height: 10, borderRadius: 999, background: "var(--adm-surface-3, #eee7f5)", overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${Math.round((phase === "saving" ? 1 : progress) * 100)}%`, background: ACCENT, borderRadius: 999, transition: "width 0.3s" }} />
           </div>
           <p style={{ margin: 0, fontSize: "0.88rem", color: MUTED }}>
@@ -230,7 +231,7 @@ export function LabUpload({
       ) : null}
 
       {error ? (
-        <p role="alert" style={{ margin: 0, color: "#b3261e", fontWeight: 600, lineHeight: 1.5 }}>
+        <p role="alert" style={{ margin: 0, color: "var(--adm-bad, #b3261e)", fontWeight: 600, lineHeight: 1.5 }}>
           {error}
         </p>
       ) : null}
@@ -238,7 +239,7 @@ export function LabUpload({
       <button
         type="submit"
         disabled={!ready}
-        style={{ width: "100%", minHeight: 52, borderRadius: 12, border: "none", background: ready ? ACCENT : "#c9bcd9", color: "#fff", fontWeight: 800, fontSize: "1.05rem", cursor: ready ? "pointer" : "default" }}
+        style={{ width: "100%", minHeight: 52, borderRadius: 12, border: "none", background: ready ? ACCENT : "var(--adm-surface-3, #c9bcd9)", color: "#fff", fontWeight: 800, fontSize: "1.05rem", cursor: ready ? "pointer" : "default" }}
       >
         {busy ? "Envoi…" : preview ? "Envoi désactivé dans l'aperçu" : "Envoyer la vidéo"}
       </button>

@@ -8,6 +8,7 @@ import { getBulletinReport } from "@/lib/bulletin-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { getFamilyRegistrations, getVerifiedParentEmail } from "@/lib/parent-repo";
 import { getFamilyProgressVideos } from "@/lib/progress-videos-repo";
+import { getGirlPhotos } from "@/lib/family-photos";
 
 export const metadata: Metadata = { title: "Progression | New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -20,10 +21,11 @@ export default async function ProgressionPage({ searchParams }: { searchParams: 
   const userId = await requireParentUserId();
   const [family, email] = await Promise.all([getFamilyRegistrations(userId), getVerifiedParentEmail(userId)]);
   const regIds = new Map(family.map((f) => [`${f.firstName} ${f.lastName}`.toLowerCase(), f.registrationId]));
-  const [bulletins, progress] = await Promise.all([
+  const [bulletins, progress, photos] = await Promise.all([
     Promise.all([...regIds.entries()].map(async ([k, id]) => ({ key: k, data: await getBulletinReport(id, { period, audience: "parent" }).catch(() => null) }))),
     // Seulement les inscriptions de cette famille : les vidéos des autres filles ne sont jamais lues ici (Loi 25).
-    getFamilyProgressVideos(family.map((f) => f.registrationId)).catch(() => new Map())
+    getFamilyProgressVideos(family.map((f) => f.registrationId)).catch(() => new Map()),
+    getGirlPhotos(family.map((f) => f.registrationId)).catch(() => new Map<string, string>())
   ]);
   return (
     <section className="insc-hero">
@@ -38,7 +40,7 @@ export default async function ProgressionPage({ searchParams }: { searchParams: 
         <div style={{ display: "grid", gap: "1.5rem" }}>
           {family.map((f) => {
             const p = progress.get(f.registrationId);
-            return p ? <FamilyProgressVideos key={`v-${f.registrationId}`} firstName={f.firstName} checkpoints={p.checkpoints} videos={p.videos} /> : null;
+            return p ? <FamilyProgressVideos key={`v-${f.registrationId}`} firstName={f.firstName} checkpoints={p.checkpoints} videos={p.videos} photoUrl={photos.get(f.registrationId) ?? null} /> : null;
           })}
           {bulletins.filter((b) => b.data).map((b) => (
             <BulletinReport key={b.key} data={b.data!} periodHref={(p) => `/compte/progression?bulletin=${p}`} />

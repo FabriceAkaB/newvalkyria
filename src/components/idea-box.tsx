@@ -1,5 +1,6 @@
 "use client";
 
+import { Lightbulb } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -7,8 +8,8 @@ import { categoryLabel, IDEA_CATEGORIES, IDEA_OWNERS, IDEA_STATUS, ideaDelay, ME
 
 /* ── Formulaire : site public et espace parent (thème foncé du site) ── */
 
-const field: React.CSSProperties = { width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "0.75rem 0.9rem", color: "#fff", fontSize: "1rem" };
-const lab: React.CSSProperties = { display: "grid", gap: 6, fontSize: "0.85rem", color: "rgba(255,255,255,0.75)" };
+const field: React.CSSProperties = { width: "100%", background: "var(--adm-surface-2, rgba(255,255,255,0.06))", border: "1px solid var(--adm-line, rgba(255,255,255,0.15))", borderRadius: 12, padding: "0.75rem 0.9rem", color: "var(--adm-text, #fff)", fontSize: "1rem" };
+const lab: React.CSSProperties = { display: "grid", gap: 6, fontSize: "0.85rem", color: "var(--adm-text-2, rgba(255,255,255,0.75))" };
 
 export function IdeaForm({ askIdentity, players = [] }: { askIdentity: boolean; players?: string[] }) {
   const router = useRouter();
@@ -35,10 +36,10 @@ export function IdeaForm({ askIdentity, players = [] }: { askIdentity: boolean; 
   if (state === "ok") {
     return (
       <div style={{ display: "grid", gap: 10, textAlign: "center", padding: "1.4rem 0" }}>
-        <p style={{ fontSize: "2.4rem", margin: 0 }}>💡</p>
-        <p style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700, color: "#fff" }}>Merci ! Votre idée est bien reçue.</p>
-        <p style={{ margin: 0, color: "rgba(255,255,255,0.7)" }}>L&apos;équipe la lit et vous répond{askIdentity ? " si vous avez laissé votre courriel" : " dans votre espace"}.</p>
-        <button type="button" onClick={() => setState("idle")} style={{ justifySelf: "center", marginTop: 6, background: "none", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 999, padding: "0.6rem 1.2rem", cursor: "pointer" }}>
+        <p style={{ margin: 0, color: "var(--adm-accent, #c4a4e4)" }}><Lightbulb size={36} strokeWidth={1.5} aria-hidden /></p>
+        <p style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700, color: "var(--adm-text, #fff)" }}>Merci ! Votre idée est bien reçue.</p>
+        <p style={{ margin: 0, color: "var(--adm-text-2, rgba(255,255,255,0.7))" }}>L&apos;équipe la lit et vous répond{askIdentity ? " si vous avez laissé votre courriel" : " dans votre espace"}.</p>
+        <button type="button" onClick={() => setState("idle")} style={{ justifySelf: "center", marginTop: 6, background: "none", border: "1px solid var(--adm-line, rgba(255,255,255,0.3))", color: "var(--adm-text, #fff)", borderRadius: 999, padding: "0.6rem 1.2rem", cursor: "pointer" }}>
           Proposer une autre idée
         </button>
       </div>
@@ -92,29 +93,29 @@ export function IdeaForm({ askIdentity, players = [] }: { askIdentity: boolean; 
         type="button"
         disabled={state === "busy" || f.message.trim().length < MESSAGE_MIN}
         onClick={send}
-        style={{ justifySelf: "start", background: "#8b5cf6", color: "#fff", border: "none", borderRadius: 999, padding: "0.85rem 1.6rem", fontWeight: 700, fontSize: "1rem", cursor: "pointer", opacity: f.message.trim().length < MESSAGE_MIN ? 0.5 : 1 }}
+        style={{ justifySelf: "start", background: "var(--adm-accent-strong, #8b5cf6)", color: "var(--adm-text, #fff)", border: "none", borderRadius: 999, padding: "0.85rem 1.6rem", fontWeight: 700, fontSize: "1rem", cursor: "pointer", opacity: f.message.trim().length < MESSAGE_MIN ? 0.5 : 1 }}
       >
         {state === "busy" ? "Envoi…" : "Envoyer mon idée"}
       </button>
-      {error ? <p style={{ margin: 0, color: "#f4a3a3" }}>{error}</p> : null}
+      {error ? <p style={{ margin: 0, color: "var(--adm-bad, #f4a3a3)" }}>{error}</p> : null}
     </div>
   );
 }
 
 export function MyIdeas({ ideas }: { ideas: { id: string; category: string; message: string; status: string; response: string | null; created_at: string }[] }) {
-  if (!ideas.length) return <p style={{ margin: 0, color: "rgba(255,255,255,0.6)" }}>Vous n&apos;avez pas encore proposé d&apos;idée.</p>;
+  if (!ideas.length) return <p style={{ margin: 0, color: "var(--adm-text-2, rgba(255,255,255,0.6))" }}>Vous n&apos;avez pas encore proposé d&apos;idée.</p>;
   return (
     <div style={{ display: "grid", gap: 10 }}>
       {ideas.map((i) => (
-        <div key={i.id} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "0.9rem 1rem", display: "grid", gap: 6 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
+        <div key={i.id} style={{ background: "var(--adm-surface-2, rgba(255,255,255,0.04))", border: "1px solid var(--adm-line, rgba(255,255,255,0.1))", borderRadius: 12, padding: "0.9rem 1rem", display: "grid", gap: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", fontSize: "0.8rem", color: "var(--adm-text-2, rgba(255,255,255,0.6))" }}>
             <span>
               {categoryLabel(i.category)} · {new Date(i.created_at).toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}
             </span>
-            <span style={{ fontWeight: 700, color: i.status === "realisee" || i.status === "retenue" ? "#7ee2a8" : "#fff" }}>{statusOf(i.status).family}</span>
+            <span style={{ fontWeight: 700, color: i.status === "realisee" || i.status === "retenue" ? "var(--adm-good, #7ee2a8)" : "var(--adm-text, #fff)" }}>{statusOf(i.status).family}</span>
           </div>
-          <p style={{ margin: 0, color: "#fff", whiteSpace: "pre-line" }}>{i.message}</p>
-          {i.response ? <p style={{ margin: 0, color: "rgba(255,255,255,0.8)", borderLeft: "3px solid #8b5cf6", paddingLeft: 10, whiteSpace: "pre-line" }}>{i.response}</p> : null}
+          <p style={{ margin: 0, color: "var(--adm-text, #fff)", whiteSpace: "pre-line" }}>{i.message}</p>
+          {i.response ? <p style={{ margin: 0, color: "var(--adm-text-2, rgba(255,255,255,0.8))", borderLeft: "3px solid var(--adm-accent-strong, #8b5cf6)", paddingLeft: 10, whiteSpace: "pre-line" }}>{i.response}</p> : null}
         </div>
       ))}
     </div>

@@ -3,14 +3,20 @@ import type { ProgressVideo } from "@/lib/progress-videos-repo";
 
 /** Espace famille : la progression de sa fille en vidéo (début, mi-saison, fin) et, dès deux moments, l'avant / après.
  *  Liens signés de 2 heures : les vidéos restent privées (Loi 25). */
-export function FamilyProgressVideos({ firstName, checkpoints, videos }: { firstName: string; checkpoints: Checkpoint[]; videos: ProgressVideo[] }) {
+export function FamilyProgressVideos({ firstName, checkpoints, videos, photoUrl = null }: { firstName: string; checkpoints: Checkpoint[]; videos: ProgressVideo[]; photoUrl?: string | null }) {
   const pair = beforeAfter(videos.filter((v) => v.url));
   const player = (v: ProgressVideo) => (
     <video src={v.url ?? undefined} controls playsInline preload="metadata" style={{ width: "100%", borderRadius: 10, background: "#000", aspectRatio: "16 / 9" }} />
   );
   return (
     <div className="parent-card" style={{ display: "grid", gap: 14 }}>
-      <h2 style={{ margin: 0 }}>La progression de {firstName} en vidéo</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span className="fam-girl__avatar" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {photoUrl ? <img src={photoUrl} alt="" /> : firstName.charAt(0)}
+        </span>
+        <h2 style={{ margin: 0 }}>La progression de {firstName} en vidéo</h2>
+      </div>
       {pair && (
         <div style={{ display: "grid", gap: 8 }}>
           <p className="parent-muted" style={{ margin: 0 }}>Avant / après</p>

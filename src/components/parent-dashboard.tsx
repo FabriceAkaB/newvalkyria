@@ -83,24 +83,24 @@ function LinkPlayerBlock({ childId, onLinked }: { childId: string; onLinked: (pl
       <button
         type="button"
         onClick={load}
-        style={{ marginTop: "0.85rem", padding: "0.6rem 0.85rem", background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: "8px", color: "#9f85ba", fontSize: "0.72rem", cursor: "pointer", width: "100%", textAlign: "left" }}
+        style={{ marginTop: "0.85rem", padding: "0.6rem 0.85rem", background: "var(--adm-surface-2, rgba(255,255,255,0.03))", border: "1px dashed var(--adm-line, rgba(255,255,255,0.12))", borderRadius: "8px", color: "var(--adm-accent, #9f85ba)", fontSize: "0.72rem", cursor: "pointer", width: "100%", textAlign: "left" }}
       >
-        🔗 Relier à une inscription pour voir le calendrier, les évaluations et les paiements
+        Relier à une inscription pour voir le calendrier, les évaluations et les paiements
       </button>
     );
   }
 
   return (
-    <div style={{ marginTop: "0.85rem", padding: "0.75rem 0.85rem", background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.12)", borderRadius: "8px" }}>
-      <p style={{ fontSize: "0.72rem", color: "#9f85ba", margin: "0 0 0.5rem" }}>
+    <div style={{ marginTop: "0.85rem", padding: "0.75rem 0.85rem", background: "var(--adm-surface-2, rgba(255,255,255,0.03))", border: "1px dashed var(--adm-line, rgba(255,255,255,0.12))", borderRadius: "8px" }}>
+      <p style={{ fontSize: "0.72rem", color: "var(--adm-accent, #9f85ba)", margin: "0 0 0.5rem" }}>
         Laquelle de ces inscriptions correspond à ce profil ?
       </p>
-      {loading && <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Recherche...</p>}
+      {loading && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #605f65)", margin: 0 }}>Recherche...</p>}
       {!loading && needsEmailCheck && (
-        <p style={{ fontSize: "0.72rem", color: "#c9a227", margin: 0 }}>Confirmez d&apos;abord votre courriel : cliquez le lien reçu par courriel (bouton « Renvoyer le lien » en haut de la page).</p>
+        <p style={{ fontSize: "0.72rem", color: "var(--adm-warn, #c9a227)", margin: 0 }}>Confirmez d&apos;abord votre courriel : cliquez le lien reçu par courriel (bouton « Renvoyer le lien » en haut de la page).</p>
       )}
       {!loading && !needsEmailCheck && candidates?.length === 0 && (
-        <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Aucune inscription trouvée avec le courriel de ce compte pour l&apos;instant.</p>
+        <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #605f65)", margin: 0 }}>Aucune inscription trouvée avec le courriel de ce compte pour l&apos;instant.</p>
       )}
       {!loading && candidates && candidates.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
@@ -110,7 +110,7 @@ function LinkPlayerBlock({ childId, onLinked }: { childId: string; onLinked: (pl
               type="button"
               onClick={() => confirmLink(c.playerId)}
               disabled={linkingId !== null}
-              style={{ textAlign: "left", padding: "0.5rem 0.7rem", background: "#17151e", border: "1px solid #251f30", borderRadius: "6px", color: "#fff", fontSize: "0.78rem", cursor: "pointer" }}
+              style={{ textAlign: "left", padding: "0.5rem 0.7rem", background: "var(--adm-surface-2, #17151e)", border: "1px solid var(--adm-line, #251f30)", borderRadius: "6px", color: "var(--adm-text, #fff)", fontSize: "0.78rem", cursor: "pointer" }}
             >
               {linkingId === c.playerId ? "Association..." : `${c.firstName} ${c.lastName}${c.dob ? ` · née le ${new Date(c.dob).toLocaleDateString("fr-CA")}` : ""}`}
             </button>
@@ -157,37 +157,37 @@ function ChildActivity({ childId, onUnlink }: { childId: string; onUnlink: () =>
       <button
         type="button"
         onClick={load}
-        style={{ padding: "0.5rem 0.7rem", background: "rgba(159,133,186,0.08)", border: "1px solid rgba(159,133,186,0.25)", borderRadius: "8px", color: "#9f85ba", fontSize: "0.72rem", cursor: "pointer", width: "100%", textAlign: "left" }}
+        style={{ padding: "0.5rem 0.7rem", background: "var(--adm-accent-soft, rgba(159,133,186,0.08))", border: "1px solid var(--adm-line, rgba(159,133,186,0.25))", borderRadius: "8px", color: "var(--adm-accent, #9f85ba)", fontSize: "0.72rem", cursor: "pointer", width: "100%", textAlign: "left" }}
       >
         {open ? "▾" : "▸"} Calendrier, évaluations et paiements
       </button>
       {open && (
         <div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-          {loading && <p style={{ fontSize: "0.72rem", color: "#605f65" }}>Chargement...</p>}
-          {!loading && seasons?.length === 0 && <p style={{ fontSize: "0.72rem", color: "#605f65" }}>Aucune inscription trouvée.</p>}
+          {loading && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #605f65)" }}>Chargement...</p>}
+          {!loading && seasons?.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #605f65)" }}>Aucune inscription trouvée.</p>}
           {!loading && seasons?.map((s) => (
-            <div key={s.registrationId} style={{ background: "#17151e", border: "1px solid #251f30", borderRadius: "8px", padding: "0.7rem 0.85rem" }}>
+            <div key={s.registrationId} style={{ background: "var(--adm-surface-2, #17151e)", border: "1px solid var(--adm-line, #251f30)", borderRadius: "8px", padding: "0.7rem 0.85rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem", marginBottom: "0.3rem" }}>
-                <p style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff", margin: 0 }}>
+                <p style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--adm-text, #fff)", margin: 0 }}>
                   {s.seasonLabel}{s.programName ? ` — ${s.programName}` : ""}{s.isTrial ? " (essai)" : ""}
                 </p>
-                <a href={`/compte/bulletin/${s.registrationId}`} style={{ fontSize: "0.68rem", color: "#9f85ba", textDecoration: "none", whiteSpace: "nowrap" }}>
-                  📋 Bulletin
+                <a href={`/compte/bulletin/${s.registrationId}`} style={{ fontSize: "0.68rem", color: "var(--adm-accent, #9f85ba)", textDecoration: "none", whiteSpace: "nowrap" }}>
+                  Bulletin
                 </a>
               </div>
 
               {s.points && s.points.xp > 0 && (
-                <div style={{ margin: "0.4rem 0 0.7rem", color: "#fff" }}>
-                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.35rem", textTransform: "uppercase" }}>Ses points Valkyria</p>
+                <div style={{ margin: "0.4rem 0 0.7rem", color: "var(--adm-text, #fff)" }}>
+                  <p style={{ fontSize: "0.68rem", color: "var(--adm-accent, #9f85ba)", margin: "0 0 0.35rem", textTransform: "uppercase" }}>Ses points Valkyria</p>
                   <PointsProgress p={s.points} />
                 </div>
               )}
 
               {s.attendance.length > 0 && (
                 <div style={{ marginBottom: "0.5rem" }}>
-                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Présences</p>
+                  <p style={{ fontSize: "0.68rem", color: "var(--adm-accent, #9f85ba)", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Présences</p>
                   {s.attendance.map((a) => (
-                    <p key={a.id} style={{ fontSize: "0.75rem", color: "#c3c2c8", margin: "0.1rem 0" }}>
+                    <p key={a.id} style={{ fontSize: "0.75rem", color: "var(--adm-text-2, #c3c2c8)", margin: "0.1rem 0" }}>
                       {new Date(a.activity.activity_date).toLocaleDateString("fr-CA")} — {a.activity.title ?? a.activity.activity_type} · {ATTENDANCE_LABELS[a.status] ?? a.status}
                     </p>
                   ))}
@@ -196,11 +196,11 @@ function ChildActivity({ childId, onUnlink }: { childId: string; onUnlink: () =>
 
               {s.evaluations.length > 0 && (
                 <div style={{ marginBottom: "0.5rem" }}>
-                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Évaluations</p>
+                  <p style={{ fontSize: "0.68rem", color: "var(--adm-accent, #9f85ba)", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Évaluations</p>
                   {s.evaluations.map((e) => (
-                    <div key={e.id} style={{ fontSize: "0.75rem", color: "#c3c2c8", margin: "0.2rem 0" }}>
+                    <div key={e.id} style={{ fontSize: "0.75rem", color: "var(--adm-text-2, #c3c2c8)", margin: "0.2rem 0" }}>
                       <span>{new Date(e.activity.activity_date).toLocaleDateString("fr-CA")} — {e.activity.title ?? "Pratique"}</span>
-                      {e.comment && <p style={{ margin: "0.15rem 0 0", color: "#9d9da0", fontStyle: "italic" }}>« {e.comment} »</p>}
+                      {e.comment && <p style={{ margin: "0.15rem 0 0", color: "var(--adm-text-2, #9d9da0)", fontStyle: "italic" }}>« {e.comment} »</p>}
                     </div>
                   ))}
                 </div>
@@ -208,18 +208,18 @@ function ChildActivity({ childId, onUnlink }: { childId: string; onUnlink: () =>
 
               {s.objectives.filter((o) => o.active).length > 0 && (
                 <div style={{ marginBottom: "0.5rem" }}>
-                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Objectifs</p>
+                  <p style={{ fontSize: "0.68rem", color: "var(--adm-accent, #9f85ba)", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Objectifs</p>
                   {s.objectives.filter((o) => o.active).map((o) => (
-                    <p key={o.id} style={{ fontSize: "0.75rem", color: "#c3c2c8", margin: "0.1rem 0" }}>• {o.objective}</p>
+                    <p key={o.id} style={{ fontSize: "0.75rem", color: "var(--adm-text-2, #c3c2c8)", margin: "0.1rem 0" }}>• {o.objective}</p>
                   ))}
                 </div>
               )}
 
               {s.paymentPlan && (
                 <div>
-                  <p style={{ fontSize: "0.68rem", color: "#9f85ba", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Paiement en plusieurs fois</p>
+                  <p style={{ fontSize: "0.68rem", color: "var(--adm-accent, #9f85ba)", margin: "0 0 0.2rem", textTransform: "uppercase" }}>Paiement en plusieurs fois</p>
                   {s.paymentPlan.installments.map((i) => (
-                    <p key={i.sequenceNo} style={{ fontSize: "0.75rem", color: "#c3c2c8", margin: "0.1rem 0" }}>
+                    <p key={i.sequenceNo} style={{ fontSize: "0.75rem", color: "var(--adm-text-2, #c3c2c8)", margin: "0.1rem 0" }}>
                       Versement {i.sequenceNo} — {formatCAD(i.amountCents)} — {i.status === "paid" ? `payé le ${i.paidAt ? new Date(i.paidAt).toLocaleDateString("fr-CA") : ""}` : `dû le ${new Date(i.dueDate).toLocaleDateString("fr-CA")}`}
                     </p>
                   ))}
@@ -227,11 +227,11 @@ function ChildActivity({ childId, onUnlink }: { childId: string; onUnlink: () =>
               )}
 
               {s.attendance.length === 0 && s.evaluations.length === 0 && s.objectives.length === 0 && !s.paymentPlan && (
-                <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Rien à afficher pour l&apos;instant.</p>
+                <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #605f65)", margin: 0 }}>Rien à afficher pour l&apos;instant.</p>
               )}
             </div>
           ))}
-          <button type="button" onClick={handleUnlink} disabled={unlinking} style={{ alignSelf: "flex-start", fontSize: "0.68rem", color: "#605f65", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+          <button type="button" onClick={handleUnlink} disabled={unlinking} style={{ alignSelf: "flex-start", fontSize: "0.68rem", color: "var(--adm-text-3, #605f65)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
             {unlinking ? "..." : "Ce n'est pas la bonne inscription ?"}
           </button>
         </div>
@@ -300,39 +300,39 @@ function PrivateSessionBooking({ childId, hasPlayer }: { childId: string; hasPla
       <button
         type="button"
         onClick={load}
-        style={{ padding: "0.5rem 0.7rem", background: "rgba(159,133,186,0.08)", border: "1px solid rgba(159,133,186,0.25)", borderRadius: "8px", color: "#9f85ba", fontSize: "0.72rem", cursor: "pointer", width: "100%", textAlign: "left" }}
+        style={{ padding: "0.5rem 0.7rem", background: "var(--adm-accent-soft, rgba(159,133,186,0.08))", border: "1px solid var(--adm-line, rgba(159,133,186,0.25))", borderRadius: "8px", color: "var(--adm-accent, #9f85ba)", fontSize: "0.72rem", cursor: "pointer", width: "100%", textAlign: "left" }}
       >
         {open ? "▾" : "▸"} Réserver une séance privée individuelle
       </button>
       {open && (
-        <div style={{ marginTop: "0.5rem", padding: "0.75rem 0.85rem", background: "#17151e", border: "1px solid #251f30", borderRadius: "8px" }}>
-          <p style={{ fontSize: "0.72rem", color: "#c3c2c8", margin: "0 0 0.6rem" }}>
+        <div style={{ marginTop: "0.5rem", padding: "0.75rem 0.85rem", background: "var(--adm-surface-2, #17151e)", border: "1px solid var(--adm-line, #251f30)", borderRadius: "8px" }}>
+          <p style={{ fontSize: "0.72rem", color: "var(--adm-text-2, #c3c2c8)", margin: "0 0 0.6rem" }}>
             Important : les séances privées sont réservées exclusivement aux jeunes inscrits à l&apos;Académie New Valkyria.
             Si votre jeune n&apos;est pas actuellement inscrit à l&apos;Académie, il ne sera pas possible de réserver une séance privée
             et l&apos;accès à la réservation pourra être refusé.
           </p>
 
-          {loading && <p style={{ fontSize: "0.72rem", color: "#605f65" }}>Chargement...</p>}
-          {error && <p style={{ fontSize: "0.72rem", color: "#f87171", margin: "0 0 0.5rem" }}>{error}</p>}
-          {confirmedSlotId && <p style={{ fontSize: "0.75rem", color: "#7fd88f", margin: "0 0 0.5rem" }}>✓ Séance réservée !</p>}
+          {loading && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #605f65)" }}>Chargement...</p>}
+          {error && <p style={{ fontSize: "0.72rem", color: "var(--adm-bad, #f87171)", margin: "0 0 0.5rem" }}>{error}</p>}
+          {confirmedSlotId && <p style={{ fontSize: "0.75rem", color: "var(--adm-good, #7fd88f)", margin: "0 0 0.5rem" }}>Séance réservée.</p>}
 
           {!loading && eligible === false && (
-            <p style={{ fontSize: "0.75rem", color: "#f0c878", margin: 0 }}>
+            <p style={{ fontSize: "0.75rem", color: "var(--adm-warn, #f0c878)", margin: 0 }}>
               {!hasPlayer || reason === "not_linked"
-                ? "Ce profil doit d'abord être relié à une inscription (voir « 🔗 Relier » ci-dessous) pour réserver une séance privée."
+                ? "Ce profil doit d'abord être relié à une inscription (voir « Relier » ci-dessous) pour réserver une séance privée."
                 : "Ce profil n'a pas d'inscription confirmée ou payée à l'Académie en ce moment — la réservation n'est pas possible."}
             </p>
           )}
 
           {!loading && eligible && slots && slots.length === 0 && (
-            <p style={{ fontSize: "0.72rem", color: "#605f65", margin: 0 }}>Aucun créneau disponible pour l&apos;instant.</p>
+            <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #605f65)", margin: 0 }}>Aucun créneau disponible pour l&apos;instant.</p>
           )}
 
           {!loading && eligible && slots && slots.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
               {slots.map((s) => (
-                <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem", background: "#100e17", border: "1px solid #1f1d25", borderRadius: "6px", padding: "0.5rem 0.7rem" }}>
-                  <span style={{ fontSize: "0.75rem", color: "#fff" }}>
+                <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem", background: "var(--adm-surface, #100e17)", border: "1px solid var(--adm-surface-2, #1f1d25)", borderRadius: "6px", padding: "0.5rem 0.7rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--adm-text, #fff)" }}>
                     {new Date(s.slot_date + "T00:00:00").toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })}
                     {" · "}
                     {s.public_start_time.slice(0, 5)}–{s.public_end_time.slice(0, 5)}
@@ -501,10 +501,10 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
 
       <a
         href="/compte/recommandations"
-        style={{ display: "block", background: "#100e17", border: "1px solid #3a2f4d", borderRadius: "12px", padding: "0.9rem 1.1rem", marginBottom: "1rem", textDecoration: "none" }}
+        style={{ display: "block", background: "var(--adm-surface, #100e17)", border: "1px solid var(--adm-line, #3a2f4d)", borderRadius: "12px", padding: "0.9rem 1.1rem", marginBottom: "1rem", textDecoration: "none" }}
       >
-        <p style={{ margin: 0, fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>🎁 Mes recommandations</p>
-        <p style={{ margin: "0.2rem 0 0", color: "#9d9da0", fontSize: "0.75rem" }}>Partagez New Valkyria : 50 $ de rabais pour l&apos;autre famille, un sac ou 50 $ de crédit pour vous.</p>
+        <p style={{ margin: 0, fontWeight: 700, color: "var(--adm-text, #fff)", fontSize: "0.9rem" }}>Mes recommandations</p>
+        <p style={{ margin: "0.2rem 0 0", color: "var(--adm-text-2, #9d9da0)", fontSize: "0.75rem" }}>Partagez New Valkyria : 50 $ de rabais pour l&apos;autre famille, un sac ou 50 $ de crédit pour vous.</p>
       </a>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
@@ -518,7 +518,7 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
           const detectedYear = birthYearFromDob(child.dob);
 
           return (
-            <div key={child.id} style={{ background: "#100e17", border: "1px solid #1f1d25", borderRadius: "12px", padding: "1.1rem 1.25rem", opacity: isBusy ? 0.6 : 1 }}>
+            <div key={child.id} style={{ background: "var(--adm-surface, #100e17)", border: "1px solid var(--adm-surface-2, #1f1d25)", borderRadius: "12px", padding: "1.1rem 1.25rem", opacity: isBusy ? 0.6 : 1 }}>
               {isEditing ? (
                 <div className="nv27-form-fields">
                   <div className="nv27-grid2">
@@ -562,24 +562,24 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
                       <div
                         style={{
                           width: "3.2rem", height: "3.2rem", borderRadius: "50%", overflow: "hidden",
-                          background: "#1f1d25", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: "1rem", color: "#9f85ba", fontWeight: 700, cursor: "pointer", position: "relative"
+                          background: "var(--adm-surface-2, #1f1d25)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: "1rem", color: "var(--adm-accent, #9f85ba)", fontWeight: 700, cursor: "pointer", position: "relative"
                         }}
                         onClick={() => fileInputs.current[child.id]?.click()}
                         title="Changer la photo"
                       >
-                        {child.photo_url
-                          ? <Image src={child.photo_url} alt={`${child.first_name} ${child.last_name}`} fill sizes="3.2rem" style={{ objectFit: "cover" }} />
+                        {child.photo_url || (child as { our_photo_url?: string | null }).our_photo_url
+                          ? <Image src={(child.photo_url || (child as { our_photo_url?: string | null }).our_photo_url)!} alt={`${child.first_name} ${child.last_name}`} fill sizes="3.2rem" style={{ objectFit: "cover" }} />
                           : child.first_name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "#fff", margin: 0 }}>{child.first_name} {child.last_name}</p>
-                        <p style={{ fontSize: "0.78rem", color: "#9f85ba", margin: "2px 0 0" }}>
+                        <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--adm-text, #fff)", margin: 0 }}>{child.first_name} {child.last_name}</p>
+                        <p style={{ fontSize: "0.78rem", color: "var(--adm-accent, #9f85ba)", margin: "2px 0 0" }}>
                           Née le {new Date(child.dob + "T00:00:00").toLocaleDateString("fr-CA")}
                           {detectedYear && <> · Catégorie {BIRTH_YEAR_LABELS[detectedYear]}</>}
                         </p>
                         {(child.level || child.club) && (
-                          <p style={{ fontSize: "0.72rem", color: "#605f65", margin: "2px 0 0" }}>
+                          <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3, #605f65)", margin: "2px 0 0" }}>
                             {[child.level, child.club].filter(Boolean).join(" · ")}
                           </p>
                         )}
@@ -589,7 +589,7 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
                       <button type="button" className="nv27-btn-ghost" style={{ padding: "0.35rem 0.7rem", fontSize: "0.72rem" }} onClick={() => { setEditingId(child.id); setEditForm(toFormState(child)); }}>
                         Modifier
                       </button>
-                      <button type="button" className="nv27-btn-ghost" style={{ padding: "0.35rem 0.7rem", fontSize: "0.72rem", color: "#f87171" }} onClick={() => handleDelete(child.id)}>
+                      <button type="button" className="nv27-btn-ghost" style={{ padding: "0.35rem 0.7rem", fontSize: "0.72rem", color: "var(--adm-bad, #f87171)" }} onClick={() => handleDelete(child.id)}>
                         Retirer
                       </button>
                     </div>
@@ -615,7 +615,7 @@ export function ParentDashboard({ initialChildren }: { initialChildren: Child[] 
       </div>
 
       {showAddForm ? (
-        <div style={{ background: "#100e17", border: "1px solid #251f30", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1rem" }}>
+        <div style={{ background: "var(--adm-surface, #100e17)", border: "1px solid var(--adm-line, #251f30)", borderRadius: "12px", padding: "1.1rem 1.25rem", marginBottom: "1rem" }}>
           <div className="nv27-form-fields">
             <div className="nv27-grid2">
               <label className="insc-field">

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Container } from "@/components/container";
 import { EmailCheckBanner } from "@/components/email-check-banner";
 import { ChampionFeed, GirlPointsCard } from "@/components/family-champions";
+import { ChampionKindIcon } from "@/components/family-icons";
+import { getGirlPhotos } from "@/lib/family-photos";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { progressOf } from "@/lib/player-points";
 import { getFamilyFeed, getPointsHistory, getPointsSummaries, getRewards } from "@/lib/player-points-repo";
@@ -19,11 +21,12 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
   const [account, family, sp] = await Promise.all([getParentAccount(userId), getFamilyRegistrations(userId), searchParams]);
   const verified = account?.email ? await isParentEmailVerified(userId, account.email) : false;
   const ids = family.map((f) => f.registrationId);
-  const [summaries, rewards, feed, histories] = await Promise.all([
+  const [summaries, rewards, feed, histories, photos] = await Promise.all([
     getPointsSummaries(ids),
     getRewards(),
     getFamilyFeed(ids),
-    Promise.all(ids.map((id) => getPointsHistory(id).catch(() => [])))
+    Promise.all(ids.map((id) => getPointsHistory(id).catch(() => []))),
+    getGirlPhotos(ids).catch(() => new Map<string, string>())
   ]);
   const active = rewards.filter((r) => r.active);
   const firstName = (account?.fullName ?? "").split(" ")[0];
@@ -32,12 +35,12 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
     <section className="insc-hero">
       <Container className="max-w-2xl">
         <div className="fam-hello">
-          <p>Bonjour{firstName ? ` ${firstName}` : ""} 👋</p>
+          <p>Bonjour{firstName ? ` ${firstName}` : ""}</p>
           <h1>{family.length ? (family.length === 1 ? `La saison de ${family[0].firstName}` : `La saison de ${family.map((f) => f.firstName).join(" et ")}`) : "Votre espace famille"}</h1>
         </div>
         <div style={{ display: "grid", gap: "0.75rem", marginBottom: "1.25rem" }}>
-          {sp.courriel === "confirme" ? <p style={{ margin: 0, color: "#7ee2a8", fontWeight: 600 }}>Merci, votre courriel est confirmé.</p> : null}
-          {sp.courriel === "invalide" ? <p style={{ margin: 0, color: "#f4a3a3" }}>Ce lien de confirmation n&apos;est plus valide : demandez-en un nouveau ci-dessous.</p> : null}
+          {sp.courriel === "confirme" ? <p style={{ margin: 0, color: "var(--adm-good)", fontWeight: 600 }}>Merci, votre courriel est confirmé.</p> : null}
+          {sp.courriel === "invalide" ? <p style={{ margin: 0, color: "var(--adm-bad)" }}>Ce lien de confirmation n&apos;est plus valide : demandez-en un nouveau ci-dessous.</p> : null}
           {!verified ? <EmailCheckBanner /> : null}
         </div>
 
@@ -53,6 +56,7 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
                   progress={progressOf(s.earned, active, s.balance)}
                   summary={s}
                   titles={histories[i].filter((h) => h.kind === "victoire" || h.kind === "attitude").length}
+                  photoUrl={photos.get(f.registrationId) ?? null}
                 />
               );
             })}
@@ -81,7 +85,7 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
               <ul>
                 {wins.slice(0, 12).map((w) => (
                   <li key={w.id}>
-                    <span aria-hidden>{w.kind === "attitude" ? "⭐" : "🏆"}</span>
+                    <ChampionKindIcon kind={w.kind === "attitude" ? "attitude" : "individuel"} size={18} />
                     <span>{w.label}<small>{new Date(`${w.date}T12:00:00Z`).toLocaleDateString("fr-CA", { day: "numeric", month: "long", timeZone: "UTC" })}</small></span>
                     <strong>+{w.points}</strong>
                   </li>

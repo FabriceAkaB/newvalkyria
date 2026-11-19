@@ -6,7 +6,7 @@ import { useState } from "react";
 export function EmailCheckBanner() {
   const [state, setState] = useState<"idle" | "busy" | "sent" | "wait" | "error">("idle");
   return (
-    <div style={{ background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.4)", borderRadius: 12, padding: "0.9rem 1rem", display: "grid", gap: "0.5rem", color: "#f1e3b0", fontSize: "0.9rem" }}>
+    <div style={{ background: "var(--adm-surface, rgba(201,162,39,0.1))", border: "1px solid var(--adm-line, rgba(201,162,39,0.4))", boxShadow: "inset 3px 0 0 var(--adm-warn, #c9a227)", borderRadius: 12, padding: "0.9rem 1rem", display: "grid", gap: "0.5rem", color: "var(--adm-text, #f1e3b0)", fontSize: "0.9rem" }}>
       <p style={{ margin: 0 }}>
         <strong>Confirmez votre courriel</strong> pour voir le bulletin, les inscriptions et les matchs filmés de votre fille. C&apos;est ce qui nous assure que c&apos;est bien vous.
       </p>
@@ -20,7 +20,7 @@ export function EmailCheckBanner() {
             const json = await res?.json().catch(() => null);
             setState(!res?.ok ? "error" : json?.sent ? "sent" : "wait");
           }}
-          style={{ minHeight: 40, padding: "0 14px", borderRadius: 10, border: "none", background: "#c9a227", color: "#1d1730", fontWeight: 700, cursor: "pointer" }}
+          style={{ minHeight: 40, padding: "0 14px", borderRadius: 10, border: "none", background: "var(--adm-accent-strong, #c9a227)", color: "var(--adm-on-accent, #1d1730)", fontWeight: 600, cursor: "pointer" }}
         >
           {state === "busy" ? "Envoi…" : state === "sent" ? "Lien envoyé : regardez vos courriels" : "Envoyer le lien de confirmation"}
         </button>

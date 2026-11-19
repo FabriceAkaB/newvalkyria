@@ -6,7 +6,7 @@ import { listIdeasForParent } from "@/lib/idea-box-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { getChildrenForParent } from "@/lib/parent-repo";
 
-export const metadata: Metadata = { title: "Boîte à idées | Mon espace", robots: "noindex" };
+export const metadata: Metadata = { title: "Boîte à suggestions | Espace famille", robots: "noindex" };
 export const dynamic = "force-dynamic";
 
 /** Boîte à idées dans l'espace parent : proposer une idée et suivre la réponse de l'académie. */
@@ -17,18 +17,18 @@ export default async function MesIdeesPage() {
     <section className="insc-hero">
       <Container className="max-w-2xl">
         <div className="insc-hero-inner">
-          <h1 className="insc-hero-title">💡 Boîte à idées</h1>
+          <h1 className="insc-hero-title">Boîte à suggestions</h1>
           <p className="insc-hero-sub">
             Ici, votre opinion compte. Cette boîte sert à améliorer l&apos;expérience de nos joueuses et de leurs familles à New Valkyria. Écrivez tout ce qui vous passe par la tête : une idée, ce que vous aimez, ce qui vous dérange. Positif comme négatif, chaque message est lu par notre équipe, et nous essayons de l&apos;appliquer le plus vite possible. La réponse de l&apos;équipe apparaît dans cette page.
           </p>
         </div>
       </Container>
       <Container className="max-w-2xl">
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "1.3rem", position: "relative" }}>
+        <div style={{ background: "var(--adm-surface-2, rgba(255,255,255,0.04))", border: "1px solid var(--adm-line, rgba(255,255,255,0.1))", borderRadius: 16, padding: "1.3rem", position: "relative" }}>
           <IdeaForm askIdentity={false} players={children.map((c) => `${c.first_name} ${c.last_name}`.trim())} />
         </div>
         <div style={{ marginTop: "1.6rem", display: "grid", gap: 10 }}>
-          <h2 style={{ margin: 0, color: "#fff", fontSize: "1.2rem", fontWeight: 700 }}>Mes idées</h2>
+          <h2 style={{ margin: 0, color: "var(--adm-text, #fff)", fontSize: "1.2rem", fontWeight: 700 }}>Mes idées</h2>
           <MyIdeas ideas={ideas} />
         </div>
       </Container>

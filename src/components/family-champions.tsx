@@ -1,4 +1,7 @@
+import { ChevronRight, Gift } from "lucide-react";
 import Link from "next/link";
+
+import { ChampionKindIcon } from "@/components/family-icons";
 
 import { CHAMPION_KINDS, type Progress } from "@/lib/player-points";
 import type { ChampionPost, PointsSummary } from "@/lib/player-points-repo";
@@ -24,11 +27,14 @@ export function ExpiryNote({ summary }: { summary: PointsSummary }) {
   );
 }
 
-export function GirlPointsCard({ firstName, progress: p, summary, titles, link = true }: { firstName: string; progress: Progress; summary: PointsSummary; titles: number; link?: boolean }) {
+export function GirlPointsCard({ firstName, progress: p, summary, titles, link = true, photoUrl = null }: { firstName: string; progress: Progress; summary: PointsSummary; titles: number; link?: boolean; photoUrl?: string | null }) {
   return (
     <article className="fam-girl">
       <div className="fam-girl__top">
-        <span className="fam-girl__avatar" aria-hidden>{firstName.charAt(0)}</span>
+        <span className="fam-girl__avatar" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {photoUrl ? <img src={photoUrl} alt="" /> : firstName.charAt(0)}
+        </span>
         <div className="fam-girl__id">
           <p className="fam-girl__name">{firstName}</p>
           <p className="fam-girl__level">Niveau {p.level.n} · {p.level.name}</p>
@@ -48,7 +54,9 @@ export function GirlPointsCard({ firstName, progress: p, summary, titles, link =
       <ExpiryNote summary={summary} />
       {link ? (
         <Link href="/compte/points" className="fam-girl__cta">
-          {p.affordable.length ? `🎁 ${p.affordable.length} récompense${p.affordable.length > 1 ? "s" : ""} à sa portée` : p.nextReward ? `Prochaine récompense : ${p.nextReward.name} (encore ${p.nextReward.toGo} points)` : "Voir ses points"} →
+          <Gift aria-hidden strokeWidth={1.75} />
+          <span style={{ flex: 1 }}>{p.affordable.length ? `${p.affordable.length} récompense${p.affordable.length > 1 ? "s" : ""} à sa portée` : p.nextReward ? `Prochaine récompense : ${p.nextReward.name} (encore ${p.nextReward.toGo} points)` : "Voir les récompenses"}</span>
+          <ChevronRight aria-hidden strokeWidth={1.75} />
         </Link>
       ) : null}
     </article>
@@ -68,10 +76,10 @@ export function ChampionFeed({ posts, empty }: { posts: ChampionPost[]; empty: s
               // eslint-disable-next-line @next/next/no-img-element
               <img src={p.photoUrl} alt={`Championnes : ${p.girls.map((g) => g.name).join(", ")}`} className="fam-post__photo" loading="lazy" />
             ) : (
-              <div className="fam-post__art" aria-hidden><span>{k.emoji}</span></div>
+              <div className="fam-post__art" aria-hidden><ChampionKindIcon kind={k.kind} size={40} /></div>
             )}
             <div className="fam-post__body">
-              <p className="fam-post__kind">{k.emoji} {k.label}{p.title ? ` · ${p.title}` : ""}</p>
+              <p className="fam-post__kind"><ChampionKindIcon kind={k.kind} size={14} /> {k.label}{p.title ? ` · ${p.title}` : ""}</p>
               <p className="fam-post__names">
                 {p.girls.map((g, i) => (
                   <span key={g.registrationId}>

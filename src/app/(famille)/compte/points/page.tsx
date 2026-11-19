@@ -3,7 +3,9 @@ import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { GirlPointsCard } from "@/components/family-champions";
+import { ChampionKindIcon, RewardKindIcon } from "@/components/family-icons";
 import { RewardRequestButton } from "@/components/family-reward-button";
+import { getGirlPhotos } from "@/lib/family-photos";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { getFamilyRegistrations } from "@/lib/parent-repo";
 import { progressOf, REWARD_KINDS } from "@/lib/player-points";
@@ -26,12 +28,13 @@ export default async function PointsPage() {
   const userId = await requireParentUserId();
   const family = await getFamilyRegistrations(userId);
   const ids = family.map((f) => f.registrationId);
-  const [rules, rewards, summaries, requests, histories] = await Promise.all([
+  const [rules, rewards, summaries, requests, histories, photos] = await Promise.all([
     getRules(),
     getRewards(),
     getPointsSummaries(ids),
     getRedemptions({ registrationIds: ids }),
-    Promise.all(ids.map((id) => getPointsHistory(id).catch(() => [])))
+    Promise.all(ids.map((id) => getPointsHistory(id).catch(() => []))),
+    getGirlPhotos(ids).catch(() => new Map<string, string>())
   ]);
   const active = rewards.filter((r) => r.active).sort((a, b) => a.cost - b.cost);
 
@@ -59,14 +62,14 @@ export default async function PointsPage() {
           const history = histories[i];
           return (
             <div key={f.registrationId} className="fam-points">
-              <GirlPointsCard firstName={f.firstName} progress={p} summary={s} titles={s.victoires + s.attitudes} link={false} />
+              <GirlPointsCard firstName={f.firstName} progress={p} summary={s} titles={s.victoires + s.attitudes} link={false} photoUrl={photos.get(f.registrationId) ?? null} />
 
               <h2 className="fam-h2">Ses récompenses</h2>
               {active.length ? (
                 <ul className="fam-rewards">
                   {active.map((r) => (
                     <li key={r.id} className="fam-reward" data-ok={r.cost <= s.balance || undefined}>
-                      <span className="fam-reward__icon" aria-hidden>{REWARD_KINDS[r.kind].emoji}</span>
+                      <span className="fam-reward__icon" aria-hidden><RewardKindIcon kind={r.kind} /></span>
                       <div className="fam-reward__body">
                         <p className="fam-reward__name">{r.name}{money(r.value_cents) ? ` · ${money(r.value_cents)}` : ""}</p>
                         <p className="fam-reward__how">{r.description || REWARD_KINDS[r.kind].how}</p>
@@ -106,7 +109,8 @@ export default async function PointsPage() {
                 <li><span>Présences<small>{s.presences} pratique{s.presences > 1 ? "s" : ""} × {rules.presence} points</small></span><strong>+{s.presence}</strong></li>
                 {history.map((h) => (
                   <li key={h.id} data-off={h.status === "annulee" || undefined}>
-                    <span>{h.kind === "attitude" ? "⭐ " : h.kind === "victoire" ? "🏆 " : ""}{h.label}<small>{day(h.date)}{h.status === "annulee" ? " · annulée" : ""}</small></span>
+                    {h.kind === "attitude" || h.kind === "victoire" ? <ChampionKindIcon kind={h.kind === "attitude" ? "attitude" : "individuel"} size={18} /> : null}
+                    <span>{h.label}<small>{day(h.date)}{h.status === "annulee" ? " · annulée" : ""}</small></span>
                     <strong>{h.status === "annulee" ? "0" : h.points > 0 ? `+${h.points}` : h.points}</strong>
                   </li>
                 ))}

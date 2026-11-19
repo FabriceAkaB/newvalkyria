@@ -53,17 +53,17 @@ export default async function MatchsFilmesPage() {
               ))}
             </div>
           ) : null}
-          {verified && !videos.length ? <p style={{ color: "#b9a9cf", margin: 0 }}>Aucun match filmé pour l&apos;instant. Ils apparaissent ici quelques jours après chaque match.</p> : null}
+          {verified && !videos.length ? <p style={{ color: "var(--adm-text-2, #b9a9cf)", margin: 0 }}>Aucun match filmé pour l&apos;instant. Ils apparaissent ici quelques jours après chaque match.</p> : null}
           {videos.map((v) => (
-            <article key={v.id} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "1rem", display: "grid", gap: "0.6rem" }}>
+            <article key={v.id} style={{ background: "var(--adm-surface-2, rgba(255,255,255,0.04))", border: "1px solid var(--adm-line, rgba(255,255,255,0.1))", borderRadius: 14, padding: "1rem", display: "grid", gap: "0.6rem" }}>
               <div style={{ display: "flex", gap: "0.8rem", alignItems: "center" }}>
                 {v.poster ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={v.poster} alt="" style={{ width: 120, aspectRatio: "16 / 9", objectFit: "cover", borderRadius: 8, flex: "none", background: "#000" }} />
                 ) : null}
                 <div>
-                  <p style={{ margin: 0, fontWeight: 700, color: "#fff" }}>{v.title}</p>
-                  <p style={{ margin: "2px 0 0", fontSize: "0.85rem", color: "#b9a9cf" }}>
+                  <p style={{ margin: 0, fontWeight: 700, color: "var(--adm-text, #fff)" }}>{v.title}</p>
+                  <p style={{ margin: "2px 0 0", fontSize: "0.85rem", color: "var(--adm-text-2, #b9a9cf)" }}>
                     <span style={{ textTransform: "capitalize" }}>{v.date ? day(v.date) : ""}</span>
                     {v.duration_s ? ` · ${durationLabel(v.duration_s)}` : ""}
                     {v.goals ? ` · ${v.goals} but${v.goals > 1 ? "s" : ""}` : ""}

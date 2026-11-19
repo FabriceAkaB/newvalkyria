@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 import Link from "next/link";
 
 import "./bulletin-lock.css";
@@ -45,7 +46,7 @@ export function BulletinReport({ data, periodHref }: { data: BulletinReportData;
           <BulletinBody data={data} />
         </div>
         <div className="nvb-lock__card" role="status">
-          <span aria-hidden>🔒</span>
+          <Lock size={22} strokeWidth={1.75} aria-hidden />
           <strong>Bientôt disponible</strong>
           <p>
             {data.range.label} de {data.player.firstName} sera remis le {fr(data.range.to)}. Les éducatrices le remplissent après chaque pratique.

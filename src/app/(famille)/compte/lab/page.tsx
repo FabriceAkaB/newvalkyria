@@ -1,3 +1,4 @@
+import { Flame, Target } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -73,7 +74,7 @@ export default async function ParentLabPage() {
           <>
             {challenge ? (
               <article className="fam-lab-day">
-                <p className="fam-post__kind">🎯 Le défi du jour</p>
+                <p className="fam-post__kind"><Target size={14} strokeWidth={1.75} aria-hidden /> Le défi du jour</p>
                 <h2 className="fam-lab-day__title">{challenge.item.name}</h2>
                 {embed ? (
                   <div className="fam-lab-video" data-vertical={embed.vertical || undefined}>
@@ -100,7 +101,7 @@ export default async function ParentLabPage() {
                       <span className="fam-girl__avatar" aria-hidden>{p.firstName.charAt(0)}</span>
                       <div className="fam-girl__id">
                         <p className="fam-girl__name">{p.firstName}</p>
-                        <p className="fam-girl__level">{streak ? `🔥 ${streak} jour${streak > 1 ? "s" : ""} d'affilée` : "Commence sa série aujourd'hui"}</p>
+                        <p className="fam-girl__level">{streak ? <><Flame size={14} strokeWidth={1.75} aria-hidden /> {streak} jour{streak > 1 ? "s" : ""} d&apos;affilée</> : "Commence sa série aujourd'hui"}</p>
                       </div>
                       <div className="fam-girl__wallet">
                         <strong>{rate.done}</strong>
@@ -145,7 +146,7 @@ export default async function ParentLabPage() {
             ) : null}
 
             <Link href={`/lab/${access.token}`} className="fam-girl__cta" style={{ marginTop: "1.25rem" }}>
-              🎥 Toute la routine, envoyer une vidéo et voir nos vidéos →
+              Toute la routine, envoyer une vidéo et voir nos vidéos →
             </Link>
           </>
         )}
