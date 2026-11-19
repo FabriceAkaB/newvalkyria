@@ -523,6 +523,11 @@ export class McsSession {
   }
 
   /** Pages 1 à `pages` de la grille (page 1 = les derniers événements passés, 2 = le bloc en cours, 3 = la suite). */
+  /** La grille des activités à venir (dont celles du jour) : page 0 de MonClubSportif. */
+  async upcomingPresences(team: number, season: number): Promise<PresenceGrid> {
+    return parsePresences(await this.page(MCS_PATHS.presences(team, season, 0)));
+  }
+
   async presences(team: number, season: number, pages = 3): Promise<PresenceGrid> {
     const grid: PresenceGrid = { events: [], rows: [] };
     for (let p = 1; p <= pages; p++) {

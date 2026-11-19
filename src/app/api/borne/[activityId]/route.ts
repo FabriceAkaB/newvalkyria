@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { setPlayerFeedback } from "@/lib/coach-portal-repo";
+import { setPlayerAttendance, setPlayerFeedback } from "@/lib/coach-portal-repo";
 import { jsonError } from "@/lib/http";
 import { parseSurveyAnswer } from "@/lib/practice-survey";
 import { getSurveyData } from "@/lib/practice-survey-repo";
@@ -16,6 +16,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   if (!body || !checkKioskKey(activityId, body.cle)) return jsonError("Lien invalide", 403);
   const registrationId = typeof body.registrationId === "string" ? body.registrationId : null;
   if (!registrationId) return jsonError("Joueuse manquante", 400);
+  // « Absente » touché sur la borne (ou remise après une erreur) : seulement la présence, aucune réponse.
+  if (body.presence === "absent" || body.presence === "present") {
+    const roster = await getSurveyData(activityId);
+    if (!roster) return jsonError("Pratique introuvable", 404);
+    if (!roster.roster.some((p) => p.registrationId === registrationId)) return jsonError("Cette joueuse n'est pas attendue à cette pratique.", 403);
+    await setPlayerAttendance(activityId, registrationId, body.presence);
+    return NextResponse.json({ ok: true });
+  }
   const answer = parseSurveyAnswer({ ...body, wantsMore: [] });
   if (typeof answer === "string") return jsonError(answer, 400);
   const data = await getSurveyData(activityId);

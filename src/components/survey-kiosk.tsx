@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { dequeue, enqueue, parseQueue, queueKey, sendOutcome, type QueuedAnswer } from "@/lib/kiosk-queue";
+import { dequeue, enqueue, parsePresenceQueue, parseQueue, presenceKey, queueKey, sendOutcome, type QueuedAnswer, type QueuedPresence } from "@/lib/kiosk-queue";
 import { KIOSK_QUESTIONS, SCALE_VALUES } from "@/lib/practice-survey";
 
 /** Borne de sondage sur l'iPad : la joueuse touche sa photo, répond à 5 questions sur 10 (une par écran), puis la
@@ -25,8 +25,11 @@ const PURPLE = "#5b2a86";
 // Du rouge au vert : la couleur aide les plus jeunes à comprendre l'échelle.
 const color = (v: number) => `hsl(${Math.round(((v - 1) / 9) * 120)}, 70%, 45%)`;
 
-export function SurveyKiosk({ activityId, cle, title, players, done: initialDone }: { activityId: string; cle: string; title: string; players: KioskPlayer[]; done: string[] }) {
+export function SurveyKiosk({ activityId, cle, title, players, done: initialDone, absent: initialAbsent = [] }: { activityId: string; cle: string; title: string; players: KioskPlayer[]; done: string[]; absent?: string[] }) {
   const [done, setDone] = useState<Set<string>>(new Set(initialDone));
+  // Absentes : marquées dans MonClubSportif (X) ou touchées ici ; elles sortent de la liste et se remettent d'un clic.
+  const [absent, setAbsent] = useState<Set<string>>(new Set(initialAbsent));
+  const presenceRef = useRef<QueuedPresence[]>([]);
   const [who, setWho] = useState<KioskPlayer | null>(null);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
@@ -51,11 +54,28 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
     [activityId]
   );
 
+  const persistPresence = useCallback(
+    (q: QueuedPresence[]) => {
+      presenceRef.current = q;
+      try {
+        localStorage.setItem(presenceKey(activityId), JSON.stringify(q));
+      } catch {
+        /* stockage indisponible : la présence reste en mémoire tant que la page est ouverte */
+      }
+    },
+    [activityId]
+  );
+
   /** Envoie les réponses gardées sur l'iPad, une à la fois ; s'arrête au premier échec réseau (on réessaie plus tard). */
   const flush = useCallback(async () => {
     if (flushing.current) return;
     flushing.current = true;
     try {
+      for (const item of [...presenceRef.current]) {
+        const res = await fetch(`/api/borne/${activityId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cle, registrationId: item.registrationId, presence: item.status }) }).catch(() => null);
+        if (sendOutcome(res ? res.status : null) === "retry") break;
+        persistPresence(dequeue(presenceRef.current, item));
+      }
       for (const item of [...queueRef.current]) {
         const res = await fetch(`/api/borne/${activityId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cle, registrationId: item.registrationId, ...item.answers }) }).catch(() => null);
         const outcome = sendOutcome(res ? res.status : null);
@@ -70,7 +90,7 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
     } finally {
       flushing.current = false;
     }
-  }, [activityId, cle, players, persist]);
+  }, [activityId, cle, players, persist, persistPresence]);
 
   // Au chargement : les réponses restées sur l'iPad (page rechargée) comptent comme faites et repartent.
   useEffect(() => {
@@ -83,6 +103,20 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
     if (saved.length) {
       persist(saved);
       setDone((d) => new Set([...d, ...saved.map((q) => q.registrationId)]));
+    }
+    let marks: QueuedPresence[] = [];
+    try {
+      marks = parsePresenceQueue(localStorage.getItem(presenceKey(activityId)));
+    } catch {
+      marks = [];
+    }
+    if (marks.length) {
+      persistPresence(marks);
+      setAbsent((a) => {
+        const next = new Set(a);
+        for (const m of marks) m.status === "absent" ? next.add(m.registrationId) : next.delete(m.registrationId);
+        return next;
+      });
     }
     setOnline(typeof navigator === "undefined" ? true : navigator.onLine);
     const up = () => {
@@ -100,9 +134,20 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activityId]);
 
+  /** « Absente » (ou remise) : gardé sur l'iPad d'abord, envoyé ensuite ; marche sans réseau. */
+  const markPresence = (id: string, status: "absent" | "present") => {
+    setAbsent((a) => {
+      const next = new Set(a);
+      status === "absent" ? next.add(id) : next.delete(id);
+      return next;
+    });
+    persistPresence(enqueue(presenceRef.current, { registrationId: id, status, at: Date.now() }));
+    void flush();
+  };
+
   // Tant qu'il reste des réponses à envoyer : un essai toutes les 15 secondes.
   useEffect(() => {
-    if (!pending.length) return;
+    if (!pending.length && !presenceRef.current.length) return;
     const t = setInterval(() => void flush(), 15000);
     return () => clearInterval(t);
   }, [pending.length, flush]);
@@ -140,13 +185,14 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
   const card: React.CSSProperties = { background: "#fff", borderRadius: 20, border: "1px solid #e6e0ee", padding: "1.4rem" };
 
   if (!who) {
-    const waiting = players.filter((p) => !done.has(p.id));
+    const waiting = players.filter((p) => !done.has(p.id) && !absent.has(p.id));
+    const away = players.filter((p) => absent.has(p.id) && !done.has(p.id));
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <div style={{ ...card, textAlign: "center" }}>
           <h1 style={{ margin: 0, fontSize: "1.8rem", fontWeight: 800, color: "#1d1730" }}>Comment était ta pratique ?</h1>
           <p style={{ margin: "0.4rem 0 0", color: "#5d566b", fontSize: "1.05rem" }}>
-            {title} · Touche ta photo ({done.size}/{players.length} ont répondu)
+            {title} · Touche ta photo ({done.size}/{players.length - away.length} ont répondu)
           </p>
         </div>
         {pending.length || !online ? (
@@ -161,7 +207,7 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
             Réponse non enregistrée : {rejected.join(" · ")}. Montre ce message à ton éducatrice.
           </div>
         ) : null}
-        {waiting.length === 0 ? (
+        {waiting.length === 0 && done.size > 0 ? (
           <div style={{ ...card, textAlign: "center", padding: "2.4rem 1.4rem" }}>
             <p style={{ fontSize: "3.2rem", margin: 0 }}>🎉</p>
             <h2 style={{ margin: "0.4rem 0 0", fontSize: "1.6rem", fontWeight: 800, color: PURPLE }}>Tout le monde a répondu. Merci !</h2>
@@ -187,10 +233,38 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
                   {p.first} {p.initial}.
                 </span>
                 {ok ? <span style={{ position: "absolute", top: 10, right: 12, fontSize: "1.4rem" }}>✅</span> : null}
+                <span
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${p.first} est absente`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    markPresence(p.id, "absent");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.stopPropagation();
+                      markPresence(p.id, "absent");
+                    }
+                  }}
+                  style={{ position: "absolute", top: 6, right: 6, padding: "4px 8px", borderRadius: 999, background: "#f4f0f8", color: "#5d566b", fontSize: "0.8rem", fontWeight: 700 }}
+                >
+                  Absente
+                </span>
               </button>
             );
           })}
         </div>
+        {away.length ? (
+          <div style={{ ...card, padding: "0.9rem 1.2rem", display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <span style={{ color: "#5d566b", fontWeight: 600 }}>Absentes :</span>
+            {away.map((p) => (
+              <button key={p.id} type="button" onClick={() => markPresence(p.id, "present")} style={{ minHeight: 40, padding: "0 12px", borderRadius: 999, border: "1px solid #e6e0ee", background: "#fff", color: "#1d1730", fontWeight: 600, cursor: "pointer" }} title="Elle est là finalement : la remettre">
+                {p.first} {p.initial}. ↺
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
     );
   }

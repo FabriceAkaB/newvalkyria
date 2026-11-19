@@ -604,19 +604,25 @@ async function activityFor(date: string, start: string, end: string | null, loca
 /** Chaque soir : les présences des événements passés (7 derniers jours) lues dans MonClubSportif deviennent les
  *  présences du site (fiche de la joueuse, bulletin, rapports), et la présence de chaque entraîneur confirme son
  *  assignation pour la paie (« MonClubSportif »). Rien n'est écrasé quand la famille n'a pas répondu. */
-export async function syncMcsAttendance(opts: { days?: number; now?: number; pages?: number } = {}): Promise<{ players: number; coaches: number; unmatched: string[]; skipped?: string }> {
+export async function syncMcsAttendance(opts: { days?: number; now?: number; pages?: number; today?: boolean } = {}): Promise<{ players: number; coaches: number; unmatched: string[]; skipped?: string }> {
   const rules = await getMcsRules();
   if (!rules.robotActive) return { players: 0, coaches: 0, unmatched: [], skipped: "Robot pas encore activé (mode assistant)." };
   const session = await openRobotSession();
   if (!session) return { players: 0, coaches: 0, unmatched: [], skipped: "Compte robot pas encore enregistré." };
+  // « today » (JP, 18 nov. 2026) : avant la pratique, les présences du jour (absentes en X, joueuses ajoutées) entrent
+  // dans le site pour que la borne du sondage les suive ; seulement les jeunes et les pratiques, jamais la paie.
   const now = opts.now ?? Date.now();
-  const since = now - (opts.days ?? 7) * 86_400_000;
-  const teams = (await loadTeamTargets()).filter((t) => t.mcs_team_id && t.mcs_season_id);
-  const players = await loadExpectedPlayers(teams);
+  const todayIso = new Date(now).toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const since = opts.today ? localDayStartMs(todayIso) : now - (opts.days ?? 7) * 86_400_000;
+  const until = opts.today ? localDayStartMs(todayIso) + 86_400_000 : now;
+  const allTeams = (await loadTeamTargets()).filter((t) => t.mcs_team_id && t.mcs_season_id);
+  const players = await loadExpectedPlayers(allTeams);
   const [{ data: coaches }, { data: events }] = await Promise.all([
     db().from("coaches").select("id, first_name, last_name").eq("status", "active"),
-    db().from("mcs_events").select("team_id, key, event_date, location, type, end_time").gte("event_date", dayIso(since)).lte("event_date", dayIso(now))
+    db().from("mcs_events").select("team_id, key, event_date, location, type, end_time").gte("event_date", opts.today ? todayIso : dayIso(since)).lte("event_date", opts.today ? todayIso : dayIso(now))
   ]);
+  const withEvents = new Set(((events ?? []) as any[]).map((e) => e.team_id));
+  const teams = opts.today ? allTeams.filter((t) => withEvents.has(t.id)) : allTeams;
   const byId = new Map<number, any>();
   for (const e of (events ?? []) as any[]) {
     const id = mcsIdOf(e.key)?.id;
@@ -631,15 +637,17 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
   for (const t of teams) {
     let grid: PresenceGrid;
     try {
-      grid = await session.presences(t.mcs_team_id!, t.mcs_season_id!, opts.pages ?? 2);
+      // Avant la pratique, la grille « à venir » (page 0) porte les présences du jour ; les pages 1 et suivantes, le passé.
+      grid = opts.today ? await session.upcomingPresences(t.mcs_team_id!, t.mcs_season_id!) : await session.presences(t.mcs_team_id!, t.mcs_season_id!, opts.pages ?? 2);
     } catch {
       continue;
     }
     for (const ev of grid.events) {
       const e = byId.get(ev.id);
-      if (!e || !e.start || e.start > now || e.start < since) continue;
+      if (!e || !e.start || e.start > until || e.start < since) continue;
       // Match ou tournoi : seule la présence des éducateurs compte (leur paie) ; celle des jeunes reste aux pratiques.
       const game = e.type === "Match" || e.type === "Tournoi";
+      if (opts.today && game) continue;
       const date = String(e.event_date).slice(0, 10);
       let activityId: string | null = null;
       for (const row of grid.rows) {
@@ -647,6 +655,7 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
         if (!status) continue;
         const coach = ((coaches ?? []) as any[]).find((c) => sameMemberName(row.name, c.first_name, c.last_name));
         if (game && !coach) continue;
+        if (coach && opts.today) continue; // la paie se règle après la pratique, au passage du soir
         activityId ??= await activityFor(date, hm(e.start), e.endHm, e.location ?? "", t.name, game ? "Match" : "Pratique");
         if (coach) {
           const { data: asg } = await db().from("coach_assignments").select("id, confirmed").eq("activity_id", activityId).eq("coach_id", coach.id).maybeSingle();

@@ -34,6 +34,7 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
       title={data.label}
       players={data.roster.map((p) => ({ id: p.registrationId, first: nice(p.firstName), initial: p.lastName.trim().charAt(0).toUpperCase(), photo: photos.get(p.registrationId) ?? null }))}
       done={done}
+      absent={data.attendance.filter((a) => a.status === "absent").map((a) => a.registration_id)}
     />
   );
 }

@@ -232,7 +232,7 @@ export function rosterForActivity(activity: { activity_date: string; start_time:
     .sort((a, b) => Number(a.isTrial) - Number(b.isTrial) || a.firstName.localeCompare(b.firstName, "fr"));
 }
 
-const toRosterPlayer = (r: RosterRegistration): RosterPlayer => ({
+export const toRosterPlayer = (r: RosterRegistration): RosterPlayer => ({
   registrationId: r.id,
   firstName: r.player_first_name ?? "",
   lastName: r.player_last_name ?? "",

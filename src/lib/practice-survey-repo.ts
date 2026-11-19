@@ -1,4 +1,4 @@
-import { getActivityAttendance, getActivityRoster, loadRosterSources, rosterForActivity, type PlayerAttendance, type RosterPlayer } from "@/lib/coach-portal-repo";
+import { getActivityAttendance, getActivityRoster, loadRosterSources, rosterForActivity, toRosterPlayer, type PlayerAttendance, type RosterPlayer } from "@/lib/coach-portal-repo";
 import { getActivity, type CoachActivity } from "@/lib/coaches-repo";
 import { summarizeSurvey, type SurveyAnswer, type SurveySummary } from "@/lib/practice-survey";
 import { createActivityFor, listPractices, todayIso, type Practice } from "@/lib/practices-repo";
@@ -103,6 +103,13 @@ export async function getSurveyData(activityId: string): Promise<SurveyData | nu
     const r = rosterForActivity({ activity_date: q.date, start_time: q.start, category: q.group }, slots, regs);
     if (r.length && !groups.includes(groupName(q.group))) groups.push(groupName(q.group));
     for (const x of r) if (!byId.has(x.registrationId)) byId.set(x.registrationId, x);
+  }
+  // Joueuses ajoutées pour cette pratique (présentes dans MonClubSportif ou notées par l'éducateur) sans être de la plage :
+  // elles répondent aussi au sondage (JP, 18 nov. 2026).
+  for (const at of attendance as any[]) {
+    if (byId.has(at.registration_id) || !["present", "late", "left_early"].includes(at.status)) continue;
+    const reg = regs.find((r: any) => r.id === at.registration_id);
+    if (reg) byId.set(at.registration_id, toRosterPlayer(reg));
   }
   const roster = [...byId.values()].sort((a, b) => Number(a.isTrial) - Number(b.isTrial) || a.firstName.localeCompare(b.firstName, "fr"));
   const label = groups.filter(Boolean).length ? `Filles ${groups.filter(Boolean).join(" et ")}` : activity.title || activity.category || activity.activity_type;
