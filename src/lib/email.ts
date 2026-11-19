@@ -297,6 +297,47 @@ export async function sendInstallmentReceiptEmail(input: InstallmentReceiptEmail
   });
 }
 
+/** Courriel à la famille quand un versement est refusé (JP, 18 nov. 2026) : le lien vers la page où elle paie avec
+ *  une autre carte, qui devient la carte des versements suivants. `cc` : Christine pour un envoi fait à la main. */
+export async function sendInstallmentPayLinkEmail(input: {
+  to: string;
+  parentName: string;
+  playerName: string;
+  programName: string;
+  amountCents: number;
+  installmentNumber: number;
+  installmentCount: number;
+  url: string;
+  finalAttempt?: boolean;
+  cc?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  if (!isEmailConfigured()) return { ok: false, error: "Courriel non configuré" };
+  const fmt = (cents: number) => (cents / 100).toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+  const first = input.parentName.trim().split(/\s+/)[0] || "";
+  const next = input.installmentNumber < input.installmentCount ? " Cette carte servira aussi pour les prochains versements." : "";
+  const intro = `Le versement ${input.installmentNumber} de ${input.installmentCount} (${fmt(input.amountCents)}) pour ${input.programName} de ${input.playerName} a été refusé par votre carte.`;
+  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1d1730;line-height:1.6;max-width:620px">
+    <p>Bonjour${first ? ` ${first}` : ""},</p>
+    <p>${intro}</p>
+    <p>Rien de grave : vous pouvez le payer en une minute avec une autre carte, ou avec la même une fois la situation réglée avec votre banque.${next}</p>
+    <p><a href="${input.url}" style="display:inline-block;background:#5b2a86;color:#fff;text-decoration:none;padding:13px 24px;border-radius:10px;font-weight:bold">Payer mon versement</a></p>
+    <p style="font-size:13px;color:#666;margin-top:-6px">Ou copiez ce lien : <a href="${input.url}">${input.url}</a></p>
+    ${input.finalAttempt ? "<p>Nous n'essaierons plus de prélever ce versement automatiquement : merci de le régler par ce lien.</p>" : "<p>Si vous l'avez déjà réglé, vous pouvez ignorer ce message.</p>"}
+    <p>Merci,<br/>L'équipe New Valkyria</p>
+  </div>`;
+  const text = `Bonjour${first ? ` ${first}` : ""},\n\n${intro}\n\nRien de grave : vous pouvez le payer en une minute avec une autre carte, ou avec la même une fois la situation réglée avec votre banque.${next}\n\nPayer mon versement : ${input.url}\n\n${input.finalAttempt ? "Nous n'essaierons plus de prélever ce versement automatiquement : merci de le régler par ce lien." : "Si vous l'avez déjà réglé, vous pouvez ignorer ce message."}\n\nMerci,\nL'équipe New Valkyria`;
+  const res = await getResendClient().emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    ...(input.cc ? { cc: input.cc } : {}),
+    subject: `Votre versement pour ${input.playerName} n'a pas pu être prélevé`,
+    html,
+    text
+  } as never);
+  const err = (res as { error?: { message: string } | null })?.error;
+  return err ? { ok: false, error: err.message } : { ok: true };
+}
+
 interface PaymentPlanFailedEmailInput {
   parentName: string;
   parentEmail: string;

@@ -1,3 +1,5 @@
+import { isInstallmentSource, type InstallmentSource } from "@/lib/installment-pay";
+import { applyInstallmentPayment } from "@/lib/installment-pay-repo";
 import { revalidateTag } from "next/cache";
 import { after, NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -435,30 +437,23 @@ export async function POST(request: Request) {
     // nouvelle, sans toucher au statut de l'inscription (déjà "paid" depuis
     // le 1er versement) ni renvoyer de courriel de confirmation d'inscription. ──
     if (checkoutType === "installment-retry") {
+      // Versement refusé payé par lien (admin ou page envoyée à la famille) : saison, programme à dates fixes ou
+      // Sport-Études. La carte utilisée devient celle des versements suivants.
       const installmentId = session.metadata?.installmentId;
       const planId = session.metadata?.planId;
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
-      if (installmentId && paymentIntentId && session.metadata?.source === "sessionprogram") {
-        // Versement d'un programme garçons / à dates fixes (carte refusée au prélèvement automatique).
-        try {
-          await markSessionProgramInstallmentPaid(installmentId, paymentIntentId);
-          await logAudit({ actorRole: "system", actorLabel: "Stripe", action: "installment_paid_by_link", entityType: "session_program_payment_plan_installments", entityId: installmentId, after: { paymentIntentId } });
-        } catch (error) {
-          console.error("Unable to process session program installment retry", error);
-        }
-        return NextResponse.json({ received: true });
-      }
+      const source = isInstallmentSource(session.metadata?.source) ? session.metadata!.source : "season";
       if (installmentId && paymentIntentId) {
         try {
-          await markInstallmentPaid(installmentId, paymentIntentId);
-          if (planId) {
-            const stripeCustomerId = typeof session.customer === "string" ? session.customer : undefined;
-            const paymentIntent = await getStripeClient().paymentIntents.retrieve(paymentIntentId);
-            const stripePaymentMethodId = typeof paymentIntent.payment_method === "string" ? paymentIntent.payment_method : undefined;
-            if (stripeCustomerId && stripePaymentMethodId) {
-              await updatePaymentPlanCard(planId, { stripeCustomerId, stripePaymentMethodId });
-            }
-          }
+          const paymentIntent = await getStripeClient().paymentIntents.retrieve(paymentIntentId);
+          await applyInstallmentPayment({
+            source: source as InstallmentSource,
+            installmentId,
+            planId: planId ?? null,
+            paymentIntentId,
+            customerId: typeof session.customer === "string" ? session.customer : null,
+            paymentMethodId: typeof paymentIntent.payment_method === "string" ? paymentIntent.payment_method : null
+          });
         } catch (error) {
           console.error("Unable to process installment retry payment", error);
         }

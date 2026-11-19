@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { cronGate } from "@/lib/cron-gate";
-import { sendInstallmentReceiptEmail, sendInstallmentReminderEmail, sendPaymentPlanFailedEmail } from "@/lib/email";
+import { sendInstallmentPayLinkEmail, sendInstallmentReceiptEmail, sendInstallmentReminderEmail, sendPaymentPlanFailedEmail } from "@/lib/email";
+import { installmentPayUrl } from "@/lib/installment-pay";
+import { getPayableInstallment } from "@/lib/installment-pay-repo";
 import { getInstallmentsNeedingReminder, markInstallmentReminderSent } from "@/lib/private-programs-repo";
 import { getDueInstallments as getDueSeasonInstallments, markInstallmentFailed as markSeasonInstallmentFailed, markInstallmentPaid as markSeasonInstallmentPaid } from "@/lib/season-admin-repo";
 import {
@@ -107,6 +109,14 @@ export async function GET(request: Request) {
           attemptNumber: attemptCount,
           finalAttempt: isFinal
         }).catch((emailErr) => console.error("Unable to send payment plan failed email", emailErr));
+        // La famille reçoit aussi son lien pour payer avec une autre carte (JP, 18 nov. 2026).
+        await getPayableInstallment(inst.source, inst.id)
+          .then((p) =>
+            p?.parentEmail
+              ? sendInstallmentPayLinkEmail({ to: p.parentEmail, parentName: p.parentName, playerName: p.playerName, programName: p.programName, amountCents: p.amountCents, installmentNumber: p.sequenceNo, installmentCount: p.installmentCount, url: installmentPayUrl(inst.source, inst.id), finalAttempt: isFinal })
+              : null
+          )
+          .catch((emailErr) => console.error("Unable to send installment pay link email", emailErr));
       }
     }
   }
