@@ -519,6 +519,39 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     ],
     done: "La première collecte a eu lieu en mars 2027 et le calendrier suit son cours."
   },
+  "P1.5.07": {
+    how: [
+      "Pour chaque thème de pratique, écris la fiche de la capitaine : 3 phrases à dire (encourager, organiser, corriger gentiment) et 1 action (rassembler son équipe, son temps mort).",
+      "Explique les attentes à toutes les filles : la capitaine parle la première, encourage après une erreur, félicite un effort.",
+      "Une capitaine différente chaque semaine ; l'éducateur note son leadership de 1 à 5 dans le portail (Équipes et capitaines)."
+    ],
+    done: "Chaque thème a sa fiche de capitaine et chaque fille a été capitaine au moins une fois dans la saison."
+  },
+  "P1.5.08": {
+    how: [
+      "Dans chaque pratique, garde un bloc de petits jeux à 2 contre 2 ou 3 contre 3, sur plusieurs mini-terrains en même temps.",
+      "Les coachs parlent peu : 3 interventions au plus, le reste du temps on laisse jouer.",
+      "Regarde la note de la pratique donnée par les filles : elle doit monter."
+    ],
+    done: "Chaque pratique a son bloc de petits jeux et les filles touchent le ballon au maximum."
+  },
+  "P1.4.11": {
+    how: [
+      "La veille, lis la pratique dans le portail (diapos et chaque exercice) et confirme-la.",
+      "Au gymnase, lance le minuteur du portail à l'étape « Pendant » : quand il sonne, on passe à l'exercice suivant, même s'il reste quelque chose à dire.",
+      "Compte tes interventions : 3 au plus par exercice, courtes et sur le thème ; chaque coach ne corrige que le thème.",
+      "Tenue Valkyria complète pour tous les coachs, jamais en noir : c'est la dernière fois que JP a à le rappeler."
+    ],
+    done: "Toutes les cases du guide de l'éducateur sont cochées avant chaque pratique, aucun exercice sauté faute de temps."
+  },
+  "P1.4.12": {
+    how: [
+      "Avant le ball mastery, répartis les joueuses : chaque éducateur a les siennes, les plus faibles d'abord.",
+      "Ajoute une séquence plus difficile : celles qui bloquent sont repérées et notées dans l'évaluation (gestes difficiles).",
+      "Ces joueuses sont encadrées de près à la pratique suivante ; pas de discussion entre coachs pendant le bloc."
+    ],
+    done: "Les joueuses en difficulté sont repérées à chaque bloc de ball mastery et suivies à la pratique suivante."
+  },
   /* ── Stade 3 d'Alex Hormozi : stabiliser (guide Acquisition.com, 17 nov. 2026 ; docs/strategie/acq-stade-3-stabiliser.md) ── */
   "P4.8.15": {
     how: [

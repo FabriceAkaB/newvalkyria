@@ -1367,6 +1367,30 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      },
+      {
+       "code": "P1.4.11",
+       "priority": "star",
+       "level": 1,
+       "title": "Standard du coach en pratique : pratique lue la veille, minuteur lancé (quand c'est fini, on passe au suivant), 3 interventions au plus par exercice puis on laisse jouer, chaque coach corrige seulement le thème, tenue Valkyria complète (jamais en noir).",
+       "due": "2026-11-25",
+       "owner": "JP + coachs",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voyage international de la relâche 2028 (17 nov. 2026)"
+      },
+      {
+       "code": "P1.4.12",
+       "priority": "star",
+       "level": 1,
+       "title": "Ball mastery : chaque éducateur a ses joueuses, les plus faibles d'abord ; des séquences plus difficiles pour repérer celles qui bloquent, qui sont alors encadrées de près ; pas de discussion entre coachs pendant le bloc.",
+       "due": "2026-12-02",
+       "owner": "Coachs + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voyage international de la relâche 2028 (17 nov. 2026)"
       }
      ]
     },
@@ -1437,6 +1461,30 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Matchs, réseaux sociaux, portail des éducateurs et appréciation des joueuses"
+      },
+      {
+       "code": "P1.5.07",
+       "priority": "star",
+       "level": 1,
+       "title": "Former les capitaines au leadership : une fiche par thème (ce que la capitaine dit, fait, comment elle encourage les autres), des attentes claires, une capitaine différente chaque semaine pour que chaque fille apprenne à communiquer et à encourager.",
+       "due": "2026-12-15",
+       "owner": "JP + coachs + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voyage international de la relâche 2028 (17 nov. 2026)"
+      },
+      {
+       "code": "P1.5.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Petits jeux à 2 contre 2 et 3 contre 3 sur plusieurs terrains en même temps : un maximum de répétitions et de confiance, moins de paroles des coachs.",
+       "due": "2026-11-30",
+       "owner": "Coachs",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Voyage international de la relâche 2028 (17 nov. 2026)"
       }
      ]
     },

@@ -1508,6 +1508,16 @@ un comité de parents ; groupes d'environ 20 joueuses ; c'est aussi un levier de
 - [ ] `P5.6.05` ⭐ N2 — Préparer le financement du voyage 2 mois avant : comité de parents formé, calendrier des collectes de mars 2027 à février 2028, objectif par joueuse, règle du temps de jeu annoncée. — 15 janv. 2027 · JP + comité de parents
 - [ ] `P5.6.06` ⭐ N2 — Lancer les activités de financement du voyage de la relâche 2028 (une collecte par mois au moins), suivies dans les tâches et annoncées aux familles. — 1er mars 2027 · Comité de parents + JP
 
+#### P1.5 Pédagogie adaptée aux filles
+
+- [ ] `P1.5.07` ⭐ N1 — Former les capitaines au leadership : une fiche par thème (ce que la capitaine dit, fait, comment elle encourage les autres), des attentes claires, une capitaine différente chaque semaine pour que chaque fille apprenne à communiquer et à encourager. — 15 déc. 2026 · JP + coachs + Claude Code
+- [ ] `P1.5.08` ⭐ N1 — Petits jeux à 2 contre 2 et 3 contre 3 sur plusieurs terrains en même temps : un maximum de répétitions et de confiance, moins de paroles des coachs. — 30 nov. 2026 · Coachs
+
+#### P1.4 Formation des coachs
+
+- [ ] `P1.4.11` ⭐ N1 — Standard du coach en pratique : pratique lue la veille, minuteur lancé (quand c'est fini, on passe au suivant), 3 interventions au plus par exercice puis on laisse jouer, chaque coach corrige seulement le thème, tenue Valkyria complète (jamais en noir). — 25 nov. 2026 · JP + coachs
+- [ ] `P1.4.12` ⭐ N1 — Ball mastery : chaque éducateur a ses joueuses, les plus faibles d'abord ; des séquences plus difficiles pour repérer celles qui bloquent, qui sont alors encadrées de près ; pas de discussion entre coachs pendant le bloc. — 2 déc. 2026 · Coachs + Claude Code
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |

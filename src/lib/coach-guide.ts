@@ -10,6 +10,9 @@ export const GUIDE_ITEMS = [
   { key: "roles", label: "Rôles décidés entre éducateurs", detail: "Qui explique, qui filme, qui corrige, qui s'occupe de la psychomotricité." },
   { key: "capitaines", label: "Équipes et capitaines prêts", detail: "Un brassard par équipe. La capitaine connaît sa tâche de communication et son pouvoir : 1 temps mort pour ajuster son équipe." },
   { key: "evolution", label: "Pour chaque exercice : 1 variante et 1 progression", detail: "L'exercice doit évoluer pendant qu'on le joue : c'est ce qui rend les filles intelligentes." },
+  { key: "theme", label: "Je connais le thème et je ne corrige que lui", detail: "En ball mastery, chaque éducateur a ses joueuses, les plus faibles d'abord : on les repère avec les séquences plus difficiles et on les encadre de près. Pas de discussion entre coachs pendant le bloc." },
+  { key: "interventions", label: "3 interventions au plus par exercice, ensuite on laisse jouer", detail: "Courtes et sur le thème. Le reste du temps, les filles répètent : petits jeux à 2 contre 2 ou 3 contre 3, un maximum de touches." },
+  { key: "tenue", label: "Tenue Valkyria complète", detail: "Tout le monde habillé pareil, jamais en noir." },
   { key: "borne", label: "Borne du sondage ouverte sur l'iPad", detail: "Onglet « Sondage des jeunes » : l'ouvrir avant d'arriver au gymnase (elle marche ensuite sans réseau)." }
 ] as const;
 export type GuideKey = (typeof GUIDE_ITEMS)[number]["key"];
