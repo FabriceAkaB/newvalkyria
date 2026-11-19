@@ -134,7 +134,7 @@ export const PILLAR_MODULES: PillarModule[] = [
     kpis: ["appreciation_joueuses"],
     links: ["A03"],
     planned: [
-      "En place : dans le portail entraîneur (étape « Après »), moins de 2 minutes par fille : photo, ball mastery, prestation, attitude (1 à 5) et une note d'au moins 30 caractères",
+      "En place : dans le portail entraîneur (étape « Après »), moins de 2 minutes par fille : photo, ball mastery, prestation, attitude (1 à 5), chaque geste du ball mastery de 1 à 10 et une observation d'au moins 25 mots ; heures payées seulement quand le rapport est fini (sondage du jour et retour 2 + 2 compris)",
       "En place : note trop courte, répétitive, copiée d'une autre fille ou d'une séance précédente refusée avec un message clair ; copier-coller bloqué",
       "En place : routine de fin, chaque joueuse donne sa note de la pratique et sa fatigue sur 10 ; moyenne par semaine dans l'indicateur « Note des pratiques »",
       "En place : résumé de saison sur la fiche joueuse (moyennes, évolution début → dernières pratiques, sa note des pratiques) et dans le bulletin ; les notes restent internes (pas dans le bulletin des parents)",

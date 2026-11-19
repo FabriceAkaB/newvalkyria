@@ -29,7 +29,7 @@ export async function getCoachPay(coachId: string, today: string, offset = 0): P
       hours: r.hold ? r.heldHours : r.hours,
       cents: r.hold ? r.heldPayCents : r.payCents,
       state: r.attendance !== "present" ? "absent" : r.hold ? "retenu" : "compte",
-      why: r.hold ? PAY_HOLD_LABEL[r.hold] : null
+      why: r.hold ? (r.hold === "rapport" && r.missingDetail.length ? `Rapport pas fini : ${r.missingDetail.join(", ")}` : PAY_HOLD_LABEL[r.hold]) : null
     }));
   // Ce qui est prévu d'ici la fin de la période (assigné, pas encore fait) : estimé avec la durée et le taux.
   const rate = new Map(typeRates.map((t) => [`${t.coach_id}:${t.activity_type}`, t.hourly_rate_cents]));

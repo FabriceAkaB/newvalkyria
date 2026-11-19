@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { activityEndMs, checkNote, computeReport, feedbackByWeek, isQuickEvaluationComplete, noteSimilarity, payHold } from "@/lib/coach-report";
+import { activityEndMs, checkNote, computeReport, countWords, debriefPoints, feedbackByWeek, isDebriefComplete, isQuickEvaluationComplete, noteSimilarity, payHold, reportMissing } from "@/lib/coach-report";
 
 const fullRatings = { "Ball mastery": 4, Prestation: 3, Attitude: 5 };
 
 describe("checkNote", () => {
   const base = { playerFirstName: "Léa", sameActivity: [], previous: [] };
 
-  it("refuse une note de moins de 30 caractères et dit combien il en manque", () => {
+  it("refuse une observation de moins de 25 mots et dit combien il en manque", () => {
     const r = checkNote({ ...base, note: "Bonne pratique." });
     expect(r.ok).toBe(false);
     expect(r.code).toBe("trop-court");
-    expect(r.message).toContain("Encore 15 caractères");
+    expect(r.message).toContain("Encore 23 mots");
     expect(r.message).toContain("Léa");
   });
 
   it("accepte une vraie note", () => {
-    expect(checkNote({ ...base, note: "Souriante, elle a aidé une coéquipière au 1 contre 1 et posé de bonnes questions." }).ok).toBe(true);
+    expect(checkNote({ ...base, note: "Souriante et concentrée. Son contrôle orienté progresse, elle lève la tête plus tôt. Au 2c2, elle a cadré la porteuse et récupéré le ballon deux fois, puis elle a relancé vite vers sa partenaire." }).ok).toBe(true);
   });
 
   it("refuse une note qui se répète", () => {
@@ -27,8 +27,8 @@ describe("checkNote", () => {
   it("refuse le même texte que pour une autre fille, même avec le prénom changé", () => {
     const r = checkNote({
       ...base,
-      note: "Léa était concentrée, a bien écouté les consignes et a encouragé son équipe.",
-      sameActivity: [{ playerName: "Mia", note: "Mia était concentrée, a bien écouté les consignes et a encouragé son équipe." }]
+      note: "Léa était concentrée, a bien écouté les consignes et a encouragé son équipe. Son premier contrôle progresse beaucoup depuis deux semaines. Au rondo, elle a trouvé la passe entre les lignes.",
+      sameActivity: [{ playerName: "Mia", note: "Mia était concentrée, a bien écouté les consignes et a encouragé son équipe. Son premier contrôle progresse beaucoup depuis deux semaines. Au rondo, elle a trouvé la passe entre les lignes." }]
     });
     expect(r.code).toBe("autre-joueuse");
     expect(r.message).toContain("celle de Mia");
@@ -36,7 +36,7 @@ describe("checkNote", () => {
   });
 
   it("fait l'élision devant une voyelle", () => {
-    const r = checkNote({ ...base, playerFirstName: "Alexia", note: "Concentrée, elle a bien écouté les consignes et a encouragé son équipe.", sameActivity: [{ playerName: "Amaliah R.", note: "Concentrée, elle a bien écouté les consignes et a encouragé son équipe." }] });
+    const r = checkNote({ ...base, playerFirstName: "Alexia", note: "Concentrée, elle a bien écouté les consignes et a encouragé son équipe. Son premier contrôle progresse beaucoup depuis deux semaines. Au rondo, elle a trouvé la passe entre les lignes.", sameActivity: [{ playerName: "Amaliah R.", note: "Concentrée, elle a bien écouté les consignes et a encouragé son équipe. Son premier contrôle progresse beaucoup depuis deux semaines. Au rondo, elle a trouvé la passe entre les lignes." }] });
     expect(r.message).toContain("celle d'Amaliah R.");
     expect(r.message).toContain("qu'est-ce qu'Alexia");
   });
@@ -44,8 +44,8 @@ describe("checkNote", () => {
   it("refuse une note identique à une séance précédente", () => {
     const r = checkNote({
       ...base,
-      note: "Très bonne attitude, concentrée du début à la fin, aucun problème aujourd'hui.",
-      previous: [{ playerName: "Léa", date: "2026-11-09", note: "Très bonne attitude, concentrée du début à la fin, aucun problème aujourd'hui." }]
+      note: "Très bonne attitude, concentrée du début à la fin, aucun problème aujourd'hui. Elle progresse au dribble pied gauche. Au 1c1 final, elle a éliminé son adversaire deux fois de suite.",
+      previous: [{ playerName: "Léa", date: "2026-11-09", note: "Très bonne attitude, concentrée du début à la fin, aucun problème aujourd'hui. Elle progresse au dribble pied gauche. Au 1c1 final, elle a éliminé son adversaire deux fois de suite." }]
     });
     expect(r.code).toBe("seance-precedente");
     expect(r.message).toContain("9 novembre");
@@ -54,8 +54,8 @@ describe("checkNote", () => {
   it("accepte deux notes différentes pour deux filles", () => {
     const r = checkNote({
       ...base,
-      note: "Fatiguée en début de séance, elle s'est réveillée au jeu réduit et a marqué deux fois.",
-      sameActivity: [{ playerName: "Mia", note: "Timide aujourd'hui, a eu besoin d'encouragements pour oser le dribble face à l'adversaire." }]
+      note: "Fatiguée en début de séance, elle s'est réveillée au jeu réduit et a marqué deux fois. Sa frappe pied droit progresse. Au 4c4, elle a demandé le ballon dans l'espace au bon moment.",
+      sameActivity: [{ playerName: "Mia", note: "Timide aujourd'hui, a eu besoin d'encouragements pour oser le dribble face à l'adversaire. Elle protège mieux son ballon qu'avant. Au rondo, elle a gardé la balle sous pression trois fois." }]
     });
     expect(r.ok).toBe(true);
   });
@@ -178,5 +178,50 @@ describe("watchReasons", () => {
     expect(r.some((x) => x.startsWith("Ball mastery en baisse"))).toBe(true);
     expect(r.some((x) => x.startsWith("Très fatiguée"))).toBe(true);
     expect(r.some((x) => x.startsWith("N'aime pas"))).toBe(true);
+  });
+});
+
+describe("règle du rapport complet du 19 nov. 2026", () => {
+  const long = "Souriante et concentrée. Son contrôle orienté progresse, elle lève la tête plus tôt. Au 2c2, elle a cadré la porteuse et récupéré le ballon deux fois de suite.";
+  const roster = [{ registrationId: "a", name: "Léa B." }];
+  const attendance = [{ registration_id: "a", status: "present", practice_rating: 8, fatigue: 5 }];
+
+  it("compte les mots", () => {
+    expect(countWords("l'équipe a 2 buts")).toBe(5);
+    expect(countWords(long)).toBeGreaterThanOrEqual(25);
+  });
+
+  it("demande 25 mots d'observation à partir du 19 nov., 30 caractères avant", () => {
+    const ev = { ratings: fullRatings, comment: "Concentrée et souriante, belle progression au contrôle." };
+    expect(isQuickEvaluationComplete(ev, "2026-11-18")).toBe(true);
+    expect(isQuickEvaluationComplete(ev, "2026-11-19")).toBe(false);
+    expect(isQuickEvaluationComplete({ ratings: fullRatings, comment: long }, "2026-11-19")).toBe(true);
+  });
+
+  it("veut 2 points qui ont bien marché et 2 à améliorer, de 4 mots ou plus", () => {
+    expect(debriefPoints("1. Les transitions étaient rapides\n- ok\n2) Mia a bien guidé son équipe")).toHaveLength(2);
+    expect(isDebriefComplete({ wentWell: "Les transitions étaient rapides\nMia a bien guidé son équipe", toImprove: "Trop d'attente en file" })).toBe(false);
+    expect(isDebriefComplete({ wentWell: "Les transitions étaient rapides\nMia a bien guidé son équipe", toImprove: "Trop d'attente en file au rondo\nLe montage pas prêt à l'arrivée" })).toBe(true);
+  });
+
+  it("retient les heures sans sondage du jour ou sans retour 2 + 2 de cet éducateur", () => {
+    const activity = { activity_type: "Pratique", activity_date: "2026-11-20" };
+    const evaluations = [{ registration_id: "a", ratings: fullRatings, comment: long }];
+    const noSurvey = computeReport({ activity, roster, attendance: [{ registration_id: "a", status: "present" }], evaluations });
+    expect(noSurvey.complete).toBe(false);
+    expect(reportMissing(noSurvey, "c1")).toContain("1 fille sans sondage du jour");
+
+    const debriefs = [{ coachId: "c1", wentWell: "Les transitions étaient rapides\nMia a bien guidé son équipe", toImprove: "Trop d'attente en file au rondo\nLe montage pas prêt à l'arrivée" }];
+    const r = computeReport({ activity, roster, attendance, evaluations, debriefs });
+    expect(r.complete).toBe(true);
+    expect(payHold({ activityDate: "2026-11-20", status: "present", confirmed: true, report: r, coachId: "c1" })).toBeNull();
+    expect(payHold({ activityDate: "2026-11-20", status: "present", confirmed: true, report: r, coachId: "c2" })).toBe("rapport");
+    expect(reportMissing(r, "c2")).toEqual(["ton retour : 2 choses qui ont bien marché et 2 à améliorer"]);
+  });
+
+  it("garde la règle d'avant pour les pratiques jusqu'au 18 nov.", () => {
+    const r = computeReport({ activity: { activity_type: "Pratique", activity_date: "2026-11-18" }, roster, attendance: [{ registration_id: "a", status: "present" }], evaluations: [{ registration_id: "a", ratings: fullRatings, comment: "Concentrée et souriante, belle progression au contrôle." }] });
+    expect(r.complete).toBe(true);
+    expect(payHold({ activityDate: "2026-11-18", status: "present", confirmed: true, report: r, coachId: "c1" })).toBeNull();
   });
 });

@@ -2,7 +2,7 @@ import { CoachDashboard, type DashboardActivity, type ToComplete } from "@/compo
 import { requireCoach } from "@/lib/coach-auth";
 import { cleanCategory, getActivityReports, getCoachActivities, getPracticeReadItems, getTeamPracticesOn, loadRosterSources, rosterForActivity } from "@/lib/coach-portal-repo";
 import { practiceReadStatus } from "@/lib/practice-read";
-import { hasStarted, REPORT_RULE_START } from "@/lib/coach-report";
+import { hasStarted, REPORT_RULE_START, reportMissing } from "@/lib/coach-report";
 import { listObservations } from "@/lib/coach-observations-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { getSeasonThemes, mondayOfWeek, themeFor } from "@/lib/season-themes-repo";
@@ -69,10 +69,7 @@ export default async function CoachDashboardPage() {
     .map((a) => {
       const report = reports.get(a.activity.id);
       const missing: string[] = [];
-      if (report?.required) {
-        if (report.attendanceMissing.length) missing.push(`${report.attendanceMissing.length} présence${report.attendanceMissing.length > 1 ? "s" : ""} de joueuses`);
-        if (report.evaluationsMissing.length) missing.push(`${report.evaluationsMissing.length} évaluation${report.evaluationsMissing.length > 1 ? "s" : ""}`);
-      }
+      missing.push(...reportMissing(report, a.assignment.coach_id));
       if (!a.assignment.confirmed) missing.push("confirmer ta présence");
       return { activity: view.find((v) => v.id === a.activity.id)!, missing };
     })

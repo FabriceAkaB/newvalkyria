@@ -659,10 +659,11 @@ export async function getActivityReports(activities: ReportActivity[]): Promise<
   const out = new Map<string, ReportStatus>();
   if (!concerned.length) return out;
   const ids = concerned.map((a) => a.id);
-  const [{ slots, regs }, { data: att, error: e1 }, { data: evals, error: e2 }] = await Promise.all([
+  const [{ slots, regs }, { data: att, error: e1 }, { data: evals, error: e2 }, { data: debriefs }] = await Promise.all([
     loadRosterSources(),
     db().from("activity_player_attendance").select("activity_id, registration_id, status, practice_rating, fatigue").in("activity_id", ids),
-    db().from("player_evaluations").select("activity_id, registration_id, ratings, comment").in("activity_id", ids)
+    db().from("player_evaluations").select("activity_id, registration_id, ratings, comment").in("activity_id", ids),
+    db().from("practice_debriefs").select("activity_id, coach_id, went_well, to_improve").in("activity_id", ids)
   ]);
   if (e1 || e2) throw new Error((e1 ?? e2).message);
   for (const a of concerned) {
@@ -673,7 +674,8 @@ export async function getActivityReports(activities: ReportActivity[]): Promise<
         activity: a,
         roster: roster.map((p) => ({ registrationId: p.registrationId, name: `${p.firstName} ${p.lastName}`.trim() })),
         attendance: ((att ?? []) as any[]).filter((r) => r.activity_id === a.id),
-        evaluations: ((evals ?? []) as any[]).filter((r) => r.activity_id === a.id)
+        evaluations: ((evals ?? []) as any[]).filter((r) => r.activity_id === a.id),
+        debriefs: ((debriefs ?? []) as any[]).filter((r) => r.activity_id === a.id).map((r) => ({ coachId: r.coach_id, wentWell: r.went_well, toImprove: r.to_improve }))
       })
     );
   }

@@ -248,3 +248,32 @@
 .chp-noconsent { margin: 0; padding: 10px 12px; border-radius: var(--adm-radius-sm); background: var(--adm-warn-soft, rgba(232,137,58,0.12)); color: var(--adm-text); font-size: 0.85rem; }
 .chp-link { border: 0; background: none; padding: 0; color: var(--adm-accent); font-size: 0.85rem; cursor: pointer; justify-self: start; text-decoration: underline; }
 .chp-actions { display: grid; gap: 10px; }
+
+/* ── Pratique à imprimer (JP, 18 nov. 2026) : une feuille blanche lisible, même en mode nuit ── */
+.print-sheet { max-width: 860px; margin: 0 auto; padding: 24px 16px 48px; background: #fff; color: #1d1730; font-size: 14px; line-height: 1.45; }
+.print-sheet h1 { margin: 2px 0 4px; font-size: 24px; }
+.print-sheet__eyebrow { margin: 0; color: #5d566b; text-transform: capitalize; font-size: 13px; }
+.print-sheet__head p { margin: 0; }
+.print-sheet__theme { margin-top: 10px; padding: 10px 12px; border: 2px solid #5b2a86; border-radius: 8px; }
+.print-sheet__theme p { margin: 4px 0 0; white-space: pre-line; }
+.print-sheet__timing { width: 100%; border-collapse: collapse; margin: 16px 0; font-variant-numeric: tabular-nums; }
+.print-sheet__timing th, .print-sheet__timing td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #d8d1e3; }
+.print-sheet__timing th { font-size: 12px; color: #5d566b; }
+.print-sheet__block { margin-top: 16px; padding-top: 12px; border-top: 2px solid #1d1730; break-inside: avoid-page; }
+.print-sheet__block h2 { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0; font-size: 17px; }
+.print-sheet__block h2 span:last-child { font-variant-numeric: tabular-nums; color: #5b2a86; }
+.print-sheet__type { margin: 0 0 6px; font-size: 12px; color: #5d566b; }
+.print-sheet__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.print-sheet__body:has(.print-sheet__diagram) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.print-sheet dl { margin: 0; display: grid; gap: 6px; }
+.print-sheet dt { font-weight: 700; font-size: 12px; color: #5d566b; }
+.print-sheet dd { margin: 0; white-space: pre-line; }
+.print-sheet__evolve { margin-top: 8px; padding: 8px 10px; background: #f3eefa; border-left: 4px solid #5b2a86; display: grid; gap: 6px; }
+.print-sheet__evolve p { margin: 2px 0 0; white-space: pre-line; }
+.print-sheet__notes { margin: 10px 0 0; color: #8a8298; }
+@media (max-width: 640px) { .print-sheet__body:has(.print-sheet__diagram) { grid-template-columns: minmax(0, 1fr); } }
+@media print {
+  .print-sheet { padding: 0; max-width: none; font-size: 11.5px; }
+  .print-sheet__evolve { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { margin: 12mm; }
+}

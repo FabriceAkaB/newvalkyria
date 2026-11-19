@@ -4,6 +4,7 @@ import { isAdminRequest } from "@/lib/admin-auth";
 import { getActivityAttendance, getActivityEvaluations, getActivityRoster } from "@/lib/coach-portal-repo";
 import { computeReport, reportRequired } from "@/lib/coach-report";
 import { getActivity, getCoaches } from "@/lib/coaches-repo";
+import { getDebriefs } from "@/lib/practice-debriefs-repo";
 import { jsonError } from "@/lib/http";
 
 /** Rapport des éducateurs pour une activité : présence, évaluation rapide et routine de fin de chaque joueuse. */
@@ -13,13 +14,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const activity = await getActivity(id);
   if (!activity) return jsonError("Activité introuvable", 404);
 
-  const [roster, attendance, evaluations, coaches] = await Promise.all([getActivityRoster(activity), getActivityAttendance(id), getActivityEvaluations(id), getCoaches()]);
+  const [roster, attendance, evaluations, coaches, debriefs] = await Promise.all([getActivityRoster(activity), getActivityAttendance(id), getActivityEvaluations(id), getCoaches(), getDebriefs([id]).catch(() => [])]);
   const coachName = new Map(coaches.map((c) => [c.id, c.first_name]));
   const report = computeReport({
     activity,
     roster: roster.map((p) => ({ registrationId: p.registrationId, name: `${p.firstName} ${p.lastName}`.trim() })),
     attendance,
-    evaluations
+    evaluations,
+    debriefs
   });
 
   return NextResponse.json({

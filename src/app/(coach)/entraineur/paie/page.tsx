@@ -4,6 +4,7 @@ import { CoachTopbar } from "@/components/coach-topbar";
 import { requireCoach } from "@/lib/coach-auth";
 import { getCoachPay } from "@/lib/coach-pay-repo";
 import { getCoach } from "@/lib/coaches-repo";
+import { DEBRIEF_POINT_MIN_WORDS, NOTE_MIN_WORDS } from "@/lib/coach-report";
 
 export const metadata = { title: "Ma paie — Espace Technique" };
 export const dynamic = "force-dynamic";
@@ -70,7 +71,20 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
             <Link href={`/entraineur/paie?avant=${offset + 1}`}>← Période d&apos;avant</Link>
             {offset ? <Link href={offset > 1 ? `/entraineur/paie?avant=${offset - 1}` : "/entraineur/paie"}>Période suivante →</Link> : null}
           </p>
-          <p className="coach-muted" style={{ fontSize: "0.8rem" }}>Ta présence dans MonClubSportif sert de punch ; tes heures comptent quand ta présence et ton rapport de pratique sont faits.</p>
+          <div className="coach-card" style={{ marginTop: 16 }}>
+            <p className="coach-card__label">Quand une pratique est-elle payée ?</p>
+            <p className="coach-sub" style={{ marginTop: 0 }}>
+              Les heures d&apos;une pratique (le temps du rapport compris) restent « Retenu » tant que ces 5 choses ne sont pas faites. Dès que la dernière est faite, elles passent toutes seules à « Compte » dans ta paie.
+            </p>
+            <ol style={{ margin: "8px 0 0", paddingLeft: 20, display: "grid", gap: 6, color: "var(--adm-text)" }}>
+              <li><strong>Ta présence</strong> : mets-toi « présent » dans MonClubSportif (c&apos;est ton punch).</li>
+              <li><strong>Les présences des joueuses</strong> : chaque fille présente ou absente.</li>
+              <li><strong>L&apos;évaluation de chaque fille présente</strong> : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10, et une observation d&apos;au moins {NOTE_MIN_WORDS} mots (comment elle était aujourd&apos;hui, comment elle progresse, un exemple vu à la pratique). En bas de {NOTE_MIN_WORDS} mots, l&apos;observation n&apos;est pas acceptée.</li>
+              <li><strong>Le sondage du jour</strong> : plaisir et fatigue de chaque fille présente (sur la borne ou dans ton portail).</li>
+              <li><strong>Ton retour</strong> : 2 choses qui ont bien marché et 2 choses à améliorer dans la pratique, {DEBRIEF_POINT_MIN_WORDS} mots ou plus chacune.</li>
+            </ol>
+            <p className="coach-muted" style={{ fontSize: "0.8rem", margin: "10px 0 0" }}>Pour les pratiques à partir du 19 novembre 2026. Ce qui manque est écrit à côté de chaque pratique retenue et dans l&apos;étape « Après » de la pratique.</p>
+          </div>
         </div>
       </div>
     </>

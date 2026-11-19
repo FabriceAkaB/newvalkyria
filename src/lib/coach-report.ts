@@ -1,6 +1,6 @@
 /** Rapport de l'éducateur après chaque activité (Mandalart P1.2.08, P1.4.09, P1.5.06, P8.3.04) :
  *  règles pures, partagées entre le portail entraîneur, la paie et « Aujourd'hui ».
- *  - Évaluation rapide d'une joueuse : 3 échelles de 1 à 5 + une note d'au moins 30 caractères.
+ *  - Évaluation rapide d'une joueuse : 3 échelles de 1 à 5 + une observation d'au moins 25 mots (30 caractères avant le 19 nov. 2026).
  *  - Contrôle de qualité : note trop courte, qui se répète, copiée d'une autre fille ou d'une séance précédente = refusée.
  *  - Les heures d'une activité ne comptent pour la paie que si la présence de l'éducateur est confirmée
  *    et le rapport complet (présences de toutes les joueuses + évaluation de chaque fille présente). */
@@ -17,6 +17,40 @@ export const QUICK_SCALE: { value: number; label: string }[] = [
 ];
 
 export const NOTE_MIN_CHARS = 30;
+
+/** Règle du rapport complet (JP, 18 nov. 2026), pour les pratiques à partir du 19 nov. 2026 : les heures de la
+ *  pratique (rapport compris) ne comptent pour la paie que quand les 4 parties sont faites :
+ *  1. présences de toutes les joueuses (MonClubSportif fait foi) ;
+ *  2. évaluation de chaque fille présente : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10 et une
+ *     observation d'au moins NOTE_MIN_WORDS mots (son état aujourd'hui, comment elle progresse, un exemple vu) ;
+ *  3. sondage du jour : plaisir et fatigue de chaque fille présente ;
+ *  4. retour de l'éducateur : 2 choses qui ont bien marché et 2 choses à améliorer. */
+export const REPORT_RULE_V2_START = "2026-11-19";
+
+/** Une petite observation complète tient en 3 phrases courtes : son état du jour (≈ 8 mots), comment elle progresse
+ *  (≈ 8 mots) et un exemple vu à la pratique (≈ 10 mots). D'où 25 mots au minimum. */
+export const NOTE_MIN_WORDS = 25;
+
+/** Retour sur la pratique : 2 points dans « bien marché » et 2 dans « à améliorer », d'au moins 4 mots chacun. */
+export const DEBRIEF_MIN_POINTS = 2;
+export const DEBRIEF_POINT_MIN_WORDS = 4;
+
+/** Nombre de mots d'un texte (un mot = une suite de lettres ou de chiffres ; « l'équipe » compte pour 2). */
+export const countWords = (s: string | null | undefined) => (String(s ?? "").match(/[\p{L}\p{N}]+/gu) ?? []).length;
+
+const strictRule = (activityDate?: string | null) => Boolean(activityDate && activityDate.slice(0, 10) >= REPORT_RULE_V2_START);
+
+/** Les points d'une liste écrite par l'éducateur (une ligne par point, puces et numéros enlevés), assez longs. */
+export function debriefPoints(text: string | null | undefined): string[] {
+  return String(text ?? "")
+    .split(/\n+/)
+    .map((l) => l.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, "").trim())
+    .filter((l) => countWords(l) >= DEBRIEF_POINT_MIN_WORDS);
+}
+
+export function isDebriefComplete(d: { wentWell?: string | null; toImprove?: string | null } | null | undefined): boolean {
+  return Boolean(d) && debriefPoints(d!.wentWell).length >= DEBRIEF_MIN_POINTS && debriefPoints(d!.toImprove).length >= DEBRIEF_MIN_POINTS;
+}
 
 /** La règle « rapport complet avant que les heures comptent » s'applique aux activités à partir de cette date ;
  *  les activités plus anciennes gardent l'ancienne règle (présence = heures payées). */
@@ -100,18 +134,22 @@ export function checkNote(input: {
 }): NoteCheck {
   const note = cleanNote(input.note);
   const first = input.playerFirstName.trim() || "la joueuse";
-  if (note.length < NOTE_MIN_CHARS) {
-    const left = NOTE_MIN_CHARS - note.length;
+  const w = words(note);
+  const distinct = new Set(w).size;
+  // Une note qui se répète est refusée comme telle, même courte (« bien bien bien… », « aaaaaa »).
+  if (/(.)\1{5,}/i.test(note.replace(/\s/g, "")) || (w.length >= 6 && distinct / w.length < 0.5)) {
+    return { ok: false, code: "repetitif", message: `Cette note se répète. Décris en tes mots ce que ${first} a vécu aujourd'hui.` };
+  }
+  const count = countWords(note);
+  if (count < NOTE_MIN_WORDS) {
+    const left = NOTE_MIN_WORDS - count;
     return {
       ok: false,
       code: "trop-court",
-      message: `Encore ${left} caractère${left > 1 ? "s" : ""} : écris comment ${first} s'est sentie et comment elle s'est comportée aujourd'hui.`
+      message: `Encore ${left} mot${left > 1 ? "s" : ""} (minimum ${NOTE_MIN_WORDS}) : écris comment ${first} était aujourd'hui, comment elle progresse et un exemple que tu as vu.`
     };
   }
-
-  const w = words(note);
-  const distinct = new Set(w).size;
-  if (/(.)\1{5,}/i.test(note.replace(/\s/g, "")) || distinct < 4 || (w.length >= 6 && distinct / w.length < 0.5)) {
+  if (distinct < 4) {
     return { ok: false, code: "repetitif", message: `Cette note se répète. Décris en tes mots ce que ${first} a vécu aujourd'hui.` };
   }
 
@@ -137,11 +175,13 @@ export function checkNote(input: {
   return { ok: true };
 }
 
-/** Une évaluation rapide est complète quand les 3 échelles sont notées et la note fait au moins 30 caractères. */
-export function isQuickEvaluationComplete(ev: { ratings?: Record<string, number> | null; comment?: string | null } | null | undefined): boolean {
+/** Une évaluation rapide est complète quand les 3 échelles sont notées et l'observation est assez longue :
+ *  au moins 25 mots pour les pratiques à partir du 19 nov. 2026 (`activityDate`), 30 caractères avant. */
+export function isQuickEvaluationComplete(ev: { ratings?: Record<string, number> | null; comment?: string | null } | null | undefined, activityDate?: string | null): boolean {
   if (!ev) return false;
   const r = ev.ratings ?? {};
-  return QUICK_CRITERIA.every((c) => Number(r[c]) >= 1 && Number(r[c]) <= 5) && cleanNote(ev.comment).length >= NOTE_MIN_CHARS;
+  const long = strictRule(activityDate) ? countWords(ev.comment) >= NOTE_MIN_WORDS : cleanNote(ev.comment).length >= NOTE_MIN_CHARS;
+  return QUICK_CRITERIA.every((c) => Number(r[c]) >= 1 && Number(r[c]) <= 5) && long;
 }
 
 /* ── Rapport d'une activité ─────────────────────────────────────────── */
@@ -172,8 +212,12 @@ export interface ReportStatus {
   attendanceMissing: string[];
   evaluationsMissing: string[];
   feedbackMissing: string[];
-  /** Présences + évaluations complètes (ce qui compte pour la paie). */
+  /** Présences + évaluations complètes, et depuis le 19 nov. 2026 le sondage du jour aussi (ce qui compte pour la paie). */
   complete: boolean;
+  /** La règle du 19 nov. 2026 s'applique : il faut aussi le retour de chaque éducateur (2 + 2). */
+  strict: boolean;
+  /** Éducateurs dont le retour est complet (2 choses qui ont bien marché, 2 à améliorer). */
+  debriefDone: string[];
 }
 
 export function reportRequired(activity: { activity_type: string; organization?: string | null }, rosterSize: number): boolean {
@@ -181,14 +225,16 @@ export function reportRequired(activity: { activity_type: string; organization?:
 }
 
 export function computeReport(input: {
-  activity: { activity_type: string; organization?: string | null };
+  activity: { activity_type: string; organization?: string | null; activity_date?: string | null };
   roster: ReportPlayer[];
   attendance: ReportAttendance[];
   evaluations: ReportEvaluation[];
+  debriefs?: { coachId: string; wentWell: string | null; toImprove: string | null }[];
 }): ReportStatus {
   const required = reportRequired(input.activity, input.roster.length);
+  const strict = strictRule(input.activity.activity_date ? String(input.activity.activity_date) : null);
   const att = new Map(input.attendance.map((a) => [a.registration_id, a]));
-  const evaluated = new Set(input.evaluations.filter(isQuickEvaluationComplete).map((e) => e.registration_id));
+  const evaluated = new Set(input.evaluations.filter((e) => isQuickEvaluationComplete(e, strict ? REPORT_RULE_V2_START : null)).map((e) => e.registration_id));
   const attendanceMissing: string[] = [];
   const evaluationsMissing: string[] = [];
   const feedbackMissing: string[] = [];
@@ -211,7 +257,9 @@ export function computeReport(input: {
     attendanceMissing,
     evaluationsMissing,
     feedbackMissing,
-    complete: !required || (attendanceMissing.length === 0 && evaluationsMissing.length === 0)
+    complete: !required || (attendanceMissing.length === 0 && evaluationsMissing.length === 0 && (!strict || feedbackMissing.length === 0)),
+    strict,
+    debriefDone: (input.debriefs ?? []).filter(isDebriefComplete).map((d) => d.coachId)
   };
 }
 
@@ -221,15 +269,35 @@ export type PayHold = "presence" | "rapport";
 
 export const PAY_HOLD_LABEL: Record<PayHold, string> = {
   presence: "Présence de l'éducateur pas confirmée",
-  rapport: "Rapport incomplet (présences ou évaluations)"
+  rapport: "Rapport pas fini (présences, évaluations, sondage du jour ou retour 2 + 2)"
 };
 
-/** Raison pour laquelle les heures d'une assignation ne comptent pas encore, ou null si elles comptent. */
-export function payHold(input: { activityDate: string; status: string; confirmed: boolean; report: Pick<ReportStatus, "required" | "complete"> | null }): PayHold | null {
+/** Raison pour laquelle les heures d'une assignation ne comptent pas encore, ou null si elles comptent.
+ *  `coachId` : depuis le 19 nov. 2026, le retour (2 + 2) de cet éducateur est demandé aussi. */
+export function payHold(input: {
+  activityDate: string;
+  status: string;
+  confirmed: boolean;
+  report: (Pick<ReportStatus, "required" | "complete"> & Partial<Pick<ReportStatus, "strict" | "debriefDone">>) | null;
+  coachId?: string;
+}): PayHold | null {
   if (input.activityDate < REPORT_RULE_START || input.status !== "present") return null;
   if (!input.confirmed) return "presence";
   if (input.report && input.report.required && !input.report.complete) return "rapport";
+  if (input.report?.required && input.report.strict && input.coachId && !(input.report.debriefDone ?? []).includes(input.coachId)) return "rapport";
   return null;
+}
+
+/** Ce qui manque au rapport d'un éducateur, en mots simples (portail, Ma paie, admin). */
+export function reportMissing(report: ReportStatus | null | undefined, coachId?: string): string[] {
+  if (!report?.required) return [];
+  const out: string[] = [];
+  const n = (k: number, one: string, many: string) => `${k} ${k > 1 ? many : one}`;
+  if (report.attendanceMissing.length) out.push(n(report.attendanceMissing.length, "présence à marquer", "présences à marquer"));
+  if (report.evaluationsMissing.length) out.push(n(report.evaluationsMissing.length, "évaluation à faire", "évaluations à faire"));
+  if (report.strict && report.feedbackMissing.length) out.push(n(report.feedbackMissing.length, "fille sans sondage du jour", "filles sans sondage du jour"));
+  if (report.strict && coachId && !report.debriefDone.includes(coachId)) out.push("ton retour : 2 choses qui ont bien marché et 2 à améliorer");
+  return out;
 }
 
 /** Une date et une heure de Montréal (« 2026-11-09 », « 19:25 ») en millisecondes : début ou fin d'une activité,

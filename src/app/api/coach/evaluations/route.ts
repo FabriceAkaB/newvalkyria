@@ -6,7 +6,7 @@ import { checkNote, cleanNote, QUICK_CRITERIA } from "@/lib/coach-report";
 import { cleanGestureScores, difficultGestures } from "@/lib/gesture-scores";
 import { jsonError } from "@/lib/http";
 
-/** Évaluation rapide d'une joueuse (P1.2.08) : 3 échelles de 1 à 5 + une note d'au moins 30 caractères.
+/** Évaluation rapide d'une joueuse (P1.2.08) : 3 échelles de 1 à 5 + une observation d'au moins 25 mots (30 caractères avant le 19 nov. 2026).
  *  Contrôle de qualité (P1.4.09) : note trop courte, répétitive, copiée d'une autre fille ou d'une séance
  *  précédente = refusée avec un message clair (422). */
 export async function POST(request: Request) {

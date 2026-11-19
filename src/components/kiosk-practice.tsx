@@ -13,9 +13,8 @@ const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")} h ${
 
 export function KioskTabs({ initial, plan, survey }: { initial: "pratique" | "sondage"; plan: ReactNode; survey: ReactNode }) {
   const [tab, setTab] = useState(initial);
-  const [online, setOnline] = useState(true);
+  const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
   useEffect(() => {
-    setOnline(navigator.onLine);
     const up = () => setOnline(true);
     const down = () => setOnline(false);
     window.addEventListener("online", up);

@@ -26,7 +26,7 @@ import type { ChampionPost } from "@/lib/player-points-repo";
 import { blockKey, practiceReadStatus, type ReadItem } from "@/lib/practice-read";
 import { themeForGroup } from "@/lib/practice-teams-core";
 import { isAnswered, type SurveyAnswer } from "@/lib/practice-survey";
-import { cleanNote, isQuickEvaluationComplete, NOTE_MIN_CHARS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START } from "@/lib/coach-report";
+import { countWords, isQuickEvaluationComplete, NOTE_MIN_WORDS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START, REPORT_RULE_V2_START } from "@/lib/coach-report";
 import type { AssignmentStatus, CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
 import type { MatchConvocation, MatchDetails, MatchLineupSlot, MatchPlayerEvaluation, MatchRosterPlayer, PlaytimeSegment } from "@/lib/match-repo";
@@ -526,6 +526,7 @@ function ballMasteryMoves(blocks: SessionBlock[], exercises: Exercise[]): string
 
 function QuickEvaluation({
   activityId,
+  activityDate,
   player,
   mine,
   others,
@@ -536,6 +537,7 @@ function QuickEvaluation({
 }: {
   gestureChoices?: string[];
   activityId: string;
+  activityDate: string;
   player: RosterPlayer;
   mine: PlayerEvaluation | undefined;
   others: { coach: string; evaluation: PlayerEvaluation }[];
@@ -552,10 +554,10 @@ function QuickEvaluation({
   const toggleGesture = (g: string) => setGestures((list) => (list.includes(g) ? list.filter((x) => x !== g) : [...list, g]));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const done = isQuickEvaluationComplete(mine);
-  const doneByOther = others.find((o) => isQuickEvaluationComplete(o.evaluation));
-  const length = cleanNote(note).length;
-  const ready = QUICK_CRITERIA.every((c) => ratings[c]) && length >= NOTE_MIN_CHARS && gestureChoices.every((g) => scores[g]);
+  const done = isQuickEvaluationComplete(mine, activityDate);
+  const doneByOther = others.find((o) => isQuickEvaluationComplete(o.evaluation, activityDate));
+  const length = countWords(note);
+  const ready = QUICK_CRITERIA.every((c) => ratings[c]) && length >= NOTE_MIN_WORDS && gestureChoices.every((g) => scores[g]);
 
   const save = async () => {
     setSaving(true);
@@ -659,12 +661,12 @@ function QuickEvaluation({
           <div className="coach-field">
             <p className="coach-field__label">
               Note sur {player.firstName}
-              <span style={{ color: length >= NOTE_MIN_CHARS ? "var(--adm-good)" : undefined }}>{length}/{NOTE_MIN_CHARS} caractères</span>
+              <span style={{ color: length >= NOTE_MIN_WORDS ? "var(--adm-good)" : undefined }}>{length}/{NOTE_MIN_WORDS} mots</span>
             </p>
             <textarea
               className="coach-textarea"
               value={note}
-              placeholder={`Comment ${player.firstName} s'est sentie, comment elle s'est comportée, ce qu'elle a réussi ou trouvé difficile.`}
+              placeholder={`Observation de ${player.firstName} (${NOTE_MIN_WORDS} mots minimum) : 1. comment elle était aujourd'hui ; 2. comment elle progresse ; 3. un exemple vu à la pratique. Ex. : « Concentrée et souriante. Son contrôle orienté progresse, elle lève la tête plus tôt. Au 2c2, elle a cadré la porteuse et récupéré le ballon deux fois. »`}
               onChange={(e) => {
                 setNote(e.target.value);
                 setError(null);
@@ -814,8 +816,10 @@ export function CoachActiviteDetail({
   const [mine, setMine] = useState<Record<string, PlayerEvaluation>>(Object.fromEntries(initialEvaluations.filter((e) => e.coach_id === coachId).map((e) => [e.registration_id, e])));
   const guest = myPresence === null;
   const [presence, setPresence] = useState<MyPresence>(myPresence ?? { status: "present" as AssignmentStatus, confirmed: false, arrivalTime: null, departureTime: null, locked: true });
+  // Retour 2 + 2 de cet éducateur : lu par la carte « Retour sur la pratique » de l'étape « Après ».
+  const [debriefDone, setDebriefDone] = useState(false);
   const [openId, setOpenId] = useState<string | null>(() => {
-    const done = (id: string) => initialEvaluations.some((e) => e.registration_id === id && isQuickEvaluationComplete(e));
+    const done = (id: string) => initialEvaluations.some((e) => e.registration_id === id && isQuickEvaluationComplete(e, String(activity.activity_date).slice(0, 10)));
     return roster.find((p) => PARTICIPATED.includes(attendance[p.registrationId] ?? "") && !done(p.registrationId))?.registrationId ?? null;
   });
   const stepsRef = useRef<HTMLElement>(null);
@@ -834,15 +838,23 @@ export function CoachActiviteDetail({
   const participants = roster.filter((p) => PARTICIPATED.includes(attendance[p.registrationId] ?? ""));
   // Les filles à observer de cet éducateur : partagées entre les éducateurs de la pratique (une sur n à chacun).
   const observed = new Set([...observerOf([...participants].sort((x, y) => fullName(x).localeCompare(fullName(y), "fr")).map((p) => p.registrationId), [coachId, ...otherCoaches.map((c) => c.id)])].filter(([, c]) => c === coachId).map(([p]) => p));
-  const isEvaluated = (id: string) => isQuickEvaluationComplete(mine[id]) || (others[id] ?? []).some((o) => isQuickEvaluationComplete(o.evaluation));
+  const activityDay = String(activity.activity_date).slice(0, 10);
+  const isEvaluated = (id: string) => isQuickEvaluationComplete(mine[id], activityDay) || (others[id] ?? []).some((o) => isQuickEvaluationComplete(o.evaluation, activityDay));
   const marked = roster.filter((p) => attendance[p.registrationId]).length;
   const evaluated = participants.filter((p) => isEvaluated(p.registrationId)).length;
   const routineDone = participants.filter((p) => isAnswered(feedback[p.registrationId])).length;
   const reportNeeded = REPORT_REQUIRED_TYPES.includes(activity.activity_type) && !activity.organization && roster.length > 0;
-  const ruleApplies = String(activity.activity_date).slice(0, 10) >= REPORT_RULE_START;
-  const reportComplete = !reportNeeded || (marked === roster.length && evaluated === participants.length);
+  const ruleApplies = activityDay >= REPORT_RULE_START;
+  // Règle du 19 nov. 2026 : sondage du jour de chaque fille et retour de l'éducateur (2 bons coups, 2 à améliorer) aussi.
+  const strict = activityDay >= REPORT_RULE_V2_START;
+  const surveyDone = participants.length > 0 && routineDone === participants.length;
+  const reportChecks = reportNeeded
+    ? [marked === roster.length, participants.length > 0 && evaluated === participants.length, ...(strict ? [surveyDone, debriefDone] : [])]
+    : [];
+  const reportComplete = !reportNeeded || reportChecks.every(Boolean);
   const hoursCount = presence.confirmed && (reportComplete || !ruleApplies);
-  const afterDone = reportNeeded ? [presence.confirmed, marked === roster.length, evaluated === participants.length].filter(Boolean).length : Number(presence.confirmed);
+  const afterDone = [presence.confirmed, ...reportChecks].filter(Boolean).length;
+  const afterTotal = 1 + reportChecks.length;
 
   const openNext = (afterId: string) => {
     const order = participants.map((p) => p.registrationId);
@@ -854,7 +866,7 @@ export function CoachActiviteDetail({
   const steps: { key: Step; label: string; detail: string }[] = [
     { key: "avant", label: "Avant", detail: activity.activity_type === "Match" || !read.hasContent || guest ? "La pratique" : read.confirmed ? "Pratique lue ✓" : `À lire ${read.seen}/${read.total}` },
     { key: "pendant", label: "Pendant", detail: roster.length ? `Présences ${marked}/${roster.length}` : "Présences" },
-    { key: "apres", label: "Après", detail: `Rapport ${afterDone}/${reportNeeded ? 3 : 1}` }
+    { key: "apres", label: "Après", detail: `Rapport ${afterDone}/${afterTotal}` }
   ];
 
   return (
@@ -899,6 +911,15 @@ export function CoachActiviteDetail({
               <div className="coach-avant">
                 <div className="coach-avant__main">
                   <CoachPracticeDeck decks={readItems.filter((i) => i.kind === "deck")} seen={readSeen} onOpened={markSeen} />
+                  {activity.activity_type !== "Match" && sessionBlocks.length > 0 && (
+                    <div className="coach-card" style={{ marginBottom: 12, display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <p className="coach-card__label">La pratique sur papier</p>
+                        <p className="coach-sub" style={{ margin: 0 }}>Imprime-la et garde-la sur toi : montage du terrain, variantes et progressions de chaque exercice.</p>
+                      </div>
+                      <Link href={`/entraineur/activites/${activity.id}/imprimer`} className="coach-primary" style={{ textDecoration: "none" }}>🖨 Imprimer la pratique</Link>
+                    </div>
+                  )}
                   <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} seen={readSeen} onSeen={markSeen} />
                   <div>
                     <button type="button" className="coach-secondary" onClick={() => setShowEditor(!showEditor)}>{showEditor ? "Fermer" : "Modifier le plan"}</button>
@@ -979,18 +1000,23 @@ export function CoachActiviteDetail({
               <div className="coach-card" style={{ marginBottom: 16 }}>
                 <p className="coach-card__label">Ton rapport</p>
                 <ul className="coach-checklist">
+                  {!guest && <li data-done={String(presence.confirmed)}>Ma présence (mets-toi « présent » dans MonClubSportif)</li>}
                   {reportNeeded && <li data-done={String(marked === roster.length)}>Présences des joueuses · {marked}/{roster.length}</li>}
-                  {reportNeeded && <li data-done={String(participants.length > 0 && evaluated === participants.length)}>Évaluation de chaque joueuse présente · {evaluated}/{participants.length}</li>}
-                  {reportNeeded && <li data-done={String(participants.length > 0 && routineDone === participants.length)}>Sondage de fin · {routineDone}/{participants.length}</li>}
-                  {!guest && <li data-done={String(presence.confirmed)}>Ma présence confirmée</li>}
+                  {reportNeeded && (
+                    <li data-done={String(participants.length > 0 && evaluated === participants.length)}>
+                      Évaluation de chaque fille présente{strict ? ` : 3 notes, chaque geste du ball mastery, observation de ${NOTE_MIN_WORDS} mots ou plus` : ""} · {evaluated}/{participants.length}
+                    </li>
+                  )}
+                  {reportNeeded && <li data-done={String(surveyDone)}>Sondage du jour de chaque fille · {routineDone}/{participants.length}</li>}
+                  {reportNeeded && strict && <li data-done={String(debriefDone)}>Mon retour : 2 choses qui ont bien marché, 2 à améliorer</li>}
                 </ul>
                 <p className="coach-sub" style={{ marginTop: 12, color: hoursCount ? "var(--adm-good)" : undefined }}>
                   {guest
                     ? "Accès d'équipe : tu n'es pas assignée à cette pratique dans le site. Ta présence et tes heures arrivent de MonClubSportif."
                     : hoursCount
-                    ? "Rapport complet : tes heures comptent pour la paie."
+                    ? "Rapport complet : les heures de cette pratique (rapport compris) sont ajoutées à ta paie."
                     : ruleApplies
-                      ? "Tes heures comptent pour la paie quand ta présence est confirmée et que les présences et les évaluations sont faites."
+                      ? "Les heures de cette pratique (rapport compris) ne sont pas payées tant que chaque case n'est pas cochée. Dès que tout est fait, elles s'ajoutent toutes seules à ta paie (Ma paie)."
                       : "Confirme ta présence pour que tes heures comptent."}
                 </p>
               </div>
@@ -1013,6 +1039,7 @@ export function CoachActiviteDetail({
                     <QuickEvaluation
                       key={p.registrationId}
                       activityId={activity.id}
+                      activityDate={String(activity.activity_date).slice(0, 10)}
                       player={p}
                       mine={mine[p.registrationId]}
                       others={others[p.registrationId] ?? []}
@@ -1055,7 +1082,7 @@ export function CoachActiviteDetail({
 
               {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
                 <div style={{ marginBottom: 16 }}>
-                  <CoachDebriefCard activityId={activity.id} />
+                  <CoachDebriefCard activityId={activity.id} onStatus={setDebriefDone} />
                 </div>
               ) : null}
 

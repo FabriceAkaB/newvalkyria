@@ -4,6 +4,7 @@
 
 export const GUIDE_ITEMS = [
   { key: "lecture", label: "J'ai lu la pratique et chaque exercice", detail: "Diapos ouvertes, chaque fiche lue : je sais expliquer chaque exercice en moins de 2 minutes." },
+  { key: "imprimee", label: "Pratique imprimée et sur moi", detail: "Bouton « Imprimer la pratique » : montage du terrain, variantes et progressions de chaque exercice sous la main, pour faire progresser les filles." },
   { key: "alarmes", label: "Alarmes réglées : début et fin de chaque exercice", detail: "Les heures sont juste en dessous. Ou je lance le minuteur du portail à l'étape « Pendant » : il sonne à chaque changement." },
   { key: "montage", label: "Terrain monté avant l'arrivée des filles", detail: "Le montage de la 1re activité est prêt ; je sais ce que je change entre chaque bloc." },
   { key: "materiel", label: "Matériel prêt", detail: "Ballons (1 par fille + réserve), coupelles, dossards, mini-buts, brassards de capitaine, chrono, sifflet." },

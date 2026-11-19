@@ -1,6 +1,6 @@
 import { computeAssignment } from "@/lib/coach-payroll";
 import { getActivityReports } from "@/lib/coach-portal-repo";
-import { activityEndMs, payHold, REPORT_RULE_START, type PayHold } from "@/lib/coach-report";
+import { activityEndMs, payHold, REPORT_RULE_START, reportMissing, type PayHold } from "@/lib/coach-report";
 import { getAllAssignments, getAllCoachTypeRates, getCoaches, type AssignmentStatus, type CoachActivity, type CoachStatus } from "@/lib/coaches-repo";
 import { formatCAD } from "@/lib/season-2027";
 
@@ -31,6 +31,8 @@ export interface PayrollRow {
   activityEnd: string;
   /** Ce qui manque au rapport de l'activité (présences, évaluations, routine de fin), s'il est demandé. */
   reportMissing: { attendance: number; evaluations: number; feedback: number } | null;
+  /** Ce qui manque encore, en mots simples, pour cet éducateur (son retour 2 + 2 compris). */
+  missingDetail: string[];
   reminderSentAt: string | null;
   coachHasEmail: boolean;
 }
@@ -116,7 +118,7 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
 
     const report = reports.get(a.activity_id) ?? null;
     // Une activité déjà payée reste payée ; sinon les heures attendent la présence confirmée et le rapport complet.
-    const hold = a.paid ? null : payHold({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, confirmed: a.confirmed, report });
+    const hold = a.paid ? null : payHold({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, confirmed: a.confirmed, report, coachId: a.coach_id });
 
     return {
       assignmentId: a.id,
@@ -142,6 +144,7 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
       reportMissing: report?.required
         ? { attendance: report.attendanceMissing.length, evaluations: report.evaluationsMissing.length, feedback: report.feedbackMissing.length }
         : null,
+      missingDetail: reportMissing(report, a.coach_id),
       reminderSentAt: a.reminder_sent_at ?? null,
       coachHasEmail: Boolean(a.coach.email)
     };
