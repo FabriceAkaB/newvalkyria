@@ -11,6 +11,7 @@ import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrie
 import { CoachGuideCard, PracticeTimer } from "@/components/coach-guide";
 import { exerciseGuideFallback } from "@/components/admin-block-guide";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
+import { observerOf } from "@/lib/gesture-scores";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { MatchPlayer } from "@/components/match-player";
 import { SurpriseMomentEditor } from "@/components/surprise-moment";
@@ -553,6 +554,8 @@ function QuickEvaluation({
   const [ratings, setRatings] = useState<Record<string, number>>(mine?.ratings ?? {});
   const [note, setNote] = useState(mine?.comment ?? "");
   const [gestures, setGestures] = useState<string[]>(mine?.gestures ?? []);
+  // Note de chaque geste du ball mastery du jour : 1 = incapable, 10 = parfait (JP, 18 nov. 2026).
+  const [scores, setScores] = useState<Record<string, number>>(mine?.gesture_scores ?? {});
   const [otherGesture, setOtherGesture] = useState("");
   const toggleGesture = (g: string) => setGestures((list) => (list.includes(g) ? list.filter((x) => x !== g) : [...list, g]));
   const [saving, setSaving] = useState(false);
@@ -560,15 +563,15 @@ function QuickEvaluation({
   const done = isQuickEvaluationComplete(mine);
   const doneByOther = others.find((o) => isQuickEvaluationComplete(o.evaluation));
   const length = cleanNote(note).length;
-  const ready = QUICK_CRITERIA.every((c) => ratings[c]) && length >= NOTE_MIN_CHARS;
+  const ready = QUICK_CRITERIA.every((c) => ratings[c]) && length >= NOTE_MIN_CHARS && gestureChoices.every((g) => scores[g]);
 
   const save = async () => {
     setSaving(true);
     setError(null);
-    const r = await postJson("/api/coach/evaluations", { activityId, registrationId: player.registrationId, ratings, comment: note, gestures });
+    const r = await postJson("/api/coach/evaluations", { activityId, registrationId: player.registrationId, ratings, comment: note, gestures, gestureScores: scores });
     setSaving(false);
     if (!r.ok) return setError(r.error ?? null);
-    onSaved({ id: mine?.id ?? "", activity_id: activityId, registration_id: player.registrationId, coach_id: "", ratings: r.data.ratings, comment: r.data.comment, gestures: r.data.gestures ?? [], created_at: new Date().toISOString() });
+    onSaved({ id: mine?.id ?? "", activity_id: activityId, registration_id: player.registrationId, coach_id: "", ratings: r.data.ratings, comment: r.data.comment, gestures: r.data.gestures ?? [], gesture_scores: r.data.gestureScores ?? scores, created_at: new Date().toISOString() });
   };
 
   return (
@@ -578,7 +581,8 @@ function QuickEvaluation({
         <div style={{ flex: 1, minWidth: 0 }}>
           <p className="coach-player__name">{fullName(player)}</p>
           {done && !open && <p className="coach-muted" style={{ margin: 0 }}>{QUICK_CRITERIA.map((c) => `${c} ${mine?.ratings?.[c]}`).join(" · ")}</p>}
-          {!open && mine?.gestures?.length ? <p className="coach-muted" style={{ margin: 0, color: "var(--adm-warn)" }}>Difficile : {mine.gestures.join(", ")}</p> : null}
+          {!open && mine?.gesture_scores && Object.keys(mine.gesture_scores).length ? <p className="coach-muted" style={{ margin: 0 }}>{Object.entries(mine.gesture_scores).map(([g, v]) => `${g} ${v}/10`).join(" · ")}</p> : null}
+          {!open && mine?.gestures?.length ? <p className="coach-muted" style={{ margin: 0, color: "var(--adm-warn)" }}>À retravailler : {mine.gestures.join(", ")}</p> : null}
           {!done && doneByOther && <p className="coach-muted" style={{ margin: 0 }}>Évaluée par {doneByOther.coach}</p>}
         </div>
         <span className="coach-pill" data-tone={done || doneByOther ? "good" : "warn"}>{done || doneByOther ? "✓ Évaluée" : "À évaluer"}</span>
@@ -601,13 +605,43 @@ function QuickEvaluation({
               </div>
             </div>
           ))}
+          {gestureChoices.length ? (
+            <div className="coach-field">
+              <p className="coach-field__label">
+                Gestes du ball mastery
+                <span>1 = incapable · 10 = parfait · 4 ou moins = à retravailler</span>
+              </p>
+              {gestureChoices.map((g) => (
+                <div key={g} style={{ margin: "8px 0" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: "0.85rem", fontWeight: 600, color: scores[g] && scores[g] <= 4 ? "var(--adm-warn)" : "var(--adm-text)" }}>
+                    {g}
+                    {scores[g] ? ` · ${scores[g]}/10` : ""}
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(10, minmax(0, 1fr))", gap: 4 }}>
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        aria-label={`${g} : ${v} sur 10`}
+                        aria-pressed={scores[g] === v}
+                        onClick={() => setScores((s) => ({ ...s, [g]: v }))}
+                        style={{ minHeight: 36, borderRadius: 8, border: scores[g] === v ? "2px solid var(--adm-accent)" : "1px solid var(--adm-line)", background: scores[g] === v ? `hsl(${Math.round(((v - 1) / 9) * 120)}, 65%, 45%)` : "var(--adm-surface)", color: scores[g] === v ? "#fff" : "var(--adm-text)", fontWeight: 700, cursor: "pointer", padding: 0 }}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
           <div className="coach-field">
             <p className="coach-field__label">
-              Gestes difficiles pour {player.firstName}
+              Autres gestes difficiles pour {player.firstName}
               <span>facultatif · touche ceux qu&apos;elle a du mal à faire</span>
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {[...new Set([...gestureChoices, ...gestures])].map((g) => (
+              {[...new Set(gestures.filter((g) => !gestureChoices.includes(g)))].map((g) => (
                 <button key={g} type="button" className="coach-pill" data-tone={gestures.includes(g) ? "warn" : undefined} aria-pressed={gestures.includes(g)} onClick={() => toggleGesture(g)} style={{ cursor: "pointer", border: gestures.includes(g) ? undefined : "1px solid var(--adm-line)" }}>
                   {gestures.includes(g) ? "✗ " : ""}
                   {g}
@@ -806,6 +840,8 @@ export function CoachActiviteDetail({
   }, [initialEvaluations, coachId, coachNames]);
 
   const participants = roster.filter((p) => PARTICIPATED.includes(attendance[p.registrationId] ?? ""));
+  // Les filles à observer de cet éducateur : partagées entre les éducateurs de la pratique (une sur n à chacun).
+  const observed = new Set([...observerOf([...participants].sort((x, y) => fullName(x).localeCompare(fullName(y), "fr")).map((p) => p.registrationId), [coachId, ...otherCoaches.map((c) => c.id)])].filter(([, c]) => c === coachId).map(([p]) => p));
   const isEvaluated = (id: string) => isQuickEvaluationComplete(mine[id]) || (others[id] ?? []).some((o) => isQuickEvaluationComplete(o.evaluation));
   const marked = roster.filter((p) => attendance[p.registrationId]).length;
   const evaluated = participants.filter((p) => isEvaluated(p.registrationId)).length;
@@ -977,8 +1013,11 @@ export function CoachActiviteDetail({
               {reportNeeded && participants.length > 0 && (
                 <section style={{ marginBottom: 16 }}>
                   <h2 className="coach-h2">Évaluation rapide · {evaluated}/{participants.length}</h2>
-                  <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>Moins de 2 minutes par fille : 3 notes de 1 à 5 et une phrase sur ce que tu as vu.</p>
-                  {participants.map((p) => (
+                  <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>
+                    Moins de 2 minutes par fille : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10, et une phrase sur ce que tu as vu (écrite pendant la pratique ou en regardant la vidéo).
+                    {observed.size ? ` Tes ${observed.size} joueuses à observer sont en premier.` : ""}
+                  </p>
+                  {[...participants].sort((a, b) => Number(!observed.has(a.registrationId)) - Number(!observed.has(b.registrationId))).map((p) => (
                     <QuickEvaluation
                       key={p.registrationId}
                       activityId={activity.id}

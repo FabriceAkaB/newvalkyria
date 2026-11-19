@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getActivityNotes, getCoachActivityWithRoster, getCoachPreviousNotes, saveEvaluation } from "@/lib/coach-portal-repo";
 import { checkNote, cleanNote, QUICK_CRITERIA } from "@/lib/coach-report";
+import { cleanGestureScores, difficultGestures } from "@/lib/gesture-scores";
 import { jsonError } from "@/lib/http";
 
 /** Évaluation rapide d'une joueuse (P1.2.08) : 3 échelles de 1 à 5 + une note d'au moins 30 caractères.
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
     ratings?: Record<string, number>;
     comment?: string | null;
     gestures?: unknown;
+    gestureScores?: unknown;
   } | null;
 
   if (!body?.activityId || !body.registrationId) {
@@ -41,7 +43,10 @@ export async function POST(request: Request) {
   const check = checkNote({ note: comment, playerFirstName: player.firstName, sameActivity, previous });
   if (!check.ok) return NextResponse.json({ error: check.message, code: check.code }, { status: 422 });
 
-  const gestures = Array.isArray(body.gestures) ? [...new Set(body.gestures.filter((g): g is string => typeof g === "string").map((g) => g.trim().slice(0, 60)).filter(Boolean))].slice(0, 12) : undefined;
-  await saveEvaluation({ activityId: body.activityId, registrationId: body.registrationId, coachId, ratings, comment, gestures });
-  return NextResponse.json({ ok: true, ratings, comment, gestures: gestures ?? [] });
+  const gestureScores = cleanGestureScores(body.gestureScores);
+  const manual = Array.isArray(body.gestures) ? body.gestures.filter((g): g is string => typeof g === "string").map((g) => g.trim().slice(0, 60)).filter(Boolean) : [];
+  // Un geste noté 4 ou moins devient « à retravailler », en plus de ceux touchés à la main.
+  const gestures = Array.isArray(body.gestures) || Object.keys(gestureScores).length ? [...new Set([...manual, ...difficultGestures(gestureScores)])].slice(0, 12) : undefined;
+  await saveEvaluation({ activityId: body.activityId, registrationId: body.registrationId, coachId, ratings, comment, gestures, gestureScores: Object.keys(gestureScores).length ? gestureScores : undefined });
+  return NextResponse.json({ ok: true, ratings, comment, gestures: gestures ?? [], gestureScores });
 }

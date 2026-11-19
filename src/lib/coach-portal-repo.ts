@@ -353,6 +353,8 @@ export interface PlayerEvaluation {
   comment: string | null;
   /** Gestes que la joueuse trouve difficiles (ball mastery du jour ou autre). */
   gestures?: string[] | null;
+  /** Note de chaque geste du ball mastery, de 1 (incapable) à 10 (parfait). */
+  gesture_scores?: Record<string, number> | null;
   created_at: string;
 }
 
@@ -387,6 +389,7 @@ export async function saveEvaluation(input: {
   ratings: Record<string, number>;
   comment: string | null;
   gestures?: string[];
+  gestureScores?: Record<string, number>;
 }): Promise<void> {
   const { error } = await db()
     .from("player_evaluations")
@@ -397,6 +400,7 @@ export async function saveEvaluation(input: {
         coach_id: input.coachId,
         ratings: input.ratings,
         comment: input.comment,
+        ...(input.gestureScores ? { gesture_scores: input.gestureScores } : {}),
         ...(input.gestures ? { gestures: input.gestures } : {}),
         updated_at: new Date().toISOString()
       },
