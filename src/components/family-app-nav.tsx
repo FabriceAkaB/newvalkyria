@@ -1,6 +1,6 @@
 "use client";
 
-import { FlaskConical, Globe, Handshake, House, LogOut, Menu, MessageSquareHeart, Receipt, Star, TrendingUp, Users, Video, type LucideIcon } from "lucide-react";
+import { FlaskConical, Globe, Handshake, MessageSquareQuote, House, LogOut, Menu, MessageSquareHeart, Receipt, Star, TrendingUp, Users, Video, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -18,6 +18,7 @@ export const FAMILY_TABS: { href: string; label: string; icon: LucideIcon; main:
   { href: "/compte/factures", label: "Programmes et factures", icon: Receipt, main: false },
   { href: "/compte/enfants", label: "Mes enfants", icon: Users, main: false },
   { href: "/compte/recommandations", label: "Recommandations", icon: Handshake, main: false },
+  { href: "/compte/avis", label: "Votre avis", icon: MessageSquareQuote, main: false },
   { href: "/compte/idees", label: "Boîte à suggestions", icon: MessageSquareHeart, main: false }
 ];
 

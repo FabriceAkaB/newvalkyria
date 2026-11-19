@@ -221,6 +221,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/sondages", label: "Sondages", adminOnly: true },
           { href: "/admin/sondages/intentions", label: "Intentions des familles" },
           { href: "/admin/idees", label: "Boîte à idées" },
+          { href: "/admin/avis", label: "Avis et témoignages" },
           { href: "/admin/sondages/programmes", label: "Satisfaction par programme" }
         ]
       }

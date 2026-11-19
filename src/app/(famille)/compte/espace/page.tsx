@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ChevronRight, MessageSquareHeart, MessageSquareQuote } from "lucide-react";
 import Link from "next/link";
 
 import { Container } from "@/components/container";
@@ -94,6 +95,25 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
             </div>
           );
         })}
+        <h2 className="fam-h2">Votre voix compte</h2>
+        <ul className="fam-list">
+          <li>
+            <MessageSquareQuote aria-hidden strokeWidth={1.75} />
+            <span>
+              <Link href="/compte/avis" className="parent-link">Donner votre avis</Link>
+              <small>Sur Google et Facebook en deux clics, et un témoignage vidéo récompensé</small>
+            </span>
+            <ChevronRight aria-hidden strokeWidth={1.75} />
+          </li>
+          <li>
+            <MessageSquareHeart aria-hidden strokeWidth={1.75} />
+            <span>
+              <Link href="/compte/idees" className="parent-link">Boîte à suggestions</Link>
+              <small>Une idée, ce que vous aimez, ce qui vous dérange : l&apos;équipe lit tout et vous répond</small>
+            </span>
+            <ChevronRight aria-hidden strokeWidth={1.75} />
+          </li>
+        </ul>
       </Container>
     </section>
   );
