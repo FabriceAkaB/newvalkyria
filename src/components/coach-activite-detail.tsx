@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { EntityDocuments } from "@/components/admin-entity-documents";
 import { CoachPracticeDeck } from "@/components/coach-practice-deck";
@@ -27,7 +27,7 @@ import type { ChampionPost } from "@/lib/player-points-repo";
 import { blockKey, practiceReadStatus, type ReadItem } from "@/lib/practice-read";
 import { themeForGroup } from "@/lib/practice-teams-core";
 import { isAnswered, type SurveyAnswer } from "@/lib/practice-survey";
-import { countWords, hasReportHour, isBoysActivity, isQuickEvaluationComplete, NOTE_MIN_WORDS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START, REPORT_RULE_V2_START } from "@/lib/coach-report";
+import { countWords, hasReportHour, isBoysActivity, isDebriefComplete, isQuickEvaluationComplete, NOTE_MIN_WORDS, PARTICIPATED, QUICK_CRITERIA, QUICK_SCALE, REPORT_REQUIRED_TYPES, REPORT_RULE_START, REPORT_RULE_V2_START } from "@/lib/coach-report";
 import type { AssignmentStatus, CoachActivity } from "@/lib/coaches-repo";
 import type { Exercise } from "@/lib/exercises-repo";
 import type { MatchConvocation, MatchDetails, MatchLineupSlot, MatchPlayerEvaluation, MatchRosterPlayer, PlaytimeSegment } from "@/lib/match-repo";
@@ -822,6 +822,30 @@ export function CoachActiviteDetail({
   const [presence, setPresence] = useState<MyPresence>(myPresence ?? { status: "present" as AssignmentStatus, confirmed: false, arrivalTime: null, departureTime: null, locked: true });
   // Retour 2 + 2 de cet éducateur : lu par la carte « Retour sur la pratique » de l'étape « Après ».
   const [debriefDone, setDebriefDone] = useState(false);
+  // Note des exercices (dans l'heure après la pratique) : faite / à faire, pour le suivi étape par étape.
+  const [exerciseRating, setExerciseRating] = useState<{ rated: number; total: number } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/coach/activities/${activity.id}/exercise-ratings`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive || !d?.exercises) return;
+        const list = d.exercises as { myRating?: unknown; notDone?: boolean }[];
+        setExerciseRating({ rated: list.filter((e) => e.myRating || e.notDone).length, total: list.length });
+      })
+      .catch(() => null);
+    fetch(`/api/coach/activities/${activity.id}/retour`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive || !d) return;
+        const mine = (d.debriefs ?? []).find((x: { coachId: string }) => x.coachId === d.coachId);
+        if (mine) setDebriefDone(isDebriefComplete(mine));
+      })
+      .catch(() => null);
+    return () => {
+      alive = false;
+    };
+  }, [activity.id]);
   const [openId, setOpenId] = useState<string | null>(() => {
     const done = (id: string) => initialEvaluations.some((e) => e.registration_id === id && isQuickEvaluationComplete(e, String(activity.activity_date).slice(0, 10)));
     return roster.find((p) => PARTICIPATED.includes(attendance[p.registrationId] ?? "") && !done(p.registrationId))?.registrationId ?? null;
@@ -887,6 +911,41 @@ export function CoachActiviteDetail({
           <h1 className="coach-title coach-title--xl">{activity.title ? activity.title : activity.activity_type}</h1>
           {activity.location && <p className="coach-sub">{activity.location.split(/\s[–-]\s/)[0]}</p>}
           {otherCoaches.length > 0 && <p className="coach-muted" style={{ margin: "4px 0 0" }}>Avec {otherCoaches.map((c) => c.first_name).join(", ")}</p>}
+
+          {isPractice && !guest ? (() => {
+            // Le suivi de l'éducateur (JP, 19 nov. 2026) : chaque étape se coche dès qu'elle est faite.
+            const items: { label: string; done: boolean; step: Step }[] = [
+              ...(read.hasContent ? [{ label: "Pratique lue et confirmée", done: read.confirmed, step: "avant" as Step }] : []),
+              ...(reportNeeded ? [{ label: `Présences des joueuses · ${marked}/${roster.length}`, done: marked === roster.length, step: "pendant" as Step }] : []),
+              ...(reportNeeded ? [{ label: `Évaluation de chaque fille · ${evaluated}/${participants.length}`, done: participants.length > 0 && evaluated === participants.length, step: "apres" as Step }] : []),
+              ...(reportNeeded ? [{ label: `Sondage du jour · ${routineDone}/${participants.length}`, done: surveyDone, step: "apres" as Step }] : []),
+              ...(exerciseRating && exerciseRating.total > 0 ? [{ label: `Note des exercices (dans l'heure) · ${exerciseRating.rated}/${exerciseRating.total}`, done: exerciseRating.rated === exerciseRating.total, step: "apres" as Step }] : []),
+              ...(reportNeeded && isCoach ? [{ label: "Mon retour : 2 bons coups, 2 à améliorer", done: debriefDone, step: "apres" as Step }] : []),
+              { label: "Ma présence dans MonClubSportif", done: presence.confirmed, step: "apres" as Step }
+            ];
+            const done = items.filter((i) => i.done).length;
+            return (
+              <div className="coach-card" style={{ margin: "12px 0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+                  <p className="coach-card__label" style={{ margin: 0 }}>Mon suivi de la pratique</p>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: done === items.length ? "var(--adm-good)" : "var(--adm-text-2)" }}>{done}/{items.length} étapes</span>
+                </div>
+                <div role="progressbar" aria-valuemin={0} aria-valuemax={items.length} aria-valuenow={done} style={{ height: 8, borderRadius: 999, background: "var(--adm-surface-3)", overflow: "hidden", margin: "10px 0" }}>
+                  <div style={{ width: `${Math.max(3, (done / items.length) * 100)}%`, height: "100%", background: done === items.length ? "var(--adm-good)" : "var(--adm-accent-strong)" }} />
+                </div>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
+                  {items.map((i) => (
+                    <li key={i.label}>
+                      <button type="button" onClick={() => goTo(i.step)} style={{ display: "flex", gap: 8, alignItems: "center", width: "100%", background: "none", border: 0, padding: "4px 0", cursor: "pointer", textAlign: "left", font: "inherit", color: i.done ? "var(--adm-text-2)" : "var(--adm-text)" }}>
+                        <span aria-hidden style={{ width: 20, height: 20, borderRadius: 999, display: "grid", placeItems: "center", flex: "0 0 auto", fontSize: "0.75rem", fontWeight: 700, background: i.done ? "var(--adm-good)" : "transparent", color: i.done ? "#fff" : "var(--adm-text-3)", border: i.done ? "none" : "1.5px solid var(--adm-border)" }}>{i.done ? "✓" : ""}</span>
+                        <span style={{ textDecoration: i.done ? "line-through" : "none" }}>{i.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })() : null}
 
           <nav ref={stepsRef} className="coach-steps" aria-label="Étapes de la pratique">
             {steps.map((s) => (
@@ -1090,7 +1149,7 @@ export function CoachActiviteDetail({
               )}
 
               <div style={{ marginBottom: 16 }}>
-                <CoachExerciseRatings activityId={activity.id} />
+                <CoachExerciseRatings activityId={activity.id} onProgress={(rated, total) => setExerciseRating({ rated, total })} />
               </div>
 
               {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (

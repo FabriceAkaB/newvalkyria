@@ -20,16 +20,20 @@ describe("statut calculé", () => {
     expect(computeBankStatus(v(1), [r(1, 9, "a", "2026-11-03"), r(1, 8, "a", "2026-11-10")]).status).toBe("a-tester");
   });
 
-  it("2 éducateurs différents à 8+ : à valider, puis approuvé avec la validation de JP", () => {
+  it("2 éducateurs différents à 8+ : approuvé", () => {
     const ratings = [r(1, 9, "a", "2026-11-03"), r(1, 8, "b", "2026-11-05")];
-    expect(computeBankStatus(v(1), ratings).status).toBe("a-valider");
-    const s = computeBankStatus(v(1, 1), ratings);
+    const s = computeBankStatus(v(1), ratings);
     expect(s.status).toBe("approuve");
     expect(s.average).toBe(8.5);
   });
 
+  it("la validation de JP compte comme 2 éducateurs", () => {
+    expect(computeBankStatus(v(1, 1), []).status).toBe("approuve");
+    expect(computeBankStatus(v(1, 1), [r(1, 9, "a", "2026-11-03")]).status).toBe("approuve");
+  });
+
   it("une validation d'une ancienne version ne compte pas", () => {
-    expect(computeBankStatus(v(2, 1), [r(2, 9, "a", "2026-11-03"), r(2, 9, "b", "2026-11-05")]).status).toBe("a-valider");
+    expect(computeBankStatus(v(2, 1), [r(2, 9, "a", "2026-11-03")]).status).toBe("a-tester");
   });
 
   it("une note sous 8 : à changer", () => {

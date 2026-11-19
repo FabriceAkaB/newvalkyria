@@ -547,7 +547,7 @@ export function AdminExerciceFiche({ entry, ratings, uses = null }: { entry: Ban
   };
 
   const primary =
-    b.status === "a-valider" ? { label: "Approuver cet exercice", run: approve }
+    b.status === "a-valider" || (b.status === "a-tester" && sheet.complete) ? { label: "Valider (compte comme 2 éducateurs)", run: approve }
     : b.status === "a-changer" ? { label: "Faire la nouvelle version", run: () => edit(true) }
     : b.status === "retire" ? { label: "Remettre à l'essai", run: restore }
     : !sheet.complete ? { label: "Compléter la fiche", run: () => edit(false) }

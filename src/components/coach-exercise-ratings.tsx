@@ -7,7 +7,7 @@ import type { ExerciseToRate } from "@/lib/exercises-repo";
 
 /** Rapport des 24 heures : l'éducateur note sur 10 chaque exercice de la banque utilisé dans la séance
  *  (5 critères à 0, 1 ou 2). La note décide du statut de l'exercice dans la banque Valkyria. */
-export function CoachExerciseRatings({ activityId }: { activityId: string }) {
+export function CoachExerciseRatings({ activityId, onProgress }: { activityId: string; onProgress?: (rated: number, total: number) => void }) {
   const [items, setItems] = useState<ExerciseToRate[] | null>(null);
   const [canRate, setCanRate] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -29,8 +29,11 @@ export function CoachExerciseRatings({ activityId }: { activityId: string }) {
     };
   }, [activityId]);
 
+  const rated = (items ?? []).filter((e) => e.myRating || e.notDone).length;
+  const total = items?.length ?? 0;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (items) onProgress?.(rated, total); }, [rated, total, items === null]);
   if (!items || items.length === 0) return null;
-  const rated = items.filter((e) => e.myRating || e.notDone).length;
 
   return (
     <section className="xb-rate" aria-labelledby="xb-rate-title">
@@ -39,8 +42,8 @@ export function CoachExerciseRatings({ activityId }: { activityId: string }) {
           <h2 id="xb-rate-title" className="mda-h2">Note des exercices</h2>
           <p className="mda-sub" style={{ margin: 0 }}>
             {canRate
-              ? "Rapport des 24 heures : 5 critères, 30 secondes par exercice. Deux éducateurs à 8 ou plus = exercice approuvé ; sous 8, il sera changé."
-              : "Après la séance, tu noteras ici chaque exercice utilisé (30 secondes par exercice)."}
+              ? "Dans l'heure après la pratique : note chaque exercice sur 10, surtout à quel point il a fait ressortir le thème de la semaine (30 secondes par exercice). Deux éducateurs à 8 ou plus, ou la validation de JP = exercice approuvé ; sous 8, il sera changé."
+              : "Après la séance, dans l'heure : tu noteras ici chaque exercice sur 10, surtout à quel point il a fait ressortir le thème."}
           </p>
         </div>
         {canRate ? <span className="mda-pill" data-tone={rated === items.length ? "good" : "warn"}>{rated}/{items.length} faits</span> : null}

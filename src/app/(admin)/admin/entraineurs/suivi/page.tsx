@@ -10,6 +10,7 @@ import { listPractices } from "@/lib/practices-repo";
 import { getCoachSatisfaction } from "@/lib/surveys-repo";
 import { DevelopmentPlanEditor, ModuleOpenToggle, ValidateModule } from "@/components/coach-training";
 import { TRAINING_MODULES, trainingProgress } from "@/lib/coach-training";
+import { getCoachAccounts } from "@/lib/coach-accounts-repo";
 import { getOpenModules, getTraining } from "@/lib/coach-training-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -52,7 +53,9 @@ export default async function CoachFollowUpPage() {
     getCoachSatisfaction().catch(() => new Map()),
     (getSupabaseAdminClient() as any).from("coaches").select("id, pro_goals, development_plan")
   ]);
-  const [training, openModules] = await Promise.all([getTraining(coaches.filter((c) => c.status === "active").map((c) => c.id)).catch(() => new Map()), getOpenModules().catch(() => [] as string[])]);
+  const activeIds = coaches.filter((c) => c.status === "active").map((c) => c.id);
+  const [training, openModules, accounts] = await Promise.all([getTraining(activeIds).catch(() => new Map()), getOpenModules().catch(() => [] as string[]), getCoachAccounts(activeIds).catch(() => new Map())]);
+  const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("fr-CA", { timeZone: "America/Toronto", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null);
   const recent = rows.filter((r) => String(r.activityDate).slice(0, 10) >= from && String(r.activityDate).slice(0, 10) <= t);
   const active = coaches.filter((c) => c.status === "active");
   const contractFor = (first: string) => contracts.find((k) => norm(k.employee_name).split(/\s+/)[0] === norm(first).split(/\s+/)[0] && k.status !== "cancelled");
@@ -70,7 +73,7 @@ export default async function CoachFollowUpPage() {
           <header>
             <p className="mda-eyebrow">3 dernières semaines · contrats, accès, présences et rapports</p>
             <h1 className="mda-h1">{incomplete.length ? `${incomplete.length} rapport${incomplete.length > 1 ? "s" : ""} d'éducateur à compléter` : "Tous les rapports des éducateurs sont complets"}</h1>
-            <p className="mda-lead">Un rapport est complet quand l'éducateur a confirmé sa présence, rempli les présences des joueuses et les évaluations. Sinon, ses heures sont retenues dans la paie et il reçoit une relance 24 h après la pratique.</p>
+            <p className="mda-lead">Depuis le 19 novembre : les heures de terrain sont payées dès la présence dans MonClubSportif ; les coachs gagnent 1 heure de rapport par jour de pratique quand le rapport est fini (présences, évaluations, sondage du jour, retour 2 + 2). Une relance part 24 h après la pratique, et un rappel de noter les exercices une heure après.</p>
           </header>
 
           <section className="mda-cols-3">
@@ -79,13 +82,57 @@ export default async function CoachFollowUpPage() {
               <p className="mda-label">Contrats signés · <Link href="/admin/contrats" style={{ color: "var(--adm-accent)" }}>Contrats de travail</Link></p>
             </div>
             <div className="mda-card">
-              <p className="mda-num">{active.filter((c) => c.username && c.email).length}/{active.length}</p>
-              <p className="mda-label">Éducateurs avec accès au portail (identifiant + courriel) · <Link href="/admin/entraineurs" style={{ color: "var(--adm-accent)" }}>Entraîneurs</Link></p>
+              <p className="mda-num">{active.filter((c) => accounts.get(c.id)?.activated).length}/{active.length}</p>
+              <p className="mda-label">Comptes activés (mot de passe choisi) · <Link href="/admin/entraineurs" style={{ color: "var(--adm-accent)" }}>Entraîneurs</Link></p>
             </div>
             <div className="mda-card" style={incomplete.length ? { boxShadow: "inset 3px 0 0 var(--adm-warn)" } : undefined}>
               <p className="mda-num">{recent.length ? Math.round(((recent.length - incomplete.length) / recent.length) * 100) : 0} %</p>
               <p className="mda-label">Rapports complets ({recent.length - incomplete.length} sur {recent.length} activités assignées)</p>
             </div>
+          </section>
+
+          <section className="mda-card-flush">
+            <div className="mda-card-head">
+              <h2 className="mda-h2">Comptes et pratiques lues avant le début</h2>
+              <Pill>30 derniers jours · 7 prochains jours</Pill>
+            </div>
+            <div className="admin-table-wrap" style={{ margin: 0, border: 0, boxShadow: "none" }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Éducateur</th>
+                    <th>Compte</th>
+                    <th>Dernière connexion</th>
+                    <th style={{ textAlign: "right" }}>Lues avant le début</th>
+                    <th style={{ textAlign: "right" }}>À venir, déjà lues</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {active.map((c) => {
+                    const a = accounts.get(c.id);
+                    const pct = a && a.pastTotal ? a.readBefore / a.pastTotal : null;
+                    return (
+                      <tr key={c.id}>
+                        <td><Link href={`/admin/entraineurs/${c.id}`} style={{ color: "var(--adm-text)", fontWeight: 600, textDecoration: "none" }}>{c.first_name} {c.last_name}</Link></td>
+                        <td>
+                          <Pill tone={a?.activated ? "good" : a?.invitedAt ? "warn" : "bad"}>
+                            {a?.activated ? "Activé" : a?.invitedAt ? `Invité le ${when(a.invitedAt)}, pas encore activé` : "Pas invité"}
+                          </Pill>
+                        </td>
+                        <td>{when(a?.lastLogin ?? null) ?? "Jamais"}</td>
+                        <td style={{ textAlign: "right", color: pct === null ? "var(--adm-text-3)" : pct >= 0.8 ? "var(--adm-good)" : "var(--adm-warn)", fontWeight: 600 }}>
+                          {a && a.pastTotal ? `${a.readBefore}/${a.pastTotal}` : "—"}
+                        </td>
+                        <td style={{ textAlign: "right" }}>{a && a.upcomingTotal ? `${a.upcomingRead}/${a.upcomingTotal}` : "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="mda-sub" style={{ padding: "10px 20px 16px", margin: 0 }}>
+              « Activé » : l&apos;éducateur a choisi son mot de passe avec le lien reçu par courriel (renvoyer l&apos;invitation : fiche de l&apos;éducateur). « Lues avant le début » : diapos et chaque exercice vus, puis « J&apos;ai pris connaissance de la pratique » confirmé avant l&apos;heure de début.
+            </p>
           </section>
 
           <section className="mda-card-flush">

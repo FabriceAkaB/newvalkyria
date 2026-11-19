@@ -167,7 +167,8 @@ export function checklistSummary(e: ExerciseSheetFields) {
 export const RATING_CRITERIA = [
   { key: "engagement", label: "Engagement et plaisir", short: "Engagement" },
   { key: "touches", label: "Volume de touches, sans file d'attente", short: "Touches" },
-  { key: "objectif", label: "Objectif atteint", short: "Objectif" },
+  // JP, 19 nov. 2026 : la note dit surtout à quel point l'exercice fait ressortir le thème de la semaine.
+  { key: "objectif", label: "A fait ressortir le thème de la semaine", short: "Thème" },
   { key: "adapte", label: "Adapté à l'âge et au nombre", short: "Adapté" },
   { key: "explication", label: "Expliqué et organisé en moins de 2 minutes", short: "Explication" }
 ] as const;
@@ -263,18 +264,20 @@ export function computeBankStatus(ex: { version: number; validated_version: numb
   if (currentLow) {
     return { ...base, status: "a-changer", reason: `Une note de ${currentLow.total} sur 10 (sous ${APPROVAL_SCORE}) : faire une nouvelle version ; il ne revient pas dans une séance la même semaine.` };
   }
+  // Approuvé (JP, 19 nov. 2026) : 2 éducateurs différents à 8 ou plus, OU la validation de JP, qui compte comme
+  // 2 éducateurs à elle seule.
+  if (ex.validated_version === ex.version) {
+    return { ...base, status: "approuve", reason: coachesAtApproval >= APPROVAL_COACHES ? `${coachesAtApproval} éducateurs ont donné ${APPROVAL_SCORE} ou plus, et JP a validé la version ${ex.version}.` : `Validé par JP (version ${ex.version}) : sa validation compte comme 2 éducateurs.`, top: (average ?? 0) >= 9 };
+  }
   if (coachesAtApproval >= APPROVAL_COACHES) {
-    if (ex.validated_version === ex.version) {
-      return { ...base, status: "approuve", reason: `${coachesAtApproval} éducateurs ont donné ${APPROVAL_SCORE} ou plus et JP a validé la version ${ex.version}.`, top: (average ?? 0) >= 9 };
-    }
-    return { ...base, status: "a-valider", reason: `${coachesAtApproval} éducateurs ont donné ${APPROVAL_SCORE} ou plus : il reste la validation de JP.` };
+    return { ...base, status: "approuve", reason: `${coachesAtApproval} éducateurs différents ont donné ${APPROVAL_SCORE} ou plus à la version ${ex.version}.`, top: (average ?? 0) >= 9 };
   }
   const left = APPROVAL_COACHES - coachesAtApproval;
   return {
     ...base,
     status: "a-tester",
     reason: current.length
-      ? `Encore ${left} éducateur${left > 1 ? "s" : ""} différent${left > 1 ? "s" : ""} à ${APPROVAL_SCORE} ou plus pour l'approuver.`
+      ? `Encore ${left} éducateur${left > 1 ? "s" : ""} différent${left > 1 ? "s" : ""} à ${APPROVAL_SCORE} ou plus pour l'approuver (ou la validation de JP).`
       : ex.version > 1
         ? `Nouvelle version ${ex.version} : les notes repartent à zéro, à réévaluer.`
         : "Pas encore noté : à essayer en séance."
