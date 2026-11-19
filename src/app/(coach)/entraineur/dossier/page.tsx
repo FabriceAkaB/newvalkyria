@@ -1,4 +1,5 @@
 import { CoachDossierGoals } from "@/components/coach-dossier-goals";
+import { CoachChangePasswordForm } from "@/components/coach-password-forms";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { requireCoach } from "@/lib/coach-auth";
 import { listObservations } from "@/lib/coach-observations-repo";
@@ -134,6 +135,11 @@ export default async function CoachDossierPage() {
             <p className="coach-card__label">Mes objectifs professionnels</p>
             <p className="coach-sub" style={{ marginTop: 0 }}>Où veux-tu être dans un an comme éducateur ? JP s&apos;en sert pour ton plan de développement.</p>
             <CoachDossierGoals initial={row?.pro_goals ?? ""} />
+          </div>
+
+          <div className="coach-card" style={{ marginTop: 16 }}>
+            <p className="coach-card__label">Mon mot de passe</p>
+            <CoachChangePasswordForm />
           </div>
         </div>
       </div>

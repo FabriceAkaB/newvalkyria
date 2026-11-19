@@ -170,7 +170,35 @@ function TypeRatesSection({ coachId, rates: initial }: { coachId: string; rates:
   );
 }
 
-function CredentialsSection({ coachId, username: initialUsername }: { coachId: string; username: string | null }) {
+function InviteButton({ coachId, email }: { coachId: string; email: string | null }) {
+  const [state, setState] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <div style={{ display: "grid", gap: "0.4rem" }}>
+      <button
+        type="button"
+        className="admin-btn-primary"
+        disabled={busy || !email}
+        style={{ fontSize: "0.8rem", alignSelf: "flex-start" }}
+        onClick={async () => {
+          setBusy(true);
+          const res = await fetch(`/api/admin/coaches/${coachId}/invitation`, { method: "POST" }).catch(() => null);
+          const data = await res?.json().catch(() => null);
+          setState(res?.ok ? { ok: true, text: `Invitation envoyée à ${data?.email}. Lien valide 7 jours.` } : { ok: false, text: data?.error ?? "Erreur" });
+          setBusy(false);
+        }}
+      >
+        {busy ? "Envoi…" : "Envoyer l'invitation par courriel"}
+      </button>
+      <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>
+        {email ? `L'éducateur choisit lui-même son mot de passe et se connecte avec ${email}. Il peut ensuite le changer dans Mon dossier ou cliquer « Mot de passe oublié ? ».` : "Ajoute d'abord son courriel dans la fiche."}
+      </p>
+      {state ? <p style={{ fontSize: "0.72rem", color: state.ok ? "var(--adm-good)" : "var(--adm-bad)", margin: 0 }}>{state.text}</p> : null}
+    </div>
+  );
+}
+
+function CredentialsSection({ coachId, username: initialUsername, email }: { coachId: string; username: string | null; email: string | null }) {
   const [username, setUsername] = useState(initialUsername ?? "");
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
@@ -207,9 +235,12 @@ function CredentialsSection({ coachId, username: initialUsername }: { coachId: s
     <div className="admin-drawer-section" style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
       <p className="admin-drawer-section-title">Accès Espace Entraîneur</p>
       <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0 0 0.6rem" }}>
-        {initialUsername ? "Cet entraîneur a déjà un accès. Vous pouvez changer son mot de passe ci-dessous." : "Aucun accès configuré — l'entraîneur ne peut pas encore se connecter à /entraineur."}
+        {initialUsername ? "Cet entraîneur a déjà un accès." : "Aucun accès pour l'instant : envoie-lui l'invitation."}
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <InviteButton coachId={coachId} email={email} />
+      <details style={{ marginTop: "0.8rem" }}>
+        <summary style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", cursor: "pointer" }}>Fixer l&apos;identifiant à la main (dépannage)</summary>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.5rem" }}>
         <label className="admin-field" style={{ gap: "0.3rem" }}>
           <span className="admin-drawer-label">Nom d&apos;utilisateur</span>
           <input className="admin-input" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="ex. jsmith" />
@@ -223,6 +254,7 @@ function CredentialsSection({ coachId, username: initialUsername }: { coachId: s
         </button>
         {message && <p style={{ fontSize: "0.72rem", color: msgError ? "var(--adm-bad)" : "var(--adm-good)", margin: 0 }}>{message}</p>}
       </div>
+      </details>
     </div>
   );
 }
@@ -358,7 +390,7 @@ export function AdminEntraineurDetail({ coach: initialCoach, initialAssignments,
 
             <div style={{ flex: "1 1 260px", display: "flex", flexDirection: "column", gap: "1rem" }}>
               <TypeRatesSection coachId={coach.id} rates={initialTypeRates} />
-              <CredentialsSection coachId={coach.id} username={coach.username} />
+              <CredentialsSection coachId={coach.id} username={coach.username} email={coach.email ?? null} />
               <CertificationsSection coachId={coach.id} certifications={initialCertifications} />
               <div style={{ background: "var(--adm-surface-2)", border: "1px solid var(--adm-border)", borderRadius: "10px", padding: "1.1rem" }}>
                 <EntityDocuments entityType="coach" entityId={coach.id} />

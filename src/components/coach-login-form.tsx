@@ -33,7 +33,7 @@ export function CoachLoginForm() {
   return (
     <form onSubmit={handleSubmit} className="admin-login-form">
       <label className="admin-field">
-        <span>Identifiant</span>
+        <span>Courriel</span>
         <input
           type="text"
           value={username}
@@ -41,6 +41,7 @@ export function CoachLoginForm() {
           className="admin-input"
           autoFocus
           autoComplete="username"
+          placeholder="ton courriel"
         />
       </label>
       <label className="admin-field">
@@ -53,6 +54,8 @@ export function CoachLoginForm() {
           autoComplete="current-password"
         />
       </label>
+
+      <a href="/entraineur/mot-de-passe-oublie" style={{ fontSize: "0.85rem", marginTop: -4 }}>Mot de passe oublié ?</a>
 
       {error && <p className="admin-error" role="alert">{error}</p>}
 
