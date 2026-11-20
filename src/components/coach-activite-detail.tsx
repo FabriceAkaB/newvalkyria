@@ -725,7 +725,7 @@ function MyPresenceCard({ activity, initial, onChange }: { activity: CoachActivi
           <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>
             {presence.status === "absent" ? "Absence confirmée" : `✓ Présence confirmée · ${presence.arrivalTime ?? start}–${presence.departureTime ?? end} · ${formatHoursMinutes(hours)}`}
           </p>
-          {!presence.locked && <button className="coach-secondary" style={{ marginTop: 12 }} onClick={() => setEditing(true)}>Modifier mes heures</button>}
+          {!presence.locked && <button className="coach-secondary" style={{ marginTop: 12 }} onClick={() => setEditing(true)}>Modifier ma présence</button>}
         </>
       ) : (
         <>
@@ -743,7 +743,8 @@ function MyPresenceCard({ activity, initial, onChange }: { activity: CoachActivi
           <p className="coach-muted" style={{ margin: "8px 0 0" }}>{formatHoursMinutes(computeHours(arrival, departure))}</p>
           {error && <p className="coach-error" role="alert">{error}</p>}
           <button className="coach-primary" disabled={saving} onClick={() => send("present")}>{saving ? "Enregistrement…" : "Confirmer ma présence"}</button>
-          <button className="coach-secondary" style={{ width: "100%", marginTop: 8 }} disabled={saving} onClick={() => send("absent")}>Je n&apos;étais pas là</button>
+          <button className="coach-secondary" style={{ width: "100%", marginTop: 8 }} disabled={saving} onClick={() => send("absent")}>Je n&apos;étais pas là pour ce groupe</button>
+          <p className="coach-muted" style={{ margin: "8px 0 0" }}>Là pour une partie seulement (ex. absent au 2e bloc) ? Touche ce bouton dans le groupe où tu n&apos;étais pas : tu n&apos;auras rien à remplir pour lui.</p>
         </>
       )}
     </div>
@@ -778,8 +779,10 @@ export function CoachActiviteDetail({
   videos = [],
   readItems = [],
   initialReadSeen = [],
-  initialReadAt = null
+  initialReadAt = null,
+  helped = []
 }: Props & {
+  helped?: { registrationId: string; name: string }[];
   defaultStep: Step;
   briefing: BriefingPlayer[];
   initialChampions: ChampionPost[];
@@ -876,7 +879,11 @@ export function CoachActiviteDetail({
   const marked = roster.filter((p) => attendance[p.registrationId]).length;
   const evaluated = participants.filter((p) => isEvaluated(p.registrationId)).length;
   const routineDone = participants.filter((p) => isAnswered(feedback[p.registrationId])).length;
-  const reportNeeded = REPORT_REQUIRED_TYPES.includes(activity.activity_type) && !activity.organization && !isBoysActivity(activity) && roster.length > 0;
+  const isCoach = hasReportHour(coachRole);
+  // Absent pour ce groupe (ex. 2e bloc, « Je n'étais pas là ») : rien à remplir ici (JP, 20 nov. 2026).
+  const absentHere = !guest && presence.confirmed && presence.status === "absent";
+  // Le rapport est pour les coachs : l'assistant (ex. William) n'en écrit aucun, la section ne lui est pas montrée.
+  const reportNeeded = REPORT_REQUIRED_TYPES.includes(activity.activity_type) && !activity.organization && !isBoysActivity(activity) && roster.length > 0 && isCoach && !absentHere;
   const ruleApplies = activityDay >= REPORT_RULE_START;
   // Règle du 19 nov. 2026 : sondage du jour de chaque fille et retour de l'éducateur (2 bons coups, 2 à améliorer) aussi.
   const strict = activityDay >= REPORT_RULE_V2_START;
@@ -886,7 +893,6 @@ export function CoachActiviteDetail({
     : [];
   const reportComplete = !reportNeeded || reportChecks.every(Boolean);
   // Depuis le 19 nov. 2026 : terrain payé dès la présence ; le coach gagne 1 h de rapport quand tout est fait.
-  const isCoach = hasReportHour(coachRole);
   const hoursCount = presence.confirmed && (reportComplete || !ruleApplies || (strict && !isCoach));
   const afterDone = [presence.confirmed, ...reportChecks].filter(Boolean).length;
   const afterTotal = 1 + reportChecks.length;
@@ -1058,6 +1064,27 @@ export function CoachActiviteDetail({
 
           {step === "apres" && (
             <>
+              {!guest && (
+                <div style={{ marginBottom: 16 }}>
+                  <MyPresenceCard activity={activity} initial={presence} onChange={setPresence} />
+                </div>
+              )}
+              {absentHere && (
+                <div className="coach-card" style={{ marginBottom: 16 }}>
+                  <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>Tu n&apos;étais pas là pour ce groupe : rien à remplir ici.</p>
+                  <p className="coach-muted" style={{ margin: "6px 0 0" }}>Ton heure de rapport du jour dépend seulement des groupes où tu étais. Erreur ? Touche « Modifier ma présence ».</p>
+                </div>
+              )}
+              {helped.length > 0 && (
+                <div className="coach-card" style={{ marginBottom: 16 }}>
+                  <p className="coach-card__label">Les joueuses que j&apos;ai aidées et encouragées aujourd&apos;hui</p>
+                  <p style={{ margin: "0 0 8px", fontSize: "1.5rem", fontWeight: 700, color: "var(--adm-text)", fontVariantNumeric: "tabular-nums" }}>
+                    {helped.length} fille{helped.length > 1 ? "s" : ""}
+                  </p>
+                  <p className="coach-muted" style={{ margin: "0 0 8px" }}>Elles l&apos;ont dit elles-mêmes sur la borne, à « Ta coach t&apos;a-t-elle aidée ou encouragée ? ».</p>
+                  <p style={{ margin: 0, color: "var(--adm-text)" }}>{helped.map((h) => h.name).join(" · ")}</p>
+                </div>
+              )}
               {videos.length > 0 && (
                 <div className="coach-card" style={{ marginBottom: 16, display: "grid", gap: 10 }}>
                   <p className="coach-card__label">{videos.length > 1 ? "Les vidéos de cette activité" : "La vidéo de cette activité"}</p>
@@ -1090,7 +1117,7 @@ export function CoachActiviteDetail({
                         ? presence.confirmed && reportComplete
                           ? "Rapport fini. Ton heure de rapport du jour (1 h, une seule même avec deux pratiques) s'ajoute à ta paie quand les rapports de toutes tes pratiques du jour sont finis."
                           : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Ton heure de rapport du jour (1 h de plus, une seule même avec deux pratiques) s'ajoute toute seule quand chaque case est cochée pour chacune de tes pratiques du jour ; sinon, tu es payé pour tes heures de terrain seulement."
-                        : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Comme assistant, tu aides au rapport (présences, sondage, évaluations) ; l'heure de rapport va aux coachs."
+                        : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Pas de rapport à remplir pour toi : il est fait par les coachs."
                     : hoursCount
                     ? "Rapport complet : tes heures comptent pour la paie."
                     : ruleApplies
@@ -1148,6 +1175,17 @@ export function CoachActiviteDetail({
                 </div>
               )}
 
+              {isPractice && participants.length > 1 && (
+                <div style={{ marginBottom: 16 }}>
+                  <CoachTeamsCard
+                    title="Équipes du jour : couleurs et qui était avec qui"
+                    activityId={activity.id}
+                    players={participants}
+                    theme={themeForGroup(theme?.theme, activity.category ?? activity.title)}
+                  />
+                </div>
+              )}
+
               {participants.length > 0 && (
                 <div style={{ marginBottom: 16 }}>
                   <CoachChampionsCard activityId={activity.id} players={participants} initial={initialChampions} rules={pointsRules} />
@@ -1160,12 +1198,11 @@ export function CoachActiviteDetail({
 
               {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
                 <div style={{ marginBottom: 16 }}>
-                  {!guest ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
-                  <CoachDebriefCard activityId={activity.id} onStatus={setDebriefDone} required={isCoach && strict} />
+                  {!guest && reportNeeded ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
+                  {reportNeeded || (guest && isCoach) ? <CoachDebriefCard activityId={activity.id} onStatus={setDebriefDone} required={isCoach && strict} /> : null}
                 </div>
               ) : null}
 
-              {!guest && <MyPresenceCard activity={activity} initial={presence} onChange={setPresence} />}
             </>
           )}
         </div>

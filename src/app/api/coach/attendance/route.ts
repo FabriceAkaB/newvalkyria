@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
+import { notifyActivityCoaches } from "@/lib/coach-report-notice";
 import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getCoachActivityWithRoster, setPlayerAttendance, type PlayerAttendanceStatus } from "@/lib/coach-portal-repo";
 import { jsonError } from "@/lib/http";
@@ -23,6 +24,8 @@ export async function POST(request: Request) {
   const allowed = new Set(entry.roster.map((p) => p.registrationId));
   if (ids.some((id) => !allowed.has(id))) return jsonError("Cette joueuse n'est pas attendue à cette activité.", 403);
 
+  // Rapports du jour tous finis : courriel automatique à l'éducateur (une fois par jour).
+  after(() => notifyActivityCoaches(body!.activityId!).catch(() => null));
   await setPlayerAttendance(body.activityId, ids, body.status as PlayerAttendanceStatus);
   return NextResponse.json({ ok: true });
 }

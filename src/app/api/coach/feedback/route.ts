@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
+import { notifyActivityCoaches } from "@/lib/coach-report-notice";
 import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getCoachActivityWithRoster, setPlayerFeedback } from "@/lib/coach-portal-repo";
 import { jsonError } from "@/lib/http";
@@ -21,6 +22,8 @@ export async function POST(request: Request) {
   if (!entry) return jsonError("Activité introuvable", 404);
   if (!entry.roster.some((p) => p.registrationId === registrationId)) return jsonError("Cette joueuse n'est pas attendue à cette activité.", 403);
 
+  // Rapports du jour tous finis : courriel automatique à l'éducateur (une fois par jour).
+  after(() => notifyActivityCoaches(activityId).catch(() => null));
   await setPlayerFeedback(activityId, registrationId, answer);
   return NextResponse.json({ ok: true });
 }

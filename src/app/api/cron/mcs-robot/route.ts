@@ -51,6 +51,9 @@ export async function GET(request: Request) {
   const weeklyMessage = await import("@/lib/weekly-parent-message-repo").then((m) => m.runWeeklyParentMessage({ dryRun: false })).then(() => ({ ok: true })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
   // Une heure après chaque pratique : rappel aux éducateurs de noter les exercices (thème de la semaine).
   const exerciseRatings = await import("@/lib/exercise-rating-reminder").then((m) => m.remindExerciseRatings()).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
+  // Toutes les heures (secours) : un coach dont les rapports d'une journée sont tous finis reçoit son avis
+  // « heure ajoutée à ta banque d'heures » (normalement envoyé dès l'enregistrement, une fois par jour).
+  const reportNotices = await import("@/lib/coach-report-notice").then((m) => m.sweepReportNotices(new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" }))).then((sent) => ({ sent })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
   // De 8 h à 21 h : absences annoncées à l'avancé (pratiques de semaine) → filles de l'intermédiaire proposées à JP ;
   // les « oui » des parents sont ajoutés à la pratique dans MonClubSportif.
   const practiceInvites = hour >= 8 && hour < 22 ? await import("@/lib/practice-invites-repo").then((m) => m.runPracticeInvites()).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
@@ -62,5 +65,5 @@ export async function GET(request: Request) {
   const archive = await archiveVideos({ deadline: started + (maxDuration - 20) * 1000 })
     .then((r) => ({ done: r.done.length, progress: r.progress, errors: r.errors.map((e) => e.error) }))
     .catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
-  return NextResponse.json({ ok: true, onboarding, parentNews, weeklyMessage, emails, mcsPosts, surveyReminders, todayPresences, practiceInvites, exerciseRatings, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
+  return NextResponse.json({ ok: true, onboarding, parentNews, weeklyMessage, emails, mcsPosts, surveyReminders, todayPresences, practiceInvites, exerciseRatings, reportNotices, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
 }

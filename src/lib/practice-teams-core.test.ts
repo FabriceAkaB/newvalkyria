@@ -57,3 +57,20 @@ describe("thème du groupe", () => {
     expect(themeForGroup("Largeur", "2015")).toBe("Largeur");
   });
 });
+
+describe("Couleurs et qui affronte qui (JP, 20 nov. 2026)", () => {
+  it("nombre d'équipes selon les filles attendues", async () => {
+    const { teamCountFor } = await import("@/lib/practice-teams-core");
+    expect([8, 11, 12, 17, 18].map(teamCountFor)).toEqual([2, 2, 3, 3, 4]);
+  });
+  it("chaque équipe affronte chaque autre une fois", async () => {
+    const { matchups } = await import("@/lib/practice-teams-core");
+    expect(matchups(["Violettes", "Noires"])).toEqual([{ games: [["Violettes", "Noires"]], rest: null }]);
+    const three = matchups(["A", "B", "C"]);
+    expect(three).toHaveLength(3);
+    expect(three.every((r) => r.games.length === 1 && r.rest)).toBe(true);
+    const four = matchups(["A", "B", "C", "D"]);
+    const pairs = four.flatMap((r) => r.games.map((g) => [...g].sort().join("-"))).sort();
+    expect(pairs).toEqual(["A-B", "A-C", "A-D", "B-C", "B-D", "C-D"]);
+  });
+});

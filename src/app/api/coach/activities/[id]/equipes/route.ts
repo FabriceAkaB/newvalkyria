@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getCoachActivityWithRoster } from "@/lib/coach-portal-repo";
 import { jsonError } from "@/lib/http";
-import { getTeamsForActivity, proposeTeams, rateCaptain, saveTeams } from "@/lib/practice-teams-repo";
+import { TEAM_COLORS } from "@/lib/practice-teams-core";
+import { confirmTeams, getTeamsForActivity, proposeTeams, rateCaptain, saveTeams } from "@/lib/practice-teams-repo";
 
 /** Équipes, duos et capitaines d'une pratique (portail) : proposer des équipes nouvelles, les enregistrer,
  *  noter le leadership de chaque capitaine. Règles : practice-teams-core.ts. */
@@ -41,10 +42,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         label: String(t?.label ?? "Équipe"),
         members: (Array.isArray(t?.members) ? t.members : []).filter((m: unknown): m is string => typeof m === "string" && roster.has(m)),
         captain: typeof t?.captain === "string" ? t.captain : null,
-        captainTask: typeof t?.captainTask === "string" ? t.captainTask : null
+        captainTask: typeof t?.captainTask === "string" ? t.captainTask : null,
+        color: typeof t?.color === "string" && TEAM_COLORS.some((c) => c.name === t.color) ? t.color : null
       }))
       .filter((t: { members: string[] }) => t.members.length);
+    // Une couleur par équipe : le nom de l'équipe est sa couleur.
+    for (const t of teams) if (kind === "equipe" && t.color) t.label = t.color;
     return NextResponse.json({ teams: await saveTeams(id, kind, teams, a.coachId) });
+  }
+  if (body?.action === "confirmer") {
+    // Les équipes préparées d'avance ont bien été jouées telles quelles.
+    await confirmTeams(id, kind);
+    return NextResponse.json({ teams: await getTeamsForActivity(id) });
   }
   return jsonError("Action invalide", 400);
 }

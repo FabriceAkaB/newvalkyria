@@ -205,3 +205,23 @@ export async function getSurveyDashboard(weeks = 10): Promise<SurveyDashboard> {
   const name = new Map(((coaches ?? []) as any[]).map((c) => [c.id, String(c.first_name ?? "").trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (x: string) => x.toUpperCase())] as const));
   return { weeks: weeklySeries(rows), coaches: rates.map((r) => ({ ...r, name: name.get(r.coachId) ?? "Coach" })) };
 }
+
+/** Les filles qui disent sur la borne que ce coach les a aidées ou encouragées ce jour-là (toutes les pratiques du
+ *  jour) : « Les joueuses que j'ai aidées et encouragées aujourd'hui » dans le portail (JP, 20 nov. 2026). */
+export async function getGirlsHelpedByCoach(coachId: string, day: string): Promise<{ registrationId: string; name: string }[]> {
+  const { data: acts } = await db().from("coach_activities").select("id").eq("activity_date", day);
+  const ids = ((acts ?? []) as any[]).map((a) => a.id);
+  if (!ids.length) return [];
+  const { data } = await db()
+    .from("activity_player_attendance")
+    .select("registration_id, registration:registrations(player_first_name, player_last_name)")
+    .in("activity_id", ids)
+    .contains("coach_helpers", [coachId]);
+  const cap = (x: string) => x.trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase());
+  const seen = new Map<string, string>();
+  for (const r of (data ?? []) as any[]) {
+    if (seen.has(r.registration_id)) continue;
+    seen.set(r.registration_id, `${cap(String(r.registration?.player_first_name ?? ""))} ${String(r.registration?.player_last_name ?? "").trim().charAt(0).toUpperCase()}.`.trim());
+  }
+  return [...seen.entries()].map(([registrationId, name]) => ({ registrationId, name })).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+}

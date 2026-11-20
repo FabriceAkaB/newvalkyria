@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
+import { notifyActivityCoaches } from "@/lib/coach-report-notice";
 import { setPlayerAttendance, setPlayerFeedback } from "@/lib/coach-portal-repo";
 import { jsonError } from "@/lib/http";
 import { parseSurveyAnswer } from "@/lib/practice-survey";
@@ -36,6 +37,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   // Ne pas effacer ce que l'éducateur avait noté (« plus de… ») : on garde ses choix.
   const prev = data.attendance.find((a) => a.registration_id === registrationId);
   await setPlayerFeedback(activityId, registrationId, { ...answer, wantsMore: prev?.wants_more ?? [], wantsMoreNote: prev?.wants_more_note ?? null });
+  // Rapports du jour tous finis : courriel automatique à l'éducateur (une fois par jour).
+  after(() => notifyActivityCoaches(activityId).catch(() => null));
   if (prev && !["present", "late", "left_early"].includes(prev.status)) {
     await (getSupabaseAdminClient() as any).from("activity_player_attendance").update({ status: "present" }).eq("activity_id", activityId).eq("registration_id", registrationId);
   }

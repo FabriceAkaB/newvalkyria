@@ -146,7 +146,22 @@ export const LEADERSHIP_SCALE: Record<number, string> = {
   5: "Vraie leader : voix, exemple, encouragement"
 };
 
-/** Noms des équipes (couleurs des dossards), puis « Équipe 3 », etc. */
+/** Couleurs des dossards (JP, 20 nov. 2026 : l'éducateur choisit la couleur de chaque équipe). Le nom de l'équipe
+ *  est sa couleur ; la pastille montre la couleur du dossard. */
+export const TEAM_COLORS: { name: string; hex: string }[] = [
+  { name: "Violettes", hex: "#6d28d9" },
+  { name: "Noires", hex: "#18181b" },
+  { name: "Jaunes", hex: "#facc15" },
+  { name: "Blanches", hex: "#ffffff" },
+  { name: "Rouges", hex: "#dc2626" },
+  { name: "Bleues", hex: "#2563eb" },
+  { name: "Vertes", hex: "#16a34a" },
+  { name: "Oranges", hex: "#f97316" },
+  { name: "Roses", hex: "#ec4899" }
+];
+export const colorHex = (name: string | null | undefined) => TEAM_COLORS.find((c) => c.name === name)?.hex ?? null;
+
+/** Noms des équipes (couleurs des dossards), puis « Équipe 5 », etc. */
 export const TEAM_NAMES = ["Violettes", "Noires", "Jaunes", "Blanches"];
 export const teamName = (i: number, kind: TeamKind) => (kind === "duo" ? `Duo ${i + 1}` : TEAM_NAMES[i] ?? `Équipe ${i + 1}`);
 
@@ -158,4 +173,30 @@ export function themeForGroup(theme: string | null | undefined, group: string | 
   const years = group.match(/\d{4}/g) ?? [];
   const hit = parts.find((p) => years.some((y) => p.includes(y)));
   return (hit ?? parts[0]).replace(/\s*\(\d{4}(?:-\d{4})?\)\s*$/, "");
+}
+
+/** Combien d'équipes préparer d'avance selon le nombre de filles attendues : 2 jusqu'à 11, 3 jusqu'à 17, puis 4. */
+export const teamCountFor = (players: number) => (players <= 11 ? 2 : players <= 17 ? 3 : 4);
+
+/** Qui affronte qui (JP, 20 nov. 2026) : chaque équipe rencontre chaque autre une fois, tour par tour (méthode du
+ *  cercle). Avec un nombre impair d'équipes, une équipe se repose à chaque tour. */
+export function matchups(labels: string[]): { games: [string, string][]; rest: string | null }[] {
+  if (labels.length < 2) return [];
+  const list: (string | null)[] = labels.length % 2 ? [...labels, null] : [...labels];
+  const n = list.length;
+  const rounds: { games: [string, string][]; rest: string | null }[] = [];
+  for (let r = 0; r < n - 1; r++) {
+    const games: [string, string][] = [];
+    let rest: string | null = null;
+    for (let i = 0; i < n / 2; i++) {
+      const a = list[i];
+      const b = list[n - 1 - i];
+      if (a && b) games.push([a, b]);
+      else rest = a ?? b;
+    }
+    rounds.push({ games, rest });
+    // Le premier reste en place, les autres tournent.
+    list.splice(1, 0, list.pop()!);
+  }
+  return rounds;
 }

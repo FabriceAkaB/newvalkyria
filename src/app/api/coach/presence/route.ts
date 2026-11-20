@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import { getCurrentCoachId } from "@/lib/coach-auth";
 import { computeHours } from "@/lib/coach-payroll";
 import { getCoachActivityById } from "@/lib/coach-portal-repo";
 import { activityEndMs } from "@/lib/coach-report";
+import { notifyActivityCoaches } from "@/lib/coach-report-notice";
 import { updateAssignment } from "@/lib/coaches-repo";
 import { jsonError } from "@/lib/http";
 
@@ -29,6 +30,8 @@ export async function POST(request: Request) {
 
   if (body.status === "absent") {
     await updateAssignment(assignment.id, { status: "absent", confirmed: true, confirmedBy: "educateur" });
+    // Absent d'une partie (ex. 2e bloc) : ses autres rapports du jour peuvent maintenant suffire.
+    after(() => notifyActivityCoaches(body.activityId!).catch(() => null));
     return NextResponse.json({ ok: true, hours: 0 });
   }
 
@@ -42,5 +45,6 @@ export async function POST(request: Request) {
   }
 
   await updateAssignment(assignment.id, { status: "present", arrivalTime: arrival, departureTime: departure, confirmed: true, confirmedBy: "educateur" });
+  after(() => notifyActivityCoaches(body.activityId!).catch(() => null));
   return NextResponse.json({ ok: true, hours });
 }

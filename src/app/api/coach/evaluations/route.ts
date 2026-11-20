@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
+import { notifyActivityCoaches } from "@/lib/coach-report-notice";
 import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getActivityNotes, getCoachActivityWithRoster, getCoachPreviousNotes, saveEvaluation } from "@/lib/coach-portal-repo";
 import { checkNote, cleanNote, QUICK_CRITERIA } from "@/lib/coach-report";
@@ -48,5 +49,7 @@ export async function POST(request: Request) {
   // Un geste noté 4 ou moins devient « à retravailler », en plus de ceux touchés à la main.
   const gestures = Array.isArray(body.gestures) || Object.keys(gestureScores).length ? [...new Set([...manual, ...difficultGestures(gestureScores)])].slice(0, 12) : undefined;
   await saveEvaluation({ activityId: body.activityId, registrationId: body.registrationId, coachId, ratings, comment, gestures, gestureScores: Object.keys(gestureScores).length ? gestureScores : undefined });
+  // Rapports du jour tous finis : courriel automatique à l'éducateur (une fois par jour).
+  after(() => notifyActivityCoaches(body!.activityId!).catch(() => null));
   return NextResponse.json({ ok: true, ratings, comment, gestures: gestures ?? [], gestureScores });
 }

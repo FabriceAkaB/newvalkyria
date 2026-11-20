@@ -658,7 +658,10 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
         if (coach && opts.today) continue; // la paie se règle après la pratique, au passage du soir
         activityId ??= await activityFor(date, hm(e.start), e.endHm, e.location ?? "", t.name, game ? "Match" : "Pratique");
         if (coach) {
-          const { data: asg } = await db().from("coach_assignments").select("id, confirmed").eq("activity_id", activityId).eq("coach_id", coach.id).maybeSingle();
+          const { data: asg } = await db().from("coach_assignments").select("id, confirmed, confirmed_by, status").eq("activity_id", activityId).eq("coach_id", coach.id).maybeSingle();
+          // « Je n'étais pas là » déclaré par l'éducateur dans le portail (ex. absent au 2e bloc) : MonClubSportif ne le
+          // remet pas présent (JP, 20 nov. 2026).
+          if (asg?.status === "absent" && asg.confirmed_by === "educateur") continue;
           const patch: Record<string, unknown> = { status: status === "absent" ? "absent" : "present", updated_at: new Date().toISOString() };
           if (status !== "absent" && !asg?.confirmed) Object.assign(patch, { confirmed: true, confirmed_at: new Date().toISOString(), confirmed_by: "MonClubSportif" });
           // Jamais en silence : cette présence est le « punch » de la paie de l'éducateur.

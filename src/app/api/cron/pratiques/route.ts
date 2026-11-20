@@ -36,10 +36,13 @@ export async function GET(request: Request) {
   const eve = hour >= 12 ? await sendEveReminders().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : { skipped: "matin" };
   // Les 30 premiers jours d'une nouvelle famille (P4.2.03) : appel du 7e jour, mini-sondage des 30 jours (tâches).
   const journey = await syncNewFamilyJourney().catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
+  // Équipes préparées d'avance (JP, 20 nov. 2026) : les pratiques des 3 prochains jours reçoivent des équipes
+  // nouvelles et leurs capitaines ; l'éducateur ou JP les confirme ou les corrige dans le rapport.
+  const teams = await import("@/lib/practice-teams-repo").then((m) => m.planUpcomingTeams()).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
   const practices = mergeSameSlot(await listPractices());
   const red = practices.filter((p) => p.readiness === "rouge");
   const yellow = practices.filter((p) => p.readiness === "jaune");
-  if (!red.length || !isEmailConfigured()) return NextResponse.json({ ok: true, red: red.length, emailed: false, staffing, points, eve, journey });
+  if (!red.length || !isEmailConfigured()) return NextResponse.json({ ok: true, red: red.length, emailed: false, staffing, points, eve, journey, teams });
   const li = (p: (typeof red)[number]) => `<li><strong>${p.date} ${p.start}</strong> — ${p.group}${p.organization ? ` (${p.organization})` : ""} · ${p.daysLeft === 0 ? "aujourd'hui" : `dans ${p.daysLeft} jour(s)`}</li>`;
   await getResendClient().emails.send({
     from: env.resendFrom,
@@ -54,5 +57,5 @@ export async function GET(request: Request) {
         <p style="color:#666;font-size:13px">Objectif : chaque pratique prête 2 semaines d'avance.</p>
       </div>`
   });
-  return NextResponse.json({ ok: true, red: red.length, emailed: true, staffing, points, eve, journey });
+  return NextResponse.json({ ok: true, red: red.length, emailed: true, staffing, points, eve, journey, teams });
 }

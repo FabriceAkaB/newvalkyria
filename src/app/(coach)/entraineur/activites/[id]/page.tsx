@@ -1,3 +1,4 @@
+import { getGirlsHelpedByCoach } from "@/lib/practice-survey-repo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -74,13 +75,14 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
     isMatch ? getMatchEvaluations(id) : Promise.resolve([])
   ]);
 
-  const [briefing, champions, pointsRules, components, videos, readItems] = await Promise.all([
+  const [briefing, champions, pointsRules, components, videos, readItems, helped] = await Promise.all([
     getBriefing(entry.activity, roster).catch(() => []),
     getActivityChampions(id).catch(() => []),
     getRules(),
     getComponents().catch(() => null),
     videosForActivity(id).catch(() => []),
-    getPracticeReadItems([id]).then((m) => m.get(id) ?? []).catch(() => [])
+    getPracticeReadItems([id]).then((m) => m.get(id) ?? []).catch(() => []),
+    getGirlsHelpedByCoach(coachId, activityDate).catch(() => [])
   ]);
 
   // Accès limité : la présence de l'éducateur sans son taux ni les champs de paiement.
@@ -132,6 +134,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       readItems={readItems}
       initialReadSeen={(assignment?.practice_read_items ?? []) as string[]}
       initialReadAt={assignment?.practice_read_at ?? null}
+      helped={helped}
     />
   );
 }

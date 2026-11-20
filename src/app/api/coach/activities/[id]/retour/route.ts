@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getCoachActivityAccess } from "@/lib/coach-portal-repo";
+import { notifyActivityCoaches } from "@/lib/coach-report-notice";
 import { jsonError } from "@/lib/http";
 import { getDebriefs, getPreviousGroupDebriefs, saveDebrief } from "@/lib/practice-debriefs-repo";
 
@@ -24,5 +25,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return jsonError("Rien à enregistrer", 400);
   await saveDebrief(id, coachId, body);
+  // Rapports du jour tous finis : courriel automatique à l'éducateur (une fois par jour).
+  after(() => notifyActivityCoaches(id).catch(() => null));
   return NextResponse.json({ ok: true });
 }
