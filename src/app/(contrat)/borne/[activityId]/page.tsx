@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Comment était ta pratique ? | New Valkyria", robots: { index: false, follow: false, nocache: true } };
 
 /** La borne de sondage : l'iPad reste ouvert sur cette page à la fin de la pratique ; chaque fille touche sa photo
- *  et répond elle-même à 5 questions sur 10. */
+ *  et répond elle-même à 4 questions : plaisir, fatigue, l'aide de sa coach et l'aide des autres. */
 export default async function KioskPage({ params, searchParams }: { params: Promise<{ activityId: string }>; searchParams: Promise<{ cle?: string; vue?: string }> }) {
   const { activityId } = await params;
   const { cle, vue } = await searchParams;
@@ -28,7 +28,8 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
   const nice = (s: string) => s.trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase());
   // La borne s'ouvre avec une clé, sans connexion : liens signés de 4 heures pour les photos (stockage privé, Loi 25).
   const photos = new Map(await Promise.all(data.roster.map(async (p) => [p.registrationId, await signedPhotoUrl(p.photoUrl, 4 * 3600).catch(() => null)] as const)));
-  const done = data.attendance.filter((a) => a.practice_rating != null && a.fatigue != null && a.learning != null).map((a) => a.registration_id);
+  // Finie : plaisir, fatigue et l'aide de la coach donnés (ou l'ancienne borne, avant le 20 nov. 2026).
+  const done = data.attendance.filter((a: any) => a.practice_rating != null && a.fatigue != null && (a.coach_helped != null || a.learning != null)).map((a) => a.registration_id);
   const plan = await getKioskPlan(activityId).catch(() => null);
   const survey = (
     <SurveyKiosk
@@ -36,6 +37,7 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
       cle={cle!}
       title={data.label}
       players={data.roster.map((p) => ({ id: p.registrationId, first: nice(p.firstName), initial: p.lastName.trim().charAt(0).toUpperCase(), photo: photos.get(p.registrationId) ?? null }))}
+      coaches={data.coaches}
       done={done}
       absent={data.attendance.filter((a) => a.status === "absent").map((a) => a.registration_id)}
     />

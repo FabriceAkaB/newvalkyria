@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
 import type { KioskPlan } from "@/lib/kiosk-practice-repo";
@@ -13,17 +13,19 @@ const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")} h ${
 
 export function KioskTabs({ initial, plan, survey }: { initial: "pratique" | "sondage"; plan: ReactNode; survey: ReactNode }) {
   const [tab, setTab] = useState(initial);
-  const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
-  useEffect(() => {
-    const up = () => setOnline(true);
-    const down = () => setOnline(false);
-    window.addEventListener("online", up);
-    window.addEventListener("offline", down);
-    return () => {
-      window.removeEventListener("online", up);
-      window.removeEventListener("offline", down);
-    };
-  }, []);
+  // En ligne au premier rendu (le serveur ne connaît pas le réseau de l'iPad), puis l'état réel du navigateur.
+  const online = useSyncExternalStore(
+    (cb) => {
+      window.addEventListener("online", cb);
+      window.addEventListener("offline", cb);
+      return () => {
+        window.removeEventListener("online", cb);
+        window.removeEventListener("offline", cb);
+      };
+    },
+    () => navigator.onLine,
+    () => true
+  );
   const btn = (key: "pratique" | "sondage", label: string) => (
     <button
       type="button"

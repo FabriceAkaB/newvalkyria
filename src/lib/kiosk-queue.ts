@@ -4,7 +4,7 @@
 
 export interface QueuedAnswer {
   registrationId: string;
-  answers: Record<string, number>;
+  answers: Record<string, unknown>;
   /** Moment de la réponse (ms) : la plus récente gagne si la fille change ses réponses. */
   at: number;
 }

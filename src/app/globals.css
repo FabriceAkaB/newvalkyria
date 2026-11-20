@@ -10784,6 +10784,9 @@ img { max-width: 100%; height: auto; }
   --adm-bad: #c62828;
   --adm-bad-soft: #fdecec;
   --adm-info: #1d4ed8;
+  /* Courbes à deux séries (sondage de fin) : paire vérifiée daltonisme + contraste (skill dataviz). */
+  --adm-series-1: #6d3fc0;
+  --adm-series-2: #c2410c;
   --adm-info-soft: #e9f0fd;
   --adm-radius: 12px;
   --adm-radius-sm: 8px;
@@ -10823,6 +10826,8 @@ img { max-width: 100%; height: auto; }
   --adm-bad: #ff8a8a;
   --adm-bad-soft: rgba(255, 123, 123, 0.13);
   --adm-info: #8cc0ff;
+  --adm-series-1: #9f7aea;
+  --adm-series-2: #e0701f;
   --adm-info-soft: rgba(124, 184, 255, 0.13);
   --adm-shadow: none;
   --adm-hover: rgba(255, 255, 255, 0.06);
@@ -11998,3 +12003,28 @@ img { max-width: 100%; height: auto; }
   --color-gold: var(--adm-warn);
 }
 .admin-shell .coach-brand { padding: 6px 8px; }
+
+/* Sondage de fin : cercles, courbes et barres (JP, 20 nov. 2026). */
+.admin-shell .svc-rings { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.admin-shell .svc-ring { display: grid; justify-items: center; gap: 8px; text-align: center; padding: 20px 12px; }
+.admin-shell .svc-ring svg { width: 112px; height: 112px; }
+.admin-shell .svc-ring-value { font-size: 1.5rem; font-weight: 600; fill: var(--adm-text); font-variant-numeric: tabular-nums; }
+.admin-shell .svc-ring-unit { font-size: 0.75rem; fill: var(--adm-text-3); }
+.admin-shell .svc-ring p { margin: 0; }
+.admin-shell .svc-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.8125rem; color: var(--adm-text-2); }
+.admin-shell .svc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.admin-shell .svc-swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.admin-shell .svc-chart { position: relative; }
+.admin-shell .svc-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.admin-shell .svc-axis { font-size: 11px; fill: var(--adm-text-3); font-variant-numeric: tabular-nums; }
+.admin-shell .svc-tip { position: absolute; top: 0; pointer-events: none; background: var(--adm-surface); border: 1px solid var(--adm-border); box-shadow: var(--adm-shadow); border-radius: 8px; padding: 8px 10px; font-size: 0.8125rem; color: var(--adm-text); white-space: nowrap; transform: translateX(-50%); }
+.admin-shell .svc-tip strong { display: block; margin-bottom: 2px; }
+.admin-shell .svc-bars { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.admin-shell .svc-bar-row { display: grid; grid-template-columns: 120px 1fr 64px; gap: 12px; align-items: center; font-size: 0.875rem; color: var(--adm-text); }
+.admin-shell .svc-bar-track { height: 10px; border-radius: 999px; background: var(--adm-surface-3); overflow: hidden; }
+.admin-shell .svc-bar-fill { height: 100%; border-radius: 999px; background: var(--adm-series-1); }
+.admin-shell .svc-bar-row small { display: block; color: var(--adm-text-3); font-size: 0.75rem; }
+@media (max-width: 720px) {
+  .admin-shell .svc-rings { grid-template-columns: 1fr 1fr; }
+  .admin-shell .svc-bar-row { grid-template-columns: 90px 1fr 52px; }
+}

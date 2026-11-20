@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { dequeue, enqueue, parsePresenceQueue, parseQueue, presenceKey, queueKey, sendOutcome, type QueuedAnswer, type QueuedPresence } from "@/lib/kiosk-queue";
 import { KIOSK_QUESTIONS, SCALE_VALUES } from "@/lib/practice-survey";
 
-/** Borne de sondage sur l'iPad : la joueuse touche sa photo, répond à 5 questions sur 10 (une par écran), puis la
+/** Borne de sondage sur l'iPad : la joueuse touche sa photo, répond aux 4 questions (une par écran : plaisir et
+ *  fatigue sur 10, puis l'aide de sa coach et l'aide des autres, oui / non et qui), puis la
  *  borne revient à la liste pour la suivante. Grands boutons, mots d'enfant, aucun clavier. Une fille qui a fini
  *  disparaît de la liste (personne ne peut revoir ni changer ses réponses) ; elle peut seulement les réviser tout de
  *  suite, sur l'écran « Merci », avant que la borne revienne à la liste.
@@ -19,13 +20,23 @@ interface KioskPlayer {
   photo: string | null;
 }
 
-type Answers = Partial<Record<(typeof KIOSK_QUESTIONS)[number]["field"], number>>;
+interface Answers {
+  practiceRating?: number;
+  fatigue?: number;
+  coachHelped?: boolean;
+  coachHelpers?: string[];
+  peerHelped?: boolean;
+  peerHelpers?: string[];
+}
+
+const HELP = { coach: { flag: "coachHelped", list: "coachHelpers" }, peer: { flag: "peerHelped", list: "peerHelpers" } } as const;
+const GREEN = "#1f7a4d";
 
 const PURPLE = "#5b2a86";
 // Du rouge au vert : la couleur aide les plus jeunes à comprendre l'échelle.
 const color = (v: number) => `hsl(${Math.round(((v - 1) / 9) * 120)}, 70%, 45%)`;
 
-export function SurveyKiosk({ activityId, cle, title, players, done: initialDone, absent: initialAbsent = [] }: { activityId: string; cle: string; title: string; players: KioskPlayer[]; done: string[]; absent?: string[] }) {
+export function SurveyKiosk({ activityId, cle, title, players, coaches = [], done: initialDone, absent: initialAbsent = [] }: { activityId: string; cle: string; title: string; players: KioskPlayer[]; coaches?: { id: string; first: string }[]; done: string[]; absent?: string[] }) {
   const [done, setDone] = useState<Set<string>>(new Set(initialDone));
   // Absentes : marquées dans MonClubSportif (X) ou touchées ici ; elles sortent de la liste et se remettent d'un clic.
   const [absent, setAbsent] = useState<Set<string>>(new Set(initialAbsent));
@@ -33,6 +44,8 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
   const [who, setWho] = useState<KioskPlayer | null>(null);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
+  // « Oui » à une question d'aide : l'écran pour choisir qui.
+  const [picking, setPicking] = useState(false);
   const [state, setState] = useState<"idle" | "saving" | "thanks">("idle");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<QueuedAnswer[]>([]);
@@ -156,6 +169,7 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
     setWho(null);
     setStep(0);
     setAnswers({});
+    setPicking(false);
     setState("idle");
     setError(null);
   };
@@ -165,21 +179,48 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
     if (!who) return;
     const t = setTimeout(reset, state === "thanks" ? 8000 : 60000);
     return () => clearTimeout(t);
-  }, [who, step, state]);
+  }, [who, step, state, picking, answers]);
 
-  const pick = async (v: number) => {
-    const q = KIOSK_QUESTIONS[step];
-    const next = { ...answers, [q.field]: v };
+  /** Question suivante, ou fin : la réponse est d'abord gardée sur l'iPad, puis envoyée (sans réseau, elle partira
+   *  toute seule plus tard). */
+  const advance = (next: Answers) => {
     setAnswers(next);
+    setPicking(false);
     if (step < KIOSK_QUESTIONS.length - 1) {
       setStep(step + 1);
       return;
     }
-    // La réponse est d'abord gardée sur l'iPad, puis envoyée : sans réseau, elle partira toute seule plus tard.
-    persist(enqueue(queueRef.current, { registrationId: who!.id, answers: next as Record<string, number>, at: Date.now() }));
+    persist(enqueue(queueRef.current, { registrationId: who!.id, answers: { ...next } as Record<string, unknown>, at: Date.now() }));
     setDone(new Set([...done, who!.id]));
     setState("thanks");
     void flush();
+  };
+
+  const pick = (v: number) => {
+    const q = KIOSK_QUESTIONS[step];
+    if (q.kind === "scale") advance({ ...answers, [q.field]: v });
+  };
+
+  /** Les personnes à proposer : les coachs de la pratique, ou les autres filles présentes (avec leur photo). */
+  const helpOptions = (field: "coach" | "peer"): { id: string; label: string; photo: string | null }[] =>
+    field === "coach"
+      ? coaches.map((c) => ({ id: c.id, label: c.first, photo: null }))
+      : players.filter((p) => p.id !== who?.id && !absent.has(p.id)).map((p) => ({ id: p.id, label: `${p.first} ${p.initial}.`, photo: p.photo }));
+
+  const answerHelp = (field: "coach" | "peer", yes: boolean) => {
+    const { flag, list } = HELP[field];
+    const options = helpOptions(field);
+    if (!yes) return advance({ ...answers, [flag]: false, [list]: [] });
+    // Une seule coach : c'est elle ; personne à proposer : le « oui » suffit.
+    if (options.length <= 1) return advance({ ...answers, [flag]: true, [list]: options.map((o) => o.id) });
+    setAnswers({ ...answers, [flag]: true, [list]: answers[flag] ? answers[list] ?? [] : [] });
+    setPicking(true);
+  };
+
+  const toggleHelper = (field: "coach" | "peer", id: string) => {
+    const { list } = HELP[field];
+    const cur = answers[list] ?? [];
+    setAnswers({ ...answers, [list]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] });
   };
 
   const card: React.CSSProperties = { background: "#fff", borderRadius: 20, border: "1px solid #e6e0ee", padding: "1.4rem" };
@@ -277,7 +318,7 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
         <p style={{ color: "#5d566b", fontSize: "1.1rem", margin: 0 }}>Tes réponses sont gardées secrètes. Passe l&apos;iPad à la prochaine.</p>
         {pending.some((q) => q.registrationId === who.id) && !online ? <p style={{ color: "#6b4e00", fontSize: "0.95rem", margin: 0 }}>📶 Pas de réseau : tes réponses sont gardées sur l&apos;iPad et partiront toutes seules.</p> : null}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-          <button type="button" onClick={() => (setStep(0), setState("idle"))} style={{ minHeight: 56, padding: "0 22px", borderRadius: 14, border: `2px solid ${PURPLE}`, background: "#fff", color: PURPLE, fontSize: "1.1rem", fontWeight: 700, cursor: "pointer" }}>
+          <button type="button" onClick={() => (setStep(0), setPicking(false), setState("idle"))} style={{ minHeight: 56, padding: "0 22px", borderRadius: 14, border: `2px solid ${PURPLE}`, background: "#fff", color: PURPLE, fontSize: "1.1rem", fontWeight: 700, cursor: "pointer" }}>
             ✏️ Changer mes réponses
           </button>
           <button type="button" onClick={reset} style={{ minHeight: 56, padding: "0 22px", borderRadius: 14, border: "none", background: PURPLE, color: "#fff", fontSize: "1.1rem", fontWeight: 700, cursor: "pointer" }}>
@@ -289,16 +330,78 @@ export function SurveyKiosk({ activityId, cle, title, players, done: initialDone
   }
 
   const q = KIOSK_QUESTIONS[step];
+  const head = (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+      <button type="button" onClick={() => (picking ? setPicking(false) : step ? setStep(step - 1) : reset())} style={{ background: "none", border: "none", color: PURPLE, fontSize: "1.05rem", fontWeight: 700, cursor: "pointer", padding: 8 }}>
+        ← {picking || step ? "Retour" : "Ce n'est pas moi"}
+      </button>
+      <span style={{ color: "#5d566b", fontWeight: 600 }}>
+        {who.first} · question {step + 1} sur {KIOSK_QUESTIONS.length}
+      </span>
+    </div>
+  );
+
+  if (q.kind === "help" && picking) {
+    const chosen = answers[HELP[q.field].list] ?? [];
+    const options = helpOptions(q.field);
+    return (
+      <div style={{ ...card, display: "grid", gap: 18 }}>
+        {head}
+        <h1 style={{ margin: 0, fontSize: "1.9rem", lineHeight: 1.25, fontWeight: 800, color: "#1d1730", textAlign: "center" }}>{q.pick}</h1>
+        <p style={{ margin: "-6px 0 0", textAlign: "center", color: "#5d566b", fontSize: "1.05rem" }}>Tu peux en choisir plusieurs.</p>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${q.field === "coach" ? 170 : 130}px, 1fr))`, gap: 12 }}>
+          {options.map((o) => {
+            const on = chosen.includes(o.id);
+            return (
+              <button
+                key={o.id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggleHelper(q.field, o.id)}
+                style={{ position: "relative", display: "grid", justifyItems: "center", gap: 8, padding: "1rem 0.6rem", minHeight: q.field === "coach" ? 150 : 150, borderRadius: 18, border: on ? `4px solid ${PURPLE}` : "1px solid #e6e0ee", background: on ? "#f4ecfb" : "#fff", cursor: "pointer" }}
+              >
+                {o.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={o.photo} alt="" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ width: 80, height: 80, borderRadius: "50%", background: "#efe7f7", color: PURPLE, display: "grid", placeItems: "center", fontSize: "2rem", fontWeight: 800 }}>{o.label.charAt(0)}</span>
+                )}
+                <span style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1d1730" }}>{o.label}</span>
+                {on ? <span aria-hidden style={{ position: "absolute", top: 8, right: 10, width: 30, height: 30, borderRadius: "50%", background: PURPLE, color: "#fff", display: "grid", placeItems: "center", fontSize: "1.1rem", fontWeight: 800 }}>✓</span> : null}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          disabled={!chosen.length}
+          onClick={() => advance(answers)}
+          style={{ position: "sticky", bottom: 12, boxShadow: "0 6px 20px rgba(29, 23, 48, 0.18)", minHeight: 64, borderRadius: 16, border: "none", background: chosen.length ? PURPLE : "#d9d2e3", color: chosen.length ? "#fff" : "#5d566b", fontSize: "1.3rem", fontWeight: 800, cursor: chosen.length ? "pointer" : "default" }}
+        >
+          {chosen.length ? `C'est bon (${chosen.length})` : "Touche au moins une personne"}
+        </button>
+      </div>
+    );
+  }
+
+  if (q.kind === "help") {
+    const was = answers[HELP[q.field].flag];
+    const big = (yes: boolean): React.CSSProperties => ({ minHeight: 120, borderRadius: 20, border: was === yes ? `4px solid ${PURPLE}` : "none", background: yes ? GREEN : "#5d566b", color: "#fff", fontSize: "2.2rem", fontWeight: 800, cursor: "pointer" });
+    return (
+      <div style={{ ...card, display: "grid", gap: 18 }}>
+        {head}
+        <h1 style={{ margin: 0, fontSize: "1.9rem", lineHeight: 1.25, fontWeight: 800, color: "#1d1730", textAlign: "center" }}>{q.question}</h1>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <button type="button" onClick={() => answerHelp(q.field, true)} style={big(true)}>Oui</button>
+          <button type="button" onClick={() => answerHelp(q.field, false)} style={big(false)}>Non</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ ...card, display: "grid", gap: 18 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-        <button type="button" onClick={() => (step ? setStep(step - 1) : reset())} style={{ background: "none", border: "none", color: PURPLE, fontSize: "1.05rem", fontWeight: 700, cursor: "pointer", padding: 8 }}>
-          ← {step ? "Retour" : "Ce n'est pas moi"}
-        </button>
-        <span style={{ color: "#5d566b", fontWeight: 600 }}>
-          {who.first} · question {step + 1} sur {KIOSK_QUESTIONS.length}
-        </span>
-      </div>
+      {head}
       <h1 style={{ margin: 0, fontSize: "1.9rem", lineHeight: 1.25, fontWeight: 800, color: "#1d1730", textAlign: "center" }}>{q.question}</h1>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
         {SCALE_VALUES.map((v) => (

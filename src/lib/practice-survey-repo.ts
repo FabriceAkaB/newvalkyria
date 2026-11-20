@@ -1,6 +1,6 @@
 import { getActivityAttendance, getActivityRoster, loadRosterSources, rosterForActivity, toRosterPlayer, type PlayerAttendance, type RosterPlayer } from "@/lib/coach-portal-repo";
 import { getActivity, type CoachActivity } from "@/lib/coaches-repo";
-import { summarizeSurvey, type SurveyAnswer, type SurveySummary } from "@/lib/practice-survey";
+import { coachHelpRates, summarizeSurvey, weeklySeries, type CoachHelpRate, type SurveyAnswer, type SurveyRow, type SurveySummary, type SurveyWeek } from "@/lib/practice-survey";
 import { createActivityFor, listPractices, todayIso, type Practice } from "@/lib/practices-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -82,6 +82,22 @@ export interface SurveyData {
   attendance: PlayerAttendance[];
   /** Les groupes sur le terrain à ce moment-là (ex. « Filles 2015 et 2014-2013 »). */
   label: string;
+  /** Les coachs de cette pratique (et des groupes à la même heure), absentes et annulées exclues : la borne les
+   *  propose à « Ta coach t'a-t-elle aidée ou encouragée ? ». */
+  coaches: { id: string; first: string }[];
+}
+
+/** Les coachs assignés à ces activités, sans les absents ni les annulés, une fois chacun. */
+export async function coachesOfActivities(activityIds: string[]): Promise<{ id: string; first: string }[]> {
+  if (!activityIds.length) return [];
+  const { data } = await db().from("coach_assignments").select("coach_id, status, coach:coaches(first_name)").in("activity_id", activityIds);
+  const out = new Map<string, string>();
+  for (const a of (data ?? []) as any[]) {
+    if (["absent", "cancelled"].includes(a.status) || out.has(a.coach_id)) continue;
+    const first = String(a.coach?.first_name ?? "").trim();
+    if (first) out.set(a.coach_id, first.toLowerCase().replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase()));
+  }
+  return [...out.entries()].map(([id, first]) => ({ id, first })).sort((a, b) => a.first.localeCompare(b.first, "fr"));
 }
 
 /** L'activité du sondage et toutes les filles attendues sur le terrain à ce moment-là (les groupes à la même heure
@@ -114,7 +130,8 @@ export async function getSurveyData(activityId: string): Promise<SurveyData | nu
   }
   const roster = [...byId.values()].sort((a, b) => Number(a.isTrial) - Number(b.isTrial) || a.firstName.localeCompare(b.firstName, "fr"));
   const label = groups.filter(Boolean).length ? `Filles ${groups.filter(Boolean).join(" et ")}` : activity.title || activity.category || activity.activity_type;
-  return { activity, roster, attendance, label };
+  const coaches = await coachesOfActivities([...new Set([activityId, ...mates.map((q) => q.activityId).filter((x): x is string => Boolean(x))])]).catch(() => []);
+  return { activity, roster, attendance, label, coaches };
 }
 
 export const answerOf = (a: PlayerAttendance): SurveyAnswer => ({
@@ -124,17 +141,67 @@ export const answerOf = (a: PlayerAttendance): SurveyAnswer => ({
   wantsMoreNote: a.wants_more_note ?? null,
   learning: a.learning ?? null,
   understanding: a.understanding ?? null,
-  confidence: a.confidence ?? null
+  confidence: a.confidence ?? null,
+  coachHelped: (a as any).coach_helped ?? null,
+  coachHelpers: (a as any).coach_helpers ?? [],
+  peerHelped: (a as any).peer_helped ?? null,
+  peerHelpers: (a as any).peer_helpers ?? []
 });
 
 /** Ce que les filles ont dit sur les 4 dernières semaines (plaisir, fatigue, ce qu'elles veulent plus). */
-export async function getSurveyTrend(days = 28): Promise<SurveySummary & { practices: number }> {
+export async function getSurveyTrend(days = 28): Promise<SurveySummary & { practices: number; coachNames: { name: string; count: number }[]; peerNames: { name: string; count: number }[] }> {
   const from = addDays(todayIso(), -days);
   const { data } = await db()
     .from("activity_player_attendance")
-    .select("activity_id, practice_rating, fatigue, learning, understanding, confidence, wants_more, wants_more_note, activity:coach_activities!inner(activity_date)")
+    .select("activity_id, practice_rating, fatigue, learning, understanding, confidence, coach_helped, coach_helpers, peer_helped, peer_helpers, wants_more, wants_more_note, activity:coach_activities!inner(activity_date)")
     .gte("activity.activity_date", from)
     .not("feedback_at", "is", null);
   const rows = (data ?? []) as any[];
-  return { ...summarizeSurvey(rows), practices: new Set(rows.map((r) => r.activity_id)).size };
+  const summary = summarizeSurvey(rows);
+  // Les noms : prénom des coachs ; prénom + initiale des filles (admin seulement).
+  const coachIds = Object.keys(summary.coachMentions);
+  const peerIds = Object.keys(summary.peerMentions);
+  const [{ data: coaches }, { data: regs }] = await Promise.all([
+    coachIds.length ? db().from("coaches").select("id, first_name").in("id", coachIds) : Promise.resolve({ data: [] }),
+    peerIds.length ? db().from("registrations").select("id, player_first_name, player_last_name").in("id", peerIds) : Promise.resolve({ data: [] })
+  ]);
+  const cap = (x: string) => x.trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase());
+  const coachName = new Map(((coaches ?? []) as any[]).map((c) => [c.id, cap(String(c.first_name ?? ""))] as const));
+  const peerName = new Map(((regs ?? []) as any[]).map((r) => [r.id, `${cap(String(r.player_first_name ?? ""))} ${String(r.player_last_name ?? "").trim().charAt(0).toUpperCase()}.`] as const));
+  const named = (m: Record<string, number>, names: Map<string, string>) =>
+    Object.entries(m).map(([id, count]) => ({ name: names.get(id) ?? "?", count })).filter((x) => x.name !== "?").sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "fr"));
+  return { ...summary, practices: new Set(rows.map((r) => r.activity_id)).size, coachNames: named(summary.coachMentions, coachName), peerNames: named(summary.peerMentions, peerName) };
+}
+
+export interface SurveyDashboard {
+  weeks: SurveyWeek[];
+  coaches: (CoachHelpRate & { name: string })[];
+}
+
+/** Les courbes (plaisir et fatigue par semaine) et l'aide de chaque coach chiffrée, sur les 10 dernières semaines. */
+export async function getSurveyDashboard(weeks = 10): Promise<SurveyDashboard> {
+  const from = addDays(todayIso(), -7 * weeks);
+  const { data } = await db()
+    .from("activity_player_attendance")
+    .select("activity_id, practice_rating, fatigue, coach_helped, coach_helpers, peer_helped, activity:coach_activities!inner(activity_date)")
+    .gte("activity.activity_date", from)
+    .not("feedback_at", "is", null);
+  const rows: SurveyRow[] = ((data ?? []) as any[]).map((r) => ({ ...r, date: String(r.activity?.activity_date ?? "").slice(0, 10) }));
+  // Les coachs sur le terrain de chaque pratique sondée (assignées, pas absentes), plus celles que les filles ont nommées
+  // (groupes fusionnés : la coach d'un groupe voisin à la même heure).
+  const asked = rows.filter((r) => r.coach_helped === true || r.coach_helped === false);
+  const ids = [...new Set(asked.map((r) => r.activity_id))];
+  const byActivity = new Map<string, Set<string>>();
+  if (ids.length) {
+    const { data: assigns } = await db().from("coach_assignments").select("activity_id, coach_id, status").in("activity_id", ids);
+    for (const a of (assigns ?? []) as any[]) {
+      if (["absent", "cancelled"].includes(a.status)) continue;
+      byActivity.set(a.activity_id, (byActivity.get(a.activity_id) ?? new Set()).add(a.coach_id));
+    }
+  }
+  for (const r of asked) for (const c of r.coach_helpers ?? []) byActivity.set(r.activity_id, (byActivity.get(r.activity_id) ?? new Set()).add(c));
+  const rates = coachHelpRates(rows, new Map([...byActivity].map(([k, v]) => [k, [...v]])));
+  const { data: coaches } = rates.length ? await db().from("coaches").select("id, first_name").in("id", rates.map((r) => r.coachId)) : { data: [] };
+  const name = new Map(((coaches ?? []) as any[]).map((c) => [c.id, String(c.first_name ?? "").trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (x: string) => x.toUpperCase())] as const));
+  return { weeks: weeklySeries(rows), coaches: rates.map((r) => ({ ...r, name: name.get(r.coachId) ?? "Coach" })) };
 }

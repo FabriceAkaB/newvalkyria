@@ -9,7 +9,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
-/** Réponse d'une joueuse sur la borne : ses 5 notes sur 10. Elle est aussi marquée présente. */
+/** Réponse d'une joueuse sur la borne : plaisir, fatigue, l'aide de sa coach et des autres. Elle est aussi marquée présente. */
 export async function POST(request: Request, { params }: { params: Promise<{ activityId: string }> }) {
   const { activityId } = await params;
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
@@ -29,6 +29,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   const data = await getSurveyData(activityId);
   if (!data) return jsonError("Pratique introuvable", 404);
   if (!data.roster.some((p) => p.registrationId === registrationId)) return jsonError("Cette joueuse n'est pas attendue à cette pratique.", 403);
+  // Seulement des coachs de cette pratique et des filles attendues (jamais elle-même) : le reste est ignoré sans
+  // refuser la réponse (elle a pu partir de la file hors ligne).
+  if (answer.coachHelpers) answer.coachHelpers = answer.coachHelpers.filter((id) => data.coaches.some((c) => c.id === id));
+  if (answer.peerHelpers) answer.peerHelpers = answer.peerHelpers.filter((id) => id !== registrationId && data.roster.some((p) => p.registrationId === id));
   // Ne pas effacer ce que l'éducateur avait noté (« plus de… ») : on garde ses choix.
   const prev = data.attendance.find((a) => a.registration_id === registrationId);
   await setPlayerFeedback(activityId, registrationId, { ...answer, wantsMore: prev?.wants_more ?? [], wantsMoreNote: prev?.wants_more_note ?? null });

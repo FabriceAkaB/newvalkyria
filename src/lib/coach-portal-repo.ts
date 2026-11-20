@@ -348,6 +348,8 @@ export async function setPlayerFeedback(activityId: string, registrationId: stri
         ...(answer.learning !== undefined ? { learning: answer.learning } : {}),
         ...(answer.understanding !== undefined ? { understanding: answer.understanding } : {}),
         ...(answer.confidence !== undefined ? { confidence: answer.confidence } : {}),
+        ...(answer.coachHelped !== undefined ? { coach_helped: answer.coachHelped, coach_helpers: answer.coachHelpers ?? [] } : {}),
+        ...(answer.peerHelped !== undefined ? { peer_helped: answer.peerHelped, peer_helpers: answer.peerHelpers ?? [] } : {}),
         feedback_at: now,
         updated_at: now
       },
