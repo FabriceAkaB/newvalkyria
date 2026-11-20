@@ -511,6 +511,29 @@
     }
    }
   ],
+  "campsSplit": [
+   {
+    "year": "2026 (nov.-déc.)",
+    "ete": 9000,
+    "releche": 0,
+    "hiver": 0,
+    "hautePerformance": 0
+   },
+   {
+    "year": "2027",
+    "ete": 328000,
+    "releche": 12000,
+    "hiver": 0,
+    "hautePerformance": 30000
+   },
+   {
+    "year": "2028",
+    "ete": 315000,
+    "releche": 15000,
+    "hiver": 0,
+    "hautePerformance": 40000
+   }
+  ],
   "periods": [
    {
     "period": "S2 2026",

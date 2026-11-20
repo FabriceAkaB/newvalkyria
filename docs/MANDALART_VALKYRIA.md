@@ -140,6 +140,16 @@ Novembre 2026 est le point de départ. Les cibles suivent les saisons réelles d
 | 2027 | 814 600 $ | 284 200 $ | 142 000 $ | 90 000 $ | 370 000 $ | 30 000 $ | 45 000 $ | 117 500 $ | 20 000 $ |
 | 2028 | 1 520 900 $ | 1 005 800 $ | 195 000 $ | 90 000 $ | 370 000 $ | 160 000 $ | 80 000 $ | 105 000 $ | 521 150 $ |
 
+### Camps par type
+
+Chaque camp est une ligne de revenu à part (décision de JP du 20 nov. 2026) : le camp d'été, le camp de la relâche, le camp d'hiver et les camps haute performance ne se vendent ni au même moment ni aux mêmes familles. Répartition proposée du total des camps, à ajuster par JP. Le camp des Fêtes 2026 est écarté (5 familles sur 30 au sondage du 18 nov.) : la prévente de Noël passe par les cartes-cadeaux du camp d'été.
+
+| Année | Camp d'été | Camp de la relâche | Camp d'hiver (Fêtes) | Camps haute performance |
+| --- | --- | --- | --- | --- |
+| 2026 (nov.-déc.) | 9 000 $ | 0 $ | 0 $ | 0 $ |
+| 2027 | 328 000 $ | 12 000 $ | 0 $ | 30 000 $ |
+| 2028 | 315 000 $ | 15 000 $ | 0 $ | 40 000 $ |
+
 ### Par 6 mois et par trimestre
 
 | Période | Cible | Plancher |

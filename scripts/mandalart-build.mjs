@@ -91,6 +91,8 @@ const years = table("### Par année").map((r) => ({
     conseil: money(r[9])
   }
 }));
+// Camps par type (JP, 20 nov. 2026) : une ligne de revenu par camp.
+const campsSplit = table("### Camps par type").map((r) => ({ year: r[0], ete: money(r[1]), releche: money(r[2]), hiver: money(r[3]), hautePerformance: money(r[4]) }));
 const periods = table("### Par 6 mois et par trimestre").map((r) => ({ period: strip(r[0]), target: money(strip(r[1])), floor: money(strip(r[2])), half: r[0].startsWith("**") }));
 const months = table("### Par mois").map(([month, kind, target, floor, cumul, how]) => ({ month, kind, target: money(target), floor: money(floor), cumulTarget: money(cumul), how }));
 
@@ -279,7 +281,7 @@ const plan = {
   progressRules,
   kpis,
   levels,
-  trajectory: { intro: trajectoryIntro.map(strip), salary, years, periods, months },
+  trajectory: { intro: trajectoryIntro.map(strip), salary, years, campsSplit, periods, months },
   pillars: pillars.map((p) => ({ ...p, intro: p.intro.join(" "), shortObjectives: overview.find((o) => o.code === p.code)?.objectives ?? [] })),
   agentsIntro,
   agentRules,

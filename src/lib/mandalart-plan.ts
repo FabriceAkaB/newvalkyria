@@ -109,6 +109,8 @@ export interface MandalartPlan {
     intro: string[];
     salary: string[];
     years: { year: string; target: number; floor: number; lines: Record<string, number | null> }[];
+    /** Les camps, une ligne de revenu par type (JP, 20 nov. 2026). */
+    campsSplit?: { year: string; ete: number | null; releche: number | null; hiver: number | null; hautePerformance: number | null }[];
     periods: { period: string; target: number; floor: number; half: boolean }[];
     months: PlanMonth[];
   };

@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 import { AdminTopbar } from "@/components/admin-topbar";
 import { Bar, capitalize, monthLabel, moneyDollars, pctLabel } from "@/components/mandalart/ui";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -7,10 +9,18 @@ import { getMandalartOverview } from "@/lib/mandalart-repo";
 export const metadata = { title: "Mandalart — Trajectoire", robots: "noindex" };
 export const dynamic = "force-dynamic";
 
+/** Les camps, une ligne de revenu par type (JP, 20 nov. 2026). */
+const CAMP_LINES: { key: "ete" | "releche" | "hiver" | "hautePerformance"; label: string }[] = [
+  { key: "ete", label: "Camp d'été" },
+  { key: "releche", label: "Camp de la relâche" },
+  { key: "hiver", label: "Camp d'hiver (Fêtes)" },
+  { key: "hautePerformance", label: "Camps haute performance" }
+];
+
 const LINES: { key: string; label: string }[] = [
   { key: "academie", label: "Académie (automne-hiver)" },
   { key: "valkyriaEte", label: "Valkyria Été (soirs)" },
-  { key: "camps", label: "Camps (été, relâche, Fêtes)" },
+  { key: "camps", label: "Camps (total)" },
   { key: "parascolaire", label: "Parascolaire" },
   { key: "commandites", label: "Commandites" },
   { key: "autres", label: "Élite, kits, tournoi, fêtes, Home Lab" },
@@ -121,6 +131,7 @@ export default async function MandalartTrajectoryPage() {
           <section className="mda-card-flush">
             <div className="mda-card-head">
               <h2 className="mda-h2">Par année et par ligne d'affaires</h2>
+              <span className="mda-sub" style={{ margin: 0 }}>Chaque camp est une ligne de revenu à part ; répartition proposée, à ajuster dans le plan.</span>
             </div>
             <div className="mda-scroll">
               <table className="mda-table" style={{ minWidth: 640 }}>
@@ -146,12 +157,24 @@ export default async function MandalartTrajectoryPage() {
                     ))}
                   </tr>
                   {LINES.map((l) => (
-                    <tr key={l.key}>
-                      <td>{l.label}</td>
-                      {PLAN.trajectory.years.map((y) => (
-                        <td key={y.year} className="r">{moneyDollars(y.lines[l.key])}</td>
-                      ))}
-                    </tr>
+                    <Fragment key={l.key}>
+                      <tr>
+                        <td style={l.key === "camps" ? { fontWeight: 600 } : undefined}>{l.label}</td>
+                        {PLAN.trajectory.years.map((y) => (
+                          <td key={y.year} className="r" style={l.key === "camps" ? { fontWeight: 600 } : undefined}>{moneyDollars(y.lines[l.key])}</td>
+                        ))}
+                      </tr>
+                      {l.key === "camps"
+                        ? CAMP_LINES.map((c) => (
+                            <tr key={c.key}>
+                              <td style={{ paddingLeft: 24, color: "var(--adm-text-2)" }}>{c.label}</td>
+                              {PLAN.trajectory.years.map((y) => (
+                                <td key={y.year} className="r" style={{ color: "var(--adm-text-2)" }}>{moneyDollars(PLAN.trajectory.campsSplit?.find((x) => x.year === y.year)?.[c.key] ?? 0)}</td>
+                              ))}
+                            </tr>
+                          ))
+                        : null}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
