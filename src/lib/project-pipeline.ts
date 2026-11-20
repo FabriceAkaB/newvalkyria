@@ -22,6 +22,10 @@ export interface Project {
   segment?: string;
   /** Sondé à part (son propre sondage, ex. le tournoi des équipes avancées) : absent de la liste à cocher commune. */
   ownSurvey?: boolean;
+  /** Projet écarté (raison et date) : il reste visible, sans agenda, et sort des prochains sondages. */
+  dropped?: string;
+  /** Idée ajoutée d'après les réponses des familles (pourquoi elle est proposée). Pas encore sondée en tant que telle. */
+  proposed?: string;
 }
 
 /** Repère des familles d'une fille née du 1er oct. 2015 au 30 sept. 2016 (âge au 30 septembre) : 6e année en 2027-2028,
@@ -34,11 +38,13 @@ export const PROJECT_CHECKLIST_ID = "interets";
 export const projectOption = (p: Project) => `${p.label} (${p.when})`;
 
 export const PROJECTS_2027: Project[] = [
-  { key: "camp-fetes-2026", label: "Camp des Fêtes", when: "entre Noël et le jour de l'An 2026", start: "2026-12-28", funding: "Fondation Bon départ (Canadian Tire) : jusqu'à 300 $ par joueuse par année, demandé par la famille." },
+  { key: "camp-fetes-2026", label: "Camp des Fêtes", when: "entre Noël et le jour de l'An 2026", start: "2026-12-28", dropped: "Écarté par JP le 20 nov. 2026 : 5 familles sur 30 intéressées, aucune vente réaliste pour les Fêtes.", funding: "Fondation Bon départ (Canadian Tire) : jusqu'à 300 $ par joueuse par année, demandé par la famille." },
   { key: "camp-releche-2027", label: "Camp de la semaine de relâche", when: "mars 2027", start: "2027-03-01" },
   { key: "camp-ete-2027", label: "Camp de jour de l'été", when: "été 2027, à la semaine", start: "2027-06-28", funding: "Emplois d'été Canada : jusqu'à 50 % du salaire minimum des moniteurs de 15 à 30 ans salariés (demande l'hiver d'avant). Bon départ pour les familles.", market: "Écoles de Soccer Montréal : 249 $ la semaine (9 h à 12 h), 349 $ la journée complète ; camp féminin Roses FC × EDSM : 529 $ la semaine (filles de 7 à 13 ans, 9 h à 15 h, Laval et Brossard), + 50 $ d'équipement. Pour nous (journée de 6 h, 24 filles, 2 éducatrices, synthétique à 41,53 $/h) : GO à partir de 504 $ ; 529 $ + équipement = environ 4 400 $ de bénéfice par semaine à 70 % de remplissage. Avec la TPS/TVQ (prochaine saison), 504 $ gardés = 579 $ payés par la famille, alors que leurs camps sont exonérés : se démarquer par la valeur, ou voir avec le CPA si un camp d'enfants peut être exonéré (piste OBNL d'Azimut)." },
   { key: "haute-performance", label: "Programme haute performance", when: "pour les joueuses qui veulent aller plus loin, dès 2027", start: null },
   { key: "roses", label: "Camp ou séances avec les Roses de Montréal", when: "en partenariat avec le club professionnel, 2027", start: null, market: "Les Roses ont déjà un camp féminin avec Écoles de Soccer Montréal (529 $ la semaine, Laval et Brossard). Notre angle : leur ouvrir les Laurentides, où elles n'ont pas de camp." },
+  { key: "clinique-roses", label: "Clinique d'une journée avec les Roses de Montréal", when: "relâche ou printemps 2027, dans les Laurentides", start: "2027-03-03", proposed: "27 familles sur 30 veulent les Roses : une journée avec leurs joueuses ou leurs entraîneurs se monte plus vite qu'un camp, coûte moins cher et ouvre la porte au partenariat (premier contact : tâche urgente de JP)." },
+  { key: "semaine-hp-ete", label: "Semaine haute performance d'été", when: "été 2027, une semaine intensive pour les joueuses qui veulent aller plus loin", start: "2027-07-05", proposed: "25 familles sur 30 veulent la haute performance et 15 le camp d'été : une semaine intensive réunit les deux, au prix d'un programme élite." },
   { key: "ontario-ete-2027", label: "Tournée de tournois en Ontario", when: "été 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
   { key: "ontario-automne-2027", label: "Tournée de tournois en Ontario", when: "automne 2027", start: null, funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },
   { key: "tournoi-av-ontario", label: "Tournoi Game Awareness avec l'équipe avancée", when: "Mississauga, 2027 (sondage à part des équipes 2015 AV et 2016-2017 AV)", start: null, segment: "Équipe avancée", ownSurvey: true, market: "Inscription par équipe, taxes incluses : 9 contre 9 de 757 $ à 1 100 $, 7 contre 7 de 616 $ à 894 $ selon le tournoi (Family Day Cup 14-15 févr., Easter Cup 29 mars, Youth World Cup 3-4 juill., Youth Gold Cup 4 sept., Thanksgiving Cup 11 oct.). Hôtel et transport en plus.", funding: "Hors Québec : rarement admissible aux subventions. Commanditaire présentateur, levées de fonds, part des parents annoncée tôt." },

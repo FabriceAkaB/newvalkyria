@@ -59,11 +59,12 @@ export default async function ProjectsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ project, interest, interestedNames, scenario, evaluation, scheduled }) => (
+                {rows.filter((r) => !r.project.dropped).map(({ project, interest, interestedNames, scenario, evaluation, scheduled }) => (
                   <tr key={project.key}>
                     <td style={{ minWidth: 220 }}>
                       <strong>{project.label}</strong>
                       <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{project.when}</span>
+                      {project.proposed ? <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-accent)", marginTop: 4 }}>Nouvelle idée, tirée du sondage : {project.proposed}</span> : null}
                       <span style={{ display: "block", fontSize: "0.8125rem", color: "var(--adm-text-2)", marginTop: 4 }}>{evaluation.sentence}</span>
                       {project.market ? <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-text-3)", marginTop: 4 }}>Marché : {project.market}</span> : null}
                       {project.funding ? <span style={{ display: "block", fontSize: "0.75rem", color: "var(--adm-text-3)", marginTop: 4 }}>Financement : {project.funding}</span> : null}
@@ -92,6 +93,16 @@ export default async function ProjectsPage() {
             </table>
           </div>
         </section>
+        {rows.some((r) => r.project.dropped) ? (
+          <section className="mda-card">
+            <h2 className="mda-h2">Projets écartés</h2>
+            <ul style={{ margin: "8px 0 0", paddingLeft: 18, display: "grid", gap: 6, color: "var(--adm-text-2)" }}>
+              {rows.filter((r) => r.project.dropped).map((r) => (
+                <li key={r.project.key}><strong style={{ color: "var(--adm-text)" }}>{r.project.label}</strong> ({r.interest.yes} oui sur {r.interest.answered}) : {r.project.dropped}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </div>
   );

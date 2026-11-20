@@ -12,6 +12,6 @@ describe("un seul formulaire, adapté à chaque famille", () => {
     const opts = (seg: string | null) => questionsForInvite(tpl.questions, seg)[0].options ?? [];
     expect(opts(`Saison filles · ${SEGMENT_6E_2027}`)).toContain(prep);
     expect(opts("Saison filles")).not.toContain(prep);
-    expect(opts(null)).toHaveLength(PROJECTS_2027.filter((p) => !p.ownSurvey && !p.segment).length);
+    expect(opts(null)).toHaveLength(PROJECTS_2027.filter((p) => !p.ownSurvey && !p.segment && !p.dropped).length);
   });
 });
