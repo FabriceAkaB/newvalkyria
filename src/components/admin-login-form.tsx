@@ -49,27 +49,6 @@ export function AdminLoginForm() {
       <button type="submit" disabled={loading} className="admin-btn-primary">
         {loading ? "Connexion..." : "Accéder →"}
       </button>
-      <ForgotCode />
     </form>
-  );
-}
-
-/** « Code oublié ? » (JP, 20 nov. 2026) : un lien de 30 minutes part au courriel de JP pour choisir un nouveau code. */
-function ForgotCode() {
-  const [state, setState] = useState<"idle" | "busy" | "sent">("idle");
-  if (state === "sent") return <p className="admin-login-sub" role="status" style={{ margin: 0 }}>Si ce compte existe, un lien vient de partir au courriel de JP (valable 30 minutes).</p>;
-  return (
-    <button
-      type="button"
-      disabled={state === "busy"}
-      onClick={async () => {
-        setState("busy");
-        await fetch("/api/admin/code-oublie", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }).catch(() => null);
-        setState("sent");
-      }}
-      style={{ background: "none", border: 0, padding: 0, color: "var(--adm-accent)", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", justifySelf: "start" }}
-    >
-      {state === "busy" ? "Envoi…" : "Code oublié ?"}
-    </button>
   );
 }
