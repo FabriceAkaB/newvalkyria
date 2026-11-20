@@ -157,3 +157,65 @@ export async function changeAccessCode(input: { target: AdminRole; current: stri
   const { error } = existing ? await db().from("app_settings").update(row).eq("key", "admin_password_hashes") : await db().from("app_settings").insert({ club_id: CLUB_ID, ...row });
   if (error) throw new Error(error.message);
 }
+
+/* ── Code administrateur oublié (JP, 20 nov. 2026) ─────────────────────────────────────────────── */
+
+const RESET_MINUTES = 30;
+
+/** Le courriel de JP pour le lien de récupération : sa fiche d'éducateur (app_settings « coach_admin_id »). */
+async function adminRecoveryEmail(): Promise<string | null> {
+  const { data: setting } = await db().from("app_settings").select("value").eq("key", "coach_admin_id").maybeSingle();
+  const coachId = typeof setting?.value === "string" ? setting.value : null;
+  if (!coachId) return null;
+  const { data: coach } = await db().from("coaches").select("email").eq("id", coachId).maybeSingle();
+  return coach?.email?.trim() || null;
+}
+
+/** Envoie à JP un lien à usage unique (30 minutes) pour choisir un nouveau code. Au plus 3 demandes par heure. */
+export async function sendAdminCodeReset(): Promise<boolean> {
+  const to = await adminRecoveryEmail();
+  if (!to) return false;
+  const since = new Date(Date.now() - 3_600_000).toISOString();
+  const { count } = await db().from("admin_code_resets").select("id", { count: "exact", head: true }).gte("created_at", since);
+  if ((count ?? 0) >= 3) return false;
+  const { randomBytes } = await import("node:crypto");
+  const token = randomBytes(32).toString("base64url");
+  const { error } = await db().from("admin_code_resets").insert({ token, expires_at: new Date(Date.now() + RESET_MINUTES * 60_000).toISOString() });
+  if (error) throw new Error(error.message);
+  const { env } = await import("@/lib/env");
+  const { getResendClient } = await import("@/lib/resend");
+  const url = `${env.publicSiteUrl}/admin/code-oublie/${token}`;
+  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1d1730;line-height:1.6;max-width:620px"><p>Bonjour JP,</p><p>Tu as demandé un nouveau code pour l'espace administrateur de New Valkyria. Ce lien est valable ${RESET_MINUTES} minutes et ne sert qu'une fois.</p><p><a href="${url}" style="display:inline-block;background:#5b2a86;color:#fff;text-decoration:none;padding:13px 24px;border-radius:10px;font-weight:bold">Choisir mon nouveau code</a></p><p style="font-size:13px;color:#666">Si ce n'est pas toi, ignore ce courriel : ton code actuel reste le même.</p></div>`;
+  const text = `Bonjour JP,\n\nTu as demandé un nouveau code pour l'espace administrateur de New Valkyria. Ce lien est valable ${RESET_MINUTES} minutes et ne sert qu'une fois :\n${url}\n\nSi ce n'est pas toi, ignore ce courriel : ton code actuel reste le même.`;
+  const res = await getResendClient().emails.send({ to, subject: "Ton nouveau code administrateur (New Valkyria)", html, text } as never);
+  const err = (res as { error?: { message: string } | null })?.error;
+  if (err) throw new Error(err.message);
+  return true;
+}
+
+export async function checkAdminCodeReset(token: string): Promise<boolean> {
+  if (!/^[A-Za-z0-9_-]{30,60}$/.test(token)) return false;
+  const { data } = await db().from("admin_code_resets").select("expires_at, used_at").eq("token", token).maybeSingle();
+  return Boolean(data && !data.used_at && Date.parse(data.expires_at) > Date.now());
+}
+
+/** JP choisit son nouveau code avec le lien reçu (le lien est ensuite inutilisable). */
+export async function consumeAdminCodeReset(token: string, next: string): Promise<void> {
+  if (!(await checkAdminCodeReset(token))) throw new Error("Ce lien n'est plus valable. Demande un nouveau lien.");
+  const code = next.trim();
+  if (code.length < 8) throw new Error("Le nouveau code doit avoir au moins 8 caractères.");
+  const other = await checkAdminPassword(code);
+  if (other && other !== "admin") throw new Error("Ce code est déjà utilisé par un autre accès : choisis-en un autre.");
+  const { hashPassword } = await import("@/lib/password");
+  const { data } = await db().from("app_settings").select("value").eq("key", "admin_password_hashes").maybeSingle();
+  let hashes: Partial<Record<AdminRole, string>> = {};
+  try {
+    hashes = typeof data?.value === "string" ? JSON.parse(data.value) : (data?.value ?? {});
+  } catch {
+    hashes = {};
+  }
+  hashes.admin = hashPassword(code);
+  const { error } = await db().from("app_settings").update({ value: JSON.stringify(hashes), updated_at: new Date().toISOString() }).eq("key", "admin_password_hashes");
+  if (error) throw new Error(error.message);
+  await db().from("admin_code_resets").update({ used_at: new Date().toISOString() }).eq("token", token);
+}
