@@ -9,6 +9,7 @@ import { CoachChampionsCard } from "@/components/coach-champions-card";
 import { CoachTeamsCard } from "@/components/coach-teams-card";
 import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrief";
 import { CoachIncidentCard } from "@/components/coach-incident-card";
+import { CoachPracticeJournal } from "@/components/coach-practice-journal";
 import { CoachGuideCard, PracticeTimer } from "@/components/coach-guide";
 import { exerciseGuideFallback, setupForGroup } from "@/lib/practice-plan-view";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
@@ -812,6 +813,8 @@ export function CoachActiviteDetail({
     [sessionBlocks, initialExercises]
   );
   const isPractice = activity.activity_type === "Pratique" || activity.activity_type === "Camp";
+  // Les blocs du plan, pour « Exercices réalisés » du rapport journalier.
+  const journalBlocks = sessionBlocks.map((b) => ({ id: b.id, title: b.custom_title || initialExercises.find((e) => e.id === b.exercise_id)?.title || b.block_type }));
   const [showEditor, setShowEditor] = useState(false);
   const [attendance, setAttendance] = useState<Record<string, PlayerAttendanceStatus>>(Object.fromEntries(initialAttendance.map((a) => [a.registration_id, a.status])));
   const [feedback, setFeedback] = useState<Record<string, SurveyAnswer>>(
@@ -1047,6 +1050,7 @@ export function CoachActiviteDetail({
                   theme={themeForGroup(theme?.theme, activity.category ?? activity.title)}
                 />
               ) : null}
+              {isPractice && !guest ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
               {activity.activity_type !== "Match" && <CoachIncidentCard activityId={activity.id} />}
               <button type="button" className="coach-primary" style={{ marginTop: 12 }} onClick={() => goTo("apres")}>Fin de la pratique : le rapport</button>
             </>
@@ -1156,6 +1160,7 @@ export function CoachActiviteDetail({
 
               {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
                 <div style={{ marginBottom: 16 }}>
+                  {!guest ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
                   <CoachDebriefCard activityId={activity.id} onStatus={setDebriefDone} required={isCoach && strict} />
                 </div>
               ) : null}

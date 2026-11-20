@@ -1,3 +1,4 @@
+import { mergeJournal, type Journal } from "@/lib/practice-journal";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 /** Retour de l'éducateur sur la pratique (table `practice_debriefs`) : ce qu'on a bien fait, ce qu'on a moins bien
@@ -15,6 +16,9 @@ export interface PracticeDebrief {
   wentWell: string | null;
   toImprove: string | null;
   nextTime: string | null;
+  /** Rapport journalier de la pratique (JP, 20 nov. 2026). */
+  journal: Journal;
+  journalAt: string | null;
   updatedAt: string;
   /** Pour le retour précédent : la date de la pratique. */
   date?: string;
@@ -31,6 +35,8 @@ function map(r: any): PracticeDebrief {
     wentWell: r.went_well,
     toImprove: r.to_improve,
     nextTime: r.next_time,
+    journal: (r.journal ?? {}) as Journal,
+    journalAt: r.journal_at ?? null,
     updatedAt: r.updated_at,
     date: r.activity?.activity_date ? String(r.activity.activity_date).slice(0, 10) : undefined
   };
@@ -40,7 +46,47 @@ export async function getDebriefs(activityIds: string[]): Promise<PracticeDebrie
   if (!activityIds.length) return [];
   const { data, error } = await db().from("practice_debriefs").select("*, coach:coaches(first_name, last_name)").in("activity_id", activityIds).order("updated_at");
   if (error) throw new Error(error.message);
-  return ((data ?? []) as any[]).filter((r) => r.went_well || r.to_improve || r.next_time).map(map);
+  return ((data ?? []) as any[]).filter((r) => r.went_well || r.to_improve || r.next_time || (r.journal && Object.keys(r.journal).length)).map(map);
+}
+
+/** Le rapport journalier d'un coach pour une pratique (vide s'il n'a rien écrit). */
+export async function getJournal(activityId: string, coachId: string): Promise<Journal> {
+  const { data } = await db().from("practice_debriefs").select("journal").eq("activity_id", activityId).eq("coach_id", coachId).maybeSingle();
+  return ((data?.journal ?? {}) as Journal) || {};
+}
+
+/** Enregistre un morceau du rapport journalier (au fil de la journée) sans toucher au reste ni au retour 2 + 2. */
+export async function saveJournal(activityId: string, coachId: string, patch: Journal): Promise<Journal> {
+  const { data: cur } = await db().from("practice_debriefs").select("id, journal").eq("activity_id", activityId).eq("coach_id", coachId).maybeSingle();
+  const journal = mergeJournal((cur?.journal ?? {}) as Journal, patch);
+  const now = new Date().toISOString();
+  const { error } = cur
+    ? await db().from("practice_debriefs").update({ journal, journal_at: now, updated_at: now }).eq("id", cur.id)
+    : await db().from("practice_debriefs").insert({ activity_id: activityId, coach_id: coachId, journal, journal_at: now, updated_at: now });
+  if (error) throw new Error(error.message);
+  return journal;
+}
+
+export interface JournalRow extends PracticeDebrief {
+  group: string;
+  startTime: string;
+}
+
+/** Historique des rapports journaliers (admin) : par date, groupe et coach, les plus récents d'abord. */
+export async function listJournals(opts: { from: string; to: string; coachId?: string | null; group?: string | null }): Promise<JournalRow[]> {
+  let q = db()
+    .from("practice_debriefs")
+    .select("*, coach:coaches(first_name, last_name), activity:coach_activities!inner(activity_date, start_time, title, category)")
+    .gte("activity.activity_date", opts.from)
+    .lte("activity.activity_date", opts.to);
+  if (opts.coachId) q = q.eq("coach_id", opts.coachId);
+  const { data, error } = await q;
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as any[])
+    .filter((r) => r.went_well || r.to_improve || r.next_time || (r.journal && Object.keys(r.journal).length))
+    .map((r) => ({ ...map(r), group: r.activity?.title || r.activity?.category || "Pratique", startTime: String(r.activity?.start_time ?? "").slice(0, 5) }))
+    .filter((r) => !opts.group || r.group === opts.group)
+    .sort((a, b) => `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`));
 }
 
 export async function saveDebrief(activityId: string, coachId: string, input: { wentWell?: unknown; toImprove?: unknown; nextTime?: unknown }): Promise<void> {

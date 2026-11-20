@@ -323,6 +323,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/pratiques", label: "À préparer" },
           { href: "/admin/pratiques/saison", label: "Toute la saison" },
           { href: "/admin/coaching/historique", label: "Historique" },
+          { href: "/admin/coaching/journaux", label: "Rapports journaliers" },
           { href: "/admin/coaching/plan", label: "Plan de l'année", adminOnly: true },
           { href: "/admin/entraineurs/activites", label: "Entraînements", adminOnly: true },
           { href: "/admin/themes", label: "Thèmes", adminOnly: true }
