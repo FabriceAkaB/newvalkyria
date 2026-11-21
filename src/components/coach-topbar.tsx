@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminThemeToggle } from "@/components/admin-theme-toggle";
+import { CoachSessionGuard } from "@/components/coach-session-guard";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -44,6 +45,7 @@ export function CoachTopbar({ coachName }: Props) {
 
   return (
     <aside className="admin-sidebar" data-menu-open={String(menuOpen)}>
+      <CoachSessionGuard />
       <div className="admin-sidebar-brand">
         <div className="admin-sidebar-brand-id coach-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}

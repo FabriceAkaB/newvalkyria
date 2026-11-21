@@ -6,7 +6,8 @@ import { hashPassword, verifyPassword } from "@/lib/password";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const COACH_COOKIE_NAME = "nv_coach_session";
-export const COACH_SESSION_TTL_SECONDS = 60 * 60 * 12; // 12 heures
+// 30 jours (JP, 20 nov. 2026) : 12 heures faisaient expirer la connexion pendant le rapport du lendemain.
+export const COACH_SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 function db() {
   return getSupabaseAdminClient() as any;

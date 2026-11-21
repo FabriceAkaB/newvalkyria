@@ -255,6 +255,7 @@ async function postJson(url: string, body: unknown): Promise<{ ok: boolean; erro
   try {
     const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401) return { ok: false, error: "Ta connexion a expiré : rien n'a été enregistré. Reconnecte-toi avec le bandeau en bas de l'écran, puis touche Enregistrer de nouveau (ton texte reste ici)." };
     return res.ok ? { ok: true, data } : { ok: false, error: data?.error ?? "Pas enregistré. Vérifie ta connexion et réessaie." };
   } catch {
     return { ok: false, error: "Pas de connexion : réessaie dans un instant." };
