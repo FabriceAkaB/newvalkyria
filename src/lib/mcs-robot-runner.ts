@@ -709,7 +709,7 @@ export async function syncCalendar(session: McsSession, teams: TeamTarget[], dry
       .filter((p, i, a) => a.findIndex((x) => x.date === p.date && x.start === p.start) === i);
     const mine = ((evs ?? []) as any[]).filter((e) => e.team_id === t.id);
     const mcs = mine
-      .map((e) => ({ id: mcsIdOf(e.key)?.id ?? 0, kind: mcsIdOf(e.key)?.type, date: String(e.event_date).slice(0, 10), start: String(e.start_time ?? "").slice(0, 5), end: e.end_time ? String(e.end_time).slice(0, 5) : null, title: e.title as string, isPractice: e.type !== "Match" && e.type !== "Tournoi" && !/st-?gabriel|elevate|finition|solo/i.test(e.title) }))
+      .map((e) => ({ id: mcsIdOf(e.key)?.id ?? 0, kind: mcsIdOf(e.key)?.type, date: String(e.event_date).slice(0, 10), start: String(e.start_time ?? "").slice(0, 5), end: e.end_time ? String(e.end_time).slice(0, 5) : null, title: e.title as string, isPractice: e.type !== "Match" && e.type !== "Tournoi" && !/st-?gabriel|elevate|finition|solo|annul/i.test(e.title) })) // une pratique « ANNULÉE » dans MCS ne revient jamais dans l'horaire du site
       .filter((e) => e.id && e.kind === "event");
     const fallback = (() => {
       const counts = new Map<string, number>();
