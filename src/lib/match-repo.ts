@@ -85,6 +85,28 @@ export async function getMatchRoster(seasonId: string, category: string | null, 
   if (e2) throw new Error(e2.message);
 
   const rows = [...(regular ?? []), ...(trials ?? [])] as any[];
+  // Match d'une équipe MonClubSportif (« Équipe 2016-2017 INT ») : la catégorie n'est pas une année de naissance ;
+  // l'effectif vient alors de la même règle que les pratiques d'équipe (années, avancées ou intermédiaires).
+  if (!rows.length) {
+    // Équipe de match MonClubSportif : ses programmes et ses années (mcs_teams), comme le robot (teamsFor).
+    const { data: team } = await supabase.from("mcs_teams").select("program_ids, birth_years, kind").eq("name", category).maybeSingle();
+    if (team?.kind === "match" && (team.program_ids ?? []).length) {
+      const { data: regs, error: e3 } = await supabase
+        .from("registrations")
+        .select("id, player_first_name, player_last_name, player_dob, is_trial, advanced_group, players(photo_url)")
+        .eq("season_id", seasonId)
+        .in("program_id", team.program_ids)
+        .in("status", ["paid", "confirmed"]);
+      if (e3) throw new Error(e3.message);
+      const years: number[] = team.birth_years ?? [];
+      return ((regs ?? []) as any[])
+        .filter((r) => !years.length || years.includes(Number(String(r.player_dob ?? "").slice(0, 4))))
+        .map((r) => ({ registrationId: r.id, firstName: r.player_first_name ?? "", lastName: r.player_last_name ?? "", photoUrl: r.players?.photo_url ?? null, isTrial: r.is_trial, advancedGroup: r.advanced_group }));
+    }
+    const { getExpectedRoster } = await import("@/lib/coach-portal-repo");
+    const expected = await getExpectedRoster(seasonId, category, activityDate).catch(() => []);
+    return expected.map((r) => ({ registrationId: r.registrationId, firstName: r.firstName, lastName: r.lastName, photoUrl: r.photoUrl, isTrial: r.isTrial, advancedGroup: r.advancedGroup }));
+  }
   return rows.map((r) => ({
     registrationId: r.id,
     firstName: r.player_first_name ?? "",
@@ -93,6 +115,14 @@ export async function getMatchRoster(seasonId: string, category: string | null, 
     isTrial: r.is_trial,
     advancedGroup: r.advanced_group
   }));
+}
+
+/** Joueuses par inscription (ex. une remplaçante d'une autre équipe convoquée au match), avec leur photo. */
+export async function getRosterPlayersByIds(ids: string[]): Promise<MatchRosterPlayer[]> {
+  if (!ids.length) return [];
+  const { data, error } = await db().from("registrations").select("id, player_first_name, player_last_name, is_trial, advanced_group, players(photo_url)").in("id", ids);
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as any[]).map((r) => ({ registrationId: r.id, firstName: r.player_first_name ?? "", lastName: r.player_last_name ?? "", photoUrl: r.players?.photo_url ?? null, isTrial: r.is_trial, advancedGroup: r.advanced_group }));
 }
 
 /* ── Convocations ──────────────────────────────────────────────── */
@@ -244,6 +274,11 @@ export interface MatchPlayerEvaluation {
   scale: 10 | 100;
   score: number | null;
   comment: string | null;
+  /** Fiche en 10 points (match-evaluation.ts) : critère → note de 1 à 5. Vide pour une ancienne évaluation. */
+  criteria?: Record<string, number> | null;
+  strengths?: string | null;
+  to_improve?: string | null;
+  updated_at?: string | null;
 }
 
 export async function getMatchEvaluations(activityId: string): Promise<MatchPlayerEvaluation[]> {
@@ -260,6 +295,9 @@ export async function saveMatchEvaluation(input: {
   scale: 10 | 100;
   score: number | null;
   comment: string | null;
+  criteria?: Record<string, number>;
+  strengths?: string | null;
+  toImprove?: string | null;
 }): Promise<void> {
   const { error } = await db().from("match_player_evaluations").upsert(
     {
@@ -270,6 +308,7 @@ export async function saveMatchEvaluation(input: {
       scale: input.scale,
       score: input.score,
       comment: input.comment,
+      ...(input.criteria ? { criteria: input.criteria, strengths: input.strengths ?? null, to_improve: input.toImprove ?? null } : {}),
       updated_at: new Date().toISOString()
     },
     { onConflict: "activity_id,registration_id,coach_id" }

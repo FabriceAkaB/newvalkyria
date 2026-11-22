@@ -645,7 +645,7 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
     for (const ev of grid.events) {
       const e = byId.get(ev.id);
       if (!e || !e.start || e.start > until || e.start < since) continue;
-      // Match ou tournoi : seule la présence des éducateurs compte (leur paie) ; celle des jeunes reste aux pratiques.
+      // Match ou tournoi : la présence des éducateurs compte pour leur paie ; celle des jeunes devient la convocation du match.
       const game = e.type === "Match" || e.type === "Tournoi";
       if (opts.today && game) continue;
       const date = String(e.event_date).slice(0, 10);
@@ -654,7 +654,25 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
         const status = attendanceFromMcs(row.states[ev.id]);
         if (!status) continue;
         const coach = ((coaches ?? []) as any[]).find((c) => sameMemberName(row.name, c.first_name, c.last_name));
-        if (game && !coach) continue;
+        if (game && !coach) {
+          // Joueuses d'un match (JP, 22 nov. 2026) : leur présence MCS devient la convocation du match (présente ou
+          // absente), pour que la fiche « Évaluer le match » montre qui était là. Jamais dans les présences des
+          // pratiques (points, bulletin). Une joueuse déjà évaluée par un éducateur n'est pas remise absente.
+          const p = players.find((x) => sameMemberName(row.name, x.firstName, x.lastName));
+          if (!p?.registrationId) {
+            unmatched.add(row.name);
+            continue;
+          }
+          activityId ??= await activityFor(date, hm(e.start), e.endHm, e.location ?? "", t.name, "Match");
+          if (status === "absent") {
+            const { data: ev } = await db().from("match_player_evaluations").select("id").eq("activity_id", activityId).eq("registration_id", p.registrationId).limit(1);
+            if ((ev ?? []).length) continue;
+          }
+          const { setConvocation } = await import("@/lib/match-repo");
+          await setConvocation(activityId, p.registrationId, status === "absent" ? "absent" : "confirmed");
+          nPlayers++;
+          continue;
+        }
         if (coach && opts.today) continue; // la paie se règle après la pratique, au passage du soir
         activityId ??= await activityFor(date, hm(e.start), e.endHm, e.location ?? "", t.name, game ? "Match" : "Pratique");
         if (coach) {

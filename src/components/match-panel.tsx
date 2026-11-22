@@ -14,20 +14,9 @@ import type {
   MatchStatus,
   PlaytimeSegment
 } from "@/lib/match-repo";
+import { POSITION_LABELS, familyAverages, ratedCount } from "@/lib/match-evaluation";
 import { MATCH_POSITIONS, computeTotalMinutes } from "@/lib/match-repo";
 
-const POSITION_LABELS: Record<string, string> = {
-  GB: "Gardienne",
-  AD: "Arrière droit",
-  DC: "Défenseure centrale",
-  AG: "Arrière gauche",
-  MDC: "Milieu défensif",
-  MC: "Milieu centrale",
-  MOC: "Milieu offensif",
-  AiD: "Ailière droite",
-  AiG: "Ailière gauche",
-  AT: "Attaquante"
-};
 
 const CONVOCATION_LABELS: Record<ConvocationStatus, string> = {
   convoked: "Convoquée",
@@ -303,6 +292,13 @@ function EvaluationsPanel({ activityId, roster, convocations, evaluations, setEv
               <strong>{playerName(roster, e.registration_id)}</strong>
               {e.position_code && ` · ${POSITION_LABELS[e.position_code] ?? e.position_code}`}
               {e.score !== null && ` · ${e.score}/${e.scale}`}
+              {e.criteria && ratedCount(e.criteria) > 0 && (
+                <p style={{ margin: "0.2rem 0 0", color: "var(--adm-text-3)" }}>
+                  {familyAverages(e.criteria).map((f) => `${f.family} ${f.avg !== null ? `${f.avg}/5` : "–"}`).join(" · ")}
+                </p>
+              )}
+              {e.strengths && <p style={{ margin: "0.2rem 0 0", color: "var(--adm-text-2)" }}>Points forts : {e.strengths}</p>}
+              {e.to_improve && <p style={{ margin: "0.2rem 0 0", color: "var(--adm-text-2)" }}>À travailler : {e.to_improve}</p>}
               {e.comment && <p style={{ margin: "0.2rem 0 0", color: "var(--adm-text-2)" }}>{e.comment}</p>}
             </div>
           ))}
@@ -311,81 +307,19 @@ function EvaluationsPanel({ activityId, roster, convocations, evaluations, setEv
     );
   }
 
+  // Évaluation du match : la fiche en 10 points sur sa propre page (photo, poste, présence, hors réseau).
+  const mine = evaluations.filter((e) => e.coach_id === coachId);
   return (
     <div style={{ marginBottom: "1.5rem" }}>
       <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>Évaluations post-match</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        {convokedIds.map((id) => (
-          <MatchEvalRow
-            key={id}
-            activityId={activityId}
-            registrationId={id}
-            coachId={coachId}
-            playerLabel={playerName(roster, id)}
-            existing={evaluations.find((e) => e.registration_id === id && e.coach_id === coachId)}
-            base={base}
-            onSaved={(saved) => setEvaluations((prev) => [...prev.filter((e) => !(e.registration_id === id && e.coach_id === coachId)), saved])}
-          />
-        ))}
-        {convokedIds.length === 0 && <p className="admin-empty-text">Convoquez des joueuses pour pouvoir les évaluer après le match.</p>}
-      </div>
-    </div>
-  );
-}
-
-function MatchEvalRow({ activityId, registrationId, coachId, playerLabel, existing, base, onSaved }: { activityId: string; registrationId: string; coachId?: string; playerLabel: string; existing: MatchPlayerEvaluation | undefined; base: string; onSaved: (evaluation: MatchPlayerEvaluation) => void }) {
-  const [position, setPosition] = useState(existing?.position_code ?? "");
-  const [scale, setScale] = useState<10 | 100>(existing?.scale ?? 10);
-  const [score, setScore] = useState(existing?.score?.toString() ?? "");
-  const [comment, setComment] = useState(existing?.comment ?? "");
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  const save = async () => {
-    setSaving(true);
-    setSaved(false);
-    try {
-      const res = await fetch(`${base}/evaluations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ registrationId, positionCode: position || null, scale, score: score === "" ? null : parseFloat(score), comment: comment.trim() || null })
-      });
-      if (res.ok) {
-        setSaved(true);
-        onSaved({
-          id: existing?.id ?? "",
-          activity_id: activityId,
-          registration_id: registrationId,
-          coach_id: coachId ?? "",
-          position_code: position || null,
-          scale,
-          score: score === "" ? null : parseFloat(score),
-          comment: comment.trim() || null
-        });
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.8rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-      <strong style={{ fontSize: "0.8rem", color: "var(--adm-text)" }}>{playerLabel}</strong>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-        <select className="admin-input" value={position} onChange={(e) => setPosition(e.target.value)} style={{ width: "auto", fontSize: "0.72rem" }}>
-          <option value="">Poste joué</option>
-          {MATCH_POSITIONS.map((p) => <option key={p} value={p}>{POSITION_LABELS[p]}</option>)}
-        </select>
-        <select className="admin-input" value={scale} onChange={(e) => setScale(parseInt(e.target.value, 10) as 10 | 100)} style={{ width: "auto", fontSize: "0.72rem" }}>
-          <option value={10}>Échelle /10</option>
-          <option value={100}>Échelle /100</option>
-        </select>
-        <input className="admin-input" type="number" min={0} max={scale} placeholder={`Note /${scale}`} value={score} onChange={(e) => setScore(e.target.value)} style={{ width: "6rem", fontSize: "0.72rem" }} />
-      </div>
-      <textarea className="admin-input" placeholder="Commentaire" rows={2} value={comment} onChange={(e) => setComment(e.target.value)} style={{ fontSize: "0.75rem" }} />
-      <div>
-        <button className="admin-btn-primary" onClick={save} disabled={saving} style={{ fontSize: "0.72rem" }}>{saving ? "..." : saved ? "✓ Enregistré" : "Enregistrer"}</button>
-      </div>
+      <a href={`/entraineur/activites/${activityId}/evaluer`} className="admin-btn-primary" style={{ display: "inline-block", textDecoration: "none", minHeight: 44, lineHeight: "28px" }}>
+        Évaluer le match
+      </a>
+      <p style={{ fontSize: "0.75rem", color: "var(--adm-text-2)", margin: "0.4rem 0 0" }}>
+        Une fiche en 10 points par joueuse présente (technique, tactique, physique, mental), avec sa photo et son poste. Elle se remplit même sans réseau.
+        {mine.length ? ` ${mine.length} fiche${mine.length > 1 ? "s" : ""} déjà faite${mine.length > 1 ? "s" : ""}.` : ""}
+        {convokedIds.length && !mine.length ? ` ${convokedIds.length} joueuse${convokedIds.length > 1 ? "s" : ""} convoquée${convokedIds.length > 1 ? "s" : ""}.` : ""}
+      </p>
     </div>
   );
 }
