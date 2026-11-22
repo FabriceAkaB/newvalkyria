@@ -387,6 +387,56 @@
    "source": "manuel",
    "how": "Temps entre une demande (formulaire, courriel, message) et la première réponse ; relevé chaque mois (stade 4 d'Alex : répondre vite aux demandes).",
    "addedOn": "2026-11-02"
+  },
+  {
+   "id": "prospects_semaine",
+   "label": "Nouvelles familles intéressées par semaine (prospects)",
+   "start": "à mesurer",
+   "target": "40 par semaine",
+   "due": "2027-03-31",
+   "source": "manuel",
+   "how": "Demandes d'information, essais, formulaires de l'aimant à prospects, réponses « oui » aux sondages d'intérêt ; relevé chaque lundi (P3.8.18). Calcul : environ 240 familles pour remplir 480 semaines de camp + 100 inscrites à Valkyria Été, à environ 1 inscription pour 3 prospects, sur 20 semaines de vente.",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "semaines_camp_ete_2027",
+   "label": "Semaines de camp de jour d'été 2027 vendues",
+   "start": "0",
+   "target": "480",
+   "due": "2027-06-01",
+   "source": "manuel",
+   "how": "2 sites × 8 semaines × 30 jeunes.",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "inscrites_valkyria_ete_2027",
+   "label": "Inscrites à Valkyria Été 2027 (soir)",
+   "start": "0",
+   "target": "100",
+   "due": "2027-06-01",
+   "source": "manuel",
+   "how": "60 000 $ visés ÷ 595 $ ≈ 100 inscriptions.",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "cout_par_prospect",
+   "label": "Coût par prospect de la publicité payante",
+   "start": "à mesurer",
+   "target": "à fixer après le premier essai",
+   "due": "2027-02-28",
+   "source": "manuel",
+   "how": "Dépense publicitaire ÷ prospects venus de la pub, chaque semaine.",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "pratiques_annulees_jp",
+   "label": "Pratiques annulées parce que JP était absent",
+   "start": "2 (22 nov. 2026, crevaison)",
+   "target": "0",
+   "due": "2027-02-28",
+   "source": "manuel",
+   "how": "Toute pratique annulée ou écourtée faute d'un éducateur capable de la donner sans JP.",
+   "addedOn": "2026-11-02"
   }
  ],
  "levels": [
@@ -1426,6 +1476,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Voyage international de la relâche 2028 (17 nov. 2026)"
+      },
+      {
+       "code": "P1.4.14",
+       "priority": "star",
+       "level": 1,
+       "title": "Former les éducateurs principaux à diriger la pratique complète sans JP : chacun dirige seul une pratique par semaine dès janvier, JP observe et donne son retour, puis s'absente ; tous prêts avant les camps.",
+       "due": "2027-02-28",
+       "owner": "JP + coachs",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
       }
      ]
     },
@@ -2057,6 +2119,30 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Plan par saison jusqu'à l'été 2028 et structure 2027-2028 (13 nov. 2026)"
+      },
+      {
+       "code": "P2.4.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Écrire la grille d'offres claire de l'été 2027 et de l'hiver 2027-2028, avant toute publicité : pour chaque programme, pour qui (âge, niveau), la promesse en une phrase, où (ville, terrain ou gymnase), quand (jours, heures, dates), combien, combien de places ; une seule page « Nos programmes » sur le site la reprend. Brouillon : docs/strategie/offres-ete-2027-hiver-2028.md.",
+       "due": "2026-12-10",
+       "owner": "JP + Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
+      },
+      {
+       "code": "P2.4.09",
+       "priority": "star",
+       "level": 1,
+       "title": "Confirmer par écrit le lieu de chaque programme de la grille avant de le vendre : les 2 sites des camps de jour, les terrains du soir de Valkyria Été, les gymnases des 3 villes de la Pré-académie.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
       }
      ]
     },
@@ -2669,6 +2755,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Espace création de contenu (13 nov. 2026)"
+      },
+      {
+       "code": "P3.2.22",
+       "priority": "star",
+       "level": 1,
+       "title": "Me former à la création de contenu organique : un crochet dans les 3 premières secondes, un reel de 30 secondes, un appel à l'action vers l'aimant à prospects dans chaque publication ; une publication par jour sur les comptes de New Valkyria (séparés de JP Coach).",
+       "due": "2026-12-31",
+       "owner": "JP + caméra",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
       }
      ]
     },
@@ -2889,6 +2987,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P3.6.09",
+       "priority": "star",
+       "level": 1,
+       "title": "Prévente aux contacts chauds d'abord (la 1re méthode de $100M Leads) : écrire une par une à chaque famille de la liste chaude (familles actuelles, été 2026, essais, anciennes joueuses) avec la grille de l'été et le prix hâtif ; chaque échange noté dans les relances.",
+       "due": "2027-01-31",
+       "owner": "JP + gérante",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
       }
      ]
     },
@@ -3101,6 +3211,74 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P3.8.14",
+       "priority": "star",
+       "level": 1,
+       "title": "Me former à la publicité payante Meta (Facebook et Instagram) : formation gratuite Meta Blueprint (bases du Gestionnaire de publicités), compte publicitaire et pixel du site en place, 2 h par semaine bloquées à l'agenda ; ce que j'apprends noté dans Mes connaissances.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
+      },
+      {
+       "code": "P3.8.15",
+       "priority": "star",
+       "level": 1,
+       "title": "Lire $100M Leads d'Alex Hormozi, un chapitre par semaine, et appliquer chaque chapitre à l'académie : les 4 façons d'attirer (contacts chauds, contenu gratuit, contacts froids, publicité payante), l'aimant à prospects, ceux qui amènent des prospects pour nous (références, employés, partenaires, affiliés) ; une fiche par chapitre dans Mes connaissances.",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
+      },
+      {
+       "code": "P3.8.16",
+       "priority": "star",
+       "level": 1,
+       "title": "Créer l'aimant à prospects de l'été : une offre gratuite qui règle un petit problème des parents (ex. séance découverte gratuite du camp ou évaluation ball mastery gratuite avec rapport) ; une page avec formulaire qui ajoute la famille à la liste chaude et à la séquence de courriels.",
+       "due": "2027-01-15",
+       "owner": "JP + Claude Code",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
+      },
+      {
+       "code": "P3.8.17",
+       "priority": "star",
+       "level": 2,
+       "title": "Lancer la première campagne payante de l'été : une vidéo déjà prouvée en organique qui mène à l'aimant à prospects, petit budget d'essai (10 à 20 $ par jour), rayon de 25 km autour des sites ; coût par prospect et coût par inscription mesurés chaque semaine.",
+       "due": "2027-02-01",
+       "owner": "JP",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
+      },
+      {
+       "code": "P3.8.18",
+       "priority": "star",
+       "level": 1,
+       "title": "Chaque lundi, 15 minutes : les nouveaux prospects de la semaine par canal (organique, payant, références, relances, Google) et le coût par prospect ; doubler le canal qui marche, couper celui qui ne marche pas.",
+       "due": "2026-12-31",
+       "owner": "JP",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
       }
      ]
     }
@@ -5404,6 +5582,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P8.3.08",
+       "priority": "star",
+       "level": 1,
+       "title": "Plus aucune pratique annulée parce que JP est absent (le 22 nov. 2026, une crevaison a fait annuler deux pratiques) : pour chaque plage, un éducateur principal capable de donner la pratique seul et un remplaçant nommé ; liste tenue dans Structure.",
+       "due": "2027-01-31",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
       }
      ]
     },
@@ -6700,7 +6890,44 @@
    {
     "title": "Voyage international de la relâche 2028 (17 nov. 2026)",
     "text": "Décisions de JP : l'académie ne paie pas le voyage, ce sont les parents ; le départ se fait pendant la **semaine de relâche de mars 2028** ; les **activités de financement commencent en mars 2027** (un an de collectes), organisées par un comité de parents ; groupes d'environ 20 joueuses ; c'est aussi un levier de rétention."
+   },
+   {
+    "title": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)",
+    "text": "Décision de JP après les courriels d'Alex Hormozi sur la contrainte principale (« Tout ce qui n'est pas votre contrainte principale vous fait perdre du temps : choisissez-en une, investissez-vous à fond, réglez-la, puis passez à la suivante ») et sur le stade 3 (passer de celui qui fait à celui qui forme). Sous 500 000 $ de chiffre d'affaires, la contrainte habituelle est de **ne pas attirer assez de prospects**. Le 22 nov. 2026, une crevaison de JP a fait annuler deux pratiques : la livraison dépend encore de lui. Pour la prochaine saison, le focus est donc mis sur deux choses liées : **les prospects** (les 2 camps de jour d'été, Valkyria Été le soir, puis l'hiver 2027-2028) et **la formation de l'équipe**, qui libère JP pour attirer des familles. JP se forme lui-même à la publicité payante, à la création de contenu et aux méthodes de $100M Leads. L'ordre : d'abord une offre claire (quoi, pour qui, où, quand, combien), ensuite la communication pour attirer du monde dans chaque programme. Les leçons d'Alex sont gardées dans Mes connaissances (`jp_knowledge`, auteur « Alex Hormozi »)."
    }
+  ]
+ },
+ "constraint": {
+  "title": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)",
+  "statement": "Attirer assez de familles intéressées pour remplir les 2 camps de jour d'été, Valkyria Été (soir) et la saison 2027-2028, avec une équipe qui donne les pratiques sans JP.",
+  "until": "2027-02-28",
+  "why": "Sous 500 000 $, le frein est le nombre de prospects (Alex Hormozi) ; et JP ne peut pas attirer des familles s'il doit être sur chaque terrain.",
+  "doneWhen": "la grille d'offres est en ligne, 40 nouvelles familles intéressées par semaine, la prévente de l'été est lancée et plus aucune pratique n'est annulée parce que JP est absent.",
+  "paused": "tout chantier du site ou du plan qui ne sert pas cette contrainte attend le 1er mars 2027, sauf les obligations (paie, taxes, sécurité des joueuses).",
+  "tasks": [
+   "P2.4.08",
+   "P2.4.09",
+   "P2.4.05",
+   "P2.4.06",
+   "P5.2.10",
+   "P3.8.15",
+   "P3.8.14",
+   "P3.2.22",
+   "P3.8.16",
+   "P3.6.09",
+   "P5.2.03",
+   "P2.4.03",
+   "P3.8.17",
+   "P3.8.18",
+   "P3.8.13",
+   "P3.6.06",
+   "P3.6.08",
+   "P3.1.06",
+   "P8.3.08",
+   "P1.4.14",
+   "P8.2.08",
+   "P8.3.02",
+   "P8.3.03"
   ]
  },
  "decisions": [

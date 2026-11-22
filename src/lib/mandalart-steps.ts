@@ -715,6 +715,109 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     ],
     done: "Le portrait des meilleures familles est fait et l'offre 2027-2028 est ajustée.",
     link: { href: "/admin/revenus/calculateur", label: "Calculateur de lancement" }
+  },
+  // ── Contrainte n°1 jusqu'au 28 févr. 2027 : les prospects de l'été et une équipe qui livre sans JP (22 nov. 2026) ──
+  "P2.4.08": {
+    how: [
+      "Ouvre le brouillon docs/strategie/offres-ete-2027-hiver-2028.md (ou demande-le à Claude) : chaque programme y a déjà sa ligne.",
+      "Pour chaque programme, tranche les cases « à décider » : pour qui, la promesse en une phrase, où, quand, combien, combien de places.",
+      "Enlève ce que tu n'es pas certain de pouvoir livrer : mieux vaut 4 offres claires que 10 floues.",
+      "Dis à Claude : « Mets la grille en ligne dans une page Nos programmes » ; chaque programme garde sa page et son bouton d'inscription."
+    ],
+    done: "La grille est tranchée et la page « Nos programmes » est en ligne.",
+    link: { href: "/admin/programme", label: "Programmes" }
+  },
+  "P2.4.09": {
+    how: [
+      "Pour chaque lieu de la grille, appelle la ville, l'école ou le club et demande la disponibilité aux dates et heures voulues.",
+      "Garde la confirmation écrite (courriel) dans Documents ; note le coût à l'heure.",
+      "Un programme sans lieu confirmé ne se vend pas encore."
+    ],
+    done: "Chaque programme de la grille a un lieu confirmé par écrit.",
+    link: { href: "/admin/location-terrains", label: "Terrains" }
+  },
+  "P3.8.14": {
+    how: [
+      "Bloque 2 h par semaine dans ton agenda (bloc 🧲) : « Formation pub ».",
+      "Suis la formation gratuite Meta Blueprint sur les bases du Gestionnaire de publicités (objectifs, audiences, budget, mesure).",
+      "Crée le compte publicitaire de New Valkyria (séparé de JP Coach) et demande à Claude d'installer le pixel Meta sur le site.",
+      "Après chaque séance, écris 3 choses apprises dans Mes connaissances."
+    ],
+    done: "Formation de base finie, compte publicitaire et pixel en place.",
+    link: { href: "/admin/moi/connaissances", label: "Mes connaissances" }
+  },
+  "P3.8.15": {
+    how: [
+      "Un chapitre de $100M Leads par semaine (livre ou audio).",
+      "Après chaque chapitre, écris dans Mes connaissances : l'idée principale et comment l'appliquer à New Valkyria cette semaine.",
+      "Applique une chose avant de lire le chapitre suivant (ex. écrire aux contacts chauds, créer l'aimant à prospects)."
+    ],
+    done: "Le livre est fini et chaque chapitre a sa fiche et une action faite.",
+    link: { href: "/admin/moi/connaissances", label: "Mes connaissances" }
+  },
+  "P3.8.16": {
+    how: [
+      "Choisis le petit problème que les parents veulent régler maintenant (ex. « ma fille veut essayer avant de s'inscrire au camp »).",
+      "Choisis l'offre gratuite qui le règle : séance découverte du camp, ou évaluation ball mastery gratuite avec un rapport.",
+      "Dis à Claude : « Crée la page de l'aimant à prospects » : formulaire, ajout à la liste chaude, courriels de suivi.",
+      "Mets le lien dans ta bio Instagram et Facebook et dans chaque publication."
+    ],
+    done: "La page est en ligne et reçoit ses premières demandes.",
+    link: { href: "/admin/relances", label: "Liste chaude et relances" }
+  },
+  "P3.8.17": {
+    how: [
+      "Prends la vidéo organique qui a le mieux marché (vues et messages).",
+      "Crée une campagne vers la page de l'aimant à prospects : 10 à 20 $ par jour, parents à 25 km autour des sites.",
+      "Laisse rouler 7 jours sans toucher, puis note la dépense et les prospects dans Réseaux (campagne payante)."
+    ],
+    done: "Une campagne a roulé au moins 2 semaines et son coût par prospect est connu.",
+    link: { href: "/admin/reseaux", label: "Réseaux sociaux" }
+  },
+  "P3.8.18": {
+    how: [
+      "Chaque lundi, ouvre D'où viennent nos familles et Réseaux.",
+      "Compte les nouvelles familles intéressées de la semaine par canal et note le total dans l'indicateur « Prospects par semaine ».",
+      "Garde le canal qui donne le plus de prospects pour le moins cher ; coupe celui qui ne donne rien depuis 2 semaines."
+    ],
+    done: "Le relevé est fait 4 lundis de suite.",
+    link: { href: "/admin/acquisition", label: "D'où viennent nos familles" }
+  },
+  "P3.2.22": {
+    how: [
+      "Chaque vidéo commence par un crochet de 3 secondes (une question ou un résultat que le parent veut).",
+      "Format reel de 30 secondes ; finis toujours par une seule demande : « Lien en bio pour la séance découverte ».",
+      "Une publication par jour sur les comptes de New Valkyria, planifiée dans le calendrier de publication ; JP Coach reste à part."
+    ],
+    done: "30 jours de suite avec une publication par jour et un appel à l'action.",
+    link: { href: "/admin/contenu/calendrier", label: "Calendrier de publication" }
+  },
+  "P3.6.09": {
+    how: [
+      "Sors la liste chaude : familles actuelles, été 2026, essais, anciennes joueuses.",
+      "Écris à chacune personnellement (pas un envoi de masse) avec la grille de l'été et le prix hâtif ; Claude prépare les messages, tu valides.",
+      "Note chaque réponse dans les relances et rappelle celles qui ne répondent pas après 3 jours."
+    ],
+    done: "Chaque famille de la liste chaude a reçu l'offre de l'été et sa réponse est notée.",
+    link: { href: "/admin/relances", label: "Relances et suivi" }
+  },
+  "P8.3.08": {
+    how: [
+      "Liste chaque plage de pratique de la semaine.",
+      "Pour chacune, nomme l'éducateur principal qui peut la donner seul et un remplaçant.",
+      "Là où il n'y a que toi, c'est la première plage à couvrir (formation ou recrutement)."
+    ],
+    done: "Chaque plage a un éducateur principal et un remplaçant, et aucune pratique n'a été annulée parce que tu étais absent.",
+    link: { href: "/admin/structure", label: "Structure et recrutement" }
+  },
+  "P1.4.14": {
+    how: [
+      "Dès janvier, chaque éducateur principal dirige seul une pratique par semaine, du début à la fin.",
+      "Tu observes sans intervenir, puis tu donnes ton retour (2 bons coups, 2 à améliorer).",
+      "Quand c'est réussi 3 fois, tu ne viens plus à cette pratique."
+    ],
+    done: "Chaque éducateur principal a dirigé seul au moins 3 pratiques réussies.",
+    link: { href: "/admin/entraineurs/suivi", label: "Suivi des éducateurs" }
   }
 };
 

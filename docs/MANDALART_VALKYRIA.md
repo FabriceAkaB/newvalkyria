@@ -9,7 +9,7 @@ Dossier de référence pour Claude Code. Mis à jour le 1er nov. 2026. Contenu i
 - **Ce qu'il faut construire** : le module `/admin/mandalart` (section 6), qui charge `mandalart.json`, garde l'état des cases cochées dans Supabase et calcule les progressions (section 2). Puis, dans l'ordre des niveaux, les automatisations et les agents de la section 5.
 - **Règles** : interface en français du Québec ; JP travaille surtout sur son téléphone ; ne jamais changer le contenu du plan sans JP ; ne jamais écraser une case cochée lors d'une nouvelle importation ; aucune donnée d'enfant dans les tables du Mandalart (Loi 25).
 - **En chiffres** : 8 piliers × 8 objectifs = 64 objectifs ; 251 tâches, dont 69 ⭐ ; 6 niveaux ; 27 indicateurs ; 11 agents IA ; 16 automatisations.
-- **Ce mois-ci (novembre 2026)** : JP travaille sur le pilier 1, Excellence pédagogique. C'est le pilier le plus détaillé ; ses ⭐ de novembre sont dues le 30 novembre.
+- **Contrainte n°1 jusqu'au 28 février 2027 (décision de JP, 22 nov. 2026)** : les prospects de l'été 2027 (2 camps de jour, Valkyria Été) et de l'hiver 2027-2028, et une équipe qui livre sans JP. Tout le reste attend le 1er mars 2027. Détail et ordre des tâches : section 11, « Contrainte n°1 ». Avant, en novembre 2026 : pilier 1, Excellence pédagogique.
 
 ## 1. La case centrale
 
@@ -1529,6 +1529,46 @@ un comité de parents ; groupes d'environ 20 joueuses ; c'est aussi un levier de
 - [ ] `P1.4.12` ⭐ N1 — Ball mastery : chaque éducateur a ses joueuses, les plus faibles d'abord ; des séquences plus difficiles pour repérer celles qui bloquent, qui sont alors encadrées de près ; pas de discussion entre coachs pendant le bloc. — 2 déc. 2026 · Coachs + Claude Code
 - [ ] `P1.4.13` ⭐ N2 — Réécouter les formations de Rhéal Dazé et en faire des modules vidéo interactifs de la formation des éducateurs (extraits courts, question après chaque extrait, lien avec la méthode Valkyria), ouverts un à un dans « Ma formation ». — 15 janv. 2027 · JP + Claude Code
 
+### Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)
+
+Décision de JP après les courriels d'Alex Hormozi sur la contrainte principale (« Tout ce qui n'est pas votre contrainte principale vous fait perdre du temps : choisissez-en une, investissez-vous à fond, réglez-la, puis passez à la suivante ») et sur le stade 3 (passer de celui qui fait à celui qui forme). Sous 500 000 $ de chiffre d'affaires, la contrainte habituelle est de **ne pas attirer assez de prospects**. Le 22 nov. 2026, une crevaison de JP a fait annuler deux pratiques : la livraison dépend encore de lui. Pour la prochaine saison, le focus est donc mis sur deux choses liées : **les prospects** (les 2 camps de jour d'été, Valkyria Été le soir, puis l'hiver 2027-2028) et **la formation de l'équipe**, qui libère JP pour attirer des familles. JP se forme lui-même à la publicité payante, à la création de contenu et aux méthodes de $100M Leads. L'ordre : d'abord une offre claire (quoi, pour qui, où, quand, combien), ensuite la communication pour attirer du monde dans chaque programme. Les leçons d'Alex sont gardées dans Mes connaissances (`jp_knowledge`, auteur « Alex Hormozi »).
+
+- **Contrainte** : Attirer assez de familles intéressées pour remplir les 2 camps de jour d'été, Valkyria Été (soir) et la saison 2027-2028, avec une équipe qui donne les pratiques sans JP.
+- **Jusqu'au** : 28 févr. 2027
+- **Pourquoi** : Sous 500 000 $, le frein est le nombre de prospects (Alex Hormozi) ; et JP ne peut pas attirer des familles s'il doit être sur chaque terrain.
+- **Fini quand** : la grille d'offres est en ligne, 40 nouvelles familles intéressées par semaine, la prévente de l'été est lancée et plus aucune pratique n'est annulée parce que JP est absent.
+- **Tâches, dans l'ordre** : `P2.4.08`, `P2.4.09`, `P2.4.05`, `P2.4.06`, `P5.2.10`, `P3.8.15`, `P3.8.14`, `P3.2.22`, `P3.8.16`, `P3.6.09`, `P5.2.03`, `P2.4.03`, `P3.8.17`, `P3.8.18`, `P3.8.13`, `P3.6.06`, `P3.6.08`, `P3.1.06`, `P8.3.08`, `P1.4.14`, `P8.2.08`, `P8.3.02`, `P8.3.03`
+- **En pause** : tout chantier du site ou du plan qui ne sert pas cette contrainte attend le 1er mars 2027, sauf les obligations (paie, taxes, sécurité des joueuses).
+
+#### P2.4 Échelle d'offres sur 5 générations
+
+- [ ] `P2.4.08` ⭐ N1 — Écrire la grille d'offres claire de l'été 2027 et de l'hiver 2027-2028, avant toute publicité : pour chaque programme, pour qui (âge, niveau), la promesse en une phrase, où (ville, terrain ou gymnase), quand (jours, heures, dates), combien, combien de places ; une seule page « Nos programmes » sur le site la reprend. Brouillon : docs/strategie/offres-ete-2027-hiver-2028.md. — 10 déc. 2026 · JP + Claude Code
+- [ ] `P2.4.09` ⭐ N1 — Confirmer par écrit le lieu de chaque programme de la grille avant de le vendre : les 2 sites des camps de jour, les terrains du soir de Valkyria Été, les gymnases des 3 villes de la Pré-académie. — 31 déc. 2026 · JP
+
+#### P3.8 Publicité payante et mesure
+
+- [ ] `P3.8.14` ⭐ N1 — Me former à la publicité payante Meta (Facebook et Instagram) : formation gratuite Meta Blueprint (bases du Gestionnaire de publicités), compte publicitaire et pixel du site en place, 2 h par semaine bloquées à l'agenda ; ce que j'apprends noté dans Mes connaissances. — 31 déc. 2026 · JP
+- [ ] `P3.8.15` ⭐ N1 — Lire $100M Leads d'Alex Hormozi, un chapitre par semaine, et appliquer chaque chapitre à l'académie : les 4 façons d'attirer (contacts chauds, contenu gratuit, contacts froids, publicité payante), l'aimant à prospects, ceux qui amènent des prospects pour nous (références, employés, partenaires, affiliés) ; une fiche par chapitre dans Mes connaissances. — 31 janv. 2027 · JP · A05
+- [ ] `P3.8.16` ⭐ N1 — Créer l'aimant à prospects de l'été : une offre gratuite qui règle un petit problème des parents (ex. séance découverte gratuite du camp ou évaluation ball mastery gratuite avec rapport) ; une page avec formulaire qui ajoute la famille à la liste chaude et à la séquence de courriels. — 15 janv. 2027 · JP + Claude Code · A05
+- [ ] `P3.8.17` ⭐ N2 — Lancer la première campagne payante de l'été : une vidéo déjà prouvée en organique qui mène à l'aimant à prospects, petit budget d'essai (10 à 20 $ par jour), rayon de 25 km autour des sites ; coût par prospect et coût par inscription mesurés chaque semaine. — 1er févr. 2027 · JP · A05
+- [ ] `P3.8.18` ⭐ N1 — Chaque lundi, 15 minutes : les nouveaux prospects de la semaine par canal (organique, payant, références, relances, Google) et le coût par prospect ; doubler le canal qui marche, couper celui qui ne marche pas. — 31 déc. 2026 · JP · A05
+
+#### P3.2 Vidéos portfolio et avant-après
+
+- [ ] `P3.2.22` ⭐ N1 — Me former à la création de contenu organique : un crochet dans les 3 premières secondes, un reel de 30 secondes, un appel à l'action vers l'aimant à prospects dans chaque publication ; une publication par jour sur les comptes de New Valkyria (séparés de JP Coach). — 31 déc. 2026 · JP + caméra
+
+#### P3.6 Liste chaude
+
+- [ ] `P3.6.09` ⭐ N1 — Prévente aux contacts chauds d'abord (la 1re méthode de $100M Leads) : écrire une par une à chaque famille de la liste chaude (familles actuelles, été 2026, essais, anciennes joueuses) avec la grille de l'été et le prix hâtif ; chaque échange noté dans les relances. — 31 janv. 2027 · JP + gérante
+
+#### P8.3 Recrutement et ressources humaines des coachs
+
+- [ ] `P8.3.08` ⭐ N1 — Plus aucune pratique annulée parce que JP est absent (le 22 nov. 2026, une crevaison a fait annuler deux pratiques) : pour chaque plage, un éducateur principal capable de donner la pratique seul et un remplaçant nommé ; liste tenue dans Structure. — 31 janv. 2027 · JP
+
+#### P1.4 Formation des coachs
+
+- [ ] `P1.4.14` ⭐ N1 — Former les éducateurs principaux à diriger la pratique complète sans JP : chacun dirige seul une pratique par semaine dès janvier, JP observe et donne son retour, puis s'absente ; tous prêts avant les camps. — 28 févr. 2027 · JP + coachs
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |
@@ -1541,6 +1581,11 @@ un comité de parents ; groupes d'environ 20 joueuses ; c'est aussi un levier de
 | `satisfaction` | Familles satisfaites (8 sur 10 et plus) | à mesurer | 90 % | 31 déc. 2027 | auto | Part des répondants qui donnent 8 sur 10 ou plus à la question de recommandation. Module Sondages. |
 | `taches_confiees` | Tâches confiées à l'équipe et faites (par mois) | 0 | 20 par mois | 31 mars 2027 | auto | Tâches de team_tasks confiées à quelqu'un d'autre que JP et marquées faites dans le mois (stade 3 d'Alex : JP forme au lieu de faire). |
 | `delai_reponse_familles` | Délai de réponse à une demande de famille | à mesurer | moins de 24 h | 31 mars 2027 | manuel | Temps entre une demande (formulaire, courriel, message) et la première réponse ; relevé chaque mois (stade 4 d'Alex : répondre vite aux demandes). |
+| `prospects_semaine` | Nouvelles familles intéressées par semaine (prospects) | à mesurer | 40 par semaine | 31 mars 2027 | manuel | Demandes d'information, essais, formulaires de l'aimant à prospects, réponses « oui » aux sondages d'intérêt ; relevé chaque lundi (P3.8.18). Calcul : environ 240 familles pour remplir 480 semaines de camp + 100 inscrites à Valkyria Été, à environ 1 inscription pour 3 prospects, sur 20 semaines de vente. |
+| `semaines_camp_ete_2027` | Semaines de camp de jour d'été 2027 vendues | 0 | 480 | 1er juin 2027 | manuel | 2 sites × 8 semaines × 30 jeunes. |
+| `inscrites_valkyria_ete_2027` | Inscrites à Valkyria Été 2027 (soir) | 0 | 100 | 1er juin 2027 | manuel | 60 000 $ visés ÷ 595 $ ≈ 100 inscriptions. |
+| `cout_par_prospect` | Coût par prospect de la publicité payante | à mesurer | à fixer après le premier essai | 28 févr. 2027 | manuel | Dépense publicitaire ÷ prospects venus de la pub, chaque semaine. |
+| `pratiques_annulees_jp` | Pratiques annulées parce que JP était absent | 2 (22 nov. 2026, crevaison) | 0 | 28 févr. 2027 | manuel | Toute pratique annulée ou écourtée faute d'un éducateur capable de la donner sans JP. |
 
 ### Automatisations ajoutées
 

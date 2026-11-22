@@ -136,4 +136,14 @@ describe("jeu", () => {
     expect(q).toHaveLength(3);
     expect(q.every((t) => t.status !== "fait")).toBe(true);
   });
+
+  it("met les tâches de la contrainte n°1 en premier dans la quête du jour", async () => {
+    const { dailyQuest } = await import("@/lib/mandalart-game");
+    const c = PLAN.constraint!;
+    expect(c.until).toBe("2027-02-28");
+    expect(c.tasks.length).toBeGreaterThan(5);
+    const tasks = buildLiveTasks(PLAN, [{ code: c.tasks[0], status: "fait", note: null, evidence_url: null, done_at: "2026-11-02T15:00:00Z" }], [], TODAY);
+    const q = dailyQuest(tasks, 1, 3, c.tasks);
+    expect(q.map((t) => t.code)).toEqual(c.tasks.slice(1, 4));
+  });
 });

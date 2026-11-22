@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { isOpen, monthFocus } from "@/lib/mandalart-core";
 import { dailyQuest, journey, rankOf, streakOf, xpOf } from "@/lib/mandalart-game";
 import { computeGap } from "@/lib/mandalart-levers";
+import { PLAN } from "@/lib/mandalart-plan";
 import { getMandalartOverview } from "@/lib/mandalart-repo";
 import { toItems } from "@/lib/mandalart-view";
 
@@ -31,7 +32,13 @@ export default async function MandalartNowPage() {
   const xp = xpOf(o.tasks);
   const rank = rankOf(xp);
   const streak = streakOf(done.map((t) => torontoDay(t.doneAt!)), o.today);
-  const quest = dailyQuest(o.tasks, o.currentLevel);
+  // Contrainte n°1 (Alex Hormozi : un seul problème à la fois) : ses tâches passent avant tout le reste.
+  const constraint = PLAN.constraint && o.today <= PLAN.constraint.until ? PLAN.constraint : null;
+  const focusTasks = constraint ? constraint.tasks.map((c) => o.tasks.find((t) => t.code === c)).filter((t): t is (typeof o.tasks)[number] => !!t) : [];
+  const focusOpen = focusTasks.filter(isOpen);
+  const focusDone = focusTasks.filter((t) => t.status === "fait").length;
+  const focusDays = constraint ? Math.max(0, Math.round((Date.parse(`${constraint.until}T12:00:00Z`) - Date.parse(`${o.today}T12:00:00Z`)) / 86400000)) : 0;
+  const quest = dailyQuest(o.tasks, o.currentLevel, 3, constraint?.tasks ?? []);
   const { stops, pacePerWeek } = journey(o.levels, o.tasks, done.map((t) => ({ code: t.code, date: torontoDay(t.doneAt!) })), o.today);
   const current = stops.find((s) => s.state === "en_cours");
   const starsThisMonth = focus.dueThisMonth.filter((t) => t.priority === "star");
@@ -60,6 +67,34 @@ export default async function MandalartNowPage() {
             <h1 className="mda-h1">{doneToday ? `${doneToday} bouchée${doneToday > 1 ? "s" : ""} faite${doneToday > 1 ? "s" : ""} aujourd'hui. On continue ?` : "Ta quête du jour : 3 petites bouchées"}</h1>
             <p className="mda-lead">Une à la fois. Touche le rond quand tu commences (en cours), puis quand c'est fait : +100 XP pour une ⭐, +50 XP pour une ➜.</p>
           </header>
+
+          {/* Contrainte n°1 : le seul problème sur lequel tout le plan se concentre */}
+          {constraint && (
+            <section className="mda-card-flush" style={{ borderColor: "var(--adm-accent)" }}>
+              <div className="mda-card-head" style={{ alignItems: "flex-start" }}>
+                <div style={{ flex: "1 1 320px" }}>
+                  <p className="mda-eyebrow" style={{ color: "var(--adm-accent)" }}>
+                    Contrainte n°1 · jusqu'au {dayLabel(constraint.until)} · encore {focusDays} jours
+                  </p>
+                  <h2 className="mda-h2" style={{ margin: "4px 0 0" }}>{constraint.statement}</h2>
+                  <p className="mda-sub" style={{ margin: "6px 0 0", color: "var(--adm-text-2)" }}>{constraint.why}</p>
+                  <p className="mda-sub" style={{ margin: "6px 0 0", color: "var(--adm-text-2)" }}>
+                    <strong style={{ color: "var(--adm-text)" }}>Fini quand :</strong> {constraint.doneWhen}
+                  </p>
+                </div>
+                <div style={{ width: 220 }}>
+                  <p className="mda-label" style={{ marginTop: 0 }}>
+                    <strong style={{ color: "var(--adm-text)" }}>{focusDone} sur {focusTasks.length}</strong> tâches faites
+                  </p>
+                  <Bar value={focusTasks.length ? focusDone / focusTasks.length : 0} thin />
+                </div>
+              </div>
+              <TaskList tasks={toItems(focusOpen)} currentLevel={o.currentLevel} showObjective empty="Toutes les tâches de la contrainte sont faites : choisis la suivante avec Claude." />
+              <p className="mda-label" style={{ margin: 0, padding: "12px 20px", borderTop: "1px solid var(--adm-line)" }}>
+                <strong style={{ color: "var(--adm-text)" }}>En pause :</strong> {constraint.paused}
+              </p>
+            </section>
+          )}
 
           {/* Rang, XP, série + quête du jour */}
           <section className="mda-game">

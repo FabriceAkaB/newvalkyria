@@ -270,6 +270,27 @@ if (s11 >= 0) {
     automations.push({ id, name, type, trigger, does, forWho, state, level: Number(level.slice(1)), tasks: tasks.split(", ").map((x) => x.trim()), note: null, addedOn: "2026-11-02" });
 }
 
+// ── Contrainte n°1 (Alex Hormozi : un seul problème à la fois ; décision de JP du 22 nov. 2026) ──
+let constraint = null;
+const cHead = lines.find((l) => l.startsWith("### Contrainte n°1"));
+if (cHead) {
+  const block = section(cHead.trim(), ["#### ", "### ", "## "]);
+  const field = (label) => strip((block.find((x) => x.startsWith(`- **${label}** : `)) ?? "").replace(`- **${label}** : `, ""));
+  const codesRaw = (block.find((x) => x.startsWith("- **Tâches, dans l'ordre** : ")) ?? "").match(/`([^`]+)`/g) ?? [];
+  constraint = {
+    title: cHead.replace(/^### /, ""),
+    statement: field("Contrainte"),
+    until: frDate(field("Jusqu'au")),
+    why: field("Pourquoi"),
+    doneWhen: field("Fini quand"),
+    paused: field("En pause"),
+    tasks: codesRaw.map((c) => c.replace(/`/g, ""))
+  };
+  const known = new Set(pillars.flatMap((p) => p.objectives.flatMap((o) => o.tasks.map((t) => t.code))));
+  for (const c of constraint.tasks) if (!known.has(c)) throw new Error(`Tâche inconnue dans la contrainte n°1 : ${c}`);
+  if (!constraint.until) throw new Error("Contrainte n°1 : date « Jusqu'au » illisible");
+}
+
 // ── Points à trancher ──
 const decisions = section("## 9. Points à trancher par JP", ["## "]).filter((l) => l.startsWith("- ")).map((l) => strip(l.slice(2)));
 
@@ -289,6 +310,7 @@ const plan = {
   agents,
   automations,
   additions,
+  constraint,
   decisions
 };
 

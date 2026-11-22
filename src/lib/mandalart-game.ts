@@ -41,13 +41,17 @@ export function streakOf(doneDays: string[], today: string): number {
 
 /** Quête du jour : 3 petites bouchées. D'abord le retard, puis les ⭐ du niveau actuel par échéance,
  *  puis les ⭐ à préparer d'avance. Une tâche « en cours » passe avant une tâche pas commencée. */
-export function dailyQuest(tasks: LiveTask[], level: number, n = 3): LiveTask[] {
+/** `focusCodes` : tâches de la contrainte n°1, dans l'ordre où les faire ; elles passent avant tout le reste
+ *  (Alex Hormozi : tout ce qui n'est pas la contrainte principale fait perdre du temps). */
+export function dailyQuest(tasks: LiveTask[], level: number, n = 3, focusCodes: string[] = []): LiveTask[] {
   const open = tasks.filter(isOpen);
   const byDue = (a: LiveTask, b: LiveTask) => (a.status === "en_cours" ? -1 : 0) - (b.status === "en_cours" ? -1 : 0) || (a.due ?? "9999").localeCompare(b.due ?? "9999");
   const picked: LiveTask[] = [];
   const add = (list: LiveTask[]) => {
     for (const t of list.sort(byDue)) if (picked.length < n && !picked.includes(t)) picked.push(t);
   };
+  const focus = focusCodes.map((c) => open.find((t) => t.code === c)).filter((t): t is LiveTask => !!t);
+  for (const t of [...focus.filter((t) => t.status === "en_cours"), ...focus]) if (picked.length < n && !picked.includes(t)) picked.push(t);
   add(open.filter((t) => t.overdue));
   add(open.filter((t) => t.level === level && t.priority === "star"));
   add(open.filter((t) => t.priority === "star"));

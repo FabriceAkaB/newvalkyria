@@ -99,6 +99,17 @@ export interface PlanAutomation {
   addedOn?: string;
 }
 
+export interface PlanConstraint {
+  title: string;
+  statement: string;
+  until: string;
+  why: string;
+  doneWhen: string;
+  paused: string;
+  /** Codes des tâches qui servent la contrainte, dans l'ordre où les faire. */
+  tasks: string[];
+}
+
 export interface MandalartPlan {
   version: string | null;
   center: { statement: string; goalCents: number; milestoneCents: number; year: number; jpYearlyCents: number; notes: { indent: boolean; text: string }[] };
@@ -121,6 +132,8 @@ export interface MandalartPlan {
   agents: PlanAgent[];
   automations: PlanAutomation[];
   additions: { title: string | null; rules: string[]; themes: { title: string; text: string }[] };
+  /** Contrainte n°1 (Alex Hormozi : un seul problème à la fois) : ce sur quoi tout le plan se concentre jusqu'à `until`. */
+  constraint: PlanConstraint | null;
   decisions: string[];
 }
 
