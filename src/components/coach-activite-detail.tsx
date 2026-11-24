@@ -1159,15 +1159,17 @@ export function CoachActiviteDetail({
               ))}
             </nav>
 
+            {/* Téléphone : la vidéo reste collée en haut de l'écran pendant qu'on évalue les filles en dessous. */}
+            {videos.length > 0 ? <div className="coach-split__video-phone">{videosBlock("La pratique en vidéo")}</div> : null}
+
             <div className="coach-split">
               <section id="te-avant" className="coach-split__left coach-split__anchor" aria-label="La pratique">
                 <h2 className="coach-h2">La pratique</h2>
                 {/* La vidéo Veo d'abord (JP, 25 nov. 2026) : regarder la pratique en évaluant ; sinon, où elle apparaîtra. */}
                 {videos.length > 0 ? (
-                  videosBlock("La pratique en vidéo")
-                ) : (
-                  noVideoCard
-                )}
+                  <div className="coach-split__video-wide">{videosBlock("La pratique en vidéo")}</div>
+                ) : null}
+                {videos.length > 0 ? null : noVideoCard}
                 {deckCard}
                 {practicePlan}
                 {practiceTimer}

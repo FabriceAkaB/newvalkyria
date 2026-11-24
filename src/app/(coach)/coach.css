@@ -289,7 +289,13 @@
 .coach-split__anchor { scroll-margin-top: 76px; }
 .coach-split__jump { margin-top: 0; }
 .coach-split__right > .coach-card:first-child { margin-top: 0; }
+/* Vidéo de la pratique : sur téléphone, collée en haut pendant qu'on évalue ; sur grand écran, dans la colonne de gauche. */
+.coach-split__video-wide { display: none; }
+.coach-split__video-phone { position: sticky; top: 60px; z-index: 9; background: var(--adm-bg); padding-top: 8px; }
+.coach-split__video-phone .coach-card { margin-bottom: 12px; box-shadow: var(--adm-shadow); }
 @media (min-width: 1200px) {
+  .coach-split__video-phone { display: none; }
+  .coach-split__video-wide { display: block; }
   .coach-split__jump { display: none; }
   .coach-split__anchor { scroll-margin-top: 16px; }
   .coach-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }

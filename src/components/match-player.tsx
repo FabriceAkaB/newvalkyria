@@ -151,12 +151,23 @@ export function MatchPlayer({ id, endpoint, label = "Regarder", palette = "admin
       ) : null}
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        {duration > 1800 ? (
+          // Vidéo d'une soirée complète (2 blocs ou plus) : avancer de 5 minutes pour trouver son groupe.
+          <button type="button" style={chip(false)} onClick={() => seek(now - 300)}>
+            − 5 min
+          </button>
+        ) : null}
         <button type="button" style={chip(false)} onClick={() => seek(now - 10)}>
           − 10 s
         </button>
         <button type="button" style={chip(false)} onClick={() => seek(now + 10)}>
           + 10 s
         </button>
+        {duration > 1800 ? (
+          <button type="button" style={chip(false)} onClick={() => seek(now + 300)}>
+            + 5 min
+          </button>
+        ) : null}
         {nextMoment ? (
           <button type="button" style={chip(false)} onClick={() => seek(nextMoment.t - 5)}>
             Temps fort suivant ▸
