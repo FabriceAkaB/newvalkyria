@@ -382,6 +382,29 @@ export class McsSession {
     if (/\/calendar\/games$/.test(res.url) || res.status >= 400) throw new McsRobotError(`Match refusé par MonClubSportif (${g.date} ${g.start}).`);
   }
 
+  /** Change le lieu (et au besoin les commentaires) d'un match existant, le reste inchangé, sans courriel de MonClubSportif. */
+  async updateGame(team: number, season: number, gameId: number, patch: { location?: string; comments?: string }): Promise<void> {
+    const html = await this.page(MCS_PATHS.gameEdit(team, season, gameId));
+    const fields = formFields(html, MCS_PATHS.game(team, season, gameId)).filter(([k]) => k !== MCS_FIELDS.game.sendByEmail);
+    if (!fields.length) throw new McsRobotError("Formulaire du match illisible (balises à revoir).");
+    const options = parse(html).querySelectorAll('select[name="game[location_id]"] option').map((o) => ({ v: o.getAttribute("value") ?? "", t: o.text.trim() }));
+    const set: Record<string, string> = {};
+    if (patch.location) {
+      const loc = options.find((o) => o.v && o.v !== "new" && o.t.toLowerCase().startsWith(patch.location!.toLowerCase().slice(0, 18)));
+      set["game[location_id]"] = loc?.v ?? "new";
+      set["location[name]"] = loc ? "" : patch.location;
+    }
+    if (patch.comments !== undefined) set["game[comments]"] = patch.comments;
+    const f = new URLSearchParams();
+    for (const [k, v] of fields) if (!(k in set)) f.append(k, v);
+    // MCS a deux champs « durée », dont un vide : garder la vraie valeur, sinon le match perdrait sa durée.
+    const duration = fields.find(([k, v]) => k === "game[duration_minutes]" && v !== "")?.[1];
+    if (duration) f.set("game[duration_minutes]", duration);
+    for (const [k, v] of Object.entries(set)) f.set(k, v);
+    const res = await this.request(MCS_PATHS.game(team, season, gameId), { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Changement du match refusé par MonClubSportif (${res.status}).`);
+  }
+
   /** Change l'heure d'une activité existante (le reste inchangé, sans courriel de MonClubSportif). */
   async retimeEvent(team: number, season: number, id: number, date: string, start: string, end: string): Promise<void> {
     const html = await this.page(MCS_PATHS.eventEdit(team, season, id));
