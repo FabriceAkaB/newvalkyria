@@ -190,7 +190,7 @@ S'ajoutent 3 à 5 **reels d'essai** pour tester des crochets.
 - **Agenda de JP** (blocs 🧲 marketing) :
   - 100 minutes de marketing par jour ;
   - 30 minutes de veille de contenu par jour (repérer des formats et des crochets) ;
-  - 2 plages par semaine pour JP Coach ;
+  - 2 plages par semaine pour JP Coach : **une journée pour pratiquer le tournage** (cadrages, plans, lumière, son, montage court, refaire une vidéo qu'on aime), **une journée de repos** (JP, 25 nov. 2026) ;
   - 1 plage par semaine pour le Valkyria Lab ;
   - 2 h par semaine de formation à la publicité.
 - **Le guide de tournage** (à construire dans Création de contenu, P3.2.24) :

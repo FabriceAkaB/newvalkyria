@@ -865,7 +865,7 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     link: { href: "/admin/contenu/entrevues", label: "Entrevues" }
   },
   "P3.2.28": {
-    how: ["Bloque dans ton agenda : 100 min de marketing et 30 min de veille chaque jour.", "Ajoute 2 plages JP Coach et 1 plage Valkyria Lab par semaine.", "Ajoute 2 h de formation à la publicité."],
+    how: ["Bloque dans ton agenda : 100 min de marketing et 30 min de veille chaque jour.", "Ajoute 2 plages JP Coach : une journée pour pratiquer le tournage (plans, lumière, son, montage court), une journée de repos ; et 1 plage Valkyria Lab par semaine.", "Ajoute 2 h de formation à la publicité."],
     done: "Les blocs sont dans l'agenda et tenus 3 semaines de suite.",
     link: { href: "/admin/moi/calendrier", label: "Mon calendrier" }
   },

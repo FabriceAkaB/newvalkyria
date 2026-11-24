@@ -1590,7 +1590,7 @@ Décision de JP : pendant 3 mois (1er décembre 2026 au 28 février 2027), JP se
 - [ ] `P3.2.25` ⭐ N1 — Calendrier de contenu de l'académie sur 90 jours : 7 publications par semaine (3 haut, 3 milieu, 1 bas d'entonnoir) + 3 à 5 reels d'essai, 5 familles de contenu (éducatif, démonstratif, coulisses et éducateurs, histoires de joueuses, preuve et offre), banque de 50 crochets ; chaque publication finit par « Réserve l'essai gratuit ». — 1er déc. 2026 · Claude Code + JP
 - [ ] `P3.2.26` ➜ N1 — Bios Instagram, Facebook et TikTok de New Valkyria : la promesse (soccer 100 % filles, ballon au pied dès la 1re minute), les villes, l'appel à l'action vers l'essai gratuit. — 1er déc. 2026 · JP
 - [ ] `P3.2.27` ⭐ N1 — Entrevue d'une joueuse chaque semaine au Club des Recrues dès décembre : choisie le lundi (âges et niveaux en alternance, débutantes comprises), elle raconte son histoire ; 3 contenus par entrevue (reel 30 s, version longue, citation). — 6 déc. 2026 · JP + caméra
-- [ ] `P3.2.28` ⭐ N1 — Agenda marketing de JP : 100 minutes de marketing et 30 minutes de veille de contenu par jour, 2 plages JP Coach et 1 plage Valkyria Lab par semaine, 2 h de formation à la publicité. — 1er déc. 2026 · JP
+- [ ] `P3.2.28` ⭐ N1 — Agenda marketing de JP : 100 minutes de marketing et 30 minutes de veille de contenu par jour, 2 plages JP Coach (une journée pour pratiquer le tournage, une journée de repos) et 1 plage Valkyria Lab par semaine, 2 h de formation à la publicité. — 1er déc. 2026 · JP
 
 #### P3.6 Liste chaude
 
