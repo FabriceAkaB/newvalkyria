@@ -160,6 +160,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
         adminUrl: `${env.publicSiteUrl}/admin/contrats`,
         nextPay: nextPay(signed.pay_schedule)
       }).catch((err) => console.error("Unable to send contract notification", err));
+      // Nouvelle coach créée avant d'avoir son nom (ex. Lauralie, 25 nov. 2026) : son dossier d'éducatrice prend le
+      // nom et le cellulaire du contrat, et JP reçoit la tâche de l'inscrire dans MonClubSportif sous ce nom.
+      await completeCoachFromContract([signed.employee_email, payload.email], data).catch((err) => console.error("Unable to complete coach profile", err));
     });
 
     return NextResponse.json({ ok: true });
@@ -167,5 +170,27 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     if (error instanceof ZodError) return jsonError(error.issues[0]?.message ?? "Données invalides", 422);
     console.error("Contract signing failed", error);
     return jsonError(error instanceof Error ? error.message : "Erreur serveur", 500);
+  }
+}
+
+/** Une éducatrice inscrite sans nom de famille (créée avant de signer) reçoit le nom et le cellulaire de son contrat ;
+ *  JP reçoit la tâche de l'ajouter dans MonClubSportif sous ce nom (ses équipes sont dans la note de son dossier). */
+async function completeCoachFromContract(emails: (string | null | undefined)[], data: EmployeeFormData): Promise<void> {
+  const { getSupabaseAdminClient } = await import("@/lib/supabase-admin");
+  const db = getSupabaseAdminClient() as any;
+  for (const email of [...new Set(emails.map((e) => (e ?? "").trim().toLowerCase()).filter(Boolean))]) {
+    const { data: coach } = await db.from("coaches").select("id, first_name, last_name, phone, notes").ilike("email", email).maybeSingle();
+    if (!coach || (coach.last_name ?? "").trim()) continue;
+    await db
+      .from("coaches")
+      .update({ first_name: data.firstName.trim() || coach.first_name, last_name: data.lastName.trim(), phone: coach.phone || data.mobile || null, updated_at: new Date().toISOString() })
+      .eq("id", coach.id);
+    const { syncRefTask } = await import("@/lib/team-tasks-repo");
+    await syncRefTask(`mcs-coach:${coach.id}`, {
+      title: `Inscrire ${data.firstName} ${data.lastName} comme coach dans MonClubSportif (contrat signé)`,
+      details: `Son contrat est signé : ajoute-la sous ce nom dans ses équipes MonClubSportif (dis-le à Claude). ${coach.notes ?? ""}`.trim(),
+      due: new Date().toISOString().slice(0, 10)
+    });
+    return;
   }
 }
