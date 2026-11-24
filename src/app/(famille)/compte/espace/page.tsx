@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { EmailCheckBanner } from "@/components/email-check-banner";
+import { FamilyInviteCard } from "@/components/family-invite-card";
 import { ChampionFeed, GirlPointsCard } from "@/components/family-champions";
 import { ChampionKindIcon } from "@/components/family-icons";
 import { getGirlPhotos } from "@/lib/family-photos";
@@ -15,6 +16,8 @@ import { getFamilySchedule } from "@/lib/family-schedule";
 import { fmtDay, fmtHours } from "@/lib/family-schedule-core";
 import { getFamilyFeed, getPointsHistory, getPointsSummaries, getRewards } from "@/lib/player-points-repo";
 import { getFamilyRegistrations, getParentAccount, isParentEmailVerified } from "@/lib/parent-repo";
+import { getTrialInviteUrl } from "@/lib/referrals-repo";
+import { isFreshWin } from "@/lib/trial-invite";
 
 export const metadata: Metadata = { title: "Accueil | Espace famille", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -38,6 +41,9 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
   const today = new Date().toLocaleDateString("en-CA", { timeZone: CLUB.timezone });
   const active = rewards.filter((r) => r.active);
   const firstName = (account?.fullName ?? "").split(" ")[0];
+  // « Invite une amie à l'essai » (P3.1.08) : juste après une victoire de sa fille (championne du jour, 14 jours).
+  const champion = family.find((f, i) => histories[i].some((h) => (h.kind === "victoire" || h.kind === "attitude") && isFreshWin(h.date, today)));
+  const inviteUrl = champion && verified ? await getTrialInviteUrl(account?.email, account?.fullName) : null;
 
   return (
     <section className="insc-hero">
@@ -108,6 +114,11 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
 
         <h2 className="fam-h2">Championnes du jour</h2>
         <ChampionFeed posts={feed} empty={family.length ? "Les championnes de ses pratiques apparaîtront ici dès que les éducatrices les publieront, après chaque pratique." : "Le fil des championnes s'ouvre dès l'inscription de votre fille."} />
+        {champion && inviteUrl ? (
+          <div style={{ marginTop: "1rem" }}>
+            <FamilyInviteCard moment="championne" firstName={champion.firstName} url={inviteUrl} />
+          </div>
+        ) : null}
 
         {family.map((f, i) => {
           const wins = histories[i].filter((h) => h.kind === "victoire" || h.kind === "attitude");

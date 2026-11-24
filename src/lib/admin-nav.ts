@@ -106,8 +106,9 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "essais",
         label: "Essais",
         icon: "flask",
-        description: "Les joueuses inscrites à un essai, les dates offertes et le calendrier de tous les essais.",
+        description: "Qui appeler ou relancer aujourd'hui (entonnoir des essais : contact en 24 h, offre, relances jour 3, 7, 14), les joueuses inscrites à un essai, les dates offertes et le calendrier.",
         tabs: [
+          { href: "/admin/relances/essais", label: "Entonnoir des essais" },
           { href: "/admin/saison/{saison}/essais", label: "Inscriptions aux essais" },
           { href: "/admin/essais-dates", label: "Dates d'essai" },
           { href: "/admin/essais-calendrier", label: "Calendrier des essais" }
@@ -435,7 +436,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "marketing",
         label: "D'où viennent nos familles",
         icon: "chart",
-        description: "D'où viennent nos familles (la question obligatoire de tous les formulaires). Les réseaux sociaux sont juste en dessous.",
+        description: "Les objectifs d'acquisition de la semaine, du mois et du trimestre (prospects, essais, inscriptions, avis, publications, coûts par canal), puis d'où viennent nos familles.",
         tabs: [{ href: "/admin/acquisition", label: "D'où viennent nos familles" }]
       }
     ]

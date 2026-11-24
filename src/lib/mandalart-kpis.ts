@@ -240,6 +240,15 @@ export async function computeRealFigures(today = new Date().toLocaleDateString("
     /* module réseaux sociaux pas encore utilisé */
   }
 
+  // essais_semaine, publications_semaine, prospects_semaine : objectifs d'acquisition (/admin/acquisition, P3.8.20),
+  // la dernière semaine complète (lundi au dimanche). avis_google_total reste noté à la main (aucune lecture de Google).
+  try {
+    const { getAcquisitionKpis } = await import("@/lib/acquisition-goals-repo");
+    Object.assign(auto, await getAcquisitionKpis(today));
+  } catch {
+    /* objectifs d'acquisition indisponibles */
+  }
+
   return { auto, cohorts, retention: { previousFamilies: summer.size, returned, lost }, monthsCents, activeSeason };
 }
 
@@ -255,8 +264,9 @@ export interface KpiView extends PlanKpi {
   history: { date: string; value: number }[];
 }
 
-/** videos_semaine : « manuel » dans le plan d'origine, calculé depuis /admin/reseaux (marketing_posts). */
-const PLAN_MANUAL_NOW_AUTO = new Set(["videos_semaine"]);
+/** « manuel » dans le plan d'origine, calculés par le site : videos_semaine (/admin/reseaux), essais, publications et
+ *  prospects de la semaine (/admin/acquisition). */
+const PLAN_MANUAL_NOW_AUTO = new Set(["videos_semaine", "essais_semaine", "publications_semaine", "prospects_semaine"]);
 
 export async function computeKpis(figures?: RealFigures): Promise<KpiView[]> {
   const [{ auto }, manualRows] = await Promise.all([

@@ -416,3 +416,15 @@ export async function getReferrerSummary(email: string, familyName?: string | nu
     }))
   };
 }
+
+/** Lien « Invite une amie à l'essai » de l'espace famille (P3.1.08) : le formulaire d'essai avec le code de la famille.
+ *  null si le courriel n'est pas utilisable (la carte ne s'affiche pas). */
+export async function getTrialInviteUrl(email: string | null | undefined, familyName?: string | null): Promise<string | null> {
+  if (!email) return null;
+  try {
+    const [{ code }, { env }, { inviteUrl }] = await Promise.all([getOrCreateReferralCode(email, familyName), import("@/lib/env"), import("@/lib/trial-invite")]);
+    return inviteUrl(env.publicSiteUrl, code);
+  } catch {
+    return null;
+  }
+}

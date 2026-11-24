@@ -3,14 +3,17 @@ import { z, ZodError } from "zod";
 
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { addBusinessToSponsors, setFamilySource } from "@/lib/acquisition";
+import { addGoogleReviewTotal, addManualProspects, recordTrialStep } from "@/lib/acquisition-goals-repo";
 import { ACQ_TABLES, ACQUISITION_SOURCE_IDS, sourceLabel } from "@/lib/acquisition-core";
 import { logAudit } from "@/lib/audit-repo";
 import { jsonError } from "@/lib/http";
+import { stageLabel, TRIAL_STEPS } from "@/lib/trial-funnel";
 
 export const dynamic = "force-dynamic";
 
 // Les quatre tables ont un identifiant uuid : un autre format est refusé (400) au lieu d'une erreur de la base.
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const ref = z.object({ table: z.enum(ACQ_TABLES), id: z.string().regex(UUID) });
 const schema = z.discriminatedUnion("action", [
   z.object({
@@ -27,7 +30,12 @@ const schema = z.discriminatedUnion("action", [
     parentEmail: z.string().max(200),
     parentPhone: z.string().max(40).nullable().optional(),
     players: z.array(z.string().max(120)).max(10)
-  })
+  }),
+  // Entonnoir des essais (P3.6.10) : une étape faite pour un essai (« registrations:<id> », « boys_trials:<id> »…).
+  z.object({ action: z.literal("trial-step"), ref: z.string().max(80), step: z.enum(TRIAL_STEPS), notes: z.string().max(500).nullable().optional() }),
+  // Objectifs d'acquisition (P3.8.20) : prospects reçus hors du site, total d'avis Google de la fiche.
+  z.object({ action: z.literal("manual-prospects"), day: z.string().regex(DAY), source: z.enum(ACQUISITION_SOURCE_IDS).nullable(), count: z.number().int().min(1).max(500), note: z.string().max(160).nullable().optional() }),
+  z.object({ action: z.literal("google-reviews"), day: z.string().regex(DAY), total: z.number().int().min(0).max(100000) })
 ]);
 
 /** « D'où viennent nos familles ? » (/admin/acquisition) : JP indique la source d'une famille déjà inscrite,
@@ -37,6 +45,19 @@ export async function POST(request: Request) {
   if (!role) return jsonError("Non autorisé", 401);
   try {
     const b = schema.parse(await request.json());
+    const actor = role === "admin" ? "JP" : "Gérante";
+    if (b.action === "trial-step") {
+      const row = await recordTrialStep({ ref: b.ref, step: b.step, notes: b.notes ?? null, actor });
+      return NextResponse.json({ ok: true, stage: row.stage, stageLabel: stageLabel(row.stage), next: row.next });
+    }
+    if (b.action === "manual-prospects") {
+      await addManualProspects({ day: b.day, source: b.source, count: b.count, note: b.note ?? null });
+      return NextResponse.json({ ok: true });
+    }
+    if (b.action === "google-reviews") {
+      await addGoogleReviewTotal({ day: b.day, total: b.total });
+      return NextResponse.json({ ok: true });
+    }
     if (b.action === "set-source") {
       const updated = await setFamilySource({ refs: b.refs, source: b.source, detail: b.detail ?? null });
       await logAudit({
@@ -65,6 +86,7 @@ export async function POST(request: Request) {
     if (err instanceof ZodError) return jsonError("Données invalides", 400);
     const message = err instanceof Error ? err.message : "Erreur";
     if (/déjà dans le suivi|requis/.test(message)) return jsonError(message, 409);
+    if (/Essai introuvable|pas de courriel/.test(message)) return jsonError(message, 404);
     console.error("Acquisition POST failed", err);
     return jsonError("Impossible d'enregistrer pour l'instant.", 500);
   }

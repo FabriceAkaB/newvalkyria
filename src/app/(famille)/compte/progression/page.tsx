@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { BulletinGateSurvey, BulletinGoogleReview } from "@/components/bulletin-gate";
 import { BulletinReport } from "@/components/bulletin-report";
+import { FamilyInviteCard } from "@/components/family-invite-card";
 import { FamilyPassport } from "@/components/family-passport";
 import { FamilyProgressVideos } from "@/components/family-progress-videos";
 import { Container } from "@/components/container";
@@ -14,6 +15,7 @@ import { requireParentUserId } from "@/lib/parent-auth";
 import { getFamilyRegistrations, getParentAccount, getVerifiedParentEmail } from "@/lib/parent-repo";
 import { getFamilyProgressVideos } from "@/lib/progress-videos-repo";
 import { getGirlPhotos } from "@/lib/family-photos";
+import { getTrialInviteUrl } from "@/lib/referrals-repo";
 
 export const metadata: Metadata = { title: "Progression | New Valkyria", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -43,6 +45,12 @@ export default async function ProgressionPage({ searchParams }: { searchParams: 
   const googleUrl = gate?.response && !locked ? await getGoogleReviewUrl().catch(() => null) : null;
   const askGoogle = !!gate?.response && !gate.response.google_clicked_at && showGoogleButton(gate.response.recommend_score, googleUrl);
   const names = shown.filter((b) => b.data!.released).map((b) => b.data!.player.firstName).filter(Boolean);
+  // « Invite une amie à l'essai » (P3.1.08) : après le bulletin remis (jamais avant le sondage), sinon après la vidéo de progrès.
+  const withVideo = family.find((f) => (progress.get(f.registrationId)?.videos?.length ?? 0) > 0);
+  const inviteMoment = released && !locked ? "bulletin" : withVideo ? "video" : null;
+  const inviteName = inviteMoment === "bulletin" ? released!.player.firstName : withVideo?.firstName ?? "";
+  const inviteUrl = inviteMoment ? await getTrialInviteUrl(email, account?.fullName) : null;
+  const invite = inviteMoment && inviteUrl ? <FamilyInviteCard moment={inviteMoment} firstName={inviteName} url={inviteUrl} /> : null;
   return (
     <section className="insc-hero">
       <Container className="max-w-2xl">
@@ -80,6 +88,7 @@ export default async function ProgressionPage({ searchParams }: { searchParams: 
               {shown.map((b) => (
                 <BulletinReport key={b.key} data={b.data!} periodHref={(p) => `/compte/progression?bulletin=${p}`} />
               ))}
+              {invite}
             </>
           )}
           {!bulletins.some((b) => b.data) ? (

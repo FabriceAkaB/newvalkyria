@@ -104,3 +104,100 @@ export function AddSponsorButton({ business }: { business: { businessName: strin
     </span>
   );
 }
+
+/** Objectifs d'acquisition (P3.8.20) : prospects reçus hors du site (message Instagram, appel, kiosque), par canal. */
+export function ManualProspectsForm({ today }: { today: string }) {
+  const router = useRouter();
+  const [dayIso, setDay] = useState(today);
+  const [source, setSource] = useState<AcquisitionSource | "">("");
+  const [count, setCount] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const n = Number(count);
+  return (
+    <form
+      style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!Number.isInteger(n) || n < 1) return;
+        setBusy(true);
+        setMsg(null);
+        try {
+          await post({ action: "manual-prospects", day: dayIso, source: source || null, count: n, note: note.trim() || null });
+          setMsg({ ok: true, text: `${n} prospect${n > 1 ? "s" : ""} noté${n > 1 ? "s" : ""}.` });
+          setCount("");
+          setNote("");
+          router.refresh();
+        } catch (error) {
+          setMsg({ ok: false, text: error instanceof Error ? error.message : "Erreur" });
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <input className="admin-input" type="date" aria-label="Jour" value={dayIso} max={today} onChange={(e) => setDay(e.target.value)} style={{ minHeight: 44, flex: "0 0 150px" }} />
+      <select className="admin-input" aria-label="Canal" value={source} onChange={(e) => setSource(e.target.value as AcquisitionSource | "")} style={{ minHeight: 44, flex: "1 1 170px", maxWidth: 240 }}>
+        <option value="">Canal (facultatif)</option>
+        {ACQUISITION_SOURCES.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.short}
+          </option>
+        ))}
+      </select>
+      <input className="admin-input" type="number" inputMode="numeric" min={1} max={500} aria-label="Nombre de prospects" placeholder="Nombre" value={count} onChange={(e) => setCount(e.target.value)} style={{ minHeight: 44, flex: "0 0 100px" }} />
+      <input className="admin-input" aria-label="Précision" placeholder="ex. messages Instagram, kiosque école" maxLength={160} value={note} onChange={(e) => setNote(e.target.value)} style={{ minHeight: 44, flex: "1 1 200px" }} />
+      <button type="submit" className="admin-btn-ghost" disabled={busy || !Number.isInteger(n) || n < 1} style={{ minHeight: 44 }}>
+        {busy ? "…" : "Noter"}
+      </button>
+      {msg ? <span style={{ fontSize: "0.78rem", color: msg.ok ? "var(--adm-good)" : "var(--adm-bad)" }}>{msg.text}</span> : null}
+    </form>
+  );
+}
+
+/** Total d'avis Google de la fiche, noté chaque lundi (indicateur avis_google_total du Mandalart). */
+export function GoogleReviewsForm({ today, last }: { today: string; last: number | null }) {
+  const router = useRouter();
+  const [total, setTotal] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const n = Number(total);
+  const valid = total !== "" && Number.isInteger(n) && n >= 0;
+  return (
+    <form
+      style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!valid) return;
+        setBusy(true);
+        setMsg(null);
+        try {
+          await post({ action: "google-reviews", day: today, total: n });
+          setMsg({ ok: true, text: "Total noté." });
+          setTotal("");
+          router.refresh();
+        } catch (error) {
+          setMsg({ ok: false, text: error instanceof Error ? error.message : "Erreur" });
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <input
+        className="admin-input"
+        type="number"
+        inputMode="numeric"
+        min={0}
+        aria-label="Total d'avis Google aujourd'hui"
+        placeholder={last === null ? "Total d'avis aujourd'hui" : `Total aujourd'hui (dernier : ${last})`}
+        value={total}
+        onChange={(e) => setTotal(e.target.value)}
+        style={{ minHeight: 44, flex: "1 1 220px", maxWidth: 280 }}
+      />
+      <button type="submit" className="admin-btn-ghost" disabled={busy || !valid} style={{ minHeight: 44 }}>
+        {busy ? "…" : "Noter le total"}
+      </button>
+      {msg ? <span style={{ fontSize: "0.78rem", color: msg.ok ? "var(--adm-good)" : "var(--adm-bad)" }}>{msg.text}</span> : null}
+    </form>
+  );
+}

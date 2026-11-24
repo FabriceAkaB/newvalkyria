@@ -3,11 +3,12 @@
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Container } from "@/components/container";
 import { InscriptionForm, type InscriptionFormData } from "@/components/inscription-form";
-import { toAcquisitionPayload } from "@/lib/acquisition-core";
+import { EMPTY_ACQUISITION, toAcquisitionPayload } from "@/lib/acquisition-core";
+import { parseRefCode } from "@/lib/trial-invite";
 import { getInstallmentPlan } from "@/lib/payment-plan";
 import ctaTeamImg from "@/content/image/photos/inscription-cta-547.jpg";
 import yearImg2017 from "@/content/image/photos/inscription-year-2017.jpg";
@@ -327,11 +328,17 @@ export function InscriptionContent({ variant = "public" }: { variant?: Variant }
 /* ════════════════════════════════════════════════════════════
    Essai gratuit — formulaire seul, sans programme/plage/paiement
    ════════════════════════════════════════════════════════════ */
+const noSubscribe = () => () => {};
+
 function TrialFlow() {
   const [submit, setSubmit] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
   const account = useParentAccount();
   const { showPicker, initialData, handlePick, handleSkip } = useChildQuickPick(account);
+  // Lien « Invite une amie à l'essai » d'une famille (?ref=CODE, P3.1.08) : « Parrainage » déjà coché avec son code.
+  // Lu après le rendu (la page reste statique) ; le formulaire est remonté avec la valeur, avant toute saisie.
+  const refCode = useSyncExternalStore(noSubscribe, () => parseRefCode(new URLSearchParams(window.location.search).get("ref")), () => null);
+  const trialInitial = refCode ? { ...initialData, acquisition: { ...EMPTY_ACQUISITION, ...initialData?.acquisition, source: "parrainage" as const, detail: refCode } } : initialData;
 
   // La date d'essai n'est plus choisie par la famille — un représentant la
   // fixe ensuite selon l'âge et le niveau indiqués ici (question conservée
@@ -380,7 +387,7 @@ function TrialFlow() {
               {showPicker && account ? (
                 <ChildQuickPick account={account} onPick={handlePick} onSkip={handleSkip} />
               ) : (
-                <InscriptionForm onComplete={handleComplete} finalLabel={submit === "loading" ? "..." : "Envoyer ma demande →"} initialData={initialData} />
+                <InscriptionForm key={refCode ?? "sans-code"} onComplete={handleComplete} finalLabel={submit === "loading" ? "..." : "Envoyer ma demande →"} initialData={trialInitial} />
               )}
             </div>
           )}

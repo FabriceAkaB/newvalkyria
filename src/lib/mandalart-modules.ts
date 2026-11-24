@@ -304,12 +304,15 @@ export const PILLAR_MODULES: PillarModule[] = [
     status: "actif",
     href: "/admin/acquisition",
     objectives: ["P3.6", "P3.8", "P3.1", "P6.1"],
-    kpis: ["source_connue", "nouvelles_joueuses_an"],
+    kpis: ["source_connue", "nouvelles_joueuses_an", "essais_semaine", "prospects_semaine", "publications_semaine", "avis_google_total"],
     links: ["AU05", "A01"],
     planned: [
       "En place (6 nov. 2026) : « Comment nous avez-vous connus ? » obligatoire et « Avez-vous une entreprise ? » dans tous les formulaires d'inscription et d'essai",
       "En place : tableau par canal (inscriptions, essais, conversion), codes de référence utilisés, familles avec une entreprise, familles sans source",
-      "À venir : liste chaude (familles intéressées, à relancer à l'ouverture des inscriptions) et coût par inscription de chaque canal"
+      "En place (24 nov. 2026, P3.8.20) : objectifs d'acquisition de la semaine, du mois et du trimestre, coût par prospect, par essai et par inscription de chaque canal, prospects et avis Google notés à la main, revue du lundi dans Aujourd'hui",
+      "En place (P3.6.10) : entonnoir des essais (/admin/relances/essais) : contact en 24 h, rappel la veille, offre le lendemain, relances jour 3, 7 et 14, liste chaude ; à relancer aujourd'hui dans Aujourd'hui",
+      "En place (P3.1.08) : carte « Invite une amie à l'essai » dans l'espace famille (après le bulletin, une championne du jour, une vidéo de progrès), lien avec le code de parrainage",
+      "À venir : courriel de valeur hebdomadaire à la liste chaude (P3.6.06)"
     ],
     next: "Compléter la source des familles déjà inscrites (liste « sans source » de /admin/acquisition) et ajouter les entreprises déclarées au suivi des commanditaires."
   },

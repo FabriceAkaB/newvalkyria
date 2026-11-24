@@ -21,8 +21,11 @@ export async function logOutreach(entry: {
   kind?: OutreachKind;
   notes?: string | null;
   sentAt?: string;
+  /** Entonnoir des essais (P3.6.10) : l'essai visé (« registrations:<id> », « boys_trials:<id> »…) et l'étape faite. */
+  trialRef?: string | null;
+  trialStep?: string | null;
 }) {
-  await db()
+  const { error } = await db()
     .from("outreach_log")
     .insert({
       parent_email: entry.parentEmail,
@@ -34,8 +37,10 @@ export async function logOutreach(entry: {
       offer_token: entry.offerToken ?? null,
       kind: entry.kind ?? "relance",
       notes: entry.notes ?? null,
+      ...(entry.trialRef ? { trial_ref: entry.trialRef, trial_step: entry.trialStep ?? null } : {}),
       ...(entry.sentAt ? { sent_at: entry.sentAt } : {})
     });
+  if (error) throw new Error(error.message);
 }
 
 const norm = (s: string | null | undefined) =>

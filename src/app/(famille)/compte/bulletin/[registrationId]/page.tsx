@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { BulletinReport } from "@/components/bulletin-report";
+import { FamilyInviteCard } from "@/components/family-invite-card";
 import { getBulletinReport } from "@/lib/bulletin-repo";
 import { getParentUserId } from "@/lib/parent-auth";
-import { getChildrenForParent } from "@/lib/parent-repo";
+import { getChildrenForParent, getVerifiedParentEmail } from "@/lib/parent-repo";
+import { getTrialInviteUrl } from "@/lib/referrals-repo";
 import { getRegistrationById } from "@/lib/season-admin-repo";
 
 export const metadata = { title: "Bulletin — New Valkyria" };
@@ -28,6 +30,8 @@ export default async function ParentBulletinPage({ params, searchParams }: { par
 
   const data = await getBulletinReport(registrationId, { period, audience: "parent" });
   if (!data) notFound();
+  // « Invite une amie à l'essai » (P3.1.08), juste après le bulletin remis.
+  const inviteUrl = data.released ? await getTrialInviteUrl(await getVerifiedParentEmail(userId), registration.parent_name ?? null) : null;
 
   return (
     <div className="nv27-step" style={{ maxWidth: "760px", margin: "0 auto", padding: "2rem 1rem" }}>
@@ -35,6 +39,11 @@ export default async function ParentBulletinPage({ params, searchParams }: { par
         ← Progression
       </Link>
       <BulletinReport data={data} periodHref={(p) => `/compte/bulletin/${registrationId}?bulletin=${p}`} />
+      {inviteUrl ? (
+        <div style={{ marginTop: "1.5rem" }}>
+          <FamilyInviteCard moment="bulletin" firstName={data.player.firstName} url={inviteUrl} />
+        </div>
+      ) : null}
     </div>
   );
 }

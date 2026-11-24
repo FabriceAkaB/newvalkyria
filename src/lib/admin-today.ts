@@ -821,6 +821,36 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
       })
     );
 
+    // ── Machine d'acquisition (P3.6.10, P3.8.20) : essais à contacter ou relancer aujourd'hui (aucune demande perdue),
+    //    et le lundi, la revue des objectifs de la semaine dernière ──
+    const acqGoals = await import("@/lib/acquisition-goals-repo").then((m) => m.getAcquisitionGoalsToday(new Date(now))).catch(() => null);
+    if (acqGoals) {
+      sections.push(
+        section({
+          key: "entonnoir-essais",
+          title: "Essais : familles à contacter ou relancer",
+          level: acqGoals.late ? "rouge" : acqGoals.funnel.length ? "orange" : "info",
+          emptyText: "Toutes les demandes d'essai ont une réponse et les relances sont à jour.",
+          href: "/admin/relances/essais",
+          hrefLabel: "Entonnoir des essais",
+          items: acqGoals.funnel
+        })
+      );
+      if (acqGoals.monday) {
+        sections.push(
+          section({
+            key: "objectifs-acquisition",
+            title: "Objectifs d'acquisition de la semaine",
+            level: "orange",
+            emptyText: "",
+            href: "/admin/acquisition#objectifs",
+            hrefLabel: "D'où viennent nos familles",
+            items: [acqGoals.monday]
+          })
+        );
+      }
+    }
+
     // ── D'où viennent nos familles (AU05, P6.1.02) : entreprises déclarées dans les 30 derniers jours, pas encore dans
     //    le suivi des commanditaires, et inscriptions payées des 14 derniers jours sans source ──
     const acquisition = await import("@/lib/acquisition").then((m) => m.getAcquisitionToday(new Date(now))).catch(() => null);

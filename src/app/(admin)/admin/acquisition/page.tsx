@@ -1,8 +1,10 @@
 import Link from "next/link";
 
+import { AcquisitionGoalsSection } from "@/components/acquisition-goals";
 import { Bar, Pill } from "@/components/mandalart/ui";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAcquisitionStats } from "@/lib/acquisition";
+import { getAcquisitionGoals } from "@/lib/acquisition-goals-repo";
 import type { BusinessFamily, FamilyGroup } from "@/lib/acquisition-core";
 
 import { AddSponsorButton, SetSourceForm } from "./acquisition-actions";
@@ -59,11 +61,11 @@ function BusinessRow({ b }: { b: BusinessFamily }) {
   );
 }
 
-/** « D'où viennent nos familles ? » : canaux des inscriptions et des essais, conversion essai → inscription par canal,
+/** « D'où viennent nos familles ? » : objectifs d'acquisition de la semaine, du mois et du trimestre (P3.8.20), canaux des inscriptions et des essais, conversion essai → inscription par canal,
  *  codes de référence utilisés, familles qui ont une entreprise (commandites) et familles dont la source manque. */
 export default async function AcquisitionPage() {
-  await requireAdmin();
-  const s = await getAcquisitionStats();
+  const role = await requireAdmin();
+  const [s, goals] = await Promise.all([getAcquisitionStats(), getAcquisitionGoals()]);
   const toApproach = s.businesses.filter((b) => !b.inSponsors);
   const conversion = s.trialsCount ? s.convertedTrials / s.trialsCount : null;
   const hasAnswers = s.channels.some((c) => c.source !== null);
@@ -74,7 +76,9 @@ export default async function AcquisitionPage() {
   return (
     <div className="admin-content">
       <div className="admin-section mda" style={{ maxWidth: 1000 }}>
-        <header>
+        <AcquisitionGoalsSection g={goals} isAdmin={role === "admin"} />
+
+        <header style={{ marginTop: 16 }}>
           <p className="mda-eyebrow">
             Saison en cours · {plural(s.inscriptionsCount, "inscription payée", "inscriptions payées")} · {plural(s.trialsCount, "essai")} · depuis le {day(s.seasonStart)}
           </p>
