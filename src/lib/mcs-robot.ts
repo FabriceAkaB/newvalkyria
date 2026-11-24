@@ -346,6 +346,42 @@ export class McsSession {
     if (/\/calendar\/events$/.test(res.url) || res.status >= 400) throw new McsRobotError(`Activité refusée par MonClubSportif (${ev.date} ${ev.start}).`);
   }
 
+  /** Crée un match (adversaire existant ou nouveau, lieu existant ou nouveau), assigné à l'équipe, sans courriel de
+   *  MonClubSportif. `reserves` : remplaçantes invitées à ce match seulement (ex. filles de l'avancé ajoutées à un
+   *  match de l'intermédiaire, à la demande de JP). Type : « exhibition » (hors-concours, amical) par défaut. */
+  async createGame(team: number, season: number, g: { opponent: string; date: string; start: string; end: string; location: string; type?: "regular" | "exhibition" | "playoff" | "tournament" | "other"; comments?: string; reserves?: number[] }): Promise<void> {
+    const html = await this.page(MCS_PATHS.gameCreate(team, season));
+    const action = `/team/${team}/seasons/${season}/calendar/games`;
+    const fields = formFields(html, action).filter(([k]) => !CREATE_EVENT_SKIPPED.includes(k));
+    if (!fields.length) throw new McsRobotError("Formulaire de création de match illisible (balises à revoir).");
+    const root = parse(html);
+    const options = (name: string) => root.querySelectorAll(`select[name="${name}"] option`).map((o) => ({ v: o.getAttribute("value") ?? "", t: o.text.trim() }));
+    const loc = options("game[location_id]").find((o) => o.v && o.v !== "new" && o.t.toLowerCase().startsWith(g.location.toLowerCase().slice(0, 18)));
+    const opp = options(MCS_FIELDS.game.opponentId).find((o) => o.v && o.v !== "new" && o.t.toLowerCase() === g.opponent.toLowerCase());
+    const mins = (Date.parse(`${g.date}T${g.end}:00Z`) - Date.parse(`${g.date}T${g.start}:00Z`)) / 60000;
+    const set: Record<string, string> = {
+      "game[event_type]": g.type ?? "exhibition",
+      [MCS_FIELDS.game.opponentId]: opp?.v ?? MCS_FIELDS.game.newOpponent,
+      [MCS_FIELDS.game.opponentName]: opp ? "" : g.opponent,
+      "game[starts_at]": `${g.date}T${g.start}`,
+      "game[ends_at]": `${g.date}T${g.end}`,
+      "game[arrival_time]": `${g.date}T${g.start}`,
+      "game[duration_minutes]": String(mins),
+      "game[location_id]": loc?.v ?? "new",
+      "location[name]": loc ? "" : g.location,
+      "game[comments]": g.comments ?? ""
+    };
+    const f = new URLSearchParams();
+    for (const [k, v] of fields) if (!(k in set)) f.append(k, v);
+    for (const [k, v] of Object.entries(set)) f.set(k, v);
+    if (g.reserves?.length) {
+      f.set("include_reserve", "on");
+      for (const id of g.reserves) f.append("invite[]", String(id));
+    }
+    const res = await this.request(action, { method: "POST", body: f });
+    if (/\/calendar\/games$/.test(res.url) || res.status >= 400) throw new McsRobotError(`Match refusé par MonClubSportif (${g.date} ${g.start}).`);
+  }
+
   /** Change l'heure d'une activité existante (le reste inchangé, sans courriel de MonClubSportif). */
   async retimeEvent(team: number, season: number, id: number, date: string, start: string, end: string): Promise<void> {
     const html = await this.page(MCS_PATHS.eventEdit(team, season, id));

@@ -31,7 +31,8 @@ export const MCS_PATHS = {
   posts: (team: number, season: number) => `/team/${team}/seasons/${season}/posts`,
   postCreate: (team: number, season: number) => `/team/${team}/seasons/${season}/posts/create`,
   gameEdit: (team: number, season: number, game: number) => `/team/${team}/seasons/${season}/calendar/games/${game}/edit`,
-  game: (team: number, season: number, game: number) => `/team/${team}/seasons/${season}/calendar/games/${game}`
+  game: (team: number, season: number, game: number) => `/team/${team}/seasons/${season}/calendar/games/${game}`,
+  gameCreate: (team: number, season: number) => `/team/${team}/seasons/${season}/calendar/games/create`
 } as const;
 
 /** Noms des champs (Rails) des formulaires de MCS. */
