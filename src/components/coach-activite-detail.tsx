@@ -1152,10 +1152,20 @@ export function CoachActiviteDetail({
             <div className="coach-split">
               <section id="te-avant" className="coach-split__left coach-split__anchor" aria-label="La pratique">
                 <h2 className="coach-h2">La pratique</h2>
-                {videosBlock(videos.length > 1 ? "Regarder la pratique : les vidéos" : "Regarder la pratique : la vidéo")}
-                {practiceTimer}
+                {/* La vidéo Veo d'abord (JP, 25 nov. 2026) : regarder la pratique en évaluant ; sinon, où elle apparaîtra. */}
+                {videos.length > 0 ? (
+                  videosBlock("La pratique en vidéo")
+                ) : (
+                  <div className="coach-card" style={{ marginBottom: 16 }}>
+                    <p className="coach-card__label">La pratique en vidéo</p>
+                    <p className="coach-sub" style={{ margin: 0 }}>
+                      Pas encore de vidéo pour cette pratique. Dès que l&apos;enregistrement Veo (titre « New Valkyria … ») est importé, il apparaît ici pour regarder la pratique en évaluant les filles.
+                    </p>
+                  </div>
+                )}
                 {deckCard}
                 {practicePlan}
+                {practiceTimer}
               </section>
 
               <section className="coach-split__right" aria-label="Évaluer et faire mon rapport">

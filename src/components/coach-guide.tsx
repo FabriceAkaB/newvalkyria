@@ -174,7 +174,7 @@ export function PracticeTimer({ activityId, blocks }: { activityId: string; bloc
   const next = state && !state.done ? blocks[state.index + 1] : null;
   return (
     <div className="coach-card" style={{ marginBottom: 12 }}>
-      <p className="coach-card__label">Minuteur de la pratique</p>
+      <p className="coach-card__label">Minuteur sur le terrain</p>
       {!state ? (
         <>
           <p className="coach-sub" style={{ marginTop: 0 }}>
