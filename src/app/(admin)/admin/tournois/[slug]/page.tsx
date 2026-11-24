@@ -22,7 +22,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       key: girl.key,
       firstName: girl.firstName,
       lastName: girl.lastName,
-      birthYear: girl.birthYear,
+      birthYear: girl.birthYear ?? girl.years[0] ?? null,
       parentName: girl.parentName,
       parentEmail: girl.parentEmail,
       inRoster: true,

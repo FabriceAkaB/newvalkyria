@@ -169,9 +169,16 @@ export function playerKey(first: string, last: string): string {
 }
 
 /** Une joueuse de la saison est-elle visée par ce tournoi ? */
-export function isEligible(girl: { birthYear: number | null; programId: string | null; advanced: boolean; demo?: boolean }, s: TournamentSettings, birthYears: string[]): boolean {
+/** Années d'une joueuse : sa naissance et sa catégorie (une fille de 2014 peut jouer en catégorie 2015). */
+export const girlYears = (g: { birthYear: number | null; years?: number[] }) => [...new Set([g.birthYear, ...(g.years ?? [])].filter((y): y is number => !!y))];
+
+export function yearsMatch(g: { birthYear: number | null; years?: number[] }, birthYears: string[]): boolean {
+  return !birthYears.length || girlYears(g).some((y) => birthYears.includes(String(y)));
+}
+
+export function isEligible(girl: { birthYear: number | null; years?: number[]; programId: string | null; advanced: boolean; demo?: boolean }, s: TournamentSettings, birthYears: string[]): boolean {
   if (!!girl.demo !== s.test) return false;
-  if (birthYears.length && (!girl.birthYear || !birthYears.includes(String(girl.birthYear)))) return false;
+  if (!yearsMatch(girl, birthYears)) return false;
   if (s.advancedOnly && !girl.advanced) return false;
   if (s.programIds.length && (!girl.programId || !s.programIds.includes(girl.programId))) return false;
   return true;

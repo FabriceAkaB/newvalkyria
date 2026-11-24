@@ -25,6 +25,7 @@ import {
   reminderAt,
   surveySaysInterested,
   tally,
+  yearsMatch,
   type OfferStatus,
   type ResponseLite,
   type Tally,
@@ -172,6 +173,8 @@ export interface RosterGirl {
   firstName: string;
   lastName: string;
   birthYear: number | null;
+  /** Naissance et catégorie (une fille de 2014 peut jouer en 2015). */
+  years: number[];
   programId: string | null;
   advanced: boolean;
   parentEmail: string;
@@ -184,7 +187,7 @@ export interface RosterGirl {
 async function seasonGirls(): Promise<RosterGirl[]> {
   const { data: season } = await db().from("seasons").select("id").eq("is_active", true).limit(1).maybeSingle();
   const seasons = [season?.id, "demo"].filter(Boolean) as string[];
-  const q = db().from("registrations").select("id, season_id, player_id, player_first_name, player_last_name, player_dob, program_id, advanced_group, parent_email, parent_name, parent_phone, created_at").eq("status", "paid").eq("is_trial", false).in("season_id", seasons);
+  const q = db().from("registrations").select("id, season_id, player_id, player_first_name, player_last_name, player_dob, category_id, program_id, advanced_group, parent_email, parent_name, parent_phone, created_at").eq("status", "paid").eq("is_trial", false).in("season_id", seasons);
   const { data } = await q.order("created_at", { ascending: false });
   const out = new Map<string, RosterGirl>();
   for (const r of (data ?? []) as any[]) {
@@ -197,8 +200,10 @@ async function seasonGirls(): Promise<RosterGirl[]> {
       firstName: String(r.player_first_name ?? "").trim(),
       lastName: String(r.player_last_name ?? "").trim(),
       birthYear: r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : null,
+      years: [r.player_dob ? Number(String(r.player_dob).slice(0, 4)) : null, /^\d{4}$/.test(String(r.category_id ?? "")) ? Number(r.category_id) : null].filter((y): y is number => !!y),
       programId: r.program_id ?? null,
-      advanced: !!r.advanced_group,
+      // Groupe avancé : programme avancé (TVA, SVA), comme l'équipe de matchs AV du robot MonClubSportif, ou groupe avancé coché.
+      advanced: /^(TVA|SVA)$/.test(String(r.program_id ?? "")) || !!r.advanced_group,
       parentEmail: String(r.parent_email ?? "").trim().toLowerCase(),
       parentName: String(r.parent_name ?? "").trim(),
       parentPhone: String(r.parent_phone ?? "").trim(),
@@ -302,7 +307,7 @@ export async function setResponseFromPrivatePage(input: { slug: string; firstNam
   const found = await getTournament(input.slug);
   if (!found || !found.tournament.published) return { ok: false as const, error: "Tournoi introuvable." };
   const key = playerKey(input.firstName, input.lastName);
-  const girl = (await getRoster(found.tournament)).find((g) => g.key === key);
+  const girl = (await getRoster(found.tournament)).find((g) => g.key === key) ?? (found.responses.some((r) => r.playerKey === key) ? (await seasonGirls()).find((g) => g.key === key) : undefined);
   if (!girl) return { ok: false as const, error: "Nous ne trouvons pas cette joueuse dans l'équipe visée par ce tournoi. Vérifiez l'orthographe, ou écrivez-nous à info@newvalkyria.com." };
   if (girl.parentEmail !== input.parentEmail.trim().toLowerCase()) return { ok: false as const, error: "Utilisez le courriel donné à l'inscription de votre fille (ou connectez-vous à votre espace famille)." };
   return setResponse({ slug: input.slug, firstName: girl.firstName, lastName: girl.lastName, birthYear: girl.birthYear, playerId: girl.playerId, parentEmail: girl.parentEmail, parentName: girl.parentName, answer: input.answer, source: "famille" });
@@ -338,7 +343,7 @@ export async function getFamilyTournaments(userId: string): Promise<FamilyTourna
   return tournaments
     .map((t) => ({
       tournament: t,
-      girls: mine.filter((g) => isEligible(g, t.settings, t.birthYears)).map((g) => ({ firstName: g.firstName, lastName: g.lastName, response: rows.find((r) => r.programSlug === t.slug && r.playerKey === g.key) ?? null }))
+      girls: mine.filter((g) => isEligible(g, t.settings, t.birthYears) || rows.some((r) => r.programSlug === t.slug && r.playerKey === g.key)).map((g) => ({ firstName: g.firstName, lastName: g.lastName, response: rows.find((r) => r.programSlug === t.slug && r.playerKey === g.key) ?? null }))
     }))
     .filter((x) => x.girls.length > 0);
 }
@@ -351,7 +356,7 @@ export async function setFamilyResponse(userId: string, input: { slug: string; f
   const found = await getTournament(input.slug);
   if (!found || !found.tournament.published) return { ok: false as const, error: "Tournoi introuvable." };
   const girl = (await seasonGirls()).find((g) => g.key === key);
-  if (!girl || !isEligible(girl, found.tournament.settings, found.tournament.birthYears)) return { ok: false as const, error: "Ce tournoi ne vise pas l'équipe de votre fille." };
+  if (!girl || (!isEligible(girl, found.tournament.settings, found.tournament.birthYears) && !found.responses.some((r) => r.playerKey === key))) return { ok: false as const, error: "Ce tournoi ne vise pas l'équipe de votre fille." };
   const account = await getParentAccount(userId);
   return setResponse({ slug: input.slug, firstName: girl.firstName, lastName: girl.lastName, birthYear: girl.birthYear, playerId: girl.playerId, parentEmail: girl.parentEmail || account?.email, parentName: girl.parentName || account?.fullName, parentUserId: userId, answer: input.answer, source: "famille" });
 }
@@ -364,7 +369,7 @@ export async function importSurveyInterest(slug: string): Promise<{ added: numbe
   const found = await getTournament(slug);
   const survey = found?.tournament.settings.survey;
   if (!found || !survey) return { added: 0, skipped: [] };
-  const roster = await getRoster(found.tournament);
+  const [roster, all] = await Promise.all([getRoster(found.tournament), seasonGirls()]);
   const { data } = await db().from("survey_responses").select("answers, created_at, invite:survey_invites(parent_email, parent_name, player_names)").eq("survey_id", survey.id);
   let added = 0;
   const skipped: string[] = [];
@@ -372,9 +377,12 @@ export async function importSurveyInterest(slug: string): Promise<{ added: numbe
   for (const r of (data ?? []) as any[]) {
     if (!surveySaysInterested(r.answers ?? {}, SURVEY_INTEREST_Q, survey.option)) continue;
     for (const name of String(r.invite?.player_names ?? "").split(",").map((s) => s.trim()).filter(Boolean)) {
-      const exact = roster.find((g) => g.key === playerKey(name, ""));
+      // Le sondage est l'audience choisie par JP : une fille de la bonne année qui a dit oui est reprise même hors
+      // du groupe avancé (elle paraît alors « hors de la liste visée » dans l'admin).
+      const exact = roster.find((g) => g.key === playerKey(name, "")) ?? all.find((g) => g.key === playerKey(name, "") && !g.demo === !found.tournament.settings.test && yearsMatch(g, found.tournament.birthYears));
       if (!exact) {
-        skipped.push(name);
+        // Pas retrouvée dans toute la saison (nom écrit autrement, essai) ; une fille d'une autre équipe est ignorée sans bruit.
+        if (!all.some((g) => g.key === playerKey(name, ""))) skipped.push(name);
         continue;
       }
       if (have.has(exact.key)) continue;

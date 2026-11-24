@@ -68,6 +68,10 @@ describe("joueuses visées", () => {
     expect(isEligible({ birthYear: 2016, programId: "TVA", advanced: true }, av, ["2015"])).toBe(false);
     expect(isEligible({ birthYear: 2016, programId: "SV", advanced: false }, readSettings({ tournament: { programIds: ["TVA"] } }), [])).toBe(false);
   });
+  it("la catégorie compte aussi : née en 2014, elle joue en 2015", () => {
+    expect(isEligible({ birthYear: 2014, years: [2015], programId: "TVA", advanced: true }, av, ["2015"])).toBe(true);
+    expect(isEligible({ birthYear: null, years: [], programId: "TVA", advanced: true }, av, ["2015"])).toBe(false);
+  });
   it("un tournoi d'essai ne vise que la famille de démonstration, jamais l'inverse", () => {
     const test = readSettings({ tournament: { test: true } });
     expect(isEligible({ birthYear: 2016, programId: "TV", advanced: false, demo: true }, test, ["2016"])).toBe(true);
