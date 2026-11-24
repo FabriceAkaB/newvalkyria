@@ -128,7 +128,7 @@ Chaque famille intéressée suit le même chemin. Le site garde la trace de chaq
 | Démonstratif | Ball mastery en musique, défis, avant/après d'une fille | ✔ | ✔ | |
 | Coulisses et éducateurs | Une coach qui explique son exercice, la préparation d'une pratique, JP qui parle à son groupe | | ✔ | |
 | Histoires de joueuses | L'entrevue de la semaine (voir plus bas), la championne du jour | | ✔ | ✔ |
-| Preuve et offre | Témoignages de parents, progrès filmés, « Réserve l'essai », places restantes, camps d'été | | | ✔ |
+| Preuve et offre | Avant/après des filles (la pièce maîtresse), témoignages de parents, « Réserve l'essai », places restantes, camps d'été | | | ✔ |
 
 **Rythme :** 7 publications par semaine, réparties ainsi :
 - 3 du haut ;
@@ -147,6 +147,18 @@ S'ajoutent 3 à 5 **reels d'essai** pour tester des crochets.
 - Le lundi, on choisit la joueuse : on alterne les âges, les débutantes et les avancées.
 - Elle raconte son histoire, pourquoi elle aime l'académie et ce qu'elle a appris.
 - On en tire 3 contenus : un reel de 30 s, la version longue pour le site et une citation en image.
+
+**Les avant/après des filles : la pièce maîtresse (JP, 25 nov. 2026).**
+- **Ce que c'est :** chaque fille est filmée sur le même exercice au début, à la mi-saison et à la fin (module Progression en vidéo, P3.2.29). C'est la preuve la plus forte qu'on a : on voit ce que l'académie change chez une fille.
+- **Pour les parents actuels :**
+  - montré dans Progression et avec le bulletin ;
+  - montré à la réinscription : « voici le chemin parcouru, voici la suite ».
+- **Pour les nouvelles familles :**
+  - envoyé après l'essai : « voici ce que votre fille fera dans 3 mois » ;
+  - publié en contenu du bas de l'entonnoir ;
+  - utilisé comme créatif de publicité de preuve ;
+  - mis sur la page « Découvrir New Valkyria ».
+- **Le point de départ :** aucune vidéo de progression n'est encore filmée. Les vidéos « début » de toutes les filles se font dès la semaine du 30 novembre, avec la personne caméra.
 
 **Ball mastery filmé :**
 - Chaque fille est filmée sur ses gestes pendant la pratique (P3.2.18, P1.2).

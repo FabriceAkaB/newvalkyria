@@ -1537,7 +1537,7 @@ Décision de JP après les courriels d'Alex Hormozi sur la contrainte principale
 - **Jusqu'au** : 28 févr. 2027
 - **Pourquoi** : Sous 500 000 $, le frein est le nombre de prospects (Alex Hormozi) ; et JP ne peut pas attirer des familles s'il doit être sur chaque terrain.
 - **Fini quand** : 40 nouvelles familles intéressées et 12 essais réservés par semaine, une publication par jour, une publicité qui ramène des essais à 25 $ ou moins, la prévente de l'été lancée, et plus aucune pratique annulée parce que JP est absent.
-- **Tâches, dans l'ordre** : `P3.8.06`, `P3.2.26`, `P3.2.23`, `P3.2.28`, `P3.2.25`, `P3.2.24`, `P4.8.18`, `P3.2.27`, `P3.8.20`, `P2.4.08`, `P3.8.19`, `P3.6.10`, `P2.4.09`, `P2.4.05`, `P5.2.10`, `P3.8.15`, `P3.8.14`, `P3.2.22`, `P3.8.16`, `P3.6.09`, `P3.8.21`, `P3.1.08`, `P5.2.03`, `P2.4.03`, `P3.8.17`, `P3.8.18`, `P3.8.13`, `P3.6.06`, `P3.1.02`, `P3.1.06`, `P8.3.08`, `P1.4.14`, `P8.2.08`
+- **Tâches, dans l'ordre** : `P3.8.06`, `P3.2.26`, `P3.2.23`, `P3.2.29`, `P3.2.28`, `P3.2.25`, `P3.2.24`, `P4.8.18`, `P3.2.27`, `P3.8.20`, `P2.4.08`, `P3.8.19`, `P3.6.10`, `P2.4.09`, `P2.4.05`, `P5.2.10`, `P3.8.15`, `P3.8.14`, `P3.2.22`, `P3.8.16`, `P3.6.09`, `P3.8.21`, `P3.1.08`, `P5.2.03`, `P2.4.03`, `P3.8.17`, `P3.8.18`, `P3.8.13`, `P3.6.06`, `P3.1.02`, `P3.1.06`, `P8.3.08`, `P1.4.14`, `P8.2.08`
 - **En pause** : tout chantier du site ou du plan qui ne sert pas cette contrainte attend le 1er mars 2027, sauf les obligations (paie, taxes, sécurité des joueuses).
 
 #### P2.4 Échelle d'offres sur 5 générations
@@ -1590,6 +1590,7 @@ Décision de JP : pendant 3 mois (1er décembre 2026 au 28 février 2027), JP se
 - [ ] `P3.2.25` ⭐ N1 — Calendrier de contenu de l'académie sur 90 jours : 7 publications par semaine (3 haut, 3 milieu, 1 bas d'entonnoir) + 3 à 5 reels d'essai, 5 familles de contenu (éducatif, démonstratif, coulisses et éducateurs, histoires de joueuses, preuve et offre), banque de 50 crochets ; chaque publication finit par « Réserve l'essai gratuit ». — 1er déc. 2026 · Claude Code + JP
 - [ ] `P3.2.26` ➜ N1 — Bios Instagram, Facebook et TikTok de New Valkyria : la promesse (soccer 100 % filles, ballon au pied dès la 1re minute), les villes, l'appel à l'action vers l'essai gratuit. — 1er déc. 2026 · JP
 - [ ] `P3.2.27` ⭐ N1 — Entrevue d'une joueuse chaque semaine au Club des Recrues dès décembre : choisie le lundi (âges et niveaux en alternance, débutantes comprises), elle raconte son histoire ; 3 contenus par entrevue (reel 30 s, version longue, citation). — 6 déc. 2026 · JP + caméra
+- [ ] `P3.2.29` ⭐ N1 — Les avant/après des filles, pièce maîtresse de la conversion : chaque fille filmée sur le même exercice (début dès la semaine du 30 novembre, mi-saison, fin) ; montrés aux parents (Progression, bulletin, réinscription) et aux nouvelles familles (après l'essai « voici ce que votre fille fera dans 3 mois », contenu du bas de l'entonnoir, publicités de preuve, page Découvrir New Valkyria). — 15 déc. 2026 · JP + caméra + Claude Code · A05
 - [ ] `P3.2.28` ⭐ N1 — Agenda marketing de JP : 100 minutes de marketing et 30 minutes de veille de contenu par jour, 2 plages JP Coach (une journée pour pratiquer le tournage, une journée de repos) et 1 plage Valkyria Lab par semaine, 2 h de formation à la publicité. — 1er déc. 2026 · JP
 
 #### P3.6 Liste chaude

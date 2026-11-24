@@ -864,6 +864,16 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     done: "Une entrevue par semaine depuis décembre.",
     link: { href: "/admin/contenu/entrevues", label: "Entrevues" }
   },
+  "P3.2.29": {
+    how: [
+      "Semaine du 30 novembre : la personne caméra filme chaque fille sur l'exercice de référence (même cadrage, même exercice), c'est la vidéo « début ».",
+      "Dépose les vidéos dans Coaching → Progression en vidéo : la famille la voit dans Progression.",
+      "Mi-saison et fin : même exercice, même cadrage ; le site montre l'avant/après côte à côte.",
+      "Choisis chaque mois 2 ou 3 avant/après pour le contenu de preuve, l'envoi après l'essai et la publicité."
+    ],
+    done: "Chaque fille a sa vidéo « début » et les premiers avant/après servent à convertir.",
+    link: { href: "/admin/coaching/progression-video", label: "Progression en vidéo" }
+  },
   "P3.2.28": {
     how: ["Bloque dans ton agenda : 100 min de marketing et 30 min de veille chaque jour.", "Ajoute 2 plages JP Coach : une journée pour pratiquer le tournage (plans, lumière, son, montage court), une journée de repos ; et 1 plage Valkyria Lab par semaine.", "Ajoute 2 h de formation à la publicité."],
     done: "Les blocs sont dans l'agenda et tenus 3 semaines de suite.",

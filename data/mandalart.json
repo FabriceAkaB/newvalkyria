@@ -2871,6 +2871,20 @@
        "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
       },
       {
+       "code": "P3.2.29",
+       "priority": "star",
+       "level": 1,
+       "title": "Les avant/après des filles, pièce maîtresse de la conversion : chaque fille filmée sur le même exercice (début dès la semaine du 30 novembre, mi-saison, fin) ; montrés aux parents (Progression, bulletin, réinscription) et aux nouvelles familles (après l'essai « voici ce que votre fille fera dans 3 mois », contenu du bas de l'entonnoir, publicités de preuve, page Découvrir New Valkyria).",
+       "due": "2026-12-15",
+       "owner": "JP + caméra + Claude Code",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
+      },
+      {
        "code": "P3.2.28",
        "priority": "star",
        "level": 1,
@@ -7090,6 +7104,7 @@
    "P3.8.06",
    "P3.2.26",
    "P3.2.23",
+   "P3.2.29",
    "P3.2.28",
    "P3.2.25",
    "P3.2.24",
