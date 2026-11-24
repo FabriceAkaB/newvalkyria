@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AdminCoachActiviteDetail } from "@/components/admin-coach-activite-detail";
 import { requireAdmin } from "@/lib/admin-auth";
+import { allInOneHref } from "@/lib/admin-my-practices";
 import { getPracticeReads } from "@/lib/coach-portal-repo";
 import { getDocumentsForEntity } from "@/lib/documents-repo";
 import { getActivity, getActivityAssignments, getAllCoachTypeRates, getCoaches } from "@/lib/coaches-repo";
@@ -48,8 +49,8 @@ export default async function AdminCoachActiviteDetailPage({ params }: { params:
     {!isMatch ? (
       <div className="admin-content" style={{ paddingBottom: 0 }}>
         <div className="admin-stat-card" style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
-          <p style={{ margin: 0, color: "var(--adm-text)" }}>Tu étais coach à cette pratique ? Remplis ton rapport (évaluations des filles, sondage, retour 2 + 2) dans l&apos;espace coach.</p>
-          <a href={`/api/admin/coach-portal?activite=${id}`} className="admin-btn-primary" style={{ textDecoration: "none" }}>Remplir mon rapport de coach</a>
+          <p style={{ margin: 0, color: "var(--adm-text)" }}>Tu étais coach à cette pratique ? Regarde-la, évalue les filles et remplis ton rapport (sondage, retour 2 + 2) sur un seul écran de l&apos;espace coach.</p>
+          <a href={allInOneHref(id)} className="admin-btn-primary" style={{ textDecoration: "none" }}>Regarder, évaluer et faire mon rapport</a>
         </div>
       </div>
     ) : null}

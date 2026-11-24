@@ -781,8 +781,11 @@ export function CoachActiviteDetail({
   readItems = [],
   initialReadSeen = [],
   initialReadAt = null,
-  helped = []
+  helped = [],
+  view = "etapes"
 }: Props & {
+  /** « tout-en-un » : la pratique, l'évaluation des filles et le rapport sur un seul écran (JP, 25 nov. 2026). */
+  view?: "etapes" | "tout-en-un";
   helped?: { registrationId: string; name: string }[];
   defaultStep: Step;
   briefing: BriefingPlayer[];
@@ -860,7 +863,13 @@ export function CoachActiviteDetail({
     return roster.find((p) => PARTICIPATED.includes(attendance[p.registrationId] ?? "") && !done(p.registrationId))?.registrationId ?? null;
   });
   const stepsRef = useRef<HTMLElement>(null);
+  const allInOne = view === "tout-en-un" && activity.activity_type !== "Match";
   const goTo = (next: Step) => {
+    // Vue « tout-en-un » : tout est déjà à l'écran, on descend jusqu'à la bonne section.
+    if (allInOne) {
+      document.getElementById(`te-${next}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     setStep(next);
     const top = stepsRef.current ? stepsRef.current.getBoundingClientRect().top + window.scrollY - 8 : 0;
     if (window.scrollY > top) window.scrollTo({ top });
@@ -911,53 +920,307 @@ export function CoachActiviteDetail({
     { key: "apres", label: "Après", detail: `Rapport ${afterDone}/${afterTotal}` }
   ];
 
+  /* ── Morceaux réutilisés par la vue par étapes et par la vue « tout-en-un » (même comportement) ── */
+
+  // Le suivi de l'éducateur (JP, 19 nov. 2026) : chaque étape se coche dès qu'elle est faite.
+  const suiviCard = isPractice && !guest ? (() => {
+    const items: { label: string; done: boolean; step: Step }[] = [
+      ...(read.hasContent ? [{ label: "Pratique lue et confirmée", done: read.confirmed, step: "avant" as Step }] : []),
+      ...(reportNeeded ? [{ label: `Présences des joueuses · ${marked}/${roster.length}`, done: marked === roster.length, step: "pendant" as Step }] : []),
+      ...(reportNeeded ? [{ label: `Évaluation de chaque fille · ${evaluated}/${participants.length}`, done: participants.length > 0 && evaluated === participants.length, step: "apres" as Step }] : []),
+      ...(reportNeeded ? [{ label: `Sondage du jour · ${routineDone}/${participants.length}`, done: surveyDone, step: "apres" as Step }] : []),
+      ...(exerciseRating && exerciseRating.total > 0 ? [{ label: `Note des exercices (dans l'heure) · ${exerciseRating.rated}/${exerciseRating.total}`, done: exerciseRating.rated === exerciseRating.total, step: "apres" as Step }] : []),
+      ...(reportNeeded && isCoach ? [{ label: "Mon retour : 2 bons coups, 2 à améliorer", done: debriefDone, step: "apres" as Step }] : []),
+      { label: "Ma présence dans MonClubSportif", done: presence.confirmed, step: "apres" as Step }
+    ];
+    const done = items.filter((i) => i.done).length;
+    return (
+      <div className="coach-card" style={{ margin: "12px 0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+          <p className="coach-card__label" style={{ margin: 0 }}>Mon suivi de la pratique</p>
+          <span style={{ fontSize: "0.85rem", fontWeight: 600, color: done === items.length ? "var(--adm-good)" : "var(--adm-text-2)" }}>{done}/{items.length} étapes</span>
+        </div>
+        <div role="progressbar" aria-valuemin={0} aria-valuemax={items.length} aria-valuenow={done} style={{ height: 8, borderRadius: 999, background: "var(--adm-surface-3)", overflow: "hidden", margin: "10px 0" }}>
+          <div style={{ width: `${Math.max(3, (done / items.length) * 100)}%`, height: "100%", background: done === items.length ? "var(--adm-good)" : "var(--adm-accent-strong)" }} />
+        </div>
+        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
+          {items.map((i) => (
+            <li key={i.label}>
+              <button type="button" onClick={() => goTo(i.step)} style={{ display: "flex", gap: 8, alignItems: "center", width: "100%", background: "none", border: 0, padding: "4px 0", cursor: "pointer", textAlign: "left", font: "inherit", color: i.done ? "var(--adm-text-2)" : "var(--adm-text)" }}>
+                <span aria-hidden style={{ width: 20, height: 20, borderRadius: 999, display: "grid", placeItems: "center", flex: "0 0 auto", fontSize: "0.75rem", fontWeight: 700, background: i.done ? "var(--adm-good)" : "transparent", color: i.done ? "#fff" : "var(--adm-text-3)", border: i.done ? "none" : "1.5px solid var(--adm-border)" }}>{i.done ? "✓" : ""}</span>
+                <span style={{ textDecoration: i.done ? "line-through" : "none" }}>{i.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  })() : null;
+
+  const attendanceStep = (
+    <AttendanceStep
+      activityId={activity.id}
+      roster={roster}
+      attendance={attendance}
+      onChange={(ids, status) => setAttendance((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, status])) }))}
+    />
+  );
+
+  const deckCard = <CoachPracticeDeck decks={readItems.filter((i) => i.kind === "deck")} seen={readSeen} onOpened={markSeen} />;
+  const practicePlan = <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} seen={readSeen} onSeen={markSeen} />;
+  const practiceTimer = isPractice ? <PracticeTimer activityId={activity.id} blocks={guideBlocks} /> : null;
+
+  const presenceBlock = (
+    <>
+      {!guest && (
+        <div style={{ marginBottom: 16 }}>
+          <MyPresenceCard activity={activity} initial={presence} onChange={setPresence} />
+        </div>
+      )}
+      {absentHere && (
+        <div className="coach-card" style={{ marginBottom: 16 }}>
+          <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>Tu n&apos;étais pas là pour ce groupe : rien à remplir ici.</p>
+          <p className="coach-muted" style={{ margin: "6px 0 0" }}>Ton heure de rapport du jour dépend seulement des groupes où tu étais. Erreur ? Touche « Modifier ma présence ».</p>
+        </div>
+      )}
+    </>
+  );
+
+  const helpedBlock = helped.length > 0 && (
+    <div className="coach-card" style={{ marginBottom: 16 }}>
+      <p className="coach-card__label">Les joueuses que j&apos;ai aidées et encouragées aujourd&apos;hui</p>
+      <p style={{ margin: "0 0 8px", fontSize: "1.5rem", fontWeight: 700, color: "var(--adm-text)", fontVariantNumeric: "tabular-nums" }}>
+        {helped.length} fille{helped.length > 1 ? "s" : ""}
+      </p>
+      <p className="coach-muted" style={{ margin: "0 0 8px" }}>Elles l&apos;ont dit elles-mêmes sur la borne, à « Ta coach t&apos;a-t-elle aidée ou encouragée ? ».</p>
+      <p style={{ margin: 0, color: "var(--adm-text)" }}>{helped.map((h) => h.name).join(" · ")}</p>
+    </div>
+  );
+
+  const videosBlock = (label: string) =>
+    videos.length > 0 && (
+      <div className="coach-card" style={{ marginBottom: 16, display: "grid", gap: 10 }}>
+        <p className="coach-card__label">{label}</p>
+        {videos.map((v) => (
+          <div key={v.id} style={{ display: "grid", gap: 6 }}>
+            {videos.length > 1 ? <p className="coach-muted" style={{ margin: 0 }}>{v.title}</p> : null}
+            <MatchPlayer id={v.id} endpoint={`/api/coach/videos/${v.id}`} label="Revoir la vidéo" />
+          </div>
+        ))}
+      </div>
+    );
+
+  const checklistBlock = (
+    <div className="coach-card" style={{ marginBottom: 16 }}>
+      <p className="coach-card__label">{strict && isCoach && reportNeeded ? "Ton rapport · 1 heure payée en plus par jour quand il est fini" : "Ton rapport"}</p>
+      <ul className="coach-checklist">
+        {!guest && <li data-done={String(presence.confirmed)}>Ma présence (mets-toi « présent » dans MonClubSportif)</li>}
+        {reportNeeded && <li data-done={String(marked === roster.length)}>Présences des joueuses · {marked}/{roster.length}</li>}
+        {reportNeeded && (
+          <li data-done={String(participants.length > 0 && evaluated === participants.length)}>
+            Évaluation de chaque fille présente{strict ? ` : 3 notes, chaque geste du ball mastery, observation de ${NOTE_MIN_WORDS} mots ou plus` : ""} · {evaluated}/{participants.length}
+          </li>
+        )}
+        {reportNeeded && <li data-done={String(surveyDone)}>Sondage du jour de chaque fille · {routineDone}/{participants.length}</li>}
+        {reportNeeded && strict && isCoach && <li data-done={String(debriefDone)}>Mon retour : 2 choses qui ont bien marché, 2 à améliorer</li>}
+      </ul>
+      <p className="coach-sub" style={{ marginTop: 12, color: hoursCount ? "var(--adm-good)" : undefined }}>
+        {guest
+          ? "Accès d'équipe : tu n'es pas assignée à cette pratique dans le site. Ta présence et tes heures arrivent de MonClubSportif."
+          : strict && reportNeeded
+            ? isCoach
+              ? presence.confirmed && reportComplete
+                ? "Rapport fini. Ton heure de rapport du jour (1 h, une seule même avec deux pratiques) s'ajoute à ta paie quand les rapports de toutes tes pratiques du jour sont finis."
+                : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Ton heure de rapport du jour (1 h de plus, une seule même avec deux pratiques) s'ajoute toute seule quand chaque case est cochée pour chacune de tes pratiques du jour ; sinon, tu es payé pour tes heures de terrain seulement."
+              : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Pas de rapport à remplir pour toi : il est fait par les coachs."
+          : hoursCount
+          ? "Rapport complet : tes heures comptent pour la paie."
+          : ruleApplies
+            ? "Tes heures comptent pour la paie quand ta présence est confirmée et que les présences et les évaluations sont faites."
+            : "Confirme ta présence pour que tes heures comptent."}
+      </p>
+    </div>
+  );
+
+  const evaluationBlock = reportNeeded && participants.length > 0 && (
+    <section style={{ marginBottom: 16 }}>
+      <h2 className="coach-h2">Évaluation rapide · {evaluated}/{participants.length}</h2>
+      <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>
+        Moins de 2 minutes par fille : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10, et une phrase sur ce que tu as vu (écrite pendant la pratique ou en regardant la vidéo).
+        {observed.size ? ` Tes ${observed.size} joueuses à observer sont en premier.` : ""}
+      </p>
+      {[...participants].sort((a, b) => Number(!observed.has(a.registrationId)) - Number(!observed.has(b.registrationId))).map((p) => (
+        <QuickEvaluation
+          key={p.registrationId}
+          activityId={activity.id}
+          activityDate={String(activity.activity_date).slice(0, 10)}
+          player={p}
+          mine={mine[p.registrationId]}
+          others={others[p.registrationId] ?? []}
+          open={openId === p.registrationId}
+          onToggle={() => setOpenId(openId === p.registrationId ? null : p.registrationId)}
+          gestureChoices={bmMoves}
+          onSaved={(ev) => {
+            setMine((prev) => ({ ...prev, [p.registrationId]: ev }));
+            openNext(p.registrationId);
+          }}
+        />
+      ))}
+    </section>
+  );
+
+  const surveyBlock = reportNeeded && participants.length > 0 && (
+    <div style={{ marginBottom: 16 }}>
+      <h2 className="coach-h2">Sondage de fin · {routineDone}/{participants.length}</h2>
+      <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>Avant de partir, chaque fille dit si elle a aimé, sa fatigue et ce qu&apos;elle aimerait avoir plus. 3 touches par fille.</p>
+      <PracticeSurvey
+        activityId={activity.id}
+        players={participants}
+        initialPresence={attendance}
+        initialAnswers={feedback}
+        feedbackUrl="/api/coach/feedback"
+        onAnswersChange={setFeedback}
+      />
+    </div>
+  );
+
+  const teamsAfterBlock = isPractice && participants.length > 1 && (
+    <div style={{ marginBottom: 16 }}>
+      <CoachTeamsCard
+        title="Équipes du jour : couleurs et qui était avec qui"
+        activityId={activity.id}
+        players={participants}
+        theme={themeForGroup(theme?.theme, activity.category ?? activity.title)}
+      />
+    </div>
+  );
+
+  const championsBlock = participants.length > 0 && (
+    <div style={{ marginBottom: 16 }}>
+      <CoachChampionsCard activityId={activity.id} players={participants} initial={initialChampions} rules={pointsRules} />
+    </div>
+  );
+
+  const exerciseRatingsBlock = (
+    <div style={{ marginBottom: 16 }}>
+      <CoachExerciseRatings activityId={activity.id} onProgress={(rated, total) => setExerciseRating({ rated, total })} />
+    </div>
+  );
+
+  const debriefCard = reportNeeded || (guest && isCoach) ? <CoachDebriefCard activityId={activity.id} onStatus={setDebriefDone} required={isCoach && strict} /> : null;
+
+  const header = (
+    <>
+      <Link href="/entraineur/dashboard" className="coach-muted" style={{ textDecoration: "none", display: "inline-block", marginBottom: 12 }}>← Mes pratiques</Link>
+      <p className="coach-eyebrow">
+        {date} · {String(activity.start_time).slice(0, 5).replace(":", " h ")} à {String(activity.end_time).slice(0, 5).replace(":", " h ")}
+      </p>
+      <h1 className="coach-title coach-title--xl">{activity.title ? activity.title : activity.activity_type}</h1>
+      {activity.location && <p className="coach-sub">{activity.location.split(/\s[–-]\s/)[0]}</p>}
+      {otherCoaches.length > 0 && <p className="coach-muted" style={{ margin: "4px 0 0" }}>Avec {otherCoaches.map((c) => c.first_name).join(", ")}</p>}
+    </>
+  );
+
+  // Vue « tout-en-un » (JP, 25 nov. 2026) : la pratique d'un côté, les filles à évaluer et le rapport de l'autre,
+  // sur un seul écran. Mêmes composants, mêmes routes et mêmes règles que les trois étapes.
+  if (allInOne) {
+    const toMark = roster.length - marked;
+    return (
+      <>
+        <CoachTopbar coachName={coachName} />
+        <div className="admin-content">
+          <div className="coach-page coach-page--full">
+            <div className="coach-split__head">
+              <div style={{ minWidth: 0 }}>{header}</div>
+              <Link href={`/entraineur/activites/${activity.id}`} className="coach-secondary" style={{ textDecoration: "none" }}>Vue par étapes</Link>
+            </div>
+
+            {/* Téléphone et tablette : une colonne ; ces boutons sautent à la pratique, aux filles ou au rapport. */}
+            <nav className="coach-steps coach-split__jump" aria-label="Aller à">
+              {[
+                { key: "avant" as Step, label: "La pratique", detail: `${sessionBlocks.length} bloc${sessionBlocks.length > 1 ? "s" : ""}` },
+                { key: "pendant" as Step, label: "Les filles", detail: `Évaluées ${evaluated}/${participants.length}` },
+                { key: "apres" as Step, label: "Mon rapport", detail: `${afterDone}/${afterTotal}` }
+              ].map((s) => (
+                <button key={s.key} type="button" data-active="false" onClick={() => goTo(s.key)}>
+                  {s.label}
+                  <small>{s.detail}</small>
+                </button>
+              ))}
+            </nav>
+
+            <div className="coach-split">
+              <section id="te-avant" className="coach-split__left coach-split__anchor" aria-label="La pratique">
+                <h2 className="coach-h2">La pratique</h2>
+                {videosBlock(videos.length > 1 ? "Regarder la pratique : les vidéos" : "Regarder la pratique : la vidéo")}
+                {practiceTimer}
+                {deckCard}
+                {practicePlan}
+              </section>
+
+              <section className="coach-split__right" aria-label="Évaluer et faire mon rapport">
+                {suiviCard}
+
+                <div id="te-pendant" className="coach-split__anchor">
+                  <h2 className="coach-h2">Les filles du jour · {marked}/{roster.length} présences</h2>
+                  <details className="coach-fold" open={toMark > 0} style={{ marginBottom: 16 }}>
+                    <summary>
+                      <span>
+                        <strong>Présences</strong>
+                        <small>{toMark > 0 ? `${toMark} à marquer avant d'évaluer` : "Chaque présence est marquée"}</small>
+                      </span>
+                      <span className="coach-pill" data-tone={toMark > 0 ? "warn" : "good"}>{toMark > 0 ? "À marquer" : "✓ Faites"}</span>
+                    </summary>
+                    <div style={{ marginTop: 12 }}>{attendanceStep}</div>
+                  </details>
+                  {evaluationBlock}
+                  {reportNeeded && participants.length === 0 && roster.length > 0 ? (
+                    <div className="coach-card" style={{ marginBottom: 16 }}>
+                      <p style={{ margin: 0, color: "var(--adm-text)" }}>Marque les présences : les filles présentes apparaissent ici pour l&apos;évaluation.</p>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div id="te-apres" className="coach-split__anchor">
+                  <h2 className="coach-h2">Mon rapport</h2>
+                  {presenceBlock}
+                  {checklistBlock}
+                  {helpedBlock}
+                  {surveyBlock}
+                  {teamsAfterBlock}
+                  {championsBlock}
+                  {exerciseRatingsBlock}
+                  {isPractice ? (
+                    <div style={{ marginBottom: 16 }}>
+                      {!guest ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
+                      {debriefCard}
+                    </div>
+                  ) : null}
+                  <CoachIncidentCard activityId={activity.id} />
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <CoachTopbar coachName={coachName} />
       <div className="admin-content">
         <div className="coach-page coach-page--wide">
-          <Link href="/entraineur/dashboard" className="coach-muted" style={{ textDecoration: "none", display: "inline-block", marginBottom: 12 }}>← Mes pratiques</Link>
-          <p className="coach-eyebrow">
-            {date} · {String(activity.start_time).slice(0, 5).replace(":", " h ")} à {String(activity.end_time).slice(0, 5).replace(":", " h ")}
-          </p>
-          <h1 className="coach-title coach-title--xl">{activity.title ? activity.title : activity.activity_type}</h1>
-          {activity.location && <p className="coach-sub">{activity.location.split(/\s[–-]\s/)[0]}</p>}
-          {otherCoaches.length > 0 && <p className="coach-muted" style={{ margin: "4px 0 0" }}>Avec {otherCoaches.map((c) => c.first_name).join(", ")}</p>}
+          {header}
+          {isPractice ? (
+            <p style={{ margin: "8px 0 0" }}>
+              <Link href={`/entraineur/activites/${activity.id}?vue=tout-en-un`} className="coach-muted" style={{ color: "var(--adm-accent)", textDecoration: "none", fontWeight: 600 }}>
+                Tout sur un écran : la pratique, l&apos;évaluation et le rapport →
+              </Link>
+            </p>
+          ) : null}
 
-          {isPractice && !guest ? (() => {
-            // Le suivi de l'éducateur (JP, 19 nov. 2026) : chaque étape se coche dès qu'elle est faite.
-            const items: { label: string; done: boolean; step: Step }[] = [
-              ...(read.hasContent ? [{ label: "Pratique lue et confirmée", done: read.confirmed, step: "avant" as Step }] : []),
-              ...(reportNeeded ? [{ label: `Présences des joueuses · ${marked}/${roster.length}`, done: marked === roster.length, step: "pendant" as Step }] : []),
-              ...(reportNeeded ? [{ label: `Évaluation de chaque fille · ${evaluated}/${participants.length}`, done: participants.length > 0 && evaluated === participants.length, step: "apres" as Step }] : []),
-              ...(reportNeeded ? [{ label: `Sondage du jour · ${routineDone}/${participants.length}`, done: surveyDone, step: "apres" as Step }] : []),
-              ...(exerciseRating && exerciseRating.total > 0 ? [{ label: `Note des exercices (dans l'heure) · ${exerciseRating.rated}/${exerciseRating.total}`, done: exerciseRating.rated === exerciseRating.total, step: "apres" as Step }] : []),
-              ...(reportNeeded && isCoach ? [{ label: "Mon retour : 2 bons coups, 2 à améliorer", done: debriefDone, step: "apres" as Step }] : []),
-              { label: "Ma présence dans MonClubSportif", done: presence.confirmed, step: "apres" as Step }
-            ];
-            const done = items.filter((i) => i.done).length;
-            return (
-              <div className="coach-card" style={{ margin: "12px 0" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
-                  <p className="coach-card__label" style={{ margin: 0 }}>Mon suivi de la pratique</p>
-                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: done === items.length ? "var(--adm-good)" : "var(--adm-text-2)" }}>{done}/{items.length} étapes</span>
-                </div>
-                <div role="progressbar" aria-valuemin={0} aria-valuemax={items.length} aria-valuenow={done} style={{ height: 8, borderRadius: 999, background: "var(--adm-surface-3)", overflow: "hidden", margin: "10px 0" }}>
-                  <div style={{ width: `${Math.max(3, (done / items.length) * 100)}%`, height: "100%", background: done === items.length ? "var(--adm-good)" : "var(--adm-accent-strong)" }} />
-                </div>
-                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
-                  {items.map((i) => (
-                    <li key={i.label}>
-                      <button type="button" onClick={() => goTo(i.step)} style={{ display: "flex", gap: 8, alignItems: "center", width: "100%", background: "none", border: 0, padding: "4px 0", cursor: "pointer", textAlign: "left", font: "inherit", color: i.done ? "var(--adm-text-2)" : "var(--adm-text)" }}>
-                        <span aria-hidden style={{ width: 20, height: 20, borderRadius: 999, display: "grid", placeItems: "center", flex: "0 0 auto", fontSize: "0.75rem", fontWeight: 700, background: i.done ? "var(--adm-good)" : "transparent", color: i.done ? "#fff" : "var(--adm-text-3)", border: i.done ? "none" : "1.5px solid var(--adm-border)" }}>{i.done ? "✓" : ""}</span>
-                        <span style={{ textDecoration: i.done ? "line-through" : "none" }}>{i.label}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })() : null}
+          {suiviCard}
 
           <nav ref={stepsRef} className="coach-steps" aria-label="Étapes de la pratique">
             {steps.map((s) => (
@@ -987,7 +1250,7 @@ export function CoachActiviteDetail({
               )}
               <div className="coach-avant">
                 <div className="coach-avant__main">
-                  <CoachPracticeDeck decks={readItems.filter((i) => i.kind === "deck")} seen={readSeen} onOpened={markSeen} />
+                  {deckCard}
                   {activity.activity_type !== "Match" && sessionBlocks.length > 0 && (
                     <div className="coach-card" style={{ marginBottom: 12, display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
                       <div style={{ minWidth: 0 }}>
@@ -997,7 +1260,7 @@ export function CoachActiviteDetail({
                       <Link href={`/entraineur/activites/${activity.id}/imprimer`} className="coach-primary" style={{ textDecoration: "none" }}>🖨 Imprimer la pratique</Link>
                     </div>
                   )}
-                  <PracticeOfTheDay activity={activity} theme={theme} blocks={sessionBlocks} exercises={initialExercises} players={roster.length} seen={readSeen} onSeen={markSeen} />
+                  {practicePlan}
                   <div>
                     <button type="button" className="coach-secondary" onClick={() => setShowEditor(!showEditor)}>{showEditor ? "Fermer" : "Modifier le plan"}</button>
                     {showEditor && (
@@ -1043,13 +1306,8 @@ export function CoachActiviteDetail({
 
           {step === "pendant" && (
             <>
-              {isPractice ? <PracticeTimer activityId={activity.id} blocks={guideBlocks} /> : null}
-              <AttendanceStep
-                activityId={activity.id}
-                roster={roster}
-                attendance={attendance}
-                onChange={(ids, status) => setAttendance((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, status])) }))}
-              />
+              {practiceTimer}
+              {attendanceStep}
               {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
                 <CoachTeamsCard
                   activityId={activity.id}
@@ -1065,67 +1323,10 @@ export function CoachActiviteDetail({
 
           {step === "apres" && (
             <>
-              {!guest && (
-                <div style={{ marginBottom: 16 }}>
-                  <MyPresenceCard activity={activity} initial={presence} onChange={setPresence} />
-                </div>
-              )}
-              {absentHere && (
-                <div className="coach-card" style={{ marginBottom: 16 }}>
-                  <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>Tu n&apos;étais pas là pour ce groupe : rien à remplir ici.</p>
-                  <p className="coach-muted" style={{ margin: "6px 0 0" }}>Ton heure de rapport du jour dépend seulement des groupes où tu étais. Erreur ? Touche « Modifier ma présence ».</p>
-                </div>
-              )}
-              {helped.length > 0 && (
-                <div className="coach-card" style={{ marginBottom: 16 }}>
-                  <p className="coach-card__label">Les joueuses que j&apos;ai aidées et encouragées aujourd&apos;hui</p>
-                  <p style={{ margin: "0 0 8px", fontSize: "1.5rem", fontWeight: 700, color: "var(--adm-text)", fontVariantNumeric: "tabular-nums" }}>
-                    {helped.length} fille{helped.length > 1 ? "s" : ""}
-                  </p>
-                  <p className="coach-muted" style={{ margin: "0 0 8px" }}>Elles l&apos;ont dit elles-mêmes sur la borne, à « Ta coach t&apos;a-t-elle aidée ou encouragée ? ».</p>
-                  <p style={{ margin: 0, color: "var(--adm-text)" }}>{helped.map((h) => h.name).join(" · ")}</p>
-                </div>
-              )}
-              {videos.length > 0 && (
-                <div className="coach-card" style={{ marginBottom: 16, display: "grid", gap: 10 }}>
-                  <p className="coach-card__label">{videos.length > 1 ? "Les vidéos de cette activité" : "La vidéo de cette activité"}</p>
-                  {videos.map((v) => (
-                    <div key={v.id} style={{ display: "grid", gap: 6 }}>
-                      {videos.length > 1 ? <p className="coach-muted" style={{ margin: 0 }}>{v.title}</p> : null}
-                      <MatchPlayer id={v.id} endpoint={`/api/coach/videos/${v.id}`} label="Revoir la vidéo" />
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="coach-card" style={{ marginBottom: 16 }}>
-                <p className="coach-card__label">{strict && isCoach && reportNeeded ? "Ton rapport · 1 heure payée en plus par jour quand il est fini" : "Ton rapport"}</p>
-                <ul className="coach-checklist">
-                  {!guest && <li data-done={String(presence.confirmed)}>Ma présence (mets-toi « présent » dans MonClubSportif)</li>}
-                  {reportNeeded && <li data-done={String(marked === roster.length)}>Présences des joueuses · {marked}/{roster.length}</li>}
-                  {reportNeeded && (
-                    <li data-done={String(participants.length > 0 && evaluated === participants.length)}>
-                      Évaluation de chaque fille présente{strict ? ` : 3 notes, chaque geste du ball mastery, observation de ${NOTE_MIN_WORDS} mots ou plus` : ""} · {evaluated}/{participants.length}
-                    </li>
-                  )}
-                  {reportNeeded && <li data-done={String(surveyDone)}>Sondage du jour de chaque fille · {routineDone}/{participants.length}</li>}
-                  {reportNeeded && strict && isCoach && <li data-done={String(debriefDone)}>Mon retour : 2 choses qui ont bien marché, 2 à améliorer</li>}
-                </ul>
-                <p className="coach-sub" style={{ marginTop: 12, color: hoursCount ? "var(--adm-good)" : undefined }}>
-                  {guest
-                    ? "Accès d'équipe : tu n'es pas assignée à cette pratique dans le site. Ta présence et tes heures arrivent de MonClubSportif."
-                    : strict && reportNeeded
-                      ? isCoach
-                        ? presence.confirmed && reportComplete
-                          ? "Rapport fini. Ton heure de rapport du jour (1 h, une seule même avec deux pratiques) s'ajoute à ta paie quand les rapports de toutes tes pratiques du jour sont finis."
-                          : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Ton heure de rapport du jour (1 h de plus, une seule même avec deux pratiques) s'ajoute toute seule quand chaque case est cochée pour chacune de tes pratiques du jour ; sinon, tu es payé pour tes heures de terrain seulement."
-                        : "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Pas de rapport à remplir pour toi : il est fait par les coachs."
-                    : hoursCount
-                    ? "Rapport complet : tes heures comptent pour la paie."
-                    : ruleApplies
-                      ? "Tes heures comptent pour la paie quand ta présence est confirmée et que les présences et les évaluations sont faites."
-                      : "Confirme ta présence pour que tes heures comptent."}
-                </p>
-              </div>
+              {presenceBlock}
+              {helpedBlock}
+              {videosBlock(videos.length > 1 ? "Les vidéos de cette activité" : "La vidéo de cette activité")}
+              {checklistBlock}
 
               {reportNeeded && marked < roster.length && (
                 <div className="coach-card" style={{ marginBottom: 16 }}>
@@ -1134,73 +1335,16 @@ export function CoachActiviteDetail({
                 </div>
               )}
 
-              {reportNeeded && participants.length > 0 && (
-                <section style={{ marginBottom: 16 }}>
-                  <h2 className="coach-h2">Évaluation rapide · {evaluated}/{participants.length}</h2>
-                  <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>
-                    Moins de 2 minutes par fille : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10, et une phrase sur ce que tu as vu (écrite pendant la pratique ou en regardant la vidéo).
-                    {observed.size ? ` Tes ${observed.size} joueuses à observer sont en premier.` : ""}
-                  </p>
-                  {[...participants].sort((a, b) => Number(!observed.has(a.registrationId)) - Number(!observed.has(b.registrationId))).map((p) => (
-                    <QuickEvaluation
-                      key={p.registrationId}
-                      activityId={activity.id}
-                      activityDate={String(activity.activity_date).slice(0, 10)}
-                      player={p}
-                      mine={mine[p.registrationId]}
-                      others={others[p.registrationId] ?? []}
-                      open={openId === p.registrationId}
-                      onToggle={() => setOpenId(openId === p.registrationId ? null : p.registrationId)}
-                      gestureChoices={bmMoves}
-                      onSaved={(ev) => {
-                        setMine((prev) => ({ ...prev, [p.registrationId]: ev }));
-                        openNext(p.registrationId);
-                      }}
-                    />
-                  ))}
-                </section>
-              )}
-
-              {reportNeeded && participants.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <h2 className="coach-h2">Sondage de fin · {routineDone}/{participants.length}</h2>
-                  <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>Avant de partir, chaque fille dit si elle a aimé, sa fatigue et ce qu&apos;elle aimerait avoir plus. 3 touches par fille.</p>
-                  <PracticeSurvey
-                    activityId={activity.id}
-                    players={participants}
-                    initialPresence={attendance}
-                    initialAnswers={feedback}
-                    feedbackUrl="/api/coach/feedback"
-                    onAnswersChange={setFeedback}
-                  />
-                </div>
-              )}
-
-              {isPractice && participants.length > 1 && (
-                <div style={{ marginBottom: 16 }}>
-                  <CoachTeamsCard
-                    title="Équipes du jour : couleurs et qui était avec qui"
-                    activityId={activity.id}
-                    players={participants}
-                    theme={themeForGroup(theme?.theme, activity.category ?? activity.title)}
-                  />
-                </div>
-              )}
-
-              {participants.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <CoachChampionsCard activityId={activity.id} players={participants} initial={initialChampions} rules={pointsRules} />
-                </div>
-              )}
-
-              <div style={{ marginBottom: 16 }}>
-                <CoachExerciseRatings activityId={activity.id} onProgress={(rated, total) => setExerciseRating({ rated, total })} />
-              </div>
+              {evaluationBlock}
+              {surveyBlock}
+              {teamsAfterBlock}
+              {championsBlock}
+              {exerciseRatingsBlock}
 
               {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
                 <div style={{ marginBottom: 16 }}>
                   {!guest && reportNeeded ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
-                  {reportNeeded || (guest && isCoach) ? <CoachDebriefCard activityId={activity.id} onStatus={setDebriefDone} required={isCoach && strict} /> : null}
+                  {debriefCard}
                 </div>
               ) : null}
 

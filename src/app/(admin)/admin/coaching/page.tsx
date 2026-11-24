@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AdminTopbar } from "@/components/admin-topbar";
 import { Pill } from "@/components/mandalart/ui";
 import { requireAdmin } from "@/lib/admin-auth";
+import { getMyPracticesToReport, type MyPractice } from "@/lib/admin-my-practices";
 import { getCoachingWeek } from "@/lib/coaching-repo";
 import type { Practice, Readiness } from "@/lib/practices-repo";
 
@@ -55,9 +56,37 @@ function PracticeRow({ p }: { p: Practice }) {
 
 /** Espace coaching : « Qu'est-ce qui se passe sur le terrain cette semaine, et qui a besoin d'attention ? »
  *  Seulement le foot, aucun montant (l'argent reste dans l'espace Académie). */
+/** Une pratique de JP : la regarder, évaluer les filles et faire son rapport sur un seul écran (portail, vue « tout-en-un »).
+ *  Lien ordinaire (pas Link) : le pont ouvre une session d'éducateur et ne doit pas être préchargé. */
+function MyPracticeRow({ p }: { p: MyPractice }) {
+  const done = p.missing.length === 0;
+  return (
+    <li className="mda-task" style={{ alignItems: "center", flexWrap: "wrap" }}>
+      <div className="mda-task-body" style={{ minWidth: 220 }}>
+        <p className="mda-task-title" style={{ fontWeight: 600 }}>
+          {p.isToday ? "Aujourd'hui" : dayLabel(p.date)} · {p.start.replace(":", " h ")} · {p.label}
+        </p>
+        <div className="mda-task-meta">
+          {p.location ? <span>{p.location}</span> : null}
+          <span>
+            {p.present ? `${p.evaluated}/${p.present} filles évaluées` : `${p.expected} fille${p.expected > 1 ? "s" : ""} attendue${p.expected > 1 ? "s" : ""}`}
+          </span>
+          {p.missing.map((m) => (
+            <span key={m} style={{ color: "var(--adm-warn)" }}>{m}</span>
+          ))}
+        </div>
+      </div>
+      {done ? <Pill tone="good">Rapport fini</Pill> : null}
+      <a href={p.href} className={done ? "admin-btn-ghost" : "admin-btn-primary"} style={{ padding: "6px 12px", textDecoration: "none", whiteSpace: "nowrap" }}>
+        {done ? "Revoir" : "Regarder, évaluer et faire mon rapport"}
+      </a>
+    </li>
+  );
+}
+
 export default async function CoachingWeekPage() {
-  await requireAdmin();
-  const w = await getCoachingWeek();
+  const role = await requireAdmin();
+  const [w, mine] = await Promise.all([getCoachingWeek(), role === "admin" ? getMyPracticesToReport().catch(() => [] as MyPractice[]) : Promise.resolve(null)]);
   const academy = w.practices.filter((p) => !p.organization);
   const ready = academy.filter((p) => p.readiness === "prete").length;
   const toPrepare = academy.length - ready;
@@ -78,6 +107,26 @@ export default async function CoachingWeekPage() {
             </h1>
             <p className="mda-lead">{w.theme ? `Thème de la semaine : ${w.theme}.` : "Aucun thème entré pour cette semaine (Pratiques → Thèmes)."} Ici on ne parle que de foot : les pratiques, les exercices et la progression de chaque fille.</p>
           </header>
+
+          {mine ? (
+            <section className="mda-card-flush" id="mes-pratiques">
+              <div className="mda-card-head">
+                <div>
+                  <h2 className="mda-h2">Mes pratiques : regarder, évaluer, faire mon rapport</h2>
+                  <p className="mda-sub" style={{ margin: "4px 0 0" }}>La pratique d&apos;un côté, les filles du jour et ton rapport de l&apos;autre, sur un seul écran.</p>
+                </div>
+              </div>
+              {mine.length === 0 ? (
+                <p className="admin-empty-text" style={{ padding: "0 20px 20px" }}>Aucune pratique aujourd&apos;hui et aucun rapport en retard des deux derniers jours.</p>
+              ) : (
+                <ul className="mda-tasks">
+                  {mine.map((p) => (
+                    <MyPracticeRow key={p.activityId} p={p} />
+                  ))}
+                </ul>
+              )}
+            </section>
+          ) : null}
 
           <section className="mda-cols-4">
             <div className="mda-card">

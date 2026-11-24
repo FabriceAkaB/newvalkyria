@@ -22,9 +22,11 @@ import { getBlocksForActivity } from "@/lib/session-plan-repo";
 export const metadata = { title: "Activité — Espace Technique" };
 export const dynamic = "force-dynamic";
 
-export default async function CoachActiviteDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CoachActiviteDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ vue?: string }> }) {
   const coachId = await requireCoach();
   const { id } = await params;
+  // ?vue=tout-en-un : la pratique, l'évaluation des filles et le rapport sur un seul écran (JP, 25 nov. 2026).
+  const view = (await searchParams).vue === "tout-en-un" ? "tout-en-un" : "etapes";
 
   const entry = await getCoachActivityAccess(coachId, id);
   if (!entry) notFound();
@@ -135,6 +137,7 @@ export default async function CoachActiviteDetailPage({ params }: { params: Prom
       initialReadSeen={(assignment?.practice_read_items ?? []) as string[]}
       initialReadAt={assignment?.practice_read_at ?? null}
       helped={helped}
+      view={view}
     />
   );
 }

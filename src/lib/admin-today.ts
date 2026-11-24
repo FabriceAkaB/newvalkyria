@@ -459,6 +459,28 @@ export async function getTodayActions(role: AdminRole): Promise<TodaySection[]> 
     );
   }
 
+  // ── Mes pratiques (JP, 25 nov. 2026) : regarder la pratique, évaluer les filles du jour et faire mon rapport sur un écran ──
+  if (isAdmin) {
+    const { getMyPracticesToReport } = await import("@/lib/admin-my-practices");
+    const mine = (await getMyPracticesToReport(new Date(now)).catch(() => [])).filter((p) => p.missing.length > 0);
+    sections.push(
+      section({
+        key: "mes-pratiques",
+        title: "Mes pratiques : évaluer les filles et faire mon rapport",
+        level: mine.some((p) => !p.isToday) ? "orange" : "info",
+        emptyText: "Aucune pratique à évaluer aujourd'hui, aucun rapport en retard.",
+        href: "/admin/coaching#mes-pratiques",
+        hrefLabel: "Mes pratiques",
+        items: mine.map((p) => ({
+          title: `${p.isToday ? "Aujourd'hui" : shortDay(`${p.date}T12:00:00`)} ${p.start} · ${p.label}`,
+          detail: p.missing.join(" · "),
+          meta: p.present ? `${p.evaluated}/${p.present} évaluées` : `${p.expected} attendues`,
+          href: "/admin/coaching#mes-pratiques"
+        }))
+      })
+    );
+  }
+
   // ── Présences et rapports des éducateurs à compléter avant la paie (P8.3.05, AU20) — données RH : admin ──
   if (isAdmin) {
     const missing = missingBeforePayroll(await getPayrollRows().catch(() => []), now);

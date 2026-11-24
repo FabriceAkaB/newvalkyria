@@ -277,3 +277,25 @@
   .print-sheet__evolve { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   @page { margin: 12mm; }
 }
+
+/* ── Vue « tout-en-un » d'une pratique (JP, 25 nov. 2026) : la pratique à gauche, les filles du jour
+   et le rapport à droite. Grand écran : la pratique reste en place, seule la colonne de droite défile.
+   Téléphone : une colonne, la pratique en haut. ── */
+.coach-page--full { max-width: 1440px; margin: 0 auto; }
+.coach-split__head { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; }
+.coach-split__head .coach-secondary { flex: 0 0 auto; }
+.coach-split { display: grid; gap: 24px; align-items: start; }
+.coach-split__left, .coach-split__right { min-width: 0; }
+.coach-split__anchor { scroll-margin-top: 76px; }
+.coach-split__jump { margin-top: 0; }
+.coach-split__right > .coach-card:first-child { margin-top: 0; }
+@media (min-width: 1200px) {
+  .coach-split__jump { display: none; }
+  .coach-split__anchor { scroll-margin-top: 16px; }
+  .coach-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+  .coach-split__left {
+    position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; overscroll-behavior: contain;
+    padding-right: 8px; scrollbar-width: thin;
+  }
+}
+@media (min-width: 1500px) { .coach-split { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); } }
