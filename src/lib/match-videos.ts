@@ -10,7 +10,7 @@
  *  Règles pures : match-videos-core.ts. */
 
 import { CLUB_ID } from "@/lib/club";
-import { canWatch, classifyRecording, highlightsFromVeo, isNewvalRecording, montrealParts, periodsFromVeo, type VideoCandidate, type VideoHighlight, type VideoPeriod } from "@/lib/match-videos-core";
+import { canWatch, classifyRecording, dateFromTitle, highlightsFromVeo, isNewvalRecording, isPracticeRecording, montrealParts, periodsFromVeo, type VideoCandidate, type VideoHighlight, type VideoPeriod } from "@/lib/match-videos-core";
 import { loadExpectedPlayers, loadTeamTargets, openRobotSession } from "@/lib/mcs-robot-runner";
 import { personKey } from "@/lib/mcs-rules";
 import { getChildrenForParent, getVerifiedParentEmail } from "@/lib/parent-repo";
@@ -152,7 +152,11 @@ export async function importVeoRecordings(recs: VeoRecording[], opts: { dryRun?:
   const known = new Map(((existing ?? []) as any[]).map((r) => [String(r.veo_slug), r]));
   const out: VeoImportResult[] = [];
   for (const r of recs) {
-    const { date, startMin } = montrealParts(r.start);
+    const parts = montrealParts(r.start);
+    // Pratique nommée par la date (« Practique du Nov 19, 2026 ») : la date du titre fait foi, l'heure de Veo est celle du téléversement.
+    const titled = isPracticeRecording(r.title) ? dateFromTitle(r.title) : null;
+    const date = titled ?? parts.date;
+    const startMin = titled ? null : parts.startMin;
     if (!isNewvalRecording(r.title)) {
       out.push({ title: r.title, date, outcome: "ignoree", reason: "Le titre ne commence pas par « Newval »." });
       continue;
@@ -168,10 +172,25 @@ export async function importVeoRecordings(recs: VeoRecording[], opts: { dryRun?:
       out.push({ title: r.title, date, outcome: prev.status === "a-classer" ? "a-classer" : "deja", where: prev.status === "a-classer" ? undefined : prev.title });
       continue;
     }
-    const { candidate, reason } = classifyRecording({ title: r.title, startMin }, await candidatesOn(date));
+    const candidates = await candidatesOn(date);
+    const { candidate, reason } = classifyRecording({ title: r.title, startMin }, candidates);
     const row = { club_id: CLUB_ID, source: "veo", source_url: `https://app.veo.co/matches/${r.slug}/`, veo_slug: r.slug, match_date: date, created_by: "veo", ...media };
+    // La vidéo de la soirée (JP, 25 nov. 2026) : une pratique des filles filmée d'un bout à l'autre couvre tous les
+    // blocs du jour ; elle va à toutes les pratiques des filles de ce jour-là (jamais vue par les familles).
+    const evening = !candidate && isPracticeRecording(r.title) && candidates.some((c) => c.kind === "pratique" && c.activityId);
+    if (evening) {
+      if (!opts.dryRun) {
+        const { error } = await db().from("match_videos").insert({ ...row, kind: "pratique", activity_id: null, team_id: null, mcs_event_id: null, title: `Pratiques des filles du ${date}`, status: "pret", error: null, published: false, participant_keys: [] });
+        if (error) {
+          out.push({ title: r.title, date, outcome: "erreur", reason: error.message });
+          continue;
+        }
+      }
+      out.push({ title: r.title, date, outcome: "rangee", where: `Pratiques des filles du ${date} (tous les blocs)` });
+      continue;
+    }
     if (!opts.dryRun) {
-      const insert = candidate ? { ...row, ...(await placement(candidate)) } : { ...row, kind: /pratique|practice|entrainement/i.test(r.title) ? "pratique" : "match", title: r.title.trim(), status: "a-classer", error: reason, published: false };
+      const insert = candidate ? { ...row, ...(await placement(candidate)) } : { ...row, kind: /pratique|practique|practice|entrainement/i.test(r.title) ? "pratique" : "match", title: r.title.trim(), status: "a-classer", error: reason, published: false };
       const { error } = await db().from("match_videos").insert(insert);
       if (error) {
         out.push({ title: r.title, date, outcome: "erreur", reason: error.message });
@@ -283,7 +302,12 @@ export async function playerDataForParent(userId: string, videoId: string): Prom
 /** Les vidéos rangées d'une activité du portail, pour sa page (étape « Après », le jour de l'évaluation). */
 export async function videosForActivity(activityId: string): Promise<{ id: string; title: string }[]> {
   const { data } = await db().from("match_videos").select("id, title").eq("activity_id", activityId).eq("status", "pret").order("created_at");
-  return (data ?? []) as any[];
+  const own = (data ?? []) as any[];
+  // La vidéo de la soirée : une pratique des filles de ce jour-là, sans activité précise (tous les blocs).
+  const { data: act } = await db().from("coach_activities").select("activity_date, activity_type, organization").eq("id", activityId).maybeSingle();
+  if (!act || act.activity_type === "Match" || act.organization) return own;
+  const { data: evening } = await db().from("match_videos").select("id, title").eq("kind", "pratique").is("activity_id", null).eq("status", "pret").eq("match_date", String(act.activity_date).slice(0, 10)).order("created_at");
+  return [...own, ...((evening ?? []) as any[]).filter((v) => !own.some((o) => o.id === v.id))];
 }
 
 /** Vidéos des pratiques : ouvertes aux éducateurs pendant 14 jours après la pratique, puis fermées (JP, 18 nov. 2026).

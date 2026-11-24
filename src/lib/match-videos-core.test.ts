@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { canWatch, classifyRecording, clock, durationLabel, highlightCounts, highlightsFromVeo, isNewvalRecording, montrealParts, periodsFromVeo, type VideoCandidate } from "@/lib/match-videos-core";
+import { canWatch, classifyRecording, clock, dateFromTitle, isPracticeRecording, durationLabel, highlightCounts, highlightsFromVeo, isNewvalRecording, montrealParts, periodsFromVeo, type VideoCandidate } from "@/lib/match-videos-core";
 
 const video = { kind: "match", team_id: "t1", participant_keys: ["sophie anne bergeron"], published: true, status: "pret" };
 
@@ -55,6 +55,12 @@ describe("enregistrements Veo", () => {
     expect(isNewvalRecording("Newval 2015 AV match")).toBe(true);
     expect(isNewvalRecording("New valkyria 2016")).toBe(true);
     expect(isNewvalRecording("Match Nov 1, 2026")).toBe(false);
+    expect(isNewvalRecording("Practique  du Nov 23, 2026")).toBe(true);
+    expect(isPracticeRecording("Pratique du 19 nov. 2026")).toBe(true);
+    expect(isPracticeRecording("Untitled recording 2026-11-15")).toBe(false);
+    expect(dateFromTitle("Practique  du Nov 19 , 2026")).toBe("2026-11-19");
+    expect(dateFromTitle("Pratique du 3 déc. 2026")).toBe("2026-12-03");
+    expect(dateFromTitle("Newval 2015 AV match")).toBeNull();
     expect(isNewvalRecording("2015F Révolution")).toBe(false);
   });
   it("heure de Montréal", () => expect(montrealParts("2026-11-01T22:30:19+01:00")).toEqual({ date: "2026-11-01", startMin: 16 * 60 + 30 }));

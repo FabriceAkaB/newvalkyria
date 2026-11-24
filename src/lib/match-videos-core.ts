@@ -94,8 +94,29 @@ export function highlightCounts(list: VideoHighlight[]): { type: string; label: 
 
 /* ── Enregistrements Veo : seuls ceux dont le titre commence par « Newval » sont rangés ─────────────── */
 
-/** Un enregistrement Veo à ranger dans le site (titre « Newval … » ou « New Valkyria … »). */
-export const isNewvalRecording = (title: string | null | undefined) => /^\s*new\s*val/i.test(String(title ?? ""));
+/** Un enregistrement Veo à ranger dans le site (titre « Newval … » ou « New Valkyria … »), ou une pratique des filles
+ *  nommée comme JP le fait dans Veo (« Practique du Nov 23, 2026 », « Pratique … », JP, 25 nov. 2026). */
+export const isNewvalRecording = (title: string | null | undefined) => /^\s*new\s*val/i.test(String(title ?? "")) || isPracticeRecording(title);
+
+/** Enregistrement d'une pratique des filles d'après son titre Veo (« Practique du Nov 23, 2026 »). */
+export const isPracticeRecording = (title: string | null | undefined) => /^\s*(pratique|practique|practice|entra[iî]nement)\b/i.test(String(title ?? ""));
+
+const MONTHS_EN_FR: Record<string, number> = { jan: 1, janv: 1, feb: 2, fev: 2, fevr: 2, mar: 3, mars: 3, apr: 4, avr: 4, may: 5, mai: 5, jun: 6, juin: 6, jul: 7, juil: 7, aug: 8, aou: 8, aout: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
+
+/** La date écrite dans le titre (« Nov 19, 2026 », « 19 nov. 2026 ») : Veo date parfois l'enregistrement du lendemain
+ *  (jour du téléversement). Null si le titre n'a pas de date. */
+export function dateFromTitle(title: string): string | null {
+  const t = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const mk = (y: string, mon: string, d: string) => {
+    const m = MONTHS_EN_FR[mon.replace(/\./g, "")];
+    return m && Number(d) >= 1 && Number(d) <= 31 ? `${y}-${String(m).padStart(2, "0")}-${d.padStart(2, "0")}` : null;
+  };
+  const a = t.match(/\b([a-z]{3,5})\.?\s+(\d{1,2})\s*,?\s+(20\d\d)\b/);
+  if (a) return mk(a[3], a[1], a[2]);
+  const b = t.match(/\b(\d{1,2})(?:er)?\s+([a-z]{3,5})\.?\s+(20\d\d)\b/);
+  if (b) return mk(b[3], b[2], b[1]);
+  return null;
+}
 
 export interface VideoCandidate {
   /** match (familles) ou pratique (éducateurs). */
@@ -124,7 +145,7 @@ const tokens = (s: string) =>
 export function classifyRecording(rec: { title: string; startMin: number | null }, candidates: VideoCandidate[]): { candidate: VideoCandidate | null; reason: string } {
   const words = tokens(rec.title);
   const wantsMatch = words.some((w) => /^(match|partie|game|tournoi)$/.test(w));
-  const wantsPractice = words.some((w) => /^(pratique|practice|entrainement|seance)$/.test(w));
+  const wantsPractice = words.some((w) => /^(pratique|practique|practice|entrainement|seance)$/.test(w));
   let list = candidates;
   if (wantsMatch) list = list.filter((c) => c.kind === "match");
   if (wantsPractice) list = list.filter((c) => c.kind === "pratique");

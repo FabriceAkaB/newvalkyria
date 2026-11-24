@@ -1010,6 +1010,16 @@ export function CoachActiviteDetail({
       </div>
     );
 
+  // Pas de vidéo Veo pour cette activité : on le dit clairement à l'éducateur qui veut évaluer (JP, 25 nov. 2026).
+  const noVideoCard = (
+    <div className="coach-card" style={{ marginBottom: 16 }}>
+      <p className="coach-card__label">Vidéo non disponible</p>
+      <p className="coach-sub" style={{ margin: 0 }}>
+        La vidéo Veo de cette pratique n&apos;est pas encore importée. Évalue avec ce que tu as vu sur le terrain ; dès qu&apos;elle arrive (le site vérifie toutes les heures), elle s&apos;affiche ici.
+      </p>
+    </div>
+  );
+
   const checklistBlock = (
     <div className="coach-card" style={{ marginBottom: 16 }}>
       <p className="coach-card__label">{strict && isCoach && reportNeeded ? "Ton rapport · 1 heure payée en plus par jour quand il est fini" : "Ton rapport"}</p>
@@ -1156,12 +1166,7 @@ export function CoachActiviteDetail({
                 {videos.length > 0 ? (
                   videosBlock("La pratique en vidéo")
                 ) : (
-                  <div className="coach-card" style={{ marginBottom: 16 }}>
-                    <p className="coach-card__label">La pratique en vidéo</p>
-                    <p className="coach-sub" style={{ margin: 0 }}>
-                      Pas encore de vidéo pour cette pratique. Dès que l&apos;enregistrement Veo (titre « New Valkyria … ») est importé, il apparaît ici pour regarder la pratique en évaluant les filles.
-                    </p>
-                  </div>
+                  noVideoCard
                 )}
                 {deckCard}
                 {practicePlan}
@@ -1317,6 +1322,7 @@ export function CoachActiviteDetail({
           {step === "pendant" && (
             <>
               {practiceTimer}
+              {activity.activity_type !== "Match" ? (videos.length > 0 ? videosBlock("La pratique en vidéo") : noVideoCard) : null}
               {attendanceStep}
               {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
                 <CoachTeamsCard
