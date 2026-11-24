@@ -24,6 +24,8 @@ export async function POST(request: Request) {
     if (body?.action === "valider" && typeof body.id === "string") return NextResponse.json({ review: await approveTestimonial(body.id, "JP") });
     if (body?.action === "reglages") {
       await saveReviewSettings({ googleUrl: body.googleUrl, facebookUrl: body.facebookUrl, videoCreditCents: body.videoCreditCents });
+      // Lien Google enregistré : la tâche « ajouter le lien d'avis » de JP se coche toute seule (bulletin-gate-repo.ts).
+      await (await import("@/lib/bulletin-gate-repo")).syncGoogleLinkTask().catch(() => undefined);
       return NextResponse.json({ ok: true });
     }
   } catch (error) {

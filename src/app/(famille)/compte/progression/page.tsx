@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BulletinGateSurvey, BulletinGoogleReview } from "@/components/bulletin-gate";
 import { BulletinReport } from "@/components/bulletin-report";
 import { FamilyPassport } from "@/components/family-passport";
 import { FamilyProgressVideos } from "@/components/family-progress-videos";
 import { Container } from "@/components/container";
+import { needsGate, reviewDraft, showGoogleButton } from "@/lib/bulletin-gate";
+import { getEarlyAccess, getGoogleReviewUrl, getParentGate } from "@/lib/bulletin-gate-repo";
 import { getBulletinReport } from "@/lib/bulletin-repo";
 import { getFamilyParcours, type FamilyParcours } from "@/lib/family-passport-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
-import { getFamilyRegistrations, getVerifiedParentEmail } from "@/lib/parent-repo";
+import { getFamilyRegistrations, getParentAccount, getVerifiedParentEmail } from "@/lib/parent-repo";
 import { getFamilyProgressVideos } from "@/lib/progress-videos-repo";
 import { getGirlPhotos } from "@/lib/family-photos";
 
@@ -21,16 +24,25 @@ export default async function ProgressionPage({ searchParams }: { searchParams: 
   const sp = await searchParams;
   const period = sp.bulletin === "mi-saison" || sp.bulletin === "fin-saison" ? sp.bulletin : null;
   const userId = await requireParentUserId();
-  const [family, email] = await Promise.all([getFamilyRegistrations(userId), getVerifiedParentEmail(userId)]);
+  const [family, email, account] = await Promise.all([getFamilyRegistrations(userId), getVerifiedParentEmail(userId), getParentAccount(userId)]);
+  const earlyAccess = await getEarlyAccess(account?.email).catch(() => false);
   const regIds = new Map(family.map((f) => [`${f.firstName} ${f.lastName}`.toLowerCase(), f.registrationId]));
   const [bulletins, progress, photos, parcours] = await Promise.all([
-    Promise.all([...regIds.entries()].map(async ([k, id]) => ({ key: k, data: await getBulletinReport(id, { period, audience: "parent" }).catch(() => null) }))),
+    Promise.all([...regIds.entries()].map(async ([k, id]) => ({ key: k, data: await getBulletinReport(id, { period, audience: "parent", earlyAccess }).catch(() => null) }))),
     // Seulement les inscriptions de cette famille : les vidéos des autres filles ne sont jamais lues ici (Loi 25).
     getFamilyProgressVideos(family.map((f) => f.registrationId)).catch(() => new Map()),
     getGirlPhotos(family.map((f) => f.registrationId)).catch(() => new Map<string, string>()),
     // Passeport et parcours : seulement les filles de cette famille, chacune comparée à elle-même (P1.5.03).
     getFamilyParcours(family.map((f) => f.registrationId)).catch(() => new Map<string, FamilyParcours>())
   ]);
+  // Bulletin remis : d'abord le sondage de 2 minutes (P4.8.18), une fois par parent ; à 9 ou 10, le bouton d'avis Google (P3.8.19).
+  const shown = bulletins.filter((b) => b.data);
+  const released = shown.find((b) => b.data!.released)?.data ?? null;
+  const gate = released ? await getParentGate(userId, released.range.period).catch(() => null) : null;
+  const locked = !!gate && needsGate({ released: true, surveyStatus: gate.survey.status, respondedAt: gate.invite.responded_at });
+  const googleUrl = gate?.response && !locked ? await getGoogleReviewUrl().catch(() => null) : null;
+  const askGoogle = !!gate?.response && !gate.response.google_clicked_at && showGoogleButton(gate.response.recommend_score, googleUrl);
+  const names = shown.filter((b) => b.data!.released).map((b) => b.data!.player.firstName).filter(Boolean);
   return (
     <section className="insc-hero">
       <Container className="max-w-2xl">
@@ -52,9 +64,24 @@ export default async function ProgressionPage({ searchParams }: { searchParams: 
               </div>
             );
           })}
-          {bulletins.filter((b) => b.data).map((b) => (
-            <BulletinReport key={b.key} data={b.data!} periodHref={(p) => `/compte/progression?bulletin=${p}`} />
-          ))}
+          {locked && gate && released ? (
+            <BulletinGateSurvey
+              period={released.range.period}
+              names={names.length > 1 ? `${names.slice(0, -1).join(", ")} et ${names[names.length - 1]}` : names[0] || "votre fille"}
+              label={released.range.label}
+              intro={gate.survey.intro}
+              questions={gate.survey.questions}
+            />
+          ) : (
+            <>
+              {askGoogle && gate?.response && googleUrl ? (
+                <BulletinGoogleReview period={released!.range.period} url={googleUrl} draft={reviewDraft(gate.response.answers)} clicked={false} />
+              ) : null}
+              {shown.map((b) => (
+                <BulletinReport key={b.key} data={b.data!} periodHref={(p) => `/compte/progression?bulletin=${p}`} />
+              ))}
+            </>
+          )}
           {!bulletins.some((b) => b.data) ? (
             <div className="parent-card">
               <h2>Pas encore de bulletin</h2>

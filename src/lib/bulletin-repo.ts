@@ -27,7 +27,7 @@ export interface BulletinReportData {
 
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
 
-export async function getBulletinReport(registrationId: string, opts: { period?: BulletinPeriod | null; audience: "equipe" | "parent" }): Promise<BulletinReportData | null> {
+export async function getBulletinReport(registrationId: string, opts: { period?: BulletinPeriod | null; audience: "equipe" | "parent"; /** Compte de test : voit le bulletin avant sa date de remise (bulletin-gate.ts). */ earlyAccess?: boolean }): Promise<BulletinReportData | null> {
   const { data: reg } = await db()
     .from("registrations")
     .select("id, season_id, player_first_name, player_last_name, player_dob, category_id, advanced_group, player_id, time_slot_template_id")
@@ -78,7 +78,7 @@ export async function getBulletinReport(registrationId: string, opts: { period?:
     familyComments: ((comments ?? []) as any[])
       .filter((c) => c.period === period)
       .map((c) => ({ coachId: c.coach_id ?? null, author: c.author, text: c.body, date: day(c.updated_at) })),
-    released: isReleased(range, opts.audience),
+    released: isReleased(range, opts.audience) || !!opts.earlyAccess,
     audience: opts.audience,
     notes:
       opts.audience === "parent"
