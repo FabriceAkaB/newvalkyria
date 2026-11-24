@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, ClipboardList, FlaskConical, Globe, Handshake, MessageSquareQuote, House, LogOut, Menu, MessageSquareHeart, Receipt, Star, TrendingUp, Users, Video, type LucideIcon } from "lucide-react";
+import { CalendarClock, ClipboardList, FlaskConical, Globe, Handshake, MessageSquareQuote, House, LogOut, Menu, MessageSquareHeart, Receipt, Star, TrendingUp, Trophy, Users, Video, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,6 +15,7 @@ export const FAMILY_TABS: { href: string; label: string; icon: LucideIcon; main:
   { href: "/compte/points", label: "Points", icon: Star, main: true },
   { href: "/compte/progression", label: "Progression", icon: TrendingUp, main: true },
   { href: "/compte/matchs", label: "Matchs", icon: Video, main: false },
+  { href: "/compte/tournois", label: "Tournois", icon: Trophy, main: false },
   { href: "/compte/fiche", label: "Fiche joueuse", icon: ClipboardList, main: false },
   { href: "/compte/lab", label: "Valkyria Lab", icon: FlaskConical, main: false },
   { href: "/compte/factures", label: "Programmes et factures", icon: Receipt, main: false },

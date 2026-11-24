@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Apple, Archive, Check, ChevronsUpDown, BookOpen, Brain, BriefcaseBusiness, CalendarCheck, CalendarDays, Camera, ChartColumn, ChartLine, ChevronRight, Clapperboard,
   ClipboardCheck, School, Tent, Download, Dumbbell, Eye, FlaskConical, GraduationCap, Handshake, History, House, LayoutGrid, ListChecks, LogOut, Mail, MapPin,
-  Megaphone, MessageSquareHeart, Mic, Gauge, RefreshCw, Repeat, Route, Search, Shirt, ShieldCheck, ShoppingBag, Sun, Tag, Target, Ticket, TrendingUp, Trophy,
+  Medal, Megaphone, MessageSquareHeart, Mic, Gauge, RefreshCw, Repeat, Route, Search, Shirt, ShieldCheck, ShoppingBag, Sun, Tag, Target, Ticket, TrendingUp, Trophy,
   UserRound, Users, UsersRound, Wallet, type LucideIcon
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -21,7 +21,7 @@ const BY_TYPE: Record<AdminNavIcon, LucideIcon> = {
 };
 const BY_HUB: Record<string, LucideIcon> = {
   aujourdhui: Sun, mandalart: Target, saison: Users, essais: ClipboardCheck, "parcours-client": Route, uniformes: Shirt, garcons: UsersRound,
-  lieux: MapPin, camps: Tent, parascolaire: School, monclubsportif: RefreshCw, communications: Mail, voix: MessageSquareHeart, marketing: Megaphone, revenus: Wallet,
+  lieux: MapPin, camps: Tent, parascolaire: School, tournois: Medal, monclubsportif: RefreshCw, communications: Mail, voix: MessageSquareHeart, marketing: Megaphone, revenus: Wallet,
   equipe: BriefcaseBusiness, partenaires: Handshake, matchs: Ticket, coaching: CalendarCheck, pratiques: CalendarDays, "nos-matchs": Trophy,
   methode: BookOpen, exercices: Dumbbell, progression: TrendingUp, "valkyria-lab": FlaskConical, "suivi-educateurs": GraduationCap,
   contenu: Clapperboard, "contenu-captation": Camera, "contenu-entrevues": Mic, "contenu-portee": ChartLine, "ma-journee": Sun,

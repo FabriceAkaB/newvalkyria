@@ -184,6 +184,13 @@ export const ADMIN_NAV: AdminNavSection[] = [
         tabs: [{ href: "/admin/parascolaire", label: "Parascolaire" }]
       },
       {
+        key: "tournois",
+        label: "Tournois",
+        icon: "flask",
+        description: "Tournois proposés aux familles sans avancer d'argent : intérêt, minimum de joueuses, go, puis chaque famille paie sa part (inscription du tournoi et coach).",
+        tabs: [{ href: "/admin/tournois", label: "Tournois", adminOnly: true }]
+      },
+      {
         key: "monclubsportif",
         label: "MonClubSportif",
         icon: "calendar",

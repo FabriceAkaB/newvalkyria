@@ -23,6 +23,8 @@ export async function GET(request: Request) {
   // Accueil des nouvelles familles (30 premiers jours) : programmé avant l'envoi, pour que la bienvenue parte dans l'heure
   // (éteint tant que « accueil_30_jours_actif » n'est pas activé dans l'admin).
   const onboarding = await import("@/lib/onboarding-30-days-repo").then((m) => m.scheduleOnboardingForNewFamilies({})).then((r) => ({ ok: true, r })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
+  // Tournois : une place non payée à la date limite expire et passe à la suivante (avant l'envoi des rappels programmés).
+  const tournaments = await import("@/lib/tournaments-repo").then((m) => m.runTournamentDeadlines()).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
   const emails = await sendDueEmails().catch((e) => ({ sent: 0, failed: 0, error: e instanceof Error ? e.message : "erreur" }));
   // Puis les publications MonClubSportif programmées (ex. un sondage, un lien personnel par famille).
   const mcsPosts = await sendDueMcsPosts().catch((e) => ({ posted: 0, failed: 0, error: e instanceof Error ? e.message : "erreur" }));
@@ -65,5 +67,5 @@ export async function GET(request: Request) {
   const archive = await archiveVideos({ deadline: started + (maxDuration - 20) * 1000 })
     .then((r) => ({ done: r.done.length, progress: r.progress, errors: r.errors.map((e) => e.error) }))
     .catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
-  return NextResponse.json({ ok: true, onboarding, parentNews, weeklyMessage, emails, mcsPosts, surveyReminders, todayPresences, practiceInvites, exerciseRatings, reportNotices, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
+  return NextResponse.json({ ok: true, onboarding, tournaments, parentNews, weeklyMessage, emails, mcsPosts, surveyReminders, todayPresences, practiceInvites, exerciseRatings, reportNotices, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
 }

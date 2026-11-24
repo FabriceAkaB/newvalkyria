@@ -504,6 +504,15 @@ export async function POST(request: Request) {
     if (checkoutType === "sessionprogram") {
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
       const registration = await markSessionProgramRegistrationPaid(session.id, paymentIntentId);
+      // Tournoi (frais de participation payés au go) : place payée, rappel annulé, confirmation propre au tournoi.
+      const tournamentResponseId = session.metadata?.tournamentResponseId;
+      if (tournamentResponseId) {
+        if (registration) {
+          await import("@/lib/tournaments-repo").then((m) => m.onTournamentPaid(tournamentResponseId, registration as any)).catch((error) => console.error("Unable to finalize tournament payment", error));
+          await notifyPaidRegistration(await sessionProgramName(registration.program_slug), registration as any, session, "Tournoi : frais de participation");
+        }
+        return NextResponse.json({ received: true });
+      }
       const isPrivateProgram = session.metadata?.privateProgram === "true";
       if (registration) {
         await enrollInAllDates(registration.id, registration.program_slug as "privilege-valkyria" | "intensif-garcons");
