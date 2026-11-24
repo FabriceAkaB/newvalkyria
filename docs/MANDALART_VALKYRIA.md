@@ -9,7 +9,7 @@ Dossier de référence pour Claude Code. Mis à jour le 1er nov. 2026. Contenu i
 - **Ce qu'il faut construire** : le module `/admin/mandalart` (section 6), qui charge `mandalart.json`, garde l'état des cases cochées dans Supabase et calcule les progressions (section 2). Puis, dans l'ordre des niveaux, les automatisations et les agents de la section 5.
 - **Règles** : interface en français du Québec ; JP travaille surtout sur son téléphone ; ne jamais changer le contenu du plan sans JP ; ne jamais écraser une case cochée lors d'une nouvelle importation ; aucune donnée d'enfant dans les tables du Mandalart (Loi 25).
 - **En chiffres** : 8 piliers × 8 objectifs = 64 objectifs ; 251 tâches, dont 69 ⭐ ; 6 niveaux ; 27 indicateurs ; 11 agents IA ; 16 automatisations.
-- **Contrainte n°1 jusqu'au 28 février 2027 (décision de JP, 22 nov. 2026)** : les prospects de l'été 2027 (2 camps de jour, Valkyria Été) et de l'hiver 2027-2028, et une équipe qui livre sans JP. Tout le reste attend le 1er mars 2027. Détail et ordre des tâches : section 11, « Contrainte n°1 ». Avant, en novembre 2026 : pilier 1, Excellence pédagogique.
+- **Contrainte n°1 jusqu'au 28 février 2027 (décision de JP, 22 nov. 2026, précisée le 25 nov.)** : une machine d'acquisition à plusieurs canaux (plan `docs/strategie/machine-acquisition-90-jours.md`) pour les prospects de l'été 2027 (2 camps de jour, Valkyria Été) et de l'hiver 2027-2028, et une équipe qui livre sans JP. Tout le reste attend le 1er mars 2027. Détail et ordre des tâches : section 11, « Contrainte n°1 ». Avant, en novembre 2026 : pilier 1, Excellence pédagogique.
 
 ## 1. La case centrale
 
@@ -1533,11 +1533,11 @@ un comité de parents ; groupes d'environ 20 joueuses ; c'est aussi un levier de
 
 Décision de JP après les courriels d'Alex Hormozi sur la contrainte principale (« Tout ce qui n'est pas votre contrainte principale vous fait perdre du temps : choisissez-en une, investissez-vous à fond, réglez-la, puis passez à la suivante ») et sur le stade 3 (passer de celui qui fait à celui qui forme). Sous 500 000 $ de chiffre d'affaires, la contrainte habituelle est de **ne pas attirer assez de prospects**. Le 22 nov. 2026, une crevaison de JP a fait annuler deux pratiques : la livraison dépend encore de lui. Pour la prochaine saison, le focus est donc mis sur deux choses liées : **les prospects** (les 2 camps de jour d'été, Valkyria Été le soir, puis l'hiver 2027-2028) et **la formation de l'équipe**, qui libère JP pour attirer des familles. JP se forme lui-même à la publicité payante, à la création de contenu et aux méthodes de $100M Leads. L'ordre : d'abord une offre claire (quoi, pour qui, où, quand, combien), ensuite la communication pour attirer du monde dans chaque programme. Les leçons d'Alex sont gardées dans Mes connaissances (`jp_knowledge`, auteur « Alex Hormozi »).
 
-- **Contrainte** : Attirer assez de familles intéressées pour remplir les 2 camps de jour d'été, Valkyria Été (soir) et la saison 2027-2028, avec une équipe qui donne les pratiques sans JP.
+- **Contrainte** : Une machine d'acquisition à plusieurs canaux (contenu, publicité, parents, contacts chauds, Google) qui amène assez de familles à l'essai pour remplir les 2 camps de jour d'été, Valkyria Été (soir) et la saison 2027-2028, pendant que l'équipe donne les pratiques sans JP.
 - **Jusqu'au** : 28 févr. 2027
 - **Pourquoi** : Sous 500 000 $, le frein est le nombre de prospects (Alex Hormozi) ; et JP ne peut pas attirer des familles s'il doit être sur chaque terrain.
-- **Fini quand** : la grille d'offres est en ligne, 40 nouvelles familles intéressées par semaine, la prévente de l'été est lancée et plus aucune pratique n'est annulée parce que JP est absent.
-- **Tâches, dans l'ordre** : `P2.4.08`, `P2.4.09`, `P2.4.05`, `P2.4.06`, `P5.2.10`, `P3.8.15`, `P3.8.14`, `P3.2.22`, `P3.8.16`, `P3.6.09`, `P5.2.03`, `P2.4.03`, `P3.8.17`, `P3.8.18`, `P3.8.13`, `P3.6.06`, `P3.6.08`, `P3.1.06`, `P8.3.08`, `P1.4.14`, `P8.2.08`, `P8.3.02`, `P8.3.03`
+- **Fini quand** : 40 nouvelles familles intéressées et 12 essais réservés par semaine, une publication par jour, une publicité qui ramène des essais à 25 $ ou moins, la prévente de l'été lancée, et plus aucune pratique annulée parce que JP est absent.
+- **Tâches, dans l'ordre** : `P3.8.06`, `P3.2.26`, `P3.2.23`, `P3.2.28`, `P3.2.25`, `P3.2.24`, `P4.8.18`, `P3.2.27`, `P3.8.20`, `P2.4.08`, `P3.8.19`, `P3.6.10`, `P2.4.09`, `P2.4.05`, `P5.2.10`, `P3.8.15`, `P3.8.14`, `P3.2.22`, `P3.8.16`, `P3.6.09`, `P3.8.21`, `P3.1.08`, `P5.2.03`, `P2.4.03`, `P3.8.17`, `P3.8.18`, `P3.8.13`, `P3.6.06`, `P3.1.02`, `P3.1.06`, `P8.3.08`, `P1.4.14`, `P8.2.08`
 - **En pause** : tout chantier du site ou du plan qui ne sert pas cette contrainte attend le 1er mars 2027, sauf les obligations (paie, taxes, sécurité des joueuses).
 
 #### P2.4 Échelle d'offres sur 5 générations
@@ -1569,6 +1569,37 @@ Décision de JP après les courriels d'Alex Hormozi sur la contrainte principale
 
 - [ ] `P1.4.14` ⭐ N1 — Former les éducateurs principaux à diriger la pratique complète sans JP : chacun dirige seul une pratique par semaine dès janvier, JP observe et donne son retour, puis s'absente ; tous prêts avant les camps. — 28 févr. 2027 · JP + coachs
 
+### Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)
+
+Décision de JP : pendant 3 mois (1er décembre 2026 au 28 février 2027), JP se consacre à l'acquisition (marketing, prospects, publicité, plusieurs canaux selon $100M Leads), à la création de contenu et à sa formation (filmer, tester des créatifs, publicité, marque personnelle). L'indicateur roi est l'essai réservé : c'est l'essai qui fait signer. Plan complet : `docs/strategie/machine-acquisition-90-jours.md` (objectifs par semaine, mois et trimestre, les 4 canaux, l'entonnoir sans perte, 1 000 avis Google, contenu haut, milieu et bas de l'entonnoir, tout filmer, formation de JP).
+
+#### P4.8 Réinscription, satisfaction et sortie U13
+
+- [ ] `P4.8.18` ⭐ N1 — Bulletin du 15 décembre débloqué seulement après le sondage de satisfaction (2 minutes) : toutes les familles répondent ; JP valide les 8 questions proposées dans le plan avant le 8 décembre. — 8 déc. 2026 · JP + Claude Code · AU17
+
+#### P3.8 Publicité payante et mesure
+
+- [ ] `P3.8.19` ⭐ N1 — Avis Google : à 9 ou 10 sur 10 au sondage du bulletin, un bouton ouvre directement la fenêtre d'avis de notre fiche avec le texte du parent déjà copié (le parent publie lui-même, jamais de récompense) ; objectifs 100 avis au 30 juin 2027, 300 au 31 déc. 2027, 1 000 d'ici fin 2028. — 15 déc. 2026 · Claude Code + JP
+- [ ] `P3.8.20` ⭐ N1 — Objectifs d'acquisition de la semaine, du mois et du trimestre (prospects, essais réservés, essais faits, inscriptions, avis Google, publications, coût par prospect, par essai et par inscription, par canal) affichés dans l'admin et revus chaque lundi. — 4 déc. 2026 · Claude Code
+- [ ] `P3.8.21` ⭐ N1 — Méthode de test des créatifs : chaque semaine 3 crochets et 2 angles en reels d'essai ; le gagnant (rétention à 3 secondes, partages, messages) passe sur le vrai compte puis en publicité à 10-20 $ par jour ; arrêt après 7 jours sans essai, budget doublé si ça ramène des essais. — 15 janv. 2027 · JP · A05
+
+#### P3.2 Vidéos portfolio et avant-après
+
+- [ ] `P3.2.23` ⭐ N1 — Personne caméra à chaque pratique dès la semaine du 30 novembre, puis Will : toutes les pratiques de groupe, chaque pratique individuelle de JP, les matchs (jamais les garçons) ; chaque sortie de tournage de JP = au moins 2 blocs Valkyria Lab + vidéos JP Coach. — 30 nov. 2026 · JP + caméra
+- [ ] `P3.2.24` ⭐ N1 — Guide de tournage dans Création de contenu : les types de plans en images (large, moyen, serré, pieds, ralenti, point de vue, réaction, entrevue, ambiance), la liste des plans à chaque pratique et la recette de chaque format (reel 30 s, carrousel, entrevue, avant/après), pour que n'importe qui filme « comme chez nous ». — 4 déc. 2026 · Claude Code + JP
+- [ ] `P3.2.25` ⭐ N1 — Calendrier de contenu de l'académie sur 90 jours : 7 publications par semaine (3 haut, 3 milieu, 1 bas d'entonnoir) + 3 à 5 reels d'essai, 5 familles de contenu (éducatif, démonstratif, coulisses et éducateurs, histoires de joueuses, preuve et offre), banque de 50 crochets ; chaque publication finit par « Réserve l'essai gratuit ». — 1er déc. 2026 · Claude Code + JP
+- [ ] `P3.2.26` ➜ N1 — Bios Instagram, Facebook et TikTok de New Valkyria : la promesse (soccer 100 % filles, ballon au pied dès la 1re minute), les villes, l'appel à l'action vers l'essai gratuit. — 1er déc. 2026 · JP
+- [ ] `P3.2.27` ⭐ N1 — Entrevue d'une joueuse chaque semaine au Club des Recrues dès décembre : choisie le lundi (âges et niveaux en alternance, débutantes comprises), elle raconte son histoire ; 3 contenus par entrevue (reel 30 s, version longue, citation). — 6 déc. 2026 · JP + caméra
+- [ ] `P3.2.28` ⭐ N1 — Agenda marketing de JP : 100 minutes de marketing et 30 minutes de veille de contenu par jour, 2 plages JP Coach et 1 plage Valkyria Lab par semaine, 2 h de formation à la publicité. — 1er déc. 2026 · JP
+
+#### P3.6 Liste chaude
+
+- [ ] `P3.6.10` ⭐ N1 — Entonnoir des essais sans perte : chaque demande contactée en moins de 24 h, essai réservé avec rappel la veille, vidéo ball mastery et offre le lendemain, relances au jour 3, 7 et 14, puis liste chaude ; tableau des essais par étape dans l'admin avec les relances du jour. — 15 déc. 2026 · Claude Code + gérante
+
+#### P3.1 Parrainage
+
+- [ ] `P3.1.08` ➜ N1 — Les parents, notre plus gros canal : carte « Invite une amie à l'essai » (lien de parrainage) dans l'espace famille aux bons moments (bulletin, championne du jour, vidéo de progrès), éducateurs récompensés par essai amené. — 15 janv. 2027 · Claude Code
+
 ### Indicateurs ajoutés
 
 | Id | Indicateur | Départ | Cible | Échéance | Source | Comment le mesurer |
@@ -1586,6 +1617,9 @@ Décision de JP après les courriels d'Alex Hormozi sur la contrainte principale
 | `inscrites_valkyria_ete_2027` | Inscrites à Valkyria Été 2027 (soir) | 0 | 100 | 1er juin 2027 | manuel | 60 000 $ visés ÷ 595 $ ≈ 100 inscriptions. |
 | `cout_par_prospect` | Coût par prospect de la publicité payante | à mesurer | à fixer après le premier essai | 28 févr. 2027 | manuel | Dépense publicitaire ÷ prospects venus de la pub, chaque semaine. |
 | `pratiques_annulees_jp` | Pratiques annulées parce que JP était absent | 2 (22 nov. 2026, crevaison) | 0 | 28 févr. 2027 | manuel | Toute pratique annulée ou écourtée faute d'un éducateur capable de la donner sans JP. |
+| `essais_semaine` | Essais réservés par semaine | à mesurer | 12 par semaine | 28 févr. 2027 | manuel | L'indicateur roi du plan d'acquisition : essais réservés (toutes sources) ; 4 par semaine en décembre, 8 en janvier, 12 en février. Relevé chaque lundi (P3.8.20). |
+| `avis_google_total` | Avis Google cumulés de l'académie | 0 | 1 000 avis | 31 déc. 2028 | manuel | Jalons : 100 au 30 juin 2027, 300 au 31 déc. 2027 (P3.8.19). |
+| `publications_semaine` | Publications de l'académie par semaine | 0 | 7 + 3 à 5 reels d'essai | 31 janv. 2027 | manuel | Comptes Instagram, Facebook et TikTok de New Valkyria (pas JP Coach). |
 
 ### Automatisations ajoutées
 

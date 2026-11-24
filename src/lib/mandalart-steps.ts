@@ -818,6 +818,66 @@ export const TASK_GUIDES: Record<string, TaskGuide> = {
     ],
     done: "Chaque éducateur principal a dirigé seul au moins 3 pratiques réussies.",
     link: { href: "/admin/entraineurs/suivi", label: "Suivi des éducateurs" }
+  },
+  // ── Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026), plan docs/strategie/machine-acquisition-90-jours.md ──
+  "P4.8.18": {
+    how: ["Relis les 8 questions proposées dans le plan (section 7) et dis à Claude ce que tu changes.", "Claude met le sondage devant le bulletin : le parent répond, puis le bulletin s'ouvre.", "Le 15 décembre, les bulletins sont remis et les réponses arrivent dans Voix des familles."],
+    done: "Les questions sont validées et le bulletin s'ouvre après le sondage.",
+    link: { href: "/admin/sondages/bulletins", label: "Sondages des bulletins" }
+  },
+  "P3.8.19": {
+    how: ["Crée la fiche Google de l'académie (P3.8.06) et copie son lien « écrire un avis ».", "Colle ce lien dans l'admin (avis Google) : le bouton du sondage l'ouvrira directement.", "Chaque lundi, note le nombre d'avis (indicateur Avis Google cumulés)."],
+    done: "Le bouton fonctionne et les premiers avis arrivent.",
+    link: { href: "/admin/avis", label: "Avis et témoignages" }
+  },
+  "P3.8.20": {
+    how: ["Dis à Claude : « Construis les objectifs d'acquisition » (semaine, mois, trimestre, du plan section 2).", "Chaque lundi, regarde le tableau : prospects, essais, inscriptions, avis, publications, coût par canal.", "Double ce qui marche, coupe ce qui ne ramène rien."],
+    done: "Le tableau est dans l'admin et tu le revois chaque lundi.",
+    link: { href: "/admin/acquisition", label: "D'où viennent nos familles" }
+  },
+  "P3.8.21": {
+    how: ["Chaque lundi, choisis 3 crochets et 2 angles dans la banque.", "Publie-les en reels d'essai (montrés aux non-abonnés).", "Le jeudi, garde le gagnant (rétention à 3 s, partages, messages) : vrai compte, puis publicité à 10-20 $ par jour.", "Arrête une publicité après 7 jours sans essai."],
+    done: "4 semaines de tests notées, au moins une publicité qui ramène des essais.",
+    link: { href: "/admin/reseaux", label: "Réseaux sociaux" }
+  },
+  "P3.2.23": {
+    how: ["Confirme la personne caméra : pratiques, horaires, matériel (trépied, téléphone, micro).", "Donne-lui le guide de tournage (P3.2.24).", "Chaque sortie : la vidéo complète (Veo), les plans pour les reels, 2 blocs Valkyria Lab, tes vidéos JP Coach.", "Après décembre, transfère la tâche à Will (méthode montrer, faire ensemble, laisser faire, vérifier)."],
+    done: "Chaque pratique de groupe et chaque pratique individuelle est filmée depuis 3 semaines.",
+    link: { href: "/admin/contenu/captation", label: "Captation" }
+  },
+  "P3.2.24": {
+    how: ["Dis à Claude : « Construis le guide de tournage » dans Création de contenu.", "Ajoute 1 ou 2 exemples de vidéos qu'on aime pour chaque format.", "Fais-le lire à la personne caméra et à Will."],
+    done: "Le guide est en ligne et la personne caméra filme avec.",
+    link: { href: "/admin/contenu", label: "Création de contenu" }
+  },
+  "P3.2.25": {
+    how: ["Dis à Claude : « Remplis le calendrier de contenu de l'académie pour 90 jours ».", "Chaque dimanche, revois la semaine suivante (2 semaines d'avance).", "Chaque publication finit par « Réserve l'essai gratuit »."],
+    done: "Le calendrier est rempli jusqu'au 28 février et une publication part chaque jour.",
+    link: { href: "/admin/contenu/calendrier", label: "Calendrier de publication" }
+  },
+  "P3.2.26": {
+    how: ["Reprends les bios proposées dans le plan (section 6).", "Mets le lien de l'essai gratuit en bio (Instagram, Facebook, TikTok de l'académie).", "Vérifie que le nom, la photo et la description sont les mêmes partout."],
+    done: "Les 3 comptes ont la même bio claire et le lien de l'essai."
+  },
+  "P3.2.27": {
+    how: ["Chaque lundi, choisis la joueuse (âges et niveaux en alternance) et préviens sa famille.", "Filme-la au Club des Recrues : son histoire, ce qu'elle aime, ce qu'elle a appris.", "Monte 3 contenus : reel 30 s, version longue, citation en image."],
+    done: "Une entrevue par semaine depuis décembre.",
+    link: { href: "/admin/contenu/entrevues", label: "Entrevues" }
+  },
+  "P3.2.28": {
+    how: ["Bloque dans ton agenda : 100 min de marketing et 30 min de veille chaque jour.", "Ajoute 2 plages JP Coach et 1 plage Valkyria Lab par semaine.", "Ajoute 2 h de formation à la publicité."],
+    done: "Les blocs sont dans l'agenda et tenus 3 semaines de suite.",
+    link: { href: "/admin/moi/calendrier", label: "Mon calendrier" }
+  },
+  "P3.6.10": {
+    how: ["Dis à Claude : « Construis le tableau des essais par étape ».", "Chaque matin, la gérante appelle les demandes de moins de 24 h et fait les relances du jour.", "Une famille pas prête va dans la liste chaude."],
+    done: "Aucune demande sans réponse depuis plus de 24 h pendant un mois.",
+    link: { href: "/admin/relances", label: "Relances et suivi" }
+  },
+  "P3.1.08": {
+    how: ["Dis à Claude : « Ajoute la carte Invite une amie à l'essai » dans l'espace famille.", "Choisis la récompense par palier (P3.1.03).", "Annonce-le aux familles avec le bulletin."],
+    done: "La carte est en ligne et les premiers essais viennent de parents.",
+    link: { href: "/admin/apercu", label: "Aperçu de l'espace famille" }
   }
 };
 

@@ -437,6 +437,36 @@
    "source": "manuel",
    "how": "Toute pratique annulée ou écourtée faute d'un éducateur capable de la donner sans JP.",
    "addedOn": "2026-11-02"
+  },
+  {
+   "id": "essais_semaine",
+   "label": "Essais réservés par semaine",
+   "start": "à mesurer",
+   "target": "12 par semaine",
+   "due": "2027-02-28",
+   "source": "manuel",
+   "how": "L'indicateur roi du plan d'acquisition : essais réservés (toutes sources) ; 4 par semaine en décembre, 8 en janvier, 12 en février. Relevé chaque lundi (P3.8.20).",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "avis_google_total",
+   "label": "Avis Google cumulés de l'académie",
+   "start": "0",
+   "target": "1 000 avis",
+   "due": "2028-12-31",
+   "source": "manuel",
+   "how": "Jalons : 100 au 30 juin 2027, 300 au 31 déc. 2027 (P3.8.19).",
+   "addedOn": "2026-11-02"
+  },
+  {
+   "id": "publications_semaine",
+   "label": "Publications de l'académie par semaine",
+   "start": "0",
+   "target": "7 + 3 à 5 reels d'essai",
+   "due": "2027-01-31",
+   "source": "manuel",
+   "how": "Comptes Instagram, Facebook et TikTok de New Valkyria (pas JP Coach).",
+   "addedOn": "2026-11-02"
   }
  ],
  "levels": [
@@ -2473,6 +2503,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Acquisition : concours, bourses, vidéos d'entrevues et méthodes Hormozi (6 nov. 2026)"
+      },
+      {
+       "code": "P3.1.08",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Les parents, notre plus gros canal : carte « Invite une amie à l'essai » (lien de parrainage) dans l'espace famille aux bons moments (bulletin, championne du jour, vidéo de progrès), éducateurs récompensés par essai amené.",
+       "due": "2027-01-15",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
       }
      ]
     },
@@ -2767,6 +2809,78 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
+      },
+      {
+       "code": "P3.2.23",
+       "priority": "star",
+       "level": 1,
+       "title": "Personne caméra à chaque pratique dès la semaine du 30 novembre, puis Will : toutes les pratiques de groupe, chaque pratique individuelle de JP, les matchs (jamais les garçons) ; chaque sortie de tournage de JP = au moins 2 blocs Valkyria Lab + vidéos JP Coach.",
+       "due": "2026-11-30",
+       "owner": "JP + caméra",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
+      },
+      {
+       "code": "P3.2.24",
+       "priority": "star",
+       "level": 1,
+       "title": "Guide de tournage dans Création de contenu : les types de plans en images (large, moyen, serré, pieds, ralenti, point de vue, réaction, entrevue, ambiance), la liste des plans à chaque pratique et la recette de chaque format (reel 30 s, carrousel, entrevue, avant/après), pour que n'importe qui filme « comme chez nous ».",
+       "due": "2026-12-04",
+       "owner": "Claude Code + JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
+      },
+      {
+       "code": "P3.2.25",
+       "priority": "star",
+       "level": 1,
+       "title": "Calendrier de contenu de l'académie sur 90 jours : 7 publications par semaine (3 haut, 3 milieu, 1 bas d'entonnoir) + 3 à 5 reels d'essai, 5 familles de contenu (éducatif, démonstratif, coulisses et éducateurs, histoires de joueuses, preuve et offre), banque de 50 crochets ; chaque publication finit par « Réserve l'essai gratuit ».",
+       "due": "2026-12-01",
+       "owner": "Claude Code + JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
+      },
+      {
+       "code": "P3.2.26",
+       "priority": "progressive",
+       "level": 1,
+       "title": "Bios Instagram, Facebook et TikTok de New Valkyria : la promesse (soccer 100 % filles, ballon au pied dès la 1re minute), les villes, l'appel à l'action vers l'essai gratuit.",
+       "due": "2026-12-01",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
+      },
+      {
+       "code": "P3.2.27",
+       "priority": "star",
+       "level": 1,
+       "title": "Entrevue d'une joueuse chaque semaine au Club des Recrues dès décembre : choisie le lundi (âges et niveaux en alternance, débutantes comprises), elle raconte son histoire ; 3 contenus par entrevue (reel 30 s, version longue, citation).",
+       "due": "2026-12-06",
+       "owner": "JP + caméra",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
+      },
+      {
+       "code": "P3.2.28",
+       "priority": "star",
+       "level": 1,
+       "title": "Agenda marketing de JP : 100 minutes de marketing et 30 minutes de veille de contenu par jour, 2 plages JP Coach et 1 plage Valkyria Lab par semaine, 2 h de formation à la publicité.",
+       "due": "2026-12-01",
+       "owner": "JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
       }
      ]
     },
@@ -2999,6 +3113,18 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
+      },
+      {
+       "code": "P3.6.10",
+       "priority": "star",
+       "level": 1,
+       "title": "Entonnoir des essais sans perte : chaque demande contactée en moins de 24 h, essai réservé avec rappel la veille, vidéo ball mastery et offre le lendemain, relances au jour 3, 7 et 14, puis liste chaude ; tableau des essais par étape dans l'admin avec les relances du jour.",
+       "due": "2026-12-15",
+       "owner": "Claude Code + gérante",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
       }
      ]
     },
@@ -3279,6 +3405,44 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)"
+      },
+      {
+       "code": "P3.8.19",
+       "priority": "star",
+       "level": 1,
+       "title": "Avis Google : à 9 ou 10 sur 10 au sondage du bulletin, un bouton ouvre directement la fenêtre d'avis de notre fiche avec le texte du parent déjà copié (le parent publie lui-même, jamais de récompense) ; objectifs 100 avis au 30 juin 2027, 300 au 31 déc. 2027, 1 000 d'ici fin 2028.",
+       "due": "2026-12-15",
+       "owner": "Claude Code + JP",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
+      },
+      {
+       "code": "P3.8.20",
+       "priority": "star",
+       "level": 1,
+       "title": "Objectifs d'acquisition de la semaine, du mois et du trimestre (prospects, essais réservés, essais faits, inscriptions, avis Google, publications, coût par prospect, par essai et par inscription, par canal) affichés dans l'admin et revus chaque lundi.",
+       "due": "2026-12-04",
+       "owner": "Claude Code",
+       "links": [],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
+      },
+      {
+       "code": "P3.8.21",
+       "priority": "star",
+       "level": 1,
+       "title": "Méthode de test des créatifs : chaque semaine 3 crochets et 2 angles en reels d'essai ; le gagnant (rétention à 3 secondes, partages, messages) passe sur le vrai compte puis en publicité à 10-20 $ par jour ; arrêt après 7 jours sans essai, budget doublé si ça ramène des essais.",
+       "due": "2027-01-15",
+       "owner": "JP",
+       "links": [
+        "A05"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
       }
      ]
     }
@@ -3877,6 +4041,20 @@
        "initialStatus": "a_faire",
        "addedOn": "2026-11-02",
        "theme": "Stade 3 d'Alex Hormozi : stabiliser (17 nov. 2026)"
+      },
+      {
+       "code": "P4.8.18",
+       "priority": "star",
+       "level": 1,
+       "title": "Bulletin du 15 décembre débloqué seulement après le sondage de satisfaction (2 minutes) : toutes les familles répondent ; JP valide les 8 questions proposées dans le plan avant le 8 décembre.",
+       "due": "2026-12-08",
+       "owner": "JP + Claude Code",
+       "links": [
+        "AU17"
+       ],
+       "initialStatus": "a_faire",
+       "addedOn": "2026-11-02",
+       "theme": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)"
       }
      ]
     }
@@ -6894,40 +7072,54 @@
    {
     "title": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)",
     "text": "Décision de JP après les courriels d'Alex Hormozi sur la contrainte principale (« Tout ce qui n'est pas votre contrainte principale vous fait perdre du temps : choisissez-en une, investissez-vous à fond, réglez-la, puis passez à la suivante ») et sur le stade 3 (passer de celui qui fait à celui qui forme). Sous 500 000 $ de chiffre d'affaires, la contrainte habituelle est de **ne pas attirer assez de prospects**. Le 22 nov. 2026, une crevaison de JP a fait annuler deux pratiques : la livraison dépend encore de lui. Pour la prochaine saison, le focus est donc mis sur deux choses liées : **les prospects** (les 2 camps de jour d'été, Valkyria Été le soir, puis l'hiver 2027-2028) et **la formation de l'équipe**, qui libère JP pour attirer des familles. JP se forme lui-même à la publicité payante, à la création de contenu et aux méthodes de $100M Leads. L'ordre : d'abord une offre claire (quoi, pour qui, où, quand, combien), ensuite la communication pour attirer du monde dans chaque programme. Les leçons d'Alex sont gardées dans Mes connaissances (`jp_knowledge`, auteur « Alex Hormozi »)."
+   },
+   {
+    "title": "Machine d'acquisition : 90 jours sur le marketing (25 nov. 2026)",
+    "text": "Décision de JP : pendant 3 mois (1er décembre 2026 au 28 février 2027), JP se consacre à l'acquisition (marketing, prospects, publicité, plusieurs canaux selon $100M Leads), à la création de contenu et à sa formation (filmer, tester des créatifs, publicité, marque personnelle). L'indicateur roi est l'essai réservé : c'est l'essai qui fait signer. Plan complet : `docs/strategie/machine-acquisition-90-jours.md` (objectifs par semaine, mois et trimestre, les 4 canaux, l'entonnoir sans perte, 1 000 avis Google, contenu haut, milieu et bas de l'entonnoir, tout filmer, formation de JP)."
    }
   ]
  },
  "constraint": {
   "title": "Contrainte n°1 : les prospects de l'été 2027 et une équipe qui livre sans JP (22 nov. 2026)",
-  "statement": "Attirer assez de familles intéressées pour remplir les 2 camps de jour d'été, Valkyria Été (soir) et la saison 2027-2028, avec une équipe qui donne les pratiques sans JP.",
+  "statement": "Une machine d'acquisition à plusieurs canaux (contenu, publicité, parents, contacts chauds, Google) qui amène assez de familles à l'essai pour remplir les 2 camps de jour d'été, Valkyria Été (soir) et la saison 2027-2028, pendant que l'équipe donne les pratiques sans JP.",
   "until": "2027-02-28",
   "why": "Sous 500 000 $, le frein est le nombre de prospects (Alex Hormozi) ; et JP ne peut pas attirer des familles s'il doit être sur chaque terrain.",
-  "doneWhen": "la grille d'offres est en ligne, 40 nouvelles familles intéressées par semaine, la prévente de l'été est lancée et plus aucune pratique n'est annulée parce que JP est absent.",
+  "doneWhen": "40 nouvelles familles intéressées et 12 essais réservés par semaine, une publication par jour, une publicité qui ramène des essais à 25 $ ou moins, la prévente de l'été lancée, et plus aucune pratique annulée parce que JP est absent.",
   "paused": "tout chantier du site ou du plan qui ne sert pas cette contrainte attend le 1er mars 2027, sauf les obligations (paie, taxes, sécurité des joueuses).",
   "tasks": [
+   "P3.8.06",
+   "P3.2.26",
+   "P3.2.23",
+   "P3.2.28",
+   "P3.2.25",
+   "P3.2.24",
+   "P4.8.18",
+   "P3.2.27",
+   "P3.8.20",
    "P2.4.08",
+   "P3.8.19",
+   "P3.6.10",
    "P2.4.09",
    "P2.4.05",
-   "P2.4.06",
    "P5.2.10",
    "P3.8.15",
    "P3.8.14",
    "P3.2.22",
    "P3.8.16",
    "P3.6.09",
+   "P3.8.21",
+   "P3.1.08",
    "P5.2.03",
    "P2.4.03",
    "P3.8.17",
    "P3.8.18",
    "P3.8.13",
    "P3.6.06",
-   "P3.6.08",
+   "P3.1.02",
    "P3.1.06",
    "P8.3.08",
    "P1.4.14",
-   "P8.2.08",
-   "P8.3.02",
-   "P8.3.03"
+   "P8.2.08"
   ]
  },
  "decisions": [
