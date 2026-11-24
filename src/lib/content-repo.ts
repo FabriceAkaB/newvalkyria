@@ -294,13 +294,28 @@ export async function chooseInterviewSlot(token: string, slotId: string | null):
 
 export async function getCalendarItems(from: string, to: string): Promise<CalendarItem[]> {
   const [{ data: shoots, error }, posts] = await Promise.all([
-    db().from("jp_video_shoots").select("title, status, publish_on, post_kind, angle, networks, account").eq("club_id", CLUB_ID).gte("publish_on", from).lte("publish_on", to),
+    db().from("jp_video_shoots").select("id, title, status, publish_on, post_kind, angle, networks, account, funnel, content_family, hook, format, message").eq("club_id", CLUB_ID).gte("publish_on", from).lte("publish_on", to),
     listPosts()
   ]);
   if (error) throw error;
   const planned: CalendarItem[] = ((shoots ?? []) as any[])
     .filter((s) => s.status !== "publie")
-    .map((s) => ({ date: String(s.publish_on).slice(0, 10), kind: "prevu", title: s.title, postKind: s.post_kind ?? "organique", angle: s.angle, networks: s.networks ?? [], status: s.status, account: s.account ?? null }));
+    .map((s) => ({
+      id: s.id,
+      date: String(s.publish_on).slice(0, 10),
+      kind: "prevu",
+      title: s.title,
+      postKind: s.post_kind ?? "organique",
+      angle: s.angle,
+      networks: s.networks ?? [],
+      status: s.status,
+      account: s.account ?? null,
+      funnel: s.funnel ?? null,
+      family: s.content_family ?? null,
+      hook: s.hook ?? null,
+      format: s.format ?? null,
+      message: s.message ?? null
+    }));
   const seen = new Set<string>();
   const done: CalendarItem[] = [];
   for (const p of posts.filter((p) => p.posted_on >= from && p.posted_on <= to)) {
@@ -314,6 +329,60 @@ export async function getCalendarItems(from: string, to: string): Promise<Calend
     done.push({ date: p.posted_on, kind: "publie", title: p.title ?? p.theme ?? "Publication", postKind: p.paid ? "pub" : "organique", angle: p.theme, networks: [networkLabel(p.network)], views: p.views });
   }
   return [...planned, ...done];
+}
+
+/** Calendrier de contenu de l'académie sur 90 jours (P3.2.25) : ajoute les publications du plan qui manquent
+ *  (même jour, même titre), sans toucher à celles qui existent déjà, ni aux vidéos JP Coach. */
+export async function seedPlan90(): Promise<{ added: number; total: number }> {
+  const { buildPlan90, PLAN90_CODE, PLAN90_SERIES } = await import("@/lib/content-plan-90");
+  const { formatOf } = await import("@/lib/shooting-guide-core");
+  const plan = buildPlan90();
+  const { data, error } = await db().from("jp_video_shoots").select("title, publish_on").eq("club_id", CLUB_ID).eq("series", PLAN90_SERIES);
+  if (error) throw error;
+  const have = new Set(((data ?? []) as any[]).map((r) => `${String(r.publish_on).slice(0, 10)}|${r.title}`));
+  const rows = plan
+    .map((p, n) => ({ p, n }))
+    .filter(({ p }) => !have.has(`${p.date}|${p.title}`))
+    .map(({ p, n }) => ({
+      club_id: CLUB_ID,
+      account: "newvalkyria",
+      series: PLAN90_SERIES,
+      mandalart_code: PLAN90_CODE,
+      status: "idee",
+      title: p.title,
+      publish_on: p.date,
+      post_kind: p.postKind,
+      angle: p.angle,
+      networks: p.networks,
+      hook: p.hook,
+      message: `${p.message}\nAppel à l'action : ${p.cta} (lien dans la bio).`,
+      shots: p.shots,
+      format: formatOf(p.format).label,
+      funnel: p.funnel,
+      content_family: p.family,
+      sort_order: 1000 + n
+    }));
+  for (let i = 0; i < rows.length; i += 100) {
+    const { error: e } = await db().from("jp_video_shoots").insert(rows.slice(i, i + 100));
+    if (e) throw e;
+  }
+  return { added: rows.length, total: plan.length };
+}
+
+/** Combien de publications du plan sont dans le calendrier (pour le bouton « Ajouter ce qui manque »). */
+export async function plan90Count(): Promise<number> {
+  const { count, error } = await db().from("jp_video_shoots").select("id", { count: "exact", head: true }).eq("club_id", CLUB_ID).eq("series", "plan-90");
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/** Combien de joueuses de la saison ont le consentement photo (players.image_consent), pour le guide de tournage. */
+export async function imageConsentCount(): Promise<{ given: number; total: number }> {
+  const { data, error } = await db().from("registrations").select("player_id, players(image_consent)").eq("season_id", SEASON_DB_ID).eq("status", "paid").not("player_id", "is", null);
+  if (error) throw error;
+  const by = new Map<string, boolean>();
+  for (const r of (data ?? []) as any[]) by.set(r.player_id, by.get(r.player_id) || r.players?.image_consent === true);
+  return { given: [...by.values()].filter(Boolean).length, total: by.size };
 }
 
 /* ── Tableau de bord de la semaine ─────────────────────────────────── */

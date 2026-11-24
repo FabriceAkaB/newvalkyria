@@ -460,10 +460,11 @@ export const ADMIN_NAV: AdminNavSection[] = [
         key: "contenu-captation",
         label: "Tournages et captation",
         icon: "flask",
-        description: "Les vidéos à tourner (message, accroche, plans, qui filme, jour de publication), le ball mastery filmé à 360° à chaque pratique, les photos des joueuses aux matchs et la Veo.",
+        description: "Les vidéos à tourner (message, accroche, plans, qui filme, jour de publication), le ball mastery filmé à 360° à chaque pratique, les photos des joueuses aux matchs, la Veo, et le guide de tournage pour filmer comme chez nous.",
         tabs: [
           { href: "/admin/contenu/tournages", label: "Tournages" },
-          { href: "/admin/contenu/captation", label: "Ball mastery 360° et photos" }
+          { href: "/admin/contenu/captation", label: "Ball mastery 360° et photos" },
+          { href: "/admin/contenu/guide", label: "Guide de tournage" }
         ]
       },
       {

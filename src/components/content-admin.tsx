@@ -360,3 +360,29 @@ export function InterviewSlotPicker({ token, slots, current }: { token: string; 
     </div>
   );
 }
+
+/* ── Calendrier 90 jours : ajouter les publications du plan qui manquent ── */
+
+export function Plan90SeedButton({ missing }: { missing: number }) {
+  const { busy, error, run } = useAction();
+  const [done, setDone] = useState<string | null>(null);
+  return (
+    <div style={{ display: "grid", gap: 6, justifyItems: "start" }}>
+      <button
+        type="button"
+        className="admin-btn-primary"
+        disabled={busy}
+        onClick={() =>
+          run(async () => {
+            const r = await post({ action: "plan90-seed" });
+            setDone(`${r.added} publication${r.added > 1 ? "s" : ""} ajoutée${r.added > 1 ? "s" : ""} au calendrier.`);
+          })
+        }
+      >
+        {busy ? "Ajout…" : `Ajouter les ${missing} publications du plan`}
+      </button>
+      {done ? <span style={small}>{done}</span> : null}
+      {error ? <p style={errStyle}>{error}</p> : null}
+    </div>
+  );
+}

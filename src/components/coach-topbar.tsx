@@ -36,7 +36,9 @@ export function CoachTopbar({ coachName }: Props) {
       .then((d) => setVideographer(Boolean(d?.videographer)))
       .catch(() => null);
   }, []);
-  const links = videographer ? [...LINKS.slice(0, 7), { href: "/entraineur/videos-joueuses", label: "Vidéos des joueuses" }, ...LINKS.slice(7)] : LINKS;
+  const links = videographer
+    ? [...LINKS.slice(0, 7), { href: "/entraineur/videos-joueuses", label: "Vidéos des joueuses" }, { href: "/entraineur/guide-tournage", label: "Guide de tournage" }, ...LINKS.slice(7)]
+    : LINKS;
 
   const handleLogout = async () => {
     await fetch("/api/coach/auth", { method: "DELETE" });

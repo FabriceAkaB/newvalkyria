@@ -31,7 +31,8 @@ export default async function TournagesPage() {
   await requireAdmin({ roles: ["admin"] });
   const today = todayIso();
   const tomorrow = addDays(today, 1);
-  const g = groupShoots(await getShoots(), today, tomorrow);
+  // Le calendrier 90 jours de l'académie (série « plan-90 ») se suit dans Création de contenu, pas ici.
+  const g = groupShoots((await getShoots()).filter((s) => s.series !== "plan-90"), today, tomorrow);
   const ideasBySeries = SERIES.map((s) => ({ s, items: g.ideas.filter((i) => i.series === s.id) })).filter((x) => x.items.length);
 
   return (

@@ -25,6 +25,7 @@ export const SERIES: { id: string; label: string; emoji: string }[] = [
   { id: "projets", label: "Nos projets", emoji: "🧪" },
   { id: "preuves", label: "Preuves et témoignages", emoji: "📈" },
   { id: "nouveaux-parents", label: "Nouveaux parents", emoji: "🤝" },
+  { id: "plan-90", label: "Calendrier 90 jours de l'académie (déc. à févr.)", emoji: "📅" },
   { id: "reseaux", label: "Réseaux sociaux (3 par semaine)", emoji: "📱" }
 ];
 export const seriesOf = (id: string) => SERIES.find((s) => s.id === id) ?? SERIES[SERIES.length - 1];

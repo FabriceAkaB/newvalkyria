@@ -3,7 +3,7 @@ import { z, ZodError } from "zod";
 
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { logAudit } from "@/lib/audit-repo";
-import { addInterviews, addSlot, deleteInterview, deleteSlot, inviteInterviews, setCapture, updateInterview } from "@/lib/content-repo";
+import { addInterviews, addSlot, deleteInterview, deleteSlot, inviteInterviews, seedPlan90, setCapture, updateInterview } from "@/lib/content-repo";
 import { jsonError } from "@/lib/http";
 import { deleteShoot, saveShoot, setShootStatus } from "@/lib/video-shoots-repo";
 import { shootActions } from "@/lib/video-shoots-schema";
@@ -22,7 +22,8 @@ const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("interview-add"), registrationIds: z.array(z.string().uuid()).min(1).max(200), kind: z.enum(["debut", "fin"]), withParent: z.boolean() }),
   z.object({ action: z.literal("interview-update"), id: z.string().uuid(), status: interviewStatus.optional(), slotId: z.string().uuid().nullable().optional(), videoUrl: z.string().max(500).nullable().optional(), note: z.string().max(1000).nullable().optional() }),
   z.object({ action: z.literal("interview-delete"), id: z.string().uuid() }),
-  z.object({ action: z.literal("interview-invite"), ids: z.array(z.string().uuid()).min(1).max(200) })
+  z.object({ action: z.literal("interview-invite"), ids: z.array(z.string().uuid()).min(1).max(200) }),
+  z.object({ action: z.literal("plan90-seed") })
 ]);
 
 /** Espace Création de contenu (admin et gérante) : tournages et calendrier de publication, ball mastery à 360°
@@ -65,6 +66,11 @@ export async function POST(request: Request) {
       case "interview-invite": {
         const r = await inviteInterviews(body.ids);
         await logAudit({ actorRole: role, actorLabel: by, action: "content_interview_invite", entityType: "content_interviews", entityId: body.ids[0], entityLabel: `Invitations aux entrevues filmées (${r.sent} familles)`, after: r }).catch(() => null);
+        return NextResponse.json({ ok: true, ...r });
+      }
+      case "plan90-seed": {
+        const r = await seedPlan90();
+        await logAudit({ actorRole: role, actorLabel: by, action: "content_plan90_seed", entityType: "jp_video_shoots", entityId: "plan-90", entityLabel: `Calendrier 90 jours : ${r.added} publications ajoutées`, after: r }).catch(() => null);
         return NextResponse.json({ ok: true, ...r });
       }
     }

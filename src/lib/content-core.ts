@@ -204,6 +204,20 @@ export interface CalendarItem {
   views?: number | null;
   /** « jpcoach » pour la marque personnelle de JP ; absent = New Valkyria. */
   account?: string | null;
+  /** Tournage prévu : son id, sa place dans l'entonnoir, sa famille de contenu, son crochet (plan 90 jours). */
+  id?: string;
+  funnel?: string | null;
+  family?: string | null;
+  hook?: string | null;
+  format?: string | null;
+  message?: string | null;
+}
+
+/** Le compte montré dans le calendrier : l'académie seulement par défaut, JP Coach à part. */
+export type CalendarAccount = "newvalkyria" | "jpcoach" | "tous";
+export function filterAccount(items: CalendarItem[], account: CalendarAccount): CalendarItem[] {
+  if (account === "tous") return items;
+  return items.filter((it) => (it.account === "jpcoach" ? "jpcoach" : "newvalkyria") === account);
 }
 
 /** Les jours de la semaine (dimanche au samedi) avec ce qui est prévu et ce qui est publié. */

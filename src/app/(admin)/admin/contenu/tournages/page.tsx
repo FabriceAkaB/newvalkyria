@@ -28,7 +28,12 @@ export default async function ContenuTournagesPage() {
   const tomorrow = addDaysIso(today, 1);
   const g = groupShoots(await getShoots(), today, tomorrow);
   const planned = [...g.late, ...g.today, ...g.tomorrow, ...g.upcoming];
-  const ideasBySeries = SERIES.map((s) => ({ s, items: g.ideas.filter((i) => i.series === s.id) })).filter((x) => x.items.length);
+  // Le calendrier 90 jours compte 140 publications : ici, seulement celles des 14 prochains jours (le reste est dans le Calendrier).
+  const in14 = addDaysIso(today, 14);
+  const ideasBySeries = SERIES.map((s) => ({
+    s,
+    items: g.ideas.filter((i) => i.series === s.id && (s.id !== "plan-90" || (!!i.publish_on && i.publish_on >= today && i.publish_on <= in14))).sort((a, b) => (s.id === "plan-90" ? String(a.publish_on).localeCompare(String(b.publish_on)) : 0))
+  })).filter((x) => x.items.length);
 
   return (
     <div className="admin-content">
@@ -72,13 +77,13 @@ export default async function ContenuTournagesPage() {
 
         <section className="mda-card-flush">
           <div className="mda-card-head">
-            <h2 className="mda-h2">Idées de vidéos ({g.ideas.length})</h2>
+            <h2 className="mda-h2">Idées de vidéos ({ideasBySeries.reduce((n, x) => n + x.items.length, 0)})</h2>
           </div>
           <div style={{ padding: "0 16px 16px", display: "grid", gap: 10 }}>
             {ideasBySeries.map(({ s, items }) => (
               <details key={s.id}>
                 <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "0.92rem", padding: "4px 0" }}>
-                  {s.emoji} {s.label} ({items.length})
+                  {s.emoji} {s.id === "plan-90" ? "Calendrier 90 jours : à publier d'ici 14 jours" : s.label} ({items.length})
                 </summary>
                 <div style={{ marginTop: 8 }}>
                   <List items={items} tomorrow={tomorrow} />

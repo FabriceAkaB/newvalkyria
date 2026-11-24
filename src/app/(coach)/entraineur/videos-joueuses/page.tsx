@@ -40,7 +40,7 @@ export default async function VideographerPage() {
               <h1 className="coach-title coach-title--xl">{missing} joueuse{missing > 1 ? "s" : ""} à filmer · {CHECKPOINTS.find((c) => c.key === now)!.label.toLowerCase()}</h1>
               <p className="coach-sub">
                 Un court extrait (environ 30 secondes, toujours le même exercice, même angle) de chaque fille. Dépose-le le jour même : la photo t&apos;aide à la reconnaître. Les petites (2016 et après) : début, mi-saison et fin ; les 2015 et plus vieilles : mi-saison et fin.
-                {win ? ` En ce moment : du ${fr(win.from)} au ${fr(win.to)}.` : ""}
+                {win ? ` En ce moment : du ${fr(win.from)} au ${fr(win.to)}.` : ""} Quoi filmer d&apos;autre à chaque pratique : le <a href="/entraineur/guide-tournage">guide de tournage</a>.
               </p>
               {groups.map((g) => {
                 const list = rows.filter((r) => r.group === g);
