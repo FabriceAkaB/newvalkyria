@@ -197,6 +197,10 @@ export interface McsMemberInput {
   parentEmail?: string | null;
   picture?: { data: ArrayBuffer; type: string; name: string } | null;
   note?: string | null;
+  /** Section de la liste (joueuse par défaut). Une éducatrice : « coach », avec son propre courriel (`selfEmail`). */
+  type?: "player" | "coach" | "reserve" | "staff";
+  /** Le courriel est celui du membre lui-même (relation « soi-même »), pas d'un parent. */
+  selfEmail?: boolean;
 }
 
 export class McsSession {
@@ -272,11 +276,11 @@ export class McsSession {
     f.set(F.firstName, m.firstName);
     f.set(F.lastName, m.lastName);
     f.set(F.gender, m.gender);
-    f.set(F.type, "player");
+    f.set(F.type, m.type ?? "player");
     if (m.birthYear) f.set(F.birthYear, String(m.birthYear));
     if (m.parentEmail) {
       f.append(F.email, m.parentEmail);
-      f.append(F.relationship, MCS_RELATIONSHIP_PARENT);
+      f.append(F.relationship, m.selfEmail ? "1" : MCS_RELATIONSHIP_PARENT);
     }
     if (m.note) f.set(F.privateNote, m.note);
     if (m.picture) f.set(F.picture, new Blob([m.picture.data], { type: m.picture.type }), m.picture.name);
