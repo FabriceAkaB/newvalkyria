@@ -6,6 +6,7 @@ import { CoachTopbar } from "@/components/coach-topbar";
 import { isMethodOpen, opensOn } from "@/lib/coach-access-core";
 
 import { CoachActiviteDetail } from "@/components/coach-activite-detail";
+import { CoachPickupCard } from "@/components/coach-pickup-card";
 import { getComponents } from "@/lib/coaching-method-repo";
 import { requireCoach } from "@/lib/coach-auth";
 import { cleanCategory, getActivityAttendance, getActivityEvaluations, getActivityRoster, getBriefing, getCoachActivityAccess, getPracticeReadItems } from "@/lib/coach-portal-repo";
@@ -18,6 +19,7 @@ import { getConvocations, getLineup, getMatchDetails, getMatchEvaluations, getMa
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getThemeForDate, themeFor } from "@/lib/season-themes-repo";
 import { getBlocksForActivity } from "@/lib/session-plan-repo";
+import { getPickupsForActivity } from "@/lib/shop-pickup-repo";
 
 export const metadata = { title: "Activité — Espace Technique" };
 export const dynamic = "force-dynamic";
@@ -77,14 +79,16 @@ export default async function CoachActiviteDetailPage({ params, searchParams }: 
     isMatch ? getMatchEvaluations(id) : Promise.resolve([])
   ]);
 
-  const [briefing, champions, pointsRules, components, videos, readItems, helped] = await Promise.all([
+  const [briefing, champions, pointsRules, components, videos, readItems, helped, pickups] = await Promise.all([
     getBriefing(entry.activity, roster).catch(() => []),
     getActivityChampions(id).catch(() => []),
     getRules(),
     getComponents().catch(() => null),
     videosForActivity(id).catch(() => []),
     getPracticeReadItems([id]).then((m) => m.get(id) ?? []).catch(() => []),
-    getGirlsHelpedByCoach(coachId, activityDate).catch(() => [])
+    getGirlsHelpedByCoach(coachId, activityDate).catch(() => []),
+    // Colis de la boutique : seulement pour les éducateurs assignés (le responsable sur le terrain).
+    entry.assignment ? getPickupsForActivity(entry.activity).catch(() => []) : Promise.resolve([])
   ]);
 
   // Accès limité : la présence de l'éducateur sans son taux ni les champs de paiement.
@@ -137,6 +141,7 @@ export default async function CoachActiviteDetailPage({ params, searchParams }: 
       initialReadSeen={(assignment?.practice_read_items ?? []) as string[]}
       initialReadAt={assignment?.practice_read_at ?? null}
       helped={helped}
+      pickupCard={<CoachPickupCard activityId={id} pickups={pickups} isToday={activityDate === today} />}
       view={view}
     />
   );

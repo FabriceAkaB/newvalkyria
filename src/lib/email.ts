@@ -230,6 +230,8 @@ interface ShopOrderEmailInput {
   customerName: string;
   items: { productName: string; variantLabel: string | null; unitPriceCents: number; quantity: number }[];
   totalCents: number;
+  /** Tous les articles en stock (JP, 25 nov. 2026) : lien personnel où le parent choisit la séance de la remise. */
+  pickupUrl?: string | null;
 }
 
 export async function sendShopOrderConfirmationEmail(input: ShopOrderEmailInput) {
@@ -262,7 +264,46 @@ export async function sendShopOrderConfirmationEmail(input: ShopOrderEmailInput)
             <td style="padding:8px 12px;text-align:right">${fmt(input.totalCents)}</td>
           </tr>
         </table>
-        <p style="margin-top:24px">Notre équipe prépare votre commande et vous contactera pour la remise.</p>
+        ${
+          input.pickupUrl
+            ? `<p style="margin-top:24px"><strong>Votre article est en stock : il sera prêt à la séance de votre choix.</strong></p>
+        <p>Choisissez la pratique de cette semaine ou de la suivante où vous passerez le récupérer. C'est un cadeau ? Cochez-le : vous irez voir le responsable sur le terrain, qui vous remettra le colis discrètement, sans que la joueuse le voie.</p>
+        <p style="margin:20px 0"><a href="${input.pickupUrl}" style="display:inline-block;background:#5b2a86;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px">Choisir ma séance</a></p>
+        <p style="font-size:13px;color:#6b6478">Vous pouvez changer de séance avec ce même lien tant que le colis n'est pas remis.</p>`
+            : `<p style="margin-top:24px">Notre équipe prépare votre commande et vous contactera pour la remise.</p>`
+        }
+        <p style="margin-top:24px">New Valkyria<br/>Académie féminine technique</p>
+      </div>
+    `
+  });
+}
+
+/** Rappel envoyé au parent après le choix de sa séance de remise (boutique, JP 25 nov. 2026). */
+export async function sendShopPickupChoiceEmail(input: {
+  to: string;
+  customerName: string;
+  items: string;
+  when: string;
+  group: string | null;
+  location: string | null;
+  isGift: boolean;
+  pickupUrl: string;
+}) {
+  if (!isEmailConfigured()) return;
+  await getResendClient().emails.send({
+    from: env.resendFrom,
+    to: input.to,
+    subject: "New Valkyria - Votre colis vous attend à la séance choisie",
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.5;color:#161419;max-width:600px">
+        <h1 style="font-size:22px">C'est noté, ${escapeHtml(input.customerName)}.</h1>
+        <p>Votre colis (${escapeHtml(input.items)}) sera prêt le <strong>${escapeHtml(input.when)}</strong>${input.group ? `, à la pratique ${escapeHtml(input.group)}` : ""}${input.location ? `, ${escapeHtml(input.location)}` : ""}.</p>
+        ${
+          input.isGift
+            ? `<p><strong>C'est un cadeau :</strong> présentez-vous au responsable sur le terrain en lui disant votre nom. Il vous remettra le colis discrètement, sans que la joueuse le voie.</p>`
+            : `<p>Présentez-vous au responsable sur le terrain en lui disant votre nom : il vous remettra votre colis.</p>`
+        }
+        <p style="font-size:13px;color:#6b6478">Un empêchement ? Choisissez une autre séance avec ce lien : <a href="${input.pickupUrl}" style="color:#5b2a86">${input.pickupUrl}</a></p>
         <p style="margin-top:24px">New Valkyria<br/>Académie féminine technique</p>
       </div>
     `

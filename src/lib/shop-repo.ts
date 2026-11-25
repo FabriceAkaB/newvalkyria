@@ -1,4 +1,7 @@
+import { randomBytes } from "node:crypto";
+
 import { DISTRIBUTION_STATUS_LABELS, PROBLEM_TYPE_LABELS, type DistributionStatus, type ProblemType } from "@/lib/shop-labels";
+import { GIFT_NOTE, pickupSummary, pickupWhen } from "@/lib/shop-pickup-core";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 function db() {
@@ -74,6 +77,16 @@ export interface ShopOrder {
   season_key: string | null;
   notes: string | null;
   distribution_status: DistributionStatus;
+  /** Remise à la séance choisie (JP, 25 nov. 2026, shop-pickup-core.ts) : tous les articles en stock au paiement. */
+  in_stock?: boolean;
+  pickup_token?: string | null;
+  pickup_activity_id?: string | null;
+  pickup_date?: string | null;
+  pickup_start?: string | null;
+  pickup_location?: string | null;
+  pickup_group?: string | null;
+  is_gift?: boolean;
+  pickup_chosen_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -387,6 +400,8 @@ export async function createOrder(input: {
    *  rapprochement manuel par nom fait après coup dans le module Uniformes. */
   registrationId?: string | null;
   seasonKey?: string | null;
+  /** Stock vérifié pour chaque article : le parent choisira la séance de la remise (lien /remise/<jeton>). */
+  inStock?: boolean;
 }): Promise<{ orderId: string; totalCents: number }> {
   const supabase = db();
   const totalCents = input.items.reduce((sum, item) => sum + item.unitPriceCents * item.quantity, 0);
@@ -403,7 +418,9 @@ export async function createOrder(input: {
       status: "pending",
       total_cents: totalCents,
       registration_id: input.registrationId ?? null,
-      season_key: input.seasonKey ?? null
+      season_key: input.seasonKey ?? null,
+      in_stock: Boolean(input.inStock),
+      pickup_token: input.inStock ? randomBytes(18).toString("base64url") : null
     })
     .select("id")
     .single();
@@ -487,6 +504,12 @@ export async function markOrderPaidByCheckoutSession(
 
   const { data: items, error: itemsErr } = await supabase.from("shop_order_items").select("*").eq("order_id", order.id);
   if (itemsErr) throw new Error(itemsErr.message);
+
+  // En stock : rien à commander, le colis est prêt à remettre à la séance choisie par le parent.
+  if (order.in_stock && order.distribution_status === "a_commander") {
+    await supabase.from("shop_orders").update({ distribution_status: "pret_a_remettre" }).eq("id", order.id);
+    order.distribution_status = "pret_a_remettre";
+  }
 
   for (const item of items ?? []) {
     if (item.variant_id) {
@@ -729,19 +752,25 @@ export async function updateDistributionStatus(orderId: string, status: Distribu
 /** Chaque commande payée est une tâche de JP (« Mes tâches », Ma journée) jusqu'à ce qu'elle soit remise : le titre
  *  suit l'étape (à commander, en production, reçue…), et la tâche se coche toute seule à la remise. */
 export async function syncOrderTask(orderId: string): Promise<void> {
-  const { data: o } = await db().from("shop_orders").select("id, status, distribution_status, customer_name, created_at, items:shop_order_items(product_name, variant_label, quantity, delivered_quantity)").eq("id", orderId).maybeSingle();
+  const { data: o } = await db().from("shop_orders").select("id, status, distribution_status, customer_name, created_at, pickup_date, pickup_start, pickup_location, pickup_group, is_gift, items:shop_order_items(product_name, variant_label, quantity, delivered_quantity)").eq("id", orderId).maybeSingle();
   if (!o || o.status !== "paid") return;
   const { syncRefTask } = await import("@/lib/team-tasks-repo");
   const ref = `shop_order:${o.id}`;
   if (o.distribution_status === "remis") return syncRefTask(ref, { title: "", done: true, doneNote: "Commande remise" });
   const items = ((o.items ?? []) as any[]).map((i) => `${i.quantity > 1 ? `${i.quantity} × ` : ""}${i.product_name}${i.variant_label ? ` (${i.variant_label})` : ""}`).join(", ");
   const step = DISTRIBUTION_STATUS_LABELS[o.distribution_status as DistributionStatus] ?? o.distribution_status;
-  const due = new Date(Date.parse(o.created_at) + 2 * 86_400_000).toISOString().slice(0, 10);
+  // Séance choisie par le parent (JP, 25 nov. 2026) : la tâche tombe ce jour-là et dit si c'est un cadeau.
+  const pickup = pickupSummary({ ...o, is_gift: Boolean(o.is_gift) });
+  const due = o.pickup_date ? String(o.pickup_date).slice(0, 10) : new Date(Date.parse(o.created_at) + 2 * 86_400_000).toISOString().slice(0, 10);
   await syncRefTask(ref, {
-    title: `Commande boutique : ${items} pour ${String(o.customer_name ?? "").trim() || "un client"} (${String(step).toLowerCase()})`,
-    details: `https://www.newvalkyria.com/admin/uniformes/commande/${o.id}`,
+    title: `Commande boutique : ${items} pour ${String(o.customer_name ?? "").trim() || "un client"} (${String(step).toLowerCase()})${
+      o.pickup_date ? `, à remettre ${pickupWhen(String(o.pickup_date).slice(0, 10), o.pickup_start)}${o.pickup_group ? ` (${o.pickup_group})` : ""}${o.is_gift ? ", cadeau : remise discrète" : ""}` : ""
+    }`,
+    details: [pickup ? `Remise : ${pickup}.${o.is_gift ? ` ${GIFT_NOTE}.` : ""}` : null, `https://www.newvalkyria.com/admin/uniformes/commande/${o.id}`].filter(Boolean).join("\n"),
     due
   });
+  // Une tâche déjà créée au paiement prend la date de la séance choisie ensuite.
+  if (o.pickup_date) await db().from("team_tasks").update({ due }).eq("ref", ref).in("status", ["a_faire", "en_cours"]).neq("due", due);
 }
 
 /** Confirme la remise (totale ou partielle) d'une commande — enregistre la

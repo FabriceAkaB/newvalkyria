@@ -82,7 +82,9 @@ export async function POST(request: Request) {
       shippingAddress: payload.shippingAddress || null,
       shippingCity: payload.shippingCity || null,
       shippingPostalCode: payload.shippingPostalCode || null,
-      items: finalItems
+      items: finalItems,
+      // Chaque article vient d'être vérifié en stock : le parent choisira la séance de la remise (JP, 25 nov. 2026).
+      inStock: true
     });
 
     try {

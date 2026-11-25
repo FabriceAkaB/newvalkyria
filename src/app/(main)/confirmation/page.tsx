@@ -44,6 +44,27 @@ async function verifyAndMarkPaid(sessionId: string): Promise<void> {
   }
 }
 
+/** Commande boutique payée dont les articles sont en stock : le parent choisit tout de suite la séance de la remise
+ *  sur son lien personnel /remise/<jeton> (JP, 25 nov. 2026). Sinon, la confirmation habituelle. */
+async function shopPickupToken(sessionId: string): Promise<string | null> {
+  if (!env.stripeSecretKey) return null;
+  try {
+    const { getStripeClient } = await import("@/lib/stripe");
+    const session = await getStripeClient().checkout.sessions.retrieve(sessionId);
+    if (session.metadata?.checkoutType !== "shop-order" || session.payment_status !== "paid" || !session.metadata.orderId) return null;
+    const { getSupabaseAdminClient } = await import("@/lib/supabase-admin");
+    const { data } = await (getSupabaseAdminClient() as any)
+      .from("shop_orders")
+      .select("pickup_token, in_stock")
+      .eq("id", session.metadata.orderId)
+      .eq("stripe_checkout_session_id", sessionId)
+      .maybeSingle();
+    return data?.in_stock && data.pickup_token ? (data.pickup_token as string) : null;
+  } catch {
+    return null;
+  }
+}
+
 async function verifyTrialSession(sessionId: string): Promise<boolean> {
   if (!env.stripeSecretKey) return false;
 
@@ -114,6 +135,8 @@ export default async function ConfirmationPage({ searchParams }: ConfirmationPag
   // ── Paiement Stripe normal ────────────────────────────────────
   const sessionId = params.session_id;
   if (sessionId) {
+    const pickupToken = await shopPickupToken(sessionId);
+    if (pickupToken) redirect(`/remise/${pickupToken}?merci=1`);
     await verifyAndMarkPaid(sessionId);
   }
 

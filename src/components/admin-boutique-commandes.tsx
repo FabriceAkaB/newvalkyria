@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { pickupSummary } from "@/lib/shop-pickup-core";
 import type { OrderStatus, ShopOrderWithItems } from "@/lib/shop-repo";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -128,6 +129,11 @@ export function AdminBoutiqueCommandes({ initialOrders, showPrices }: { initialO
                     </p>
                   ))}
                 </div>
+                {order.in_stock && order.distribution_status !== "remis" && (
+                  <p style={{ fontSize: "0.78rem", color: order.pickup_date ? "var(--adm-text)" : "var(--adm-text-3)", margin: "0 0 0.5rem" }}>
+                    <strong>Remise :</strong> {pickupSummary({ pickup_date: order.pickup_date ?? null, pickup_start: order.pickup_start ?? null, pickup_location: order.pickup_location ?? null, pickup_group: order.pickup_group ?? null, is_gift: Boolean(order.is_gift) }) ?? "séance pas encore choisie par le parent"}
+                  </p>
+                )}
                 {showPrices && <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--adm-good)", margin: 0 }}>Total : {formatPrice(order.total_cents)}</p>}
               </div>
             ))}

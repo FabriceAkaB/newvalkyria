@@ -782,8 +782,11 @@ export function CoachActiviteDetail({
   initialReadSeen = [],
   initialReadAt = null,
   helped = [],
+  pickupCard = null,
   view = "etapes"
 }: Props & {
+  /** Colis de la boutique à remettre à cette séance (coach-pickup-card.tsx, JP 25 nov. 2026). */
+  pickupCard?: React.ReactNode;
   /** « tout-en-un » : la pratique, l'évaluation des filles et le rapport sur un seul écran (JP, 25 nov. 2026). */
   view?: "etapes" | "tout-en-un";
   helped?: { registrationId: string; name: string }[];
@@ -1238,6 +1241,7 @@ export function CoachActiviteDetail({
           ) : null}
 
           {suiviCard}
+          {pickupCard}
 
           <nav ref={stepsRef} className="coach-steps" aria-label="Étapes de la pratique">
             {steps.map((s) => (

@@ -627,7 +627,9 @@ export async function POST(request: Request) {
               unitPriceCents: item.unit_price_cents,
               quantity: item.quantity
             })),
-            totalCents: order.total_cents
+            totalCents: order.total_cents,
+            // Tout en stock : le parent choisit la séance de la remise et dit si c'est un cadeau (JP, 25 nov. 2026).
+            pickupUrl: order.in_stock && order.pickup_token ? `${env.publicSiteUrl}/remise/${order.pickup_token}` : null
           });
         } catch (error) {
           console.error("Unable to send shop order confirmation email", error);

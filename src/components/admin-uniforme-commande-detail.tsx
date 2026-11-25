@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AdminTopbar } from "@/components/admin-topbar";
 import type { Season } from "@/lib/season-admin-repo";
 import { DISTRIBUTION_STATUS_LABELS, PROBLEM_TYPE_LABELS, type DistributionStatus, type ProblemType } from "@/lib/shop-labels";
+import { pickupSummary } from "@/lib/shop-pickup-core";
 import type { OrderWithDistribution, ShopOrderEvent, ShopOrderProblem } from "@/lib/shop-repo";
 
 interface Props {
@@ -206,6 +207,11 @@ export function AdminUniformeCommandeDetail({ order: initialOrder, events, seaso
                 {new Date(order.created_at).toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}
                 {seasonLabel && ` · ${seasonLabel}`}
               </p>
+              {order.in_stock && order.distribution_status !== "remis" && (
+                  <p style={{ fontSize: "0.78rem", color: order.pickup_date ? "var(--adm-text)" : "var(--adm-text-3)", margin: "0.35rem 0 0" }}>
+                    <strong>Remise :</strong> {pickupSummary({ pickup_date: order.pickup_date ?? null, pickup_start: order.pickup_start ?? null, pickup_location: order.pickup_location ?? null, pickup_group: order.pickup_group ?? null, is_gift: Boolean(order.is_gift) }) ?? "séance pas encore choisie par le parent"}
+                  </p>
+                )}
             </div>
             <select
               className="admin-input"
