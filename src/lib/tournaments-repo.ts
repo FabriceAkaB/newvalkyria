@@ -423,7 +423,7 @@ export async function syncGoTask(slug: string): Promise<void> {
   if (!t.progress.reached) return;
   await syncRefTask(ref, {
     title: `Tournoi : donner le go pour ${t.name}`,
-    details: `${t.progress.count} disponibles sur un minimum de ${t.minPlayers} (${t.settings.teamLabel || "équipe visée"}). Coût par joueuse au go : environ ${money(t.cost.now)}. Décider : ${adminUrl(slug)}`,
+    details: `${t.progress.count} disponible${t.progress.count > 1 ? "s" : ""} sur un minimum de ${t.minPlayers} (${t.settings.teamLabel || "équipe visée"}). Coût par joueuse au go : environ ${money(t.cost.now)}. Décider : ${adminUrl(slug)}`,
     due: new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" })
   }).catch((e) => console.error("tournoi go task", e));
 }

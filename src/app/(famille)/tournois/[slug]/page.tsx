@@ -23,7 +23,9 @@ export default async function TournoiPage({ params, searchParams }: { params: Pr
   if (!found.tournament.published && !mine) notFound();
   const view = toView(found.tournament);
 
-  let girls: GirlAnswer[] = mine ? [{ firstName: mine.firstName, lastName: mine.lastName, answer: mine.response, offerStatus: mine.offerStatus, payDeadline: mine.payDeadline, token: mine.token }] : [];
+  // Retour de Stripe (?paye=1) : la confirmation du webhook arrive dans les secondes qui suivent ; on n'affiche plus « Payer ».
+  const shownStatus = paye && mine?.offerStatus === "offerte" ? "payee" : mine?.offerStatus ?? null;
+  let girls: GirlAnswer[] = mine ? [{ firstName: mine.firstName, lastName: mine.lastName, answer: mine.response, offerStatus: shownStatus, payDeadline: mine.payDeadline, token: mine.token }] : [];
   let endpoint: "famille" | "lien" = "lien";
   if (!mine) {
     const userId = await getParentUserId();

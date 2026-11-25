@@ -207,7 +207,7 @@ export function datesLabel(dates: string[]): string {
   return sameMonth ? `${f(first, { day: "numeric" })}${joiner}${f(last, { day: "numeric", month: "long", year: "numeric" })}` : `${f(first, { day: "numeric", month: "long" })}${joiner}${f(last, { day: "numeric", month: "long", year: "numeric" })}`;
 }
 
-export const deadlineLabel = (iso: string) => new Date(iso).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Toronto" });
+export const deadlineLabel = (iso: string) => new Date(iso).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Toronto" }).replace(/(^|\s)1 /, "$11er ");
 
 /** Ce que voit une famille (aucune donnée d'autres familles : seulement le compte de la barre). */
 export interface TournamentView {

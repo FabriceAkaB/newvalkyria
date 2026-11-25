@@ -122,7 +122,9 @@ export function AdminTournament(props: {
     try {
       const d = await post({ slug: props.slug, ...body });
       setMsg({ ok: true, text: done ? done(d) : "Enregistré." });
-      router.refresh();
+      // Après le go, toute la page change (prix figé, places offertes) : on la recharge.
+      if (label === "go") window.location.reload();
+      else router.refresh();
     } catch (err) {
       setMsg({ ok: false, text: err instanceof Error ? err.message : "Erreur" });
     } finally {
@@ -174,7 +176,7 @@ export function AdminTournament(props: {
         </div>
         <p className="mda-sub" style={{ margin: 0 }}>
           {go
-            ? `Prix fixé au go : ${money(go.priceCents)} par joueuse (${go.players} places offertes). Chaque famille a jusqu'au ${deadlineLabel(go.deadline)} ; une place non payée passe à la suivante toute seule.`
+            ? `Prix fixé au go : ${money(go.priceCents)} par joueuse (${go.players} place${go.players > 1 ? "s" : ""} offerte${go.players > 1 ? "s" : ""}). Chaque famille a jusqu'au ${deadlineLabel(go.deadline)} ; une place non payée passe à la suivante toute seule.`
             : fees
               ? `Au go maintenant : ${props.goPreview.players} lien${props.goPreview.players > 1 ? "s" : ""} à ${money(props.goPreview.priceCents)} = (${money(s.entryFeeCents)} d'inscription + ${money(s.coachFeeCents)} de coach)${s.teams > 1 ? ` × ${s.teams} équipes` : ""} ÷ ${props.goPreview.players || "?"} joueuse${props.goPreview.players > 1 ? "s" : ""}.`
               : "Indique le prix d'inscription du tournoi et le salaire du coach dans les réglages pour calculer le coût par joueuse."}

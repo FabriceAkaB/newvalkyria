@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { costPerPlayerCents, costRange, datesLabel, isEligible, isExpired, nextOffers, payDeadline, planGo, playerKey, progress, queue, readSettings, reminderAt, surveySaysInterested, tally, type ResponseLite } from "@/lib/tournaments-core";
+import { costPerPlayerCents, costRange, datesLabel, deadlineLabel, isEligible, isExpired, nextOffers, payDeadline, planGo, playerKey, progress, queue, readSettings, reminderAt, surveySaysInterested, tally, type ResponseLite } from "@/lib/tournaments-core";
 
 const s = readSettings({ tournament: { entryFeeCents: 110000, coachFeeCents: 30000, teams: 1 } });
 const r = (id: string, response: ResponseLite["response"], at: string, offerStatus: ResponseLite["offerStatus"] = null): ResponseLite => ({ id, response, respondedAt: `2026-11-${at}T12:00:00Z`, offerStatus });
@@ -91,5 +91,7 @@ describe("joueuses visées", () => {
     expect(datesLabel(["2027-02-14", "2027-02-15"])).toBe("14 et 15 février 2027");
     expect(datesLabel(["2027-03-29"])).toBe("lundi 29 mars 2027");
     expect(datesLabel([])).toBe("Dates à confirmer");
+    expect(deadlineLabel("2026-12-02T04:59:00.000Z")).toBe("mardi 1er décembre");
+    expect(deadlineLabel("2026-12-03T04:59:00.000Z")).toBe("mercredi 2 décembre");
   });
 });
