@@ -1,9 +1,11 @@
 "use client";
 
+import { Check, CircleHelp, Lightbulb, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { dequeue, enqueue, parsePresenceQueue, parseQueue, presenceKey, queueKey, sendOutcome, type QueuedAnswer, type QueuedPresence } from "@/lib/kiosk-queue";
-import { KIOSK_QUESTIONS, SCALE_VALUES } from "@/lib/practice-survey";
+import { KIOSK_QUESTIONS, SCALE_VALUES, type KioskQuestion } from "@/lib/practice-survey";
+import { isThemeCorrect, type ThemeQuiz } from "@/lib/theme-quiz-core";
 
 /** Borne de sondage sur l'iPad : la joueuse touche sa photo, répond aux 4 questions (une par écran : plaisir et
  *  fatigue sur 10, puis l'aide de sa coach et l'aide des autres, oui / non et qui), puis la
@@ -27,7 +29,14 @@ interface Answers {
   coachHelpers?: string[];
   peerHelped?: boolean;
   peerHelpers?: string[];
+  /** « Qu'est-ce qu'on a travaillé aujourd'hui ? » : le choix touché (un des 3). */
+  themeAnswer?: string;
 }
+
+/** La 5e question, posée seulement quand la pratique a un thème (JP, 25 nov. 2026). La fille ne voit jamais si elle
+ *  a bon : les éducateurs le voient dans « Qui a compris le thème ». */
+type Question = KioskQuestion | { kind: "theme"; question: string };
+const THEME_QUESTION: Question = { kind: "theme", question: "Qu'est-ce qu'on a travaillé aujourd'hui\u00a0?" };
 
 const HELP = { coach: { flag: "coachHelped", list: "coachHelpers" }, peer: { flag: "peerHelped", list: "peerHelpers" } } as const;
 const GREEN = "#1f7a4d";
@@ -36,7 +45,21 @@ const PURPLE = "#5b2a86";
 // Du rouge au vert : la couleur aide les plus jeunes à comprendre l'échelle.
 const color = (v: number) => `hsl(${Math.round(((v - 1) / 9) * 120)}, 70%, 45%)`;
 
-export function SurveyKiosk({ activityId, cle, title, players, coaches = [], done: initialDone, absent: initialAbsent = [] }: { activityId: string; cle: string; title: string; players: KioskPlayer[]; coaches?: { id: string; first: string }[]; done: string[]; absent?: string[] }) {
+export function SurveyKiosk({ activityId, cle, title, players, coaches = [], done: initialDone, absent: initialAbsent = [], themeQuiz = null, themeResults: initialThemeResults = {} }: { activityId: string; cle: string; title: string; players: KioskPlayer[]; coaches?: { id: string; first: string }[]; done: string[]; absent?: string[]; themeQuiz?: ThemeQuiz | null; themeResults?: Record<string, boolean> }) {
+  const questions: Question[] = themeQuiz ? [...KIOSK_QUESTIONS, THEME_QUESTION] : KIOSK_QUESTIONS;
+  // Qui a compris le thème : ce qui est déjà en base, plus les réponses de cet iPad (même hors réseau).
+  const [themeResults, setThemeResults] = useState<Record<string, boolean>>(initialThemeResults);
+  const [showResults, setShowResults] = useState(false);
+  const holdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const noteTheme = useCallback(
+    (items: { registrationId: string; answers: Record<string, unknown> }[]) => {
+      if (!themeQuiz) return;
+      const add: Record<string, boolean> = {};
+      for (const it of items) if (typeof it.answers.themeAnswer === "string") add[it.registrationId] = isThemeCorrect(it.answers.themeAnswer, themeQuiz.correct);
+      if (Object.keys(add).length) setThemeResults((r) => ({ ...r, ...add }));
+    },
+    [themeQuiz]
+  );
   const [done, setDone] = useState<Set<string>>(new Set(initialDone));
   // Absentes : marquées dans MonClubSportif (X) ou touchées ici ; elles sortent de la liste et se remettent d'un clic.
   const [absent, setAbsent] = useState<Set<string>>(new Set(initialAbsent));
@@ -115,6 +138,7 @@ export function SurveyKiosk({ activityId, cle, title, players, coaches = [], don
     }
     if (saved.length) {
       persist(saved);
+      noteTheme(saved);
       setDone((d) => new Set([...d, ...saved.map((q) => q.registrationId)]));
     }
     let marks: QueuedPresence[] = [];
@@ -186,18 +210,19 @@ export function SurveyKiosk({ activityId, cle, title, players, coaches = [], don
   const advance = (next: Answers) => {
     setAnswers(next);
     setPicking(false);
-    if (step < KIOSK_QUESTIONS.length - 1) {
+    if (step < questions.length - 1) {
       setStep(step + 1);
       return;
     }
     persist(enqueue(queueRef.current, { registrationId: who!.id, answers: { ...next } as Record<string, unknown>, at: Date.now() }));
+    noteTheme([{ registrationId: who!.id, answers: { ...next } }]);
     setDone(new Set([...done, who!.id]));
     setState("thanks");
     void flush();
   };
 
   const pick = (v: number) => {
-    const q = KIOSK_QUESTIONS[step];
+    const q = questions[step];
     if (q.kind === "scale") advance({ ...answers, [q.field]: v });
   };
 
@@ -225,9 +250,69 @@ export function SurveyKiosk({ activityId, cle, title, players, coaches = [], don
 
   const card: React.CSSProperties = { background: "#fff", borderRadius: 20, border: "1px solid #e6e0ee", padding: "1.4rem" };
 
+  if (!who && showResults && themeQuiz) {
+    // Pour l'éducatrice : qui a compris le thème. Seules les filles là aujourd'hui (absentes exclues).
+    const here = players.filter((p) => !absent.has(p.id) || done.has(p.id));
+    const cols: { key: string; label: string; icon: React.ReactNode; tone: string; soft: string; list: KioskPlayer[] }[] = [
+      { key: "ok", label: "A compris", icon: <Check size={20} aria-hidden />, tone: "var(--adm-good, #1f7a4d)", soft: "var(--adm-good-soft, #e8f5ee)", list: here.filter((p) => themeResults[p.id] === true) },
+      { key: "ko", label: "N'a pas compris", icon: <X size={20} aria-hidden />, tone: "var(--adm-bad, #b3261e)", soft: "var(--adm-bad-soft, #fdecea)", list: here.filter((p) => themeResults[p.id] === false) },
+      { key: "na", label: "Pas répondu", icon: <CircleHelp size={20} aria-hidden />, tone: "var(--adm-text-2, #5d566b)", soft: "var(--adm-surface-2, #f4f0f8)", list: here.filter((p) => themeResults[p.id] === undefined) }
+    ];
+    const answered = cols[0].list.length + cols[1].list.length;
+    return (
+      <div style={{ display: "grid", gap: 16, fontFamily: "var(--adm-font, inherit)" }}>
+        <div style={{ ...card, display: "grid", gap: 6 }}>
+          <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, color: "var(--adm-text-2, #5d566b)", fontWeight: 600 }}>
+            <Lightbulb size={18} aria-hidden /> Pour l&apos;éducatrice · {title}
+          </p>
+          <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: 800, color: "var(--adm-text, #1d1730)" }}>Qui a compris le thème ?</h1>
+          <p style={{ margin: 0, fontSize: "1.1rem", color: "var(--adm-text, #1d1730)" }}>
+            Le thème : <strong>{themeQuiz.correct}</strong>
+          </p>
+          <p style={{ margin: 0, color: "var(--adm-text-2, #5d566b)" }}>
+            {answered ? `${cols[0].list.length} sur ${answered} ont trouvé (${Math.round((cols[0].list.length / answered) * 100)} %).` : "Personne n'a encore répondu à cette question."} Autres choix proposés : {themeQuiz.choices.filter((c) => c !== themeQuiz.correct).join(" · ")}.
+          </p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+          {cols.map((c) => (
+            <section key={c.key} style={{ ...card, padding: "1rem", display: "grid", gap: 10, alignContent: "start" }}>
+              <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: "1.15rem", fontWeight: 800, color: c.tone }}>
+                <span style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: "50%", background: c.soft }}>{c.icon}</span>
+                {c.label} ({c.list.length})
+              </h2>
+              {c.list.length ? (
+                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
+                  {c.list.map((p) => (
+                    <li key={p.id} style={{ fontSize: "1.05rem", fontWeight: 600, color: "var(--adm-text, #1d1730)" }}>
+                      {p.first} {p.initial}.
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ margin: 0, color: "var(--adm-text-3, #6b6478)" }}>Personne</p>
+              )}
+            </section>
+          ))}
+        </div>
+        <button type="button" onClick={() => setShowResults(false)} style={{ minHeight: 60, borderRadius: 16, border: "none", background: `var(--adm-accent, ${PURPLE})`, color: "var(--adm-on-accent, #fff)", fontSize: "1.2rem", fontWeight: 800, cursor: "pointer" }}>
+          Revenir au sondage
+        </button>
+      </div>
+    );
+  }
+
   if (!who) {
     const waiting = players.filter((p) => !done.has(p.id) && !absent.has(p.id));
     const away = players.filter((p) => absent.has(p.id) && !done.has(p.id));
+    // Bouton de l'éducatrice : il faut le tenir 1 seconde (une fille qui le touche en passant ne voit rien).
+    const holdStart = () => {
+      if (holdRef.current) clearTimeout(holdRef.current);
+      holdRef.current = setTimeout(() => setShowResults(true), 1000);
+    };
+    const holdEnd = () => {
+      if (holdRef.current) clearTimeout(holdRef.current);
+      holdRef.current = null;
+    };
     return (
       <div style={{ display: "grid", gap: 16 }}>
         <div style={{ ...card, textAlign: "center" }}>
@@ -306,6 +391,19 @@ export function SurveyKiosk({ activityId, cle, title, players, coaches = [], don
             ))}
           </div>
         ) : null}
+        {themeQuiz ? (
+          <button
+            type="button"
+            onPointerDown={holdStart}
+            onPointerUp={holdEnd}
+            onPointerLeave={holdEnd}
+            onPointerCancel={holdEnd}
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ minHeight: 52, borderRadius: 14, border: "1px dashed var(--adm-border, #d9d2e3)", background: "transparent", color: "var(--adm-text-2, #5d566b)", fontSize: "0.95rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, userSelect: "none", WebkitUserSelect: "none", touchAction: "manipulation" }}
+          >
+            <Lightbulb size={18} aria-hidden /> Éducatrice : tiens ce bouton 1 seconde pour voir qui a compris le thème
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -329,17 +427,43 @@ export function SurveyKiosk({ activityId, cle, title, players, coaches = [], don
     );
   }
 
-  const q = KIOSK_QUESTIONS[step];
+  const q = questions[step];
   const head = (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
       <button type="button" onClick={() => (picking ? setPicking(false) : step ? setStep(step - 1) : reset())} style={{ background: "none", border: "none", color: PURPLE, fontSize: "1.05rem", fontWeight: 700, cursor: "pointer", padding: 8 }}>
         ← {picking || step ? "Retour" : "Ce n'est pas moi"}
       </button>
       <span style={{ color: "#5d566b", fontWeight: 600 }}>
-        {who.first} · question {step + 1} sur {KIOSK_QUESTIONS.length}
+        {who.first} · question {step + 1} sur {questions.length}
       </span>
     </div>
   );
+
+  if (q.kind === "theme") {
+    return (
+      <div style={{ ...card, display: "grid", gap: 18 }}>
+        {head}
+        <h1 style={{ margin: 0, fontSize: "1.9rem", lineHeight: 1.25, fontWeight: 800, color: "#1d1730", textAlign: "center" }}>{q.question}</h1>
+        <p style={{ margin: "-6px 0 0", textAlign: "center", color: "#5d566b", fontSize: "1.05rem" }}>Touche une seule réponse.</p>
+        <div style={{ display: "grid", gap: 12 }}>
+          {(themeQuiz?.choices ?? []).map((c) => {
+            const on = answers.themeAnswer === c;
+            return (
+              <button
+                key={c}
+                type="button"
+                aria-pressed={on}
+                onClick={() => advance({ ...answers, themeAnswer: c })}
+                style={{ minHeight: 88, padding: "0.8rem 1.2rem", borderRadius: 18, border: on ? `4px solid var(--adm-accent, ${PURPLE})` : "1px solid var(--adm-border, #e6e0ee)", background: on ? "var(--adm-accent-soft, #f4ecfb)" : "var(--adm-surface, #fff)", color: "var(--adm-text, #1d1730)", fontSize: "1.45rem", lineHeight: 1.25, fontWeight: 800, cursor: "pointer", fontFamily: "var(--adm-font, inherit)" }}
+              >
+                {c}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   if (q.kind === "help" && picking) {
     const chosen = answers[HELP[q.field].list] ?? [];

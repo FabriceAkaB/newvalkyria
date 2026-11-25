@@ -7,6 +7,8 @@ import { parseSurveyAnswer } from "@/lib/practice-survey";
 import { getSurveyData } from "@/lib/practice-survey-repo";
 import { checkKioskKey } from "@/lib/survey-kiosk";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { parseThemeAnswer } from "@/lib/theme-quiz-core";
+import { getThemeQuiz, saveThemeAnswer } from "@/lib/theme-quiz-repo";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   // Ne pas effacer ce que l'éducateur avait noté (« plus de… ») : on garde ses choix.
   const prev = data.attendance.find((a) => a.registration_id === registrationId);
   await setPlayerFeedback(activityId, registrationId, { ...answer, wantsMore: prev?.wants_more ?? [], wantsMoreNote: prev?.wants_more_note ?? null });
+  // « Qu'est-ce qu'on a travaillé aujourd'hui ? » : le bon thème est recalculé ici (jamais celui envoyé par l'iPad).
+  if (typeof body.themeAnswer === "string") {
+    const quiz = await getThemeQuiz(activityId).catch(() => null);
+    const choice = parseThemeAnswer(body.themeAnswer, quiz);
+    if (quiz && choice) await saveThemeAnswer(activityId, registrationId, choice, quiz);
+  }
   // Rapports du jour tous finis : courriel automatique à l'éducateur (une fois par jour).
   after(() => notifyActivityCoaches(activityId).catch(() => null));
   if (prev && !["present", "late", "left_early"].includes(prev.status)) {

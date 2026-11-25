@@ -5,9 +5,10 @@ import { planBlocks, type PlanBlockView } from "@/lib/practice-plan-view";
 import { academyPractices, groupName, together } from "@/lib/practice-survey-repo";
 import { todayIso, type Practice } from "@/lib/practices-repo";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
-import { getThemeForDate, themeFor } from "@/lib/season-themes-repo";
+import { getThemeForDate } from "@/lib/season-themes-repo";
 import { getBlocksForActivity } from "@/lib/session-plan-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { themeForGroup } from "@/lib/theme-quiz-core";
 
 /** La borne du bord du terrain (code 180180, JP 18 nov. 2026) : la pratique du jour et le sondage des filles,
  *  ouverts une fois avec du réseau puis lisibles sans réseau. */
@@ -93,7 +94,8 @@ export async function getKioskPlan(activityId: string): Promise<KioskPlan | null
   }
   const players = Math.max(roster.length, 1);
   return {
-    theme: theme ? { theme: themeFor(theme, cleanCategory(activity.category)) ?? theme.theme, notes: theme.notes ?? null } : null,
+    // Le thème de la catégorie (« 2016-2017 » prend celui de 2016) : le même que la question du sondage.
+    theme: theme ? { theme: themeForGroup(theme, cleanCategory(activity.category)) ?? theme.theme, notes: theme.notes ?? null } : null,
     blocks: planBlocks(blocks, exercises as unknown as Record<string, unknown>[], String(activity.start_time), players),
     decks,
     players: roster.length

@@ -5,6 +5,7 @@ import { Pill } from "@/components/mandalart/ui";
 import { OpenSurveyButton } from "@/components/practice-survey";
 import { requireAdmin } from "@/lib/admin-auth";
 import { CoachHelpBars, SurveyLines, SurveyRing } from "@/components/survey-charts";
+import { ThemePracticeBars } from "@/components/theme-quiz-results";
 import { getRecentPracticesForSurvey, getSurveyDashboard, getSurveyTrend } from "@/lib/practice-survey-repo";
 import { todayIso } from "@/lib/practices-repo";
 import { kioskPath } from "@/lib/survey-kiosk";
@@ -87,6 +88,31 @@ export default async function SurveyListPage() {
               </>
             ) : (
               <p style={{ margin: 0, color: "var(--adm-text-2)", fontSize: "0.875rem" }}>Pas encore de réponse. Dès la prochaine pratique, chaque fille dit sur la borne si sa coach l&apos;a aidée ou encouragée, et laquelle : chaque coach aura ici sa part en pourcentage.</p>
+            )}
+          </section>
+
+          <section className="mda-card" style={{ display: "grid", gap: 14 }}>
+            <h2 className="mda-h2" style={{ margin: 0 }}>Le thème de la pratique : qui a compris ?</h2>
+            {dash && dash.themePractices.length ? (
+              <>
+                <p style={{ margin: 0, color: "var(--adm-text-2)", fontSize: "0.875rem" }}>
+                  Sur la borne, « Qu&apos;est-ce qu&apos;on a travaillé aujourd&apos;hui ? » : 3 choix, un seul est le thème de la semaine du groupe. La fille ne voit pas si elle a bon. Part des filles qui l&apos;ont trouvé, pratique par pratique (touche une pratique pour voir qui).
+                  {(() => {
+                    const a = dash.themeWeeks.reduce((s, w) => s + w.answered, 0);
+                    const u = dash.themeWeeks.reduce((s, w) => s + w.understood, 0);
+                    return a ? ` En tout : ${u} sur ${a} (${Math.round((u / a) * 100)} %).` : "";
+                  })()}
+                </p>
+                <ThemePracticeBars practices={dash.themePractices.slice(0, 20)} />
+                {dash.themeWeeks.length > 1 ? (
+                  <>
+                    <h3 style={{ margin: "8px 0 0", fontSize: "0.875rem", fontWeight: 600, color: "var(--adm-text)" }}>Filles qui ont compris le thème, semaine par semaine</h3>
+                    <SurveyLines weeks={dash.themeWeeks.map((w) => w.week)} counts={dash.themeWeeks.map((w) => w.answered)} max={100} unit=" %" series={[{ key: "theme", label: "Compris", color: "var(--adm-series-1)", values: dash.themeWeeks.map((w) => w.pct) }]} />
+                  </>
+                ) : null}
+              </>
+            ) : (
+              <p style={{ margin: 0, color: "var(--adm-text-2)", fontSize: "0.875rem" }}>Pas encore de réponse. Dès la prochaine pratique qui a un thème, chaque fille répond sur la borne à « Qu&apos;est-ce qu&apos;on a travaillé aujourd&apos;hui ? » (3 choix) : la part de celles qui l&apos;ont trouvé s&apos;affiche ici, et qui exactement dans le sondage de chaque pratique.</p>
             )}
           </section>
 

@@ -3,6 +3,7 @@ import { getActivity, type CoachActivity } from "@/lib/coaches-repo";
 import { coachHelpRates, summarizeSurvey, weeklySeries, type CoachHelpRate, type SurveyAnswer, type SurveyRow, type SurveySummary, type SurveyWeek } from "@/lib/practice-survey";
 import { createActivityFor, listPractices, todayIso, type Practice } from "@/lib/practices-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { themeRateByPractice, themeRateByWeek, type ThemeRate } from "@/lib/theme-quiz-core";
 
 /** Sondage de fin de pratique côté espace Coaching (JP ou la gérante au bord du terrain). */
 
@@ -176,6 +177,9 @@ export async function getSurveyTrend(days = 28): Promise<SurveySummary & { pract
 export interface SurveyDashboard {
   weeks: SurveyWeek[];
   coaches: (CoachHelpRate & { name: string })[];
+  /** « Qu'est-ce qu'on a travaillé aujourd'hui ? » (JP, 25 nov. 2026) : part des filles qui ont trouvé le thème. */
+  themeWeeks: (ThemeRate & { week: string })[];
+  themePractices: (ThemeRate & { activityId: string; date: string; start: string; label: string; theme: string | null })[];
 }
 
 /** Les courbes (plaisir et fatigue par semaine) et l'aide de chaque coach chiffrée, sur les 10 dernières semaines. */
@@ -183,10 +187,17 @@ export async function getSurveyDashboard(weeks = 10): Promise<SurveyDashboard> {
   const from = addDays(todayIso(), -7 * weeks);
   const { data } = await db()
     .from("activity_player_attendance")
-    .select("activity_id, practice_rating, fatigue, coach_helped, coach_helpers, peer_helped, activity:coach_activities!inner(activity_date)")
+    .select("activity_id, practice_rating, fatigue, coach_helped, coach_helpers, peer_helped, theme_correct, theme_expected, activity:coach_activities!inner(activity_date, start_time, title, category)")
     .gte("activity.activity_date", from)
     .not("feedback_at", "is", null);
   const rows: SurveyRow[] = ((data ?? []) as any[]).map((r) => ({ ...r, date: String(r.activity?.activity_date ?? "").slice(0, 10) }));
+  const meta = new Map(((data ?? []) as any[]).map((r) => [r.activity_id, r] as const));
+  const themeOf = new Map(((data ?? []) as any[]).filter((r) => r.theme_expected).map((r) => [r.activity_id, String(r.theme_expected)] as const));
+  const themeRows = (rows as (SurveyRow & { theme_correct?: boolean | null })[]).map((r) => ({ date: r.date, activity_id: r.activity_id, theme_correct: r.theme_correct ?? null }));
+  const themePractices = themeRateByPractice(themeRows).map((p) => {
+    const m = meta.get(p.activityId);
+    return { ...p, start: String(m?.activity?.start_time ?? "").slice(0, 5), label: String(m?.activity?.title || m?.activity?.category || "Pratique"), theme: themeOf.get(p.activityId) ?? null };
+  });
   // Les coachs sur le terrain de chaque pratique sondée (assignées, pas absentes), plus celles que les filles ont nommées
   // (groupes fusionnés : la coach d'un groupe voisin à la même heure).
   const asked = rows.filter((r) => r.coach_helped === true || r.coach_helped === false);
@@ -203,7 +214,7 @@ export async function getSurveyDashboard(weeks = 10): Promise<SurveyDashboard> {
   const rates = coachHelpRates(rows, new Map([...byActivity].map(([k, v]) => [k, [...v]])));
   const { data: coaches } = rates.length ? await db().from("coaches").select("id, first_name").in("id", rates.map((r) => r.coachId)) : { data: [] };
   const name = new Map(((coaches ?? []) as any[]).map((c) => [c.id, String(c.first_name ?? "").trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (x: string) => x.toUpperCase())] as const));
-  return { weeks: weeklySeries(rows), coaches: rates.map((r) => ({ ...r, name: name.get(r.coachId) ?? "Coach" })) };
+  return { weeks: weeklySeries(rows), coaches: rates.map((r) => ({ ...r, name: name.get(r.coachId) ?? "Coach" })), themeWeeks: themeRateByWeek(themeRows), themePractices };
 }
 
 /** Les filles qui disent sur la borne que ce coach les a aidées ou encouragées ce jour-là (toutes les pratiques du

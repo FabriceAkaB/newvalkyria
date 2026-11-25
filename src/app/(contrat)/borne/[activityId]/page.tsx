@@ -6,12 +6,14 @@ import { getKioskPlan } from "@/lib/kiosk-practice-repo";
 import { getSurveyData } from "@/lib/practice-survey-repo";
 import { signedPhotoUrl } from "@/lib/player-photos";
 import { checkKioskKey } from "@/lib/survey-kiosk";
+import { getThemeQuiz } from "@/lib/theme-quiz-repo";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Comment était ta pratique ? | New Valkyria", robots: { index: false, follow: false, nocache: true } };
 
 /** La borne de sondage : l'iPad reste ouvert sur cette page à la fin de la pratique ; chaque fille touche sa photo
- *  et répond elle-même à 4 questions : plaisir, fatigue, l'aide de sa coach et l'aide des autres. */
+ *  et répond elle-même à 4 questions : plaisir, fatigue, l'aide de sa coach et l'aide des autres, puis, quand la
+ *  pratique a un thème, « Qu'est-ce qu'on a travaillé aujourd'hui ? » (3 choix, JP 25 nov. 2026). */
 export default async function KioskPage({ params, searchParams }: { params: Promise<{ activityId: string }>; searchParams: Promise<{ cle?: string; vue?: string }> }) {
   const { activityId } = await params;
   const { cle, vue } = await searchParams;
@@ -30,7 +32,9 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
   const photos = new Map(await Promise.all(data.roster.map(async (p) => [p.registrationId, await signedPhotoUrl(p.photoUrl, 4 * 3600).catch(() => null)] as const)));
   // Finie : plaisir, fatigue et l'aide de la coach donnés (ou l'ancienne borne, avant le 20 nov. 2026).
   const done = data.attendance.filter((a: any) => a.practice_rating != null && a.fatigue != null && (a.coach_helped != null || a.learning != null)).map((a) => a.registration_id);
-  const plan = await getKioskPlan(activityId).catch(() => null);
+  // Les 3 choix sont calculés ici une fois et gardés dans la page : les mêmes pour toutes, même hors réseau.
+  const [plan, themeQuiz] = await Promise.all([getKioskPlan(activityId).catch(() => null), getThemeQuiz(activityId).catch(() => null)]);
+  const themeResults = Object.fromEntries(data.attendance.filter((a: any) => a.theme_correct === true || a.theme_correct === false).map((a: any) => [a.registration_id, a.theme_correct as boolean]));
   const survey = (
     <SurveyKiosk
       activityId={activityId}
@@ -40,6 +44,8 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
       coaches={data.coaches}
       done={done}
       absent={data.attendance.filter((a) => a.status === "absent").map((a) => a.registration_id)}
+      themeQuiz={themeQuiz}
+      themeResults={themeResults}
     />
   );
   if (!plan) return survey;

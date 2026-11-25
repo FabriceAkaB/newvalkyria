@@ -1,4 +1,5 @@
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { themeForGroup } from "@/lib/theme-quiz-core";
 
 function db() {
   return getSupabaseAdminClient() as any;
@@ -19,11 +20,10 @@ export interface SeasonTheme {
   by_category?: Record<string, string>;
 }
 
-/** Thème d'une semaine pour une catégorie : le thème propre à la catégorie s'il existe, sinon celui de tout le monde. */
+/** Thème d'une semaine pour une catégorie : le thème propre à la catégorie s'il existe (« 2016-2017 » prend celui de
+ *  « 2016 » ou « 2017 », JP 25 nov. 2026 : le même que la question du thème sur la borne), sinon celui de tout le monde. */
 export function themeFor(theme: Pick<SeasonTheme, "theme" | "by_category"> | null | undefined, category: string | null | undefined): string | null {
-  if (!theme) return null;
-  const own = category ? theme.by_category?.[category] : undefined;
-  return own?.trim() || theme.theme;
+  return themeForGroup(theme, category);
 }
 
 export async function getSeasonThemes(seasonId: string): Promise<SeasonTheme[]> {
