@@ -116,7 +116,8 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
   // Heure de rapport des coachs : une seule par jour (JP, 18 nov. 2026), portée par la dernière pratique de la journée.
   const daily = dailyReportHours(
     assignments.map((a) => {
-      const r = a.paid ? { due: false, earned: false } : reportHour({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, role: a.coach.role, coachId: a.coach_id, report: reports.get(a.activity_id) ?? null });
+      const granted = Boolean(a.report_hour_granted_at) && a.status === "present";
+      const r = a.paid ? { due: false, earned: false } : granted ? { due: true, earned: true } : reportHour({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, role: a.coach.role, coachId: a.coach_id, report: reports.get(a.activity_id) ?? null });
       return { key: a.id, coachId: a.coach_id, date: String(a.activity.activity_date).slice(0, 10), start: String(a.activity.start_time).slice(0, 5), ...r };
     })
   );

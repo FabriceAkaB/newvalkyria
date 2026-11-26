@@ -81,6 +81,9 @@ export interface CoachAssignment {
   /** Heures approuvées par JP : comptent pour la paie même si le rapport de la pratique n'est pas complet. */
   pay_approved_at?: string | null;
   pay_approved_by?: string | null;
+  /** Heure de rapport accordée à la main par JP (ex. William, assistant, qui a rempli des rapports journaliers). */
+  report_hour_granted_at?: string | null;
+  report_hour_granted_by?: string | null;
   paid: boolean;
   paid_on: string | null;
   payment_method: string | null;

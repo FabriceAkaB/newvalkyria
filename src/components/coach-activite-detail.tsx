@@ -1241,7 +1241,7 @@ export function CoachActiviteDetail({
                   {exerciseRatingsBlock}
                   {isPractice ? (
                     <div style={{ marginBottom: 16 }}>
-                      {!guest ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
+                      {!guest && isCoach ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
                       {debriefCard}
                     </div>
                   ) : null}
@@ -1366,7 +1366,7 @@ export function CoachActiviteDetail({
                   theme={themeForGroup(theme?.theme, activity.category ?? activity.title)}
                 />
               ) : null}
-              {isPractice && !guest ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
+              {isPractice && !guest && isCoach ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
               {activity.activity_type !== "Match" && <CoachIncidentCard activityId={activity.id} />}
               <button type="button" className="coach-primary" style={{ marginTop: 12 }} onClick={() => goTo("apres")}>Fin de la pratique : le rapport</button>
             </>
