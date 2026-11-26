@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Pill } from "@/components/mandalart/ui";
 import {
@@ -24,6 +24,7 @@ import {
   torontoDay,
   type CoachLine,
   type FieldMode,
+  type ProgramFormat,
   type LaunchAlert,
   type LaunchInputs,
   type LaunchResults,
@@ -32,6 +33,7 @@ import {
   type Verdict
 } from "@/lib/launch-calculator";
 import type { LaunchScenario } from "@/lib/launch-scenarios-repo";
+import { DEFAULT_SEASON_SETTINGS, NO_SEASON, SEASON_FILLS, seasonLabels, seasonOf, seasonTotals, type SeasonSettings } from "@/lib/season-budget";
 
 /** Calculateur de lancement GO / NO-GO : le verdict se recalcule à chaque frappe (fonctions pures de
  *  launch-calculator.ts) ; l'enregistrement passe par /api/admin/calculateur, qui recalcule lui-même. */
@@ -40,6 +42,11 @@ import type { LaunchScenario } from "@/lib/launch-scenarios-repo";
 
 interface Form {
   name: string;
+  format: ProgramFormat;
+  season: string;
+  weeks: string;
+  perWeek: string;
+  daysPerWeek: string;
   price: string;
   capacity: string;
   sessions: string;
@@ -59,6 +66,8 @@ interface Form {
   kit: string;
   payments: string;
   otherVariable: string;
+  installmentFee: string;
+  installmentShare: string;
   jpHours: string;
   grant: string;
   grantCounted: boolean;
@@ -82,6 +91,11 @@ const showCents = (c: number) => (c ? showNum(c / 100) : "");
 
 function toInputs(f: Form): LaunchInputs {
   return normalizeInputs({
+    format: f.format,
+    season: f.season,
+    weeks: parse(f.weeks),
+    perWeek: parse(f.perWeek),
+    daysPerWeek: f.daysPerWeek.trim() === "" ? 5 : parse(f.daysPerWeek),
     priceCents: toCents(f.price),
     capacity: parse(f.capacity),
     sessions: parse(f.sessions),
@@ -104,6 +118,8 @@ function toInputs(f: Form): LaunchInputs {
     // Vide = 1 paiement (le cas courant), pas 0 : sinon les 0,30 $ de Stripe disparaîtraient.
     paymentsPerFamily: f.payments.trim() === "" ? 1 : parse(f.payments),
     otherVariableCents: toCents(f.otherVariable),
+    installmentFeeCents: toCents(f.installmentFee),
+    installmentShare: parse(f.installmentShare) / 100,
     presales: f.presales.trim() === "" ? null : parse(f.presales),
     startDate: f.startDate || null,
     jpHours: parse(f.jpHours),
@@ -115,6 +131,11 @@ function toInputs(f: Form): LaunchInputs {
 function toForm(i: LaunchInputs, name: string): Form {
   return {
     name,
+    format: i.format,
+    season: i.season,
+    weeks: i.weeks ? String(i.weeks) : "",
+    perWeek: i.perWeek ? String(i.perWeek) : "",
+    daysPerWeek: i.daysPerWeek === 5 ? "" : showNum(i.daysPerWeek),
     price: showCents(i.priceCents),
     capacity: i.capacity ? String(i.capacity) : "",
     sessions: i.sessions ? String(i.sessions) : "",
@@ -134,6 +155,8 @@ function toForm(i: LaunchInputs, name: string): Form {
     kit: showCents(i.kitCents),
     payments: showNum(i.paymentsPerFamily),
     otherVariable: showCents(i.otherVariableCents),
+    installmentFee: showCents(i.installmentFeeCents),
+    installmentShare: i.installmentShare ? showNum(i.installmentShare * 100) : "",
     jpHours: i.jpHours ? showNum(i.jpHours) : "",
     grant: showCents(i.grantCents),
     grantCounted: i.grantCounted
@@ -174,6 +197,7 @@ export function LaunchCalculator({
   sources,
   scenarios,
   alerts,
+  seasons,
   loadError,
   initialProgramKey,
   initialScenarioId
@@ -182,6 +206,7 @@ export function LaunchCalculator({
   sources: PrefillSources;
   scenarios: LaunchScenario[];
   alerts: LaunchAlert[];
+  seasons: Record<string, SeasonSettings>;
   loadError: string | null;
   initialProgramKey: string | null;
   initialScenarioId: string | null;
@@ -416,10 +441,52 @@ export function LaunchCalculator({
             <p className="mda-sub">Ce que la famille paie et combien de places vous ouvrez.</p>
             <div className="lc-fields">
               <Field wide label="Nom du scénario" value={form.name} onChange={set("name")} placeholder={`Ex. Camp des Fêtes · ${shortDate(today)}`} inputMode="text" />
-              <Field label="Prix par participante" unit="$" value={form.price} onChange={set("price")} placeholder="0" hint={inputs.priceCents ? `Avant taxes, ce que l'académie garde. Avec TPS/TVQ, la famille paie ${money2(Math.round(inputs.priceCents * (1 + SALES_TAX_RATE)))}` : "Avant taxes, ce que l'académie garde"} />
-              <Field label="Places" value={form.capacity} onChange={set("capacity")} placeholder="0" inputMode="numeric" hint="Capacité du groupe (N)" />
-              <Field label="Séances" value={form.sessions} onChange={set("sessions")} placeholder="0" inputMode="numeric" />
-              <Field label="Durée d'une séance" unit="h" value={form.hoursPerSession} onChange={set("hoursPerSession")} placeholder="0" hint={programHours ? `= ${hoursLabel(programHours)} de programme` : "Ex. 1,5 pour 1 h 30"} />
+              <div className="lc-field" data-wide="">
+                <span className="lc-field-label">Format</span>
+                <div className="lc-seg" role="group" aria-label="Format du programme">
+                  <button type="button" aria-pressed={form.format === "program"} onClick={() => set("format")("program")}>
+                    Programme
+                  </button>
+                  <button type="button" aria-pressed={form.format === "camp"} onClick={() => set("format")("camp")}>
+                    Camp à la semaine
+                  </button>
+                </div>
+                <span className="lc-hint">{form.format === "camp" ? "Camps de jour et camps de haute performance : des semaines, un maximum d'enfants par semaine, un prix par semaine." : "Saison, session ou programme à dates fixes : un groupe, un prix pour tout le programme."}</span>
+              </div>
+              <Field
+                label={form.format === "camp" ? "Prix par semaine" : "Prix par participante"}
+                unit="$"
+                value={form.price}
+                onChange={set("price")}
+                placeholder="0"
+                hint={inputs.priceCents ? `Avant taxes, ce que l'académie garde. Avec TPS/TVQ, la famille paie ${money2(Math.round(inputs.priceCents * (1 + SALES_TAX_RATE)))}` : "Avant taxes, ce que l'académie garde"}
+              />
+              {form.format === "camp" ? (
+                <>
+                  <Field label="Semaines" value={form.weeks} onChange={set("weeks")} placeholder="0" inputMode="numeric" />
+                  <Field label="Places par semaine" value={form.perWeek} onChange={set("perWeek")} placeholder="0" inputMode="numeric" hint={inputs.capacity ? `= ${inputs.capacity} inscriptions-semaines en tout` : "Maximum d'enfants accueillis chaque semaine"} />
+                  <Field label="Jours par semaine" value={form.daysPerWeek} onChange={set("daysPerWeek")} placeholder="5" inputMode="decimal" />
+                  <Field label="Heures par jour" unit="h" value={form.hoursPerSession} onChange={set("hoursPerSession")} placeholder="0" hint={programHours ? `= ${hoursLabel(programHours)} de camp` : "Ex. 7 pour 9 h à 16 h"} />
+                </>
+              ) : (
+                <>
+                  <Field label="Places" value={form.capacity} onChange={set("capacity")} placeholder="0" inputMode="numeric" hint="Capacité du groupe (N)" />
+                  <Field label="Séances" value={form.sessions} onChange={set("sessions")} placeholder="0" inputMode="numeric" />
+                  <Field label="Durée d'une séance" unit="h" value={form.hoursPerSession} onChange={set("hoursPerSession")} placeholder="0" hint={programHours ? `= ${hoursLabel(programHours)} de programme` : "Ex. 1,5 pour 1 h 30"} />
+                </>
+              )}
+              <label className="lc-field">
+                <span className="lc-field-label">Saison</span>
+                <span className="lc-input-wrap">
+                  <input className="admin-input" list="lc-seasons" value={form.season} placeholder="Ex. Été 2027" onChange={(e) => set("season")(e.target.value)} autoComplete="off" />
+                </span>
+                <span className="lc-hint">Pour l'additionner aux autres programmes de la saison</span>
+                <datalist id="lc-seasons">
+                  {[...new Set(["Été 2027", "Hiver 2027-2028", "Automne 2027", ...scenarios.map((x) => x.inputs.season).filter(Boolean)])].map((x) => (
+                    <option key={x} value={x} />
+                  ))}
+                </datalist>
+              </label>
               <Field label="Date de début" type="date" value={form.startDate} onChange={set("startDate")} inputMode="text" hint={r.presalesCheckDate ? `Préventes vérifiées le ${shortDate(r.presalesCheckDate)}` : "Pour l'alerte 2 semaines avant"} />
               <Field
                 label="Inscrites à ce jour"
@@ -601,9 +668,16 @@ export function LaunchCalculator({
               <Field label="Uniforme ou kit" unit="$" value={form.kit} onChange={set("kit")} placeholder="0" />
               <Field label="Paiements par famille" value={form.payments} onChange={set("payments")} placeholder="1" hint="1 = en une fois ; 3 = trois versements" />
               <Field label="Autres" unit="$" value={form.otherVariable} onChange={set("otherVariable")} placeholder="0" />
+              <Field label="Frais pour payer en versements" unit="$" value={form.installmentFee} onChange={set("installmentFee")} placeholder="0" hint="Ajoutés à la famille qui paie en 2 ou 3 fois : un revenu de plus" />
+              <Field label="Familles en versements" unit="%" value={form.installmentShare} onChange={set("installmentShare")} placeholder="0" hint="Part des familles qui choisiront les versements" />
             </div>
+            {r.installmentExtraCents > 0 ? (
+              <p className="lc-hint" style={{ marginTop: 12 }}>
+                Frais de versements : {money2(r.installmentExtraCents)} de plus par inscrite en moyenne. Une inscrite rapporte {money2(r.revenuePerSignupCents)}.
+              </p>
+            ) : null}
             <p className="lc-hint" style={{ marginTop: 12 }}>
-              Frais Stripe : {showNum(STRIPE_PERCENT * 100)} % × {dollars(inputs.priceCents)} + {money2(STRIPE_FIXED_CENTS)} × {showNum(inputs.paymentsPerFamily)} paiement{inputs.paymentsPerFamily > 1 ? "s" : ""} = {money2(r.stripeCents)}
+              Frais Stripe : {showNum(STRIPE_PERCENT * 100)} % × {dollars(r.revenuePerSignupCents)} + {money2(STRIPE_FIXED_CENTS)} × {showNum(inputs.paymentsPerFamily)} paiement{inputs.paymentsPerFamily > 1 ? "s" : ""} = {money2(r.stripeCents)}
             </p>
             <div className="lc-total" style={{ marginTop: 16 }}>
               <span>Coût par participante</span>
@@ -765,6 +839,8 @@ export function LaunchCalculator({
         </section>
       ) : null}
 
+      <SeasonBudget scenarios={scenarios} initial={seasons} focus={form.season.trim() || null} />
+
       <ScenarioTable scenarios={scenarios} current={r.ready && dirty ? { name: form.name.trim() || "Calcul en cours", inputs, results: r } : null} loadedId={loadedId} onOpen={openScenario} onDelete={remove} />
 
       {r.ready ? (
@@ -842,6 +918,197 @@ function Field({
       </span>
       {hint ? <span className="lc-hint">{hint}</span> : null}
     </label>
+  );
+}
+
+/** Cumul d'une saison : les scénarios cochés additionnés, puis le salaire de JP et les autres charges ;
+ *  les choix s'enregistrent tout seuls (une seconde après le dernier changement). */
+function SeasonBudget({ scenarios, initial, focus }: { scenarios: LaunchScenario[]; initial: Record<string, SeasonSettings>; focus: string | null }) {
+  const labels = useMemo(() => seasonLabels(scenarios), [scenarios]);
+  const [season, setSeason] = useState<string>(() => (focus && labels.includes(focus) ? focus : labels[0] ?? ""));
+  const [all, setAll] = useState<Record<string, SeasonSettings>>(initial);
+  const [salary, setSalary] = useState("");
+  const [other, setOther] = useState("");
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const dirty = useRef(false);
+  const current = labels.includes(season) ? season : labels[0] ?? "";
+  const settings = all[current] ?? DEFAULT_SEASON_SETTINGS;
+
+  useEffect(() => {
+    setSalary(showCents(settings.jpSalaryCents));
+    setOther(showCents(settings.otherChargesCents));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current]);
+
+  useEffect(() => {
+    if (!dirty.current || !current) return;
+    const t = setTimeout(async () => {
+      setState("saving");
+      try {
+        await post({ action: "season", season: current, settings });
+        setState("saved");
+      } catch {
+        setState("error");
+      }
+      dirty.current = false;
+    }, 900);
+    return () => clearTimeout(t);
+  }, [settings, current]);
+
+  if (!labels.length) return null;
+  const update = (patch: Partial<SeasonSettings>) => {
+    dirty.current = true;
+    setState("idle");
+    setAll((a) => ({ ...a, [current]: { ...(a[current] ?? DEFAULT_SEASON_SETTINGS), ...patch } }));
+  };
+  const list = scenarios.filter((x) => seasonOf(x.inputs) === current);
+  const t = seasonTotals(list, settings);
+  const fill = SEASON_FILLS.find((f) => f.key === settings.fill)!;
+  const leftTone = t.leftCents >= 0 ? "var(--adm-good)" : "var(--adm-bad)";
+
+  return (
+    <section className="mda-card-flush">
+      <div className="mda-card-head" style={{ flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 className="mda-h2">Cumul de la saison</h2>
+          <p className="mda-sub" style={{ margin: 0 }}>Cochez les programmes sur lesquels vous misez : leurs bénéfices s’additionnent, puis votre salaire et les charges de la saison.</p>
+        </div>
+        {labels.length > 1 ? (
+          <div className="lc-seg" role="group" aria-label="Saison">
+            {labels.map((l) => (
+              <button key={l} type="button" aria-pressed={l === current} onClick={() => setSeason(l)}>
+                {l}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="lc-season">
+        <div className="lc-season-main">
+          <div className="lc-block-head" style={{ padding: "0 0 12px" }}>
+            <span className="lc-field-label">{current} · {count(t.included, "programme")} sur {list.length}</span>
+            <div className="lc-seg" role="group" aria-label="Remplissage du cumul">
+              {SEASON_FILLS.map((f) => (
+                <button key={f.key} type="button" aria-pressed={settings.fill === f.key} onClick={() => update({ fill: f.key })}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mda-scroll">
+            <table className="mda-table" style={{ minWidth: 560 }}>
+              <thead>
+                <tr>
+                  <th style={{ width: 44 }} aria-label="Compté" />
+                  <th>Programme</th>
+                  <th className="r">Inscriptions</th>
+                  <th className="r">Revenus</th>
+                  <th className="r">Coûts</th>
+                  <th className="r">Bénéfice</th>
+                  <th className="r">Tes heures</th>
+                </tr>
+              </thead>
+              <tbody>
+                {t.lines.map((l) => (
+                  <tr key={l.id} style={l.included ? undefined : { opacity: 0.5 }}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        className="lc-box"
+                        aria-label={`Compter ${l.name}`}
+                        checked={l.included}
+                        onChange={(e) => update({ excluded: e.target.checked ? settings.excluded.filter((x) => x !== l.id) : [...settings.excluded, l.id] })}
+                      />
+                    </td>
+                    <td>
+                      {l.name}
+                      <span className="mda-muted" style={{ display: "block", fontSize: "0.75rem" }}>
+                        {l.format === "camp" ? "Camp à la semaine" : "Programme"}
+                        {l.grantCents > 0 ? ` · subvention ${dollars(l.grantCents)}` : ""}
+                      </span>
+                    </td>
+                    <td className="r">
+                      {l.count} / {l.capacity}
+                    </td>
+                    <td className="r">{dollars(l.revenueCents)}</td>
+                    <td className="r">{dollars(l.costCents)}</td>
+                    <td className="r" style={{ fontWeight: 600, color: l.profitCents >= 0 ? "var(--adm-good)" : "var(--adm-bad)" }}>{dollars(l.profitCents)}</td>
+                    <td className="r">{l.jpHours ? hoursLabel(l.jpHours) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="lc-fields" style={{ marginTop: 16 }}>
+            <Field
+              label="Ton salaire pour la saison"
+              unit="$"
+              value={salary}
+              onChange={(v) => {
+                setSalary(v);
+                update({ jpSalaryCents: toCents(v) });
+              }}
+              placeholder="0"
+              hint={`Coût total pour l'entreprise. Au plus ${dollars(t.maxSalaryCents)} sans mettre la saison dans le rouge`}
+            />
+            <Field
+              label="Autres charges de la saison"
+              unit="$"
+              value={other}
+              onChange={(v) => {
+                setOther(v);
+                update({ otherChargesCents: toCents(v) });
+              }}
+              placeholder="0"
+              hint="Ce qui n'est dans aucun programme : comptable, logiciels, assurance générale…"
+            />
+          </div>
+          {current === NO_SEASON ? (
+            <p className="lc-hint" style={{ margin: "8px 0 0", color: "var(--adm-text-2)" }}>
+              Pour séparer l’été 2027 et l’hiver 2027-2028 : ouvrez chaque scénario, remplissez « Saison », puis « Mettre à jour le scénario ».
+            </p>
+          ) : null}
+          <p className="lc-hint" style={{ margin: "8px 0 0" }} role="status">
+            {state === "saving" ? "Enregistrement…" : state === "saved" ? "Choix enregistrés." : state === "error" ? "Pas enregistré : réessayez dans un moment." : "Les choix de chaque saison s’enregistrent tout seuls."}
+          </p>
+        </div>
+
+        <aside className="lc-season-sum" aria-label="Résultat de la saison">
+          <p className="lc-field-label" style={{ margin: 0 }}>Reste dans l’entreprise · {fill.label}</p>
+          <p className="mda-num-xl" style={{ color: leftTone, margin: "4px 0 16px" }}>{dollars(t.leftCents)}</p>
+          <dl className="lc-wf">
+            <div>
+              <dt>Revenus des programmes{t.grantCents > 0 ? " (subventions comprises)" : ""}</dt>
+              <dd>{dollars(t.revenueCents)}</dd>
+            </div>
+            <div>
+              <dt>Coûts des programmes</dt>
+              <dd>−{dollars(t.costCents)}</dd>
+            </div>
+            <div data-total="">
+              <dt>Bénéfice des programmes{t.margin !== null ? ` · ${marginLabel(t.margin)}` : ""}</dt>
+              <dd>{dollars(t.programProfitCents)}</dd>
+            </div>
+            <div>
+              <dt>Ton salaire</dt>
+              <dd>−{dollars(t.jpSalaryCents)}</dd>
+            </div>
+            <div>
+              <dt>Autres charges</dt>
+              <dd>−{dollars(t.otherChargesCents)}</dd>
+            </div>
+            <div data-total="">
+              <dt>Reste dans l’entreprise (avant impôts)</dt>
+              <dd style={{ color: leftTone }}>{dollars(t.leftCents)}</dd>
+            </div>
+          </dl>
+          <p className="lc-hint" style={{ margin: "12px 0 0" }}>
+            {count(t.signups, "inscription")} · {t.jpHours ? `${hoursLabel(t.jpHours)} de ton temps${t.profitPerJpHourCents !== null ? `, ${dollars(t.profitPerJpHourCents)} de bénéfice par heure` : ""}` : "heures de JP non entrées"}
+          </p>
+        </aside>
+      </div>
+    </section>
   );
 }
 
@@ -1062,7 +1329,7 @@ const CSS = `
 .admin-shell .lc-block-head > .lc-amount:last-child { color: var(--adm-text-2); }
 .admin-shell .lc-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-top: 16px; border-top: 1px solid var(--adm-line); font-size: 0.9rem; font-weight: 500; color: var(--adm-text-2); }
 .admin-shell .lc-total strong { font-size: 1.2rem; font-weight: 600; color: var(--adm-text); font-variant-numeric: tabular-nums; }
-.admin-shell .lc-seg { display: inline-flex; align-self: flex-start; gap: 2px; padding: 3px; border-radius: var(--adm-radius-sm); background: var(--adm-surface-2); border: 1px solid var(--adm-border); }
+.admin-shell .lc-seg { display: inline-flex; flex-wrap: wrap; align-self: flex-start; gap: 2px; padding: 3px; border-radius: var(--adm-radius-sm); background: var(--adm-surface-2); border: 1px solid var(--adm-border); }
 .admin-shell .lc-seg button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 6px; background: transparent; color: var(--adm-text-2); font-size: 0.85rem; cursor: pointer; }
 .admin-shell .lc-seg button[aria-pressed="true"] { background: var(--adm-surface-3); color: var(--adm-text); font-weight: 600; }
 .admin-shell .lc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -1082,6 +1349,15 @@ const CSS = `
 .admin-shell .lc-budget-track span { display: block; height: 100%; border-radius: 999px; }
 .admin-shell .lc-check { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; font-size: 0.88rem; color: var(--adm-text); cursor: pointer; }
 .admin-shell .lc-check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--adm-accent); }
+.admin-shell .lc-season { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 24px; padding: 0 20px 20px; align-items: start; }
+.admin-shell .lc-season-sum { padding: 20px; border-radius: var(--adm-radius); background: var(--adm-surface-2); border: 1px solid var(--adm-line); }
+.admin-shell .lc-wf { margin: 0; display: flex; flex-direction: column; }
+.admin-shell .lc-wf > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--adm-line); font-size: 0.85rem; color: var(--adm-text-2); }
+.admin-shell .lc-wf > div:first-child { border-top: 0; }
+.admin-shell .lc-wf > div[data-total] { font-weight: 600; color: var(--adm-text); }
+.admin-shell .lc-wf dt { margin: 0; }
+.admin-shell .lc-wf dd { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.admin-shell .lc-box { width: 18px; height: 18px; accent-color: var(--adm-accent); }
 .admin-shell .lc-hero-num { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 4px; }
 .admin-shell .lc-gauge { margin-top: 24px; }
 .admin-shell .lc-track { position: relative; display: flex; gap: 2px; height: 12px; }
@@ -1116,6 +1392,7 @@ const CSS = `
 @media (max-width: 960px) {
   .admin-shell .lc-layout { grid-template-columns: minmax(0, 1fr); }
   .admin-shell .lc-aside { position: static; }
+  .admin-shell .lc-season { grid-template-columns: minmax(0, 1fr); padding: 0 16px 16px; }
   .admin-shell .lc { padding-bottom: 72px; }
   .admin-shell .lc-dock { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--adm-surface); border-top: 1px solid var(--adm-border); box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35); }
 }

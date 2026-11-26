@@ -452,3 +452,25 @@ describe("éducateurs un par un, avec budget (JP, 26 nov. 2026)", () => {
     expect(r.coachPay.every((c) => c.cents === 60_000)).toBe(true);
   });
 });
+
+describe("frais de paiement en versements (JP, 26 nov. 2026)", () => {
+  it("ajoutent un revenu par inscrite selon la part des familles en versements", () => {
+    const sans = at(40_000);
+    const avec = at(40_000, { installmentFeeCents: 2_000, installmentShare: 0.5 });
+    expect(avec.installmentExtraCents).toBe(1_000);
+    expect(avec.revenuePerSignupCents).toBe(41_000);
+    expect(avec.profit70Cents).toBeGreaterThan(sans.profit70Cents);
+    // Le prix plancher reste un prix (sans les frais) : il baisse d'environ les frais moyens.
+    expect(avec.methodFloorCents!).toBeLessThan(sans.methodFloorCents!);
+  });
+});
+
+describe("camp à la semaine (JP, 26 nov. 2026)", () => {
+  it("places = semaines × places par semaine, et les phrases parlent d'inscriptions", () => {
+    const r = computeLaunch({ ...base, format: "camp", weeks: 8, perWeek: 30, daysPerWeek: 5, hoursPerSession: 7, priceCents: 27_500 });
+    expect(r.pessimisticCount).toBe(168);
+    expect(r.programHours).toBe(280);
+    expect(flat(r.sentence)).toContain("168 inscriptions sur 240");
+    expect(flat(r.sentence)).not.toMatch(/inscrite/);
+  });
+});

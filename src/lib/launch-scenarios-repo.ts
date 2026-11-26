@@ -14,6 +14,7 @@ import {
   type Verdict,
   type VenueSource
 } from "@/lib/launch-calculator";
+import { normalizeSeasonSettings, parseSeasonSettingsMap, type SeasonSettings } from "@/lib/season-budget";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 /** Scénarios du calculateur de lancement (table launch_scenarios) et sources de préremplissage :
@@ -346,4 +347,24 @@ export async function getLaunchAlerts(today = torontoToday()): Promise<LaunchAle
     live,
     today
   );
+}
+
+// ── Cumul par saison (salaire de JP, autres charges, scénarios cochés) ──
+
+const SEASON_SETTINGS_KEY = "calculateur_saisons";
+
+export async function getSeasonSettings(): Promise<Record<string, SeasonSettings>> {
+  const { data } = await db().from("app_settings").select("value").eq("club_id", CLUB_ID).eq("key", SEASON_SETTINGS_KEY).maybeSingle();
+  return parseSeasonSettingsMap(data?.value ?? null);
+}
+
+/** Enregistre les choix d'une saison (les autres saisons restent telles quelles). */
+export async function saveSeasonSettings(season: string, settings: Partial<SeasonSettings>): Promise<Record<string, SeasonSettings>> {
+  const all = await getSeasonSettings();
+  all[season.trim().slice(0, 40)] = normalizeSeasonSettings(settings);
+  const { error } = await db()
+    .from("app_settings")
+    .upsert({ club_id: CLUB_ID, key: SEASON_SETTINGS_KEY, value: JSON.stringify(all), updated_at: new Date().toISOString() }, { onConflict: "club_id,key" });
+  if (error) throw new Error(error.message);
+  return all;
 }

@@ -19,6 +19,11 @@
  *  Éducateurs (JP, 26 nov. 2026) : une ligne par éducateur (nom, heures, taux) ; un budget salaires facultatif
  *  sert de cible (reste ou dépassement) et compte comme coût seulement quand aucune ligne n'a de montant.
  *
+ *  Camps (JP, 26 nov. 2026) : format « camp » = des semaines, un maximum d'enfants par semaine et un prix par semaine ;
+ *  N = semaines × places par semaine (une inscription = un enfant pour une semaine), séances = semaines × jours.
+ *  Frais de versements : la famille qui paie en 2 ou 3 fois paie des frais en plus (revenu de plus par inscrite :
+ *  frais × part des familles en versements) ; les formules utilisent alors P + X, et les prix planchers rendent P.
+ *
  *  Les frais Stripe en pourcentage dépendent du prix : toutes les formules les gardent à part
  *  (V = Vbase + 2,9 % × P), ce qui donne des prix planchers exacts.
  *  Ce fichier est pur (aucun accès à la base) : la page, la route API et les tests l'utilisent tels quels. */
@@ -34,6 +39,7 @@ export const METHOD_FILL = 0.8;
 export const PRESALES_CHECK_DAYS = 14;
 
 export type FieldMode = "hourly" | "contract";
+export type ProgramFormat = "program" | "camp";
 
 /** Un éducateur du programme : son nom (ou son rôle), ses heures (null = heures du programme) et son taux. */
 export interface CoachLine {
@@ -46,7 +52,15 @@ export const MAX_COACH_LINES = 20;
 export type Verdict = "go" | "risque" | "no-go";
 
 export interface LaunchInputs {
-  /** Prix payé par la famille pour le programme, en cents. */
+  /** Programme (places, séances) ou camp à la semaine (semaines × places par semaine). */
+  format: ProgramFormat;
+  /** Saison du cumul, ex. « Été 2027 » ou « Hiver 2027-2028 » (vide = sans saison). */
+  season: string;
+  /** Camp : nombre de semaines, maximum d'enfants par semaine et jours de camp par semaine. */
+  weeks: number;
+  perWeek: number;
+  daysPerWeek: number;
+  /** Prix payé par la famille pour le programme (camp : pour une semaine), en cents. */
   priceCents: number;
   /** Nombre de places (N). */
   capacity: number;
@@ -77,6 +91,10 @@ export interface LaunchInputs {
   /** Nombre moyen de paiements Stripe par famille (1 = paiement en une fois). */
   paymentsPerFamily: number;
   otherVariableCents: number;
+  /** Frais ajoutés quand la famille paie en 2 ou 3 versements, en cents par inscription. */
+  installmentFeeCents: number;
+  /** Part des familles qui paient en versements (0 à 1). */
+  installmentShare: number;
   /** Inscrites à ce jour (préventes) ; null = pas encore en vente. */
   presales: number | null;
   /** Date de début (AAAA-MM-JJ) ; null = pas encore fixée. */
@@ -90,6 +108,11 @@ export interface LaunchInputs {
 }
 
 export const EMPTY_INPUTS: LaunchInputs = {
+  format: "program",
+  season: "",
+  weeks: 0,
+  perWeek: 0,
+  daysPerWeek: 5,
   priceCents: 0,
   capacity: 0,
   sessions: 0,
@@ -110,6 +133,8 @@ export const EMPTY_INPUTS: LaunchInputs = {
   kitCents: 0,
   paymentsPerFamily: 1,
   otherVariableCents: 0,
+  installmentFeeCents: 0,
+  installmentShare: 0,
   presales: null,
   startDate: null,
   jpHours: 0,
@@ -177,6 +202,10 @@ export interface LaunchResults {
   coachPay: CoachPay[];
   coachBudget: CoachBudget;
   stripeCents: number;
+  /** Frais de versements moyens par inscrite (frais × part des familles en versements). */
+  installmentExtraCents: number;
+  /** Ce que rapporte une inscrite : prix + frais de versements moyens. */
+  revenuePerSignupCents: number;
   /** V au prix proposé (inclut les frais Stripe). */
   variableCents: number;
   /** Ce que chaque inscrite laisse pour payer les coûts fixes : P − V. */
@@ -238,10 +267,20 @@ export function normalizeInputs(raw: Partial<LaunchInputs> | null | undefined): 
   const optHours = (x: unknown) => (x === null || x === undefined || x === "" ? null : nonNeg(x));
   const presales = r.presales === null || r.presales === undefined || (r.presales as unknown) === "" ? null : Math.floor(nonNeg(r.presales));
   const startDate = isIsoDate(r.startDate) ? r.startDate : null;
+  const format: ProgramFormat = r.format === "camp" ? "camp" : "program";
+  const weeks = Math.floor(nonNeg(r.weeks));
+  const perWeek = Math.floor(nonNeg(r.perWeek));
+  const daysPerWeek = Math.min(7, nonNeg(r.daysPerWeek ?? 5));
+  const camp = format === "camp";
   return {
+    format,
+    season: String(r.season ?? "").trim().slice(0, 40),
+    weeks,
+    perWeek,
+    daysPerWeek,
     priceCents: cents(r.priceCents),
-    capacity: Math.floor(nonNeg(r.capacity)),
-    sessions: Math.floor(nonNeg(r.sessions)),
+    capacity: camp ? weeks * perWeek : Math.floor(nonNeg(r.capacity)),
+    sessions: camp ? Math.round(weeks * daysPerWeek) : Math.floor(nonNeg(r.sessions)),
     hoursPerSession: nonNeg(r.hoursPerSession),
     fieldMode: r.fieldMode === "contract" ? "contract" : "hourly",
     fieldHours: optHours(r.fieldHours),
@@ -263,6 +302,8 @@ export function normalizeInputs(raw: Partial<LaunchInputs> | null | undefined): 
     kitCents: cents(r.kitCents),
     paymentsPerFamily: nonNeg(r.paymentsPerFamily),
     otherVariableCents: cents(r.otherVariableCents),
+    installmentFeeCents: cents(r.installmentFeeCents),
+    installmentShare: Math.min(1, nonNeg(r.installmentShare)),
     presales,
     startDate,
     jpHours: nonNeg(r.jpHours),
@@ -365,14 +406,17 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
   /** Coûts fixes « à couvrir » pour la marge m une fois la subvention comptée : F − G × (1 − m). */
   const fixedToCover = (m: number) => F - G * (1 - m);
 
-  // V = Vbase + r × P : la part fixe des frais Stripe (0,30 $ par paiement) va dans Vbase.
+  // Frais de versements : X de plus par inscrite en moyenne ; Pe = P + X est ce que rapporte une inscrite.
+  const X = i.installmentFeeCents * i.installmentShare;
+  const Pe = P + X;
+  // V = Vbase + r × Pe : la part fixe des frais Stripe (0,30 $ par paiement) va dans Vbase.
   const Vbase = i.kitCents + i.otherVariableCents + STRIPE_FIXED_CENTS * i.paymentsPerFamily;
-  const stripe = r * P + STRIPE_FIXED_CENTS * i.paymentsPerFamily;
-  const V = Vbase + r * P;
-  const contribution = P - V;
+  const stripe = r * Pe + STRIPE_FIXED_CENTS * i.paymentsPerFamily;
+  const V = Vbase + r * Pe;
+  const contribution = Pe - V;
 
   const scenarioAt = (key: FillScenario["key"], label: string, rate: number | null, n: number): FillScenario => {
-    const revenue = n * P + G;
+    const revenue = n * Pe + G;
     const cost = F + n * V;
     const profit = revenue - cost;
     return { key, label, rate, count: n, revenueCents: Math.round(revenue), costCents: Math.round(cost), profitCents: Math.round(profit), margin: revenue > 0 ? profit / revenue : null };
@@ -383,14 +427,14 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
     if (n <= 0) return null;
     const d = 1 - m - r;
     if (d <= 0) return null;
-    return Math.max(0, Math.ceil((fixedToCover(m) / n + Vbase) / d - 1e-9));
+    return Math.max(0, Math.ceil((fixedToCover(m) / n + Vbase) / d - X - 1e-9));
   };
   /** Nombre minimal d'inscrites pour la marge m au prix P. */
   const countFor = (m: number): number | null => {
     const toCover = fixedToCover(m);
     // La subvention couvre déjà tout : aucune inscrite nécessaire pour cette marge.
     if (toCover <= 0 && G > 0) return 0;
-    const c = P * (1 - m - r) - Vbase;
+    const c = Pe * (1 - m - r) - Vbase;
     if (c <= 1e-9) return null;
     return Math.max(m > 0 ? 1 : 0, Math.ceil(toCover / c - 1e-9));
   };
@@ -412,7 +456,7 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
   const breakEvenCount = countFor(0);
   const marginCount = countFor(TARGET_MARGIN);
   // Coûts fixes maximums pour 50 % de marge à 70 % : n70 × (P × (1 − 0,5 − r) − Vbase) + G × 0,5.
-  const maxFixed = n70 * (P * (1 - TARGET_MARGIN - r) - Vbase) + G * (1 - TARGET_MARGIN);
+  const maxFixed = n70 * (Pe * (1 - TARGET_MARGIN - r) - Vbase) + G * (1 - TARGET_MARGIN);
   const maxFixedForGoCents = n70 > 0 && maxFixed > 0 ? Math.floor(maxFixed) : null;
 
   // Sans aucun coût saisi (terrain, éducateurs, kit…), tout programme serait GO : on attend au moins un coût.
@@ -485,6 +529,10 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
     grant: G
   });
 
+  // Camp : une inscription = un enfant pour une semaine ; les phrases parlent d'inscriptions, pas d'inscrites.
+  const words = (t: string) => (i.format === "camp" ? t.replace(/inscrites/g, "inscriptions").replace(/inscrite/g, "inscription") : t);
+  for (const rule of rules) rule.detail = words(rule.detail);
+
   return {
     ready,
     missing,
@@ -495,6 +543,8 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
     coachPay,
     coachBudget,
     stripeCents: Math.round(stripe),
+    installmentExtraCents: Math.round(X),
+    revenuePerSignupCents: Math.round(Pe),
     variableCents: Math.round(V),
     contributionCents: Math.round(contribution),
     floorPriceCents,
@@ -514,8 +564,8 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
     presalesCheckDate,
     daysToStart,
     rules,
-    headline,
-    sentence
+    headline: words(headline),
+    sentence: words(sentence)
   };
 }
 
@@ -655,6 +705,7 @@ export interface PrefillSources {
 export function applyProgram(inputs: LaunchInputs, p: ProgramSource): LaunchInputs {
   return normalizeInputs({
     ...inputs,
+    format: "program",
     priceCents: p.priceCents,
     capacity: p.capacity ?? inputs.capacity,
     sessions: p.sessions ?? inputs.sessions,

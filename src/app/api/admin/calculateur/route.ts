@@ -4,7 +4,7 @@ import { z, ZodError } from "zod";
 import { getCurrentAdminRole } from "@/lib/admin-auth";
 import { jsonError } from "@/lib/http";
 import { isIsoDate } from "@/lib/launch-calculator";
-import { deleteScenario, saveScenario } from "@/lib/launch-scenarios-repo";
+import { deleteScenario, saveScenario, saveSeasonSettings } from "@/lib/launch-scenarios-repo";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +38,14 @@ const inputs = z.object({
   startDate: z.string().refine(isIsoDate, "Date de début invalide.").nullable(),
   jpHours: hours.optional(),
   grantCents: cents.optional(),
-  grantCounted: z.boolean().optional()
+  grantCounted: z.boolean().optional(),
+  format: z.enum(["program", "camp"]).optional(),
+  season: z.string().max(40).optional(),
+  weeks: z.number().int().min(0).max(60).optional(),
+  perWeek: z.number().int().min(0).max(2_000).optional(),
+  daysPerWeek: z.number().min(0).max(7).optional(),
+  installmentFeeCents: cents.optional(),
+  installmentShare: z.number().min(0).max(1).optional()
 });
 
 const schema = z.discriminatedUnion("action", [
@@ -50,7 +57,17 @@ const schema = z.discriminatedUnion("action", [
     sourceId: z.string().min(1).max(120).nullable(),
     inputs
   }),
-  z.object({ action: z.literal("delete"), id: z.string().uuid() })
+  z.object({ action: z.literal("delete"), id: z.string().uuid() }),
+  z.object({
+    action: z.literal("season"),
+    season: z.string().trim().min(1).max(40),
+    settings: z.object({
+      jpSalaryCents: cents,
+      otherChargesCents: cents,
+      fill: z.enum(["pessimistic", "method", "full"]),
+      excluded: z.array(z.string().max(80)).max(200)
+    })
+  })
 ]);
 
 /** Calculateur de lancement (admin seulement) : enregistrer, mettre à jour ou supprimer un scénario.
@@ -70,6 +87,8 @@ export async function POST(request: Request) {
       case "delete":
         await deleteScenario(b.id);
         return NextResponse.json({ ok: true });
+      case "season":
+        return NextResponse.json({ ok: true, seasons: await saveSeasonSettings(b.season, b.settings) });
     }
   } catch (err) {
     if (err instanceof ZodError) {

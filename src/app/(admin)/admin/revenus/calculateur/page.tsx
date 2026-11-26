@@ -1,6 +1,7 @@
 import { LaunchCalculator } from "@/components/launch-calculator";
 import { requireAdmin } from "@/lib/admin-auth";
-import { getLaunchAlerts, getPrefillSources, listScenarios, torontoToday, type LaunchAlert, type LaunchScenario } from "@/lib/launch-scenarios-repo";
+import { getLaunchAlerts, getPrefillSources, getSeasonSettings, listScenarios, torontoToday, type LaunchAlert, type LaunchScenario } from "@/lib/launch-scenarios-repo";
+import type { SeasonSettings } from "@/lib/season-budget";
 
 export const metadata = { title: "Calculateur de lancement — Admin", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -15,10 +16,11 @@ export default async function LaunchCalculatorPage({ searchParams }: { searchPar
 
   let scenarios: LaunchScenario[] = [];
   let alerts: LaunchAlert[] = [];
+  let seasons: Record<string, SeasonSettings> = {};
   let loadError: string | null = null;
   const sourcesPromise = getPrefillSources();
   try {
-    [scenarios, alerts] = await Promise.all([listScenarios(100, today), getLaunchAlerts(today)]);
+    [scenarios, alerts, seasons] = await Promise.all([listScenarios(100, today), getLaunchAlerts(today), getSeasonSettings()]);
   } catch (err) {
     loadError = err instanceof Error ? err.message : "Erreur";
   }
@@ -32,6 +34,7 @@ export default async function LaunchCalculatorPage({ searchParams }: { searchPar
           sources={sources}
           scenarios={scenarios}
           alerts={alerts}
+          seasons={seasons}
           loadError={loadError}
           initialProgramKey={sp.programme ?? null}
           initialScenarioId={sp.scenario ?? null}
