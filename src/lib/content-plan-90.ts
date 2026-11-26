@@ -1,23 +1,29 @@
-/** Calendrier de contenu de l'académie sur 90 jours, du 1er déc. 2026 au 28 févr. 2027 (Mandalart P3.2.25,
+/** Calendrier de contenu de l'académie, du vendredi 27 nov. 2026 (jour 1) au 28 févr. 2027 (Mandalart P3.2.25,
  *  plan « machine d'acquisition 90 jours », section 6). Règles pures, testées.
- *  - 7 publications par semaine, une par jour : 3 du haut, 3 du milieu, 1 du bas de l'entonnoir ;
- *  - 3 à 5 reels d'essai par semaine pour tester les crochets de la banque (50 crochets, chacun testé une fois) ;
+ *  Volume Hormozi (JP, 26 nov. 2026, $100M Leads : « plus, mieux, nouveau », d'abord plus de volume) :
+ *  - 3 publications par jour, 21 par semaine : 9 du haut, 9 du milieu, 3 du bas de l'entonnoir ;
+ *  - un tournage par jour, décliné : la même vidéo sort en 3 versions avec 3 crochets différents (le test de crochet),
+ *    plus le carrousel du dimanche et une story chaque jour tirés du même tournage ;
+ *  - au moins 15 tests de crochets par semaine ; banque de 150 crochets, chacun testé une fois ;
+ *  - règle du gagnant : le crochet qui retient le mieux une semaine revient 3 fois la semaine suivante ;
  *  - 5 familles de contenu ; chaque publication a son crochet et l'appel à l'action « Réserve l'essai gratuit ».
  *  Seulement le compte New Valkyria : les vidéos JP Coach (marque personnelle de JP) restent à part.
  *  Les publications vont dans jp_video_shoots (série « plan-90 », seedPlan90 dans content-repo.ts). */
 
 import { CTA, formatOf, type FormatId } from "@/lib/shooting-guide-core";
 
-export const PLAN90_START = "2026-12-01";
+export const PLAN90_START = "2026-11-27";
 export const PLAN90_END = "2027-02-28";
 export const PLAN90_SERIES = "plan-90";
 export const PLAN90_CODE = "P3.2.25";
+/** Jours du plan préparés à part (le tournage du jour 1 vit dans la série « tournage-27-nov ») : pas ajoutés par seedPlan90. */
+export const PLAN90_SEPARATE_DAYS = ["2026-11-27"];
 
 export type Funnel = "haut" | "milieu" | "bas";
 export const FUNNELS: { id: Funnel; label: string; goal: string; perWeek: number }[] = [
-  { id: "haut", label: "Haut", goal: "Attirer des familles qui ne nous connaissent pas", perWeek: 3 },
-  { id: "milieu", label: "Milieu", goal: "Convaincre celles qui nous suivent", perWeek: 3 },
-  { id: "bas", label: "Bas", goal: "Faire réserver l'essai", perWeek: 1 }
+  { id: "haut", label: "Haut", goal: "Attirer des familles qui ne nous connaissent pas", perWeek: 9 },
+  { id: "milieu", label: "Milieu", goal: "Convaincre celles qui nous suivent", perWeek: 9 },
+  { id: "bas", label: "Bas", goal: "Faire réserver l'essai", perWeek: 3 }
 ];
 export const funnelLabel = (f: string | null | undefined) => FUNNELS.find((x) => x.id === f)?.label ?? "";
 
@@ -31,7 +37,7 @@ export const FAMILIES: { id: Family; label: string; funnels: Funnel[]; angle: st
 ];
 export const familyOf = (f: string | null | undefined) => FAMILIES.find((x) => x.id === f);
 
-/* ── La banque de 50 crochets (les 3 premières secondes) ──────────────── */
+/* ── La banque de 150 crochets (les 3 premières secondes) ─────────────── */
 
 export interface Hook {
   id: string;
@@ -50,7 +56,51 @@ const HOOKS_BY_FAMILY: Record<Family, string[]> = {
     "Ce que les meilleures font avant de recevoir le ballon.",
     "Pied faible ? Voici le truc.",
     "5 minutes dans le salon, pas besoin de terrain.",
-    "Le geste le plus sous-estimé du soccer féminin."
+    "Le geste le plus sous-estimé du soccer féminin.",
+    "Ta fille regarde le ballon ? Elle devrait regarder ailleurs.",
+    "Le truc des coachs pour un premier contact parfait.",
+    "Pourquoi elle tombe quand elle change de direction.",
+    "Ce n'est pas la force. C'est le pied d'appui.",
+    "La passe ratée la plus fréquente chez les 8 à 12 ans.",
+    "Un geste, 30 secondes, et elle le fait ce soir.",
+    "Les filles qui font ça gardent le ballon plus longtemps.",
+    "Elle court vite, mais elle perd le ballon ? Voici pourquoi.",
+    "Le secret d'une bonne frappe tient dans la cheville.",
+    "Arrête de lui dire « regarde le ballon ».",
+    "Petite ou grande, ce geste marche pour toutes.",
+    "Le geste qu'on travaille avant tous les autres.",
+    "Trois erreurs au premier contact. Ta fille en fait combien ?",
+    "Comment se retourner sans perdre le ballon.",
+    "Le pied gauche, ça s'entraîne. Voici comment.",
+    "Recevoir dos au jeu : l'erreur classique.",
+    "La différence entre une bonne joueuse et une très bonne.",
+    "Elle a peur du ballon aérien ? Commence par ça.",
+    "Ce qu'une fille de 10 ans peut apprendre en une semaine.",
+    "Un exercice, une chaise, aucun terrain.",
+    "Le geste qui fait gagner un duel avant qu'il commence.",
+    "On l'enseigne dès 6 ans. Voici pourquoi.",
+    "Le bon réflexe quand une adversaire arrive en face.",
+    "Plus de touches, moins de courses. Voici la règle.",
+    "Ta fille frappe toujours à côté ? Regarde son pied d'appui.",
+    "Le contrôle de la poitrine, expliqué simplement.",
+    "La conduite de balle en 3 repères.",
+    "Pourquoi on dit « petits touchers » à toutes nos filles.",
+    "Le geste qu'elle peut pratiquer en attendant l'autobus.",
+    "Ce qui se passe dans la tête d'une joueuse avant la passe.",
+    "La feinte que toutes les filles devraient connaître.",
+    "Un mur et 10 minutes : voici le programme.",
+    "La plupart des parents ne voient pas cette erreur.",
+    "Le placement du corps qui change tout.",
+    "Comment aider ta fille à la maison, sans être coach.",
+    "Le geste le plus simple est souvent le plus mal fait.",
+    "Ballon collé au pied : voici la recette.",
+    "Elle bloque le ballon ou elle l'oriente ? Grosse différence.",
+    "Le truc pour ne plus frapper de la pointe.",
+    "On a demandé à nos coachs le geste numéro 1.",
+    "Trop de filles oublient ce geste. Pas les nôtres.",
+    "Le pied faible en 5 minutes par jour.",
+    "Changer de rythme, ça s'apprend.",
+    "Ce que ta fille devrait savoir faire à 10 ans."
   ],
   demonstratif: [
     "Elle a 9 ans. Regarde ses pieds.",
@@ -62,7 +112,32 @@ const HOOKS_BY_FAMILY: Record<Family, string[]> = {
     "La coach contre les filles : qui gagne ?",
     "Regarde ce ballon : il ne quitte jamais son pied.",
     "Au ralenti, on voit tout.",
-    "Le défi que nos filles réussissent, et les parents non."
+    "Le défi que nos filles réussissent, et les parents non.",
+    "Regarde ses pieds, pas son visage.",
+    "Elle a commencé en septembre. Voici aujourd'hui.",
+    "Le défi de la semaine : qui fait mieux ?",
+    "Ce geste a pris 8 semaines. Voici le résultat.",
+    "Elles ont toutes réussi. Même la plus petite.",
+    "Compte les touches avec nous.",
+    "Une fille, un ballon, 20 secondes de contrôle.",
+    "On a chronométré tout le groupe.",
+    "Le geste de la semaine, réussi du premier coup.",
+    "Personne ne croyait qu'elle y arriverait.",
+    "Les petites contre les grandes : le défi.",
+    "Ça, c'est 3 mois de ball mastery.",
+    "Essaie de suivre le ballon des yeux.",
+    "Le moment où tout le groupe a réussi.",
+    "Elle a raté 20 fois. Regarde la 21e.",
+    "Ta fille peut-elle faire ça ? Essayez ce soir.",
+    "On a filmé la même fille chaque semaine.",
+    "Le défi que les parents ratent toujours.",
+    "Un exercice, 12 filles, aucun ballon perdu.",
+    "Le plus beau geste de la pratique.",
+    "Les touches les plus rapides du groupe.",
+    "Avant, elle cherchait le ballon. Maintenant, elle le garde.",
+    "On a lancé un défi à une coach. Elle a perdu.",
+    "Le ballon au pied pendant tout l'exercice.",
+    "Le résultat de 10 minutes par jour."
   ],
   coulisses: [
     "Il est 17 h 30, le gymnase est vide.",
@@ -74,7 +149,11 @@ const HOOKS_BY_FAMILY: Record<Family, string[]> = {
     "Le moment préféré de nos coachs.",
     "Des équipes où personne n'est choisie en dernier.",
     "Ce qu'on teste cette semaine.",
-    "Une pratique Valkyria en 30 secondes."
+    "Une pratique Valkyria en 30 secondes.",
+    "Une pratique se prépare des jours d'avance.",
+    "Ce que nos coachs regardent pendant l'exercice.",
+    "Le plan de la pratique, minute par minute.",
+    "Pourquoi chaque fille a sa fiche."
   ],
   histoires: [
     "Il y a 3 mois, elle n'avait jamais touché un ballon.",
@@ -86,7 +165,16 @@ const HOOKS_BY_FAMILY: Record<Family, string[]> = {
     "Ce qu'elle dirait à la fille qu'elle était en septembre.",
     "Sa maman ne s'attendait pas à ça.",
     "La championne de la semaine, et pourquoi.",
-    "Elle a 7 ans et elle a déjà un objectif."
+    "Elle a 7 ans et elle a déjà un objectif.",
+    "Elle ne voulait pas venir. Maintenant, elle ne veut plus partir.",
+    "Sa première passe réussie, on s'en souvient encore.",
+    "Ce qu'elle a dit à sa coach après la pratique.",
+    "Elle a trouvé sa place ici.",
+    "Ses amies sont devenues ses coéquipières.",
+    "Son papa raconte le changement.",
+    "Elle a 10 ans et elle veut devenir coach.",
+    "Pourquoi elle arrive toujours la première.",
+    "Le jour où elle a osé."
   ],
   preuve: [
     "8,8 sur 10 de plaisir : ce sont nos familles qui le disent.",
@@ -98,16 +186,42 @@ const HOOKS_BY_FAMILY: Record<Family, string[]> = {
     "Le cadeau qui bouge : un essai gratuit.",
     "Ce que ta fille reçoit à New Valkyria, en 20 secondes.",
     "Une académie 100 % filles, près de chez toi.",
-    "Les camps d'été 2027 s'en viennent."
+    "Les camps d'été 2027 s'en viennent.",
+    "La première pratique ne coûte rien.",
+    "Les parents nous posent tous la même question.",
+    "Voici ce que ta fille fera à son premier essai.",
+    "Une académie juste pour les filles, ça existe.",
+    "Un ballon par fille, dès la première minute.",
+    "Ce que les familles disent après un mois chez nous.",
+    "Elle n'a jamais joué ? Parfait.",
+    "Tu te demandes si c'est pour ta fille ? Viens voir.",
+    "Ce qu'un bulletin New Valkyria montre aux parents.",
+    "Janvier, c'est le bon moment pour essayer.",
+    "Pourquoi nos familles reviennent chaque saison.",
+    "L'essai gratuit, étape par étape.",
+    "Aucun engagement, juste une pratique.",
+    "Des coachs formées, une méthode, des progrès filmés.",
+    "Ta fille peut commencer en cours de saison.",
+    "Réserve maintenant, essaie cette semaine.",
+    "Pourquoi les parents choisissent New Valkyria.",
+    "Les inscriptions de l'été 2027 ouvrent bientôt."
   ]
 };
 
 const FAMILY_ORDER: Family[] = ["educatif", "demonstratif", "coulisses", "histoires", "preuve"];
 
-/** La banque, dans l'ordre où on les teste : une famille après l'autre, pour varier chaque semaine. */
-export const HOOK_BANK: Hook[] = Array.from({ length: 10 }, (_, round) =>
-  FAMILY_ORDER.map((family) => ({ id: `C${String(round * 5 + FAMILY_ORDER.indexOf(family) + 1).padStart(2, "0")}`, family, text: HOOKS_BY_FAMILY[family][round] }))
-).flat();
+/** La banque, dans l'ordre où on les teste : une famille après l'autre (C01 à C50 comme avant), puis la suite des
+ *  familles qui en ont encore. Chaque famille en a autant que ses tournages en demandent (voir buildPlan90). */
+export const HOOK_BANK: Hook[] = (() => {
+  const out: Hook[] = [];
+  const longest = Math.max(...FAMILY_ORDER.map((f) => HOOKS_BY_FAMILY[f].length));
+  for (let round = 0; round < longest; round++)
+    for (const family of FAMILY_ORDER) {
+      const text = HOOKS_BY_FAMILY[family][round];
+      if (text) out.push({ id: `C${String(out.length + 1).padStart(3, "0")}`, family, text });
+    }
+  return out;
+})();
 
 /** Les crochets d'une famille, pour la page (banque groupée). */
 export const hooksOf = (family: Family) => HOOK_BANK.filter((h) => h.family === family);
@@ -123,7 +237,7 @@ interface Topic {
   angle?: string;
 }
 
-/** Un jour de la semaine = une place fixe dans l'entonnoir (0 = dimanche). Le samedi alterne démonstratif
+/** Un jour de la semaine = une place fixe dans l'entonnoir (0 = dimanche) ; ses 3 publications y restent. Le samedi alterne démonstratif
  *  (avant/après) et histoires de joueuses. */
 const DAY_SLOT: Record<number, { funnel: Funnel; family: Family; format: FormatId }> = {
   0: { funnel: "bas", family: "preuve", format: "carrousel" },
@@ -245,17 +359,43 @@ const TOPICS: Record<number, Topic[]> = {
     { title: "Valkyria Été 2027", hook: "L'été 2027 se prépare maintenant.", message: "Ce qui s'en vient pour l'été, et l'essai pour commencer dès maintenant." },
     { title: "Ce que ta fille reçoit à New Valkyria", hook: "Ce que ta fille reçoit à New Valkyria, en 20 secondes.", message: "Un ballon par fille, des coachs formées, un bulletin, des vidéos de progrès." },
     { title: "Une famille raconte en vidéo", hook: "On a laissé la parole à une famille.", message: "Un témoignage vidéo d'une famille de l'académie.", format: "reel30", angle: "Témoignage d'un parent" },
-    { title: "Merci pour ces 90 jours", hook: "90 jours, 90 publications. Merci.", message: "Le bilan de l'hiver et la place pour essayer en mars." }
+    { title: "Merci pour ces 3 mois", hook: "3 mois, plus de 250 publications. Merci.", message: "Le bilan de l'hiver et la place pour essayer en mars." }
   ]
 };
 
-/** Reels d'essai par semaine (3 à 5) : on monte à mesure que le montage devient rapide ; la dernière semaine
- *  redescend à 4 pour faire le bilan. Total = 50, la banque au complet. */
-export const TESTS_PER_WEEK = [3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 4, 0];
-/** Jours des reels d'essai dans la semaine (mardi, jeudi, samedi, puis lundi et mercredi). */
-const TEST_DAYS = [2, 4, 6, 1, 3];
+/** Les sujets suivent leur jour de la semaine à partir du 1er déc. (fêtes et saisons à leur place) ; les 4 jours de
+ *  lancement d'avant (27 au 30 nov.) ont leur sujet à eux. */
+const TOPIC_ORIGIN = "2026-12-01";
+const LAUNCH_TOPICS: Record<string, Topic> = {
+  "2026-11-27": { title: "Jour 1 : la semelle à la maison", hook: "Ta fille a 5 minutes ? Voici l'exercice.", message: "Un exercice du Valkyria Lab, à faire dans le salon dès ce soir." },
+  "2026-11-28": { title: "Le point de départ : les vidéos « avant » de nos filles", hook: "Voici le point de départ. Rendez-vous en février.", message: "Chaque fille est filmée sur le même geste : dans 3 mois, on compare.", format: "reel30" },
+  "2026-11-29": { title: "Pourquoi la première pratique est gratuite", hook: "Essayer avant de payer : voici pourquoi.", message: "On veut que ta fille essaie avant que tu décides : rien à prévoir sauf des espadrilles." },
+  "2026-11-30": { title: "Le premier geste qu'on apprend à toutes nos filles", hook: "Le premier geste qu'on apprend à toutes nos filles.", message: "La semelle et les petits touchers : la base de tout le reste." }
+};
 
-export const NETWORKS_DEFAULT = ["instagram", "facebook"];
+/* ── Le volume : 3 publications par jour, tirées du même tournage ─────── */
+
+export const POSTS_PER_DAY = 3;
+export const POSTS_PER_WEEK = POSTS_PER_DAY * 7;
+/** Tests de crochets au minimum dans une semaine complète. */
+export const MIN_TESTS_PER_WEEK = 15;
+/** Les jours où la version C reprend le crochet gagnant de la semaine passée (mardi, jeudi, samedi : le milieu). */
+const WINNER_DAYS = [2, 4, 6];
+/** Première reprise du gagnant : le jeudi 3 déc., une fois lus les tests des 6 premiers jours (27 nov. au 2 déc.). */
+export const WINNER_FROM = "2026-12-03";
+export const WINNER_REUSES_PER_WEEK = WINNER_DAYS.length;
+export const WINNER_PREFIX = "Reprise du gagnant";
+export const WINNER_HOOK = "Le crochet gagnant de la semaine passée (à inscrire le lundi)";
+export const WINNER_RULE =
+  "Règle du gagnant : chaque lundi, on regarde la rétention à 3 secondes et les partages de tous les tests de la semaine ; le crochet qui retient le mieux revient 3 fois la semaine suivante (mardi, jeudi et samedi, sur la vidéo du jour) et sert aux publicités.";
+export const isWinnerReuse = (title: string | null | undefined) => !!title && title.startsWith(WINNER_PREFIX);
+
+/** Instagram, Facebook, TikTok et YouTube Shorts (identifiants de marketing-posts-core : instagram, facebook, tiktok, youtube). */
+export const NETWORKS_DEFAULT = ["instagram", "facebook", "tiktok", "youtube"];
+/** Un carrousel ne va pas sur YouTube Shorts (TikTok le prend en mode photo). */
+const networksFor = (format: FormatId) => (format === "carrousel" ? NETWORKS_DEFAULT.filter((n) => n !== "youtube") : NETWORKS_DEFAULT);
+
+export type Version = "A" | "B" | "C";
 
 export interface PlanPost {
   date: string;
@@ -264,9 +404,15 @@ export interface PlanPost {
   family: Family;
   format: FormatId;
   postKind: "organique" | "essai";
+  /** A : le sujet avec son propre crochet ; B et C : la même vidéo, un crochet de la banque (ou le gagnant). */
+  version: Version;
+  /** Le tournage du jour dont la publication est tirée. */
+  shoot: string;
   title: string;
   hook: string;
   hookId?: string;
+  /** Vrai = reprise du crochet gagnant de la semaine passée. */
+  winnerReuse?: boolean;
   message: string;
   cta: string;
   angle: string;
@@ -280,7 +426,7 @@ const addDays = (iso: string, n: number) => new Date(parse(iso) + n * DAY).toISO
 const dow = (iso: string) => new Date(parse(iso)).getUTCDay();
 const sundayOf = (iso: string) => addDays(iso, -dow(iso));
 
-/** Semaine du plan (0 = la semaine du 29 nov. 2026, les semaines vont du dimanche au samedi). */
+/** Semaine du plan (0 = la semaine du 22 nov. 2026, qui n'a que les 27 et 28 nov. ; dimanche au samedi). */
 export const planWeek = (iso: string) => Math.round((parse(sundayOf(iso)) - parse(sundayOf(PLAN90_START))) / (7 * DAY));
 
 const shotsText = (format: FormatId) => {
@@ -288,85 +434,122 @@ const shotsText = (format: FormatId) => {
   return `${f.label} (${f.length}) :\n${f.steps.map((s) => `${s.at} : ${s.what}`).join("\n")}`;
 };
 
-/** Le plan complet : une publication par jour (90) + les reels d'essai (50). */
+/** Deux crochets trop proches (l'un contient l'autre, ponctuation et casse ignorées) ne vont pas le même jour. */
+const bare = (x: string) => x.toLowerCase().replace(/[^a-z0-9àâçéèêëîïôûùüÿœ]+/g, " ").trim();
+const sameHook = (a: string, b: string) => bare(a).includes(bare(b)) || bare(b).includes(bare(a));
+
+const topicFor = (date: string): Topic => {
+  const launch = LAUNCH_TOPICS[date];
+  if (launch) return launch;
+  const day = dow(date);
+  const n = Math.floor((parse(date) - parse(TOPIC_ORIGIN)) / (7 * DAY));
+  return TOPICS[day][n % TOPICS[day].length];
+};
+
+/** Le plan complet : chaque jour, un tournage et 3 publications dans la place du jour dans l'entonnoir.
+ *  - du lundi au samedi : version A (le crochet du sujet), B et C (crochets de la banque, de la famille du jour) :
+ *    3 tests de crochet ; le mardi, le jeudi et le samedi, la version C reprend le gagnant de la semaine passée ;
+ *  - le dimanche (bas) : le sujet en carrousel (ou son format), puis 2 reels du même tournage avec 2 crochets de la banque.
+ *  Semaine complète : 21 publications (9 haut, 9 milieu, 3 bas), 17 tests, 3 reprises du gagnant. */
 export function buildPlan90(): PlanPost[] {
   const out: PlanPost[] = [];
-  const seen: Record<number, number> = {};
+  const queue: Record<Family, Hook[]> = { educatif: [], demonstratif: [], coulisses: [], histoires: [], preuve: [] };
+  for (const h of HOOK_BANK) queue[h.family].push(h);
   for (let d = PLAN90_START; d <= PLAN90_END; d = addDays(d, 1)) {
     const day = dow(d);
     const week = planWeek(d);
-    const i = seen[day] ?? 0;
-    seen[day] = i + 1;
     const slot = DAY_SLOT[day];
-    const t = TOPICS[day][i % TOPICS[day].length];
+    const t = topicFor(d);
     const family = t.family ?? slot.family;
     const format = t.format ?? slot.format;
+    const videoFormat: FormatId = format === "carrousel" ? "reel30" : format;
+    const angle = t.angle ?? familyOf(family)!.angle;
+    const base = { date: d, week, funnel: slot.funnel, family, cta: CTA, angle, shoot: t.title };
+    const sunday = day === 0;
     out.push({
-      date: d,
-      week,
-      funnel: slot.funnel,
-      family,
+      ...base,
       format,
-      postKind: "organique",
-      title: t.title,
+      postKind: sunday ? "organique" : "essai",
+      version: "A",
+      title: `${t.title} (version A)`,
       hook: t.hook,
-      message: t.message,
-      cta: CTA,
-      angle: t.angle ?? familyOf(family)!.angle,
-      networks: NETWORKS_DEFAULT,
+      message: `${t.message}\nDu même tournage : les versions B et C (autres crochets) et une story le jour même.`,
+      networks: networksFor(format),
       shots: shotsText(format)
     });
-  }
-  let h = 0;
-  for (let w = 0; w < TESTS_PER_WEEK.length; w++) {
-    const start = addDays(sundayOf(PLAN90_START), w * 7);
-    for (const day of TEST_DAYS.slice(0, TESTS_PER_WEEK[w])) {
-      const date = addDays(start, day);
-      if (date < PLAN90_START || date > PLAN90_END || h >= HOOK_BANK.length) continue;
-      const hook = HOOK_BANK[h++];
+    for (const version of ["B", "C"] as const) {
+      if (version === "C" && WINNER_DAYS.includes(day) && d >= WINNER_FROM) {
+        out.push({
+          ...base,
+          format: videoFormat,
+          postKind: "organique",
+          version,
+          title: `${WINNER_PREFIX} : ${t.title} (version C)`,
+          hook: WINNER_HOOK,
+          winnerReuse: true,
+          message: `La vidéo du jour avec le crochet gagnant de la semaine passée.\n${WINNER_RULE}`,
+          networks: networksFor(videoFormat),
+          shots: shotsText(videoFormat)
+        });
+        continue;
+      }
+      // Le prochain crochet de la famille qui n'est pas déjà celui de la version A (certains crochets de la banque
+      // viennent des sujets : ils repassent alors sur une autre vidéo, jamais deux fois le même jour).
+      const at = queue[family].findIndex((h) => !sameHook(h.text, t.hook));
+      if (at < 0) throw new Error(`Banque de crochets « ${family} » épuisée le ${d}`);
+      const [hook] = queue[family].splice(at, 1);
       out.push({
-        date,
-        week: w,
-        funnel: "haut",
-        family: hook.family,
-        format: "reel30",
+        ...base,
+        format: videoFormat,
         postKind: "essai",
-        title: `Reel d'essai ${hook.id} : « ${hook.text} »`,
+        version,
+        title: `${t.title} (version ${version}, crochet ${hook.id})`,
         hook: hook.text,
         hookId: hook.id,
-        message: "Le même extrait que la publication de la semaine ; seul le crochet change. On garde celui qui retient le plus à 3 secondes et qui fait le plus partager.",
-        cta: CTA,
-        angle: familyOf(hook.family)!.angle,
-        networks: ["instagram"],
-        shots: shotsText("reel30")
+        message: "Le même extrait que la version A ; seul le crochet change. Lundi, on compare la rétention à 3 secondes et les partages des 3 versions.",
+        networks: networksFor(videoFormat),
+        shots: shotsText(videoFormat)
       });
     }
   }
-  return out.sort((a, b) => a.date.localeCompare(b.date) || (a.postKind === b.postKind ? 0 : a.postKind === "organique" ? -1 : 1));
+  return out;
 }
 
-/** L'équilibre d'une semaine : haut, milieu, bas (publications organiques) et reels d'essai. */
-export function weekBalance(posts: { funnel?: string | null; postKind: string }[]): { haut: number; milieu: number; bas: number; essais: number } {
-  const b = { haut: 0, milieu: 0, bas: 0, essais: 0 };
+/** Les publications du plan que seedPlan90 ajoute (sans les jours préparés à part). */
+export const plan90ForSeed = () => buildPlan90().filter((p) => !PLAN90_SEPARATE_DAYS.includes(p.date));
+
+/** L'équilibre d'une semaine : haut, milieu, bas (toutes les publications, tests compris), tests de crochets et
+ *  reprises du gagnant. */
+export function weekBalance(posts: { funnel?: string | null; postKind: string; title?: string | null }[]): { haut: number; milieu: number; bas: number; essais: number; gagnants: number } {
+  const b = { haut: 0, milieu: 0, bas: 0, essais: 0, gagnants: 0 };
   for (const p of posts) {
     if (p.postKind === "essai") b.essais++;
-    else if (p.funnel === "haut" || p.funnel === "milieu" || p.funnel === "bas") b[p.funnel]++;
+    if (isWinnerReuse(p.title)) b.gagnants++;
+    if (p.funnel === "haut" || p.funnel === "milieu" || p.funnel === "bas") b[p.funnel]++;
   }
   return b;
 }
 
-/** Ce qui ne respecte pas la règle dans un plan : semaine complète qui n'a pas 3 / 3 / 1, reels d'essai hors de
- *  3 à 5, publication sans crochet ou sans appel à l'action. Liste vide = plan conforme. */
+/** Ce qui ne respecte pas la règle dans un plan : jour qui n'a pas 3 publications, semaine complète qui n'a pas
+ *  9 / 9 / 3, moins de 15 tests de crochets, pas 3 reprises du gagnant (après la première semaine complète), crochet de
+ *  la banque testé deux fois, publication sans crochet ou sans appel à l'action. Liste vide = plan conforme. */
 export function planProblems(posts: PlanPost[]): string[] {
   const problems: string[] = [];
-  const weeks = [...new Set(posts.map((p) => p.week))];
-  for (const w of weeks) {
+  const perDay = new Map<string, number>();
+  for (const p of posts) perDay.set(p.date, (perDay.get(p.date) ?? 0) + 1);
+  for (const [d, n] of perDay) if (n !== POSTS_PER_DAY) problems.push(`${d} : ${n} publications au lieu de ${POSTS_PER_DAY}.`);
+  const firstFull = planWeek(PLAN90_START) + (dow(PLAN90_START) === 0 ? 0 : 1);
+  for (const w of [...new Set(posts.map((p) => p.week))]) {
     const list = posts.filter((p) => p.week === w);
-    const days = new Set(list.filter((p) => p.postKind === "organique").map((p) => p.date)).size;
+    if (new Set(list.map((p) => p.date)).size !== 7) continue;
     const b = weekBalance(list);
-    if (days === 7 && (b.haut !== 3 || b.milieu !== 3 || b.bas !== 1)) problems.push(`Semaine ${w} : ${b.haut} haut, ${b.milieu} milieu, ${b.bas} bas.`);
-    if (days === 7 && (b.essais < 3 || b.essais > 5)) problems.push(`Semaine ${w} : ${b.essais} reels d'essai.`);
+    const want = Object.fromEntries(FUNNELS.map((f) => [f.id, f.perWeek])) as Record<Funnel, number>;
+    if (b.haut !== want.haut || b.milieu !== want.milieu || b.bas !== want.bas) problems.push(`Semaine ${w} : ${b.haut} haut, ${b.milieu} milieu, ${b.bas} bas.`);
+    if (b.essais < MIN_TESTS_PER_WEEK) problems.push(`Semaine ${w} : ${b.essais} tests de crochets (minimum ${MIN_TESTS_PER_WEEK}).`);
+    if (w > firstFull && b.gagnants !== WINNER_REUSES_PER_WEEK) problems.push(`Semaine ${w} : ${b.gagnants} reprises du gagnant.`);
   }
+  const used = posts.map((p) => p.hookId).filter(Boolean);
+  if (new Set(used).size !== used.length) problems.push("Un crochet de la banque est testé plus d'une fois.");
   for (const p of posts) {
     if (!p.hook.trim()) problems.push(`${p.date} ${p.title} : pas de crochet.`);
     if (p.cta !== CTA) problems.push(`${p.date} ${p.title} : pas d'appel à l'action.`);

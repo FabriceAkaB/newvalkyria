@@ -130,14 +130,18 @@ Chaque famille intéressée suit le même chemin. Le site garde la trace de chaq
 | Histoires de joueuses | L'entrevue de la semaine (voir plus bas), la championne du jour | | ✔ | ✔ |
 | Preuve et offre | Avant/après des filles (la pièce maîtresse), témoignages de parents, « Réserve l'essai », places restantes, camps d'été | | | ✔ |
 
-**Rythme :** 7 publications par semaine, réparties ainsi :
-- 3 du haut ;
-- 3 du milieu ;
-- 1 du bas.
+**JP, 26 nov. 2026 : volume Hormozi.** « Produire un volume tellement déraisonnable qu'il serait impossible d'échouer » ($100M Leads, « plus, mieux, nouveau » : d'abord plus). Le plan commence le **vendredi 27 novembre 2026 (jour 1)** et finit le 28 février 2027.
 
-S'ajoutent 3 à 5 **reels d'essai** pour tester des crochets.
+**Rythme :** 3 publications par jour, 21 par semaine, réparties ainsi :
+- 9 du haut ;
+- 9 du milieu ;
+- 3 du bas.
 
-**Les crochets :** une banque de 50 crochets testés (les 3 premières secondes). Chaque semaine, on en teste 3. On garde celui qui retient le plus à 3 secondes et qui fait le plus partager.
+**Un tournage, plusieurs publications :** chaque jour a un tournage. La même vidéo sort en **3 versions avec 3 crochets différents** : c'est le test de crochet. On tire aussi du même tournage le carrousel du dimanche et une story chaque jour. Diffusion par défaut sur Instagram, Facebook, TikTok et YouTube Shorts (le carrousel ne va pas sur YouTube).
+
+**Les crochets :** une banque de **150 crochets** (les 3 premières secondes), chacun testé une fois en version B ou C d'une vidéo de sa famille. **Au moins 15 tests de crochets par semaine** (17 dans une semaine complète), dès la première semaine.
+
+**Règle du gagnant :** chaque lundi, on compare la rétention à 3 secondes et les partages de tous les tests de la semaine. Le crochet qui retient le mieux revient **3 fois la semaine suivante** (mardi, jeudi et samedi, sur la vidéo du jour, « Reprise du gagnant » dans le calendrier) et sert aux publicités. Première reprise le jeudi 3 décembre.
 
 **Les bios (à écrire en premier, P3.2.26) :**
 - **Instagram :** « Académie de soccer 100 % filles · Laurentides et Rive-Nord · ballon au pied dès la 1re minute · Essai gratuit 👇 »

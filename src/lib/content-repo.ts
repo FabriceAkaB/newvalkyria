@@ -332,11 +332,12 @@ export async function getCalendarItems(from: string, to: string): Promise<Calend
 }
 
 /** Calendrier de contenu de l'académie sur 90 jours (P3.2.25) : ajoute les publications du plan qui manquent
- *  (même jour, même titre), sans toucher à celles qui existent déjà, ni aux vidéos JP Coach. */
+ *  (même jour, même titre), sans toucher à celles qui existent déjà, ni aux vidéos JP Coach. Le jour 1 (27 nov.)
+ *  est préparé à part (série « tournage-27-nov »), il n'est pas ajouté ici. */
 export async function seedPlan90(): Promise<{ added: number; total: number }> {
-  const { buildPlan90, PLAN90_CODE, PLAN90_SERIES } = await import("@/lib/content-plan-90");
+  const { plan90ForSeed, PLAN90_CODE, PLAN90_SERIES } = await import("@/lib/content-plan-90");
   const { formatOf } = await import("@/lib/shooting-guide-core");
-  const plan = buildPlan90();
+  const plan = plan90ForSeed();
   const { data, error } = await db().from("jp_video_shoots").select("title, publish_on").eq("club_id", CLUB_ID).eq("series", PLAN90_SERIES);
   if (error) throw error;
   const have = new Set(((data ?? []) as any[]).map((r) => `${String(r.publish_on).slice(0, 10)}|${r.title}`));

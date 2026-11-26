@@ -5,9 +5,9 @@ import { ShootForm } from "@/components/jp-shoots";
 import { requireAdmin } from "@/lib/admin-auth";
 import { addDaysIso, ANGLES, calendarWeeks, filterAccount, NETWORK_LINKS, POST_KINDS, postKindLabel, weekStart, type CalendarAccount, type CalendarItem } from "@/lib/content-core";
 import { shortDate } from "@/lib/content-format";
-import { buildPlan90, FAMILIES, familyOf, FUNNELS, funnelLabel, hooksOf, PLAN90_END, PLAN90_START, weekBalance } from "@/lib/content-plan-90";
+import { buildPlan90, FAMILIES, familyOf, FUNNELS, funnelLabel, HOOK_BANK, hooksOf, MIN_TESTS_PER_WEEK, plan90ForSeed, PLAN90_END, PLAN90_START, POSTS_PER_DAY, POSTS_PER_WEEK, weekBalance, WINNER_REUSES_PER_WEEK, WINNER_RULE } from "@/lib/content-plan-90";
 import { getCalendarItems, plan90Count } from "@/lib/content-repo";
-import { fmtInt } from "@/lib/marketing-posts-core";
+import { fmtInt, networkLabel } from "@/lib/marketing-posts-core";
 import { CTA } from "@/lib/shooting-guide-core";
 
 export const metadata = { title: "Calendrier de publication, Création de contenu", robots: "noindex" };
@@ -31,7 +31,7 @@ function Item({ it }: { it: CalendarItem }) {
       <summary style={{ cursor: "pointer", listStyle: "none" }}>
         {it.funnel ? (
           <span className="mda-pill" data-tone={it.postKind === "essai" ? "warn" : FUNNEL_TONE[it.funnel]} style={{ fontSize: "0.66rem", padding: "1px 6px", marginRight: 4 }}>
-            {it.postKind === "essai" ? "Essai" : funnelLabel(it.funnel)}
+            {it.postKind === "essai" ? `Essai · ${funnelLabel(it.funnel)}` : funnelLabel(it.funnel)}
           </span>
         ) : null}
         {it.kind === "publie" ? "✓ " : ""}
@@ -47,7 +47,7 @@ function Item({ it }: { it: CalendarItem }) {
         ) : null}
         {it.message ? <span style={{ whiteSpace: "pre-line" }}>{it.message}</span> : null}
         <span style={{ color: "var(--adm-text-3)" }}>
-          {[postKindLabel(it.postKind), it.format, fam?.label, it.angle, it.networks.join(", ")].filter(Boolean).join(" · ")}
+          {[postKindLabel(it.postKind), it.format, fam?.label, it.angle, it.networks.map(networkLabel).join(", ")].filter(Boolean).join(" · ")}
         </span>
       </div>
     </details>
@@ -66,7 +66,9 @@ export default async function CalendrierPage({ searchParams }: { searchParams: P
   const from = weekStart(/^\d{4}-\d{2}-\d{2}$/.test(sp.depuis ?? "") ? sp.depuis! : addDaysIso(today, -7));
   const [items, inCalendar] = await Promise.all([getCalendarItems(from, addDaysIso(from, nWeeks * 7 - 1)), plan90Count()]);
   const weeks = calendarWeeks(filterAccount(items, account), from, nWeeks);
-  const planTotal = buildPlan90().length;
+  const plan = buildPlan90();
+  const planTests = plan.filter((p) => p.postKind === "essai").length;
+  const planTotal = plan90ForSeed().length;
   const missing = Math.max(0, planTotal - inCalendar);
   const q = (extra: Record<string, string>) => {
     const p = new URLSearchParams({ ...(sp.depuis ? { depuis: sp.depuis } : {}), ...(sp.semaines ? { semaines: sp.semaines } : {}), ...(account !== "newvalkyria" ? { compte: account } : {}), ...extra });
@@ -95,8 +97,13 @@ export default async function CalendrierPage({ searchParams }: { searchParams: P
             <div style={{ maxWidth: 640 }}>
               <h2 className="mda-h2" style={{ marginTop: 0 }}>Le plan des 90 jours de l&apos;académie</h2>
               <p style={{ margin: 0, fontSize: "0.88rem", color: "var(--adm-text-2)", lineHeight: 1.5 }}>
-                Du {shortDate(PLAN90_START)} 2026 au {shortDate(PLAN90_END)} 2027 : une publication par jour, soit 7 par semaine ({FUNNELS.map((f) => `${f.perWeek} ${f.label.toLowerCase()}`).join(", ")}), et 3 à 5 reels
-                d&apos;essai par semaine qui testent chacun un crochet de la banque. Chaque semaine, on garde le crochet qui retient le plus à 3 secondes et qui fait le plus partager.
+                Du {shortDate(PLAN90_START)} 2026 (jour 1) au {shortDate(PLAN90_END)} 2027, en volume : {POSTS_PER_DAY} publications par jour, soit {POSTS_PER_WEEK} par semaine (
+                {FUNNELS.map((f) => `${f.perWeek} ${f.label.toLowerCase()}`).join(", ")}). Un tournage par jour : la même vidéo sort en 3 versions avec 3 crochets différents
+                (le test de crochet, au moins {MIN_TESTS_PER_WEEK} par semaine), plus le carrousel du dimanche et une story chaque jour tirés du même tournage. Diffusion sur
+                Instagram, Facebook, TikTok et YouTube Shorts.
+              </p>
+              <p style={{ margin: "8px 0 0", fontSize: "0.88rem", color: "var(--adm-text)", lineHeight: 1.5 }}>
+                {WINNER_RULE} Dans le calendrier, ces {WINNER_REUSES_PER_WEEK} publications s&apos;appellent « Reprise du gagnant ».
               </p>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -104,18 +111,22 @@ export default async function CalendrierPage({ searchParams }: { searchParams: P
                 Voir les 13 semaines
               </Link>
               <a className="admin-btn-ghost" href="#crochets">
-                Banque de 50 crochets
+                Banque de {HOOK_BANK.length} crochets
               </a>
             </div>
           </div>
           <div className="admin-stats" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", marginTop: 14 }}>
             <div className="admin-stat-card">
               <p className="admin-stat-label">Publications</p>
-              <p className="admin-stat-value">90</p>
+              <p className="admin-stat-value">{plan.length}</p>
             </div>
             <div className="admin-stat-card">
-              <p className="admin-stat-label">Reels d&apos;essai</p>
-              <p className="admin-stat-value">50</p>
+              <p className="admin-stat-label">Tests de crochets</p>
+              <p className="admin-stat-value">{planTests}</p>
+            </div>
+            <div className="admin-stat-card">
+              <p className="admin-stat-label">Crochets dans la banque</p>
+              <p className="admin-stat-value">{HOOK_BANK.length}</p>
             </div>
             <div className="admin-stat-card">
               <p className="admin-stat-label">Dans le calendrier</p>
@@ -166,7 +177,7 @@ export default async function CalendrierPage({ searchParams }: { searchParams: P
         {weeks.map((w) => {
           const all = w.days.flatMap((d) => d.items);
           const b = weekBalance(all.filter((it) => it.funnel));
-          const planned = b.haut + b.milieu + b.bas + b.essais > 0;
+          const planned = b.haut + b.milieu + b.bas > 0;
           return (
             <section key={w.start} className="mda-card" style={{ padding: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center", margin: "0 0 8px" }}>
@@ -181,8 +192,9 @@ export default async function CalendrierPage({ searchParams }: { searchParams: P
                       </span>
                     ))}
                     <span className="mda-pill" data-tone="warn">
-                      Essais {b.essais}
+                      Tests {b.essais}
                     </span>
+                    {b.gagnants ? <span className="mda-pill">Gagnant {b.gagnants}</span> : null}
                   </span>
                 ) : null}
               </div>
@@ -203,10 +215,10 @@ export default async function CalendrierPage({ searchParams }: { searchParams: P
         })}
 
         <section className="mda-card" id="crochets">
-          <h2 className="mda-h2" style={{ marginTop: 0 }}>La banque de 50 crochets</h2>
+          <h2 className="mda-h2" style={{ marginTop: 0 }}>La banque de {HOOK_BANK.length} crochets</h2>
           <p style={{ margin: "0 0 12px", fontSize: "0.85rem", color: "var(--adm-text-2)" }}>
-            Les 3 premières secondes, écrites à l&apos;écran et dites à voix haute. Chaque crochet est testé une fois en reel d&apos;essai (son numéro est dans le calendrier). Le gagnant
-            de la semaine sert aux publications et aux publicités de la semaine suivante.
+            Les 3 premières secondes, écrites à l&apos;écran et dites à voix haute. Chaque crochet est testé une fois, en version B ou C d&apos;une vidéo de sa famille (son numéro est
+            dans le calendrier). Le gagnant de la semaine revient {WINNER_REUSES_PER_WEEK} fois la semaine suivante et sert aux publicités.
           </p>
           <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))" }}>
             {FAMILIES.map((f) => (
@@ -215,7 +227,7 @@ export default async function CalendrierPage({ searchParams }: { searchParams: P
                 <ol style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "grid", gap: 4, fontSize: "0.84rem" }}>
                   {hooksOf(f.id).map((h) => (
                     <li key={h.id} style={{ display: "flex", gap: 8 }}>
-                      <span style={{ color: "var(--adm-text-3)", fontVariantNumeric: "tabular-nums", minWidth: 28 }}>{h.id}</span>
+                      <span style={{ color: "var(--adm-text-3)", fontVariantNumeric: "tabular-nums", minWidth: 36 }}>{h.id}</span>
                       <span>{h.text}</span>
                     </li>
                   ))}

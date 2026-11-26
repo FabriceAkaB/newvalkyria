@@ -28,7 +28,7 @@ export default async function ContenuTournagesPage() {
   const tomorrow = addDaysIso(today, 1);
   const g = groupShoots(await getShoots(), today, tomorrow);
   const planned = [...g.late, ...g.today, ...g.tomorrow, ...g.upcoming];
-  // Le calendrier 90 jours compte 140 publications : ici, seulement celles des 14 prochains jours (le reste est dans le Calendrier).
+  // Le calendrier 90 jours compte 282 publications (3 par jour) : ici, seulement celles des 14 prochains jours (le reste est dans le Calendrier).
   const in14 = addDaysIso(today, 14);
   const ideasBySeries = SERIES.map((s) => ({
     s,
