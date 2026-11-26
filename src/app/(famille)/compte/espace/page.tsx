@@ -6,7 +6,8 @@ import { Container } from "@/components/container";
 import { EmailCheckBanner } from "@/components/email-check-banner";
 import { FamilyInviteCard } from "@/components/family-invite-card";
 import { ChampionFeed, GirlPointsCard } from "@/components/family-champions";
-import { ChampionKindIcon } from "@/components/family-icons";
+import { ChampionTitlesLink } from "@/components/family-champion-titles";
+import type { ChampionTitle } from "@/lib/champion-titles";
 import { getGirlPhotos } from "@/lib/family-photos";
 import { getSheetsForRegistrations } from "@/lib/player-sheet-repo";
 import { requireParentUserId } from "@/lib/parent-auth";
@@ -14,7 +15,7 @@ import { progressOf } from "@/lib/player-points";
 import { CLUB } from "@/lib/club";
 import { getFamilySchedule } from "@/lib/family-schedule";
 import { fmtDay, fmtHours } from "@/lib/family-schedule-core";
-import { getFamilyFeed, getPointsHistory, getPointsSummaries, getRewards } from "@/lib/player-points-repo";
+import { getChampionTitles, getFamilyFeed, getPointsHistory, getPointsSummaries, getRewards } from "@/lib/player-points-repo";
 import { getFamilyRegistrations, getParentAccount, isParentEmailVerified } from "@/lib/parent-repo";
 import { getTrialInviteUrl } from "@/lib/referrals-repo";
 import { isFreshWin } from "@/lib/trial-invite";
@@ -23,20 +24,21 @@ export const metadata: Metadata = { title: "Accueil | Espace famille", robots: "
 export const dynamic = "force-dynamic";
 
 /** Accueil de l'app famille : les points de chaque fille, puis le fil des championnes du jour (les pratiques de
- *  son groupe) et son palmarès. */
+ *  son groupe) et l'accès à ses titres de championne (/compte/championne). */
 export default async function EspaceParentPage({ searchParams }: { searchParams: Promise<{ courriel?: string }> }) {
   const userId = await requireParentUserId();
   const [account, family, sp] = await Promise.all([getParentAccount(userId), getFamilyRegistrations(userId), searchParams]);
   const verified = account?.email ? await isParentEmailVerified(userId, account.email) : false;
   const ids = family.map((f) => f.registrationId);
-  const [summaries, rewards, feed, histories, photos, schedules, sheets] = await Promise.all([
+  const [summaries, rewards, feed, histories, photos, schedules, sheets, titles] = await Promise.all([
     getPointsSummaries(ids),
     getRewards(),
     getFamilyFeed(ids),
     Promise.all(ids.map((id) => getPointsHistory(id).catch(() => []))),
     getGirlPhotos(ids).catch(() => new Map<string, string>()),
     getFamilySchedule(ids).catch(() => []),
-    getSheetsForRegistrations(ids).catch(() => new Map())
+    getSheetsForRegistrations(ids).catch(() => new Map()),
+    getChampionTitles(ids).catch(() => new Map<string, ChampionTitle[]>())
   ]);
   const today = new Date().toLocaleDateString("en-CA", { timeZone: CLUB.timezone });
   const active = rewards.filter((r) => r.active);
@@ -120,24 +122,16 @@ export default async function EspaceParentPage({ searchParams }: { searchParams:
           </div>
         ) : null}
 
-        {family.map((f, i) => {
-          const wins = histories[i].filter((h) => h.kind === "victoire" || h.kind === "attitude");
-          if (!wins.length) return null;
-          return (
-            <div key={f.registrationId} className="fam-palmares">
-              <h2 className="fam-h2">Le palmarès de {f.firstName}</h2>
-              <ul>
-                {wins.slice(0, 12).map((w) => (
-                  <li key={w.id}>
-                    <ChampionKindIcon kind={w.kind === "attitude" ? "attitude" : "individuel"} size={18} />
-                    <span>{w.label}<small>{new Date(`${w.date}T12:00:00Z`).toLocaleDateString("fr-CA", { day: "numeric", month: "long", timeZone: "UTC" })}</small></span>
-                    <strong>+{w.points}</strong>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
+        {family.length ? (
+          <>
+            <h2 className="fam-h2">{family.length === 1 ? "Ses titres de championne" : "Leurs titres de championne"}</h2>
+            <ul className="fam-list">
+              {family.map((f) => (
+                <ChampionTitlesLink key={f.registrationId} firstName={f.firstName} titles={titles.get(f.registrationId) ?? []} many={family.length > 1} />
+              ))}
+            </ul>
+          </>
+        ) : null}
         {family.some((f) => !sheets.has(f.registrationId)) ? (
           <div className="parent-card" style={{ marginTop: "1.5rem", display: "flex", gap: 12, alignItems: "center", boxShadow: "inset 3px 0 0 var(--adm-accent-strong)" }}>
             <ClipboardList aria-hidden strokeWidth={1.75} style={{ color: "var(--adm-accent)", flex: "0 0 auto" }} />

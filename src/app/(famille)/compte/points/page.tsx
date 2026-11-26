@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { ChevronRight, Trophy } from "lucide-react";
 import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { GirlPointsCard } from "@/components/family-champions";
 import { ChampionKindIcon, RewardKindIcon } from "@/components/family-icons";
 import { RewardRequestButton } from "@/components/family-reward-button";
+import { timesLabel } from "@/lib/champion-titles";
 import { getGirlPhotos } from "@/lib/family-photos";
 import { requireParentUserId } from "@/lib/parent-auth";
 import { getFamilyRegistrations } from "@/lib/parent-repo";
@@ -63,6 +65,11 @@ export default async function PointsPage() {
           return (
             <div key={f.registrationId} className="fam-points">
               <GirlPointsCard firstName={f.firstName} progress={p} summary={s} titles={s.victoires + s.attitudes} link={false} photoUrl={photos.get(f.registrationId) ?? null} />
+              <Link href="/compte/championne" className="fam-girl__cta" style={{ marginTop: 10, border: "1px solid var(--adm-line)" }}>
+                <Trophy aria-hidden strokeWidth={1.75} />
+                <span style={{ flex: 1 }}>{s.victoires + s.attitudes ? `${timesLabel(s.victoires + s.attitudes)} : voir chaque titre` : "Ses titres de championne"}</span>
+                <ChevronRight aria-hidden strokeWidth={1.75} />
+              </Link>
 
               <h2 className="fam-h2">Ses récompenses</h2>
               {active.length ? (

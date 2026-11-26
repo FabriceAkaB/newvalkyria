@@ -11812,6 +11812,30 @@ img { max-width: 100%; height: auto; }
 .fam-palmares strong, .fam-list strong { font-variant-numeric: tabular-nums; }
 .fam-list li svg, .fam-palmares li svg { width: 18px; height: 18px; color: var(--adm-accent); flex: 0 0 auto; }
 .fam-list li[data-off] { opacity: 0.5; }
+
+/* Titres de championne d'une fille (/compte/championne) */
+.fam-titles + .fam-titles { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--adm-line); }
+.fam-titles__head { display: flex; align-items: center; gap: 12px; padding: 20px; border-radius: 12px; background: var(--adm-surface); border: 1px solid var(--adm-line); box-shadow: inset 3px 0 0 var(--adm-accent-strong); }
+.fam-titles__id { flex: 1; min-width: 0; }
+.fam-titles__count { margin: 2px 0 0; font-size: 0.95rem; font-weight: 600; color: var(--adm-accent); }
+.fam-titles__kinds { margin: 2px 0 0; font-size: 0.82rem; color: var(--adm-text-2); }
+.fam-titles__badge { display: grid; justify-items: center; gap: 2px; color: var(--adm-accent); flex: 0 0 auto; }
+.fam-titles__badge svg { width: 22px; height: 22px; }
+.fam-titles__badge strong { font-size: 1.9rem; font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--adm-text); }
+.fam-titles__empty { margin-top: 12px; }
+.fam-titles__month { margin: 1.5rem 0 0.5rem; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--adm-text-3); }
+.fam-titles__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fam-title { border-radius: 12px; overflow: hidden; background: var(--adm-surface); border: 1px solid var(--adm-line); }
+.fam-title__row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; }
+.fam-title__icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--adm-accent-soft); color: var(--adm-accent); flex: 0 0 auto; }
+.fam-title__body { flex: 1; min-width: 0; }
+.fam-title__kind { margin: 0; font-weight: 700; color: var(--adm-text); }
+.fam-title__word { margin: 2px 0 0; font-size: 0.92rem; color: var(--adm-text); font-style: italic; }
+.fam-title__word small { font-style: normal; font-size: 0.8rem; color: var(--adm-text-2); }
+.fam-title__meta { margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 0.82rem; color: var(--adm-text-2); }
+.fam-title__pts { display: grid; justify-items: end; font-size: 1.2rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--adm-text); flex: 0 0 auto; }
+.fam-title__pts small { font-size: 0.72rem; font-weight: 500; color: var(--adm-text-3); margin-top: 3px; }
+.fam-title__photo { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--adm-surface-2); border-top: 1px solid var(--adm-line); }
 .fam-status { font-size: 0.78rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--adm-accent-soft); color: var(--adm-text); white-space: nowrap; }
 .fam-status[data-status="remise"] { background: color-mix(in srgb, var(--adm-good) 16%, transparent); color: var(--adm-text); }
 .fam-status[data-status="annulee"] { background: var(--adm-surface-2); color: var(--adm-text-3); }

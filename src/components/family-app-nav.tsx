@@ -26,7 +26,7 @@ export const FAMILY_TABS: { href: string; label: string; icon: LucideIcon; main:
 ];
 
 function isActive(path: string, href: string) {
-  return path === href || path.startsWith(`${href}/`) || (href === "/compte/progression" && path.startsWith("/compte/bulletin"));
+  return path === href || path.startsWith(`${href}/`) || (href === "/compte/progression" && path.startsWith("/compte/bulletin")) || (href === "/compte/points" && path.startsWith("/compte/championne"));
 }
 
 export function FamilyAppNav() {

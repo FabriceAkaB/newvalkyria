@@ -1,3 +1,4 @@
+import { sortTitles, type ChampionTitle } from "@/lib/champion-titles";
 import { CLUB_ID } from "@/lib/club";
 import { PARTICIPATED } from "@/lib/coach-report";
 import {
@@ -242,6 +243,47 @@ export async function getFamilyFeed(registrationIds: string[], limit = 40): Prom
   const { data, error } = await db().from("champion_posts").select(POST_COLS).eq("hidden", false).or(filters).order("created_at", { ascending: false }).limit(limit);
   if (error) throw new Error(error.message);
   return toPosts((data ?? []) as any[], new Set(registrationIds));
+}
+
+/** Le palmarès de chaque fille de la famille (JP, 25 nov. 2026) : chaque fois qu'elle a été championne du jour, la
+ *  plus récente en haut. Seulement ses propres titres (ses lignes de points liées à une publication) ; les autres
+ *  filles du même titre en prénom et initiale ; photo seulement avec l'autorisation de chaque famille et jamais pour
+ *  une publication retirée du fil par l'admin (le titre et ses points restent). */
+export async function getChampionTitles(registrationIds: string[]): Promise<Map<string, ChampionTitle[]>> {
+  const out = new Map<string, ChampionTitle[]>(registrationIds.map((id) => [id, []]));
+  if (!registrationIds.length) return out;
+  const { data: lines, error } = await db()
+    .from("player_points")
+    .select("id, registration_id, post_id, points, created_at")
+    .in("registration_id", registrationIds)
+    .not("post_id", "is", null)
+    .limit(1000);
+  if (error) throw new Error(error.message);
+  const postIds = [...new Set(((lines ?? []) as any[]).map((l) => l.post_id))];
+  if (!postIds.length) return out;
+  const { data: rows, error: e2 } = await db().from("champion_posts").select(POST_COLS).in("id", postIds);
+  if (e2) throw new Error(e2.message);
+  const posts = new Map((await toPosts((rows ?? []) as any[])).map((p) => [p.id, p]));
+  for (const l of (lines ?? []) as any[]) {
+    const p = posts.get(l.post_id);
+    if (!p) continue;
+    out.get(l.registration_id)?.push({
+      id: l.id,
+      postId: p.id,
+      registrationId: l.registration_id,
+      date: p.activity.date,
+      createdAt: p.createdAt,
+      kind: p.kind,
+      title: p.title,
+      points: l.points,
+      group: p.activity.title,
+      coachName: p.coachName,
+      teammates: p.girls.filter((g) => g.registrationId !== l.registration_id).map((g) => g.name),
+      photoUrl: p.hidden ? null : p.photoUrl
+    });
+  }
+  for (const [id, list] of out) out.set(id, sortTitles(list));
+  return out;
 }
 
 export interface PublishInput {
