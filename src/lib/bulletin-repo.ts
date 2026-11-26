@@ -1,4 +1,4 @@
-import { checkFamilyComment, currentPeriod, isReleased, periodRange, seasonDates, summarize, type BulletinPeriod, type BulletinSummary, type PeriodRange } from "@/lib/bulletin-report";
+import { bulletinReadiness, checkFamilyComment, currentPeriod, isReleased, periodRange, seasonDates, summarize, type BulletinPeriod, type BulletinSummary, type PeriodRange } from "@/lib/bulletin-report";
 import { getPlayerAttendanceHistory, getPlayerEvaluations, getPlayerObjectives } from "@/lib/coach-portal-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -21,6 +21,8 @@ export interface BulletinReportData {
   familyComments: { coachId: string | null; author: string; text: string; date: string }[];
   /** Remis à la famille (sinon montré flou avec « Bientôt disponible »). */
   released: boolean;
+  /** Au moins 4 pratiques évaluées sur la période (sinon le bulletin n'est pas produit ni remis). */
+  readiness: { ready: boolean; count: number; min: number; message: string | null };
   /** Pour qui le bulletin a été préparé : la famille voit en plus le sondage court (P4.8.11). */
   audience: "equipe" | "parent";
 }
@@ -52,7 +54,7 @@ export async function getBulletinReport(registrationId: string, opts: { period?:
   const dates = seasonDates(reg.season_id);
   const day = (v: unknown) => String(v ?? "").slice(0, 10);
   const summary = summarize({
-    evaluations: evaluations.map((e: any) => ({ date: day(e.activity?.activity_date), coachId: e.coach_id ?? null, ratings: e.ratings ?? {} })),
+    evaluations: evaluations.map((e: any) => ({ date: day(e.activity?.activity_date), activityId: e.activity_id ?? null, coachId: e.coach_id ?? null, ratings: e.ratings ?? {} })),
     attendance: attendance.map((a: any) => ({ date: day(a.activity?.activity_date), status: a.status, practice_rating: a.practice_rating, fatigue: a.fatigue, learning: a.learning, understanding: a.understanding, confidence: a.confidence })),
     captaincies: ((caps ?? []) as any[]).map((c) => ({ date: day(c.activity?.activity_date), leadership: c.leadership })),
     from: range.from,
@@ -60,6 +62,7 @@ export async function getBulletinReport(registrationId: string, opts: { period?:
     mid: period === "fin-saison" ? dates.mid : null
   });
   const inRange = (d: string) => d >= range.from && d <= range.to;
+  const readiness = bulletinReadiness(summary.evaluated);
   return {
     registrationId,
     player: {
@@ -78,7 +81,9 @@ export async function getBulletinReport(registrationId: string, opts: { period?:
     familyComments: ((comments ?? []) as any[])
       .filter((c) => c.period === period)
       .map((c) => ({ coachId: c.coach_id ?? null, author: c.author, text: c.body, date: day(c.updated_at) })),
-    released: isReleased(range, opts.audience) || !!opts.earlyAccess,
+    // Compte de test : voit le bulletin avant sa date, mais jamais sans ses 4 pratiques évaluées.
+    released: isReleased(range, opts.audience, readiness.ready) || (!!opts.earlyAccess && readiness.ready),
+    readiness,
     audience: opts.audience,
     notes:
       opts.audience === "parent"

@@ -4,7 +4,7 @@
  *  annoncée qu'une fois par adresse (table `parent_notices`). Règles pures, testées (parent-notifications.test.ts) ;
  *  lecture de la base et envoi : parent-notifications-repo.ts. */
 
-import { periodRange, type BulletinPeriod } from "@/lib/bulletin-report";
+import { MIN_EVALUATED_PRACTICES, periodRange, type BulletinPeriod } from "@/lib/bulletin-report";
 import { championLabel, type ChampionKind } from "@/lib/player-points";
 
 export type NewsKind = "bulletin" | "video" | "champion";
@@ -47,14 +47,16 @@ export const frenchDay = (iso: string) => {
 /* ── Les nouvelles de chaque sorte ─────────────────────────────────── */
 
 /** Bulletin remis : à la date de fin de sa période (mi-saison, fin de saison), annoncé dans les jours qui suivent,
- *  seulement pour une fille qui a des présences (sinon le bulletin est vide). */
-export function bulletinNews(regs: { registrationId: string; firstName: string; seasonId: string | null; hasActivity: boolean }[], today: string): NewsItem[] {
+ *  seulement pour une fille qui a des présences et au moins 4 pratiques évaluées sur la période (sinon le bulletin
+ *  n'est pas remis : JP, 26 nov. 2026). `evaluated` : pratiques évaluées par période. */
+export function bulletinNews(regs: { registrationId: string; firstName: string; seasonId: string | null; hasActivity: boolean; evaluated?: Partial<Record<BulletinPeriod, number>> }[], today: string): NewsItem[] {
   const out: NewsItem[] = [];
   for (const r of regs) {
     if (!r.hasActivity) continue;
     for (const period of ["mi-saison", "fin-saison"] as BulletinPeriod[]) {
       const range = periodRange(r.seasonId, period, today);
       if (range.provisional || !recent(range.to, today)) continue;
+      if ((r.evaluated?.[period] ?? 0) < MIN_EVALUATED_PRACTICES) continue;
       out.push({
         key: `bulletin:${r.registrationId}:${period}`,
         kind: "bulletin",

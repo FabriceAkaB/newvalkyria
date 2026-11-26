@@ -196,6 +196,63 @@ export function attendanceFromMcs(state: string | undefined): "present" | "late"
   return state === "present" ? "present" : state === "late" ? "late" : state === "absent" ? "absent" : null;
 }
 
+/* ── Présences : MonClubSportif fait foi (JP, 26 nov. 2026) ─────────── */
+
+const FR_MONTHS: Record<string, number> = { janv: 1, jan: 1, fevr: 2, fev: 2, mars: 3, mar: 3, avr: 4, mai: 5, juin: 6, juil: 7, aout: 8, sept: 9, sep: 9, oct: 10, nov: 11, dec: 12 };
+
+/** La date et l'heure d'une colonne de la grille des présences (« Lun 19 oct. 2026 » et « 07:30 PM ») → AAAA-MM-JJ, HH:MM. */
+export function parseMcsWhen(dateText: string, timeText: string): { date: string; start: string } | null {
+  const d = String(dateText ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .match(/(\d{1,2})(?:er)?\s+([a-z]+)\.?\s+(\d{4})/);
+  const month = d ? FR_MONTHS[d[2]] ?? FR_MONTHS[d[2].slice(0, 4)] ?? FR_MONTHS[d[2].slice(0, 3)] : undefined;
+  const t = String(timeText ?? "").trim().match(/^(\d{1,2}):(\d{2})\s*([ap]\.?m\.?)?$/i);
+  if (!d || !month || !t) return null;
+  let h = Number(t[1]);
+  const pm = t[3] ? /^p/i.test(t[3]) : null;
+  if (pm === true && h < 12) h += 12;
+  if (pm === false && h === 12) h = 0;
+  if (h > 23 || Number(t[2]) > 59) return null;
+  return { date: `${d[3]}-${String(month).padStart(2, "0")}-${d[1].padStart(2, "0")}`, start: `${String(h).padStart(2, "0")}:${t[2]}` };
+}
+
+/** Un événement MCS annulé (« (Annulé) » ou « ANNULÉE : … ») : il ne compte dans aucune présence. */
+export const isCancelledTitle = (title: string | null | undefined) => /annul/i.test(String(title ?? ""));
+
+/** Un match (ou une partie) d'après le titre de la grille, quand le cache du calendrier ne le dit plus (événement passé). */
+export const isGameTitle = (title: string | null | undefined) => {
+  const t = String(title ?? "");
+  // « Autre c. Académie JF PREPA », « Hors-concours c. Dollard », « Simulation match #2 ».
+  return /\b(match|matchs|hors-concours|tournoi|partie|game|contre)\b/i.test(t) || /\svs\.?\s/i.test(t) || /(^|\s)c\.\s/.test(t);
+};
+
+export type AttendanceSource = "mcs" | "educateur" | "borne";
+
+/** Ce que la lecture de MonClubSportif fait des joueuses d'une pratique. MCS fait foi : une réponse (présente, en retard,
+ *  absente) remplace la marque de l'éducateur ou de la borne ; « pas de réponse » ou « incertaine » ne touche à rien
+ *  (la marque de l'éducateur reste) et seul l'état lu est noté. Toutes les membres assignées sont attendues, remplaçantes
+ *  et invitées comprises. `corrected` : lignes qui existaient avec un autre état. */
+export function mcsAttendancePlan(
+  members: { registrationId: string; state: string | undefined }[],
+  existing: Map<string, { status: string; source: string | null }>
+): { writes: { registrationId: string; status: "present" | "late" | "absent"; mcsStatus: string; changed: boolean; created: boolean }[]; notes: { registrationId: string; mcsStatus: string }[]; expected: string[]; corrected: number; created: number } {
+  const writes: { registrationId: string; status: "present" | "late" | "absent"; mcsStatus: string; changed: boolean; created: boolean }[] = [];
+  const notes: { registrationId: string; mcsStatus: string }[] = [];
+  const expected: string[] = [];
+  for (const m of members) {
+    if (!m.registrationId || expected.includes(m.registrationId)) continue;
+    expected.push(m.registrationId);
+    const mcsStatus = m.state ?? "unknown";
+    const status = attendanceFromMcs(m.state);
+    const prev = existing.get(m.registrationId) ?? null;
+    if (status) writes.push({ registrationId: m.registrationId, status, mcsStatus, changed: !!prev && prev.status !== status, created: !prev });
+    else if (prev) notes.push({ registrationId: m.registrationId, mcsStatus });
+  }
+  return { writes, notes, expected, corrected: writes.filter((w) => w.changed).length, created: writes.filter((w) => w.created).length };
+}
+
 /* ── Calendrier : site → MonClubSportif ──────────────────────────── */
 
 export interface SiteEvent {

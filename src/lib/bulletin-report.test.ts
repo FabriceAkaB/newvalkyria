@@ -58,3 +58,29 @@ describe("bulletin remis et mot pour la famille", () => {
     expect(checkFamilyComment("Léa garde la tête levée avec le ballon ; on travaille maintenant son pied gauche en conduite.", "Léa")).toBeNull();
   });
 });
+
+describe("au moins 4 pratiques évaluées (JP, 26 nov. 2026)", () => {
+  it("compte les pratiques de la période où au moins un éducateur a noté un critère", async () => {
+    const { evaluatedPractices, bulletinReadiness } = await import("@/lib/bulletin-report");
+    const list: import("@/lib/bulletin-report").EvalRow[] = [
+      { date: "2026-10-05", activityId: "a1", coachId: "c1", ratings: { Attitude: 4 } },
+      { date: "2026-10-05", activityId: "a1", coachId: "c2", ratings: { Attitude: 5 } }, // même pratique, 2e éducateur
+      { date: "2026-10-12", activityId: "a2", coachId: "c1", ratings: {} }, // rien de noté
+      { date: "2026-10-19", activityId: "a3", coachId: "c1", ratings: { Prestation: 3 } },
+      { date: "2026-12-20", activityId: "a4", coachId: "c1", ratings: { Prestation: 3 } } // après la mi-saison
+    ];
+    expect(evaluatedPractices(list, "2026-09-01", "2026-12-15")).toBe(2);
+    expect(bulletinReadiness(2)).toEqual({ ready: false, count: 2, min: 4, message: "Pas encore assez de pratiques évaluées : 2 sur 4" });
+    expect(bulletinReadiness(4)).toMatchObject({ ready: true, message: null });
+    const s = summarize({ evaluations: [ev("2026-10-01", 3, 3, 3), ev("2026-10-08", 4, 4, 4), ev("2026-10-15", 4, 4, 4), ev("2026-10-22", 5, 5, 5)], attendance: [], captaincies: [], from: "2026-09-01", to: "2026-12-15" });
+    expect(s.evaluated).toBe(4);
+  });
+
+  it("sans 4 pratiques évaluées, le bulletin n'est pas remis à la famille, même après sa date ; l'équipe le voit", async () => {
+    const { isReleased, periodRange } = await import("@/lib/bulletin-report");
+    const after = periodRange("automne-hiver-2026", "mi-saison", "2026-12-16");
+    expect(isReleased(after, "parent", true)).toBe(true);
+    expect(isReleased(after, "parent", false)).toBe(false);
+    expect(isReleased(after, "equipe", false)).toBe(true);
+  });
+});

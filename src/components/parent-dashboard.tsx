@@ -36,7 +36,7 @@ interface SeasonActivity {
 }
 
 const ATTENDANCE_LABELS: Record<string, string> = {
-  present: "Présente", absent: "Absente", injured: "Blessée", late: "En retard", left_early: "Partie tôt"
+  present: "Présente", absent: "Absente", injured: "Blessée", late: "En retard", left_early: "Partie tôt", unknown: "Présence pas indiquée"
 };
 
 function formatCAD(cents: number): string {

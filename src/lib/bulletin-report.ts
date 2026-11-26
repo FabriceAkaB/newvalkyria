@@ -67,6 +67,8 @@ type WellKey = (typeof WELLBEING)[number]["key"];
 
 export interface EvalRow {
   date: string;
+  /** La pratique évaluée (sinon la date sert de pratique). */
+  activityId?: string | null;
   coachId: string | null;
   ratings: Record<string, number>;
 }
@@ -96,6 +98,8 @@ export interface BulletinSummary {
   leadership: { times: number; value: number | null };
   coaches: number;
   practices: number;
+  /** Pratiques évaluées sur la période (au moins une évaluation rapide d'un éducateur) : il en faut MIN_EVALUATED_PRACTICES. */
+  evaluated: number;
 }
 
 /** Le bulletin d'une période. `before` (fin de saison) : la valeur à la mi-saison, pour montrer la progression. */
@@ -123,16 +127,35 @@ export function summarize(input: { evaluations: EvalRow[]; attendance: Attendanc
     wellbeing,
     leadership: { times: caps.length, value: avg(leads) },
     coaches: new Set(evals.map((e) => e.coachId).filter(Boolean)).size,
-    practices: new Set(evals.map((e) => e.date)).size
+    practices: new Set(evals.map((e) => e.date)).size,
+    evaluated: evaluatedPractices(input.evaluations, input.from, input.to)
   };
 }
 
 /* ── Bulletin remis ou pas encore, et mot des éducateurs pour la famille (JP, 17 nov. 2026) ── */
 
-/** Le bulletin est remis à la famille à la date de fin de sa période (mi-saison, fin de saison) ; avant, la famille
- *  le voit flou avec « Bientôt disponible ». L'équipe le voit toujours. */
-export function isReleased(range: PeriodRange, audience: "equipe" | "parent"): boolean {
-  return audience === "equipe" || !range.provisional;
+/* ── Au moins 4 pratiques évaluées (JP, 26 nov. 2026) ── */
+
+/** « Pour le bulletin, il faut au minimum 4 pratiques évaluées pour que ça fonctionne. » */
+export const MIN_EVALUATED_PRACTICES = 4;
+
+const hasRating = (e: EvalRow) => Object.values(e.ratings ?? {}).some((v) => Number(v) >= 1 && Number(v) <= 5);
+
+/** Les pratiques de la période où au moins un éducateur l'a évaluée (évaluation rapide : au moins un critère noté). */
+export function evaluatedPractices(evaluations: EvalRow[], from: string, to: string): number {
+  return new Set(evaluations.filter((e) => inRange(e.date, from, to) && hasRating(e)).map((e) => e.activityId || e.date)).size;
+}
+
+/** Le bulletin peut-il être produit ? Sinon : « Pas encore assez de pratiques évaluées : X sur 4 ». */
+export function bulletinReadiness(evaluated: number): { ready: boolean; count: number; min: number; message: string | null } {
+  const ready = evaluated >= MIN_EVALUATED_PRACTICES;
+  return { ready, count: evaluated, min: MIN_EVALUATED_PRACTICES, message: ready ? null : `Pas encore assez de pratiques évaluées : ${evaluated} sur ${MIN_EVALUATED_PRACTICES}` };
+}
+
+/** Le bulletin est remis à la famille à la date de fin de sa période (mi-saison, fin de saison), et seulement s'il a au
+ *  moins 4 pratiques évaluées ; avant, la famille le voit flou avec « Bientôt disponible ». L'équipe le voit toujours. */
+export function isReleased(range: PeriodRange, audience: "equipe" | "parent", ready = true): boolean {
+  return audience === "equipe" || (!range.provisional && ready);
 }
 
 export const FAMILY_COMMENT_MIN = 40;

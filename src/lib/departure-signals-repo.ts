@@ -17,10 +17,13 @@ export async function getDepartureCalls(today: string): Promise<DepartureCall[]>
   const db = getSupabaseAdminClient() as any;
   const since = new Date(Date.parse(`${today}T12:00:00Z`) - 35 * 86_400_000).toISOString().slice(0, 10);
   const recent = new Date(Date.parse(`${today}T12:00:00Z`) - 14 * 86_400_000).toISOString();
-  const { data: marks } = await db.from("activity_player_attendance").select("registration_id, status, activity:coach_activities!inner(activity_date)").gte("activity.activity_date", since).lte("activity.activity_date", today).in("status", ["present", "absent"]);
+  const { data: marks } = await db.from("activity_player_attendance").select("registration_id, status, activity:coach_activities!inner(activity_date, mcs_expected, mcs_cancelled)").gte("activity.activity_date", since).lte("activity.activity_date", today).in("status", ["present", "absent"]);
   const byReg = new Map<string, { date: string; present: boolean }[]>();
   for (const m of (marks ?? []) as any[]) {
     if (!m.registration_id || !m.activity?.activity_date) continue;
+    // MonClubSportif fait foi : une pratique annulée ne compte pas, ni une absence là où MCS ne l'attendait pas.
+    if (m.activity.mcs_cancelled) continue;
+    if (m.status === "absent" && Array.isArray(m.activity.mcs_expected) && !m.activity.mcs_expected.includes(m.registration_id)) continue;
     byReg.set(m.registration_id, [...(byReg.get(m.registration_id) ?? []), { date: String(m.activity.activity_date).slice(0, 10), present: m.status === "present" }]);
   }
   const signals = [...byReg.entries()].map(([id, list]) => ({ id, signal: departureSignal(list, today) })).filter((x) => x.signal);

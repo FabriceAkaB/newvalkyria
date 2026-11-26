@@ -1,4 +1,4 @@
-import { periodRange, type BulletinPeriod } from "@/lib/bulletin-report";
+import { evaluatedPractices, periodRange, type BulletinPeriod } from "@/lib/bulletin-report";
 import { CLUB_ID } from "@/lib/club";
 import { env } from "@/lib/env";
 import {
@@ -112,7 +112,17 @@ async function collectNews(today: string): Promise<NewsItem[]> {
     const active = new Set(
       (await inChunks(ids, async (part) => ((await db().from("activity_player_attendance").select("registration_id").in("registration_id", part)).data ?? []) as any[])).map((a) => a.registration_id)
     );
-    items.push(...bulletinNews(((regs ?? []) as any[]).map((r) => ({ registrationId: r.id, firstName: first(r.player_first_name), seasonId: r.season_id ?? null, hasActivity: active.has(r.id) })), today));
+    // Pratiques évaluées par fille et par bulletin : un bulletin sans ses 4 pratiques évaluées n'est pas remis.
+    const evals = await inChunks(ids, async (part) => ((await db().from("player_evaluations").select("registration_id, activity_id, coach_id, ratings, activity:coach_activities(activity_date)").in("registration_id", part)).data ?? []) as any[]);
+    const evaluated = (r: any) => {
+      const list = evals.filter((e) => e.registration_id === r.id).map((e) => ({ date: String(e.activity?.activity_date ?? "").slice(0, 10), activityId: e.activity_id, coachId: e.coach_id, ratings: e.ratings ?? {} }));
+      const of = (p: BulletinPeriod) => {
+        const range = periodRange(r.season_id ?? null, p, today);
+        return evaluatedPractices(list, range.from, range.to);
+      };
+      return { "mi-saison": of("mi-saison"), "fin-saison": of("fin-saison") };
+    };
+    items.push(...bulletinNews(((regs ?? []) as any[]).map((r) => ({ registrationId: r.id, firstName: first(r.player_first_name), seasonId: r.season_id ?? null, hasActivity: active.has(r.id), evaluated: evaluated(r) })), today));
   }
   return items.filter((i) => i.firstName);
 }

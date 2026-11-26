@@ -139,6 +139,7 @@
 .pd-dot[data-s="late"], .pd-dot[data-s="left_early"] { background: var(--adm-warn); }
 .pd-dot[data-s="absent"] { background: var(--adm-bad-soft); box-shadow: inset 0 0 0 1px var(--adm-bad); }
 .pd-dot[data-s="injured"] { background: var(--adm-bad); }
+.pd-dot[data-s="unknown"] { background: transparent; box-shadow: inset 0 0 0 1.5px var(--adm-text-3); }
 
 /* Fiche du parent */
 .pd-dl { margin: 0; display: grid; gap: 14px; }

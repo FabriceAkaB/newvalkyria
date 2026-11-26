@@ -1,11 +1,11 @@
 import type { BulletinData } from "@/lib/coach-portal-repo";
 
 const ATTENDANCE_LABELS: Record<string, string> = {
-  present: "Présente", absent: "Absente", injured: "Blessée", late: "En retard", left_early: "Partie tôt"
+  present: "Présente", absent: "Absente", injured: "Blessée", late: "En retard", left_early: "Partie tôt", unknown: "Sans réponse (MCS)"
 };
 
 export function BulletinView({ data, seasonLabel }: { data: BulletinData; seasonLabel?: string }) {
-  const { player, attendanceCounts, totalActivities, criteriaAverages, evaluations, objectives, trends, feedback, showNotes } = data;
+  const { player, attendanceCounts, totalActivities, criteriaAverages, evaluations, objectives, trends, feedback, showNotes, readiness } = data;
   const activeObjectives = objectives.filter((o) => o.active);
   const presentCount = attendanceCounts.present;
   const attendanceRate = totalActivities > 0 ? Math.round((presentCount / totalActivities) * 100) : null;
@@ -23,6 +23,12 @@ export function BulletinView({ data, seasonLabel }: { data: BulletinData; season
           Généré le {new Date().toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })} — basé uniquement sur les données enregistrées ci-dessous.
         </p>
       </div>
+
+      {readiness && !readiness.ready ? (
+        <div role="status" style={{ marginBottom: "1.25rem", padding: "0.75rem 1rem", borderRadius: "10px", border: "1px solid var(--adm-warn)", background: "var(--adm-warn-soft, var(--adm-surface))", color: "var(--adm-text)", fontSize: "0.85rem" }}>
+          <strong>{readiness.message}</strong> ({readiness.label}). Le bulletin n&apos;est pas remis à la famille tant qu&apos;un éducateur n&apos;a pas fait l&apos;évaluation rapide de {player.firstName} à {readiness.min} pratiques.
+        </div>
+      ) : null}
 
       <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>Présences</p>
       {totalActivities === 0 ? (

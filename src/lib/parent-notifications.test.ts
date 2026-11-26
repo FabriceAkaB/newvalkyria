@@ -14,8 +14,10 @@ describe("avis aux parents", () => {
 
   it("bulletin annoncé à sa date de remise et dans les jours qui suivent, jamais avant, seulement avec des présences", () => {
     const regs = [
-      { registrationId: "r1", firstName: "Justine", seasonId: "automne-hiver-2026", hasActivity: true },
-      { registrationId: "r2", firstName: "Léa", seasonId: "automne-hiver-2026", hasActivity: false }
+      { registrationId: "r1", firstName: "Justine", seasonId: "automne-hiver-2026", hasActivity: true, evaluated: { "mi-saison": 4, "fin-saison": 9 } },
+      { registrationId: "r2", firstName: "Léa", seasonId: "automne-hiver-2026", hasActivity: false, evaluated: { "mi-saison": 6, "fin-saison": 6 } },
+      // Moins de 4 pratiques évaluées : le bulletin n'est pas remis, donc pas annoncé (JP, 26 nov. 2026).
+      { registrationId: "r3", firstName: "Maya", seasonId: "automne-hiver-2026", hasActivity: true, evaluated: { "mi-saison": 3 } }
     ];
     expect(bulletinNews(regs, "2026-12-14")).toEqual([]);
     const at = bulletinNews(regs, "2026-12-15");

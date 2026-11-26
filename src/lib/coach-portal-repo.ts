@@ -6,6 +6,8 @@ import type { CoachActivity, CoachAssignment } from "@/lib/coaches-repo";
 import { addSeen, practiceReadItems, practiceReadStatus, readLabel, type ReadItem, type ReadStatus } from "@/lib/practice-read";
 import { briefingLines, type SheetAnswers } from "@/lib/player-sheet";
 import { getSheetsForRegistrations } from "@/lib/player-sheet-repo";
+import { alignAttendance, NO_ANSWER } from "@/lib/player-attendance";
+import { bulletinReadiness, currentPeriod, evaluatedPractices, periodRange } from "@/lib/bulletin-report";
 import type { SurveyAnswer } from "@/lib/practice-survey";
 import { SEASON_DB_ID } from "@/lib/season-2027-db-map";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -323,13 +325,15 @@ export async function getActivityAttendance(activityId: string): Promise<PlayerA
   return (data ?? []) as PlayerAttendance[];
 }
 
-export async function setPlayerAttendance(activityId: string, registrationId: string | string[], status: PlayerAttendanceStatus): Promise<void> {
+/** Présence marquée par l'éducateur (ou la borne). MonClubSportif fait foi : à la prochaine lecture, une réponse dans MCS
+ *  (présente, en retard, absente) remplace cette marque ; sans réponse dans MCS, elle reste (`status_source`). */
+export async function setPlayerAttendance(activityId: string, registrationId: string | string[], status: PlayerAttendanceStatus, source: "educateur" | "borne" = "educateur"): Promise<void> {
   const ids = Array.isArray(registrationId) ? registrationId : [registrationId];
   if (!ids.length) return;
   const now = new Date().toISOString();
   const { error } = await db()
     .from("activity_player_attendance")
-    .upsert(ids.map((id) => ({ activity_id: activityId, registration_id: id, status, updated_at: now })), { onConflict: "activity_id,registration_id" });
+    .upsert(ids.map((id) => ({ activity_id: activityId, registration_id: id, status, status_source: source, updated_at: now })), { onConflict: "activity_id,registration_id" });
   if (error) throw new Error(error.message);
 }
 
@@ -503,14 +507,42 @@ export async function deactivatePlayerRoutine(id: string): Promise<void> {
 
 /* ── Historique de présence d'une joueuse ────────────────────────── */
 
-export async function getPlayerAttendanceHistory(registrationId: string): Promise<(PlayerAttendance & { activity: CoachActivity })[]> {
-  const { data, error } = await db()
-    .from("activity_player_attendance")
-    .select("*, activity:coach_activities(*)")
-    .eq("registration_id", registrationId)
-    .order("created_at", { ascending: false });
+/** « unknown » : attendue dans MonClubSportif, sans réponse ni marque (ligne ajoutée à la lecture, pas en base). */
+export type HistoryAttendanceStatus = PlayerAttendanceStatus | "unknown";
+export type HistoryAttendance = Omit<PlayerAttendance, "status"> & { status: HistoryAttendanceStatus; activity: CoachActivity; noAnswer?: boolean };
+
+/** Les présences d'une joueuse, MonClubSportif faisant foi (règles : player-attendance.ts) : sans les pratiques annulées
+ *  dans MCS ni les absences notées à une pratique où MCS ne l'attendait pas, avec « pas de réponse » pour chaque pratique
+ *  passée où MCS l'attendait sans que rien ne soit noté. */
+export async function getPlayerAttendanceHistory(registrationId: string): Promise<HistoryAttendance[]> {
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const [{ data, error }, { data: expected }] = await Promise.all([
+    db().from("activity_player_attendance").select("*, activity:coach_activities(*)").eq("registration_id", registrationId).order("created_at", { ascending: false }),
+    db().from("coach_activities").select("*").contains("mcs_expected", [registrationId]).lt("activity_date", today).limit(1000)
+  ]);
   if (error) throw new Error(error.message);
-  return (data ?? []) as any;
+  const rows = (data ?? []) as any[];
+  const asAlign = (a: any) => (a ? { id: a.id, date: String(a.activity_date).slice(0, 10), mcsExpected: Array.isArray(a.mcs_expected) ? a.mcs_expected : null, mcsCancelled: !!a.mcs_cancelled } : null);
+  const exp = ((expected ?? []) as any[]);
+  const { keep, missing } = alignAttendance(
+    registrationId,
+    rows.map((r) => ({ activityId: r.activity_id, status: String(r.status), activity: asAlign(r.activity) })),
+    exp.map((a) => asAlign(a)!),
+    today
+  );
+  const byId = new Map(exp.map((a) => [a.id, a]));
+  const added = missing.map((m) => ({
+    id: `mcs:${m.id}`,
+    activity_id: m.id,
+    registration_id: registrationId,
+    status: NO_ANSWER as HistoryAttendanceStatus,
+    practice_rating: null,
+    fatigue: null,
+    created_at: `${m.date}T12:00:00.000Z`,
+    activity: byId.get(m.id),
+    noAnswer: true
+  }));
+  return [...keep.map((i) => rows[i]), ...added] as HistoryAttendance[];
 }
 
 
@@ -534,7 +566,10 @@ export interface BulletinTrend {
 
 export interface BulletinData {
   player: PlayerProfile;
-  attendanceCounts: Record<PlayerAttendanceStatus, number>;
+  /** « unknown » : attendue dans MonClubSportif, sans réponse. */
+  attendanceCounts: Record<HistoryAttendanceStatus, number>;
+  /** Le bulletin en cours (mi-saison ou fin) : au moins 4 pratiques évaluées pour qu'il soit produit. */
+  readiness: { ready: boolean; count: number; min: number; message: string | null; label: string };
   totalActivities: number;
   criteriaAverages: BulletinCriterionAverage[];
   /** Évolution des 3 échelles de l'évaluation rapide sur la saison. */
@@ -552,13 +587,21 @@ export async function getBulletinData(registrationId: string, audience: "equipe"
   const player = await getPlayerProfile(registrationId);
   if (!player) return null;
 
-  const [attendance, evaluations, objectives] = await Promise.all([
+  const [attendance, evaluations, objectives, { data: reg }] = await Promise.all([
     getPlayerAttendanceHistory(registrationId),
     getPlayerEvaluations(registrationId),
-    getPlayerObjectives(registrationId)
+    getPlayerObjectives(registrationId),
+    db().from("registrations").select("season_id").eq("id", registrationId).maybeSingle()
   ]);
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const range = periodRange(reg?.season_id ?? null, currentPeriod(reg?.season_id ?? null, today), today);
+  const evaluated = evaluatedPractices(
+    evaluations.map((e: any) => ({ date: String(e.activity?.activity_date ?? "").slice(0, 10), activityId: e.activity_id ?? null, coachId: e.coach_id ?? null, ratings: e.ratings ?? {} })),
+    range.from,
+    range.to
+  );
 
-  const attendanceCounts: Record<PlayerAttendanceStatus, number> = { present: 0, absent: 0, injured: 0, late: 0, left_early: 0 };
+  const attendanceCounts: Record<HistoryAttendanceStatus, number> = { present: 0, absent: 0, injured: 0, late: 0, left_early: 0, unknown: 0 };
   for (const a of attendance) attendanceCounts[a.status] += 1;
 
   const sums = new Map<string, { sum: number; count: number }>();
@@ -588,6 +631,7 @@ export async function getBulletinData(registrationId: string, audience: "equipe"
   return {
     player,
     attendanceCounts,
+    readiness: { ...bulletinReadiness(evaluated), label: range.label },
     totalActivities: attendance.length,
     criteriaAverages,
     trends,

@@ -1,4 +1,4 @@
-import { Lock } from "lucide-react";
+import { CircleAlert, Lock } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -62,7 +62,9 @@ export function BulletinReport({
           <Lock size={22} strokeWidth={1.75} aria-hidden />
           <strong>Bientôt disponible</strong>
           <p>
-            {data.range.label} de {data.player.firstName} sera remis le {fr(data.range.to)}. Les éducatrices le remplissent après chaque pratique.
+            {data.range.provisional
+              ? `${data.range.label} de ${data.player.firstName} sera remis le ${fr(data.range.to)}. Les éducatrices le remplissent après chaque pratique.`
+              : `${data.range.label} de ${data.player.firstName} sera remis dès que ses éducatrices auront terminé ses évaluations.`}
           </p>
         </div>
       </div>
@@ -70,7 +72,22 @@ export function BulletinReport({
   }
   const feedback =
     audience === "parent" ? <BulletinFeedback registrationId={data.registrationId} period={data.range.period} firstName={data.player.firstName || "votre fille"} /> : null;
-  return <BulletinBody data={data} periodHref={periodHref} feedback={feedback} />;
+  // Moins de 4 pratiques évaluées : l'équipe voit le bulletin en construction, avec ce qui manque ; la famille ne le reçoit pas.
+  const notReady = data.readiness && !data.readiness.ready && data.audience === "equipe" ? (
+    <div className="nvb-ready no-print" role="status">
+      <CircleAlert size={18} strokeWidth={1.75} aria-hidden style={{ flexShrink: 0, marginTop: 2 }} />
+      <div>
+        <strong>{data.readiness.message}</strong>
+        Il faut au moins {data.readiness.min} pratiques où un éducateur a fait l&apos;évaluation rapide de {data.player.firstName || "la joueuse"} : d&apos;ici là, le bulletin n&apos;est pas remis à la famille.
+      </div>
+    </div>
+  ) : null;
+  return (
+    <>
+      {notReady}
+      <BulletinBody data={data} periodHref={periodHref} feedback={feedback} />
+    </>
+  );
 }
 
 function BulletinBody({ data, periodHref, feedback }: { data: BulletinReportData; periodHref?: (p: "mi-saison" | "fin-saison") => string; feedback?: ReactNode }) {

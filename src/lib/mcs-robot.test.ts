@@ -33,6 +33,26 @@ describe("robot MonClubSportif : lecture des pages", () => {
     ]);
   });
 
+  it("lit la date de chaque colonne, ignore les cases non assignées et met à part les pratiques annulées", () => {
+    const th = (title: string, d: string, t: string, cls = "") => `<th class="presence center${cls}"> ${title} <br> <span> <span style="color: gray;">${d}</span> <br> <span style="color: gray;">${t}</span> </span> </th>`;
+    const none = `<td class="presence"> <div class="icon-not-assigned"></div> </td>`;
+    const off = `<td class="presence canceled"><div class="manager"><div class="availability-wrapper"><span class='status unknown'></span></div></div></td>`;
+    const html = `<h2>Joueurs</h2><table><thead><tr><th>Membre</th>${th("Pratique en gym (Annulé)", "Lun 5 oct. 2026", "07:30 PM", " canceled")}${th("Pratique en gym", "Lun 19 oct. 2026", "07:30 PM")}</tr></thead><tbody>
+<tr><td class="member"><a class="rosters-details-link" href="/team/1/seasons/2/roster/101">Alice Test</a></td>${off}${cell(601, "present")}</tr>
+<tr><td class="member"><a class="rosters-details-link" href="/team/1/seasons/2/roster/102">Béa Exemple</a></td>${off}${none}</tr>
+</tbody></table><h2>Remplaçants</h2><table><thead><tr><th>Membre</th>${th("Pratique en gym (Annulé)", "Lun 5 oct. 2026", "07:30 PM", " canceled")}${th("Pratique en gym", "Lun 19 oct. 2026", "07:30 PM")}</tr></thead><tbody>
+<tr><td class="member"><a class="rosters-details-link" href="/team/1/seasons/2/roster/103">Cléo Invitée</a></td>${off}${cell(601, "absent")}</tr>
+</tbody></table>`;
+    const g = parsePresences(html);
+    expect(g.events).toEqual([{ id: 601, title: "Pratique en gym Lun 19 oct. 2026 07:30 PM", date: "2026-10-19", start: "19:30", cancelled: false }]);
+    expect(g.rows).toEqual([
+      { memberId: 101, name: "Alice Test", states: { 601: "present" } },
+      { memberId: 102, name: "Béa Exemple", states: {} },
+      { memberId: 103, name: "Cléo Invitée", states: { 601: "absent" } }
+    ]);
+    expect(g.cancelled).toEqual([{ title: "Pratique en gym (Annulé) Lun 5 oct. 2026 07:30 PM", date: "2026-10-05", start: "19:30" }]);
+  });
+
   it("lit les événements à assigner, les adversaires connus et les champs d'un formulaire", () => {
     expect(parseAssignIds('<input type="checkbox" name="assign[]" value="7" checked><input type="checkbox" name="assign[]" value="8">')).toEqual(["7", "8"]);
     const game = `<form action="/team/1/seasons/2/calendar/games/5"><input type="hidden" name="_method" value="patch"><select name="game[opponent_id]"><option value="">Choisir</option><option value="11">À déterminer</option><option value="12" selected>FC Test</option><option value="new">Nouveau…</option></select><input type="checkbox" name="send_by_email" value="on"><input type="radio" name="game[home]" value="1" checked><input type="radio" name="game[home]" value="0"><textarea name="game[comments]">Bonne chance</textarea><input type="file" name="game[file]"></form>`;

@@ -5,6 +5,7 @@ import { canWatch } from "@/lib/match-videos-core";
 import { listMatchVideos, posterOf } from "@/lib/match-videos";
 import { loadExpectedPlayers } from "@/lib/mcs-robot-runner";
 import { personKey } from "@/lib/mcs-rules";
+import { alignAttendance, attendanceRate, NO_ANSWER } from "@/lib/player-attendance";
 import { listBadges, type ListBadge, type SurveyRow } from "@/lib/player-dossier";
 import { getPlayerReports, type PlayerReport } from "@/lib/player-reports-repo";
 import { getChampionTitles, getPointsSummaries, type PointsSummary } from "@/lib/player-points-repo";
@@ -64,13 +65,15 @@ export async function getDossierPlayers(coachId: string, seasonId: string = SEAS
   const since = shift(today(), -28);
   const playerIds = [...new Set(rows.map((r) => r.player_id).filter(Boolean))];
   const slotIds = [...new Set(rows.map((r) => r.time_slot_template_id).filter(Boolean))];
-  const [mine, { data: slots }, { data: players }, { data: evals }, { data: att }, { data: inc }] = await Promise.all([
+  const [mine, { data: slots }, { data: players }, { data: evals }, { data: att }, { data: inc }, { data: acts }] = await Promise.all([
     getCoachPlayers(coachId, seasonId).catch(() => []),
     slotIds.length ? db().from("time_slot_templates").select("id, day, start_time").in("id", slotIds) : Promise.resolve({ data: [] }),
     playerIds.length ? db().from("players").select("id, photo_url").in("id", playerIds) : Promise.resolve({ data: [] }),
     db().from("player_evaluations").select("registration_id, activity:coach_activities(activity_date)").in("registration_id", ids).limit(10000),
-    db().from("activity_player_attendance").select("registration_id, status, activity:coach_activities!inner(activity_date, activity_type)").in("registration_id", ids).gte("activity.activity_date", since).lte("activity.activity_date", today()).limit(10000),
-    db().from("player_incidents").select("registration_id, status").in("registration_id", ids).neq("status", "fermee")
+    db().from("activity_player_attendance").select("registration_id, status, activity_id, activity:coach_activities!inner(id, activity_date, activity_type, mcs_expected, mcs_cancelled)").in("registration_id", ids).gte("activity.activity_date", since).lte("activity.activity_date", today()).limit(10000),
+    db().from("player_incidents").select("registration_id, status").in("registration_id", ids).neq("status", "fermee"),
+    // Pratiques lues dans MonClubSportif (filles attendues) : le dénominateur des présences récentes.
+    db().from("coach_activities").select("id, activity_date, activity_type, mcs_expected, mcs_cancelled").eq("activity_type", "Pratique").not("mcs_expected", "is", null).gte("activity_date", since).lt("activity_date", today()).limit(2000)
   ]);
   const mineIds = new Set(mine.map((m) => m.registrationId));
   const slot = new Map(((slots ?? []) as any[]).map((s) => [s.id, s]));
@@ -80,13 +83,17 @@ export async function getDossierPlayers(coachId: string, seasonId: string = SEAS
     const d = day(e.activity?.activity_date);
     if (d && d > (lastEval.get(e.registration_id) ?? "")) lastEval.set(e.registration_id, d);
   }
+  // Présences des 4 dernières semaines, MonClubSportif faisant foi (player-attendance.ts).
+  const asAlign = (a: any) => ({ id: a.id, date: day(a.activity_date), mcsExpected: Array.isArray(a.mcs_expected) ? a.mcs_expected : null, mcsCancelled: !!a.mcs_cancelled });
+  const expectedActs = ((acts ?? []) as any[]).map(asAlign);
+  const rowsByReg = new Map<string, any[]>();
+  for (const a of (att ?? []) as any[]) if (a.activity?.activity_type === "Pratique") rowsByReg.set(a.registration_id, [...(rowsByReg.get(a.registration_id) ?? []), a]);
   const recent = new Map<string, { present: number; total: number }>();
-  for (const a of (att ?? []) as any[]) {
-    if (a.activity?.activity_type !== "Pratique") continue;
-    const r = recent.get(a.registration_id) ?? { present: 0, total: 0 };
-    r.total += 1;
-    if (["present", "late", "left_early"].includes(a.status)) r.present += 1;
-    recent.set(a.registration_id, r);
+  for (const id of ids) {
+    const list = rowsByReg.get(id) ?? [];
+    const { keep, missing } = alignAttendance(id, list.map((a) => ({ activityId: a.activity_id, status: String(a.status), activity: asAlign(a.activity) })), expectedActs, today());
+    const r = attendanceRate([...keep.map((i) => String(list[i].status)), ...missing.map(() => NO_ANSWER)]);
+    if (r.total) recent.set(id, { present: r.present, total: r.total });
   }
   const hurt = new Set(((inc ?? []) as any[]).map((i) => i.registration_id));
   const now = today();

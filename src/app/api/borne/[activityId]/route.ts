@@ -24,7 +24,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
     const roster = await getSurveyData(activityId);
     if (!roster) return jsonError("Pratique introuvable", 404);
     if (!roster.roster.some((p) => p.registrationId === registrationId)) return jsonError("Cette joueuse n'est pas attendue à cette pratique.", 403);
-    await setPlayerAttendance(activityId, registrationId, body.presence);
+    await setPlayerAttendance(activityId, registrationId, body.presence, "borne");
     return NextResponse.json({ ok: true });
   }
   const answer = parseSurveyAnswer({ ...body, wantsMore: [] });
@@ -47,8 +47,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   }
   // Rapports du jour tous finis : courriel automatique à l'éducateur (une fois par jour).
   after(() => notifyActivityCoaches(activityId).catch(() => null));
+  // Elle a répondu à la borne : présente (MonClubSportif fait foi quand il a une réponse, à sa prochaine lecture).
   if (prev && !["present", "late", "left_early"].includes(prev.status)) {
-    await (getSupabaseAdminClient() as any).from("activity_player_attendance").update({ status: "present" }).eq("activity_id", activityId).eq("registration_id", registrationId);
+    await (getSupabaseAdminClient() as any).from("activity_player_attendance").update({ status: "present", status_source: "borne" }).eq("activity_id", activityId).eq("registration_id", registrationId);
+  } else if (!prev) {
+    await (getSupabaseAdminClient() as any).from("activity_player_attendance").update({ status_source: "borne" }).eq("activity_id", activityId).eq("registration_id", registrationId).is("status_source", null);
   }
   return NextResponse.json({ ok: true });
 }

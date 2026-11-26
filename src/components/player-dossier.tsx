@@ -26,7 +26,7 @@ import { beforeAfter, checkpointLabel } from "@/lib/progress-videos";
 
 const num = (v: number | null | undefined, digits = 1) => (v === null || v === undefined ? "—" : v.toLocaleString("fr-CA", { minimumFractionDigits: digits, maximumFractionDigits: digits }));
 const longDay = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" });
-const STATUS: Record<string, string> = { present: "Présente", absent: "Absente", injured: "Blessée", late: "En retard", left_early: "Partie plus tôt" };
+const STATUS: Record<string, string> = { present: "Présente", absent: "Absente", injured: "Blessée", late: "En retard", left_early: "Partie plus tôt", unknown: "Attendue, pas de réponse dans MonClubSportif" };
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
 
 interface Props {
@@ -102,6 +102,7 @@ export function PlayerDossierView({ d, canEdit, isVideographer, exercises }: Pro
   const practices = d.attendance.filter((a) => a.type === "Pratique" && a.date <= now);
   const present = practices.filter((a) => PARTICIPATED.includes(a.status)).length;
   const rate = practices.length ? Math.round((present / practices.length) * 100) : null;
+  const noAnswer = practices.filter((a) => a.status === "unknown").length;
   const overalls = d.reports.map((r) => r.merged.overall).filter((v): v is number => v !== null);
   const avgOverall = overalls.length ? Math.round((overalls.reduce((a, b) => a + b, 0) / overalls.length) * 10) / 10 : null;
   const trend = overallTrend(d.reports.map((r) => ({ date: r.date, overall: r.merged.overall })));
@@ -177,7 +178,7 @@ export function PlayerDossierView({ d, canEdit, isVideographer, exercises }: Pro
       </div>
       <div className="pd-stack">
         <div className="pd-card">
-          <p className="pd-card__label">Présences · {practices.length} pratique{practices.length > 1 ? "s" : ""} notée{practices.length > 1 ? "s" : ""}</p>
+          <p className="pd-card__label">Présences · {practices.length} pratique{practices.length > 1 ? "s" : ""} attendue{practices.length > 1 ? "s" : ""}</p>
           {practices.length ? (
             <>
               <div className="pd-dots" aria-label="Présences, de la plus ancienne à la plus récente">
@@ -187,6 +188,10 @@ export function PlayerDossierView({ d, canEdit, isVideographer, exercises }: Pro
               </div>
               <p className="pd-note" style={{ marginTop: 10 }}>
                 Dernière : {longDay(practices[0].date)}, {(STATUS[practices[0].status] ?? practices[0].status).toLowerCase()}.
+              </p>
+              <p className="pd-note" style={{ marginTop: 4 }}>
+                MonClubSportif fait foi : {present} présence{present > 1 ? "s" : ""} sur {practices.length} pratique{practices.length > 1 ? "s" : ""} où elle était attendue
+                {noAnswer ? ` (${noAnswer} sans réponse)` : ""}. Les pratiques annulées ne comptent pas.
               </p>
             </>
           ) : (
@@ -563,7 +568,7 @@ export function PlayerDossierView({ d, canEdit, isVideographer, exercises }: Pro
       criteria: b.summary.criteria.map((c) => ({ label: c.label, count: c.count })),
       wellbeingAnswers: Math.max(0, ...b.summary.wellbeing.map((w) => w.count)),
       attendanceTotal: b.summary.attendance.total,
-      practicesEvaluated: b.summary.practices,
+      practicesEvaluated: b.summary.evaluated,
       coaches: b.summary.coaches,
       objectives: b.objectives.length,
       familyComments: b.familyComments.length,

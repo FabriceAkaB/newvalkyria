@@ -138,3 +138,48 @@ describe("nom inversé dans le site", () => {
     expect(sameMemberName("Roy Stella", "Èva", "Roy")).toBe(false);
   });
 });
+
+describe("présences : MonClubSportif fait foi (JP, 26 nov. 2026)", () => {
+  it("lit la date et l'heure des colonnes de la grille", async () => {
+    const { parseMcsWhen } = await import("@/lib/mcs-rules");
+    expect(parseMcsWhen("Lun 19 oct. 2026", "07:30 PM")).toEqual({ date: "2026-10-19", start: "19:30" });
+    expect(parseMcsWhen("Sam 26 sept. 2026", "02:00 PM")).toEqual({ date: "2026-09-26", start: "14:00" });
+    expect(parseMcsWhen("Lun 1 fév. 2027", "12:00 PM")).toEqual({ date: "2027-02-01", start: "12:00" });
+    expect(parseMcsWhen("Mer 9 déc. 2026", "12:15 AM")).toEqual({ date: "2026-12-09", start: "00:15" });
+    expect(parseMcsWhen("Dim 1er août 2027", "18:00")).toEqual({ date: "2027-08-01", start: "18:00" });
+    expect(parseMcsWhen("bientôt", "07:30 PM")).toBeNull();
+  });
+
+  it("une réponse de MCS remplace la marque de l'éducateur ; sans réponse, sa marque reste ; toutes les assignées sont attendues", async () => {
+    const { mcsAttendancePlan, isCancelledTitle, isGameTitle } = await import("@/lib/mcs-rules");
+    const existing = new Map([
+      ["a", { status: "present", source: "educateur" }],
+      ["b", { status: "absent", source: "educateur" }],
+      ["c", { status: "present", source: "borne" }]
+    ]);
+    const plan = mcsAttendancePlan(
+      [
+        { registrationId: "a", state: "absent" }, // l'éducateur l'avait mise présente : MCS l'emporte
+        { registrationId: "b", state: "unknown" }, // pas de réponse dans MCS : l'absence de l'éducateur reste
+        { registrationId: "c", state: "present" }, // même état : rien à corriger
+        { registrationId: "d", state: "late" }, // rien dans le site : ajoutée
+        { registrationId: "e", state: "uncertain" }, // hésite, rien dans le site : attendue seulement
+        { registrationId: "a", state: "present" } // doublon (deux équipes) : ignoré
+      ],
+      existing
+    );
+    expect(plan.writes.map((w) => [w.registrationId, w.status])).toEqual([["a", "absent"], ["c", "present"], ["d", "late"]]);
+    expect(plan.notes).toEqual([{ registrationId: "b", mcsStatus: "unknown" }]);
+    expect(plan.expected).toEqual(["a", "b", "c", "d", "e"]);
+    expect(plan).toMatchObject({ corrected: 1, created: 1 });
+    expect(isCancelledTitle("Pratique en gym (Annulé)")).toBe(true);
+    expect(isCancelledTitle("ANNULÉE : Pratique sur synthétique")).toBe(true);
+    expect(isCancelledTitle("Pratique en gym")).toBe(false);
+    expect(isGameTitle("Simulation match #2")).toBe(true);
+    expect(isGameTitle("Hors-concours Équipe 2015 AV c. FC Test")).toBe(true);
+    expect(isGameTitle("Autre c. Académie JF PREPA Dim 22 nov. 2026 05:00 PM")).toBe(true);
+    expect(isGameTitle("Pratique d'ajustement")).toBe(false);
+    expect(isGameTitle("Pratique sur synthétique Dim 8 nov. 2026 04:30 PM")).toBe(false);
+  });
+});
+

@@ -1,5 +1,6 @@
 import { parse, type HTMLElement } from "node-html-parser";
 
+import { isCancelledTitle, parseMcsWhen } from "@/lib/mcs-rules";
 import { MCS_BASE, MCS_FIELDS, MCS_PATHS, MCS_PRESENCE_STATES, MCS_RELATIONSHIP_PARENT, type McsPresenceState } from "@/lib/mcs-site-map";
 
 /** Le robot MonClubSportif (agent A12) : se connecte avec le compte robot du club et remplit les formulaires de MCS
@@ -89,32 +90,57 @@ export function parseAssignmentEvents(html: string): string[] {
 }
 
 export interface PresenceGrid {
-  events: { id: number; title: string }[];
+  /** `title` : l'en-tête complet de la colonne (titre, date et heure) ; `date` et `start` (heure du club) en sont lus ;
+   *  `cancelled` : annulé dans MCS (« (Annulé) », « ANNULÉE : … »). */
+  events: { id: number; title: string; date?: string | null; start?: string | null; cancelled?: boolean }[];
+  /** Membres : seulement les événements où il est assigné (une case « non assignée » n'y est pas). */
   rows: { memberId: number; name: string; states: Record<number, McsPresenceState> }[];
+  /** Colonnes annulées sans formulaire (donc sans numéro d'événement) : elles ne comptent dans aucune présence. */
+  cancelled?: { title: string; date: string | null; start: string | null }[];
 }
 
-/** La grille des présences (vue gestionnaire) : pour chaque membre et chaque événement, son état
- *  (`unknown` = pas encore répondu). */
+/** L'en-tête d'une colonne : « Pratique en gym <br> <span>Lun 19 oct. 2026</span> <br> <span>07:30 PM</span> ». */
+function columnOf(th: HTMLElement): { title: string; date: string | null; start: string | null; cancelled: boolean } {
+  const title = th.text.trim().replace(/\s+/g, " ");
+  const spans = th.querySelectorAll("span span").map((s) => s.text.trim().replace(/\s+/g, " "));
+  const when = spans.length >= 2 ? parseMcsWhen(spans[0], spans[1]) : null;
+  return { title, date: when?.date ?? null, start: when?.start ?? null, cancelled: (th.getAttribute("class") ?? "").split(/\s+/).includes("canceled") || isCancelledTitle(title) };
+}
+
+/** La grille des présences (vue gestionnaire) : pour chaque membre et chaque événement où il est assigné, son état
+ *  (`unknown` = pas encore répondu). Chaque section (Joueurs, Remplaçants, Entraîneurs…) est un tableau : la case n°i
+ *  d'une rangée est la colonne n°i de son en-tête. */
 export function parsePresences(html: string): PresenceGrid {
   const root = parse(html);
   const events: PresenceGrid["events"] = [];
   const rows: PresenceGrid["rows"] = [];
-  for (const tr of root.querySelectorAll("tbody tr")) {
-    const link = tr.querySelector("td.member a.rosters-details-link") ?? tr.querySelector("td.member a");
-    const memberId = Number((link?.getAttribute("href") ?? "").match(/roster\/(\d+)/)?.[1]);
-    if (!memberId) continue;
-    const states: Record<number, McsPresenceState> = {};
-    for (const td of tr.querySelectorAll("td.presence")) {
-      const eventId = Number(td.querySelector('input[name="event_id"]')?.getAttribute("value"));
-      if (!eventId) continue;
-      if (!events.some((e) => e.id === eventId)) events.push({ id: eventId, title: "" });
-      states[eventId] = presenceStateOf(td);
+  const cancelled: NonNullable<PresenceGrid["cancelled"]> = [];
+  const tables = root.querySelectorAll("table");
+  for (const table of tables.length ? tables : [root]) {
+    const cols = table.querySelectorAll("thead th.presence").map(columnOf);
+    const colIds: number[] = cols.map(() => 0);
+    for (const tr of table.querySelectorAll("tbody tr")) {
+      const link = tr.querySelector("td.member a.rosters-details-link") ?? tr.querySelector("td.member a");
+      const memberId = Number((link?.getAttribute("href") ?? "").match(/roster\/(\d+)/)?.[1]);
+      if (!memberId) continue;
+      const states: Record<number, McsPresenceState> = {};
+      tr.querySelectorAll("td.presence").forEach((td, i) => {
+        const eventId = Number(td.querySelector('input[name="event_id"]')?.getAttribute("value"));
+        if (!eventId) return; // non assignée, ou événement annulé
+        if (i < colIds.length) colIds[i] = eventId;
+        const col = cols[i];
+        if (!events.some((e) => e.id === eventId)) events.push({ id: eventId, title: col?.title ?? "", date: col?.date ?? null, start: col?.start ?? null, cancelled: col?.cancelled ?? false });
+        states[eventId] = presenceStateOf(td);
+      });
+      const row = rows.find((r) => r.memberId === memberId);
+      if (row) Object.assign(row.states, states);
+      else rows.push({ memberId, name: (link?.text ?? "").trim().replace(/\s+/g, " "), states });
     }
-    rows.push({ memberId, name: (link?.text ?? "").trim().replace(/\s+/g, " "), states });
+    cols.forEach((c, i) => {
+      if (c.cancelled && !colIds[i] && !cancelled.some((x) => x.date === c.date && x.start === c.start)) cancelled.push({ title: c.title, date: c.date, start: c.start });
+    });
   }
-  const titles = root.querySelectorAll("thead th.presence").map((th) => th.text.trim().replace(/\s+/g, " "));
-  events.forEach((e, i) => (e.title = titles[i] ?? ""));
-  return { events, rows };
+  return { events, rows, cancelled };
 }
 
 function presenceStateOf(td: HTMLElement): McsPresenceState {
@@ -589,6 +615,29 @@ export class McsSession {
   /** La grille des activités à venir (dont celles du jour) : page 0 de MonClubSportif. */
   async upcomingPresences(team: number, season: number): Promise<PresenceGrid> {
     return parsePresences(await this.page(MCS_PATHS.presences(team, season, 0)));
+  }
+
+  /** Les présences des événements entre deux dates (AAAA-MM-JJ). Les pages de la grille vont du début de la saison
+   *  (page 1) vers la fin : on lit jusqu'à la première page qui commence après `until`. */
+  async presencesBetween(team: number, season: number, since: string, until: string, max = 14): Promise<PresenceGrid> {
+    const out: PresenceGrid = { events: [], rows: [], cancelled: [] };
+    const inside = (d: string | null | undefined) => !!d && d >= since && d <= until;
+    for (let p = 1; p <= max; p++) {
+      const g = parsePresences(await this.page(MCS_PATHS.presences(team, season, p)));
+      if (!g.events.length && !(g.cancelled ?? []).length) break;
+      const keep = g.events.filter((e) => inside(e.date) && !out.events.some((x) => x.id === e.id));
+      out.events.push(...keep);
+      out.cancelled!.push(...(g.cancelled ?? []).filter((c) => inside(c.date)));
+      for (const r of g.rows) {
+        const states = Object.fromEntries(Object.entries(r.states).filter(([id]) => keep.some((e) => e.id === Number(id))));
+        const row = out.rows.find((x) => x.memberId === r.memberId);
+        if (row) Object.assign(row.states, states);
+        else out.rows.push({ ...r, states });
+      }
+      const dated = [...g.events.map((e) => e.date), ...(g.cancelled ?? []).map((c) => c.date)].filter(Boolean) as string[];
+      if (dated.length && dated.every((d) => d > until)) break;
+    }
+    return out;
   }
 
   async presences(team: number, season: number, pages = 3): Promise<PresenceGrid> {

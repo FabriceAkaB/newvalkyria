@@ -116,6 +116,7 @@ describe("bulletinChecklist", () => {
     });
     expect(c.find((x) => x.label === "Prestation")).toMatchObject({ done: false, detail: "1 note sur 3 souhaitées" });
     expect(c.find((x) => x.label === "Le mot pour la famille")?.detail).toContain("dans 19 jours");
-    expect(bulletinProgress(c)).toEqual({ done: 3, total: 9 });
+    expect(c[0]).toMatchObject({ label: "Au moins 4 pratiques évaluées", done: false, detail: "Pas encore assez de pratiques évaluées : 3 sur 4" });
+    expect(bulletinProgress(c)).toEqual({ done: 3, total: 10 });
   });
 });

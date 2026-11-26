@@ -41,7 +41,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         programName: program?.name ?? null,
         status: reg.status,
         isTrial: reg.isTrial,
-        attendance,
+        // Seulement ce que la famille voit (jamais la liste des autres filles attendues ni les notes de l'activité).
+        attendance: attendance.map((a) => ({ id: a.id, status: a.status, activity: { activity_date: a.activity?.activity_date, title: a.activity?.title ?? null, activity_type: a.activity?.activity_type } })),
         // Les notes des éducateurs sont internes (elles peuvent parler d'autres enfants) : jamais envoyées aux parents,
         // comme dans le bulletin.
         evaluations: (evaluations as any[]).map((e) => ({ ...e, comment: null })),

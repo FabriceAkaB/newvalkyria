@@ -5,7 +5,7 @@ import { env } from "@/lib/env";
 import { McsRobotError, McsSession, type PresenceGrid } from "@/lib/mcs-robot";
 import { getRobotCredentials } from "@/lib/mcs-robot-config";
 import { cleanTitle, eventKind, isCancelled, titleDate } from "@/lib/delivery-core";
-import { attendanceFromMcs, calendarDiff, dueReminder, memberTeamKey, pendingMcsPlayers, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type PendingMcsPlayer, type TeamTarget } from "@/lib/mcs-rules";
+import { attendanceFromMcs, calendarDiff, dueReminder, isCancelledTitle, isGameTitle, mcsAttendancePlan, memberTeamKey, pendingMcsPlayers, personKey, sameMemberName, teamsFor, yearsOf, type McsRules, type PendingMcsPlayer, type TeamTarget } from "@/lib/mcs-rules";
 import { getMcsRules } from "@/lib/mcs-rules-repo";
 import { MCS_BASE } from "@/lib/mcs-site-map";
 import { OWNER_NOTIFY_EMAIL } from "@/lib/email";
@@ -590,37 +590,79 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const dayIso = (ms: number) => new Date(ms).toLocaleDateString("en-CA", { timeZone: TZ });
 const hm = (ms: number) => new Date(ms).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: TZ });
 
-/** L'activité du site pour un événement MCS passé : même jour, même heure (± 15 min), hors activités de JP ;
- *  créée au besoin (même règle que le sondage de fin) pour que la présence ait où aller. */
-async function activityFor(date: string, start: string, end: string | null, location: string, group: string, type = "Pratique"): Promise<string> {
-  const { data } = await db().from("coach_activities").select("id, start_time, organization").eq("activity_date", date);
+/** L'activité du site pour un événement MCS : même jour, même heure (± 15 min), hors activités de JP ; quand deux
+ *  activités sont à la même heure, celle du même type et du même groupe. `create: false` : seulement la trouver. */
+async function activityFor(date: string, start: string, end: string | null, location: string, group: string, type = "Pratique", create = true): Promise<string | null> {
+  const { data } = await db().from("coach_activities").select("id, start_time, organization, activity_type, title").eq("activity_date", date);
   const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
-  const hit = ((data ?? []) as any[]).find((a) => !a.organization && Math.abs(toMin(String(a.start_time)) - toMin(start)) <= 15);
+  const game = (x: unknown) => x === "Match" || x === "Tournoi";
+  // Une pratique ne tombe jamais sur un match du site à la même heure (et l'inverse).
+  const hits = ((data ?? []) as any[]).filter((a) => !a.organization && Math.abs(toMin(String(a.start_time)) - toMin(start)) <= 15 && game(a.activity_type) === game(type));
+  const score = (a: any) => (a.activity_type === type ? 2 : 0) + (personKey(String(a.title ?? ""), "") === personKey(group, "") ? 1 : 0);
+  const hit = hits.sort((x, y) => score(y) - score(x))[0];
   if (hit) return hit.id;
+  if (!create) return null;
   const { createActivityFor } = await import("@/lib/practices-repo");
   return createActivityFor({ date, start, end, location, group, type });
 }
 
-/** Chaque soir : les présences des événements passés (7 derniers jours) lues dans MonClubSportif deviennent les
- *  présences du site (fiche de la joueuse, bulletin, rapports), et la présence de chaque entraîneur confirme son
- *  assignation pour la paie (« MonClubSportif »). Rien n'est écrasé quand la famille n'a pas répondu. */
-export async function syncMcsAttendance(opts: { days?: number; now?: number; pages?: number; today?: boolean } = {}): Promise<{ players: number; coaches: number; unmatched: string[]; skipped?: string }> {
+export interface McsAttendanceReport {
+  players: number;
+  coaches: number;
+  unmatched: string[];
+  /** Présences du site corrigées pour suivre MonClubSportif (un autre état était noté). */
+  corrected: number;
+  /** Présences ajoutées (MCS avait une réponse, le site rien). */
+  created: number;
+  /** Pratiques dont la liste des filles attendues a été lue. */
+  practices: number;
+  /** Pratiques annulées dans MCS (elles ne comptent plus). */
+  cancelled: number;
+  /** Pratiques de MCS sans activité dans le site (créées seulement quand MCS a une réponse ; jamais en essai à blanc). */
+  newActivities: string[];
+  /** Le détail des corrections (essai à blanc ou journal). */
+  changes: { date: string; group: string; player: string; from: string | null; to: string }[];
+  skipped?: string;
+}
+
+/** Les présences des jeunes lues dans MonClubSportif. MCS fait foi (JP, 26 nov. 2026) : une réponse (présente, en
+ *  retard, absente) devient la présence du site, même si l'éducateur avait marqué autre chose ; sans réponse dans MCS,
+ *  la marque de l'éducateur (ou de la borne) reste. Les filles assignées à l'activité MCS (remplaçantes et invitées
+ *  comprises) sont les filles attendues (`coach_activities.mcs_expected`) : c'est le dénominateur du pourcentage de
+ *  présence. Une pratique annulée dans MCS ne compte pas (`mcs_cancelled`). Les éducateurs (paie) et les convocations
+ *  des matchs ne sont lus que pour les événements encore dans le cache du calendrier (aujourd'hui et hier), comme avant.
+ *  `days` : combien de jours en arrière (7 chaque soir) ; `today` : les présences du jour avant la pratique ;
+ *  `dryRun` : rien n'est écrit, le rapport dit ce qui changerait. */
+export async function syncMcsAttendance(opts: { days?: number; now?: number; pages?: number; today?: boolean; dryRun?: boolean } = {}): Promise<McsAttendanceReport> {
+  const out: McsAttendanceReport = { players: 0, coaches: 0, unmatched: [], corrected: 0, created: 0, practices: 0, cancelled: 0, newActivities: [], changes: [] };
   const rules = await getMcsRules();
-  if (!rules.robotActive) return { players: 0, coaches: 0, unmatched: [], skipped: "Robot pas encore activé (mode assistant)." };
+  if (!rules.robotActive) return { ...out, skipped: "Robot pas encore activé (mode assistant)." };
   const session = await openRobotSession();
-  if (!session) return { players: 0, coaches: 0, unmatched: [], skipped: "Compte robot pas encore enregistré." };
+  if (!session) return { ...out, skipped: "Compte robot pas encore enregistré." };
+  const dry = !!opts.dryRun;
   // « today » (JP, 18 nov. 2026) : avant la pratique, les présences du jour (absentes en X, joueuses ajoutées) entrent
   // dans le site pour que la borne du sondage les suive ; seulement les jeunes et les pratiques, jamais la paie.
   const now = opts.now ?? Date.now();
-  const todayIso = new Date(now).toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const todayIso = dayIso(now);
   const since = opts.today ? localDayStartMs(todayIso) : now - (opts.days ?? 7) * 86_400_000;
   const until = opts.today ? localDayStartMs(todayIso) + 86_400_000 : now;
+  const sinceIso = opts.today ? todayIso : dayIso(since);
   const allTeams = (await loadTeamTargets()).filter((t) => t.mcs_team_id && t.mcs_season_id);
   const players = await loadExpectedPlayers(allTeams);
-  const [{ data: coaches }, { data: events }] = await Promise.all([
+  const [{ data: coaches }, { data: events }, { data: ahead }] = await Promise.all([
     db().from("coaches").select("id, first_name, last_name").eq("status", "active"),
-    db().from("mcs_events").select("team_id, key, event_date, location, type, end_time").gte("event_date", opts.today ? todayIso : dayIso(since)).lte("event_date", opts.today ? todayIso : dayIso(now))
+    db().from("mcs_events").select("team_id, key, event_date, location, type, end_time, title").gte("event_date", sinceIso).lte("event_date", todayIso),
+    // Événements passés sortis du cache : l'heure de fin et le lieu viennent des prochains événements de la même équipe à la même heure.
+    db().from("mcs_events").select("team_id, start_time, end_time, location").gt("event_date", todayIso).limit(2000)
   ]);
+  const usual = (teamId: string, start: string) => {
+    const same = ((ahead ?? []) as any[]).filter((x) => x.team_id === teamId && x.end_time);
+    const hit = same.find((x) => String(x.start_time ?? "").slice(0, 5) === start) ?? null;
+    const startMin = Number(start.slice(0, 2)) * 60 + Number(start.slice(3, 5));
+    const dur = hit ? Number(String(hit.end_time).slice(0, 2)) * 60 + Number(String(hit.end_time).slice(3, 5)) - (Number(String(hit.start_time).slice(0, 2)) * 60 + Number(String(hit.start_time).slice(3, 5))) : 90;
+    const end = Math.min(23 * 60 + 59, startMin + (dur > 0 ? dur : 90));
+    return { end: `${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`, location: hit?.location ?? same[0]?.location ?? "" };
+  };
   const withEvents = new Set(((events ?? []) as any[]).map((e) => e.team_id));
   const teams = opts.today ? allTeams.filter((t) => withEvents.has(t.id)) : allTeams;
   const byId = new Map<number, any>();
@@ -630,52 +672,51 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
     // La clé ne porte que le début : la fin vient de la colonne end_time (sans elle, l'activité ne pouvait pas être créée).
     if (id) byId.set(id, { ...e, start: Number(s), endHm: Number(en) ? hm(Number(en)) : e.end_time ? String(e.end_time).slice(0, 5) : null });
   }
-  const { setPlayerAttendance } = await import("@/lib/coach-portal-repo");
-  let nPlayers = 0;
-  let nCoaches = 0;
+  const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const regName = new Map(players.filter((p) => p.registrationId).map((p) => [p.registrationId!, `${p.firstName} ${p.lastName}`.trim()]));
   const unmatched = new Set<string>();
+  // Une activité du site peut recevoir plusieurs équipes MCS (deux groupes à la même heure) : on additionne avant d'écrire.
+  const acts = new Map<string, { date: string; group: string; eventIds: number[]; members: Map<string, string | undefined> }>();
+  const cancelledSlots: { date: string; start: string; group: string }[] = [];
+  let readFailed = false;
+  const strong = (s: string | undefined) => !!attendanceFromMcs(s);
+
   for (const t of teams) {
     let grid: PresenceGrid;
     try {
-      // Avant la pratique, la grille « à venir » (page 0) porte les présences du jour ; les pages 1 et suivantes, le passé.
-      grid = opts.today ? await session.upcomingPresences(t.mcs_team_id!, t.mcs_season_id!) : await session.presences(t.mcs_team_id!, t.mcs_season_id!, opts.pages ?? 2);
+      // Avant la pratique, la grille « à venir » (page 0) porte les présences du jour ; le soir, les pages de la période.
+      grid = opts.today ? await session.upcomingPresences(t.mcs_team_id!, t.mcs_season_id!) : await session.presencesBetween(t.mcs_team_id!, t.mcs_season_id!, sinceIso, todayIso);
     } catch {
+      readFailed = true;
       continue;
     }
+    for (const c of grid.cancelled ?? []) if (c.date && c.start && c.date >= sinceIso && c.date <= todayIso) cancelledSlots.push({ date: c.date, start: c.start, group: t.name });
     for (const ev of grid.events) {
       const e = byId.get(ev.id);
-      if (!e || !e.start || e.start > until || e.start < since) continue;
+      const date = e ? String(e.event_date).slice(0, 10) : ev.date ?? null;
+      const startHm = e?.start ? hm(e.start) : ev.start ?? null;
+      if (!date || !startHm) continue;
+      const startMs = e?.start ?? localDayStartMs(date) + toMin(startHm) * 60_000;
+      if (startMs > until || startMs < since) continue;
+      if (ev.cancelled || isCancelledTitle(e?.title)) {
+        cancelledSlots.push({ date, start: startHm, group: t.name });
+        continue;
+      }
       // Match ou tournoi : la présence des éducateurs compte pour leur paie ; celle des jeunes devient la convocation du match.
-      const game = e.type === "Match" || e.type === "Tournoi";
+      const game = e ? e.type === "Match" || e.type === "Tournoi" : isGameTitle(ev.title);
       if (opts.today && game) continue;
-      const date = String(e.event_date).slice(0, 10);
       let activityId: string | null = null;
+      const members: { registrationId: string; state: string | undefined }[] = [];
       for (const row of grid.rows) {
-        const status = attendanceFromMcs(row.states[ev.id]);
-        if (!status) continue;
+        if (!(ev.id in row.states)) continue; // pas assignée à cet événement
+        const state = row.states[ev.id];
+        const status = attendanceFromMcs(state);
         const coach = ((coaches ?? []) as any[]).find((c) => sameMemberName(row.name, c.first_name, c.last_name));
-        if (game && !coach) {
-          // Joueuses d'un match (JP, 22 nov. 2026) : leur présence MCS devient la convocation du match (présente ou
-          // absente), pour que la fiche « Évaluer le match » montre qui était là. Jamais dans les présences des
-          // pratiques (points, bulletin). Une joueuse déjà évaluée par un éducateur n'est pas remise absente.
-          const p = players.find((x) => sameMemberName(row.name, x.firstName, x.lastName));
-          if (!p?.registrationId) {
-            unmatched.add(row.name);
-            continue;
-          }
-          activityId ??= await activityFor(date, hm(e.start), e.endHm, e.location ?? "", t.name, "Match");
-          if (status === "absent") {
-            const { data: ev } = await db().from("match_player_evaluations").select("id").eq("activity_id", activityId).eq("registration_id", p.registrationId).limit(1);
-            if ((ev ?? []).length) continue;
-          }
-          const { setConvocation } = await import("@/lib/match-repo");
-          await setConvocation(activityId, p.registrationId, status === "absent" ? "absent" : "confirmed");
-          nPlayers++;
-          continue;
-        }
-        if (coach && opts.today) continue; // la paie se règle après la pratique, au passage du soir
-        activityId ??= await activityFor(date, hm(e.start), e.endHm, e.location ?? "", t.name, game ? "Match" : "Pratique");
         if (coach) {
+          // Paie : seulement les événements du cache du calendrier (comme avant), jamais en essai à blanc ni le matin.
+          if (!status || !e || opts.today || dry) continue;
+          activityId ??= await activityFor(date, startHm, e.endHm, e.location ?? "", t.name, game ? "Match" : "Pratique");
+          if (!activityId) continue;
           const { data: asg } = await db().from("coach_assignments").select("id, confirmed, confirmed_by, status").eq("activity_id", activityId).eq("coach_id", coach.id).maybeSingle();
           // « Je n'étais pas là » déclaré par l'éducateur dans le portail (ex. absent au 2e bloc) : MonClubSportif ne le
           // remet pas présent (JP, 20 nov. 2026).
@@ -689,21 +730,87 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
               ? await db().from("coach_assignments").insert({ activity_id: activityId, coach_id: coach.id, arrival_time: hm(e.start), departure_time: e.endHm, ...patch })
               : { error: null };
           if (error) throw new Error(`Présence de ${row.name} refusée par la base : ${error.message}`);
-          nCoaches++;
+          out.coaches++;
           continue;
         }
         const p = players.find((x) => sameMemberName(row.name, x.firstName, x.lastName));
         if (!p?.registrationId) {
-          unmatched.add(row.name);
+          if (status) unmatched.add(row.name);
           continue;
         }
-        await setPlayerAttendance(activityId, p.registrationId, status);
-        nPlayers++;
+        if (game) {
+          // Joueuses d'un match (JP, 22 nov. 2026) : leur présence MCS devient la convocation du match (présente ou
+          // absente), pour que la fiche « Évaluer le match » montre qui était là. Jamais dans les présences des
+          // pratiques (points, bulletin). Une joueuse déjà évaluée par un éducateur n'est pas remise absente.
+          if (!status || !e || dry) continue;
+          activityId ??= await activityFor(date, startHm, e.endHm, e.location ?? "", t.name, "Match");
+          if (!activityId) continue;
+          if (status === "absent") {
+            const { data: done } = await db().from("match_player_evaluations").select("id").eq("activity_id", activityId).eq("registration_id", p.registrationId).limit(1);
+            if ((done ?? []).length) continue;
+          }
+          const { setConvocation } = await import("@/lib/match-repo");
+          await setConvocation(activityId, p.registrationId, status === "absent" ? "absent" : "confirmed");
+          out.players++;
+          continue;
+        }
+        members.push({ registrationId: p.registrationId, state });
       }
+      // « Vendredi Solo » (l'horaire personnel de JP, séances une à une) n'est pas une pratique de groupe : pas de présence.
+      const personal = t.kind === "programme" && !(t.session_program_slugs ?? []).length && !(t.program_ids ?? []).length;
+      if (game || personal || !members.length) continue;
+      // La pratique du site : trouvée, ou créée quand MCS a au moins une réponse (jamais en essai à blanc).
+      const guess = e?.endHm ? null : usual(t.id, startHm);
+      const found = await activityFor(date, startHm, e?.endHm ?? guess?.end ?? null, e?.location || guess?.location || "", t.name, "Pratique", !dry && members.some((m) => strong(m.state)));
+      const key = found ?? `nouvelle:${date}|${startHm}|${t.name}`;
+      const acc = acts.get(key) ?? { date, group: t.name, eventIds: [], members: new Map<string, string | undefined>() };
+      acc.eventIds.push(ev.id);
+      for (const m of members) if (!acc.members.has(m.registrationId) || strong(m.state)) acc.members.set(m.registrationId, m.state);
+      acts.set(key, acc);
     }
   }
-  if (nPlayers || nCoaches) await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_attendance_sync", entityType: "activity_player_attendance", entityId: CLUB_ID, entityLabel: `${nPlayers} présences de jeunes, ${nCoaches} d'entraîneurs`, after: { unmatched: [...unmatched] } }).catch(() => null);
-  return { players: nPlayers, coaches: nCoaches, unmatched: [...unmatched] };
+
+  const readAt = new Date().toISOString();
+  for (const [activityId, acc] of acts) {
+    const real = !activityId.startsWith("nouvelle:");
+    if (!real) out.newActivities.push(`${acc.date} ${acc.group}`);
+    const { data: rows } = real ? await db().from("activity_player_attendance").select("registration_id, status, status_source").eq("activity_id", activityId) : { data: [] };
+    const existing = new Map(((rows ?? []) as any[]).map((r) => [r.registration_id as string, { status: String(r.status), source: (r.status_source ?? null) as string | null }]));
+    const plan = mcsAttendancePlan([...acc.members].map(([registrationId, state]) => ({ registrationId, state })), existing);
+    out.practices++;
+    out.corrected += plan.corrected;
+    out.created += plan.created;
+    for (const w of plan.writes) {
+      if (w.changed || w.created) out.changes.push({ date: acc.date, group: acc.group, player: regName.get(w.registrationId) ?? w.registrationId, from: existing.get(w.registrationId)?.status ?? null, to: w.status });
+    }
+    out.players += plan.writes.length;
+    if (dry || !real) continue;
+    if (plan.writes.length) {
+      const { error } = await db()
+        .from("activity_player_attendance")
+        .upsert(plan.writes.map((w) => ({ activity_id: activityId, registration_id: w.registrationId, status: w.status, status_source: "mcs", mcs_status: w.mcsStatus, mcs_read_at: readAt, updated_at: readAt })), { onConflict: "activity_id,registration_id" });
+      if (error) throw new Error(error.message);
+    }
+    for (const n of plan.notes) await db().from("activity_player_attendance").update({ mcs_status: n.mcsStatus, mcs_read_at: readAt }).eq("activity_id", activityId).eq("registration_id", n.registrationId);
+    // Les filles attendues : remplacées par la lecture (ajoutées à l'ancienne liste si une équipe n'a pas pu être lue).
+    const { data: act } = await db().from("coach_activities").select("mcs_expected, mcs_event_ids").eq("id", activityId).maybeSingle();
+    const expected = readFailed ? [...new Set([...((act?.mcs_expected ?? []) as string[]), ...plan.expected])] : plan.expected;
+    const eventIds = [...new Set([...(readFailed ? ((act?.mcs_event_ids ?? []) as number[]).map(Number) : []), ...acc.eventIds])];
+    await db().from("coach_activities").update({ mcs_expected: expected, mcs_event_ids: eventIds, mcs_cancelled: false, mcs_read_at: readAt }).eq("id", activityId);
+  }
+
+  // Pratiques annulées dans MonClubSportif : la pratique du site à la même heure ne compte plus (si aucune autre équipe
+  // n'a d'événement actif à cette heure-là).
+  for (const c of cancelledSlots) {
+    const id = await activityFor(c.date, c.start, null, "", c.group, "Pratique", false);
+    if (!id || acts.has(id)) continue;
+    out.cancelled++;
+    if (!dry) await db().from("coach_activities").update({ mcs_cancelled: true, mcs_read_at: readAt }).eq("id", id);
+  }
+
+  out.unmatched = [...unmatched];
+  if (!dry && (out.players || out.coaches)) await logAudit({ actorRole: "admin", actorLabel: "Robot MonClubSportif", action: "mcs_attendance_sync", entityType: "activity_player_attendance", entityId: CLUB_ID, entityLabel: `${out.players} présences de jeunes (${out.corrected} corrigées, ${out.created} ajoutées), ${out.coaches} d'entraîneurs`, after: { unmatched: out.unmatched, changes: out.changes.slice(0, 200) } }).catch(() => null);
+  return out;
 }
 
 /** Les pratiques prévues dans le site (plages de la saison, programmes à dates fixes) pour les 45 prochains jours,

@@ -3,6 +3,7 @@
  *  dossier, et même le début de construction de son bulletin ». Règles pures, testées (player-dossier.test.ts) ;
  *  les données viennent de player-dossier-repo.ts. Jamais de montant ni de paiement. */
 
+import { MIN_EVALUATED_PRACTICES } from "@/lib/bulletin-report";
 import { PARTICIPATED, watchReasons } from "@/lib/coach-report";
 import { departureSignal } from "@/lib/departure-signals";
 
@@ -149,7 +150,8 @@ export function dossierAlerts(a: AlertInput): DossierAlert[] {
     out.push({ tone: "bad", text: `${i.kind === "choc-tete" ? "Choc à la tête" : "Blessure"}${i.date ? ` le ${shortDay(i.date)}` : ""} : ${i.status === "ouverte" ? "parent à appeler" : "en suivi, pas encore de retour au jeu confirmé"}.` });
   }
   if (a.health) out.push({ tone: "warn", text: `Santé (fiche du parent) : ${a.health}` });
-  const marks = a.attendance.filter((x) => x.activityType === "Pratique" && x.date <= a.today).map((x) => ({ date: x.date, present: PARTICIPATED.includes(x.status) }));
+  // « Pas de réponse » dans MonClubSportif n'est pas une absence : seules les vraies réponses comptent pour l'alerte.
+  const marks = a.attendance.filter((x) => x.activityType === "Pratique" && x.date <= a.today && x.status !== "unknown").map((x) => ({ date: x.date, present: PARTICIPATED.includes(x.status) }));
   const signal = departureSignal(marks, a.today);
   if (signal) out.push({ tone: "warn", text: `${signal.reason.charAt(0).toUpperCase()}${signal.reason.slice(1)}.` });
   for (const r of watchReasons({ evaluations: [...a.evaluations].sort((x, y) => x.date.localeCompare(y.date)), feedback: [...a.feedback].sort((x, y) => x.date.localeCompare(y.date)) })) out.push({ tone: "warn", text: `${r}.` });
@@ -187,11 +189,19 @@ export interface BulletinCheck {
 export const BULLETIN_MIN = { perCriterion: 3, coaches: 2, wellbeing: 3 };
 
 export function bulletinChecklist(b: BulletinCheckInput): BulletinCheck[] {
-  const list: BulletinCheck[] = b.criteria.map((c) => ({
+  // La condition pour que le bulletin existe (JP, 26 nov. 2026) : au moins 4 pratiques évaluées.
+  const list: BulletinCheck[] = [
+    {
+      label: `Au moins ${MIN_EVALUATED_PRACTICES} pratiques évaluées`,
+      done: b.practicesEvaluated >= MIN_EVALUATED_PRACTICES,
+      detail: b.practicesEvaluated >= MIN_EVALUATED_PRACTICES ? `${b.practicesEvaluated} pratiques évaluées` : `Pas encore assez de pratiques évaluées : ${b.practicesEvaluated} sur ${MIN_EVALUATED_PRACTICES}`
+    }
+  ];
+  list.push(...b.criteria.map((c) => ({
     label: c.label,
     done: c.count >= BULLETIN_MIN.perCriterion,
     detail: c.count ? `${c.count} note${c.count > 1 ? "s" : ""}${c.count < BULLETIN_MIN.perCriterion ? ` sur ${BULLETIN_MIN.perCriterion} souhaitées` : ""}` : "Aucune note encore"
-  }));
+  })));
   list.push({ label: "Deux regards d'éducateurs", done: b.coaches >= BULLETIN_MIN.coaches, detail: b.coaches ? `${b.coaches} éducateur${b.coaches > 1 ? "s" : ""} l'ont évaluée` : "Personne ne l'a évaluée" });
   list.push({ label: "Présences", done: b.attendanceTotal > 0, detail: b.attendanceTotal ? `${b.attendanceTotal} pratique${b.attendanceTotal > 1 ? "s" : ""} notée${b.attendanceTotal > 1 ? "s" : ""}` : "Aucune présence notée" });
   list.push({ label: "Bien-être (sondage de la borne)", done: b.wellbeingAnswers >= BULLETIN_MIN.wellbeing, detail: b.wellbeingAnswers ? `${b.wellbeingAnswers} réponse${b.wellbeingAnswers > 1 ? "s" : ""}` : "Elle n'a pas encore répondu" });
