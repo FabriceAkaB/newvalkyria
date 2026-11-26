@@ -521,6 +521,7 @@ export function AdminExerciceFiche({ entry, ratings, uses = null }: { entry: Ban
     if (!confirm(`Supprimer définitivement « ${e.title} » et ses ${b.countAll} note(s) ? Pour le sortir de la banque sans perdre l'historique, utiliser « Retirer ».`)) return;
     const res = await fetch(`/api/admin/exercises/${e.id}`, { method: "DELETE" });
     if (res.ok) router.push("/admin/exercices");
+    else setError((await res.json().catch(() => null))?.error ?? "La suppression n'a pas fonctionné.");
   };
   const saveDiagram = async (diagram: ExerciseDiagram) => {
     setBusy(true);

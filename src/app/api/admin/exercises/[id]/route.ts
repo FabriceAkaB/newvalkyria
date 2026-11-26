@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
-import { deleteExercise, parseExerciseBody, resetBlockOverrides, setBankDecision, updateExercise } from "@/lib/exercises-repo";
+import { deleteExerciseSafely, getExerciseDeleteImpact, parseExerciseBody, resetBlockOverrides, setBankDecision, updateExercise } from "@/lib/exercises-repo";
 import { jsonError } from "@/lib/http";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -47,12 +47,32 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 }
 
+/** Ce qu'une suppression toucherait : pratiques à venir (bloquantes), passées, notes, routines. Admin seulement. */
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
+  const { id } = await params;
+  try {
+    return NextResponse.json(await getExerciseDeleteImpact(id));
+  } catch (error) {
+    if (error instanceof Error) return jsonError(error.message, 422);
+    return jsonError("Erreur serveur", 500);
+  }
+}
+
+/** Suppression définitive (JP seulement). Refusée (409) si l'exercice est prévu dans une pratique à venir. */
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdminRequest({ roles: ["admin"] }))) return jsonError("Non autorisé", 401);
   const { id } = await params;
 
   try {
-    await deleteExercise(id);
+    const result = await deleteExerciseSafely(id);
+    if (!result.deleted) {
+      const n = result.upcoming.length;
+      return NextResponse.json(
+        { error: `Prévu dans ${n} pratique${n > 1 ? "s" : ""} à venir : change-le dans ${n > 1 ? "ces pratiques" : "cette pratique"} d'abord, ou retire-le de la banque.`, upcoming: result.upcoming },
+        { status: 409 }
+      );
+    }
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof Error) return jsonError(error.message, 422);

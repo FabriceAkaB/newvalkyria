@@ -510,6 +510,44 @@ export async function getExerciseUses(exerciseId: string): Promise<{ upcoming: E
   return { upcoming, pastCount: all.length - upcoming.length };
 }
 
+/** Ce qu'une suppression toucherait (JP, 26 nov. 2026) : pratiques à venir et passées qui l'utilisent, notes, routines. */
+export interface ExerciseDeleteImpact {
+  upcoming: ExerciseUse[];
+  pastCount: number;
+  ratings: number;
+  routines: number;
+}
+
+export async function getExerciseDeleteImpact(exerciseId: string): Promise<ExerciseDeleteImpact> {
+  const [{ upcoming, pastCount }, ratings, routines] = await Promise.all([
+    getExerciseUses(exerciseId),
+    db().from("exercise_ratings").select("id", { count: "exact", head: true }).eq("exercise_id", exerciseId),
+    db().from("player_routines").select("id", { count: "exact", head: true }).contains("exercise_ids", [exerciseId])
+  ]);
+  if (ratings.error) throw new Error(ratings.error.message);
+  return { upcoming, pastCount, ratings: ratings.count ?? 0, routines: routines.error ? 0 : (routines.count ?? 0) };
+}
+
+/** Suppression définitive sans rien casser : refusée si l'exercice est prévu dans une pratique à venir (le changer
+ *  là d'abord, ou le retirer de la banque) ; les pratiques passées gardent son nom dans leur plan ; ses notes
+ *  s'effacent avec lui ; il sort des routines des joueuses. La diapo reste dans le stockage (un doublon peut la partager). */
+export async function deleteExerciseSafely(id: string): Promise<{ deleted: true } | { deleted: false; upcoming: ExerciseUse[] }> {
+  const exercise = await getExercise(id);
+  if (!exercise) throw new Error("Exercice introuvable");
+  const impact = await getExerciseDeleteImpact(id);
+  if (impact.upcoming.length) return { deleted: false, upcoming: impact.upcoming };
+  const { error: keepName } = await db().from("activity_session_blocks").update({ custom_title: exercise.title }).eq("exercise_id", id).is("custom_title", null);
+  if (keepName) throw new Error(keepName.message);
+  if (impact.routines) {
+    const { data } = await db().from("player_routines").select("id, exercise_ids").contains("exercise_ids", [id]);
+    for (const r of (data ?? []) as { id: string; exercise_ids: string[] }[]) {
+      await db().from("player_routines").update({ exercise_ids: r.exercise_ids.filter((x) => x !== id) }).eq("id", r.id);
+    }
+  }
+  await deleteExercise(id);
+  return { deleted: true };
+}
+
 /** Une modification faite dans « Pratique du jour » d'un bloc devient la règle partout : matériel, points clés,
  *  variantes et progressions vont dans la fiche de la banque (et les blocs à venir reprennent la fiche) ; montage
  *  du terrain et « qui fait quoi » (pas de champ dans la fiche) sont recopiés dans chaque pratique à venir. */

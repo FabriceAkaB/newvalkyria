@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, BookOpen, ChevronLeft, ChevronRight, LayoutGrid, LayoutList, ListOrdered, Maximize2, PencilLine, Search, Star, X } from "lucide-react";
+import { Archive, Award, BookOpen, ChevronDown, ChevronLeft, ChevronRight, FilePlus2, ImageUp, LayoutGrid, LayoutList, ListOrdered, Maximize2, PencilLine, Plus, Search, Star, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -185,6 +185,152 @@ function JpReferenceControl({ ex }: { ex: BookExercise }) {
     <button type="button" className="admin-btn-ghost xbk-tool xbk-jp-toggle" data-on={ex.jpReference || undefined} onClick={() => setEditing(true)} aria-pressed={ex.jpReference}>
       <Award size={16} strokeWidth={1.75} aria-hidden /> {ex.jpReference ? "JP référence" : "Marquer JP référence"}
     </button>
+  );
+}
+
+interface DeleteImpact {
+  upcoming: { activityId: string; date: string; start: string; title: string }[];
+  pastCount: number;
+  ratings: number;
+  routines: number;
+}
+
+const shortDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short" });
+
+/** Admin seulement (JP, 26 nov. 2026) : supprimer un exercice de la banque, ou le retirer pour garder l'historique.
+ *  Refusé tant que l'exercice est prévu dans une pratique à venir : on montre lesquelles. */
+function DeleteControl({ ex }: { ex: BookExercise }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [impact, setImpact] = useState<DeleteImpact | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const start = async () => {
+    setOpen(true);
+    setError(null);
+    setImpact(null);
+    const res = await fetch(`/api/admin/exercises/${ex.id}`);
+    if (res.ok) setImpact(await res.json());
+    else setError("Impossible de vérifier où cet exercice est utilisé. Réessaie.");
+  };
+  const act = async (kind: "supprimer" | "retirer") => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res =
+        kind === "supprimer"
+          ? await fetch(`/api/admin/exercises/${ex.id}`, { method: "DELETE" })
+          : await fetch(`/api/admin/exercises/${ex.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "retirer", reason: "Retiré depuis la Bible" }) });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        if (data?.upcoming) setImpact((prev) => (prev ? { ...prev, upcoming: data.upcoming } : prev));
+        setError(data?.error ?? "Ça n'a pas fonctionné. Réessaie.");
+        return;
+      }
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button type="button" className="admin-btn-ghost xbk-tool xbk-del-btn" onClick={start}>
+        <Trash2 size={15} strokeWidth={1.75} aria-hidden /> Supprimer
+      </button>
+    );
+  }
+  const planned = impact?.upcoming ?? [];
+  return (
+    <div className="xbk-del" role="group" aria-label={`Supprimer « ${ex.title} »`}>
+      {!impact && !error ? <p className="xbk-muted">Je vérifie où cet exercice est utilisé…</p> : null}
+      {impact && planned.length ? (
+        <>
+          <p>
+            <strong>Prévu dans {planned.length} pratique{planned.length > 1 ? "s" : ""} à venir :</strong> change-le dans {planned.length > 1 ? "ces pratiques" : "cette pratique"} avant de le supprimer, ou retire-le de la banque (il reste dans {planned.length > 1 ? "ces pratiques" : "cette pratique"}).
+          </p>
+          <ul>
+            {planned.map((u) => (
+              <li key={`${u.activityId}-${u.date}`}>
+                <Link href={`/admin/entraineurs/activites/${u.activityId}`}>
+                  {shortDate(u.date)}
+                  {u.start ? ` · ${u.start.replace(":", " h ")}` : ""} · {u.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      {impact && !planned.length ? (
+        <p>
+          <strong>Supprimer définitivement « {ex.title} » ?</strong>{" "}
+          {impact.ratings ? `Ses ${impact.ratings} note${impact.ratings > 1 ? "s" : ""} d'éducateurs seront effacées. ` : ""}
+          {impact.pastCount ? `${impact.pastCount} pratique${impact.pastCount > 1 ? "s" : ""} passée${impact.pastCount > 1 ? "s" : ""} garde${impact.pastCount > 1 ? "nt" : ""} son nom dans le plan. ` : ""}
+          Pour garder l&apos;historique, retire-le plutôt : il sort de la Bible et des plans à venir, sans rien effacer.
+        </p>
+      ) : null}
+      {error ? <p className="xbk-jp-error">{error}</p> : null}
+      <span className="xbk-jp-form-actions">
+        {impact && !planned.length ? (
+          <button type="button" className="xbk-del-confirm" onClick={() => act("supprimer")} disabled={busy}>
+            <Trash2 size={15} strokeWidth={1.75} aria-hidden /> {busy ? "Un instant…" : "Supprimer définitivement"}
+          </button>
+        ) : null}
+        {impact ? (
+          <button type="button" className="admin-btn-ghost xbk-tool" onClick={() => act("retirer")} disabled={busy}>
+            <Archive size={15} strokeWidth={1.75} aria-hidden /> Retirer (garder l&apos;historique)
+          </button>
+        ) : null}
+        <button type="button" className="admin-btn-ghost" onClick={() => setOpen(false)} disabled={busy}>
+          Annuler
+        </button>
+      </span>
+    </div>
+  );
+}
+
+/** Admin seulement : ajouter un exercice à la banque, par diapo (lue et rangée toute seule) ou en remplissant la fiche. */
+function AddExerciseMenu() {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [open]);
+  return (
+    <div className="xbk-add" ref={box}>
+      <button type="button" className="admin-btn-primary xbk-tool" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="menu">
+        <Plus size={16} strokeWidth={2} aria-hidden /> Ajouter un exercice <ChevronDown size={15} strokeWidth={2} aria-hidden />
+      </button>
+      {open ? (
+        <div className="xbk-add-menu" role="menu">
+          <Link href="/admin/exercices/diapos" role="menuitem">
+            <ImageUp size={18} strokeWidth={1.75} aria-hidden />
+            <span>
+              <strong>Déposer des diapos</strong>
+              <small>Image ou PDF : chaque exercice est lu et rangé tout seul.</small>
+            </span>
+          </Link>
+          <Link href="/admin/exercices/nouveau" role="menuitem">
+            <FilePlus2 size={18} strokeWidth={1.75} aria-hidden />
+            <span>
+              <strong>Remplir une fiche</strong>
+              <small>La fiche Valkyria complète, champ par champ.</small>
+            </span>
+          </Link>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -390,7 +536,12 @@ function Page({ page, ctx }: { page: BookPage; ctx: { chapters: BookChapter[]; s
             </Link>
           ) : null}
         </p>
-        {ctx.ficheBase ? <JpReferenceControl key={`${page.exercise.id}-${page.exercise.jpReference}`} ex={page.exercise} /> : null}
+        {ctx.ficheBase ? (
+          <div className="xbk-admin-actions">
+            <JpReferenceControl key={`${page.exercise.id}-${page.exercise.jpReference}`} ex={page.exercise} />
+            <DeleteControl key={`del-${page.exercise.id}`} ex={page.exercise} />
+          </div>
+        ) : null}
         <ExerciseSheet ex={page.exercise} eager />
       </>
     );
@@ -604,6 +755,7 @@ function WideCard({ ex, onOpen, canMark }: { ex: BookExercise; onOpen: () => voi
             <Maximize2 size={15} strokeWidth={1.75} aria-hidden /> Fiche complète
           </button>
           {canMark ? <JpReferenceControl key={`${ex.id}-${ex.jpReference}`} ex={ex} /> : null}
+          {canMark ? <DeleteControl key={`del-${ex.id}`} ex={ex} /> : null}
         </div>
       </div>
     </article>
@@ -735,6 +887,7 @@ function Modal({ ex, onClose, onBook, ficheBase }: { ex: BookExercise; onClose: 
               </Link>
             ) : null}
             {ficheBase ? <JpReferenceControl key={`${ex.id}-${ex.jpReference}`} ex={ex} /> : null}
+            {ficheBase ? <DeleteControl key={`del-${ex.id}`} ex={ex} /> : null}
             <button type="button" className="xbk-close" onClick={onClose} aria-label="Fermer">
               <X size={20} strokeWidth={1.75} />
             </button>
@@ -795,6 +948,12 @@ export function ExerciseBible({ exercises, ficheBase }: { exercises: BookExercis
 
   return (
     <div className="xbk">
+      {ficheBase ? (
+        <div className="xbk-admin-bar">
+          <p className="xbk-muted">Ta banque, comme les éducateurs la voient. Tu es le seul à pouvoir ajouter, marquer et supprimer.</p>
+          <AddExerciseMenu />
+        </div>
+      ) : null}
       <section className="xbk-best" data-kind="jp" aria-label="Exercices JP référence">
         <div className="xbk-best-head">
           <h2 className="mda-h2" style={{ margin: 0 }}>
