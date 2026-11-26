@@ -648,7 +648,8 @@ function useWide(ref: React.RefObject<HTMLElement | null>, min: number) {
 
 function Book({ pages, chapters, page, setPage, total, best, ficheBase, bible }: { pages: BookPage[]; chapters: BookChapter[]; page: number; setPage: (p: number) => void; total: number; best: number; ficheBase?: string; bible: BibleKey }) {
   const box = useRef<HTMLDivElement>(null);
-  const double = useWide(box, 960);
+  // Deux pages à la fois dès qu'il y a la place (ordinateur, tablette en paysage) ; une seule au téléphone.
+  const double = useWide(box, 620);
   const starts = useMemo(() => chapterStarts(pages), [pages]);
   const start = spreadStart(page, double);
   const shown = double && start > 0 ? [start, start + 1].filter((i) => i < pages.length) : [start];
@@ -854,26 +855,16 @@ function WideCard({ ex, onOpen, canMark, onLink }: { ex: BookExercise; onOpen: (
   );
 }
 
-function Grid({ list, chapters, onOpen, canMark }: { list: BookExercise[]; chapters: BookChapter[]; onOpen: (id: string) => void; canMark: boolean }) {
+function Grid({ list, chapters, onOpen, canMark, layout }: { list: BookExercise[]; chapters: BookChapter[]; onOpen: (id: string) => void; canMark: boolean; layout: "fiches" | "vignettes" }) {
   const [q, setQ] = useState("");
   const [chapter, setChapter] = useState("");
   const [best, setBest] = useState(false);
   const [jp, setJp] = useState(false);
-  const [layout, setLayout] = useState<"fiches" | "vignettes">("fiches");
   const [limit, setLimit] = useState(GRID_STEP);
   const more = useRef<HTMLDivElement>(null);
   const shown = list.filter((e) => matchesGrid(e, { q, chapter, best, jp }));
   const jpCount = list.filter((e) => e.jpReference).length;
 
-  useEffect(() => {
-    try {
-      const v = localStorage.getItem(GRID_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (v === "fiches" || v === "vignettes") setLayout(v);
-    } catch {
-      /* stockage indisponible : grandes fiches */
-    }
-  }, []);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setLimit(GRID_STEP), [q, chapter, best, jp, layout]);
   // Les grandes fiches arrivent par paquets de 16 en défilant (380 diapos d'un coup alourdiraient la page).
@@ -884,15 +875,6 @@ function Grid({ list, chapters, onOpen, canMark }: { list: BookExercise[]; chapt
     io.observe(el);
     return () => io.disconnect();
   }, [layout, limit, shown.length]);
-  const chooseLayout = (v: "fiches" | "vignettes") => {
-    setLayout(v);
-    try {
-      localStorage.setItem(GRID_KEY, v);
-    } catch {
-      /* rien */
-    }
-  };
-
   return (
     <div className="xbk-grid-wrap">
       <div className="xbk-grid-filters">
@@ -901,14 +883,6 @@ function Grid({ list, chapters, onOpen, canMark }: { list: BookExercise[]; chapt
             <Search size={16} strokeWidth={1.75} aria-hidden />
             <input className="admin-input" type="search" placeholder="Chercher un exercice, un thème, un âge" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Chercher" />
           </label>
-          <div className="xbk-seg" role="group" aria-label="Taille de l'affichage">
-            <button type="button" aria-pressed={layout === "fiches"} onClick={() => chooseLayout("fiches")}>
-              <LayoutList size={16} strokeWidth={1.75} aria-hidden /> Grandes fiches
-            </button>
-            <button type="button" aria-pressed={layout === "vignettes"} onClick={() => chooseLayout("vignettes")}>
-              <LayoutGrid size={16} strokeWidth={1.75} aria-hidden /> Vignettes
-            </button>
-          </div>
         </div>
         <div className="xbk-chips" role="group" aria-label="Chapitre">
           <button type="button" data-on={String(!chapter && !best && !jp)} onClick={() => { setChapter(""); setBest(false); setJp(false); }}>Tous ({list.length})</button>
@@ -994,6 +968,14 @@ function Modal({ ex, onClose, onBook, ficheBase, onLink }: { ex: BookExercise; o
 
 const BIBLE_ICON: Record<BibleKey, typeof BookOpen> = { valkyria: BookOpen, psychomotricite: Shapes, "ball-mastery": Dumbbell };
 
+/** Les 3 façons de lire une Bible (JP, 26 nov. 2026) ; le choix reste mémorisé sur l'appareil de la personne. */
+type BibleView = "livre" | "fiches" | "vignettes";
+const VIEWS: { key: BibleView; label: string; short: string; icon: typeof BookOpen }[] = [
+  { key: "livre", label: "Feuilleter comme un livre", short: "Livre", icon: BookOpen },
+  { key: "fiches", label: "Grandes fiches", short: "Fiches", icon: LayoutList },
+  { key: "vignettes", label: "Vignettes", short: "Vignettes", icon: LayoutGrid }
+];
+
 /** Les 3 Bibles (JP, 26 nov. 2026) : un lien par Bible, avec son nombre d'exercices. */
 function BibleSwitcher({ bible, counts, basePath }: { bible: BibleKey; counts: Partial<Record<BibleKey, number>>; basePath: string }) {
   return (
@@ -1024,7 +1006,7 @@ export function ExerciseBible({ exercises, ficheBase, bible = "valkyria", counts
   const best = useMemo(() => bestExercises(exercises, 12), [exercises]);
   const references = useMemo(() => jpReferenceExercises(exercises, order), [exercises, order]);
   const approvedCount = exercises.filter((e) => e.approved).length;
-  const [view, setView] = useState<"livre" | "grille">("livre");
+  const [view, setView] = useState<BibleView>("livre");
   const [page, setPageState] = useState(0);
   const [open, setOpen] = useState<string | null>(null);
 
@@ -1032,8 +1014,10 @@ export function ExerciseBible({ exercises, ficheBase, bible = "valkyria", counts
     try {
       const v = localStorage.getItem(VIEW_KEY);
       const p = parseInt(localStorage.getItem(pageKey) ?? "", 10);
+      // Ancien choix « grille » : on reprend la taille choisie dans le descriptif (grandes fiches par défaut).
+      const saved = v === "grille" ? (localStorage.getItem(GRID_KEY) === "vignettes" ? "vignettes" : "fiches") : v;
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (v === "grille" || v === "livre") setView(v);
+      if (saved === "livre" || saved === "fiches" || saved === "vignettes") setView(saved);
       if (Number.isFinite(p) && p > 0 && p < pages.length) setPageState(p);
     } catch {
       /* stockage indisponible : on part de la couverture */
@@ -1050,7 +1034,7 @@ export function ExerciseBible({ exercises, ficheBase, bible = "valkyria", counts
     },
     [pageKey]
   );
-  const choose = (v: "livre" | "grille") => {
+  const choose = (v: BibleView) => {
     setView(v);
     try {
       localStorage.setItem(VIEW_KEY, v);
@@ -1134,19 +1118,28 @@ export function ExerciseBible({ exercises, ficheBase, bible = "valkyria", counts
         )}
       </section>
 
-      <div className="xbk-tabs" role="tablist" aria-label="Affichage">
-        <button type="button" role="tab" aria-selected={view === "livre"} onClick={() => choose("livre")}>
-          <BookOpen size={16} strokeWidth={1.75} aria-hidden /> La Bible
-        </button>
-        <button type="button" role="tab" aria-selected={view === "grille"} onClick={() => choose("grille")}>
-          <LayoutGrid size={16} strokeWidth={1.75} aria-hidden /> Descriptif ({realCount})
-        </button>
+      <div className="xbk-modes-bar">
+        <div className="xbk-modes" role="group" aria-label="Affichage">
+          {VIEWS.map((v) => {
+            const Icon = v.icon;
+            return (
+              <button key={v.key} type="button" aria-pressed={view === v.key} aria-label={v.label} onClick={() => choose(v.key)}>
+                <Icon size={16} strokeWidth={1.75} aria-hidden />
+                <span className="xbk-mode-long">{v.label}</span>
+                <span className="xbk-mode-short" aria-hidden>
+                  {v.short}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <span className="xbk-muted">{realCount} exercice{realCount > 1 ? "s" : ""}</span>
       </div>
 
       {view === "livre" ? (
         <Book pages={pages} chapters={chapters} page={Math.min(page, pages.length - 1)} setPage={setPage} total={realCount} best={approvedCount} ficheBase={ficheBase} bible={bible} />
       ) : (
-        <Grid list={exercises} chapters={chapters} onOpen={setOpen} canMark={Boolean(ficheBase)} />
+        <Grid list={exercises} chapters={chapters} onOpen={setOpen} canMark={Boolean(ficheBase)} layout={view} />
       )}
         </>
       )}

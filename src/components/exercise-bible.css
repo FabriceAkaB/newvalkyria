@@ -57,15 +57,27 @@
 .xbk-turn { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--adm-border); background: var(--adm-surface); color: var(--adm-text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .xbk-turn:hover:not(:disabled) { background: var(--adm-hover); }
 .xbk-turn:disabled { opacity: 0.35; cursor: default; }
-.xbk-book { display: grid; grid-template-columns: minmax(0, 1fr); background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: 14px; box-shadow: var(--adm-shadow); overflow: hidden; touch-action: pan-y; animation: xbk-in-next 0.28s ease; }
-.xbk-book[data-dir="-1"] { animation-name: xbk-in-prev; }
+.xbk-book { display: grid; grid-template-columns: minmax(0, 1fr); background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: 14px; box-shadow: var(--adm-shadow); overflow: hidden; touch-action: pan-y; perspective: 2400px; }
 .xbk-book[data-double="true"] { grid-template-columns: repeat(2, minmax(0, 1fr)); height: min(80vh, 880px); }
 .xbk-book[data-double="true"] .xbk-page { overflow-y: auto; }
 .xbk-book[data-double="true"] .xbk-page + .xbk-page { border-left: 1px solid var(--adm-line); box-shadow: inset 14px 0 18px -16px var(--adm-text-3); }
 .xbk-book[data-double="true"][data-single-cover="true"] { grid-template-columns: minmax(0, 1fr); width: min(100%, 560px); justify-self: center; }
-@keyframes xbk-in-next { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
-@keyframes xbk-in-prev { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .xbk-book { animation: none; } }
+/* La page qui tourne (JP, 26 nov. 2026). Double page : vers l'avant, la feuille passe par-dessus la reliure et devient
+   la page de gauche ; vers l'arrière, elle devient la page de droite. Une page : la nouvelle arrive en pivotant sur la
+   reliure. L'autre page sort de l'ombre de la feuille. */
+.xbk-book .xbk-page { background: var(--adm-surface); backface-visibility: hidden; }
+.xbk-book[data-double="true"][data-dir="1"] .xbk-page:first-child:not(:last-child) { transform-origin: right center; animation: xbk-leaf-from-right 0.62s cubic-bezier(0.25, 0.75, 0.3, 1) both; z-index: 2; }
+.xbk-book[data-double="true"][data-dir="1"] .xbk-page:last-child:not(:first-child) { animation: xbk-leaf-shade 0.62s ease both; }
+.xbk-book[data-double="true"][data-dir="-1"] .xbk-page:last-child:not(:first-child) { transform-origin: left center; animation: xbk-leaf-from-left 0.62s cubic-bezier(0.25, 0.75, 0.3, 1) both; z-index: 2; }
+.xbk-book[data-double="true"][data-dir="-1"] .xbk-page:first-child:not(:last-child) { animation: xbk-leaf-shade 0.62s ease both; }
+.xbk-book[data-double="false"][data-dir="1"] .xbk-page, .xbk-book[data-single-cover="true"][data-dir="1"] .xbk-page { transform-origin: left center; animation: xbk-page-from-right 0.5s cubic-bezier(0.25, 0.75, 0.3, 1) both; }
+.xbk-book[data-double="false"][data-dir="-1"] .xbk-page, .xbk-book[data-single-cover="true"][data-dir="-1"] .xbk-page { transform-origin: right center; animation: xbk-page-from-left 0.5s cubic-bezier(0.25, 0.75, 0.3, 1) both; }
+@keyframes xbk-leaf-from-right { from { transform: rotateY(110deg); filter: brightness(0.82); } 55% { filter: brightness(0.92); } to { transform: none; filter: none; } }
+@keyframes xbk-leaf-from-left { from { transform: rotateY(-110deg); filter: brightness(0.82); } 55% { filter: brightness(0.92); } to { transform: none; filter: none; } }
+@keyframes xbk-leaf-shade { from { filter: brightness(0.86); } to { filter: none; } }
+@keyframes xbk-page-from-right { from { transform: rotateY(-75deg); opacity: 0.4; filter: brightness(0.85); } to { transform: none; opacity: 1; filter: none; } }
+@keyframes xbk-page-from-left { from { transform: rotateY(75deg); opacity: 0.4; filter: brightness(0.85); } to { transform: none; opacity: 1; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .xbk-book .xbk-page { animation: none !important; } }
 .xbk-page { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 520px; }
 .xbk-page-inner { flex: 1; padding: 28px 32px 16px; display: grid; align-content: start; gap: 14px; }
 .xbk-folio { margin: 0; padding: 8px 32px 16px; text-align: center; font-size: 0.78rem; color: var(--adm-text-3); font-variant-numeric: tabular-nums; }
@@ -279,3 +291,28 @@
 .xbk-links button:hover { border-color: var(--adm-accent); background: var(--adm-accent-soft); }
 .xbk-visual[data-kind="manquant"] { aspect-ratio: 3 / 1; }
 .xbk-missing-visual { white-space: nowrap; }
+
+/* Les 3 façons de lire une Bible : feuilleter comme un livre, grandes fiches, vignettes. */
+.xbk-modes-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.xbk-modes { display: inline-flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--adm-surface-2); max-width: 100%; }
+.xbk-modes button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 9px; background: transparent; color: var(--adm-text-2); font: inherit; font-size: 0.92rem; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.xbk-modes button:hover { color: var(--adm-text); background: var(--adm-hover); }
+.xbk-modes button[aria-pressed="true"] { background: var(--adm-surface); color: var(--adm-text); font-weight: 600; box-shadow: var(--adm-shadow); }
+.xbk-modes button[aria-pressed="true"] svg { color: var(--adm-accent); }
+.xbk-mode-short { display: none; }
+@media (max-width: 760px) {
+  .xbk-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
+  .xbk-modes button { padding: 0 6px; font-size: 0.86rem; gap: 6px; }
+  .xbk-mode-long { display: none; }
+  .xbk-mode-short { display: inline; }
+}
+/* Tablette en paysage (livre de 620 à 900 px) : les flèches passent sous le livre pour laisser toute la largeur aux 2 pages. */
+.xbk-book-wrap { container-type: inline-size; }
+@container (max-width: 900px) {
+  .xbk-stage { grid-template-columns: minmax(0, 1fr); }
+  .xbk-turn { display: none; }
+  .xbk-mobile-nav { display: flex; }
+  .xbk-book[data-double="true"] .xbk-page-inner { padding: 18px 18px 12px; }
+  .xbk-book[data-double="true"] .xbk-folio { padding: 6px 18px 12px; }
+  .xbk-book[data-double="true"] .xbk-sheet-title { font-size: 1.12rem; }
+}
