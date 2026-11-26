@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Printer } from "lucide-react";
+import { FolderOpen, Printer } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { EntityDocuments } from "@/components/admin-entity-documents";
@@ -14,8 +14,10 @@ import { CoachPracticeJournal } from "@/components/coach-practice-journal";
 import { CoachGuideCard, PracticeTimer } from "@/components/coach-guide";
 import { exerciseGuideFallback, setupForGroup } from "@/lib/practice-plan-view";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
-import { BallMasterySkipToggle } from "@/components/ball-mastery-skip-toggle";
+import { PlannedExercisesCard } from "@/components/planned-exercises-card";
 import { ballMasteryState, isBallMasteryBlock } from "@/lib/ball-mastery-skip";
+import { blockAnswer, blockTitle, plannedRequired, plannedSummary } from "@/lib/planned-exercises";
+import type { PlannedView } from "@/lib/planned-exercises-repo";
 import { observerOf } from "@/lib/gesture-scores";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { MatchPlayer } from "@/components/match-player";
@@ -274,6 +276,23 @@ function Avatar({ player, large = false }: { player: RosterPlayer; large?: boole
   return <div className={cls} aria-hidden>{`${player.firstName[0] ?? ""}${player.lastName[0] ?? ""}`.toUpperCase()}</div>;
 }
 
+/** Lien discret vers le dossier complet de la joueuse (nouvel onglet : l'évaluation en cours reste ouverte). */
+function DossierLink({ player }: { player: RosterPlayer }) {
+  return (
+    <a
+      href={`/entraineur/joueuses/${player.registrationId}`}
+      target="_blank"
+      rel="noopener"
+      aria-label={`Dossier de ${fullName(player)} (nouvel onglet)`}
+      title="Ouvrir son dossier dans un nouvel onglet"
+      onClick={(e) => e.stopPropagation()}
+      style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 4, minHeight: 32, padding: "0 8px", borderRadius: 8, fontSize: "0.8rem", fontWeight: 600, color: "var(--adm-text-2)", textDecoration: "none", border: "1px solid var(--adm-border)", background: "var(--adm-surface)" }}
+    >
+      <FolderOpen size={14} aria-hidden /> Dossier
+    </a>
+  );
+}
+
 /* ── Avant : la pratique du jour ─────────────────────────────────── */
 
 function PracticeOfTheDay({ activity, theme, blocks, exercises, players, seen, onSeen }: { activity: CoachActivity; theme: Props["theme"]; blocks: SessionBlock[]; exercises: Exercise[]; players: number; seen: string[]; onSeen: (key: string) => void }) {
@@ -498,6 +517,7 @@ function AttendanceStep({
                 <p className="coach-muted" style={{ margin: 0 }}>{p.isTrial ? "Essai aujourd'hui" : `Née ${p.birthYear ?? "—"}${p.advancedGroup ? " · avancé" : ""}`}</p>
               </div>
               {!current && <span className="coach-pill" data-tone="warn">À marquer</span>}
+              <DossierLink player={p} />
             </div>
             <div className="coach-seg" style={{ marginTop: 10 }}>
               {ATTENDANCE_OPTIONS.map((o) => (
@@ -589,7 +609,8 @@ function QuickEvaluation({
 
   return (
     <div className="coach-player">
-      <button type="button" onClick={onToggle} className="coach-player__head" style={{ width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", color: "inherit", font: "inherit" }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <button type="button" onClick={onToggle} className="coach-player__head" style={{ flex: 1, minWidth: 0, width: "100%", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", color: "inherit", font: "inherit" }}>
         <Avatar player={player} large={open} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <p className="coach-player__name">{fullName(player)}</p>
@@ -600,6 +621,8 @@ function QuickEvaluation({
         </div>
         <span className="coach-pill" data-tone={done || doneByOther ? "good" : "warn"}>{done || doneByOther ? "✓ Évaluée" : "À évaluer"}</span>
       </button>
+      <DossierLink player={player} />
+      </div>
 
       {open && (
         <div>
@@ -829,16 +852,18 @@ export function CoachActiviteDetail({
   };
   const read = practiceReadStatus(readItems, readSeen, readAt);
   const bmAllMoves = useMemo(() => ballMasteryMoves(sessionBlocks, initialExercises), [sessionBlocks, initialExercises]);
-  // « Ball mastery fait aujourd'hui ? Oui / Non » (JP, 25 nov. 2026) : une réponse pour toute la pratique, dans le rapport.
-  // « Non » = pas de gestes à noter pour aucune fille ; sans réponse, les gestes sont demandés comme avant.
-  const bmInitial = useMemo(() => {
+  // « Exercices prévus : faits ? » (JP, 26 nov. 2026) : Oui / Non pour chaque bloc du plan, une réponse partagée par
+  // tous les éducateurs (planned-exercises.ts). La ligne du ball mastery remplace « Ball mastery fait aujourd'hui ? » :
+  // tous ses blocs à « Non » = pas de gestes à noter pour aucune fille ; sans réponse, les gestes sont demandés comme avant.
+  const plannedInitial = useMemo<PlannedView>(() => {
     const typeOf = (id: string) => (initialExercises.find((e) => e.id === id) as (Exercise & { exercise_type?: string | null }) | undefined)?.exercise_type;
+    const titleOf = (id: string) => initialExercises.find((e) => e.id === id)?.title;
     const blocks = sessionBlocks as (SessionBlock & { not_done?: boolean | null; not_done_at?: string | null })[];
-    const state = ballMasteryState(blocks, typeOf);
-    const answered = blocks.some((b) => isBallMasteryBlock(b, typeOf) && b.not_done_at);
-    return { ...state, answer: state.skipped ? ("non" as const) : answered ? ("oui" as const) : null, byName: null, at: null };
+    const rows = blocks.map((b) => ({ id: b.id, order: b.block_order, title: blockTitle(b, titleOf), blockType: b.block_type, minutes: b.duration_minutes ?? null, ballMastery: isBallMasteryBlock(b, typeOf), answer: blockAnswer(b), byName: null, at: b.not_done_at ?? null }));
+    return { blocks: rows, summary: plannedSummary(blocks), ballMasterySkipped: ballMasteryState(blocks, typeOf).skipped };
   }, [sessionBlocks, initialExercises]);
-  const [bmSkipped, setBmSkipped] = useState(bmInitial.skipped);
+  const [planned, setPlanned] = useState<PlannedView>(plannedInitial);
+  const bmSkipped = planned.ballMasterySkipped;
   const bmMoves = bmSkipped ? [] : bmAllMoves;
   // Guide de l'éducateur et minuteur : les blocs du plan dans l'ordre, avec leur durée.
   const guideBlocks = useMemo(
@@ -924,8 +949,10 @@ export function CoachActiviteDetail({
   // Règle du 19 nov. 2026 : sondage du jour de chaque fille et retour de l'éducateur (2 bons coups, 2 à améliorer) aussi.
   const strict = activityDay >= REPORT_RULE_V2_START;
   const surveyDone = participants.length > 0 && routineDone === participants.length;
+  // Depuis le 26 nov. 2026 : chaque exercice prévu a sa réponse Oui / Non (pas exigé pour les pratiques d'avant).
+  const plannedNeeded = reportNeeded && isPractice && plannedRequired(activityDay, planned.blocks.length);
   const reportChecks = reportNeeded
-    ? [marked === roster.length, participants.length > 0 && evaluated === participants.length, ...(strict ? [surveyDone, ...(hasReportHour(coachRole) ? [debriefDone] : [])] : [])]
+    ? [marked === roster.length, participants.length > 0 && evaluated === participants.length, ...(strict ? [surveyDone, ...(hasReportHour(coachRole) ? [debriefDone] : [])] : []), ...(plannedNeeded ? [planned.summary.complete] : [])]
     : [];
   const reportComplete = !reportNeeded || reportChecks.every(Boolean);
   // Depuis le 19 nov. 2026 : terrain payé dès la présence ; le coach gagne 1 h de rapport quand tout est fait.
@@ -953,6 +980,7 @@ export function CoachActiviteDetail({
     const items: { label: string; done: boolean; step: Step }[] = [
       ...(read.hasContent ? [{ label: "Pratique lue et confirmée", done: read.confirmed, step: "avant" as Step }] : []),
       ...(reportNeeded ? [{ label: `Présences des joueuses · ${marked}/${roster.length}`, done: marked === roster.length, step: "pendant" as Step }] : []),
+      ...(plannedNeeded ? [{ label: `Exercices prévus : faits ? · ${planned.summary.answered}/${planned.summary.total}`, done: planned.summary.complete, step: "apres" as Step }] : []),
       ...(reportNeeded ? [{ label: `Évaluation de chaque fille · ${evaluated}/${participants.length}`, done: participants.length > 0 && evaluated === participants.length, step: "apres" as Step }] : []),
       ...(reportNeeded ? [{ label: `Sondage du jour · ${routineDone}/${participants.length}`, done: surveyDone, step: "apres" as Step }] : []),
       ...(exerciseRating && exerciseRating.total > 0 ? [{ label: `Note des exercices (dans l'heure) · ${exerciseRating.rated}/${exerciseRating.total}`, done: exerciseRating.rated === exerciseRating.total, step: "apres" as Step }] : []),
@@ -1052,6 +1080,7 @@ export function CoachActiviteDetail({
       <ul className="coach-checklist">
         {!guest && <li data-done={String(presence.confirmed)}>Ma présence (mets-toi « présent » dans MonClubSportif)</li>}
         {reportNeeded && <li data-done={String(marked === roster.length)}>Présences des joueuses · {marked}/{roster.length}</li>}
+        {plannedNeeded && <li data-done={String(planned.summary.complete)}>Exercices prévus répondus (Oui ou Non) · {planned.summary.answered}/{planned.summary.total}</li>}
         {reportNeeded && (
           <li data-done={String(participants.length > 0 && evaluated === participants.length)}>
             Évaluation de chaque fille présente{strict ? ` : 3 notes${bmSkipped ? "" : ", chaque geste du ball mastery"}, observation de ${NOTE_MIN_WORDS} mots ou plus` : ""} · {evaluated}/{participants.length}
@@ -1080,6 +1109,19 @@ export function CoachActiviteDetail({
     </div>
   );
 
+  // « Exercices prévus : faits ? » au début du rapport (vue par étapes et tout-en-un).
+  const plannedCard = reportNeeded && isPractice && planned.blocks.length > 0 ? (
+    <PlannedExercisesCard
+      activityId={activity.id}
+      initial={planned}
+      statusUrl={`/api/coach/activities/${activity.id}/exercices-prevus`}
+      saveUrl={`/api/coach/activities/${activity.id}/exercices-prevus`}
+      canAnswer={activityDay <= new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" })}
+      required={plannedNeeded}
+      onChange={setPlanned}
+    />
+  ) : null;
+
   const evaluationBlock = reportNeeded && participants.length > 0 && (
     <section style={{ marginBottom: 16 }}>
       <h2 className="coach-h2">Évaluation rapide · {evaluated}/{participants.length}</h2>
@@ -1087,14 +1129,8 @@ export function CoachActiviteDetail({
         Moins de 2 minutes par fille : 3 notes de 1 à 5{bmMoves.length ? ", chaque geste du ball mastery de 1 à 10" : ""}, et une phrase sur ce que tu as vu (écrite pendant la pratique ou en regardant la vidéo).
         {observed.size ? ` Tes ${observed.size} joueuses à observer sont en premier.` : ""}
       </p>
-      {bmInitial.planned ? (
-        <BallMasterySkipToggle
-          initial={bmInitial}
-          title={String(activity.activity_date).slice(0, 10) < new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" }) ? "Ball mastery fait ce jour-là ?" : "Ball mastery fait aujourd'hui ?"}
-          statusUrl={`/api/coach/activities/${activity.id}/ball-mastery`}
-          saveUrl={`/api/coach/activities/${activity.id}/ball-mastery`}
-          onChange={setBmSkipped}
-        />
+      {bmSkipped ? (
+        <p className="coach-muted" style={{ margin: "0 0 12px" }}>Ball mastery pas fait ce jour-là (« Exercices prévus : faits ? ») : pas de gestes à noter.</p>
       ) : null}
       {[...participants].sort((a, b) => Number(!observed.has(a.registrationId)) - Number(!observed.has(b.registrationId))).map((p) => (
         <QuickEvaluation
@@ -1216,6 +1252,7 @@ export function CoachActiviteDetail({
 
               <section className="coach-split__right" aria-label="Évaluer et faire mon rapport">
                 {suiviCard}
+                {plannedCard}
 
                 <div id="te-pendant" className="coach-split__anchor">
                   <h2 className="coach-h2">Les filles du jour · {marked}/{roster.length} présences</h2>
@@ -1394,6 +1431,7 @@ export function CoachActiviteDetail({
               {videosBlock(videos.length > 1 ? "Les vidéos de cette activité" : "La vidéo de cette activité")}
               </aside>
               <div className="coach-aside-layout__main">
+              {plannedCard}
 
               {reportNeeded && marked < roster.length && (
                 <div className="coach-card" style={{ marginBottom: 16 }}>

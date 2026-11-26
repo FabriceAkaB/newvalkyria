@@ -1,4 +1,5 @@
 import { stripSkippedGestures } from "@/lib/ball-mastery-skip-repo";
+import { getPlannedSummaries } from "@/lib/planned-exercises-repo";
 import { methodWindow } from "@/lib/coach-access-core";
 import { cleanNote, computeReport, feedbackByWeek, hasReportHour, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, watchReasons, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
 import type { CoachActivity, CoachAssignment } from "@/lib/coaches-repo";
@@ -696,6 +697,8 @@ export async function getActivityReports(activities: ReportActivity[]): Promise<
     db().from("practice_debriefs").select("activity_id, coach_id, went_well, to_improve").in("activity_id", ids)
   ]);
   if (e1 || e2) throw new Error((e1 ?? e2).message);
+  // « Exercices prévus : faits ? » (compte à partir du 26 nov. 2026).
+  const planned = await getPlannedSummaries(ids).catch(() => new Map<string, { total: number; answered: number }>());
   for (const a of concerned) {
     const roster = rosterForActivity(a, slots, regs);
     out.set(
@@ -705,7 +708,8 @@ export async function getActivityReports(activities: ReportActivity[]): Promise<
         roster: roster.map((p) => ({ registrationId: p.registrationId, name: `${p.firstName} ${p.lastName}`.trim() })),
         attendance: ((att ?? []) as any[]).filter((r) => r.activity_id === a.id),
         evaluations: ((evals ?? []) as any[]).filter((r) => r.activity_id === a.id),
-        debriefs: ((debriefs ?? []) as any[]).filter((r) => r.activity_id === a.id).map((r) => ({ coachId: r.coach_id, wentWell: r.went_well, toImprove: r.to_improve }))
+        debriefs: ((debriefs ?? []) as any[]).filter((r) => r.activity_id === a.id).map((r) => ({ coachId: r.coach_id, wentWell: r.went_well, toImprove: r.to_improve })),
+        planned: planned.get(a.id)
       })
     );
   }

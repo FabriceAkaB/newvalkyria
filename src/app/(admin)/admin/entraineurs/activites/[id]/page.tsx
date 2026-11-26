@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { AdminCoachActiviteDetail } from "@/components/admin-coach-activite-detail";
-import { BallMasterySkipToggle } from "@/components/ball-mastery-skip-toggle";
-import { getBallMasteryStatus } from "@/lib/ball-mastery-skip-repo";
+import { PlannedExercisesCard } from "@/components/planned-exercises-card";
+import { getPlannedExercises } from "@/lib/planned-exercises-repo";
 import { requireAdmin } from "@/lib/admin-auth";
 import { allInOneHref } from "@/lib/admin-my-practices";
 import { getPracticeReads } from "@/lib/coach-portal-repo";
@@ -44,7 +44,8 @@ export default async function AdminCoachActiviteDetailPage({ params }: { params:
   const reads = isMatch ? [] : await getPracticeReads([id]).catch(() => []);
   const decks = ((await getDocumentsForEntity("coach_activity", id).catch(() => [])) as any[]).filter((d) => d.category === "Pratique").map((d) => ({ id: d.id as string, fileName: d.file_name as string }));
   const debriefs = isMatch ? [] : await getDebriefs([id]).catch(() => []);
-  const ballMastery = isMatch ? null : await getBallMasteryStatus(id).catch(() => null);
+  const planned = isMatch ? null : await getPlannedExercises(id).catch(() => null);
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
   const practiceReads = Object.fromEntries(reads.map((r) => [r.coachId, { label: r.label, confirmed: r.status.confirmed }]));
 
   return (
@@ -55,10 +56,19 @@ export default async function AdminCoachActiviteDetailPage({ params }: { params:
           <p style={{ margin: 0, color: "var(--adm-text)" }}>Tu étais coach à cette pratique ? Regarde-la, évalue les filles et remplis ton rapport (sondage, retour 2 + 2) sur un seul écran de l&apos;espace coach.</p>
           <a href={allInOneHref(id)} className="admin-btn-primary" style={{ textDecoration: "none" }}>Regarder, évaluer et faire mon rapport</a>
         </div>
-        {ballMastery?.planned ? (
+        {planned?.blocks.length ? (
           <div style={{ marginTop: 12 }}>
-            {/* « Ball mastery fait ce jour-là ? » : la réponse des éducateurs, modifiable par JP, aussi pour les pratiques passées. */}
-            <BallMasterySkipToggle initial={ballMastery} title="Ball mastery fait ce jour-là ?" saveUrl="/api/admin/coaching/ball-mastery" saveBody={{ activityId: id }} />
+            {/* « Exercices prévus : faits ? » : la réponse des éducateurs (ball mastery compris), modifiable par JP, aussi pour les pratiques passées. */}
+            <PlannedExercisesCard
+              activityId={id}
+              initial={planned}
+              className="admin-stat-card"
+              buttonClassName="admin-btn-ghost"
+              statusUrl={`/api/admin/coaching/exercices-prevus?activite=${id}`}
+              saveUrl="/api/admin/coaching/exercices-prevus"
+              saveBody={{ activityId: id }}
+              canAnswer={String(activity.activity_date).slice(0, 10) <= today}
+            />
           </div>
         ) : null}
       </div>

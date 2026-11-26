@@ -4,7 +4,8 @@ import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getCoachActivityAccess } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { APPROVAL_SCORE, parseScores } from "@/lib/exercise-bank";
-import { getActivityExercisesToRate, saveRating, setExerciseNotDone } from "@/lib/exercises-repo";
+import { getActivityExercisesToRate, saveRating } from "@/lib/exercises-repo";
+import { setExerciseDoneInActivity } from "@/lib/planned-exercises-repo";
 import { jsonError } from "@/lib/http";
 
 const todayToronto = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
@@ -53,7 +54,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   return NextResponse.json({ ok: true, total: parsed.total, bank: after?.bank ?? null });
 }
 
-/** « On ne l'a pas fait » : l'exercice prévu n'a pas été joué (ou on annule : il a été fait). */
+/** « On ne l'a pas fait » : l'exercice prévu n'a pas été joué (ou on annule : il a été fait). Même état que
+ *  « Exercices prévus : faits ? » du rapport (Non / Oui), partagé par tous les éducateurs (planned-exercises.ts). */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const coachId = await getCurrentCoachId();
   if (!coachId) return jsonError("Non autorisé", 401);
@@ -64,6 +66,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!body?.exerciseId || typeof body.notDone !== "boolean") return jsonError("Paramètres invalides", 400);
   const used = await getActivityExercisesToRate(id, coachId);
   if (!used.some((e) => e.exerciseId === body.exerciseId)) return jsonError("Cet exercice n'est pas dans le plan de cette séance.", 400);
-  await setExerciseNotDone(id, body.exerciseId, body.notDone, coachId, typeof body.note === "string" ? body.note.trim() : null);
+  if (String(entry.activity.activity_date).slice(0, 10) > todayToronto()) return jsonError("On répond le jour de la pratique ou après.", 400);
+  await setExerciseDoneInActivity(id, body.exerciseId, !body.notDone, coachId, typeof body.note === "string" ? body.note.trim() : null);
   return NextResponse.json({ ok: true });
 }

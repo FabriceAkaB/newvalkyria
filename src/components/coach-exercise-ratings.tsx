@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { APPROVAL_SCORE, RATING_CRITERIA, SCORE_LABELS, STATUS_LABEL, STATUS_TONE, type RatingCriterion, type RatingScores } from "@/lib/exercise-bank";
 import type { ExerciseToRate } from "@/lib/exercises-repo";
+import { announcePlannedChange, PLANNED_EVENT } from "@/lib/planned-exercises";
 
 /** Rapport des 24 heures : l'éducateur note sur 10 chaque exercice de la banque utilisé dans la séance
  *  (5 critères à 0, 1 ou 2). La note décide du statut de l'exercice dans la banque Valkyria. */
@@ -24,8 +25,18 @@ export function CoachExerciseRatings({ activityId, onProgress }: { activityId: s
         if (data.canRate && first) setOpenId(first.exerciseId);
       })
       .catch(() => setItems([]));
+    // « Exercices prévus : faits ? » répondu ailleurs dans le rapport : on relit « pas fait » (même état partagé).
+    const onEvent = (e: Event) => {
+      if ((e as CustomEvent<{ activityId?: string }>).detail?.activityId !== activityId) return;
+      fetch(`/api/coach/activities/${activityId}/exercise-ratings`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => alive && data?.exercises && setItems(data.exercises))
+        .catch(() => null);
+    };
+    window.addEventListener(PLANNED_EVENT, onEvent);
     return () => {
       alive = false;
+      window.removeEventListener(PLANNED_EVENT, onEvent);
     };
   }, [activityId]);
 
@@ -87,6 +98,7 @@ function ExerciseRow({ item, activityId, canRate, open, onToggle, onSaved }: { i
     setSaving(false);
     if (!res?.ok) return setError("Pas enregistré. Réessaie.");
     onSaved({ ...item, notDone });
+    announcePlannedChange(activityId);
   };
 
   const save = async () => {

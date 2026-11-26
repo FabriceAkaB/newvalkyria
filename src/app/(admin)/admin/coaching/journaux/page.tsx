@@ -6,6 +6,8 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { getCoaches } from "@/lib/coaches-repo";
 import { JOURNAL_FIELDS, EXERCISE_OUTCOMES } from "@/lib/practice-journal";
 import { listJournals } from "@/lib/practice-debriefs-repo";
+import { journalOutcome, PLANNED_EXERCISES_RULE_START, type BlockAnswer } from "@/lib/planned-exercises";
+import { listPlannedPractices } from "@/lib/planned-exercises-repo";
 
 export const metadata = { title: "Rapports journaliers — Coaching", robots: "noindex" };
 export const dynamic = "force-dynamic";
@@ -23,7 +25,10 @@ export default async function JournalsPage({ searchParams }: { searchParams: Pro
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
   const to = sp.au && ISO.test(sp.au) ? sp.au : today;
   const from = sp.du && ISO.test(sp.du) ? sp.du : addDays(to, -14);
-  const [rows, coaches] = await Promise.all([listJournals({ from, to, coachId: sp.coach || null, group: sp.groupe || null }), getCoaches()]);
+  const [rows, coaches, plannedAll] = await Promise.all([listJournals({ from, to, coachId: sp.coach || null, group: sp.groupe || null }), getCoaches(), listPlannedPractices({ from, to }).catch(() => [])]);
+  // « Exercices prévus : faits ? » : la réponse partagée de chaque bloc, par pratique (JP, 26 nov. 2026).
+  const planned = plannedAll.filter((p) => !sp.groupe || p.group === sp.groupe);
+  const answersOf = new Map(plannedAll.map((p) => [p.activityId, new Map<string, BlockAnswer>(p.view.blocks.map((b) => [b.id, b.answer]))]));
   const all = rows;
   const groups = [...new Set((await listJournals({ from, to })).map((r) => r.group))].sort();
   const scaleFields = JOURNAL_FIELDS.filter((f) => f.kind === "scale");
@@ -60,11 +65,51 @@ export default async function JournalsPage({ searchParams }: { searchParams: Pro
             <button type="submit" className="admin-btn-primary">Afficher</button>
           </form>
 
+          <section className="mda-card-flush">
+            <div className="mda-card-head">
+              <div>
+                <h2 className="mda-h2" style={{ textTransform: "none", margin: 0 }}>Exercices prévus : faits ou non, par pratique</h2>
+                <p style={{ margin: "2px 0 0", fontSize: "0.85rem", color: "var(--adm-text-2)" }}>
+                  La réponse des éducateurs dans leur rapport (une par bloc du plan, la même pour tous). Obligatoire dans le rapport depuis le {fr(PLANNED_EXERCISES_RULE_START)}.
+                </p>
+              </div>
+            </div>
+            <div style={{ padding: "6px 20px 14px", display: "grid" }}>
+              {planned.length === 0 ? (
+                <p style={{ margin: "8px 0 0", color: "var(--adm-text-2)" }}>Aucune pratique avec un plan pour cette période.</p>
+              ) : (
+                planned.map((p, i) => (
+                  <div key={p.activityId} style={{ display: "grid", gap: 6, padding: "10px 0", borderTop: i ? "1px solid var(--adm-border)" : "none" }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap" }}>
+                      <Link href={`/admin/entraineurs/activites/${p.activityId}`} style={{ color: "var(--adm-text)", fontWeight: 600, textDecoration: "none" }}>
+                        {p.group} <span style={{ fontWeight: 400, color: "var(--adm-text-2)", textTransform: "capitalize" }}>· {fr(p.date)} · {p.start.replace(":", " h ")}</span>
+                      </Link>
+                      <Pill tone={p.view.summary.complete ? (p.view.summary.notDone ? "warn" : "good") : p.date >= PLANNED_EXERCISES_RULE_START && p.date < today ? "bad" : undefined}>
+                        {p.view.summary.done} fait{p.view.summary.done > 1 ? "s" : ""} · {p.view.summary.notDone} pas fait{p.view.summary.notDone > 1 ? "s" : ""}
+                        {p.view.summary.complete ? "" : ` · ${p.view.summary.total - p.view.summary.answered} sans réponse`}
+                      </Pill>
+                    </div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {p.view.blocks.map((b) => (
+                        <Pill key={b.id} tone={b.answer === "oui" ? "good" : b.answer === "non" ? "warn" : undefined}>
+                          {b.answer === "oui" ? "Fait" : b.answer === "non" ? "Pas fait" : "Sans réponse"} : {b.title}
+                        </Pill>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
           {all.length === 0 ? (
             <div className="mda-card"><p style={{ margin: 0, color: "var(--adm-text-2)" }}>Aucun rapport pour cette période. Les coachs le remplissent dans leur portail, étapes « Pendant » et « Après » de chaque pratique.</p></div>
           ) : (
             all.map((r) => {
-              const ex = Object.values(r.journal.exercices ?? {});
+              const shared = answersOf.get(r.activityId);
+              const ex = [...new Set([...Object.keys(r.journal.exercices ?? {}), ...(shared?.keys() ?? [])])]
+                .map((id) => journalOutcome(shared?.get(id) ?? null, r.journal.exercices?.[id]))
+                .filter(Boolean);
               return (
                 <section key={r.id} className="mda-card-flush">
                   <div className="mda-card-head">

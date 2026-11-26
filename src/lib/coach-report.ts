@@ -1,3 +1,5 @@
+import { plannedMissingLabel, plannedRequired } from "@/lib/planned-exercises";
+
 /** Rapport de l'éducateur après chaque activité (Mandalart P1.2.08, P1.4.09, P1.5.06, P8.3.04) :
  *  règles pures, partagées entre le portail entraîneur, la paie et « Aujourd'hui ».
  *  - Évaluation rapide d'une joueuse : 3 échelles de 1 à 5 + une observation d'au moins 25 mots (30 caractères avant le 19 nov. 2026).
@@ -26,9 +28,11 @@ export const NOTE_MIN_CHARS = 30;
  *  1. présences de toutes les joueuses ;
  *  2. évaluation de chaque fille présente : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10 et une
  *     observation d'au moins NOTE_MIN_WORDS mots (son état aujourd'hui, comment elle progresse, un exemple vu) ;
- *     « Ball mastery fait aujourd'hui ? » = Non (ball-mastery-skip.ts) : pas de gestes, le rapport est complet sans eux ;
+ *     ball mastery à « Non » dans « Exercices prévus : faits ? » (ball-mastery-skip.ts) : pas de gestes, le rapport est complet sans eux ;
  *  3. sondage du jour : plaisir et fatigue de chaque fille présente ;
- *  4. retour du coach : 2 choses qui ont bien marché et 2 choses à améliorer. */
+ *  4. retour du coach : 2 choses qui ont bien marché et 2 choses à améliorer ;
+ *  5. à partir du 26 nov. 2026 : « Exercices prévus : faits ? », Oui ou Non pour chaque bloc du plan (planned-exercises.ts),
+ *     une réponse partagée par les éducateurs de la pratique ; les pratiques d'avant n'en ont pas besoin. */
 export const REPORT_RULE_V2_START = "2026-11-19";
 
 /** Paie du 27 nov. 2026 (période du 8 au 21 nov.) : les pratiques du 8 au 18 nov. comptent comme si les rapports
@@ -232,6 +236,8 @@ export interface ReportStatus {
   strict: boolean;
   /** Éducateurs dont le retour est complet (2 choses qui ont bien marché, 2 à améliorer). */
   debriefDone: string[];
+  /** Exercices prévus sans réponse Oui / Non (compte dans `complete` à partir du 26 nov. 2026, planned-exercises.ts). */
+  plannedMissing?: number;
 }
 
 /** Programmes de garçons : pas de rapport ni d'heure de rapport (le rapport est pour les programmes de filles). */
@@ -247,6 +253,8 @@ export function computeReport(input: {
   attendance: ReportAttendance[];
   evaluations: ReportEvaluation[];
   debriefs?: { coachId: string; wentWell: string | null; toImprove: string | null }[];
+  /** « Exercices prévus : faits ? » : blocs du plan et blocs répondus (Oui ou Non). */
+  planned?: { total: number; answered: number };
 }): ReportStatus {
   const required = reportRequired(input.activity, input.roster.length);
   const strict = strictRule(input.activity.activity_date ? String(input.activity.activity_date) : null);
@@ -267,6 +275,7 @@ export function computeReport(input: {
     if (!evaluated.has(p.registrationId)) evaluationsMissing.push(p.name);
     if (a.practice_rating == null || a.fatigue == null) feedbackMissing.push(p.name);
   }
+  const plannedMissing = input.planned && plannedRequired(input.activity.activity_date ? String(input.activity.activity_date) : null, input.planned.total) ? Math.max(0, input.planned.total - input.planned.answered) : 0;
   return {
     required,
     expected: input.roster.length,
@@ -274,9 +283,10 @@ export function computeReport(input: {
     attendanceMissing,
     evaluationsMissing,
     feedbackMissing,
-    complete: !required || (attendanceMissing.length === 0 && evaluationsMissing.length === 0 && (!strict || feedbackMissing.length === 0)),
+    complete: !required || (attendanceMissing.length === 0 && evaluationsMissing.length === 0 && (!strict || feedbackMissing.length === 0) && plannedMissing === 0),
     strict,
-    debriefDone: (input.debriefs ?? []).filter(isDebriefComplete).map((d) => d.coachId)
+    debriefDone: (input.debriefs ?? []).filter(isDebriefComplete).map((d) => d.coachId),
+    plannedMissing
   };
 }
 
@@ -286,7 +296,7 @@ export type PayHold = "presence" | "rapport";
 
 export const PAY_HOLD_LABEL: Record<PayHold, string> = {
   presence: "Présence pas confirmée dans MonClubSportif",
-  rapport: "Rapport pas fini (présences, évaluations, sondage du jour ou retour 2 + 2)"
+  rapport: "Rapport pas fini (présences, évaluations, sondage du jour, exercices prévus ou retour 2 + 2)"
 };
 
 /** Raison pour laquelle les heures de terrain d'une assignation ne comptent pas encore, ou null si elles comptent.
@@ -347,6 +357,8 @@ export function reportMissing(report: ReportStatus | null | undefined, coachId?:
   if (report.attendanceMissing.length) out.push(n(report.attendanceMissing.length, "présence à marquer", "présences à marquer"));
   if (report.evaluationsMissing.length) out.push(n(report.evaluationsMissing.length, "évaluation à faire", "évaluations à faire"));
   if (report.strict && report.feedbackMissing.length) out.push(n(report.feedbackMissing.length, "fille sans sondage du jour", "filles sans sondage du jour"));
+  const planned = plannedMissingLabel(report.plannedMissing ?? 0);
+  if (planned) out.push(planned);
   if (report.strict && coachId && !report.debriefDone.includes(coachId)) out.push("ton retour : 2 choses qui ont bien marché et 2 à améliorer");
   return out;
 }
