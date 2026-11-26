@@ -41,7 +41,7 @@ export function CoachSessionGuard() {
 
   if (!expired) return null;
   return (
-    <div role="alert" style={{ position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 50, maxWidth: 640, margin: "0 auto", background: "var(--adm-surface)", border: "1px solid var(--adm-warn)", boxShadow: "var(--adm-shadow)", borderRadius: 12, padding: "14px 16px", display: "grid", gap: 10, color: "var(--adm-text)" }}>
+    <div role="alert" style={{ position: "fixed", left: 16, right: 16, bottom: "calc(16px + var(--coach-tabbar-space, 0px))", zIndex: 50, maxWidth: 640, margin: "0 auto", background: "var(--adm-surface)", border: "1px solid var(--adm-warn)", boxShadow: "var(--adm-shadow)", borderRadius: 12, padding: "14px 16px", display: "grid", gap: 10, color: "var(--adm-text)" }}>
       <p style={{ margin: 0, fontWeight: 600 }}>Ta connexion au portail a expiré : rien n&apos;a été enregistré.</p>
       <p style={{ margin: 0, color: "var(--adm-text-2)", fontSize: "0.9rem" }}>
         Ce que tu as écrit est encore à l&apos;écran, ne ferme pas cette page. Touche « Me reconnecter » (un nouvel onglet s&apos;ouvre), connecte-toi, puis reviens ici et touche Enregistrer de nouveau.

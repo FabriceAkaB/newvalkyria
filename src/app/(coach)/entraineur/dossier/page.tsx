@@ -23,7 +23,7 @@ const num = (v: number | null) => (v === null ? "—" : v.toLocaleString("fr-CA"
 export default async function CoachDossierPage() {
   const coachId = await requireCoach();
   const db = getSupabaseAdminClient() as any;
-  const since = new Date(Date.now() - 60 * 86_400_000).toISOString().slice(0, 10);
+  const since = new Date(new Date().getTime() - 60 * 86_400_000).toISOString().slice(0, 10);
   const [coach, { data: row }, { data: staff }, { data: certs }, observations, satisfaction, { data: assigns }] = await Promise.all([
     getCoach(coachId),
     db.from("coaches").select("pro_goals, development_plan, hired_on").eq("id", coachId).maybeSingle(),
@@ -44,7 +44,7 @@ export default async function CoachDossierPage() {
   const obsAvg = obsTotals.length ? Math.round((obsTotals.reduce((a, b) => a + b, 0) / obsTotals.length) * 10) / 10 : null;
   const latest = observations[0] ?? null;
   const today = new Date().toISOString().slice(0, 10);
-  const soon = new Date(Date.now() + 60 * 86_400_000).toISOString().slice(0, 10);
+  const soon = new Date(new Date().getTime() + 60 * 86_400_000).toISOString().slice(0, 10);
 
   return (
     <>
@@ -76,6 +76,8 @@ export default async function CoachDossierPage() {
             </div>
           </div>
 
+          {/* Ordinateur : les fiches du dossier en deux colonnes. */}
+          <div className="coach-grid2 coach-stack-grid" style={{ marginTop: 16, alignItems: "start" }}>
           <a href="/api/coach/contrat" target="_blank" rel="noreferrer" className="coach-card" style={{ display: "block", marginTop: 16, textDecoration: "none", color: "inherit" }}>
             <p className="coach-card__label">Mon contrat</p>
             <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>Ouvrir mon contrat signé (PDF) →</p>
@@ -152,6 +154,7 @@ export default async function CoachDossierPage() {
           <div className="coach-card" style={{ marginTop: 16 }}>
             <p className="coach-card__label">Mon mot de passe</p>
             <CoachChangePasswordForm />
+          </div>
           </div>
         </div>
       </div>

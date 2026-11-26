@@ -22,7 +22,7 @@ export default async function CoachExercisesPage() {
       <CoachTopbar coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"} />
       <div className="admin-content">
         <div className="coach-page coach-page--wide" style={{ maxWidth: 1280 }}>
-          <h1 className="coach-title">La Bible New Valkyria</h1>
+          <h1 className="coach-title coach-title--xl">La Bible New Valkyria</h1>
           <p className="coach-sub" style={{ marginBottom: 16 }}>Tous les exercices de l&apos;académie, classés par thème : feuillette le livre ou parcours le descriptif.</p>
           <ExerciseBible exercises={exercises} />
           <div className="mda" style={{ marginTop: 24 }}><ModelPractices practices={models} /></div>

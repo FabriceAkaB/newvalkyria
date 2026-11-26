@@ -49,6 +49,8 @@ interface Props {
   coachId?: string;
   /** Pratiques du jour de l'Académie, pour toute l'équipe (même sans y être assignée). */
   teamToday?: { id: string; startTime: string; endTime: string; title: string; location: string | null; mine: boolean; blocks: number; theme?: string | null }[];
+  /** Faux pour un assistant : pas de rapport à remplir, seulement sa présence. */
+  reportsRequired?: boolean;
 }
 
 function FeedbackCard({ f }: { f: CoachFeedback }) {
@@ -130,7 +132,7 @@ function TodayCard({ p }: { p: NonNullable<Props["teamToday"]>[number] }) {
   );
 }
 
-export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFeedback, coachId, teamToday = [] }: Props) {
+export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFeedback, coachId, teamToday = [], reportsRequired = true }: Props) {
   const next = upcoming[0];
   // Aujourd'hui : les pratiques de l'Académie (toute l'équipe) et mes autres activités du jour.
   const cards = [
@@ -149,7 +151,7 @@ export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFee
           </header>
 
           <section style={{ marginTop: 28 }}>
-            <h2 className="coach-h2">Aujourd&apos;hui</h2>
+            <h2 className="coach-h2">Pratiques du jour</h2>
             {cards.length ? (
               <div className="coach-today">
                 {cards.map((p) => (
@@ -170,7 +172,7 @@ export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFee
 
           <div className="coach-cols">
             <section>
-              <h2 className="coach-h2">À venir</h2>
+              <h2 className="coach-h2">Mes pratiques à venir</h2>
               {upcoming.length === 0 ? (
                 <p className="coach-muted">Aucune activité à venir.</p>
               ) : (
@@ -199,8 +201,11 @@ export function CoachDashboard({ coachName, today, upcoming, toComplete, lastFee
                 <details className="coach-fold">
                   <summary>
                     <span>
-                      <strong>{toComplete.length} rapport{toComplete.length > 1 ? "s" : ""} à compléter</strong>
-                      <small>Tes heures comptent quand ta présence et ton rapport sont faits.</small>
+                      <strong>
+                        {toComplete.length} {reportsRequired ? "rapport" : "présence"}
+                        {toComplete.length > 1 ? "s" : ""} à compléter
+                      </strong>
+                      <small>{reportsRequired ? "Tes heures comptent quand ta présence et ton rapport sont faits." : "Tes heures comptent quand ta présence est confirmée."}</small>
                     </span>
                     <span className="coach-pill" data-tone="warn">Voir</span>
                   </summary>

@@ -141,7 +141,7 @@ export default async function CoachActiviteDetailPage({ params, searchParams }: 
       initialReadSeen={(assignment?.practice_read_items ?? []) as string[]}
       initialReadAt={assignment?.practice_read_at ?? null}
       helped={helped}
-      pickupCard={<CoachPickupCard activityId={id} pickups={pickups} isToday={activityDate === today} />}
+      pickupCard={<CoachPickupCard key="colis" activityId={id} pickups={pickups} isToday={activityDate === today} />}
       view={view}
     />
   );

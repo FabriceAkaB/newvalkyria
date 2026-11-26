@@ -20,7 +20,7 @@ export default async function CoachTrainingPage() {
         <div className="admin-section coach-page">
           <p className="coach-eyebrow">Ma formation</p>
           <h1 className="coach-title coach-title--xl">{p.certified ? "Prête à diriger un groupe ✓" : `${p.validated} module${p.validated > 1 ? "s" : ""} validé${p.validated > 1 ? "s" : ""} sur ${p.total}`}</h1>
-          <p className="coach-sub">
+          <p className="coach-sub coach-prose">
             Le parcours pour coacher à la façon Valkyria. Les modules s&apos;ouvrent un à un : lis chaque module ouvert, confirme que tu l&apos;as compris, puis JP le valide après t&apos;avoir observée sur le terrain. Quand tout est validé, tu peux diriger un groupe seule.{open.length ? "" : " Aucun module n'est encore ouvert : ils arrivent bientôt."}
           </p>
           <div className="coach-card" style={{ marginTop: 16 }}>
@@ -29,7 +29,7 @@ export default async function CoachTrainingPage() {
             </div>
             <p className="coach-muted" style={{ margin: "8px 0 0" }}>{p.read} lu{p.read > 1 ? "s" : ""} · {p.validated} validé{p.validated > 1 ? "s" : ""}{p.next ? ` · prochain : ${p.next.title}` : ""}</p>
           </div>
-          <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
+          <div className="coach-grid2" style={{ marginTop: 16 }}>
             {p.states.map((s, i) => (
               <TrainingModuleCard key={s.module.key} module={s.module} state={s.state} index={i} open={open.includes(s.module.key)} />
             ))}

@@ -19,9 +19,11 @@ export default async function CoachMethodPage() {
       <CoachTopbar coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"} />
       <div className="admin-content">
         <div className="coach-page">
-          <h1 className="coach-title">La méthode Valkyria</h1>
+          <h1 className="coach-title coach-title--xl">La méthode Valkyria</h1>
           <p className="coach-sub">Comment se déroule chaque séance, ce qu&apos;on défend et les gestes à enseigner à chaque niveau.</p>
 
+          {/* Ordinateur : l'obligatoire et nos principes côte à côte ; téléphone : l'un sous l'autre. */}
+          <div className="coach-grid2" style={{ gap: 24 }}>
           {components.items.length > 0 && (
             <section id="obligatoire" style={{ marginTop: 24, scrollMarginTop: 80 }}>
               <h2 className="coach-h2">Obligatoire dans chaque entraînement</h2>
@@ -37,23 +39,6 @@ export default async function CoachMethodPage() {
               </div>
             </section>
           )}
-
-          <section id="seance" style={{ marginTop: 24, scrollMarginTop: 80 }}>
-            <h2 className="coach-h2">Une séance · {total} min</h2>
-            {structure.blocks.map((b, i) => (
-              <div key={i} className="coach-block">
-                <div className="coach-block__head">
-                  <p className="coach-block__title">{b.label}</p>
-                  <span className="coach-block__time">{b.minutes} min</span>
-                </div>
-                <dl>
-                  {b.objective && <div><dt>Objectif</dt><dd>{b.objective}</dd></div>}
-                  {b.rules && <div><dt>Règles</dt><dd>{b.rules}</dd></div>}
-                </dl>
-              </div>
-            ))}
-          </section>
-
           <section id="principes" style={{ marginTop: 24, scrollMarginTop: 80 }}>
             <h2 className="coach-h2">Nos principes</h2>
             <div className="coach-card">
@@ -66,6 +51,25 @@ export default async function CoachMethodPage() {
               </ul>
             </div>
           </section>
+          </div>
+
+          <section id="seance" style={{ marginTop: 24, scrollMarginTop: 80 }}>
+            <h2 className="coach-h2">Une séance · {total} min</h2>
+            <div className="coach-grid3">
+            {structure.blocks.map((b, i) => (
+              <div key={i} className="coach-block">
+                <div className="coach-block__head">
+                  <p className="coach-block__title">{b.label}</p>
+                  <span className="coach-block__time">{b.minutes} min</span>
+                </div>
+                <dl>
+                  {b.objective && <div><dt>Objectif</dt><dd>{b.objective}</dd></div>}
+                  {b.rules && <div><dt>Règles</dt><dd>{b.rules}</dd></div>}
+                </dl>
+              </div>
+            ))}
+            </div>
+          </section>
 
           <section id="gestes" style={{ marginTop: 24, scrollMarginTop: 80 }}>
             <h2 className="coach-h2">Les gestes du passeport</h2>
@@ -76,6 +80,7 @@ export default async function CoachMethodPage() {
               return (
                 <div key={level ?? "aucun"} style={{ marginBottom: 16 }}>
                   <p className="coach-card__label">{level ? `Niveau ${LEVEL_LABEL[level]}` : "Autres gestes"}</p>
+                  <div className="coach-grid2">
                   {list.map((g) => (
                     <div key={g.id} className="coach-block">
                       <div className="coach-block__head">
@@ -95,6 +100,7 @@ export default async function CoachMethodPage() {
                       {g.video_url && <a href={g.video_url} target="_blank" rel="noreferrer" className="coach-secondary" style={{ marginTop: 12 }}>Voir la démonstration ↗</a>}
                     </div>
                   ))}
+                  </div>
                 </div>
               );
             })}

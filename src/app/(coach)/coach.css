@@ -305,3 +305,103 @@
   }
 }
 @media (min-width: 1500px) { .coach-split { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); } }
+
+/* ══════════════════════════════════════════════════════════════════════
+   L'Espace Technique en vraie application (JP, 25 nov. 2026 : « natif, téléphone et ordinateur,
+   mais surtout optimisé pour l'ordinateur »).
+   Ordinateur (≥ 900 px) : menu latéral fixe en 3 groupes avec icônes, le contenu prend la largeur
+   (1120 px), grilles en 2 ou 3 colonnes. Téléphone : barre du haut compacte, 4 onglets + « Plus » en bas.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Une seule largeur de page pour tout le portail (fini la colonne de téléphone sur grand écran). */
+.admin-shell .coach-page,
+.admin-shell .coach-page.mda,
+.admin-shell .coach-page.coach-page--wide { max-width: 1120px; margin-left: auto; margin-right: auto; }
+.admin-shell .coach-page.coach-page--full { max-width: 1440px; }
+/* Lecture longue (méthode, formation, idées) : le texte garde une longueur de ligne confortable. */
+.coach-prose { max-width: 72ch; }
+
+/* Grilles de contenu : une colonne au téléphone, deux ou trois sur ordinateur. */
+.coach-grid2, .coach-grid3 { display: grid; gap: 12px; }
+.coach-grid2 > .coach-card + .coach-card, .coach-grid3 > .coach-card + .coach-card,
+.coach-grid2 > .coach-block + .coach-block, .coach-grid3 > .coach-block + .coach-block { margin-top: 0; }
+@media (min-width: 1100px) {
+  .coach-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .coach-grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 760px) and (max-width: 1099px) { .coach-grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Contenu principal + colonne latérale (paie, idées, étape « Après » d'une pratique). La colonne latérale vient
+   en premier dans le code : au téléphone elle reste en haut, sur ordinateur elle passe à droite. */
+.coach-aside-layout { display: grid; gap: 16px; align-items: start; }
+.coach-aside-layout > * { min-width: 0; }
+@media (min-width: 1100px) {
+  .coach-aside-layout { grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; }
+  .coach-aside-layout > .coach-aside-layout__side { grid-column: 2; grid-row: 1; position: sticky; top: 76px; max-height: calc(100vh - 92px); overflow-y: auto; scrollbar-width: thin; }
+  .coach-aside-layout > .coach-aside-layout__main { grid-column: 1; grid-row: 1; }
+  .coach-aside-layout--static > .coach-aside-layout__side { position: static; max-height: none; overflow: visible; }
+}
+
+/* En-tête de page commun : sur-titre, titre, phrase. */
+.coach-page > header, .coach-page-head { margin-bottom: 4px; }
+
+/* ── Menu ── */
+.admin-shell .coach-sidebar .admin-sidebar-link { min-height: 36px; }
+.admin-shell .coach-sidebar .admin-sidebar-link svg { color: var(--adm-text-3); opacity: 1; }
+.admin-shell .coach-sidebar .admin-sidebar-link[data-active="true"] svg { color: var(--adm-on-accent); }
+.admin-shell .coach-sidebar .admin-sidebar-group { margin-bottom: 0.6rem; }
+.admin-shell .coach-sidebar .admin-sidebar-group-head { padding-top: 0.6rem; }
+.coach-logout { display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-transform: none; letter-spacing: normal; font-size: 0.8rem; min-height: 36px; }
+.coach-sidebar__mobile-theme, .coach-sidebar__close { display: none; }
+.coach-tabbar { display: none; }
+
+@media (max-width: 899px) {
+  .admin-shell:has(.coach-tabbar) { --coach-tabbar-space: calc(64px + env(safe-area-inset-bottom)); }
+  /* Barre du haut compacte : la marque, le mode jour / nuit ; le menu complet s'ouvre par « Plus ». */
+  .admin-shell .coach-sidebar .admin-sidebar-brand { padding: 10px 16px; min-height: 56px; }
+  .admin-shell .coach-sidebar .admin-sidebar-menu-btn { display: none; }
+  .admin-shell .coach-sidebar .coach-sidebar__mobile-theme { display: block; margin-left: auto; }
+  .admin-shell .coach-sidebar .adm-theme[data-compact] button { min-height: 36px; min-width: 40px; }
+  .admin-shell .coach-sidebar[data-menu-open="true"] {
+    position: fixed; inset: 0 0 var(--coach-tabbar-space) 0; z-index: 44; overflow-y: auto; overscroll-behavior: contain;
+    display: flex; flex-direction: column;
+  }
+  .admin-shell .coach-sidebar[data-menu-open="true"] .coach-sidebar__mobile-theme { display: none; }
+  .admin-shell .coach-sidebar[data-menu-open="true"] .coach-sidebar__close {
+    display: inline-flex; align-items: center; justify-content: center; margin-left: auto; width: 44px; height: 44px; padding: 0; border-radius: 999px;
+  }
+  .admin-shell .coach-sidebar[data-menu-open="true"] .admin-sidebar-nav { flex: 1; }
+  .admin-shell .coach-sidebar .admin-sidebar-link { min-height: 48px; font-size: 0.95rem; }
+
+  .coach-tabbar {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+    background: var(--adm-surface); border-top: 1px solid var(--adm-line);
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+  }
+  .coach-tabbar a, .coach-tabbar button {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-height: 56px; padding: 0 2px; border: 0; border-radius: 10px; background: none;
+    color: var(--adm-text-3); font: inherit; font-size: 0.7rem; font-weight: 500; text-decoration: none; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .coach-tabbar span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .coach-tabbar [data-active="true"] { color: var(--adm-accent); font-weight: 600; }
+  .coach-tabbar [data-active="true"] svg { background: var(--adm-accent-soft); border-radius: 999px; padding: 2px 12px; box-sizing: content-box; }
+  .admin-shell .admin-content:has(.coach-page),
+  .admin-shell:has(.coach-tabbar) .admin-content { padding-bottom: calc(var(--coach-tabbar-space) + 32px); }
+}
+@media print { .coach-tabbar, .coach-sidebar { display: none !important; } }
+/* Fiches empilées (marge du haut écrite dans la page) rangées en grille : la grille gère l'espace. */
+.coach-stack-grid > * { margin-top: 0 !important; }
+/* Présences d'une pratique : deux colonnes de joueuses sur ordinateur. */
+.coach-roster-grid { display: grid; gap: 8px; }
+.coach-roster-grid > .coach-player + .coach-player { margin-top: 0; }
+@media (min-width: 1100px) { .coach-roster-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Colonne latérale d'une étape : les cartes s'empilent sans double marge. */
+.coach-aside-layout__side { display: grid; gap: 12px; align-content: start; }
+.coach-aside-layout__side > * { margin-bottom: 0 !important; margin-top: 0 !important; }
+.coach-aside-layout__side:empty { display: none; }
+@media (min-width: 1100px) { .coach-aside-layout:has(> .coach-aside-layout__side:empty) { grid-template-columns: minmax(0, 1fr); } }
+/* Vue tout-en-un : la colonne de droite est étroite, une joueuse par ligne. */
+.coach-split .coach-roster-grid { grid-template-columns: minmax(0, 1fr); }

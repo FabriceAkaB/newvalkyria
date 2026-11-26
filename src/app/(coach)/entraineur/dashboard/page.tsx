@@ -69,7 +69,8 @@ export default async function CoachDashboardPage() {
     .map((a) => {
       const report = reports.get(a.activity.id);
       const missing: string[] = [];
-      missing.push(...reportMissing(report, hasReportHour(coach?.role) ? a.assignment.coach_id : undefined));
+      // Les assistants n'ont pas de rapport à remplir (même règle que la page de la pratique) : seulement leur présence.
+      if (hasReportHour(coach?.role)) missing.push(...reportMissing(report, a.assignment.coach_id));
       if (!a.assignment.confirmed) missing.push("confirmer ta présence");
       return { activity: view.find((v) => v.id === a.activity.id)!, missing };
     })
@@ -100,6 +101,7 @@ export default async function CoachDashboardPage() {
       today={view.filter((a) => a.date === today).sort((a, b) => a.startTime.localeCompare(b.startTime))}
       upcoming={view.filter((a) => a.date > today).sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`))}
       toComplete={toComplete}
+      reportsRequired={hasReportHour(coach?.role)}
       lastFeedback={
         observations[0]
           ? { date: observations[0].observed_on, total: observations[0].total, strengths: observations[0].strengths, toImprove: observations[0].to_improve, nextFocus: observations[0].next_focus, videoUrl: observations[0].video_url }

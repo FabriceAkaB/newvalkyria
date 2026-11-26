@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Printer } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { EntityDocuments } from "@/components/admin-entity-documents";
@@ -484,6 +485,8 @@ function AttendanceStep({
         )}
         {error && <p className="coach-error">{error}</p>}
       </div>
+      {/* Ordinateur : les joueuses sur deux colonnes ; téléphone : une seule. */}
+      <div className="coach-roster-grid">
       {roster.map((p) => {
         const current = attendance[p.registrationId];
         return (
@@ -513,6 +516,7 @@ function AttendanceStep({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
@@ -939,7 +943,7 @@ export function CoachActiviteDetail({
   const steps: { key: Step; label: string; detail: string }[] = [
     { key: "avant", label: "Avant", detail: activity.activity_type === "Match" || !read.hasContent || guest ? "La pratique" : read.confirmed ? "Pratique lue ✓" : `À lire ${read.seen}/${read.total}` },
     { key: "pendant", label: "Pendant", detail: roster.length ? `Présences ${marked}/${roster.length}` : "Présences" },
-    { key: "apres", label: "Après", detail: `Rapport ${afterDone}/${afterTotal}` }
+    { key: "apres", label: "Après", detail: `${isCoach ? "Rapport" : "Présence"} ${afterDone}/${afterTotal}` }
   ];
 
   /* ── Morceaux réutilisés par la vue par étapes et par la vue « tout-en-un » (même comportement) ── */
@@ -1044,13 +1048,13 @@ export function CoachActiviteDetail({
 
   const checklistBlock = (
     <div className="coach-card" style={{ marginBottom: 16 }}>
-      <p className="coach-card__label">{strict && isCoach && reportNeeded ? "Ton rapport · 1 heure payée en plus par jour quand il est fini" : "Ton rapport"}</p>
+      <p className="coach-card__label">{strict && isCoach && reportNeeded ? "Ton rapport · 1 heure payée en plus par jour quand il est fini" : isCoach || guest || !strict ? "Ton rapport" : "Tes heures"}</p>
       <ul className="coach-checklist">
         {!guest && <li data-done={String(presence.confirmed)}>Ma présence (mets-toi « présent » dans MonClubSportif)</li>}
         {reportNeeded && <li data-done={String(marked === roster.length)}>Présences des joueuses · {marked}/{roster.length}</li>}
         {reportNeeded && (
           <li data-done={String(participants.length > 0 && evaluated === participants.length)}>
-            Évaluation de chaque fille présente{strict ? ` : 3 notes, chaque geste du ball mastery, observation de ${NOTE_MIN_WORDS} mots ou plus` : ""} · {evaluated}/{participants.length}
+            Évaluation de chaque fille présente{strict ? ` : 3 notes${bmSkipped ? "" : ", chaque geste du ball mastery"}, observation de ${NOTE_MIN_WORDS} mots ou plus` : ""} · {evaluated}/{participants.length}
           </li>
         )}
         {reportNeeded && <li data-done={String(surveyDone)}>Sondage du jour de chaque fille · {routineDone}/{participants.length}</li>}
@@ -1059,6 +1063,8 @@ export function CoachActiviteDetail({
       <p className="coach-sub" style={{ marginTop: 12, color: hoursCount ? "var(--adm-good)" : undefined }}>
         {guest
           ? "Accès d'équipe : tu n'es pas assignée à cette pratique dans le site. Ta présence et tes heures arrivent de MonClubSportif."
+          : !isCoach && strict
+            ? "Tes heures de terrain sont payées dès ta présence dans MonClubSportif. Pas de rapport à remplir pour toi : il est fait par les coachs."
           : strict && reportNeeded
             ? isCoach
               ? presence.confirmed && reportComplete
@@ -1084,6 +1090,7 @@ export function CoachActiviteDetail({
       {bmInitial.planned ? (
         <BallMasterySkipToggle
           initial={bmInitial}
+          title={String(activity.activity_date).slice(0, 10) < new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" }) ? "Ball mastery fait ce jour-là ?" : "Ball mastery fait aujourd'hui ?"}
           statusUrl={`/api/coach/activities/${activity.id}/ball-mastery`}
           saveUrl={`/api/coach/activities/${activity.id}/ball-mastery`}
           onChange={setBmSkipped}
@@ -1181,8 +1188,8 @@ export function CoachActiviteDetail({
             <nav className="coach-steps coach-split__jump" aria-label="Aller à">
               {[
                 { key: "avant" as Step, label: "La pratique", detail: `${sessionBlocks.length} bloc${sessionBlocks.length > 1 ? "s" : ""}` },
-                { key: "pendant" as Step, label: "Les filles", detail: `Évaluées ${evaluated}/${participants.length}` },
-                { key: "apres" as Step, label: "Mon rapport", detail: `${afterDone}/${afterTotal}` }
+                { key: "pendant" as Step, label: "Les filles", detail: reportNeeded ? `Évaluées ${evaluated}/${participants.length}` : `Présences ${marked}/${roster.length}` },
+                { key: "apres" as Step, label: isCoach ? "Mon rapport" : "Ma présence", detail: `${afterDone}/${afterTotal}` }
               ].map((s) => (
                 <button key={s.key} type="button" data-active="false" onClick={() => goTo(s.key)}>
                   {s.label}
@@ -1231,7 +1238,7 @@ export function CoachActiviteDetail({
                 </div>
 
                 <div id="te-apres" className="coach-split__anchor">
-                  <h2 className="coach-h2">Mon rapport</h2>
+                  <h2 className="coach-h2">{isCoach ? "Mon rapport" : "Ma présence et mes heures"}</h2>
                   {presenceBlock}
                   {checklistBlock}
                   {helpedBlock}
@@ -1307,7 +1314,7 @@ export function CoachActiviteDetail({
                         <p className="coach-card__label">La pratique sur papier</p>
                         <p className="coach-sub" style={{ margin: 0 }}>Imprime-la et garde-la sur toi : montage du terrain, variantes et progressions de chaque exercice.</p>
                       </div>
-                      <Link href={`/entraineur/activites/${activity.id}/imprimer`} className="coach-primary" style={{ textDecoration: "none" }}>🖨 Imprimer la pratique</Link>
+                      <Link href={`/entraineur/activites/${activity.id}/imprimer`} className="coach-primary" style={{ textDecoration: "none", width: "auto", padding: "0 20px", marginTop: 0, gap: 8 }}><Printer size={17} strokeWidth={1.75} aria-hidden /> Imprimer la pratique</Link>
                     </div>
                   )}
                   {practicePlan}
@@ -1355,9 +1362,13 @@ export function CoachActiviteDetail({
           )}
 
           {step === "pendant" && (
-            <>
-              {practiceTimer}
-              {activity.activity_type !== "Match" ? (videos.length > 0 ? videosBlock("La pratique en vidéo") : noVideoCard) : null}
+            <div className="coach-aside-layout">
+              {/* Ordinateur : le minuteur et la vidéo à droite, les présences et les équipes au centre. */}
+              <aside className="coach-aside-layout__side">
+                {practiceTimer}
+                {activity.activity_type !== "Match" ? (videos.length > 0 ? videosBlock("La pratique en vidéo") : noVideoCard) : null}
+              </aside>
+              <div className="coach-aside-layout__main">
               {attendanceStep}
               {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
                 <CoachTeamsCard
@@ -1369,15 +1380,20 @@ export function CoachActiviteDetail({
               {isPractice && !guest && isCoach ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
               {activity.activity_type !== "Match" && <CoachIncidentCard activityId={activity.id} />}
               <button type="button" className="coach-primary" style={{ marginTop: 12 }} onClick={() => goTo("apres")}>Fin de la pratique : le rapport</button>
-            </>
+              </div>
+            </div>
           )}
 
           {step === "apres" && (
-            <>
+            <div className="coach-aside-layout">
+              {/* Ordinateur : ma présence, la liste du rapport et la vidéo restent à droite pendant qu'on évalue au centre. */}
+              <aside className="coach-aside-layout__side">
               {presenceBlock}
+              {checklistBlock}
               {helpedBlock}
               {videosBlock(videos.length > 1 ? "Les vidéos de cette activité" : "La vidéo de cette activité")}
-              {checklistBlock}
+              </aside>
+              <div className="coach-aside-layout__main">
 
               {reportNeeded && marked < roster.length && (
                 <div className="coach-card" style={{ marginBottom: 16 }}>
@@ -1398,8 +1414,8 @@ export function CoachActiviteDetail({
                   {debriefCard}
                 </div>
               ) : null}
-
-            </>
+              </div>
+            </div>
           )}
         </div>
       </div>

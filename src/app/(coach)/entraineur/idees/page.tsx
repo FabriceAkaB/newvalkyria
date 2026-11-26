@@ -19,14 +19,19 @@ export default async function CoachIdeasPage() {
         <div className="admin-section coach-page">
           <p className="coach-eyebrow">Boîte à suggestions</p>
           <h1 className="coach-title coach-title--xl">Ton idée compte</h1>
-          <p className="coach-sub">
+          <p className="coach-sub coach-prose">
             Nous voulons améliorer l&apos;expérience de nos coachs et de nos athlètes. Une idée pour les pratiques, l&apos;organisation, le portail, le matériel, ce qui t&apos;aiderait ou ce qui te dérange : écris-la ici. JP lit chaque suggestion et te répond dans cette page.
           </p>
-          <div className="coach-card" style={{ marginTop: 16 }}>
-            <IdeaForm askIdentity={false} />
+          {/* Ordinateur : écrire à gauche, mes suggestions et les réponses de JP à droite. */}
+          <div className="coach-grid2" style={{ marginTop: 16, gap: 24, alignItems: "start" }}>
+            <div className="coach-card">
+              <IdeaForm askIdentity={false} />
+            </div>
+            <section>
+              <h2 className="coach-h2">Mes suggestions</h2>
+              <MyIdeas ideas={ideas} />
+            </section>
           </div>
-          <h2 className="coach-h2" style={{ marginTop: 24 }}>Mes suggestions</h2>
-          <MyIdeas ideas={ideas} />
         </div>
       </div>
     </>

@@ -49,7 +49,10 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
 
           {!offset ? <PayBankTiles bank={bank} /> : null}
 
-          <p className="coach-card__label" style={{ margin: "20px 0 0" }}>Le détail de cette paie</p>
+          {/* Ordinateur : le détail de la paie à gauche, comment elle se calcule à droite. */}
+          <div className="coach-aside-layout coach-aside-layout--static" style={{ marginTop: 20 }}>
+          <div className="coach-aside-layout__main">
+          <p className="coach-card__label" style={{ margin: 0 }}>Le détail de cette paie</p>
           <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
             {days.map((d) => (
               <div key={d} className="coach-card" style={{ padding: "12px 16px" }}>
@@ -75,7 +78,9 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
             <Link href={`/entraineur/paie?avant=${offset + 1}`}>← Période d&apos;avant</Link>
             {offset ? <Link href={offset > 1 ? `/entraineur/paie?avant=${offset - 1}` : "/entraineur/paie"}>Période suivante →</Link> : null}
           </p>
-          <div className="coach-card" style={{ marginTop: 16, display: "grid", gap: 14 }}>
+          </div>
+          <div className="coach-aside-layout__side">
+          <div className="coach-card" style={{ display: "grid", gap: 14 }}>
             <p className="coach-card__label" style={{ margin: 0 }}>Comment tes heures sont payées</p>
 
             <div>
@@ -127,6 +132,8 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
             </div>
 
             <p className="coach-muted" style={{ fontSize: "0.8rem", margin: 0 }}>Règle en place depuis le 19 novembre 2026 (pour la paie du 27 novembre, l&apos;heure de rapport des pratiques du 8 au 18 novembre est déjà comptée).</p>
+          </div>
+          </div>
           </div>
         </div>
       </div>
