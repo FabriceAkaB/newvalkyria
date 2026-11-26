@@ -367,6 +367,8 @@ export const ADMIN_NAV: AdminNavSection[] = [
         description: "Les exercices Valkyria, leur fiche, la note des éducateurs et leur statut (à tester, approuvé, à changer).",
         tabs: [
           { href: "/admin/exercices", label: "Exercices", adminOnly: true },
+          { href: "/admin/exercices/diapos", label: "Ajouter des diapos", adminOnly: true },
+          { href: "/admin/exercices/bible", label: "La Bible (éducateurs)", adminOnly: true },
           { href: "/admin/exercices/galerie", label: "Galerie en diapos", adminOnly: true }
         ]
       }

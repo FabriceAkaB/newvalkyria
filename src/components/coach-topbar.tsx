@@ -14,7 +14,7 @@ const LINKS = [
   { href: "/entraineur/dashboard", label: "Mes pratiques" },
   { href: "/entraineur/sondage", label: "Sondage des jeunes" },
   { href: "/entraineur/joueuses", label: "Joueuses" },
-  { href: "/entraineur/exercices", label: "Exercices" },
+  { href: "/entraineur/exercices", label: "La Bible des exercices" },
   { href: "/entraineur/laboratoire", label: "Laboratoire" },
   { href: "/entraineur/methode", label: "Méthode" },
   { href: "/entraineur/videos", label: "Vidéos" },
