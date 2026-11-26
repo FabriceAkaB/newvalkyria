@@ -26,15 +26,15 @@ export const METRIC_DEFS: Record<Metric, { label: string; help: string }> = {
   trialReels: { label: "Reels d'essai", help: "Reels d'essai publiés (calendrier de contenu)" }
 };
 
-/** Objectifs par semaine, mois par mois (tableau de la section 2 du plan). Les essais faits n'ont pas de cible, les reels
- *  d'essai commencent en janvier. */
+/** Objectifs par semaine, mois par mois (tableau de la section 2 du plan). Les essais faits n'ont pas de cible.
+ *  Publications et reels d'essai : volume Hormozi (JP, 26 nov. 2026), 21 publications et 17 tests de crochets par semaine. */
 export const WEEKLY_GOALS: Record<string, GoalSet> = {
-  "2026-12": { prospects: 10, trialsBooked: 4, trialsDone: null, inscriptions: 2, reviews: 5, posts: 7, trialReels: null },
-  "2027-01": { prospects: 25, trialsBooked: 8, trialsDone: null, inscriptions: 4, reviews: 5, posts: 7, trialReels: 3 },
-  "2027-02": { prospects: 40, trialsBooked: 12, trialsDone: null, inscriptions: 6, reviews: 5, posts: 7, trialReels: 5 }
+  "2026-12": { prospects: 10, trialsBooked: 4, trialsDone: null, inscriptions: 2, reviews: 5, posts: 21, trialReels: 17 },
+  "2027-01": { prospects: 25, trialsBooked: 8, trialsDone: null, inscriptions: 4, reviews: 5, posts: 21, trialReels: 17 },
+  "2027-02": { prospects: 40, trialsBooked: 12, trialsDone: null, inscriptions: 6, reviews: 5, posts: 21, trialReels: 17 }
 };
-/** Trimestre au 28 février (≈ du plan ; reels : 3 par semaine en janvier + 5 en février). */
-export const QUARTER_GOALS: GoalSet = { prospects: 300, trialsBooked: 100, trialsDone: null, inscriptions: 50, reviews: 60, posts: 90, trialReels: 33 };
+/** Trimestre au 28 février (≈ du plan ; publications et tests de crochets : calendrier de contenu du 27 nov., content-plan-90.ts). */
+export const QUARTER_GOALS: GoalSet = { prospects: 300, trialsBooked: 100, trialsDone: null, inscriptions: 50, reviews: 60, posts: 282, trialReels: 230 };
 
 /* ── Dates (AAAA-MM-JJ, semaines du lundi au dimanche) ── */
 

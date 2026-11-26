@@ -15,8 +15,8 @@ describe("objectifs du plan", () => {
   });
 
   it("mois : cible de la semaine × jours ÷ 7", () => {
-    expect(monthlyGoals("2026-12")).toMatchObject({ prospects: 44, trialsBooked: 18, inscriptions: 9, posts: 31, trialsDone: null });
-    expect(monthlyGoals("2027-02")).toMatchObject({ trialsBooked: 48, trialReels: 20 });
+    expect(monthlyGoals("2026-12")).toMatchObject({ prospects: 44, trialsBooked: 18, inscriptions: 9, posts: 93, trialsDone: null });
+    expect(monthlyGoals("2027-02")).toMatchObject({ trialsBooked: 48, trialReels: 68 });
     expect(monthlyGoals("2026-11")).toBeNull();
   });
 
