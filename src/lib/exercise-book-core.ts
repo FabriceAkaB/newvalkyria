@@ -17,8 +17,13 @@ export interface BookDiagram {
 /** Un exercice tel que le livre et la grille le montrent (sérialisable, envoyé au navigateur). */
 export interface BookExercise {
   id: string;
-  /** « exercice » de la banque, ou « geste » de la bibliothèque de la méthode (Bible du ball mastery). */
-  kind: "exercice" | "geste";
+  /** « exercice » de la banque, « geste » de la bibliothèque de la méthode (Bible du ball mastery), ou jour d'un
+   *  programme qui n'est pas encore dans la banque (« manquant » : une place visible, rien d'inventé). */
+  kind: "exercice" | "geste" | "manquant";
+  /** Jour dans un programme (« Ball mastery Maestro 2.0, jour 3 : … ») : les jours se suivent dans l'ordre. */
+  day: number | null;
+  /** Routine → ses gestes dans la bibliothèque ; geste → les routines où il est travaillé. */
+  links: { id: string; title: string }[];
   /** Geste dont la fiche n'est pas encore validée par JP. */
   draft: boolean;
   title: string;
@@ -139,6 +144,8 @@ export function toBookExercise(e: BookSource): BookExercise {
     id: e.id,
     kind: "exercice",
     draft: false,
+    day: null,
+    links: [],
     title: e.title,
     status: e.bank.status,
     approved: e.bank.status === "approuve",
@@ -244,6 +251,7 @@ const passportRank = (e: BookExercise) => (e.kind === "geste" && e.level ? PASSP
  *  (gestes), les approuvés, la note, le titre. */
 export function compareInChapter(a: BookExercise, b: BookExercise): number {
   return (
+    (a.day !== null && b.day !== null ? a.day - b.day : 0) ||
     (TYPE_RANK.get(a.typeKey ?? "") ?? 99) - (TYPE_RANK.get(b.typeKey ?? "") ?? 99) ||
     Number(b.jpReference) - Number(a.jpReference) ||
     passportRank(a) - passportRank(b) ||
@@ -366,11 +374,41 @@ export function matchesGrid(e: BookExercise, f: { q?: string; chapter?: string; 
 
 export const ROUTINES_CHAPTER = "Routines";
 
-/** Ordre des chapitres d'une Bible. */
-export function bibleChapterOrder(bible: BibleKey): readonly string[] {
+export const PROGRAM_PREFIX = "Programme ";
+/** Le programme qu'on suit en premier dans la Bible du ball mastery (JP, 26 nov. 2026). */
+export const FIRST_PROGRAM = "Maestro 2.0";
+
+/** Ordre des chapitres d'une Bible. Ball mastery : les programmes (Maestro 2.0 d'abord), les autres routines, puis les gestes. */
+export function bibleChapterOrder(bible: BibleKey, list: Pick<BookExercise, "chapter">[] = []): readonly string[] {
   if (bible === "psychomotricite") return PSYCHOMOTOR_CATEGORIES;
-  if (bible === "ball-mastery") return [ROUTINES_CHAPTER, ...GESTURE_FAMILIES.map((f) => f.label)];
+  if (bible === "ball-mastery") {
+    const first = `${PROGRAM_PREFIX}${FIRST_PROGRAM}`;
+    const programs = [...new Set([first, ...list.map((e) => e.chapter).filter((c) => c.startsWith(PROGRAM_PREFIX))])].sort((a, b) => Number(b === first) - Number(a === first) || a.localeCompare(b, "fr"));
+    return [...programs, ROUTINES_CHAPTER, ...GESTURE_FAMILIES.map((f) => f.label)];
+  }
   return EXERCISE_CATEGORIES;
+}
+
+/** « Ball mastery Maestro 2.0, jour 3 : Two Cones Vertical » → programme « Maestro 2.0 », jour 3. */
+export function routineProgram(title: string): { program: string; day: number } | null {
+  const m = String(title ?? "").match(/^\s*ball mastery\s+(.+?),\s*jour\s+(\d+)\b/i);
+  return m ? { program: m[1].trim(), day: parseInt(m[2], 10) } : null;
+}
+
+const moveKey = (s: string) => titleKey(s.replace(/\s+pied\s+(droit|gauche)\s*$/i, ""));
+
+/** Les gestes d'une routine, dans l'ordre : les lignes « 1. Right Foot Weave : … » du déroulement (même lecture que
+ *  l'évaluation des joueuses), sans « pied droit / pied gauche » ni l'échauffement. */
+export function routineMoves(instructions: string | null): string[] {
+  const out: string[] = [];
+  for (const line of String(instructions ?? "").split("\n")) {
+    const m = line.match(/^\s*\d+[.)]\s*([^:]{3,60}?)\s*:/);
+    if (!m) continue;
+    const name = m[1].trim().replace(/\s+pied\s+(droit|gauche)\s*$/i, "");
+    if (/^warm ?up$/i.test(name) || out.some((o) => moveKey(o) === moveKey(name))) continue;
+    out.push(name);
+  }
+  return out;
 }
 
 /** Un geste de la bibliothèque de la méthode, comme une page de la Bible du ball mastery : exécution, 3 points clés,
@@ -382,6 +420,8 @@ export function gestureToBook(g: Gesture): BookExercise {
     id: `geste-${g.id}`,
     kind: "geste",
     draft: !g.validated_at,
+    day: null,
+    links: [],
     title: g.name,
     status: "a-tester",
     approved: false,
@@ -422,6 +462,40 @@ export function gestureToBook(g: Gesture): BookExercise {
 export function bibleExercises(entries: BookSource[], bible: BibleKey, gestures: Gesture[] = []): BookExercise[] {
   const list = bookExercises(entries.filter((e) => bibleKey(e.bible) === bible));
   if (bible !== "ball-mastery") return list;
-  const routines = list.map((e) => ({ ...e, chapter: ROUTINES_CHAPTER, versions: e.versions.map((v) => ({ ...v, chapter: ROUTINES_CHAPTER })) }));
-  return [...routines, ...gestures.filter((g) => g.active).map(gestureToBook)];
+  const moves = gestures.filter((g) => g.active).map(gestureToBook);
+  const byKey = new Map(moves.map((g) => [moveKey(g.title), g]));
+  const days = new Map<string, Set<number>>();
+  const routines = list.map((e) => {
+    const p = routineProgram(e.title);
+    const chapter = p ? `${PROGRAM_PREFIX}${p.program}` : ROUTINES_CHAPTER;
+    if (p) days.set(p.program, (days.get(p.program) ?? new Set()).add(p.day));
+    const links = routineMoves(e.instructions)
+      .map((name) => byKey.get(moveKey(name)))
+      .filter((g): g is BookExercise => Boolean(g))
+      .map((g) => ({ id: g.id, title: g.title }));
+    return { ...e, chapter, day: p?.day ?? null, links, versions: e.versions.map((v) => ({ ...v, chapter })) };
+  });
+  // Geste → les jours de programme (et routines) où il est travaillé.
+  for (const r of routines) for (const l of r.links) byKey.get(moveKey(l.title))?.links.push({ id: r.id, title: r.title });
+  // Un jour qui manque dans un programme garde sa place, sans contenu inventé.
+  const missing: BookExercise[] = [];
+  if (!days.has(FIRST_PROGRAM)) days.set(FIRST_PROGRAM, new Set());
+  for (const [program, set] of days) {
+    for (let d = 1; d <= Math.max(1, ...set); d++) {
+      if (set.has(d)) continue;
+      missing.push({
+        ...gestureToBook({ id: "", name: "", family: "", passport_level: null, execution: null, key_points: [], common_mistakes: null, video_url: null, progression: {}, sort_order: 0, active: true, validated_at: null }),
+        id: `manquant-${titleKey(program).replace(/\s+/g, "-")}-${d}`,
+        kind: "manquant",
+        draft: false,
+        day: d,
+        title: `${program}, jour ${d} : à ajouter`,
+        chapter: `${PROGRAM_PREFIX}${program}`,
+        type: "À ajouter",
+        typeKey: "ball-mastery",
+        instructions: `Le jour ${d} du programme ${program} n'est pas encore dans la banque. Dépose sa diapo dans la Bible du ball mastery : il prendra cette place.`
+      });
+    }
+  }
+  return [...routines, ...missing, ...moves];
 }

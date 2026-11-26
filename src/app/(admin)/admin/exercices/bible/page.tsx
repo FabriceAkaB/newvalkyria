@@ -17,7 +17,7 @@ export default async function AdminExerciseBiblePage({ searchParams }: { searchP
   await requireAdmin({ roles: ["admin"] });
   const bible = bibleKey((await searchParams).bible);
   const [{ entries }, gestures] = await Promise.all([getBank(), getGestures({ activeOnly: true }).catch(() => [])]);
-  const counts = Object.fromEntries(BIBLES.map((b) => [b.key, bibleExercises(entries, b.key, gestures).length]));
+  const counts = Object.fromEntries(BIBLES.map((b) => [b.key, bibleExercises(entries, b.key, gestures).filter((e) => e.kind !== "manquant").length]));
   return (
     <>
       <AdminTopbar />

@@ -22,7 +22,7 @@ export default async function CoachExercisesPage({ searchParams }: { searchParam
   const bible = bibleKey((await searchParams).bible);
   const [coach, { entries }, models, gestures] = await Promise.all([getCoach(coachId), getBank(), getModelPractices().catch(() => []), getGestures({ activeOnly: true }).catch(() => [])]);
   const exercises = bibleExercises(entries, bible, gestures);
-  const counts = Object.fromEntries(BIBLES.map((b) => [b.key, bibleExercises(entries, b.key, gestures).length]));
+  const counts = Object.fromEntries(BIBLES.map((b) => [b.key, bibleExercises(entries, b.key, gestures).filter((e) => e.kind !== "manquant").length]));
   return (
     <>
       <CoachTopbar coachName={coach ? `${coach.first_name} ${coach.last_name}` : "Entraîneur"} />

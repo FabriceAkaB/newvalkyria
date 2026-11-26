@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Gesture } from "@/lib/coaching-method";
 import { categoriesForBible, guessPsychomotorCategory, PSYCHOMOTOR_CATEGORIES } from "@/lib/exercise-bank";
-import { bestExercises, bibleChapterOrder, bibleExercises, bookChapters, bookExercises, bookPages, chapterStarts, duplicateGroups, gestureToBook, jpReferenceExercises, matchesGrid, pageOfExercise, ROUTINES_CHAPTER, spreadStart, turnPage, type BookSource } from "@/lib/exercise-book-core";
+import { bestExercises, bibleChapterOrder, bibleExercises, bookChapters, bookExercises, bookPages, chapterStarts, duplicateGroups, gestureToBook, jpReferenceExercises, matchesGrid, pageOfExercise, ROUTINES_CHAPTER, routineMoves, routineProgram, spreadStart, turnPage, type BookSource } from "@/lib/exercise-book-core";
 import { draftForBible, type SlideDraft } from "@/lib/exercise-slide-core";
 
 const ex = (id: string, o: Partial<BookSource> = {}, bank: Partial<BookSource["bank"]> = {}): BookSource => ({
@@ -196,10 +196,40 @@ describe("Plusieurs Bibles", () => {
     expect(bibleExercises(entries, "psychomotricite").map((e) => e.id)).toEqual(["p"]);
   });
 
-  it("Bible du ball mastery : les routines, puis les gestes actifs de la méthode", () => {
+  it("Bible du ball mastery : les routines, la place du Maestro 2.0, puis les gestes actifs de la méthode", () => {
     const list = bibleExercises(entries, "ball-mastery", [gesture(), gesture({ id: "g2", name: "Ancien", active: false })]);
-    expect(list.map((e) => [e.id, e.chapter, e.kind])).toEqual([["b", ROUTINES_CHAPTER, "exercice"], ["geste-g1", "Intérieur / extérieur", "geste"]]);
-    expect(bookChapters(list, bibleChapterOrder("ball-mastery")).map((c) => c.title)).toEqual([ROUTINES_CHAPTER, "Intérieur / extérieur"]);
+    expect(list.map((e) => [e.id, e.chapter, e.kind])).toEqual([
+      ["b", ROUTINES_CHAPTER, "exercice"],
+      ["manquant-maestro-2-0-1", "Programme Maestro 2.0", "manquant"],
+      ["geste-g1", "Intérieur / extérieur", "geste"]
+    ]);
+    expect(bookChapters(list, bibleChapterOrder("ball-mastery", list)).map((c) => c.title)).toEqual(["Programme Maestro 2.0", ROUTINES_CHAPTER, "Intérieur / extérieur"]);
+  });
+
+  it("programme Maestro 2.0 : chapitre en tête, jours dans l'ordre, jour 1 manquant gardé à sa place, gestes reliés", () => {
+    const bm = (id: string, title: string, instructions: string) => ex(id, { title, instructions, category: "Ball mastery", exercise_type: "ball-mastery", bible: "ball-mastery" }, { status: id === "d3" ? "approuve" : "a-tester", average: id === "d3" ? 10 : null });
+    const list = bibleExercises(
+      [
+        bm("m1", "Ball mastery Magnetico, jour 1 : vitesse", "1. Warm Up : slalom.\n2. Speed Nudges pied droit : porte à porte.\n3. Speed Nudges pied gauche : même chose."),
+        bm("d3", "Ball mastery Maestro 2.0, jour 3 : Two Cones Vertical", "1. Sole Rolls : semelle."),
+        bm("d2", "Ball mastery Maestro 2.0, jour 2 : deux cônes", "1. Right Foot Weave : slalom.\n2. Sole Rolls : semelle.\n3. Inconnu : rien.")
+      ],
+      "ball-mastery",
+      [gesture({ id: "rfw" }), gesture({ id: "sr", name: "Sole Rolls", family: "semelle" }), gesture({ id: "sn", name: "Speed Nudges" })]
+    );
+    const chapters = bookChapters(list, bibleChapterOrder("ball-mastery", list));
+    expect(chapters.map((c) => c.title)).toEqual(["Programme Maestro 2.0", "Programme Magnetico", "Semelle", "Intérieur / extérieur"]);
+    expect(chapters[0].exercises.map((e) => [e.day, e.kind])).toEqual([[1, "manquant"], [2, "exercice"], [3, "exercice"]]);
+    const d2 = list.find((e) => e.id === "d2")!;
+    expect(d2.links.map((l) => l.id)).toEqual(["geste-rfw", "geste-sr"]);
+    expect(list.find((e) => e.id === "geste-sr")!.links.map((l) => l.id)).toEqual(["d3", "d2"]);
+    expect(list.find((e) => e.id === "m1")!.links.map((l) => l.id)).toEqual(["geste-sn"]);
+  });
+
+  it("lit le programme et le jour dans le titre, et les gestes dans le déroulement", () => {
+    expect(routineProgram("Ball mastery Maestro 2.0, jour 2 : deux cônes")).toEqual({ program: "Maestro 2.0", day: 2 });
+    expect(routineProgram("Rondo 4c2")).toBeNull();
+    expect(routineMoves("Intro\n1. Warm Up : x\n2. The Square pied droit : y\n3. The Square pied gauche : z\n4) L Drag Double U : w")).toEqual(["The Square", "L Drag Double U"]);
   });
 
   it("un geste devient une page : exécution, 3 points clés, erreurs, progression en étapes, à valider par JP", () => {

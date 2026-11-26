@@ -80,8 +80,12 @@ function IllustratedGesture({ ex }: { ex: BookExercise }) {
 
 export function ExerciseVisual({ ex, eager }: { ex: BookExercise; eager?: boolean }) {
   return (
-    <div className="xbk-visual" data-kind={ex.kind === "geste" && !ex.imageUrl ? "geste" : undefined}>
-      {ex.imageUrl ? (
+    <div className="xbk-visual" data-kind={ex.kind === "manquant" ? "manquant" : ex.kind === "geste" && !ex.imageUrl ? "geste" : undefined}>
+      {ex.kind === "manquant" ? (
+        <span className="xbk-missing-visual">
+          <ImageUp size={22} strokeWidth={1.5} aria-hidden /> Diapo à ajouter
+        </span>
+      ) : ex.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={ex.imageUrl} alt={`Schéma : ${ex.title}`} loading={eager ? "eager" : "lazy"} draggable={false} />
       ) : ex.diagram ? (
@@ -118,6 +122,7 @@ function Lines({ text }: { text: string | null }) {
 function Badges({ ex }: { ex: BookExercise }) {
   return (
     <p className="xbk-badges">
+      {ex.kind === "manquant" ? <span data-tone="warn">Jour à ajouter</span> : null}
       {ex.kind === "geste" && ex.draft ? <span data-tone="warn">Fiche à valider par JP</span> : null}
       {ex.jpReference ? (
         <span data-tone="jp">
@@ -129,7 +134,7 @@ function Badges({ ex }: { ex: BookExercise }) {
           <Star size={12} strokeWidth={2} aria-hidden /> Meilleur exercice{ex.average !== null ? ` · ${fr(ex.average)}/10` : ""}
         </span>
       ) : null}
-      {ex.type ? <span data-tone="accent">{ex.type}</span> : null}
+      {ex.type && ex.kind !== "manquant" ? <span data-tone="accent">{ex.type}</span> : null}
       {ex.ages.length ? <span>{ex.ages.join(", ")}</span> : null}
       {ex.players ? <span>{ex.players}</span> : null}
       {ex.duration ? <span>{ex.duration} min</span> : null}
@@ -315,6 +320,13 @@ function DeleteControl({ ex }: { ex: BookExercise }) {
 
 /** Admin seulement : marquer JP référence et supprimer un exercice ; un geste se modifie dans la bibliothèque des gestes. */
 function AdminActions({ ex }: { ex: BookExercise }) {
+  if (ex.kind === "manquant") {
+    return (
+      <Link href="/admin/exercices/diapos?bible=ball-mastery" className="admin-btn-primary xbk-tool">
+        <ImageUp size={15} strokeWidth={1.75} aria-hidden /> Ajouter ce jour
+      </Link>
+    );
+  }
   if (ex.kind === "geste") {
     return (
       <Link href="/admin/coaching/gestes" className="admin-btn-ghost xbk-tool">
@@ -382,8 +394,28 @@ function AddExerciseMenu({ bible }: { bible: BibleKey }) {
   );
 }
 
+/** Routine → ses gestes dans la bibliothèque ; geste → les jours de programme où il est travaillé. Cliquables. */
+function LinkedMoves({ ex, onLink }: { ex: BookExercise; onLink?: (id: string) => void }) {
+  if (!ex.links.length) return null;
+  return (
+    <Section label={ex.kind === "geste" ? "Travaillé dans" : `Les gestes du jour (${ex.links.length})`}>
+      <span className="xbk-links">
+        {ex.links.map((l) =>
+          onLink ? (
+            <button key={l.id} type="button" onClick={() => onLink(l.id)}>
+              {ex.kind === "geste" ? l.title.replace(/^ball mastery\s+/i, "") : l.title}
+            </button>
+          ) : (
+            <span key={l.id}>{ex.kind === "geste" ? l.title.replace(/^ball mastery\s+/i, "") : l.title}</span>
+          )
+        )}
+      </span>
+    </Section>
+  );
+}
+
 /** La fiche complète d'un exercice : schéma, organisation, déroulement, consignes, variantes, tout. */
-export function ExerciseSheet({ ex, eager }: { ex: BookExercise; eager?: boolean }) {
+export function ExerciseSheet({ ex, eager, onLink }: { ex: BookExercise; eager?: boolean; onLink?: (id: string) => void }) {
   const hasVariants = ex.easier || ex.harder || ex.cognitive || ex.variants;
   return (
     <div className="xbk-sheet">
@@ -391,6 +423,7 @@ export function ExerciseSheet({ ex, eager }: { ex: BookExercise; eager?: boolean
       <Badges ex={ex} />
       <JpNote ex={ex} />
       <ExerciseVisual ex={ex} eager={eager} />
+      <LinkedMoves ex={ex} onLink={onLink} />
       {ex.objective ? (
         <Section label="Objectif">
           <Lines text={ex.objective} />
@@ -413,7 +446,7 @@ export function ExerciseSheet({ ex, eager }: { ex: BookExercise; eager?: boolean
         </Section>
       ) : null}
       {ex.instructions ? (
-        <Section label={ex.kind === "geste" ? "Exécution" : "Déroulement"}>
+        <Section label={ex.kind === "geste" ? "Exécution" : ex.kind === "manquant" ? "À faire" : "Déroulement"}>
           <Lines text={ex.instructions} />
         </Section>
       ) : null}
@@ -590,7 +623,7 @@ function Page({ page, ctx }: { page: BookPage; ctx: { chapters: BookChapter[]; s
             <AdminActions ex={page.exercise} />
           </div>
         ) : null}
-        <ExerciseSheet ex={page.exercise} eager />
+        <ExerciseSheet ex={page.exercise} eager onLink={(id) => ctx.onGo(pageOfExercise(ctx.pages, id))} />
       </>
     );
   return (
@@ -750,7 +783,7 @@ function Card({ ex, onOpen, showNote }: { ex: BookExercise; onOpen: () => void; 
 
 /** Une grande fiche du descriptif (JP, 26 nov. 2026) : la diapo entière et, à côté, l'explication, la progression et la
  *  limite (variantes), lisibles sans ouvrir la fiche. */
-function WideCard({ ex, onOpen, canMark }: { ex: BookExercise; onOpen: () => void; canMark: boolean }) {
+function WideCard({ ex, onOpen, canMark, onLink }: { ex: BookExercise; onOpen: () => void; canMark: boolean; onLink?: (id: string) => void }) {
   const gesture = ex.kind === "geste";
   const explanation = gesture ? ex.instructions : ex.instructions ?? ex.coachingPoints;
   return (
@@ -766,6 +799,7 @@ function WideCard({ ex, onOpen, canMark }: { ex: BookExercise; onOpen: () => voi
           <JpNote ex={ex} />
         </div>
         {ex.objective ? <p className="xbk-wide-objective">{ex.objective}</p> : null}
+        <LinkedMoves ex={ex} onLink={onLink} />
         {ex.dimensions ? (
           <p className="xbk-wide-space">
             <strong>Espace :</strong> {ex.dimensions}
@@ -902,7 +936,7 @@ function Grid({ list, chapters, onOpen, canMark }: { list: BookExercise[]; chapt
           <p className="xbk-muted">
             {shown.length} exercice{shown.length > 1 ? "s" : ""} · la diapo entière, l&apos;explication, la progression et la limite ; « Fiche complète » pour l&apos;organisation selon le nombre et les consignes.
           </p>
-          {shown.slice(0, limit).map((e) => <WideCard key={e.id} ex={e} onOpen={() => onOpen(e.id)} canMark={canMark} />)}
+          {shown.slice(0, limit).map((e) => <WideCard key={e.id} ex={e} onOpen={() => onOpen(e.id)} canMark={canMark} onLink={onOpen} />)}
           {limit < shown.length ? (
             <div ref={more} className="xbk-wide-more">
               <button type="button" className="admin-btn-ghost" onClick={() => setLimit((n) => n + GRID_STEP)}>
@@ -916,7 +950,7 @@ function Grid({ list, chapters, onOpen, canMark }: { list: BookExercise[]; chapt
   );
 }
 
-function Modal({ ex, onClose, onBook, ficheBase }: { ex: BookExercise; onClose: () => void; onBook: () => void; ficheBase?: string }) {
+function Modal({ ex, onClose, onBook, ficheBase, onLink }: { ex: BookExercise; onClose: () => void; onBook: () => void; ficheBase?: string; onLink?: (id: string) => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -950,7 +984,7 @@ function Modal({ ex, onClose, onBook, ficheBase }: { ex: BookExercise; onClose: 
             </button>
           </span>
         </div>
-        <ExerciseSheet ex={ex} eager />
+        <ExerciseSheet ex={ex} eager onLink={onLink} />
       </div>
     </div>
   );
@@ -982,7 +1016,8 @@ function BibleSwitcher({ bible, counts, basePath }: { bible: BibleKey; counts: P
  *  `bible` choisit le titre, les chapitres et l'endroit où l'ajout range l'exercice ; `basePath` + `counts` montrent le sélecteur. */
 export function ExerciseBible({ exercises, ficheBase, bible = "valkyria", counts, basePath }: { exercises: BookExercise[]; ficheBase?: string; bible?: BibleKey; counts?: Partial<Record<BibleKey, number>>; basePath?: string }) {
   const info = bibleInfo(bible);
-  const order = useMemo(() => bibleChapterOrder(bible), [bible]);
+  const order = useMemo(() => bibleChapterOrder(bible, exercises), [bible, exercises]);
+  const realCount = exercises.filter((e) => e.kind !== "manquant").length;
   const pageKey = `${PAGE_KEY}:${bible}`;
   const chapters = useMemo(() => bookChapters(exercises, order), [exercises, order]);
   const pages = useMemo(() => bookPages(chapters), [chapters]);
@@ -1104,19 +1139,19 @@ export function ExerciseBible({ exercises, ficheBase, bible = "valkyria", counts
           <BookOpen size={16} strokeWidth={1.75} aria-hidden /> La Bible
         </button>
         <button type="button" role="tab" aria-selected={view === "grille"} onClick={() => choose("grille")}>
-          <LayoutGrid size={16} strokeWidth={1.75} aria-hidden /> Descriptif ({exercises.length})
+          <LayoutGrid size={16} strokeWidth={1.75} aria-hidden /> Descriptif ({realCount})
         </button>
       </div>
 
       {view === "livre" ? (
-        <Book pages={pages} chapters={chapters} page={Math.min(page, pages.length - 1)} setPage={setPage} total={exercises.length} best={approvedCount} ficheBase={ficheBase} bible={bible} />
+        <Book pages={pages} chapters={chapters} page={Math.min(page, pages.length - 1)} setPage={setPage} total={realCount} best={approvedCount} ficheBase={ficheBase} bible={bible} />
       ) : (
         <Grid list={exercises} chapters={chapters} onOpen={setOpen} canMark={Boolean(ficheBase)} />
       )}
         </>
       )}
 
-      {openEx ? <Modal ex={openEx} onClose={() => setOpen(null)} onBook={() => toBook(openEx.id)} ficheBase={ficheBase} /> : null}
+      {openEx ? <Modal key={openEx.id} ex={openEx} onClose={() => setOpen(null)} onBook={() => toBook(openEx.id)} ficheBase={ficheBase} onLink={setOpen} /> : null}
     </div>
   );
 }

@@ -270,3 +270,12 @@
 .xbk-visual[data-kind="geste"] { aspect-ratio: 20 / 7; }
 .xbk-sheet .xbk-visual[data-kind="geste"] { max-width: 420px; }
 .xbk-wide-visual .xbk-visual[data-kind="geste"] { min-height: 0; aspect-ratio: 20 / 7; }
+/* Programme Maestro 2.0 : jour à ajouter, gestes du jour reliés à la bibliothèque des gestes. */
+.xbk-visual[data-kind="manquant"] { border: 2px dashed var(--adm-border); background: var(--adm-surface); }
+.xbk-missing-visual { display: inline-flex; align-items: center; gap: 8px; color: var(--adm-text-2); font-size: 0.9rem; font-weight: 500; }
+.xbk-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.xbk-links button, .xbk-links span { display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border: 1px solid var(--adm-border); border-radius: 999px; background: var(--adm-surface); color: var(--adm-text); font: inherit; font-size: 0.82rem; }
+.xbk-links button { cursor: pointer; }
+.xbk-links button:hover { border-color: var(--adm-accent); background: var(--adm-accent-soft); }
+.xbk-visual[data-kind="manquant"] { aspect-ratio: 3 / 1; }
+.xbk-missing-visual { white-space: nowrap; }
