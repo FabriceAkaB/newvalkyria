@@ -2,6 +2,7 @@
  *  fichier. Règles pures : ce qu'une diapo montre et quels exercices sont dans la galerie (lecture seule de la banque). */
 
 import { placeLabel, typeLabel, venueLabel, type BankStatus } from "@/lib/exercise-bank";
+import { compareKeep, duplicateGroups } from "@/lib/exercise-book-core";
 import type { BankEntry, ExerciseDiagram } from "@/lib/exercises-repo";
 
 export interface GallerySlide {
@@ -57,9 +58,12 @@ export function toSlide(e: BankEntry): GallerySlide {
   };
 }
 
-/** Les approuvés d'abord (les tops en tête), dans l'ordre de la banque ; « tous » ajoute les autres, jamais les retirés. */
+/** Les approuvés d'abord (les tops en tête), dans l'ordre de la banque ; « tous » ajoute les autres, jamais les retirés.
+ *  Une même diapo (ou un même titre) ne passe qu'une fois. */
 export function gallerySlides(entries: BankEntry[], opts: { all?: boolean } = {}): GallerySlide[] {
-  return entries.filter((e) => e.bank.status !== "retire" && (opts.all || e.bank.status === "approuve")).map(toSlide);
+  const shown = entries.filter((e) => e.bank.status !== "retire" && (opts.all || e.bank.status === "approuve"));
+  const keep = new Set(duplicateGroups(shown).map((g) => [...g].sort(compareKeep)[0].id));
+  return shown.filter((e) => keep.has(e.id)).map(toSlide);
 }
 
 export function matchesSlide(s: Pick<GallerySlide, "ages" | "theme">, f: { age: string; theme: string }): boolean {

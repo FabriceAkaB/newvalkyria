@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bestExercises, bookChapters, bookExercises, bookPages, chapterStarts, matchesGrid, pageOfExercise, spreadStart, turnPage, type BookSource } from "@/lib/exercise-book-core";
+import { bestExercises, bookChapters, bookExercises, bookPages, chapterStarts, duplicateGroups, matchesGrid, pageOfExercise, spreadStart, turnPage, type BookSource } from "@/lib/exercise-book-core";
 
 const ex = (id: string, o: Partial<BookSource> = {}, bank: Partial<BookSource["bank"]> = {}): BookSource => ({
   id, title: `Exercice ${id}`, category: "Passe", exercise_type: "jeu-reduit", session_place: null, level: null, age_groups: ["U10"], venue: null,
@@ -95,5 +95,47 @@ describe("Bible : grille", () => {
     expect(matchesGrid(a, { q: "défense" })).toBe(false);
     expect(matchesGrid(a, { chapter: "Passe", best: true })).toBe(true);
     expect(matchesGrid(a, { chapter: "Finition" })).toBe(false);
+  });
+});
+
+describe("Bible : chaque exercice une seule fois", () => {
+  it("même diapo = un seul exercice à l'écran, les autres deviennent ses versions", () => {
+    const list = bookExercises([
+      ex("a", { image_hash: "h1", title: "Rondo 4c1 : passe qui traverse", category: "Passe", created_at: "2026-11-16T10:00:00Z" }),
+      ex("b", { image_hash: "h1", title: "Rondo 4c1 : perdu, presse !", category: "Prise de décision", instructions: "Perdu : presse.", created_at: "2026-11-16T09:00:00Z" }, { count: 2 }),
+      ex("c", { image_hash: "h2", title: "Autre" })
+    ]);
+    expect(list.map((e) => e.id)).toEqual(["b", "c"]);
+    expect(list[0].versions).toEqual([{ id: "a", title: "Rondo 4c1 : passe qui traverse", chapter: "Passe", type: "Jeu réduit à thème", instructions: null, coachingPoints: null }]);
+    expect(list[1].versions).toEqual([]);
+  });
+
+  it("même titre (accents, majuscules, ponctuation ignorés) = doublon ; sans note, le plus ancien reste", () => {
+    const list = bookExercises([
+      ex("x", { title: "Jeu — le capital points", created_at: "2026-11-20T00:00:00Z" }),
+      ex("y", { title: "jeu : LE CAPITAL  points", created_at: "2026-11-01T00:00:00Z" })
+    ]);
+    expect(list.map((e) => e.id)).toEqual(["y"]);
+    expect(list[0].versions.map((v) => v.id)).toEqual(["x"]);
+  });
+
+  it("un exercice retiré ne compte pas, et la recherche trouve aussi les versions", () => {
+    const list = bookExercises([ex("a", { image_hash: "h" }), ex("b", { image_hash: "h", title: "Toro spécial", category: "Défense" }, { status: "retire" })]);
+    expect(list).toHaveLength(1);
+    expect(list[0].versions).toEqual([]);
+    const [m] = bookExercises([ex("a", { image_hash: "h" }), ex("b", { image_hash: "h", title: "Toro spécial", category: "Défense", created_at: "2027-01-01" })]);
+    expect(matchesGrid(m, { q: "toro" })).toBe(true);
+    expect(matchesGrid(m, { chapter: "Défense" })).toBe(true);
+    expect(matchesGrid(m, { chapter: "Finition" })).toBe(false);
+  });
+
+  it("regroupe en chaîne (diapo commune puis titre commun)", () => {
+    const g = duplicateGroups([
+      { id: "1", title: "A", image_hash: "h" },
+      { id: "2", title: "B", image_hash: "h" },
+      { id: "3", title: "b", image_hash: null },
+      { id: "4", title: "C", image_hash: null }
+    ]);
+    expect(g.map((x) => x.map((e) => e.id))).toEqual([["1", "2", "3"], ["4"]]);
   });
 });

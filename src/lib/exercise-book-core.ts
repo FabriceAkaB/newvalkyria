@@ -44,6 +44,18 @@ export interface BookExercise {
   progression: string | null;
   mistakes: string | null;
   material: string | null;
+  /** Autres exercices de la banque avec la même diapo ou le même titre : montrés une seule fois, dans cette page. */
+  versions: BookVersion[];
+}
+
+/** Une autre version d'un exercice (même diapo, autre thème ou autre règle), rangée sous l'exercice principal. */
+export interface BookVersion {
+  id: string;
+  title: string;
+  chapter: string;
+  type: string | null;
+  instructions: string | null;
+  coachingPoints: string | null;
 }
 
 /** Champs de la banque lus par le livre (sous-ensemble de BankEntry). */
@@ -76,12 +88,20 @@ export interface BookSource {
   image_url: string | null;
   video_url: string | null;
   diagram_data: unknown;
+  /** Empreinte de la diapo (SHA-256) : deux exercices avec la même diapo sont le même exercice à l'écran. */
+  image_hash?: string | null;
+  created_at?: string | null;
   bank: { status: BankStatus; top: boolean; average: number | null; count: number };
 }
 
 export const OTHER_CHAPTER = "Autre";
 const TYPE_RANK = new Map<string, number>(EXERCISE_TYPES.map((t, i) => [t.key, i]));
 const clean = (s: string | null | undefined) => (s && s.trim() ? s.trim() : null);
+const norm = (s: unknown) =>
+  String(s ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
 
 function chapterOf(category: string | null | undefined): string {
   const c = clean(category);
@@ -138,13 +158,64 @@ export function toBookExercise(e: BookSource): BookExercise {
     variants: clean(e.variants),
     progression: clean(e.progression),
     mistakes: clean(e.common_mistakes),
-    material: clean(e.material)
+    material: clean(e.material),
+    versions: []
   };
 }
 
-/** Toute la banque pour les éducateurs : tout sauf les exercices retirés. */
+/** Titre ramené à l'essentiel (accents, majuscules, ponctuation et espaces ignorés) pour repérer un doublon. */
+export function titleKey(title: string | null | undefined): string {
+  return norm(title)
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/** L'exercice qu'on garde à l'écran dans un groupe de doublons : approuvé, top, le plus noté, la meilleure note, le plus ancien. */
+export function compareKeep(a: Pick<BookSource, "bank" | "created_at" | "title">, b: Pick<BookSource, "bank" | "created_at" | "title">): number {
+  return (
+    Number(b.bank.status === "approuve") - Number(a.bank.status === "approuve") ||
+    Number(b.bank.top) - Number(a.bank.top) ||
+    b.bank.count - a.bank.count ||
+    (b.bank.average ?? -1) - (a.bank.average ?? -1) ||
+    String(a.created_at ?? "").localeCompare(String(b.created_at ?? "")) ||
+    a.title.localeCompare(b.title, "fr")
+  );
+}
+
+/** Groupes d'exercices identiques à l'écran : même diapo (empreinte) ou même titre. Chaque groupe, dans l'ordre d'arrivée. */
+export function duplicateGroups<T extends Pick<BookSource, "id" | "title" | "image_hash">>(entries: T[]): T[][] {
+  const parent = entries.map((_, i) => i);
+  const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+  const seen = new Map<string, number>();
+  entries.forEach((e, i) => {
+    for (const key of [e.image_hash ? `img:${e.image_hash}` : null, titleKey(e.title) ? `t:${titleKey(e.title)}` : null]) {
+      if (!key) continue;
+      const j = seen.get(key);
+      if (j === undefined) seen.set(key, i);
+      else parent[find(i)] = find(j);
+    }
+  });
+  const groups = new Map<number, T[]>();
+  entries.forEach((e, i) => groups.set(find(i), [...(groups.get(find(i)) ?? []), e]));
+  return [...groups.values()];
+}
+
+/** Toute la banque pour les éducateurs : tout sauf les exercices retirés, et chaque exercice une seule fois
+ *  (même diapo ou même titre = un seul exercice à l'écran, les autres sont ses « autres versions »). */
 export function bookExercises(entries: BookSource[]): BookExercise[] {
-  return entries.filter((e) => e.bank.status !== "retire").map(toBookExercise);
+  return duplicateGroups(entries.filter((e) => e.bank.status !== "retire")).map((group) => {
+    const [keep, ...others] = [...group].sort(compareKeep);
+    const main = toBookExercise(keep);
+    main.versions = others.map((o) => ({
+      id: o.id,
+      title: o.title,
+      chapter: chapterOf(o.category),
+      type: typeLabel(o.exercise_type),
+      instructions: clean(o.instructions),
+      coachingPoints: clean(o.coaching_points)
+    }));
+    return main;
+  });
 }
 
 /** Dans un chapitre : par catégorie (type d'exercice, dans l'ordre de la séance), puis les approuvés, la note, le titre. */
@@ -243,18 +314,13 @@ export function turnPage(index: number, dir: 1 | -1, double: boolean, total: num
   return start <= 1 ? 0 : start - 2;
 }
 
-const norm = (s: unknown) =>
-  String(s ?? "")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
-
 /** Recherche de la grille : titre, thème, type, objectif, âges ; filtre de chapitre facultatif. */
 export function matchesGrid(e: BookExercise, f: { q?: string; chapter?: string; best?: boolean }): boolean {
-  if (f.chapter && e.chapter !== f.chapter) return false;
+  const versions = e.versions ?? [];
+  if (f.chapter && e.chapter !== f.chapter && !versions.some((v) => v.chapter === f.chapter)) return false;
   if (f.best && !e.approved) return false;
   if (f.q) {
-    const hay = norm(`${e.title} ${e.chapter} ${e.type ?? ""} ${e.objective ?? ""} ${e.ages.join(" ")}`);
+    const hay = norm(`${e.title} ${e.chapter} ${e.type ?? ""} ${e.objective ?? ""} ${e.ages.join(" ")} ${versions.map((v) => `${v.title} ${v.chapter}`).join(" ")}`);
     return norm(f.q)
       .split(/\s+/)
       .filter(Boolean)

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
 import { readSlide } from "@/lib/exercise-slide-reader";
-import { createExerciseFromSlide, setExerciseClassification } from "@/lib/exercise-slide-repo";
+import { createExerciseFromSlide, DuplicateExerciseError, setExerciseClassification } from "@/lib/exercise-slide-repo";
 import { jsonError } from "@/lib/http";
 
 export const maxDuration = 60;
@@ -25,9 +25,10 @@ export async function POST(request: Request) {
   try {
     const data = Buffer.from(await file.arrayBuffer()).toString("base64");
     const { draft, by } = await readSlide({ image: { data, mediaType: file.type as ImageType }, text, fileName });
-    const { id, imageUrl } = await createExerciseFromSlide(draft, file);
+    const { id, imageUrl } = await createExerciseFromSlide(draft, file, { force: form?.get("force") === "1" });
     return NextResponse.json({ ok: true, id, imageUrl, by, draft: { title: draft.title, category: draft.category, exerciseType: draft.exerciseType } });
   } catch (error) {
+    if (error instanceof DuplicateExerciseError) return NextResponse.json({ error: error.message, duplicateOf: error.existing }, { status: 409 });
     return jsonError(error instanceof Error ? error.message : "Erreur serveur", 422);
   }
 }

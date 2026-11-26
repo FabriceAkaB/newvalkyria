@@ -1,5 +1,7 @@
+import { createHash } from "node:crypto";
+
 import { DEFAULT_PLACE, EXERCISE_CATEGORIES, EXERCISE_TYPES, type ExerciseType } from "@/lib/exercise-bank";
-import type { SlideDraft } from "@/lib/exercise-slide-core";
+import { findDuplicateExercise, type SlideDraft } from "@/lib/exercise-slide-core";
 import { createExercise, setExerciseImage, type ExerciseInput } from "@/lib/exercises-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -31,7 +33,21 @@ export function draftToInput(d: SlideDraft): ExerciseInput {
   };
 }
 
-export async function createExerciseFromSlide(draft: SlideDraft, image: File): Promise<{ id: string; imageUrl: string }> {
+/** La diapo (ou le titre) est déjà dans la banque : rien n'est créé. */
+export class DuplicateExerciseError extends Error {
+  constructor(public readonly existing: { id: string; title: string }) {
+    super(`Déjà dans la banque : « ${existing.title} ». Rien n'a été ajouté.`);
+  }
+}
+
+export async function createExerciseFromSlide(draft: SlideDraft, image: File, opts: { force?: boolean } = {}): Promise<{ id: string; imageUrl: string }> {
+  if (!opts.force) {
+    const imageHash = createHash("sha256").update(Buffer.from(await image.arrayBuffer())).digest("hex");
+    const { data, error } = await (getSupabaseAdminClient() as any).from("exercises").select("id, title, image_hash");
+    if (error) throw new Error(error.message);
+    const dup = findDuplicateExercise({ title: draft.title, imageHash }, (data ?? []) as { id: string; title: string; image_hash: string | null }[]);
+    if (dup) throw new DuplicateExerciseError({ id: dup.id, title: dup.title });
+  }
   const id = await createExercise(draftToInput(draft));
   const imageUrl = await setExerciseImage(id, image);
   return { id, imageUrl };

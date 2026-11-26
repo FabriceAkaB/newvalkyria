@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { checklistSummary, compareBank, computeBankStatus, planningAvailability, type BankSummary, type RatingLite, type RatingScores } from "@/lib/exercise-bank";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -270,8 +272,10 @@ export async function setExerciseImage(id: string, file: File): Promise<string> 
 
   const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path);
   const publicUrl = data.publicUrl as string;
+  // Empreinte de la diapo : la Bible montre une seule fois les exercices qui ont la même (exercise-book-core.ts).
+  const imageHash = createHash("sha256").update(Buffer.from(await file.arrayBuffer())).digest("hex");
 
-  const { error } = await supabase.from("exercises").update({ image_url: publicUrl, updated_at: new Date().toISOString() }).eq("id", id);
+  const { error } = await supabase.from("exercises").update({ image_url: publicUrl, image_hash: imageHash, updated_at: new Date().toISOString() }).eq("id", id);
   if (error) throw new Error(error.message);
   return publicUrl;
 }

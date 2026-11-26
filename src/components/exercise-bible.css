@@ -165,3 +165,8 @@
 }
 .xsl-spin, .xsl-state svg.lucide-loader-circle, .xsl-state svg.lucide-loader-2 { animation: xsl-spin 1s linear infinite; }
 @keyframes xsl-spin { to { transform: rotate(360deg); } }
+
+/* Autres versions d'un exercice (même diapo) : repliées sous la fiche principale. */
+.xbk-version { border-top: 1px solid var(--adm-border); padding: 6px 0; }
+.xbk-version > summary { cursor: pointer; font-weight: 600; color: var(--adm-text); }
+.xbk-version[open] > summary { margin-bottom: 4px; }

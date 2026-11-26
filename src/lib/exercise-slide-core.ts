@@ -231,3 +231,18 @@ export const SLIDE_DRAFT_SCHEMA = {
     maxPlayers: { type: ["integer", "null"] }
   }
 } as const;
+
+/** Un exercice déjà dans la banque avec la même diapo (empreinte) ou le même titre (accents, majuscules et
+ *  ponctuation ignorés) : l'ajout par diapo le refuse pour ne pas créer de doublon. Les exercices retirés comptent aussi. */
+export function findDuplicateExercise<T extends { id: string; title: string; image_hash?: string | null }>(
+  candidate: { title: string | null | undefined; imageHash: string | null | undefined },
+  existing: T[]
+): T | null {
+  const key = (t: string | null | undefined) => norm(t).replace(/[^a-z0-9]+/g, " ").trim();
+  const title = key(candidate.title);
+  return (
+    (candidate.imageHash ? existing.find((e) => e.image_hash === candidate.imageHash) : undefined) ??
+    (title && title !== key("Nouvel exercice (diapo)") ? existing.find((e) => key(e.title) === title) : undefined) ??
+    null
+  );
+}

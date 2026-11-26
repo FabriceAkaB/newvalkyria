@@ -192,6 +192,20 @@ export function ExerciseSheet({ ex, eager }: { ex: BookExercise; eager?: boolean
           <p>{ex.material}</p>
         </Section>
       ) : null}
+      {ex.versions.length ? (
+        <Section label={ex.versions.length > 1 ? `${ex.versions.length} autres versions (même diapo)` : "Autre version (même diapo)"}>
+          {ex.versions.map((v) => (
+            <details key={v.id} className="xbk-version">
+              <summary>
+                {v.title}
+                {v.type || v.chapter !== ex.chapter ? <span className="xbk-muted"> · {[v.chapter !== ex.chapter ? v.chapter : null, v.type].filter(Boolean).join(" · ")}</span> : null}
+              </summary>
+              {v.instructions ? <Lines text={v.instructions} /> : null}
+              {v.coachingPoints ? <Lines text={v.coachingPoints} /> : null}
+            </details>
+          ))}
+        </Section>
+      ) : null}
       {ex.videoUrl ? (
         <a className="xbk-link" href={ex.videoUrl} target="_blank" rel="noreferrer">
           Voir la vidéo

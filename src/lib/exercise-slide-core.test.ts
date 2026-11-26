@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { draftFromSlideText, guessCategory, guessType, sanitizeDraft, titleFromFileName } from "@/lib/exercise-slide-core";
+import { draftFromSlideText, guessCategory, guessType, sanitizeDraft, titleFromFileName, findDuplicateExercise } from "@/lib/exercise-slide-core";
 
 describe("Diapo : nom du fichier", () => {
   it("garde un nom parlant, ignore les noms génériques", () => {
@@ -77,5 +77,20 @@ describe("Diapo : réponse de Claude nettoyée", () => {
   });
   it("une réponse vide redonne la lecture sans IA", () => {
     expect(sanitizeDraft(null, fallback)).toBe(fallback);
+  });
+});
+
+describe("ajout par diapo : pas de doublon", () => {
+  const bank = [
+    { id: "1", title: "Rondo 4c2 : 2 solutions", image_hash: "abc" },
+    { id: "2", title: "Jeu — le capital points", image_hash: null }
+  ];
+  it("même diapo ou même titre = déjà dans la banque", () => {
+    expect(findDuplicateExercise({ title: "Tout autre titre", imageHash: "abc" }, bank)?.id).toBe("1");
+    expect(findDuplicateExercise({ title: "JEU : Le Capital Points", imageHash: "zzz" }, bank)?.id).toBe("2");
+  });
+  it("une nouvelle diapo passe, et le titre par défaut ne bloque jamais", () => {
+    expect(findDuplicateExercise({ title: "Rondo 5c2", imageHash: "zzz" }, bank)).toBeNull();
+    expect(findDuplicateExercise({ title: "Nouvel exercice (diapo)", imageHash: null }, [...bank, { id: "3", title: "Nouvel exercice (diapo)", image_hash: null }])).toBeNull();
   });
 });
