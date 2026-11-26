@@ -1,6 +1,7 @@
 /** « La Bible New Valkyria » (JP, 25 nov. 2026) : toute la banque d'exercices, pour les éducateurs, en livre qu'on
  *  feuillette (couverture, sommaire, un chapitre par thème, une page par exercice) et en grille d'images.
- *  Les meilleurs exercices (statut « approuvé » de la banque) sont mis en avant.
+ *  Les exercices JP référence (les phares choisis par JP, 26 nov. 2026) et les meilleurs exercices (statut « approuvé »
+ *  de la banque) sont mis en avant.
  *  Règles pures, testées (exercise-book-core.test.ts). Aucune date de planification, aucune note d'éducateur nommé :
  *  la planification annuelle reste fermée aux éducateurs (coach-access-core.ts). */
 
@@ -19,6 +20,9 @@ export interface BookExercise {
   approved: boolean;
   top: boolean;
   average: number | null;
+  /** Exercice phare de JP (« JP référence ») et, s'il l'a écrit, ce pour quoi c'est le meilleur. */
+  jpReference: boolean;
+  jpReferenceNote: string | null;
   imageUrl: string | null;
   diagram: BookDiagram | null;
   videoUrl: string | null;
@@ -91,6 +95,8 @@ export interface BookSource {
   /** Empreinte de la diapo (SHA-256) : deux exercices avec la même diapo sont le même exercice à l'écran. */
   image_hash?: string | null;
   created_at?: string | null;
+  jp_reference_at?: string | null;
+  jp_reference_note?: string | null;
   bank: { status: BankStatus; top: boolean; average: number | null; count: number };
 }
 
@@ -129,6 +135,8 @@ export function toBookExercise(e: BookSource): BookExercise {
     approved: e.bank.status === "approuve",
     top: e.bank.top,
     average: e.bank.average,
+    jpReference: Boolean(e.jp_reference_at),
+    jpReferenceNote: e.jp_reference_at ? clean(e.jp_reference_note) : null,
     imageUrl: clean(e.image_url),
     diagram: diagramOf(e.diagram_data),
     videoUrl: clean(e.video_url),
@@ -170,9 +178,10 @@ export function titleKey(title: string | null | undefined): string {
     .trim();
 }
 
-/** L'exercice qu'on garde à l'écran dans un groupe de doublons : approuvé, top, le plus noté, la meilleure note, le plus ancien. */
-export function compareKeep(a: Pick<BookSource, "bank" | "created_at" | "title">, b: Pick<BookSource, "bank" | "created_at" | "title">): number {
+/** L'exercice qu'on garde à l'écran dans un groupe de doublons : JP référence, approuvé, top, le plus noté, la meilleure note, le plus ancien. */
+export function compareKeep(a: Pick<BookSource, "bank" | "created_at" | "title" | "jp_reference_at">, b: Pick<BookSource, "bank" | "created_at" | "title" | "jp_reference_at">): number {
   return (
+    Number(Boolean(b.jp_reference_at)) - Number(Boolean(a.jp_reference_at)) ||
     Number(b.bank.status === "approuve") - Number(a.bank.status === "approuve") ||
     Number(b.bank.top) - Number(a.bank.top) ||
     b.bank.count - a.bank.count ||
@@ -218,10 +227,11 @@ export function bookExercises(entries: BookSource[]): BookExercise[] {
   });
 }
 
-/** Dans un chapitre : par catégorie (type d'exercice, dans l'ordre de la séance), puis les approuvés, la note, le titre. */
+/** Dans un chapitre : par catégorie (type d'exercice, dans l'ordre de la séance), puis JP référence, les approuvés, la note, le titre. */
 export function compareInChapter(a: BookExercise, b: BookExercise): number {
   return (
     (TYPE_RANK.get(a.typeKey ?? "") ?? 99) - (TYPE_RANK.get(b.typeKey ?? "") ?? 99) ||
+    Number(b.jpReference) - Number(a.jpReference) ||
     Number(b.approved) - Number(a.approved) ||
     Number(b.top) - Number(a.top) ||
     (b.average ?? -1) - (a.average ?? -1) ||
@@ -269,6 +279,13 @@ export function bestExercises(list: BookExercise[], limit = 12): BookExercise[] 
     .slice(0, limit);
 }
 
+/** Exercices JP référence : les phares de JP, rangés par thème (dans l'ordre des chapitres), puis par titre. */
+export function jpReferenceExercises(list: BookExercise[]): BookExercise[] {
+  const known = EXERCISE_CATEGORIES.filter((c) => c !== OTHER_CHAPTER) as readonly string[];
+  const rank = (k: string) => (k === OTHER_CHAPTER ? 1000 : known.includes(k) ? known.indexOf(k) : 500);
+  return list.filter((e) => e.jpReference).sort((a, b) => rank(a.chapter) - rank(b.chapter) || a.chapter.localeCompare(b.chapter, "fr") || a.title.localeCompare(b.title, "fr"));
+}
+
 export type BookPage =
   | { kind: "cover"; number: number }
   | { kind: "contents"; number: number }
@@ -314,13 +331,14 @@ export function turnPage(index: number, dir: 1 | -1, double: boolean, total: num
   return start <= 1 ? 0 : start - 2;
 }
 
-/** Recherche de la grille : titre, thème, type, objectif, âges ; filtre de chapitre facultatif. */
-export function matchesGrid(e: BookExercise, f: { q?: string; chapter?: string; best?: boolean }): boolean {
+/** Recherche de la grille : titre, thème, type, objectif, âges, « le meilleur pour » ; filtres de chapitre, meilleurs et JP référence. */
+export function matchesGrid(e: BookExercise, f: { q?: string; chapter?: string; best?: boolean; jp?: boolean }): boolean {
   const versions = e.versions ?? [];
   if (f.chapter && e.chapter !== f.chapter && !versions.some((v) => v.chapter === f.chapter)) return false;
   if (f.best && !e.approved) return false;
+  if (f.jp && !e.jpReference) return false;
   if (f.q) {
-    const hay = norm(`${e.title} ${e.chapter} ${e.type ?? ""} ${e.objective ?? ""} ${e.ages.join(" ")} ${versions.map((v) => `${v.title} ${v.chapter}`).join(" ")}`);
+    const hay = norm(`${e.title} ${e.chapter} ${e.type ?? ""} ${e.objective ?? ""} ${e.ages.join(" ")} ${e.jpReferenceNote ?? ""} ${versions.map((v) => `${v.title} ${v.chapter}`).join(" ")}`);
     return norm(f.q)
       .split(/\s+/)
       .filter(Boolean)

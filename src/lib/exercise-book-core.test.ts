@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bestExercises, bookChapters, bookExercises, bookPages, chapterStarts, duplicateGroups, matchesGrid, pageOfExercise, spreadStart, turnPage, type BookSource } from "@/lib/exercise-book-core";
+import { bestExercises, bookChapters, bookExercises, bookPages, chapterStarts, duplicateGroups, jpReferenceExercises, matchesGrid, pageOfExercise, spreadStart, turnPage, type BookSource } from "@/lib/exercise-book-core";
 
 const ex = (id: string, o: Partial<BookSource> = {}, bank: Partial<BookSource["bank"]> = {}): BookSource => ({
   id, title: `Exercice ${id}`, category: "Passe", exercise_type: "jeu-reduit", session_place: null, level: null, age_groups: ["U10"], venue: null,
@@ -137,5 +137,41 @@ describe("Bible : chaque exercice une seule fois", () => {
       { id: "4", title: "C", image_hash: null }
     ]);
     expect(g.map((x) => x.map((e) => e.id))).toEqual([["1", "2", "3"], ["4"]]);
+  });
+});
+
+describe("Bible : exercices JP référence", () => {
+  const ref = (id: string, o: Partial<BookSource> = {}, bank: Partial<BookSource["bank"]> = {}) => ex(id, { jp_reference_at: "2026-11-26T12:00:00Z", ...o }, bank);
+
+  it("seulement les exercices marqués par JP, par thème puis par titre, avec « le meilleur pour »", () => {
+    const list = bookExercises([
+      ref("f", { category: "Finition", title: "Bravo", jp_reference_note: "  la frappe en 1 touche  " }),
+      ex("x", { category: "Passe" }, { status: "approuve", average: 10 }),
+      ref("p", { category: "Passe", title: "Zèbre" }),
+      ref("b", { category: "Ball mastery", title: "Alpha" })
+    ]);
+    const refs = jpReferenceExercises(list);
+    expect(refs.map((e) => e.id)).toEqual(["b", "p", "f"]);
+    expect(refs[2].jpReferenceNote).toBe("la frappe en 1 touche");
+    expect(list.find((e) => e.id === "x")?.jpReference).toBe(false);
+  });
+
+  it("une note sans marqueur ne compte pas ; le marqueur passe devant les approuvés dans un chapitre", () => {
+    const list = bookExercises([ex("a", { jp_reference_note: "oublié" }, { status: "approuve", average: 9 }), ref("b")]);
+    expect(list.find((e) => e.id === "a")?.jpReferenceNote).toBeNull();
+    expect(bookChapters(list)[0].exercises.map((e) => e.id)).toEqual(["b", "a"]);
+  });
+
+  it("dans un groupe de doublons, l'exercice gardé est celui que JP a marqué", () => {
+    const list = bookExercises([ex("a", { title: "Rondo" }, { status: "approuve", average: 9 }), ref("b", { title: "rondo" })]);
+    expect(list.map((e) => e.id)).toEqual(["b"]);
+    expect(list[0].versions.map((v) => v.id)).toEqual(["a"]);
+  });
+
+  it("filtre et recherche de la grille", () => {
+    const [a, b] = bookExercises([ref("a", { title: "Un", jp_reference_note: "la passe qui traverse" }), ex("b", { title: "Deux" })]);
+    expect(matchesGrid(a, { jp: true })).toBe(true);
+    expect(matchesGrid(b, { jp: true })).toBe(false);
+    expect(matchesGrid(a, { q: "traverse" })).toBe(true);
   });
 });

@@ -36,7 +36,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { blocks } = await resetBlockOverrides(id);
     return NextResponse.json({ ok: true, blocks });
   }
-  if (action !== "valider" && action !== "annuler-validation" && action !== "retirer" && action !== "remettre") return jsonError("Action invalide", 400);
+  if (action !== "valider" && action !== "annuler-validation" && action !== "retirer" && action !== "remettre" && action !== "reference" && action !== "annuler-reference") return jsonError("Action invalide", 400);
 
   try {
     await setBankDecision(id, action, body?.reason ?? null);

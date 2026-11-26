@@ -88,6 +88,9 @@ export interface ExerciseFiche extends Exercise {
   validated_at: string | null;
   retired_at: string | null;
   retired_reason: string | null;
+  /** Exercice phare de JP (« JP référence », 26 nov. 2026) : posé par JP seulement, distinct de la validation. */
+  jp_reference_at?: string | null;
+  jp_reference_note?: string | null;
 }
 
 export interface ExerciseInput {
@@ -391,7 +394,7 @@ export async function saveRating(input: {
 }
 
 /** Décision de JP : valider la version en cours, retirer, ou remettre à l'essai (nouvelle version). */
-export async function setBankDecision(id: string, action: "valider" | "annuler-validation" | "retirer" | "remettre", reason?: string | null): Promise<void> {
+export async function setBankDecision(id: string, action: "valider" | "annuler-validation" | "retirer" | "remettre" | "reference" | "annuler-reference", reason?: string | null): Promise<void> {
   const exercise = await getExercise(id);
   if (!exercise) throw new Error("Exercice introuvable");
   const now = new Date().toISOString();
@@ -399,6 +402,9 @@ export async function setBankDecision(id: string, action: "valider" | "annuler-v
   if (action === "valider") patch = { validated_version: exercise.version, validated_at: now };
   else if (action === "annuler-validation") patch = { validated_version: null, validated_at: null };
   else if (action === "retirer") patch = { retired_at: now, retired_reason: reason?.trim() || null };
+  // JP référence : la date du premier marquage reste ; seul « le meilleur pour … » change si JP le réécrit.
+  else if (action === "reference") patch = { jp_reference_at: exercise.jp_reference_at ?? now, jp_reference_note: reason?.trim().slice(0, 200) || null };
+  else if (action === "annuler-reference") patch = { jp_reference_at: null, jp_reference_note: null };
   else {
     const version = (exercise.version ?? 1) + 1;
     patch = {

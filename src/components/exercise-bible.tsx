@@ -1,7 +1,8 @@
 "use client";
 
-import { BookOpen, ChevronLeft, ChevronRight, LayoutGrid, ListOrdered, PencilLine, Search, Star, X } from "lucide-react";
+import { Award, BookOpen, ChevronLeft, ChevronRight, LayoutGrid, LayoutList, ListOrdered, Maximize2, PencilLine, Search, Star, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "./exercise-bible.css";
@@ -12,6 +13,7 @@ import {
   bookChapters,
   bookPages,
   chapterStarts,
+  jpReferenceExercises,
   matchesGrid,
   pageOfExercise,
   spreadStart,
@@ -25,6 +27,8 @@ import type { ExerciseDiagram } from "@/lib/exercises-repo";
 const fr = (n: number | null) => (n === null ? null : n.toLocaleString("fr-CA", { maximumFractionDigits: 1 }));
 const PAGE_KEY = "nv-bible-page";
 const VIEW_KEY = "nv-bible-vue";
+const GRID_KEY = "nv-bible-descriptif";
+const GRID_STEP = 16;
 
 function hash(s: string): number {
   let h = 2166136261;
@@ -93,6 +97,11 @@ function Lines({ text }: { text: string | null }) {
 function Badges({ ex }: { ex: BookExercise }) {
   return (
     <p className="xbk-badges">
+      {ex.jpReference ? (
+        <span data-tone="jp">
+          <Award size={12} strokeWidth={2} aria-hidden /> JP référence
+        </span>
+      ) : null}
       {ex.approved ? (
         <span data-tone="good">
           <Star size={12} strokeWidth={2} aria-hidden /> Meilleur exercice{ex.average !== null ? ` · ${fr(ex.average)}/10` : ""}
@@ -108,6 +117,77 @@ function Badges({ ex }: { ex: BookExercise }) {
   );
 }
 
+function JpNote({ ex }: { ex: BookExercise }) {
+  if (!ex.jpReferenceNote) return null;
+  return (
+    <p className="xbk-jp-note">
+      <Award size={14} strokeWidth={2} aria-hidden />
+      <span>
+        <strong>Le meilleur pour :</strong> {ex.jpReferenceNote}
+      </span>
+    </p>
+  );
+}
+
+/** Admin seulement : JP marque (ou démarque) un exercice comme « JP référence », avec ce pour quoi c'est le meilleur. */
+function JpReferenceControl({ ex }: { ex: BookExercise }) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [note, setNote] = useState(ex.jpReferenceNote ?? "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const send = async (action: "reference" | "annuler-reference") => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/exercises/${ex.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, reason: note }) });
+      if (!res.ok) {
+        setError((await res.json().catch(() => null))?.error ?? "Pas enregistré. Réessaie.");
+        return;
+      }
+      setEditing(false);
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (editing) {
+    return (
+      <form
+        className="xbk-jp-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          send("reference");
+        }}
+      >
+        <label>
+          <span>Le meilleur pour (facultatif)</span>
+          <input className="admin-input" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Ex. : la passe qui traverse, U9-U10" autoFocus />
+        </label>
+        <span className="xbk-jp-form-actions">
+          <button type="submit" className="admin-btn-primary" disabled={busy}>
+            {busy ? "Un instant…" : ex.jpReference ? "Enregistrer" : "Marquer JP référence"}
+          </button>
+          <button type="button" className="admin-btn-ghost" onClick={() => setEditing(false)} disabled={busy}>
+            Annuler
+          </button>
+          {ex.jpReference ? (
+            <button type="button" className="xbk-jp-remove" onClick={() => send("annuler-reference")} disabled={busy}>
+              Retirer de JP référence
+            </button>
+          ) : null}
+        </span>
+        {error ? <span className="xbk-jp-error">{error}</span> : null}
+      </form>
+    );
+  }
+  return (
+    <button type="button" className="admin-btn-ghost xbk-tool xbk-jp-toggle" data-on={ex.jpReference || undefined} onClick={() => setEditing(true)} aria-pressed={ex.jpReference}>
+      <Award size={16} strokeWidth={1.75} aria-hidden /> {ex.jpReference ? "JP référence" : "Marquer JP référence"}
+    </button>
+  );
+}
+
 /** La fiche complète d'un exercice : schéma, organisation, déroulement, consignes, variantes, tout. */
 export function ExerciseSheet({ ex, eager }: { ex: BookExercise; eager?: boolean }) {
   const hasVariants = ex.easier || ex.harder || ex.cognitive || ex.variants;
@@ -115,6 +195,7 @@ export function ExerciseSheet({ ex, eager }: { ex: BookExercise; eager?: boolean
     <div className="xbk-sheet">
       <h3 className="xbk-sheet-title">{ex.title}</h3>
       <Badges ex={ex} />
+      <JpNote ex={ex} />
       <ExerciseVisual ex={ex} eager={eager} />
       {ex.objective ? (
         <Section label="Objectif">
@@ -309,6 +390,7 @@ function Page({ page, ctx }: { page: BookPage; ctx: { chapters: BookChapter[]; s
             </Link>
           ) : null}
         </p>
+        {ctx.ficheBase ? <JpReferenceControl key={`${page.exercise.id}-${page.exercise.jpReference}`} ex={page.exercise} /> : null}
         <ExerciseSheet ex={page.exercise} eager />
       </>
     );
@@ -447,15 +529,16 @@ function Book({ pages, chapters, page, setPage, total, best, ficheBase }: { page
 
 /* ── La grille (descriptif) ───────────────────────────────────────────────── */
 
-function Card({ ex, onOpen }: { ex: BookExercise; onOpen: () => void }) {
+function Card({ ex, onOpen, showNote }: { ex: BookExercise; onOpen: () => void; showNote?: boolean }) {
   return (
     <button type="button" className="xbk-card" onClick={onOpen}>
       <ExerciseVisual ex={ex} />
       <span className="xbk-card-body">
         <span className="xbk-card-title">
-          {ex.approved ? <Star size={14} strokeWidth={2} className="xbk-star" aria-label="Meilleur exercice" /> : null}
+          {ex.jpReference ? <Award size={14} strokeWidth={2} className="xbk-jp-icon" aria-label="JP référence" /> : ex.approved ? <Star size={14} strokeWidth={2} className="xbk-star" aria-label="Meilleur exercice" /> : null}
           {ex.title}
         </span>
+        {showNote && ex.jpReferenceNote ? <span className="xbk-card-note">Le meilleur pour : {ex.jpReferenceNote}</span> : null}
         <span className="xbk-card-meta">
           {ex.chapter}
           {ex.type ? ` · ${ex.type}` : ""}
@@ -466,20 +549,128 @@ function Card({ ex, onOpen }: { ex: BookExercise; onOpen: () => void }) {
   );
 }
 
-function Grid({ list, chapters, onOpen }: { list: BookExercise[]; chapters: BookChapter[]; onOpen: (id: string) => void }) {
+/** Une grande fiche du descriptif (JP, 26 nov. 2026) : la diapo entière et, à côté, l'explication, la progression et la
+ *  limite (variantes), lisibles sans ouvrir la fiche. */
+function WideCard({ ex, onOpen, canMark }: { ex: BookExercise; onOpen: () => void; canMark: boolean }) {
+  const explanation = ex.instructions ?? ex.coachingPoints;
+  return (
+    <article className="xbk-wide" data-jp={ex.jpReference || undefined} aria-label={ex.title}>
+      <button type="button" className="xbk-wide-visual" onClick={onOpen} aria-label={`Ouvrir la fiche complète : ${ex.title}`}>
+        <ExerciseVisual ex={ex} />
+      </button>
+      <div className="xbk-wide-body">
+        <div className="xbk-wide-head">
+          <p className="xbk-wide-kicker">{ex.chapter}</p>
+          <h3 className="xbk-wide-title">{ex.title}</h3>
+          <Badges ex={ex} />
+          <JpNote ex={ex} />
+        </div>
+        {ex.objective ? <p className="xbk-wide-objective">{ex.objective}</p> : null}
+        {ex.dimensions ? (
+          <p className="xbk-wide-space">
+            <strong>Espace :</strong> {ex.dimensions}
+          </p>
+        ) : null}
+        {explanation ? (
+          <Section label="Explication">
+            <Lines text={explanation} />
+          </Section>
+        ) : null}
+        {ex.progression ? (
+          <Section label="Progression">
+            <Lines text={ex.progression} />
+          </Section>
+        ) : null}
+        {ex.easier || ex.harder ? (
+          <Section label="Variantes et limite">
+            <dl className="xbk-dl">
+              {ex.easier ? (
+                <div>
+                  <dt>Plus facile</dt>
+                  <dd>{ex.easier}</dd>
+                </div>
+              ) : null}
+              {ex.harder ? (
+                <div>
+                  <dt>Plus difficile</dt>
+                  <dd>{ex.harder}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </Section>
+        ) : null}
+        <div className="xbk-wide-foot">
+          <button type="button" className="admin-btn-ghost xbk-tool" onClick={onOpen}>
+            <Maximize2 size={15} strokeWidth={1.75} aria-hidden /> Fiche complète
+          </button>
+          {canMark ? <JpReferenceControl key={`${ex.id}-${ex.jpReference}`} ex={ex} /> : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function Grid({ list, chapters, onOpen, canMark }: { list: BookExercise[]; chapters: BookChapter[]; onOpen: (id: string) => void; canMark: boolean }) {
   const [q, setQ] = useState("");
   const [chapter, setChapter] = useState("");
   const [best, setBest] = useState(false);
-  const shown = list.filter((e) => matchesGrid(e, { q, chapter, best }));
+  const [jp, setJp] = useState(false);
+  const [layout, setLayout] = useState<"fiches" | "vignettes">("fiches");
+  const [limit, setLimit] = useState(GRID_STEP);
+  const more = useRef<HTMLDivElement>(null);
+  const shown = list.filter((e) => matchesGrid(e, { q, chapter, best, jp }));
+  const jpCount = list.filter((e) => e.jpReference).length;
+
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(GRID_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (v === "fiches" || v === "vignettes") setLayout(v);
+    } catch {
+      /* stockage indisponible : grandes fiches */
+    }
+  }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setLimit(GRID_STEP), [q, chapter, best, jp, layout]);
+  // Les grandes fiches arrivent par paquets de 16 en défilant (380 diapos d'un coup alourdiraient la page).
+  useEffect(() => {
+    const el = more.current;
+    if (!el || layout !== "fiches") return;
+    const io = new IntersectionObserver(([entry]) => entry.isIntersecting && setLimit((n) => n + GRID_STEP), { rootMargin: "800px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [layout, limit, shown.length]);
+  const chooseLayout = (v: "fiches" | "vignettes") => {
+    setLayout(v);
+    try {
+      localStorage.setItem(GRID_KEY, v);
+    } catch {
+      /* rien */
+    }
+  };
+
   return (
     <div className="xbk-grid-wrap">
       <div className="xbk-grid-filters">
-        <label className="xbk-search">
-          <Search size={16} strokeWidth={1.75} aria-hidden />
-          <input className="admin-input" type="search" placeholder="Chercher un exercice, un thème, un âge" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Chercher" />
-        </label>
+        <div className="xbk-grid-bar">
+          <label className="xbk-search">
+            <Search size={16} strokeWidth={1.75} aria-hidden />
+            <input className="admin-input" type="search" placeholder="Chercher un exercice, un thème, un âge" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Chercher" />
+          </label>
+          <div className="xbk-seg" role="group" aria-label="Taille de l'affichage">
+            <button type="button" aria-pressed={layout === "fiches"} onClick={() => chooseLayout("fiches")}>
+              <LayoutList size={16} strokeWidth={1.75} aria-hidden /> Grandes fiches
+            </button>
+            <button type="button" aria-pressed={layout === "vignettes"} onClick={() => chooseLayout("vignettes")}>
+              <LayoutGrid size={16} strokeWidth={1.75} aria-hidden /> Vignettes
+            </button>
+          </div>
+        </div>
         <div className="xbk-chips" role="group" aria-label="Chapitre">
-          <button type="button" data-on={String(!chapter && !best)} onClick={() => { setChapter(""); setBest(false); }}>Tous ({list.length})</button>
+          <button type="button" data-on={String(!chapter && !best && !jp)} onClick={() => { setChapter(""); setBest(false); setJp(false); }}>Tous ({list.length})</button>
+          <button type="button" data-on={String(jp)} onClick={() => setJp(!jp)}>
+            <Award size={13} strokeWidth={2} aria-hidden /> JP référence ({jpCount})
+          </button>
           <button type="button" data-on={String(best)} onClick={() => setBest(!best)}>
             <Star size={13} strokeWidth={2} aria-hidden /> Meilleurs
           </button>
@@ -490,12 +681,26 @@ function Grid({ list, chapters, onOpen }: { list: BookExercise[]; chapters: Book
           ))}
         </div>
       </div>
-      {shown.length ? (
+      {!shown.length ? (
+        <p className="xbk-empty">Aucun exercice pour cette recherche.</p>
+      ) : layout === "vignettes" ? (
         <div className="xbk-grid">
           {shown.map((e) => <Card key={e.id} ex={e} onOpen={() => onOpen(e.id)} />)}
         </div>
       ) : (
-        <p className="xbk-empty">Aucun exercice pour cette recherche.</p>
+        <div className="xbk-wide-list">
+          <p className="xbk-muted">
+            {shown.length} exercice{shown.length > 1 ? "s" : ""} · la diapo entière, l&apos;explication, la progression et la limite ; « Fiche complète » pour l&apos;organisation selon le nombre et les consignes.
+          </p>
+          {shown.slice(0, limit).map((e) => <WideCard key={e.id} ex={e} onOpen={() => onOpen(e.id)} canMark={canMark} />)}
+          {limit < shown.length ? (
+            <div ref={more} className="xbk-wide-more">
+              <button type="button" className="admin-btn-ghost" onClick={() => setLimit((n) => n + GRID_STEP)}>
+                Voir {Math.min(GRID_STEP, shown.length - limit)} exercices de plus ({shown.length - limit} restants)
+              </button>
+            </div>
+          ) : null}
+        </div>
       )}
     </div>
   );
@@ -529,6 +734,7 @@ function Modal({ ex, onClose, onBook, ficheBase }: { ex: BookExercise; onClose: 
                 <PencilLine size={16} strokeWidth={1.75} aria-hidden /> Modifier
               </Link>
             ) : null}
+            {ficheBase ? <JpReferenceControl key={`${ex.id}-${ex.jpReference}`} ex={ex} /> : null}
             <button type="button" className="xbk-close" onClick={onClose} aria-label="Fermer">
               <X size={20} strokeWidth={1.75} />
             </button>
@@ -547,6 +753,7 @@ export function ExerciseBible({ exercises, ficheBase }: { exercises: BookExercis
   const chapters = useMemo(() => bookChapters(exercises), [exercises]);
   const pages = useMemo(() => bookPages(chapters), [chapters]);
   const best = useMemo(() => bestExercises(exercises, 12), [exercises]);
+  const references = useMemo(() => jpReferenceExercises(exercises), [exercises]);
   const approvedCount = exercises.filter((e) => e.approved).length;
   const [view, setView] = useState<"livre" | "grille">("livre");
   const [page, setPageState] = useState(0);
@@ -588,6 +795,26 @@ export function ExerciseBible({ exercises, ficheBase }: { exercises: BookExercis
 
   return (
     <div className="xbk">
+      <section className="xbk-best" data-kind="jp" aria-label="Exercices JP référence">
+        <div className="xbk-best-head">
+          <h2 className="mda-h2" style={{ margin: 0 }}>
+            <Award size={16} strokeWidth={2} className="xbk-jp-icon" aria-hidden /> Exercices JP référence
+          </h2>
+          <p className="xbk-muted">Les exercices phares de JP : ses meilleurs pour chaque thème.</p>
+        </div>
+        {references.length ? (
+          <div className="xbk-best-row">
+            {references.map((e) => <Card key={e.id} ex={e} onOpen={() => setOpen(e.id)} showNote />)}
+          </div>
+        ) : (
+          <p className="xbk-empty">
+            {ficheBase
+              ? "Aucun pour l'instant. Ouvre un exercice (Descriptif ou la Bible) et touche « Marquer JP référence », avec ce pour quoi c'est le meilleur."
+              : "JP n'a pas encore choisi ses exercices de référence."}
+          </p>
+        )}
+      </section>
+
       <section className="xbk-best" aria-label="Meilleurs exercices">
         <div className="xbk-best-head">
           <h2 className="mda-h2" style={{ margin: 0 }}>
@@ -618,7 +845,7 @@ export function ExerciseBible({ exercises, ficheBase }: { exercises: BookExercis
       ) : view === "livre" ? (
         <Book pages={pages} chapters={chapters} page={Math.min(page, pages.length - 1)} setPage={setPage} total={exercises.length} best={approvedCount} ficheBase={ficheBase} />
       ) : (
-        <Grid list={exercises} chapters={chapters} onOpen={setOpen} />
+        <Grid list={exercises} chapters={chapters} onOpen={setOpen} canMark={Boolean(ficheBase)} />
       )}
 
       {openEx ? <Modal ex={openEx} onClose={() => setOpen(null)} onBook={() => toBook(openEx.id)} ficheBase={ficheBase} /> : null}

@@ -170,3 +170,55 @@
 .xbk-version { border-top: 1px solid var(--adm-border); padding: 6px 0; }
 .xbk-version > summary { cursor: pointer; font-weight: 600; color: var(--adm-text); }
 .xbk-version[open] > summary { margin-bottom: 4px; }
+
+/* Exercices JP référence (JP, 26 nov. 2026) : les phares de JP, en mauve Valkyria. */
+.xbk-jp-icon { color: var(--adm-accent); vertical-align: -2px; flex: none; }
+.xbk-badges span[data-tone="jp"] { background: var(--adm-accent); color: var(--adm-on-accent); font-weight: 600; }
+.xbk-jp-note { display: flex; align-items: flex-start; gap: 6px; margin: 0; padding: 8px 10px; border-radius: var(--adm-radius-sm); background: var(--adm-accent-soft); color: var(--adm-text); font-size: 0.88rem; line-height: 1.45; }
+.xbk-jp-note svg { color: var(--adm-accent); margin-top: 2px; flex: none; }
+.xbk-card-note { font-size: 0.8rem; line-height: 1.35; color: var(--adm-text); }
+.xbk-best[data-kind="jp"] .xbk-card { border-color: color-mix(in srgb, var(--adm-accent) 45%, var(--adm-border)); }
+.xbk-jp-toggle[data-on] { border-color: var(--adm-accent); color: var(--adm-text); background: var(--adm-accent-soft); }
+.xbk-jp-toggle[data-on] svg { color: var(--adm-accent); }
+.xbk-jp-form { display: grid; gap: 8px; width: 100%; padding: 10px 12px; border: 1px solid var(--adm-accent); border-radius: var(--adm-radius-sm); background: var(--adm-accent-soft); }
+.xbk-jp-form label { display: grid; gap: 4px; font-size: 0.8rem; font-weight: 600; color: var(--adm-text-2); }
+.xbk-jp-form .admin-input { width: 100%; }
+.xbk-jp-form-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.xbk-jp-remove { border: 0; background: transparent; color: var(--adm-bad); font: inherit; font-size: 0.84rem; cursor: pointer; padding: 8px 4px; }
+.xbk-jp-error { color: var(--adm-bad); font-size: 0.84rem; }
+
+/* Descriptif en grandes fiches : la diapo entière + l'explication, la progression et la limite, sans clic. */
+.xbk-grid-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
+.xbk-grid-bar .xbk-search { flex: 1 1 280px; }
+.xbk-seg { display: inline-flex; padding: 3px; gap: 3px; border-radius: 10px; background: var(--adm-surface-2); }
+.xbk-seg button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--adm-text-2); font: inherit; font-size: 0.84rem; cursor: pointer; white-space: nowrap; }
+.xbk-seg button[aria-pressed="true"] { background: var(--adm-surface); color: var(--adm-text); font-weight: 600; box-shadow: var(--adm-shadow); }
+.xbk-wide-list { display: grid; gap: 16px; container-type: inline-size; min-width: 0; }
+.xbk-wide { display: grid; grid-template-columns: minmax(0, 1fr); border: 1px solid var(--adm-border); border-radius: var(--adm-radius); background: var(--adm-surface); overflow: hidden; }
+.xbk-wide[data-jp] { border-color: color-mix(in srgb, var(--adm-accent) 55%, var(--adm-border)); }
+.xbk-wide-visual { display: block; padding: 0; border: 0; background: var(--adm-surface-2); cursor: zoom-in; border-bottom: 1px solid var(--adm-line); }
+.xbk-wide-visual:focus-visible { outline: 2px solid var(--adm-accent); outline-offset: -2px; }
+.xbk-wide-visual .xbk-visual { border-radius: 0; aspect-ratio: auto; min-height: 180px; }
+.xbk-wide-visual .xbk-visual img { height: auto; max-height: 78vh; }
+.xbk-wide-visual .xbk-visual svg { aspect-ratio: 2 / 1; height: auto; }
+.xbk-wide-body { display: grid; align-content: start; gap: 12px; padding: 16px 18px 18px; min-width: 0; }
+.xbk-wide-head { display: grid; gap: 6px; }
+.xbk-wide-kicker { margin: 0; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--adm-text-3); }
+.xbk-wide-title { margin: 0; font-size: 1.15rem; line-height: 1.3; font-weight: 650; color: var(--adm-text); }
+.xbk-wide-objective { margin: 0; font-size: 0.92rem; line-height: 1.5; color: var(--adm-text-2); }
+.xbk-wide-space { margin: 0; font-size: 0.84rem; line-height: 1.45; color: var(--adm-text-2); }
+.xbk-wide-space strong { color: var(--adm-text); font-weight: 600; }
+.xbk-wide .xbk-dl > div { grid-template-columns: 110px 1fr; }
+.xbk-wide-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 4px; }
+.xbk-wide-more { display: flex; justify-content: center; padding: 8px 0 4px; }
+@container (min-width: 860px) {
+  .xbk-wide { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+  .xbk-wide-visual { border-bottom: 0; border-right: 1px solid var(--adm-line); display: flex; align-items: flex-start; }
+  .xbk-wide-visual .xbk-visual { width: 100%; position: sticky; top: 12px; }
+}
+@media (max-width: 760px) {
+  .xbk-seg { width: 100%; }
+  .xbk-seg button { flex: 1; justify-content: center; }
+  .xbk-wide-body { padding: 14px; }
+  .xbk-wide .xbk-dl > div { grid-template-columns: 1fr; }
+}
