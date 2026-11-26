@@ -155,7 +155,7 @@ function splitTax(totalCents: number, taxRate: number): { netCents: number; taxC
 /** Étale une charge récurrente en une occurrence par mois, de sa date de
  *  départ jusqu'au mois courant (ou jusqu'à sa date de fin si définie). Une
  *  charge non récurrente ne produit qu'une seule occurrence. */
-function expandExpense(expense: RevenueExpense, today: Date): ExpenseEvent[] {
+export function expandExpense(expense: RevenueExpense, today: Date): ExpenseEvent[] {
   if (!expense.is_recurring) {
     return [{
       expenseId: expense.id,

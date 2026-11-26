@@ -259,6 +259,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/registre-contrats", label: "Échéances des contrats", adminOnly: true },
           { href: "/admin/revenus/annuel", label: "Vue annuelle", adminOnly: true },
           { href: "/admin/revenus/calculateur", label: "Calculateur de lancement", adminOnly: true },
+          { href: "/admin/revenus/saisons", label: "Plans de saison", adminOnly: true },
           { href: "/admin/revenus/projets", label: "Projets à lancer", adminOnly: true }
         ]
       }

@@ -368,3 +368,23 @@ export async function saveSeasonSettings(season: string, settings: Partial<Seaso
   if (error) throw new Error(error.message);
   return all;
 }
+
+/** Saisons comptables (table seasons, sans la démo) : pour lier un plan de saison à ses dépenses réelles. */
+export async function getAccountingSeasons(): Promise<{ id: string; label: string }[]> {
+  const { data } = await db().from("seasons").select("id, label, starts_on").neq("id", "demo").order("starts_on", { ascending: false, nullsFirst: false });
+  return ((data ?? []) as any[]).map((s) => ({ id: String(s.id), label: String(s.label ?? s.id) }));
+}
+
+/** Dépensé à ce jour par saison comptable et par catégorie (charges récurrentes étalées jusqu'à aujourd'hui). */
+export async function getSpentBySeason(): Promise<Record<string, Record<string, number>>> {
+  const [{ getRevenueExpenses }, { expandExpense }] = await Promise.all([import("@/lib/revenue-repo"), import("@/lib/revenue-calc")]);
+  const out: Record<string, Record<string, number>> = {};
+  const now = new Date();
+  for (const e of await getRevenueExpenses()) {
+    for (const ev of expandExpense(e, now)) {
+      const bySeason = (out[ev.seasonKey] ??= {});
+      bySeason[ev.category] = (bySeason[ev.category] ?? 0) + ev.amountCents;
+    }
+  }
+  return out;
+}

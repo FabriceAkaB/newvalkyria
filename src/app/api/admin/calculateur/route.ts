@@ -65,7 +65,9 @@ const schema = z.discriminatedUnion("action", [
       jpSalaryCents: cents,
       otherChargesCents: cents,
       fill: z.enum(["pessimistic", "method", "full"]),
-      excluded: z.array(z.string().max(80)).max(200)
+      excluded: z.array(z.string().max(80)).max(200),
+      jpHourValueCents: cents.optional(),
+      seasonKey: z.string().max(80).nullable().optional()
     })
   })
 ]);

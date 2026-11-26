@@ -198,6 +198,8 @@ export function LaunchCalculator({
   scenarios,
   alerts,
   seasons,
+  accountingSeasons,
+  initialSeason,
   loadError,
   initialProgramKey,
   initialScenarioId
@@ -207,6 +209,8 @@ export function LaunchCalculator({
   scenarios: LaunchScenario[];
   alerts: LaunchAlert[];
   seasons: Record<string, SeasonSettings>;
+  accountingSeasons: { id: string; label: string }[];
+  initialSeason: string | null;
   loadError: string | null;
   initialProgramKey: string | null;
   initialScenarioId: string | null;
@@ -839,7 +843,7 @@ export function LaunchCalculator({
         </section>
       ) : null}
 
-      <SeasonBudget scenarios={scenarios} initial={seasons} focus={form.season.trim() || null} />
+      <SeasonBudget scenarios={scenarios} initial={seasons} focus={initialSeason ?? (form.season.trim() || null)} accountingSeasons={accountingSeasons} />
 
       <ScenarioTable scenarios={scenarios} current={r.ready && dirty ? { name: form.name.trim() || "Calcul en cours", inputs, results: r } : null} loadedId={loadedId} onOpen={openScenario} onDelete={remove} />
 
@@ -923,12 +927,23 @@ function Field({
 
 /** Cumul d'une saison : les scénarios cochés additionnés, puis le salaire de JP et les autres charges ;
  *  les choix s'enregistrent tout seuls (une seconde après le dernier changement). */
-function SeasonBudget({ scenarios, initial, focus }: { scenarios: LaunchScenario[]; initial: Record<string, SeasonSettings>; focus: string | null }) {
+function SeasonBudget({
+  scenarios,
+  initial,
+  focus,
+  accountingSeasons
+}: {
+  scenarios: LaunchScenario[];
+  initial: Record<string, SeasonSettings>;
+  focus: string | null;
+  accountingSeasons: { id: string; label: string }[];
+}) {
   const labels = useMemo(() => seasonLabels(scenarios), [scenarios]);
   const [season, setSeason] = useState<string>(() => (focus && labels.includes(focus) ? focus : labels[0] ?? ""));
   const [all, setAll] = useState<Record<string, SeasonSettings>>(initial);
   const [salary, setSalary] = useState("");
   const [other, setOther] = useState("");
+  const [hourValue, setHourValue] = useState("");
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const dirty = useRef(false);
   const current = labels.includes(season) ? season : labels[0] ?? "";
@@ -937,6 +952,7 @@ function SeasonBudget({ scenarios, initial, focus }: { scenarios: LaunchScenario
   useEffect(() => {
     setSalary(showCents(settings.jpSalaryCents));
     setOther(showCents(settings.otherChargesCents));
+    setHourValue(showCents(settings.jpHourValueCents));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
 
@@ -1063,6 +1079,29 @@ function SeasonBudget({ scenarios, initial, focus }: { scenarios: LaunchScenario
               placeholder="0"
               hint="Ce qui n'est dans aucun programme : comptable, logiciels, assurance générale…"
             />
+            <Field
+              label="Ce que vaut ton heure"
+              unit="$/h"
+              value={hourValue}
+              onChange={(v) => {
+                setHourValue(v);
+                update({ jpHourValueCents: toCents(v) });
+              }}
+              placeholder="50"
+              hint="Pour le coût d'opportunité de ton temps"
+            />
+            <label className="lc-field">
+              <span className="lc-field-label">Saison comptable liée</span>
+              <select className="admin-input lc-select" value={settings.seasonKey ?? ""} onChange={(e) => update({ seasonKey: e.target.value || null })}>
+                <option value="">Pas encore liée</option>
+                {accountingSeasons.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.label}
+                  </option>
+                ))}
+              </select>
+              <span className="lc-hint">Pour comparer le budget aux dépenses entrées dans Revenus</span>
+            </label>
           </div>
           {current === NO_SEASON ? (
             <p className="lc-hint" style={{ margin: "8px 0 0", color: "var(--adm-text-2)" }}>
@@ -1103,6 +1142,16 @@ function SeasonBudget({ scenarios, initial, focus }: { scenarios: LaunchScenario
               <dd style={{ color: leftTone }}>{dollars(t.leftCents)}</dd>
             </div>
           </dl>
+          <p className="lc-hint" style={{ margin: "12px 0 0", color: t.overOpportunityCents >= 0 ? "var(--adm-text-2)" : "var(--adm-bad)" }}>
+            {t.jpHours
+              ? `Coût d'opportunité : tes ${hoursLabel(t.jpHours)} valent ${dollars(t.opportunityCents)} à ${dollars(settings.jpHourValueCents)}/h. ${t.overOpportunityCents >= 0 ? `Les programmes rapportent ${dollars(t.overOpportunityCents)} de plus.` : `Les programmes rapportent ${dollars(-t.overOpportunityCents)} de moins : ton temps vaut plus ailleurs.`}`
+              : "Entrez tes heures dans chaque scénario pour voir le coût d'opportunité."}
+          </p>
+          <p style={{ margin: "12px 0 0" }}>
+            <a className="admin-btn-ghost" style={{ display: "inline-flex", alignItems: "center", minHeight: 40, padding: "0 14px" }} href={`/admin/revenus/saisons?saison=${encodeURIComponent(current)}`}>
+              Voir le plan et le budget de la saison
+            </a>
+          </p>
           <p className="lc-hint" style={{ margin: "12px 0 0" }}>
             {count(t.signups, "inscription")} · {t.jpHours ? `${hoursLabel(t.jpHours)} de ton temps${t.profitPerJpHourCents !== null ? `, ${dollars(t.profitPerJpHourCents)} de bénéfice par heure` : ""}` : "heures de JP non entrées"}
           </p>
