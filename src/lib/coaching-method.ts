@@ -61,7 +61,7 @@ export interface Principle {
 export const DEFAULT_PRINCIPLES: Principle[] = [
   { title: "Confiance et appartenance", text: "Chaque fille se sent à sa place dans le groupe ; l'erreur est valorisée, c'est comme ça qu'on apprend." },
   { title: "Chaque fille comparée à elle-même", text: "Dans les tests et les bulletins, on compare une fille à elle-même (son jour 1, son mois précédent), jamais aux autres." },
-  { title: "Le cri Valkyria", text: "Après une erreur, le groupe rebondit ensemble avec le cri Valkyria." },
+  { title: "La poignée de main Valkyria", text: "L'éducatrice fait la poignée de main Valkyria avec chacune des filles : à l'arrivée et à la fin de la pratique, et pour rebondir ensemble après une erreur." },
   { title: "500 touches par séance", text: "Un ballon par fille, aucune file d'attente, explications courtes." },
   { title: "Prévention", text: "L'échauffement FIFA 11+ Kids à chaque séance (prévention du ligament croisé)." },
   { title: "La règle du coach", text: "Parler moins de 20 % du temps, poser des questions, nommer chaque fille avec un compliment précis." },

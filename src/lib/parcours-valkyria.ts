@@ -90,7 +90,7 @@ export const JOUEUSE: { title: string; text: string }[] = [
   { title: "Technique", text: "Beaucoup de touches (un ballon par fille, aucune file), les gestes du passeport de son niveau, le thème de la semaine vu sous pression et dans le jeu." },
   { title: "Intelligence de jeu", text: "Des formes jouées avec prises de décision à chaque séance, des dossards de couleurs pour regarder avant de recevoir, les clous du thème toujours avec les mêmes mots." },
   { title: "Confiance", text: "Elle est comparée à elle-même (son jour 1, son mois précédent), jamais aux autres ; l'erreur fait partie de l'apprentissage ; un compliment précis à chaque séance." },
-  { title: "Appartenance", text: "Le cri Valkyria, les gagnantes du jour, ses points et ses niveaux (de Recrue à Légende), des récompenses, des amies dans son groupe." },
+  { title: "Appartenance", text: "La poignée de main Valkyria avec chaque fille, les gagnantes du jour, ses points et ses niveaux (de Recrue à Légende), des récompenses, des amies dans son groupe." },
   { title: "Plaisir", text: "Elle donne sa note de plaisir à chaque pratique ; ce qu'elle demande (matchs, tirs, jeux…) revient dans les pratiques suivantes." },
   { title: "Prévention", text: "Échauffement FIFA 11+ Kids intégré au jeu d'entrée ; la fatigue est suivie à chaque séance." }
 ];
