@@ -228,17 +228,20 @@ export const isGameTitle = (title: string | null | undefined) => {
   return /\b(match|matchs|hors-concours|tournoi|partie|game|contre)\b/i.test(t) || /\svs\.?\s/i.test(t) || /(^|\s)c\.\s/.test(t);
 };
 
-export type AttendanceSource = "mcs" | "educateur" | "borne";
+export type AttendanceSource = "mcs" | "educateur" | "borne" | "defaut";
 
 /** Ce que la lecture de MonClubSportif fait des joueuses d'une pratique. MCS fait foi : une réponse (présente, en retard,
- *  absente) remplace la marque de l'éducateur ou de la borne ; « pas de réponse » ou « incertaine » ne touche à rien
- *  (la marque de l'éducateur reste) et seul l'état lu est noté. Toutes les membres assignées sont attendues, remplaçantes
- *  et invitées comprises. `corrected` : lignes qui existaient avec un autre état. */
+ *  absente) remplace la marque de l'éducateur ou de la borne ; « pas de réponse » ou « incertaine » ne touche pas à la
+ *  marque de l'éducateur (seul l'état lu est noté). Toutes les membres assignées sont attendues, remplaçantes et
+ *  invitées comprises. `corrected` : lignes qui existaient avec un autre état.
+ *  `defaultPresent` (JP, 26 nov. 2026) : une fille assignée qui n'a pas mis sa présence, et que personne n'a encore
+ *  marquée, est présente par défaut (source « defaut ») ; une réponse « absente » plus tard la corrige. */
 export function mcsAttendancePlan(
   members: { registrationId: string; state: string | undefined }[],
-  existing: Map<string, { status: string; source: string | null }>
-): { writes: { registrationId: string; status: "present" | "late" | "absent"; mcsStatus: string; changed: boolean; created: boolean }[]; notes: { registrationId: string; mcsStatus: string }[]; expected: string[]; corrected: number; created: number } {
-  const writes: { registrationId: string; status: "present" | "late" | "absent"; mcsStatus: string; changed: boolean; created: boolean }[] = [];
+  existing: Map<string, { status: string; source: string | null }>,
+  opts: { defaultPresent?: boolean } = {}
+): { writes: { registrationId: string; status: "present" | "late" | "absent"; mcsStatus: string; changed: boolean; created: boolean; source: "mcs" | "defaut" }[]; notes: { registrationId: string; mcsStatus: string }[]; expected: string[]; corrected: number; created: number } {
+  const writes: { registrationId: string; status: "present" | "late" | "absent"; mcsStatus: string; changed: boolean; created: boolean; source: "mcs" | "defaut" }[] = [];
   const notes: { registrationId: string; mcsStatus: string }[] = [];
   const expected: string[] = [];
   for (const m of members) {
@@ -247,8 +250,9 @@ export function mcsAttendancePlan(
     const mcsStatus = m.state ?? "unknown";
     const status = attendanceFromMcs(m.state);
     const prev = existing.get(m.registrationId) ?? null;
-    if (status) writes.push({ registrationId: m.registrationId, status, mcsStatus, changed: !!prev && prev.status !== status, created: !prev });
+    if (status) writes.push({ registrationId: m.registrationId, status, mcsStatus, changed: !!prev && prev.status !== status, created: !prev, source: "mcs" });
     else if (prev) notes.push({ registrationId: m.registrationId, mcsStatus });
+    else if (opts.defaultPresent) writes.push({ registrationId: m.registrationId, status: "present", mcsStatus, changed: false, created: true, source: "defaut" });
   }
   return { writes, notes, expected, corrected: writes.filter((w) => w.changed).length, created: writes.filter((w) => w.created).length };
 }

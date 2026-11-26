@@ -673,6 +673,21 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
     if (id) byId.set(id, { ...e, start: Number(s), endHm: Number(en) ? hm(Number(en)) : e.end_time ? String(e.end_time).slice(0, 5) : null });
   }
   const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  // Filles qui ne sont pas dans la liste des inscrites de la saison (ex. inscription d'essai de l'été, puis ajoutée à
+  // l'équipe dans MCS) : retrouvées par leur nom dans toutes les inscriptions payées de la saison, pour que leur présence
+  // et la liste du sondage les suivent (JP, 26 nov. 2026 : Violette et Sophia manquaient au sondage).
+  const { data: seasonRow } = await db().from("seasons").select("id").eq("is_active", true).maybeSingle();
+  const { data: otherRegs } = await db()
+    .from("registrations")
+    .select("id, player_first_name, player_last_name, is_trial, created_at")
+    .eq("season_id", seasonRow?.id ?? "automne-hiver-2026")
+    .not("status", "in", "(cancelled,unavailable)")
+    .order("is_trial", { ascending: true })
+    .order("created_at", { ascending: false });
+  const fallbackOf = (name: string) => {
+    const r = ((otherRegs ?? []) as any[]).find((x) => sameMemberName(name, String(x.player_first_name ?? "").trim(), String(x.player_last_name ?? "").trim()));
+    return r ? { registrationId: r.id as string, firstName: String(r.player_first_name).trim(), lastName: String(r.player_last_name).trim() } : null;
+  };
   const regName = new Map(players.filter((p) => p.registrationId).map((p) => [p.registrationId!, `${p.firstName} ${p.lastName}`.trim()]));
   const unmatched = new Set<string>();
   // Une activité du site peut recevoir plusieurs équipes MCS (deux groupes à la même heure) : on additionne avant d'écrire.
@@ -733,7 +748,9 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
           out.coaches++;
           continue;
         }
-        const p = players.find((x) => sameMemberName(row.name, x.firstName, x.lastName));
+        const listed = players.find((x) => sameMemberName(row.name, x.firstName, x.lastName));
+        const p = listed?.registrationId ? listed : fallbackOf(row.name) ?? listed;
+        if (p?.registrationId && !regName.has(p.registrationId)) regName.set(p.registrationId, `${p.firstName} ${p.lastName}`.trim());
         if (!p?.registrationId) {
           if (status) unmatched.add(row.name);
           continue;
@@ -776,7 +793,8 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
     if (!real) out.newActivities.push(`${acc.date} ${acc.group}`);
     const { data: rows } = real ? await db().from("activity_player_attendance").select("registration_id, status, status_source").eq("activity_id", activityId) : { data: [] };
     const existing = new Map(((rows ?? []) as any[]).map((r) => [r.registration_id as string, { status: String(r.status), source: (r.status_source ?? null) as string | null }]));
-    const plan = mcsAttendancePlan([...acc.members].map(([registrationId, state]) => ({ registrationId, state })), existing);
+    // Pas de présence mise dans MCS : présente par défaut (JP, 26 nov. 2026).
+    const plan = mcsAttendancePlan([...acc.members].map(([registrationId, state]) => ({ registrationId, state })), existing, { defaultPresent: true });
     out.practices++;
     out.corrected += plan.corrected;
     out.created += plan.created;
@@ -788,7 +806,7 @@ export async function syncMcsAttendance(opts: { days?: number; now?: number; pag
     if (plan.writes.length) {
       const { error } = await db()
         .from("activity_player_attendance")
-        .upsert(plan.writes.map((w) => ({ activity_id: activityId, registration_id: w.registrationId, status: w.status, status_source: "mcs", mcs_status: w.mcsStatus, mcs_read_at: readAt, updated_at: readAt })), { onConflict: "activity_id,registration_id" });
+        .upsert(plan.writes.map((w) => ({ activity_id: activityId, registration_id: w.registrationId, status: w.status, status_source: w.source, mcs_status: w.mcsStatus, mcs_read_at: readAt, updated_at: readAt })), { onConflict: "activity_id,registration_id" });
       if (error) throw new Error(error.message);
     }
     for (const n of plan.notes) await db().from("activity_player_attendance").update({ mcs_status: n.mcsStatus, mcs_read_at: readAt }).eq("activity_id", activityId).eq("registration_id", n.registrationId);

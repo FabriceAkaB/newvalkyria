@@ -129,6 +129,17 @@ export async function getSurveyData(activityId: string): Promise<SurveyData | nu
     const reg = regs.find((r: any) => r.id === at.registration_id);
     if (reg) byId.set(at.registration_id, toRosterPlayer(reg));
   }
+  // Toutes les filles assignées à la pratique dans MonClubSportif (lues chaque heure, remplaçantes, invitées et
+  // filles qui n'ont qu'une inscription d'essai comprises) sont dans le sondage, même sans présence notée
+  // (JP, 26 nov. 2026 : Violette et Sophia manquaient).
+  const mateIds = mates.map((q) => q.activityId).filter((x): x is string => Boolean(x) && x !== activityId);
+  const { data: mateRows } = mateIds.length ? await db().from("coach_activities").select("mcs_expected").in("id", mateIds) : { data: [] };
+  const mcsExpected = new Set<string>([...(((activity as any).mcs_expected ?? []) as string[]), ...((mateRows ?? []) as any[]).flatMap((r) => (r.mcs_expected ?? []) as string[])]);
+  for (const id of mcsExpected) {
+    if (byId.has(id)) continue;
+    const reg = regs.find((r: any) => r.id === id);
+    if (reg) byId.set(id, toRosterPlayer(reg));
+  }
   const roster = [...byId.values()].sort((a, b) => Number(a.isTrial) - Number(b.isTrial) || a.firstName.localeCompare(b.firstName, "fr"));
   const label = groups.filter(Boolean).length ? `Filles ${groups.filter(Boolean).join(" et ")}` : activity.title || activity.category || activity.activity_type;
   const coaches = await coachesOfActivities([...new Set([activityId, ...mates.map((q) => q.activityId).filter((x): x is string => Boolean(x))])]).catch(() => []);

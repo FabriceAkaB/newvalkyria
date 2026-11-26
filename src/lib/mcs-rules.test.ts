@@ -172,6 +172,10 @@ describe("présences : MonClubSportif fait foi (JP, 26 nov. 2026)", () => {
     expect(plan.notes).toEqual([{ registrationId: "b", mcsStatus: "unknown" }]);
     expect(plan.expected).toEqual(["a", "b", "c", "d", "e"]);
     expect(plan).toMatchObject({ corrected: 1, created: 1 });
+    // Présente par défaut (JP, 26 nov. 2026) : pas de réponse et personne ne l'a marquée.
+    const byDefault = mcsAttendancePlan([{ registrationId: "e", state: "unknown" }, { registrationId: "b", state: undefined }, { registrationId: "f", state: undefined }], existing, { defaultPresent: true });
+    expect(byDefault.writes.map((w) => [w.registrationId, w.status, w.source])).toEqual([["e", "present", "defaut"], ["f", "present", "defaut"]]);
+    expect(byDefault.notes.map((n) => n.registrationId)).toEqual(["b"]);
     expect(isCancelledTitle("Pratique en gym (Annulé)")).toBe(true);
     expect(isCancelledTitle("ANNULÉE : Pratique sur synthétique")).toBe(true);
     expect(isCancelledTitle("Pratique en gym")).toBe(false);
