@@ -384,3 +384,71 @@ describe("alerte des préventes dans Aujourd'hui", () => {
     expect(selectLaunchAlerts([old], () => 2, "2026-11-10").map((a) => a.scenarioId)).toEqual(["old"]);
   });
 });
+
+describe("subvention comptée comme revenu (JP, 26 nov. 2026)", () => {
+  it("s'ajoute aux revenus de chaque remplissage et améliore la marge", () => {
+    const sans = at(40_000);
+    const avec = at(40_000, { grantCents: 100_000 });
+    const p70 = (r: ReturnType<typeof at>) => r.scenarios.find((s) => s.key === "pessimistic")!;
+    expect(p70(avec).revenueCents).toBe(p70(sans).revenueCents + 100_000);
+    expect(avec.profit70Cents).toBe(sans.profit70Cents + 100_000);
+    expect(avec.margin70!).toBeGreaterThan(sans.margin70!);
+    expect(avec.grantCents).toBe(100_000);
+  });
+
+  it("baisse le seuil de survie et le prix plancher", () => {
+    const sans = at(40_000);
+    const avec = at(40_000, { grantCents: 100_000 });
+    expect(avec.breakEvenCount!).toBeLessThan(sans.breakEvenCount!);
+    expect(avec.methodFloorCents!).toBeLessThan(sans.methodFloorCents!);
+    // Au prix plancher, la marge à 80 % est bien d'au moins 50 %, subvention comprise.
+    const check = at(avec.methodFloorCents!, { grantCents: 100_000 }).scenarios.find((s) => s.key === "method")!;
+    expect(check.margin!).toBeGreaterThanOrEqual(0.5 - 1e-6);
+  });
+
+  it("une subvention qui couvre tous les coûts fixes : aucune inscrite nécessaire pour survivre", () => {
+    const r = at(40_000, { grantCents: 400_000 });
+    expect(r.breakEvenCount).toBe(0);
+    expect(flat(r.sentence)).toContain("La subvention couvre déjà les coûts fixes");
+  });
+
+  it("décochée, elle ne change rien au calcul", () => {
+    const sans = at(40_000);
+    const off = at(40_000, { grantCents: 100_000, grantCounted: false });
+    expect(off.margin70).toBe(sans.margin70);
+    expect(off.breakEvenCount).toBe(sans.breakEvenCount);
+    expect(off.grantCents).toBe(0);
+  });
+});
+
+describe("éducateurs un par un, avec budget (JP, 26 nov. 2026)", () => {
+  const lines = [
+    { name: "Maéva", hours: null, hourlyCents: 4_000 },
+    { name: "William", hours: null, hourlyCents: 2_500 },
+    { name: "Noura", hours: 10, hourlyCents: 2_300 }
+  ];
+
+  it("chaque éducateur a son taux et ses heures ; le total remplace Nombre × taux", () => {
+    const r = at(40_000, { coachLines: lines });
+    expect(r.coachPay.map((c) => c.cents)).toEqual([60_000, 37_500, 23_000]);
+    expect(r.fixedLines.find((l) => l.key === "coaches")?.cents).toBe(120_500);
+    expect(r.coachPay[0].share!).toBeCloseTo(60_000 / 120_500, 6);
+  });
+
+  it("le budget dit ce qui reste ou ce qui dépasse", () => {
+    expect(at(40_000, { coachLines: lines, coachBudgetCents: 150_000 }).coachBudget.leftCents).toBe(29_500);
+    expect(at(40_000, { coachLines: lines, coachBudgetCents: 100_000 }).coachBudget.leftCents).toBe(-20_500);
+  });
+
+  it("sans ligne chiffrée, le budget sert de coût des éducateurs", () => {
+    const r = at(40_000, { coachCount: 0, coachBudgetCents: 90_000 });
+    expect(r.coachBudget.budgetUsed).toBe(true);
+    expect(r.fixedLines.find((l) => l.key === "coaches")?.cents).toBe(90_000);
+  });
+
+  it("l'ancien calcul (Nombre × heures × taux) reste lu pour les scénarios enregistrés", () => {
+    const r = at(40_000);
+    expect(r.coachPay).toHaveLength(2);
+    expect(r.coachPay.every((c) => c.cents === 60_000)).toBe(true);
+  });
+});

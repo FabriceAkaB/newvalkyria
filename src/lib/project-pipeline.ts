@@ -106,7 +106,7 @@ export interface ProjectEvaluation {
   /** Bénéfice si les inscrites probables paient (avant le salaire de JP). */
   profitCents: number | null;
   profitPerJpHourCents: number | null;
-  /** Bénéfice probable + subvention attendue (bonus, hors verdict). */
+  /** Bénéfice probable + subvention attendue, quand elle n'est pas comptée dans le calcul (« Compter la subvention » décoché). */
   profitWithGrantCents: number | null;
   sentence: string;
 }
@@ -131,9 +131,10 @@ export function evaluateProject(interest: Interest, scenario: { inputs: LaunchIn
   }
   const { inputs, results } = scenario;
   const probable = probableSignups(interest, inputs.capacity);
-  const profit = probable * results.contributionCents - results.fixedCents;
+  // La subvention comptée (grantCounted) est un revenu fixe de plus, déjà dans le verdict du calculateur.
+  const profit = probable * results.contributionCents - results.fixedCents + results.grantCents;
   const perHour = inputs.jpHours > 0 ? Math.round(profit / inputs.jpHours) : null;
-  const base = { probable, breakEven: results.breakEvenCount, profitCents: profit, profitPerJpHourCents: perHour, profitWithGrantCents: inputs.grantCents ? profit + inputs.grantCents : null };
+  const base = { probable, breakEven: results.breakEvenCount, profitCents: profit, profitPerJpHourCents: perHour, profitWithGrantCents: inputs.grantCents && !inputs.grantCounted ? profit + inputs.grantCents : null };
   if (results.economicVerdict === "no-go" || results.breakEvenCount === null) {
     return { ...base, decision: "non", sentence: "Même à 70 % de remplissage, la marge n'y est pas : monter le prix, baisser les coûts ou laisser tomber." };
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Pill } from "@/components/mandalart/ui";
@@ -21,6 +22,7 @@ import {
   normalizeInputs,
   shortDate,
   torontoDay,
+  type CoachLine,
   type FieldMode,
   type LaunchAlert,
   type LaunchInputs,
@@ -48,9 +50,8 @@ interface Form {
   fieldHours: string;
   fieldHourly: string;
   fieldContract: string;
-  coachCount: string;
-  coachHours: string;
-  coachHourly: string;
+  coaches: CoachRow[];
+  coachBudget: string;
   equipment: string;
   insurance: string;
   marketing: string;
@@ -60,6 +61,14 @@ interface Form {
   otherVariable: string;
   jpHours: string;
   grant: string;
+  grantCounted: boolean;
+}
+
+/** Un éducateur tel que tapé : nom, heures (vide = heures du programme), taux horaire. */
+interface CoachRow {
+  name: string;
+  hours: string;
+  hourly: string;
 }
 
 const parse = (s: string): number => {
@@ -81,9 +90,12 @@ function toInputs(f: Form): LaunchInputs {
     fieldHours: optional(f.fieldHours),
     fieldHourlyCents: toCents(f.fieldHourly),
     fieldContractCents: toCents(f.fieldContract),
-    coachCount: parse(f.coachCount),
-    coachHours: optional(f.coachHours),
-    coachHourlyCents: toCents(f.coachHourly),
+    // Les éducateurs sont tous dans la liste : l'ancien « Nombre × taux » reste à 0.
+    coachCount: 0,
+    coachHours: null,
+    coachHourlyCents: 0,
+    coachLines: f.coaches.map((c) => ({ name: c.name, hours: optional(c.hours), hourlyCents: toCents(c.hourly) })),
+    coachBudgetCents: toCents(f.coachBudget),
     equipmentCents: toCents(f.equipment),
     insuranceCents: toCents(f.insurance),
     marketingCents: toCents(f.marketing),
@@ -95,7 +107,8 @@ function toInputs(f: Form): LaunchInputs {
     presales: f.presales.trim() === "" ? null : parse(f.presales),
     startDate: f.startDate || null,
     jpHours: parse(f.jpHours),
-    grantCents: toCents(f.grant)
+    grantCents: toCents(f.grant),
+    grantCounted: f.grantCounted
   });
 }
 
@@ -112,9 +125,8 @@ function toForm(i: LaunchInputs, name: string): Form {
     fieldHours: i.fieldHours === null ? "" : showNum(i.fieldHours),
     fieldHourly: showCents(i.fieldHourlyCents),
     fieldContract: showCents(i.fieldContractCents),
-    coachCount: String(i.coachCount),
-    coachHours: i.coachHours === null ? "" : showNum(i.coachHours),
-    coachHourly: showCents(i.coachHourlyCents),
+    coaches: coachRowsOf(i),
+    coachBudget: showCents(i.coachBudgetCents),
     equipment: showCents(i.equipmentCents),
     insurance: showCents(i.insuranceCents),
     marketing: showCents(i.marketingCents),
@@ -123,9 +135,20 @@ function toForm(i: LaunchInputs, name: string): Form {
     payments: showNum(i.paymentsPerFamily),
     otherVariable: showCents(i.otherVariableCents),
     jpHours: i.jpHours ? showNum(i.jpHours) : "",
-    grant: showCents(i.grantCents)
+    grant: showCents(i.grantCents),
+    grantCounted: i.grantCounted
   };
 }
+
+/** Lignes d'éducateurs d'un scénario ; un ancien scénario (Nombre × heures × taux) devient une ligne par éducateur. */
+function coachRowsOf(i: LaunchInputs): CoachRow[] {
+  const toRow = (l: CoachLine): CoachRow => ({ name: l.name, hours: l.hours === null ? "" : showNum(l.hours), hourly: showCents(l.hourlyCents) });
+  if (i.coachLines.length) return i.coachLines.map(toRow);
+  return Array.from({ length: i.coachCount }, () => toRow({ name: "", hours: i.coachHours, hourlyCents: i.coachHourlyCents }));
+}
+
+/** « Maéva · pratique » → « Maéva » : le nom de l'éducateur d'un taux connu. */
+const coachNameOf = (label: string) => label.split(" · ")[0];
 
 const money2 = (c: number) => `${(c / 100).toLocaleString("fr-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 const count = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString("fr-CA")} ${n > 1 ? many : one}`;
@@ -195,6 +218,19 @@ export function LaunchCalculator({
     setForm((f) => ({ ...f, [k]: v }));
     setMsg(null);
   };
+
+  function setCoach(idx: number, k: keyof CoachRow, v: string) {
+    setForm((f) => ({ ...f, coaches: f.coaches.map((c, j) => (j === idx ? { ...c, [k]: v } : c)) }));
+    setMsg(null);
+  }
+  function addCoach(row: CoachRow = { name: "", hours: "", hourly: "" }) {
+    setForm((f) => (f.coaches.length >= 20 ? f : { ...f, coaches: [...f.coaches, row] }));
+    setMsg(null);
+  }
+  function removeCoach(idx: number) {
+    setForm((f) => ({ ...f, coaches: f.coaches.filter((_, j) => j !== idx) }));
+    setMsg(null);
+  }
 
   function chooseProgram(key: string) {
     setProgramKey(key);
@@ -394,8 +430,24 @@ export function LaunchCalculator({
                 hint={source ? "Préventes du programme, comptées en direct pour l'alerte" : "Préventes (vide si pas encore en vente)"}
               />
               <Field label="Heures de JP" unit="h" value={form.jpHours} onChange={set("jpHours")} placeholder="0" hint="Préparation, vente et présence : donne le bénéfice par heure de JP" />
-              <Field label="Subvention attendue" unit="$" value={form.grant} onChange={set("grant")} placeholder="0" hint="Bonus montré à part : le projet doit tenir sans elle" />
+              <Field
+                label="Subvention attendue"
+                unit="$"
+                value={form.grant}
+                onChange={set("grant")}
+                placeholder="0"
+                hint={form.grantCounted ? "Comptée comme revenu : elle entre dans la marge, les seuils et le verdict" : "Montrée à part : le verdict se calcule sans elle"}
+              />
             </div>
+            {inputs.grantCents > 0 ? (
+              <label className="lc-check">
+                <input type="checkbox" checked={form.grantCounted} onChange={(e) => set("grantCounted")(e.target.checked)} />
+                <span>
+                  Compter la subvention dans la marge
+                  <span className="lc-hint" style={{ display: "block" }}>Décochez pour voir si le projet tient sans elle.</span>
+                </span>
+              </label>
+            ) : null}
             {source ? (
               <p className="lc-hint" style={{ marginTop: 12 }}>
                 <Pill tone="info">Relié à {source.label}</Pill>
@@ -454,25 +506,75 @@ export function LaunchCalculator({
                 <h3 className="lc-block-title">Éducateurs</h3>
                 <span className="lc-amount">{dollars(coachLine)}</span>
               </div>
-              <div className="lc-fields">
-                <Field label="Nombre" value={form.coachCount} onChange={set("coachCount")} placeholder="0" inputMode="numeric" />
-                <Field label="Heures chacun" unit="h" value={form.coachHours} onChange={set("coachHours")} placeholder={programHours ? showNum(programHours) : "0"} hint="Vide = heures du programme" />
-                <Field label="Taux horaire" unit="$/h" value={form.coachHourly} onChange={set("coachHourly")} placeholder="0" />
-              </div>
               {sources.coachRates.length ? (
-                <div className="lc-chips" aria-label="Taux des éducateurs">
-                  {sources.coachRates.map((c) => (
-                    <button
-                      key={`${c.label}-${c.hourlyCents}`}
-                      type="button"
-                      className="lc-chip"
-                      aria-pressed={inputs.coachHourlyCents === c.hourlyCents}
-                      onClick={() => set("coachHourly")(showCents(c.hourlyCents))}
-                    >
-                      {c.label} · {dollars(c.hourlyCents)}/h
-                    </button>
-                  ))}
+                <div className="lc-chips" aria-label="Ajouter un éducateur connu">
+                  {sources.coachRates.map((c) => {
+                    const name = coachNameOf(c.label);
+                    const taken = form.coaches.some((row) => row.name === name && toCents(row.hourly) === c.hourlyCents);
+                    return (
+                      <button key={`${c.label}-${c.hourlyCents}`} type="button" className="lc-chip" aria-pressed={taken} onClick={() => addCoach({ name, hours: "", hourly: showCents(c.hourlyCents) })}>
+                        <Plus size={14} aria-hidden="true" />
+                        {c.label} · {dollars(c.hourlyCents)}/h
+                      </button>
+                    );
+                  })}
                 </div>
+              ) : null}
+              {form.coaches.length ? (
+                <ul className="lc-coaches">
+                  <li className="lc-coach lc-coach-head" aria-hidden="true">
+                    <span>Éducateur</span>
+                    <span>Heures</span>
+                    <span>Taux</span>
+                    <span className="r">Payé</span>
+                    <span />
+                  </li>
+                  {form.coaches.map((c, idx) => {
+                    const pay = r.coachPay[idx];
+                    return (
+                      <li key={idx} className="lc-coach">
+                        <input className="admin-input" aria-label={`Nom de l'éducateur ${idx + 1}`} value={c.name} placeholder={`Éducateur ${idx + 1}`} onChange={(e) => setCoach(idx, "name", e.target.value)} autoComplete="off" />
+                        <span className="lc-input-wrap" data-unit="1">
+                          <input className="admin-input" aria-label="Heures" inputMode="decimal" value={c.hours} placeholder={programHours ? showNum(programHours) : "0"} onChange={(e) => setCoach(idx, "hours", e.target.value)} autoComplete="off" />
+                          <span className="lc-unit">h</span>
+                        </span>
+                        <span className="lc-input-wrap" data-unit="3">
+                          <input className="admin-input" aria-label="Taux horaire" inputMode="decimal" value={c.hourly} placeholder="0" onChange={(e) => setCoach(idx, "hourly", e.target.value)} autoComplete="off" />
+                          <span className="lc-unit">$/h</span>
+                        </span>
+                        <span className="lc-coach-pay">
+                          <strong>{pay ? dollars(pay.cents) : "—"}</strong>
+                          <span className="lc-hint">{pay?.share != null ? `${Math.round(pay.share * 100)} % des salaires` : ""}</span>
+                        </span>
+                        <button type="button" className="lc-icon-btn" aria-label={`Retirer ${c.name || `l'éducateur ${idx + 1}`}`} onClick={() => removeCoach(idx)}>
+                          <X size={16} aria-hidden="true" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="lc-hint" style={{ margin: 0 }}>Ajoutez chaque éducateur avec son taux, ou entrez seulement un budget salaires.</p>
+              )}
+              <div className="lc-actions">
+                <button type="button" className="admin-btn-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 6 }} onClick={() => addCoach()} disabled={form.coaches.length >= 20}>
+                  <Plus size={16} aria-hidden="true" />
+                  Ajouter un éducateur
+                </button>
+              </div>
+              <p className="lc-hint" style={{ margin: 0 }}>Heures vides = les heures du programme{programHours ? ` (${hoursLabel(programHours)})` : ""}.</p>
+              <div className="lc-fields">
+                <Field
+                  label="Budget salaires"
+                  unit="$"
+                  value={form.coachBudget}
+                  onChange={set("coachBudget")}
+                  placeholder="0"
+                  hint={r.coachBudget.budgetUsed ? "Aucun éducateur chiffré : le budget compte comme coût" : "Facultatif : la cible à ne pas dépasser"}
+                />
+              </div>
+              {r.coachBudget.leftCents !== null && !r.coachBudget.budgetUsed ? (
+                <BudgetBar planned={r.coachBudget.plannedCents} budget={r.coachBudget.budgetCents} />
               ) : null}
             </div>
 
@@ -623,7 +725,8 @@ export function LaunchCalculator({
             <div>
               <h2 className="mda-h2">Marge selon le remplissage</h2>
               <p className="mda-sub" style={{ margin: 0 }}>
-                Mêmes coûts fixes ({dollars(r.fixedCents)}), {money2(r.variableCents)} par inscrite, prix de {dollars(inputs.priceCents)}.
+                Mêmes coûts fixes ({dollars(r.fixedCents)}), {money2(r.variableCents)} par inscrite, prix de {dollars(inputs.priceCents)}
+                {r.grantCents > 0 ? ` ; les revenus comprennent la subvention de ${dollars(r.grantCents)}` : ""}.
               </p>
             </div>
           </div>
@@ -739,6 +842,23 @@ function Field({
       </span>
       {hint ? <span className="lc-hint">{hint}</span> : null}
     </label>
+  );
+}
+
+/** Prévu par rapport au budget salaires : ce qui reste ou ce qui dépasse. */
+function BudgetBar({ planned, budget }: { planned: number; budget: number }) {
+  const left = budget - planned;
+  const over = left < 0;
+  const pct = budget > 0 ? Math.min(100, (planned / budget) * 100) : 100;
+  return (
+    <div className="lc-budget">
+      <div className="lc-budget-track" role="img" aria-label={`Salaires prévus ${dollars(planned)} sur un budget de ${dollars(budget)}`}>
+        <span style={{ width: `${pct}%`, background: over ? "var(--adm-bad)" : "var(--adm-accent)" }} />
+      </div>
+      <p className="lc-hint" style={{ margin: 0, color: over ? "var(--adm-bad)" : "var(--adm-text-2)" }}>
+        {dollars(planned)} prévus sur un budget de {dollars(budget)} : {over ? `dépasse de ${dollars(-left)}` : left === 0 ? "budget pile atteint" : `il reste ${dollars(left)}`}
+      </p>
+    </div>
   );
 }
 
@@ -946,8 +1066,22 @@ const CSS = `
 .admin-shell .lc-seg button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 6px; background: transparent; color: var(--adm-text-2); font-size: 0.85rem; cursor: pointer; }
 .admin-shell .lc-seg button[aria-pressed="true"] { background: var(--adm-surface-3); color: var(--adm-text); font-weight: 600; }
 .admin-shell .lc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.admin-shell .lc-chip { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--adm-border); background: transparent; color: var(--adm-text-2); font-size: 0.8rem; cursor: pointer; font-variant-numeric: tabular-nums; }
+.admin-shell .lc-chip { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--adm-border); background: transparent; color: var(--adm-text-2); font-size: 0.8rem; cursor: pointer; font-variant-numeric: tabular-nums; }
 .admin-shell .lc-chip[aria-pressed="true"] { border-color: transparent; background: var(--adm-accent-soft); color: var(--adm-text); }
+.admin-shell .lc-coaches { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.admin-shell .lc-coach { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(72px, 0.8fr) minmax(88px, 0.9fr) minmax(96px, 0.9fr) 44px; gap: 8px; align-items: center; }
+.admin-shell .lc-coach > .admin-input { width: 100%; min-height: 44px; padding: 0 12px; font-size: 0.95rem; }
+.admin-shell .lc-coach-head { font-size: 0.75rem; font-weight: 500; color: var(--adm-text-3); }
+.admin-shell .lc-coach-head .r, .admin-shell .lc-coach-pay { text-align: right; }
+.admin-shell .lc-coach-pay { display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
+.admin-shell .lc-coach-pay strong { font-size: 0.95rem; font-weight: 600; color: var(--adm-text); }
+.admin-shell .lc-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: var(--adm-radius-sm); background: transparent; color: var(--adm-text-3); cursor: pointer; }
+.admin-shell .lc-icon-btn:hover { background: var(--adm-surface-2); color: var(--adm-text); }
+.admin-shell .lc-budget { display: flex; flex-direction: column; gap: 8px; }
+.admin-shell .lc-budget-track { height: 8px; border-radius: 999px; background: var(--adm-surface-3); overflow: hidden; }
+.admin-shell .lc-budget-track span { display: block; height: 100%; border-radius: 999px; }
+.admin-shell .lc-check { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; font-size: 0.88rem; color: var(--adm-text); cursor: pointer; }
+.admin-shell .lc-check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--adm-accent); }
 .admin-shell .lc-hero-num { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 4px; }
 .admin-shell .lc-gauge { margin-top: 24px; }
 .admin-shell .lc-track { position: relative; display: flex; gap: 2px; height: 12px; }
@@ -990,5 +1124,12 @@ const CSS = `
   .admin-shell .lc-start .lc-actions { padding-top: 0; }
   .admin-shell .lc-kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
   .admin-shell .lc-kpi { padding: 12px; }
+  .admin-shell .lc-coach { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px; padding-bottom: 12px; border-bottom: 1px solid var(--adm-line); }
+  .admin-shell .lc-coach > :nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
+  .admin-shell .lc-coach > :nth-child(5) { grid-column: 3; grid-row: 1; }
+  .admin-shell .lc-coach > :nth-child(2) { grid-column: 1; grid-row: 2; }
+  .admin-shell .lc-coach > :nth-child(3) { grid-column: 2; grid-row: 2; }
+  .admin-shell .lc-coach > :nth-child(4) { grid-column: 1 / 4; grid-row: 3; flex-direction: row; justify-content: space-between; align-items: baseline; }
+  .admin-shell .lc-coach-head { display: none; }
 }
 `;

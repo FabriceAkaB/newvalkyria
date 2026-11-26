@@ -34,11 +34,18 @@ describe("projets à lancer", () => {
     expect(e.profitPerJpHourCents).toBeGreaterThan(5_000);
   });
 
-  it("la subvention s'ajoute à part, sans changer le verdict", () => {
+  it("la subvention comptée est un vrai revenu de plus dans le bénéfice probable", () => {
     const sans = evaluateProject({ yes: 4, maybe: 0, no: 5, answered: 9 }, camp());
     const avec = evaluateProject({ yes: 4, maybe: 0, no: 5, answered: 9 }, camp({ grantCents: 400_000 }));
-    expect(avec.decision).toBe(sans.decision);
-    expect(avec.profitWithGrantCents).toBe((sans.profitCents ?? 0) + 400_000);
+    expect(avec.profitCents).toBe((sans.profitCents ?? 0) + 400_000);
+    expect(avec.profitWithGrantCents).toBeNull();
+  });
+
+  it("décochée, la subvention reste montrée à part sans changer le verdict", () => {
+    const sans = evaluateProject({ yes: 4, maybe: 0, no: 5, answered: 9 }, camp());
+    const aPart = evaluateProject({ yes: 4, maybe: 0, no: 5, answered: 9 }, camp({ grantCents: 400_000, grantCounted: false }));
+    expect(aPart.decision).toBe(sans.decision);
+    expect(aPart.profitWithGrantCents).toBe((sans.profitCents ?? 0) + 400_000);
   });
 
   it("à risque quand le projet mange trop d'heures de JP", () => {

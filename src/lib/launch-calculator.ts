@@ -12,6 +12,13 @@
  *    À RISQUE si elle est d'au moins 35 %, NO-GO sinon. Deux semaines avant le début, des préventes
  *    sous le seuil de survie font passer le lancement à NO-GO (reporter, fusionner ou annuler).
  *
+ *  Subvention (JP, 26 nov. 2026) : un vrai revenu de plus, fixe (ne dépend pas des inscrites) : revenus = n × P + G.
+ *  Elle entre dans la marge, les seuils et le verdict tant que « Compter la subvention » est coché (grantCounted).
+ *  Avec la subvention, les formules gardent leur forme en remplaçant F par F − G × (1 − m).
+ *
+ *  Éducateurs (JP, 26 nov. 2026) : une ligne par éducateur (nom, heures, taux) ; un budget salaires facultatif
+ *  sert de cible (reste ou dépassement) et compte comme coût seulement quand aucune ligne n'a de montant.
+ *
  *  Les frais Stripe en pourcentage dépendent du prix : toutes les formules les gardent à part
  *  (V = Vbase + 2,9 % × P), ce qui donne des prix planchers exacts.
  *  Ce fichier est pur (aucun accès à la base) : la page, la route API et les tests l'utilisent tels quels. */
@@ -27,6 +34,15 @@ export const METHOD_FILL = 0.8;
 export const PRESALES_CHECK_DAYS = 14;
 
 export type FieldMode = "hourly" | "contract";
+
+/** Un éducateur du programme : son nom (ou son rôle), ses heures (null = heures du programme) et son taux. */
+export interface CoachLine {
+  name: string;
+  hours: number | null;
+  hourlyCents: number;
+}
+
+export const MAX_COACH_LINES = 20;
 export type Verdict = "go" | "risque" | "no-go";
 
 export interface LaunchInputs {
@@ -48,6 +64,10 @@ export interface LaunchInputs {
   /** Heures payées à chaque éducateur ; null = les heures du programme. */
   coachHours: number | null;
   coachHourlyCents: number;
+  /** Éducateurs un par un, chacun avec son taux ; quand la liste a une ligne, elle remplace Nombre × heures × taux. */
+  coachLines: CoachLine[];
+  /** Budget salaires des éducateurs (0 = aucun) : cible à respecter, coût utilisé seulement sans ligne chiffrée. */
+  coachBudgetCents: number;
   equipmentCents: number;
   insuranceCents: number;
   marketingCents: number;
@@ -63,8 +83,10 @@ export interface LaunchInputs {
   startDate: string | null;
   /** Heures de JP pour ce projet (préparation, vente, présence) : sert au bénéfice par heure de JP (page Projets). */
   jpHours: number;
-  /** Subvention attendue pour ce projet (ex. Emplois d'été Canada) : un bonus montré à part, jamais compté dans le verdict. */
+  /** Subvention attendue pour ce projet (ex. Emplois d'été Canada) : un revenu de plus, fixe. */
   grantCents: number;
+  /** true = la subvention compte dans les revenus, la marge et le verdict (par défaut) ; false = montrée à part. */
+  grantCounted: boolean;
 }
 
 export const EMPTY_INPUTS: LaunchInputs = {
@@ -79,6 +101,8 @@ export const EMPTY_INPUTS: LaunchInputs = {
   coachCount: 1,
   coachHours: null,
   coachHourlyCents: 0,
+  coachLines: [],
+  coachBudgetCents: 0,
   equipmentCents: 0,
   insuranceCents: 0,
   marketingCents: 0,
@@ -89,13 +113,34 @@ export const EMPTY_INPUTS: LaunchInputs = {
   presales: null,
   startDate: null,
   jpHours: 0,
-  grantCents: 0
+  grantCents: 0,
+  grantCounted: true
 };
 
 export interface FixedLine {
   key: "field" | "coaches" | "equipment" | "insurance" | "marketing" | "other";
   label: string;
   cents: number;
+}
+
+/** Ce que chaque éducateur sera payé, et sa part du total des salaires. */
+export interface CoachPay {
+  name: string;
+  hours: number;
+  hourlyCents: number;
+  cents: number;
+  /** Part du total des salaires (0 à 1) ; null quand le total est nul. */
+  share: number | null;
+}
+
+export interface CoachBudget {
+  /** Total prévu des lignes (avant le budget). */
+  plannedCents: number;
+  budgetCents: number;
+  /** Budget − prévu : positif = il reste, négatif = dépassement ; null sans budget. */
+  leftCents: number | null;
+  /** true quand le budget sert de coût (aucune ligne chiffrée). */
+  budgetUsed: boolean;
 }
 
 export interface FillScenario {
@@ -127,6 +172,10 @@ export interface LaunchResults {
   programHours: number;
   fixedLines: FixedLine[];
   fixedCents: number;
+  /** Subvention comptée dans les revenus (0 si non cochée). */
+  grantCents: number;
+  coachPay: CoachPay[];
+  coachBudget: CoachBudget;
   stripeCents: number;
   /** V au prix proposé (inclut les frais Stripe). */
   variableCents: number;
@@ -201,6 +250,12 @@ export function normalizeInputs(raw: Partial<LaunchInputs> | null | undefined): 
     coachCount: Math.floor(nonNeg(r.coachCount)),
     coachHours: optHours(r.coachHours),
     coachHourlyCents: cents(r.coachHourlyCents),
+    coachLines: (Array.isArray(r.coachLines) ? r.coachLines : []).slice(0, MAX_COACH_LINES).map((l) => ({
+      name: String(l?.name ?? "").trim().slice(0, 80),
+      hours: optHours(l?.hours),
+      hourlyCents: cents(l?.hourlyCents)
+    })),
+    coachBudgetCents: cents(r.coachBudgetCents),
     equipmentCents: cents(r.equipmentCents),
     insuranceCents: cents(r.insuranceCents),
     marketingCents: cents(r.marketingCents),
@@ -211,7 +266,8 @@ export function normalizeInputs(raw: Partial<LaunchInputs> | null | undefined): 
     presales,
     startDate,
     jpHours: nonNeg(r.jpHours),
-    grantCents: cents(r.grantCents)
+    grantCents: cents(r.grantCents),
+    grantCounted: r.grantCounted !== false
   };
 }
 
@@ -279,7 +335,23 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
   const programHours = i.sessions * i.hoursPerSession;
 
   const fieldCents = i.fieldMode === "contract" ? i.fieldContractCents : (i.fieldHours ?? programHours) * i.fieldHourlyCents;
-  const coachesCents = i.coachCount * (i.coachHours ?? programHours) * i.coachHourlyCents;
+  const lines: CoachLine[] = i.coachLines.length
+    ? i.coachLines
+    : Array.from({ length: i.coachCount }, (_, k) => ({ name: i.coachCount > 1 ? `Éducateur ${k + 1}` : "Éducateur", hours: i.coachHours, hourlyCents: i.coachHourlyCents }));
+  const plannedCoach = lines.map((l) => {
+    const hours = l.hours ?? programHours;
+    return { name: l.name, hours, hourlyCents: l.hourlyCents, cents: Math.round(hours * l.hourlyCents) };
+  });
+  const plannedCents = plannedCoach.reduce((s, l) => s + l.cents, 0);
+  const budgetUsed = plannedCents === 0 && i.coachBudgetCents > 0;
+  const coachesCents = budgetUsed ? i.coachBudgetCents : plannedCents;
+  const coachPay: CoachPay[] = plannedCoach.map((l) => ({ ...l, share: plannedCents > 0 ? l.cents / plannedCents : null }));
+  const coachBudget: CoachBudget = {
+    plannedCents,
+    budgetCents: i.coachBudgetCents,
+    leftCents: i.coachBudgetCents > 0 ? i.coachBudgetCents - plannedCents : null,
+    budgetUsed
+  };
   const fixedLines: FixedLine[] = [
     { key: "field", label: "Terrain", cents: Math.round(fieldCents) },
     { key: "coaches", label: "Éducateurs", cents: Math.round(coachesCents) },
@@ -289,6 +361,9 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
     { key: "other", label: "Autres coûts fixes", cents: i.otherFixedCents }
   ];
   const F = fixedLines.reduce((s, l) => s + l.cents, 0);
+  const G = i.grantCounted ? i.grantCents : 0;
+  /** Coûts fixes « à couvrir » pour la marge m une fois la subvention comptée : F − G × (1 − m). */
+  const fixedToCover = (m: number) => F - G * (1 - m);
 
   // V = Vbase + r × P : la part fixe des frais Stripe (0,30 $ par paiement) va dans Vbase.
   const Vbase = i.kitCents + i.otherVariableCents + STRIPE_FIXED_CENTS * i.paymentsPerFamily;
@@ -296,26 +371,28 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
   const V = Vbase + r * P;
   const contribution = P - V;
 
-  const profitAt = (n: number) => n * contribution - F;
   const scenarioAt = (key: FillScenario["key"], label: string, rate: number | null, n: number): FillScenario => {
-    const revenue = n * P;
+    const revenue = n * P + G;
     const cost = F + n * V;
     const profit = revenue - cost;
     return { key, label, rate, count: n, revenueCents: Math.round(revenue), costCents: Math.round(cost), profitCents: Math.round(profit), margin: revenue > 0 ? profit / revenue : null };
   };
 
-  /** Prix qui donne la marge m avec n inscrites : P = (F ÷ n + Vbase) ÷ (1 − m − r). */
+  /** Prix qui donne la marge m avec n inscrites : P = ((F − G(1 − m)) ÷ n + Vbase) ÷ (1 − m − r), jamais sous 0. */
   const priceFor = (m: number, n: number): number | null => {
     if (n <= 0) return null;
     const d = 1 - m - r;
     if (d <= 0) return null;
-    return Math.ceil((F / n + Vbase) / d - 1e-9);
+    return Math.max(0, Math.ceil((fixedToCover(m) / n + Vbase) / d - 1e-9));
   };
   /** Nombre minimal d'inscrites pour la marge m au prix P. */
   const countFor = (m: number): number | null => {
+    const toCover = fixedToCover(m);
+    // La subvention couvre déjà tout : aucune inscrite nécessaire pour cette marge.
+    if (toCover <= 0 && G > 0) return 0;
     const c = P * (1 - m - r) - Vbase;
     if (c <= 1e-9) return null;
-    return Math.max(m > 0 ? 1 : 0, Math.ceil(F / c - 1e-9));
+    return Math.max(m > 0 ? 1 : 0, Math.ceil(toCover / c - 1e-9));
   };
 
   const n70 = fillCount(N, PESSIMISTIC_FILL);
@@ -334,8 +411,8 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
   const goPriceCents = priceFor(TARGET_MARGIN, n70);
   const breakEvenCount = countFor(0);
   const marginCount = countFor(TARGET_MARGIN);
-  // Coûts fixes maximums pour 50 % de marge à 70 % : n70 × (P × (1 − 0,5 − r) − Vbase).
-  const maxFixed = n70 * (P * (1 - TARGET_MARGIN - r) - Vbase);
+  // Coûts fixes maximums pour 50 % de marge à 70 % : n70 × (P × (1 − 0,5 − r) − Vbase) + G × 0,5.
+  const maxFixed = n70 * (P * (1 - TARGET_MARGIN - r) - Vbase) + G * (1 - TARGET_MARGIN);
   const maxFixedForGoCents = n70 > 0 && maxFixed > 0 ? Math.floor(maxFixed) : null;
 
   // Sans aucun coût saisi (terrain, éducateurs, kit…), tout programme serait GO : on attend au moins un coût.
@@ -404,7 +481,8 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
     marginCount,
     goPriceCents,
     maxFixedForGoCents,
-    daysToStart
+    daysToStart,
+    grant: G
   });
 
   return {
@@ -413,6 +491,9 @@ export function computeLaunch(raw: Partial<LaunchInputs>, today?: string): Launc
     programHours,
     fixedLines,
     fixedCents: F,
+    grantCents: G,
+    coachPay,
+    coachBudget,
     stripeCents: Math.round(stripe),
     variableCents: Math.round(V),
     contributionCents: Math.round(contribution),
@@ -455,6 +536,7 @@ function describe(x: {
   goPriceCents: number | null;
   maxFixedForGoCents: number | null;
   daysToStart: number | null;
+  grant: number;
 }): { headline: string; sentence: string } {
   if (x.missing === "costs") {
     return {
@@ -468,11 +550,14 @@ function describe(x: {
       sentence: "Partez d'un programme existant ou entrez vos chiffres : le verdict se calcule à mesure que vous tapez."
     };
   }
+  const withGrant = x.grant > 0 ? ` (subvention de ${dollars(x.grant)} comprise)` : "";
   const survival =
     x.breakEvenCount === null
       ? "À ce prix, chaque inscrite coûte plus qu'elle ne rapporte."
       : x.breakEvenCount === 0
-        ? "Sans coûts fixes, chaque inscrite couvre déjà ses coûts."
+        ? x.grant > 0
+          ? "La subvention couvre déjà les coûts fixes : chaque inscrite est du profit."
+          : "Sans coûts fixes, chaque inscrite couvre déjà ses coûts."
         : `Il faut ${plural(x.breakEvenCount, "inscrite")} pour couvrir les coûts${x.marginCount !== null ? ` et ${x.marginCount.toLocaleString("fr-CA")} pour 50 % de marge` : ""}.`;
 
   // Sans seuil de survie (le prix ne couvre jamais les coûts), le NO-GO économique ci-dessous l'explique mieux.
@@ -502,24 +587,24 @@ function describe(x: {
   if (x.economicVerdict === "go") {
     return {
       headline: `GO : ${marginLabel(x.margin70)} de marge même ${at70}`,
-      sentence: `Même avec ${who}, le programme dégage ${dollars(x.profit70)} de profit. ${survival}`
+      sentence: `Même avec ${who}, le programme dégage ${dollars(x.profit70)} de profit${withGrant}. ${survival}`
     };
   }
   if (x.economicVerdict === "risque") {
     return {
       headline: `À risque : ${marginLabel(x.margin70)} de marge ${at70}`,
-      sentence: `Avec ${who}, la marge est sous l'objectif de 50 % (profit de ${dollars(x.profit70)}).${toGo} ${survival}`
+      sentence: `Avec ${who}, la marge est sous l'objectif de 50 % (profit de ${dollars(x.profit70)}${withGrant}).${toGo} ${survival}`
     };
   }
   if (x.profit70 < 0) {
     return {
       headline: `NO-GO : perte de ${dollars(-x.profit70)} ${at70}`,
-      sentence: `Avec ${who}, le programme coûte plus qu'il ne rapporte.${toGo} ${survival}`
+      sentence: `Avec ${who}, le programme coûte plus qu'il ne rapporte${withGrant}.${toGo} ${survival}`
     };
   }
   return {
     headline: `NO-GO : seulement ${marginLabel(x.margin70)} de marge ${at70}`,
-    sentence: `Avec ${who}, la marge est sous 35 % (profit de ${dollars(x.profit70)}).${toGo} ${survival}`
+    sentence: `Avec ${who}, la marge est sous 35 % (profit de ${dollars(x.profit70)}${withGrant}).${toGo} ${survival}`
   };
 }
 

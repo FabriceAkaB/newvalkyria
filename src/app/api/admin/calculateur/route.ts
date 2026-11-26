@@ -22,6 +22,11 @@ const inputs = z.object({
   coachCount: z.number().int().min(0).max(100),
   coachHours: hours.nullable(),
   coachHourlyCents: cents,
+  coachLines: z
+    .array(z.object({ name: z.string().max(80), hours: hours.nullable(), hourlyCents: cents }))
+    .max(20, "20 éducateurs au maximum.")
+    .optional(),
+  coachBudgetCents: cents.optional(),
   equipmentCents: cents,
   insuranceCents: cents,
   marketingCents: cents,
@@ -32,7 +37,8 @@ const inputs = z.object({
   presales: z.number().int().min(0).max(10_000).nullable(),
   startDate: z.string().refine(isIsoDate, "Date de début invalide.").nullable(),
   jpHours: hours.optional(),
-  grantCents: cents.optional()
+  grantCents: cents.optional(),
+  grantCounted: z.boolean().optional()
 });
 
 const schema = z.discriminatedUnion("action", [
