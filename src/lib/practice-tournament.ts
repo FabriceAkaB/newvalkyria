@@ -336,3 +336,26 @@ export const defaultFields = (teams: number) => Math.max(1, Math.min(3, Math.flo
 
 /** « 0 h 04 » → « 4 min », minutes depuis le début en « 12:00 » style chrono. */
 export const clock = (min: number) => `${Math.floor(min / 60) ? `${Math.floor(min / 60)} h ` : ""}${String(min % 60).padStart(Math.floor(min / 60) ? 2 : 1, "0")} min`;
+
+/** « Équipes déjà faites » (JP, 26 nov. 2026) : les équipes des dernières pratiques où jouaient des filles présentes
+ *  aujourd'hui, par date (la plus récente d'abord), avec leur capitaine. Seules les filles connues sont nommées. */
+export function pastTeamsByDate(history: PastTeam[], present: Iterable<string>, limit = 5): { date: string; teams: { members: string[]; captain: string | null }[] }[] {
+  const here = new Set(present);
+  const byDate = new Map<string, { members: string[]; captain: string | null }[]>();
+  for (const t of history) {
+    if (t.kind !== "equipe" || !t.date || !t.members.some((m) => here.has(m))) continue;
+    byDate.set(t.date, [...(byDate.get(t.date) ?? []), { members: t.members, captain: t.captain }]);
+  }
+  return [...byDate.entries()]
+    .sort(([a], [b]) => b.localeCompare(a))
+    .slice(0, limit)
+    .map(([date, teams]) => ({ date, teams }));
+}
+
+/** Combien de fois chaque fille présente a été capitaine dans l'historique. */
+export function captainCounts(history: PastTeam[], present: Iterable<string>): Map<string, number> {
+  const here = new Set(present);
+  const out = new Map<string, number>();
+  for (const t of history) if (t.kind === "equipe" && t.captain && here.has(t.captain)) out.set(t.captain, (out.get(t.captain) ?? 0) + 1);
+  return out;
+}

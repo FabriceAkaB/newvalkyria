@@ -157,3 +157,18 @@ describe("réglages et capitaine", () => {
     expect(captainTaskFor("Prise d'information")).toMatch(/disponible/);
   });
 });
+
+describe("équipes déjà faites", () => {
+  it("par date, la plus récente d'abord, seulement avec des filles présentes", async () => {
+    const { pastTeamsByDate, captainCounts } = await import("@/lib/practice-tournament");
+    const history: PastTeam[] = [
+      { kind: "equipe", members: ["j1", "j2"], captain: "j1", date: "2026-11-20" },
+      { kind: "equipe", members: ["j3", "j4"], captain: "j3", date: "2026-11-24" },
+      { kind: "equipe", members: ["x9"], captain: "x9", date: "2026-11-25" },
+      { kind: "duo", members: ["j1", "j3"], captain: null, date: "2026-11-25" }
+    ];
+    const out = pastTeamsByDate(history, ["j1", "j3"]);
+    expect(out.map((d) => d.date)).toEqual(["2026-11-24", "2026-11-20"]);
+    expect(captainCounts(history, ["j1", "j3"]).get("j1")).toBe(1);
+  });
+});

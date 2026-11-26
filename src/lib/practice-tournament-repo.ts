@@ -72,7 +72,8 @@ export async function getTournamentContext(activityId: string): Promise<Tourname
   const date = String(data.activity.activity_date).slice(0, 10);
   const [ratings, history, theme, saved] = await Promise.all([
     ratingsOf(ids),
-    getTeamHistory(ids, activityId).catch(() => []),
+    // Seulement les pratiques jusqu'à aujourd'hui : les équipes préparées d'avance pour plus tard ne sont pas « déjà faites ».
+    getTeamHistory(ids, activityId).then((h) => h.filter((t) => t.date && t.date <= date)).catch(() => []),
     getThemeForDate(SEASON_DB_ID, new Date(`${date}T12:00:00`)).catch(() => null),
     getTournament(activityId)
   ]);

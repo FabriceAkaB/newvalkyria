@@ -6,6 +6,7 @@ import { Crown, RefreshCw, Shuffle, Timer, Trophy, UserPlus } from "lucide-react
 import { colorHex } from "@/lib/practice-teams-core";
 import {
   buildSchedule,
+  captainCounts,
   champion,
   defaultFields,
   finishFor,
@@ -13,6 +14,7 @@ import {
   formatLabel,
   formTournamentTeams,
   outcome,
+  pastTeamsByDate,
   poolDone,
   resolveSlot,
   standings,
@@ -117,6 +119,59 @@ function ring() {
     /* pas de son sur cet appareil */
   }
   navigator.vibrate?.([300, 150, 300, 150, 300]);
+}
+
+const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const DAYS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+const dayLabel = (iso: string) => {
+  const d = new Date(`${iso}T12:00:00Z`);
+  const t = `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
+/** Équipes déjà faites avec les filles présentes : dernières pratiques, par date, avec la capitaine ; et combien de
+ *  fois chacune a été capitaine. Le site s'en sert pour former des équipes nouvelles. */
+function PastTeams({ history, present, nameOf, open = false }: { history: TournamentContext["history"]; present: string[]; nameOf: Map<string, string>; open?: boolean }) {
+  const days = pastTeamsByDate(history, present, 5);
+  const caps = captainCounts(history, present);
+  const never = present.filter((p) => !caps.get(p)).map((p) => nameOf.get(p)).filter(Boolean);
+  return (
+    <details className="tn-card" open={open}>
+      <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "1.05rem", minHeight: 32, display: "flex", alignItems: "center" }}>
+        Équipes déjà faites {days.length ? `(${days.length} dernière${days.length > 1 ? "s" : ""} pratique${days.length > 1 ? "s" : ""})` : ""}
+      </summary>
+      {days.length === 0 ? (
+        <p className="tn-sub">Aucune équipe enregistrée pour ces filles dans les 6 derniers mois : toutes les équipes sont nouvelles.</p>
+      ) : (
+        <div style={{ display: "grid", gap: 12 }}>
+          {days.map((d) => (
+            <div key={d.date} style={{ display: "grid", gap: 6 }}>
+              <p className="tn-label">{dayLabel(d.date)}</p>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 4 }}>
+                {d.teams.map((t, i) => {
+                  const known = t.members.filter((m) => nameOf.has(m));
+                  const others = t.members.length - known.length;
+                  return (
+                    <li key={i} style={{ fontSize: "0.9rem", color: "var(--t-text-2)" }}>
+                      {known.map((m, k) => (
+                        <span key={m} style={{ color: present.includes(m) ? "var(--t-text)" : "var(--t-text-3)", fontWeight: m === t.captain ? 700 : 400 }}>
+                          {k ? ", " : ""}
+                          {nameOf.get(m)}
+                          {m === t.captain ? " (capitaine)" : ""}
+                        </span>
+                      ))}
+                      {others > 0 ? <span style={{ color: "var(--t-text-3)" }}> + {others} autre{others > 1 ? "s" : ""}</span> : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+      {never.length ? <p className="tn-sub" style={{ fontSize: "0.85rem" }}>Jamais capitaine : {never.join(", ")}</p> : null}
+    </details>
+  );
 }
 
 type Sync = "saved" | "pending" | "saving" | "error";
@@ -382,6 +437,7 @@ export function PracticeTournament({ endpoint, query = "", initial = null, title
             Le site forme des équipes nouvelles (pas toujours les mêmes ensemble), équilibrées selon les évaluations des filles, et choisit une capitaine qui ne l&apos;a pas été récemment.
           </p>
         </section>
+        <PastTeams history={ctx.history} present={here.map((p) => p.id)} nameOf={nameOf} open />
       </div>
     );
   }
@@ -603,6 +659,8 @@ export function PracticeTournament({ endpoint, query = "", initial = null, title
           <p style={{ margin: "4px 0 0", fontWeight: 600 }}>{ctx.captainTask}</p>
         </div>
       </section>
+
+      <PastTeams history={ctx.history} present={state.present} nameOf={nameOf} />
 
       <section className="tn-card">
         <h3 className="tn-h" style={{ fontSize: "1.05rem" }}>Qui contre qui</h3>
