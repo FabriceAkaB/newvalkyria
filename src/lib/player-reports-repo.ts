@@ -1,3 +1,4 @@
+import { stripSkippedGestures } from "@/lib/ball-mastery-skip-repo";
 import { mergeEvaluations, type CoachEvaluation, type MergedEvaluation } from "@/lib/player-reports";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -32,8 +33,10 @@ async function load(filter: { since?: string; activityId?: string; registrationI
   if (filter.registrationId) q = q.eq("registration_id", filter.registrationId);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
+  // Ball mastery pas fait ce jour-là : ses gestes ne comptent pas dans les moyennes (gardés en base).
+  const rows = await stripSkippedGestures((data ?? []) as any[]);
   const groups = new Map<string, PlayerReport>();
-  for (const r of (data ?? []) as any[]) {
+  for (const r of rows) {
     const key = `${r.activity_id}|${r.registration_id}`;
     let g = groups.get(key);
     if (!g) {

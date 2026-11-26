@@ -13,6 +13,8 @@ import { CoachPracticeJournal } from "@/components/coach-practice-journal";
 import { CoachGuideCard, PracticeTimer } from "@/components/coach-guide";
 import { exerciseGuideFallback, setupForGroup } from "@/lib/practice-plan-view";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
+import { BallMasterySkipToggle } from "@/components/ball-mastery-skip-toggle";
+import { ballMasteryState, isBallMasteryBlock } from "@/lib/ball-mastery-skip";
 import { observerOf } from "@/lib/gesture-scores";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { MatchPlayer } from "@/components/match-player";
@@ -540,9 +542,14 @@ function QuickEvaluation({
   open,
   onToggle,
   onSaved,
-  gestureChoices = []
+  gestureChoices = [],
+  bmSkipped = false,
+  skippedGestures = []
 }: {
   gestureChoices?: string[];
+  /** « Le ball mastery n'a pas été fait » : pas de gestes à noter, ceux déjà notés ne sont ni montrés ni envoyés. */
+  bmSkipped?: boolean;
+  skippedGestures?: string[];
   activityId: string;
   activityDate: string;
   player: RosterPlayer;
@@ -555,6 +562,7 @@ function QuickEvaluation({
   const [ratings, setRatings] = useState<Record<string, number>>(mine?.ratings ?? {});
   const [note, setNote] = useState(mine?.comment ?? "");
   const [gestures, setGestures] = useState<string[]>(mine?.gestures ?? []);
+  const shownGestures = bmSkipped ? gestures.filter((g) => !skippedGestures.includes(g) && !Object.keys(mine?.gesture_scores ?? {}).includes(g)) : gestures;
   // Note de chaque geste du ball mastery du jour : 1 = incapable, 10 = parfait (JP, 18 nov. 2026).
   const [scores, setScores] = useState<Record<string, number>>(mine?.gesture_scores ?? {});
   const [otherGesture, setOtherGesture] = useState("");
@@ -569,10 +577,10 @@ function QuickEvaluation({
   const save = async () => {
     setSaving(true);
     setError(null);
-    const r = await postJson("/api/coach/evaluations", { activityId, registrationId: player.registrationId, ratings, comment: note, gestures, gestureScores: scores });
+    const r = await postJson("/api/coach/evaluations", { activityId, registrationId: player.registrationId, ratings, comment: note, gestures: shownGestures, gestureScores: bmSkipped ? {} : scores });
     setSaving(false);
     if (!r.ok) return setError(r.error ?? null);
-    onSaved({ id: mine?.id ?? "", activity_id: activityId, registration_id: player.registrationId, coach_id: "", ratings: r.data.ratings, comment: r.data.comment, gestures: r.data.gestures ?? [], gesture_scores: r.data.gestureScores ?? scores, created_at: new Date().toISOString() });
+    onSaved({ id: mine?.id ?? "", activity_id: activityId, registration_id: player.registrationId, coach_id: "", ratings: r.data.ratings, comment: r.data.comment, gestures: r.data.gestures ?? [], gesture_scores: bmSkipped ? (mine?.gesture_scores ?? {}) : (r.data.gestureScores ?? scores), created_at: new Date().toISOString() });
   };
 
   return (
@@ -582,8 +590,8 @@ function QuickEvaluation({
         <div style={{ flex: 1, minWidth: 0 }}>
           <p className="coach-player__name">{fullName(player)}</p>
           {done && !open && <p className="coach-muted" style={{ margin: 0 }}>{QUICK_CRITERIA.map((c) => `${c} ${mine?.ratings?.[c]}`).join(" · ")}</p>}
-          {!open && mine?.gesture_scores && Object.keys(mine.gesture_scores).length ? <p className="coach-muted" style={{ margin: 0 }}>{Object.entries(mine.gesture_scores).map(([g, v]) => `${g} ${v}/10`).join(" · ")}</p> : null}
-          {!open && mine?.gestures?.length ? <p className="coach-muted" style={{ margin: 0, color: "var(--adm-warn)" }}>À retravailler : {mine.gestures.join(", ")}</p> : null}
+          {!open && !bmSkipped && mine?.gesture_scores && Object.keys(mine.gesture_scores).length ? <p className="coach-muted" style={{ margin: 0 }}>{Object.entries(mine.gesture_scores).map(([g, v]) => `${g} ${v}/10`).join(" · ")}</p> : null}
+          {!open && (bmSkipped ? shownGestures : mine?.gestures ?? []).length ? <p className="coach-muted" style={{ margin: 0, color: "var(--adm-warn)" }}>À retravailler : {(bmSkipped ? shownGestures : mine?.gestures ?? []).join(", ")}</p> : null}
           {!done && doneByOther && <p className="coach-muted" style={{ margin: 0 }}>Évaluée par {doneByOther.coach}</p>}
         </div>
         <span className="coach-pill" data-tone={done || doneByOther ? "good" : "warn"}>{done || doneByOther ? "✓ Évaluée" : "À évaluer"}</span>
@@ -642,7 +650,7 @@ function QuickEvaluation({
               <span>facultatif · touche ceux qu&apos;elle a du mal à faire</span>
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {[...new Set(gestures.filter((g) => !gestureChoices.includes(g)))].map((g) => (
+              {[...new Set(shownGestures.filter((g) => !gestureChoices.includes(g)))].map((g) => (
                 <button key={g} type="button" className="coach-pill" data-tone={gestures.includes(g) ? "warn" : undefined} aria-pressed={gestures.includes(g)} onClick={() => toggleGesture(g)} style={{ cursor: "pointer", border: gestures.includes(g) ? undefined : "1px solid var(--adm-line)" }}>
                   {gestures.includes(g) ? "✗ " : ""}
                   {g}
@@ -816,7 +824,18 @@ export function CoachActiviteDetail({
     return null;
   };
   const read = practiceReadStatus(readItems, readSeen, readAt);
-  const bmMoves = useMemo(() => ballMasteryMoves(sessionBlocks, initialExercises), [sessionBlocks, initialExercises]);
+  const bmAllMoves = useMemo(() => ballMasteryMoves(sessionBlocks, initialExercises), [sessionBlocks, initialExercises]);
+  // « Ball mastery fait aujourd'hui ? Oui / Non » (JP, 25 nov. 2026) : une réponse pour toute la pratique, dans le rapport.
+  // « Non » = pas de gestes à noter pour aucune fille ; sans réponse, les gestes sont demandés comme avant.
+  const bmInitial = useMemo(() => {
+    const typeOf = (id: string) => (initialExercises.find((e) => e.id === id) as (Exercise & { exercise_type?: string | null }) | undefined)?.exercise_type;
+    const blocks = sessionBlocks as (SessionBlock & { not_done?: boolean | null; not_done_at?: string | null })[];
+    const state = ballMasteryState(blocks, typeOf);
+    const answered = blocks.some((b) => isBallMasteryBlock(b, typeOf) && b.not_done_at);
+    return { ...state, answer: state.skipped ? ("non" as const) : answered ? ("oui" as const) : null, byName: null, at: null };
+  }, [sessionBlocks, initialExercises]);
+  const [bmSkipped, setBmSkipped] = useState(bmInitial.skipped);
+  const bmMoves = bmSkipped ? [] : bmAllMoves;
   // Guide de l'éducateur et minuteur : les blocs du plan dans l'ordre, avec leur durée.
   const guideBlocks = useMemo(
     () => sessionBlocks.map((b) => ({ title: b.custom_title || initialExercises.find((e) => e.id === b.exercise_id)?.title || b.block_type, minutes: b.duration_minutes })),
@@ -1059,9 +1078,17 @@ export function CoachActiviteDetail({
     <section style={{ marginBottom: 16 }}>
       <h2 className="coach-h2">Évaluation rapide · {evaluated}/{participants.length}</h2>
       <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>
-        Moins de 2 minutes par fille : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10, et une phrase sur ce que tu as vu (écrite pendant la pratique ou en regardant la vidéo).
+        Moins de 2 minutes par fille : 3 notes de 1 à 5{bmMoves.length ? ", chaque geste du ball mastery de 1 à 10" : ""}, et une phrase sur ce que tu as vu (écrite pendant la pratique ou en regardant la vidéo).
         {observed.size ? ` Tes ${observed.size} joueuses à observer sont en premier.` : ""}
       </p>
+      {bmInitial.planned ? (
+        <BallMasterySkipToggle
+          initial={bmInitial}
+          statusUrl={`/api/coach/activities/${activity.id}/ball-mastery`}
+          saveUrl={`/api/coach/activities/${activity.id}/ball-mastery`}
+          onChange={setBmSkipped}
+        />
+      ) : null}
       {[...participants].sort((a, b) => Number(!observed.has(a.registrationId)) - Number(!observed.has(b.registrationId))).map((p) => (
         <QuickEvaluation
           key={p.registrationId}
@@ -1073,6 +1100,8 @@ export function CoachActiviteDetail({
           open={openId === p.registrationId}
           onToggle={() => setOpenId(openId === p.registrationId ? null : p.registrationId)}
           gestureChoices={bmMoves}
+          bmSkipped={bmSkipped}
+          skippedGestures={bmSkipped ? bmAllMoves : []}
           onSaved={(ev) => {
             setMine((prev) => ({ ...prev, [p.registrationId]: ev }));
             openNext(p.registrationId);

@@ -1,3 +1,4 @@
+import { stripSkippedGestures } from "@/lib/ball-mastery-skip-repo";
 import { CLUB_ID } from "@/lib/club";
 import { getGestures } from "@/lib/coaching-method-repo";
 import { getPlayerObjectives } from "@/lib/coach-portal-repo";
@@ -26,7 +27,8 @@ export async function getFamilyParcours(registrationIds: string[]): Promise<Map<
     getTests({ activeOnly: true }).catch(() => []),
     getResults(registrationIds).catch(() => []),
     getGestures({ activeOnly: true }).catch(() => []),
-    db().from("player_evaluations").select("registration_id, gesture_scores, gestures, activity:coach_activities(activity_date)").in("registration_id", registrationIds),
+    // Ball mastery pas fait ce jour-là : ses gestes ne comptent pas dans le passeport.
+    db().from("player_evaluations").select("activity_id, registration_id, gesture_scores, gestures, activity:coach_activities(activity_date)").in("registration_id", registrationIds).then(async (r: any) => ({ ...r, data: r.data ? await stripSkippedGestures(r.data) : r.data })),
     db()
       .from("team_tasks")
       .select("ref, status, created_at")

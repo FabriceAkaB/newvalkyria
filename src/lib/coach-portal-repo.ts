@@ -1,3 +1,4 @@
+import { stripSkippedGestures } from "@/lib/ball-mastery-skip-repo";
 import { methodWindow } from "@/lib/coach-access-core";
 import { cleanNote, computeReport, feedbackByWeek, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, watchReasons, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
 import type { CoachActivity, CoachAssignment } from "@/lib/coaches-repo";
@@ -395,7 +396,8 @@ export async function getPlayerEvaluations(registrationId: string): Promise<(Pla
     .eq("registration_id", registrationId)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as any;
+  // Ball mastery pas fait ce jour-là : ses gestes ne comptent pas (bulletin, résumé de saison, fiche de la joueuse).
+  return (await stripSkippedGestures((data ?? []) as any[])) as any;
 }
 
 export async function saveEvaluation(input: {
@@ -747,7 +749,7 @@ export async function getBriefing(activity: { id: string; activity_date: string 
   const date = String(activity.activity_date).slice(0, 10);
   const [{ data: objectives }, { data: evals }, { data: att }, sheets] = await Promise.all([
     db().from("player_objectives").select("registration_id, objective").in("registration_id", ids).eq("active", true),
-    db().from("player_evaluations").select("registration_id, ratings, gestures, activity:coach_activities(activity_date)").in("registration_id", ids),
+    db().from("player_evaluations").select("activity_id, registration_id, ratings, gestures, gesture_scores, activity:coach_activities(activity_date)").in("registration_id", ids).then(async (r: any) => ({ ...r, data: r.data ? await stripSkippedGestures(r.data) : r.data })),
     db().from("activity_player_attendance").select("registration_id, status, practice_rating, fatigue, activity_id, activity:coach_activities(activity_date)").in("registration_id", ids),
     getSheetsForRegistrations(ids).catch(() => new Map<string, SheetAnswers>())
   ]);

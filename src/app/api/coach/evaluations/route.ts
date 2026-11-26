@@ -3,6 +3,7 @@ import { after, NextResponse } from "next/server";
 import { notifyActivityCoaches } from "@/lib/coach-report-notice";
 import { getCurrentCoachId } from "@/lib/coach-auth";
 import { getActivityNotes, getCoachActivityWithRoster, getCoachPreviousNotes, saveEvaluation } from "@/lib/coach-portal-repo";
+import { isBallMasterySkipped } from "@/lib/ball-mastery-skip-repo";
 import { checkNote, cleanNote, QUICK_CRITERIA } from "@/lib/coach-report";
 import { cleanGestureScores, difficultGestures } from "@/lib/gesture-scores";
 import { jsonError } from "@/lib/http";
@@ -44,7 +45,9 @@ export async function POST(request: Request) {
   const check = checkNote({ note: comment, playerFirstName: player.firstName, sameActivity, previous });
   if (!check.ok) return NextResponse.json({ error: check.message, code: check.code }, { status: 422 });
 
-  const gestureScores = cleanGestureScores(body.gestureScores);
+  // « Ball mastery fait aujourd'hui ? » = Non : aucun geste noté ce jour-là (ceux déjà en base sont gardés, pas comptés).
+  const bmSkipped = await isBallMasterySkipped(body.activityId).catch(() => false);
+  const gestureScores = bmSkipped ? {} : cleanGestureScores(body.gestureScores);
   const manual = Array.isArray(body.gestures) ? body.gestures.filter((g): g is string => typeof g === "string").map((g) => g.trim().slice(0, 60)).filter(Boolean) : [];
   // Un geste noté 4 ou moins devient « à retravailler », en plus de ceux touchés à la main.
   const gestures = Array.isArray(body.gestures) || Object.keys(gestureScores).length ? [...new Set([...manual, ...difficultGestures(gestureScores)])].slice(0, 12) : undefined;

@@ -26,6 +26,7 @@ export const NOTE_MIN_CHARS = 30;
  *  1. présences de toutes les joueuses ;
  *  2. évaluation de chaque fille présente : 3 notes de 1 à 5, chaque geste du ball mastery de 1 à 10 et une
  *     observation d'au moins NOTE_MIN_WORDS mots (son état aujourd'hui, comment elle progresse, un exemple vu) ;
+ *     « Ball mastery fait aujourd'hui ? » = Non (ball-mastery-skip.ts) : pas de gestes, le rapport est complet sans eux ;
  *  3. sondage du jour : plaisir et fatigue de chaque fille présente ;
  *  4. retour du coach : 2 choses qui ont bien marché et 2 choses à améliorer. */
 export const REPORT_RULE_V2_START = "2026-11-19";
