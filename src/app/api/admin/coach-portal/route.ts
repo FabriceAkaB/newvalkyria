@@ -7,7 +7,8 @@ import { sessionCookie } from "@/lib/login-guard";
 
 /** JP remplit son rapport de coach depuis l'admin (JP, 18 nov. 2026) : ouvre l'espace coach sous SON profil
  *  d'éducateur (app_settings « coach_admin_id »), sur la pratique demandée. Réservé au rôle admin.
- *  `vue=tout-en-un` (JP, 25 nov. 2026) : la pratique, l'évaluation des filles et le rapport sur un seul écran. */
+ *  `vue=tout-en-un` (JP, 25 nov. 2026) : la pratique, l'évaluation des filles et le rapport sur un seul écran.
+ *  `joueuse=<inscription>` (JP, 26 nov. 2026) : ouvre le dossier complet de la joueuse dans l'Espace Technique. */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   if (!(await isAdminRequest({ roles: ["admin"] }))) return NextResponse.redirect(new URL("/admin", url));
@@ -16,7 +17,9 @@ export async function GET(request: Request) {
   const token = await createCoachSession(coachId);
   const activity = url.searchParams.get("activite");
   const view = url.searchParams.get("vue") === "tout-en-un" ? "?vue=tout-en-un" : "";
-  const target = activity && /^[0-9a-f-]{36}$/i.test(activity) ? `/entraineur/activites/${activity}${view}` : "/entraineur";
+  const player = url.searchParams.get("joueuse");
+  const uuid = (v: string | null) => Boolean(v && /^[0-9a-f-]{36}$/i.test(v));
+  const target = uuid(activity) ? `/entraineur/activites/${activity}${view}` : uuid(player) ? `/entraineur/joueuses/${player}` : url.searchParams.has("joueuses") ? "/entraineur/joueuses" : "/entraineur";
   const res = NextResponse.redirect(new URL(target, url));
   res.cookies.set(COACH_COOKIE_NAME, token, sessionCookie(COACH_SESSION_TTL_SECONDS));
   return res;

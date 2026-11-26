@@ -1,6 +1,6 @@
 import { stripSkippedGestures } from "@/lib/ball-mastery-skip-repo";
 import { methodWindow } from "@/lib/coach-access-core";
-import { cleanNote, computeReport, feedbackByWeek, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, watchReasons, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
+import { cleanNote, computeReport, feedbackByWeek, hasReportHour, PARTICIPATED, QUICK_CRITERIA, REPORT_REQUIRED_TYPES, REPORT_RULE_START, watchReasons, type FeedbackWeek, type ReportStatus } from "@/lib/coach-report";
 import type { CoachActivity, CoachAssignment } from "@/lib/coaches-repo";
 import { addSeen, practiceReadItems, practiceReadStatus, readLabel, type ReadItem, type ReadStatus } from "@/lib/practice-read";
 import { briefingLines, type SheetAnswers } from "@/lib/player-sheet";
@@ -597,21 +597,32 @@ export async function getBulletinData(registrationId: string, audience: "equipe"
   };
 }
 
-/* ── Accès de l'éducateur (strict nécessaire) ─────────────────────────
- *  Un éducateur ne voit et ne touche que les joueuses de ses groupes (ou à l'essai le jour d'une de ses
- *  activités), et seulement les activités où il est assigné. Jamais de prix, de paiement ni de parent. */
+/* ── Accès de l'éducateur ─────────────────────────────────────────────
+ *  Dossier des joueuses (JP, 26 nov. 2026) : toute l'équipe active de l'Académie voit le dossier de chaque fille
+ *  inscrite à l'Académie (comme « Pratiques du jour »), pas seulement celles de ses groupes. Les essais restent limités
+ *  au jour d'une activité de l'éducateur. Jamais de prix, de paiement ni de coordonnées du parent. */
 
 export async function coachCanSeePlayer(coachId: string, registrationId: string): Promise<boolean> {
-  const [activities, { data: reg }] = await Promise.all([
+  if (!/^[0-9a-f-]{36}$/i.test(registrationId)) return false;
+  const [activities, { data: reg }, { data: coach }] = await Promise.all([
     getCoachActivities(coachId),
-    db().from("registrations").select("id, category_id, is_trial, trial_date, season_id").eq("id", registrationId).maybeSingle()
+    db().from("registrations").select("id, category_id, is_trial, trial_date, season_id, status").eq("id", registrationId).maybeSingle(),
+    db().from("coaches").select("status").eq("id", coachId).maybeSingle()
   ]);
   if (!reg) return false;
   // Comptes de démo : les joueuses de la saison « demo » seulement, pour l'éducateur qui a une pratique de démo.
   if (reg.season_id === "demo") return activities.some((a) => isDemoActivity(a.activity));
+  if (coach && coach.status !== "inactive" && !reg.is_trial && ["paid", "confirmed"].includes(reg.status)) return true;
   const categories = new Set(activities.map((a) => cleanCategory(a.activity.category)).filter(Boolean));
   if (reg.category_id && categories.has(reg.category_id)) return true;
   return Boolean(reg.is_trial && reg.trial_date && activities.some((a) => String(a.activity.activity_date).slice(0, 10) === String(reg.trial_date).slice(0, 10)));
+}
+
+/** Écrire dans le dossier (objectifs, routines, mot du bulletin) : les éducateurs qui ont des rapports à remplir
+ *  (« Entraîneur principal ») ; les assistants lisent seulement (rien à remplir). */
+export async function coachCanEditPlayer(coachId: string, registrationId: string): Promise<boolean> {
+  const [{ data: coach }, canSee] = await Promise.all([db().from("coaches").select("role").eq("id", coachId).maybeSingle(), coachCanSeePlayer(coachId, registrationId)]);
+  return canSee && hasReportHour(coach?.role);
 }
 
 /** Joueuse d'un objectif ou d'une routine, pour vérifier l'accès avant de le retirer. */

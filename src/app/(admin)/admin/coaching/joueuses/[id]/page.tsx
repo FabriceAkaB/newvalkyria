@@ -32,6 +32,10 @@ export default async function PlayerSeasonPage({ params }: { params: Promise<{ i
           <Link href="/admin/coaching/joueuses" className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1rem" }}>
             ← Progression des joueuses
           </Link>
+          {/* Le dossier complet (rapports, sondages, matchs, vidéos, fiche du parent, bulletin en construction) dans l'Espace Technique. */}
+          <a href={`/api/admin/coach-portal?joueuse=${id}`} className="admin-btn-primary" style={{ textDecoration: "none", display: "inline-block", margin: "0 0 1rem 0.5rem" }}>
+            Ouvrir son dossier complet
+          </a>
           <BulletinView data={data} />
 
           {points && (

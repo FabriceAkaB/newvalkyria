@@ -33,6 +33,9 @@ export default async function PlayersProgressPage() {
             <p className="mda-eyebrow">Espace coaching · saison en cours</p>
             <h1 className="mda-h1">{evaluated ? `${evaluated} joueuse${evaluated > 1 ? "s" : ""} sur ${players.length} déjà évaluée${evaluated > 1 ? "s" : ""}` : `${players.length} joueuses, pas encore d'évaluation`}</h1>
             <p className="mda-lead">Chaque éducateur évalue chaque fille après chaque pratique (ball mastery, prestation, attitude sur 5 et une note) dans son portail. Tout s&apos;accumule ici : à la fin de la saison, on a un vrai portrait de chaque fille.</p>
+            <p className="mda-lead" style={{ marginTop: 8 }}>
+              <a href="/api/admin/coach-portal?joueuses=1">Ouvrir le dossier de chaque joueuse dans l&apos;Espace Technique</a> (rapports, sondages, matchs, vidéos, fiche du parent, bulletin en construction).
+            </p>
           </header>
 
           <section className="mda-card">

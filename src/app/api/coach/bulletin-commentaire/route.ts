@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { saveFamilyComment } from "@/lib/bulletin-repo";
 import { getCurrentCoachId } from "@/lib/coach-auth";
-import { coachCanSeePlayer } from "@/lib/coach-portal-repo";
+import { coachCanEditPlayer } from "@/lib/coach-portal-repo";
 import { getCoach } from "@/lib/coaches-repo";
 import { jsonError } from "@/lib/http";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   if (!coachId) return jsonError("Non autorisé", 401);
   const b = (await request.json().catch(() => null)) as { registrationId?: string; period?: string; text?: string } | null;
   if (!b?.registrationId || (b.period !== "mi-saison" && b.period !== "fin-saison") || typeof b.text !== "string") return jsonError("Paramètres invalides", 400);
-  if (!(await coachCanSeePlayer(coachId, b.registrationId))) return jsonError("Cette joueuse n'est pas dans tes groupes.", 403);
+  if (!(await coachCanEditPlayer(coachId, b.registrationId))) return jsonError("Seuls les coachs qui remplissent les rapports écrivent le mot du bulletin.", 403);
   const [coach, { data: reg }] = await Promise.all([
     getCoach(coachId),
     (getSupabaseAdminClient() as any).from("registrations").select("player_first_name").eq("id", b.registrationId).maybeSingle()

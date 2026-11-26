@@ -99,6 +99,13 @@ export async function listIncidents(opts: { openOnly?: boolean } = {}): Promise<
   return ((data ?? []) as any[]).map(map);
 }
 
+/** Toutes les fiches d'une joueuse, la plus récente d'abord (dossier de la joueuse, Espace Technique). */
+export async function getPlayerIncidents(registrationId: string): Promise<PlayerIncident[]> {
+  const { data, error } = await db().from("player_incidents").select(SELECT).eq("registration_id", registrationId).order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as any[]).map(map);
+}
+
 /** L'éducateur signale une blessure : la fiche est gardée et JP reçoit sa tâche (appeler la famille) pour aujourd'hui. */
 export async function reportIncident(input: { activityId: string; coachId: string | null; reportedBy: string; playerName: string; incident: IncidentInput }): Promise<PlayerIncident> {
   const i = input.incident;

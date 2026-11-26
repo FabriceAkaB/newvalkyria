@@ -7,6 +7,7 @@ import { getBulletinReport } from "@/lib/bulletin-repo";
 import { CoachTopbar } from "@/components/coach-topbar";
 import { requireCoach } from "@/lib/coach-auth";
 import { coachCanSeePlayer } from "@/lib/coach-portal-repo";
+import { hasReportHour } from "@/lib/coach-report";
 import { getCoach } from "@/lib/coaches-repo";
 
 export const metadata = { title: "Bulletin — Espace Technique" };
@@ -28,15 +29,18 @@ export default async function CoachBulletinPage({ params, searchParams }: { para
       <div className="admin-content">
         <div className="admin-section">
           <Link href={`/entraineur/joueuses/${id}`} className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-block", marginBottom: "1rem" }}>
-            ← Fiche joueuse
+            ← Dossier de la joueuse
           </Link>
-          <CoachBulletinComment
-            key={data.range.period}
-            registrationId={id}
-            period={data.range.period}
-            firstName={data.player.firstName}
-            initial={data.familyComments.find((c) => c.coachId === coachId)?.text ?? ""}
-          />
+          {/* Les assistants lisent le bulletin ; seuls les coachs qui remplissent les rapports écrivent le mot pour la famille. */}
+          {hasReportHour(coach?.role) ? (
+            <CoachBulletinComment
+              key={data.range.period}
+              registrationId={id}
+              period={data.range.period}
+              firstName={data.player.firstName}
+              initial={data.familyComments.find((c) => c.coachId === coachId)?.text ?? ""}
+            />
+          ) : null}
           <BulletinReport data={data} periodHref={(p) => `/entraineur/joueuses/${id}/bulletin?bulletin=${p}`} />
         </div>
       </div>

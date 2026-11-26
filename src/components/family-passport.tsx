@@ -27,7 +27,7 @@ function gestureDetail(g: PassportGesture): string {
   return parts.join(" · ");
 }
 
-export function FamilyPassport({ registrationId, firstName, photoUrl = null, data }: { registrationId: string; firstName: string; photoUrl?: string | null; data: FamilyParcours }) {
+export function FamilyPassport({ registrationId, firstName, photoUrl = null, data, staffView = false }: { registrationId: string; firstName: string; photoUrl?: string | null; data: FamilyParcours; staffView?: boolean }) {
   const { passport, objectives, meeting } = data;
   return (
     <>
@@ -137,6 +137,8 @@ export function FamilyPassport({ registrationId, firstName, photoUrl = null, dat
               <span className="fam-status" style={{ marginRight: 8 }}>{meeting.status === "en_cours" ? "En préparation" : "Demande reçue"}</span>
               Demandée le {dateFr(meeting.requestedAt)} : nous vous écrivons pour fixer le moment.
             </p>
+          ) : staffView ? (
+            <p className="parent-muted" style={{ margin: 0, fontSize: "0.9rem" }}>La famille n&apos;a pas demandé de rencontre.</p>
           ) : (
             <FamilyMeetingRequest registrationId={registrationId} firstName={firstName} />
           )}

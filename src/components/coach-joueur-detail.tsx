@@ -1,37 +1,15 @@
 "use client";
 
-import { ClipboardList } from "lucide-react";
-import Link from "next/link";
+import { X } from "lucide-react";
 import { useState } from "react";
 
-import { CoachTopbar } from "@/components/coach-topbar";
-import { SeasonSummaryCard } from "@/components/season-summary-card";
-import type { CoachActivity } from "@/lib/coaches-repo";
-import type { PlayerAttendance, PlayerEvaluation, PlayerObjective, PlayerProfile, PlayerRoutine } from "@/lib/coach-portal-repo";
+import type { PlayerObjective, PlayerRoutine } from "@/lib/coach-portal-repo";
 import type { Exercise } from "@/lib/exercises-repo";
-import type { SeasonSummary } from "@/lib/season-summary";
 
-const ATTENDANCE_LABELS: Record<string, string> = {
-  present: "Présente",
-  absent: "Absente",
-  injured: "Blessée",
-  late: "En retard",
-  left_early: "Partie plus tôt"
-};
+/** Objectifs individuels et routines maison d'une joueuse, dans son dossier (Espace Technique). `readOnly` : les
+ *  assistants lisent seulement (rien à remplir). */
 
-interface Props {
-  coachName: string;
-  player: PlayerProfile;
-  evaluations: (PlayerEvaluation & { activity: CoachActivity; coach: { first_name: string; last_name: string } })[];
-  objectives: PlayerObjective[];
-  routines: PlayerRoutine[];
-  exercises: Exercise[];
-  attendanceHistory: (PlayerAttendance & { activity: CoachActivity })[];
-  /** Résumé de saison (season-summary.ts, P1.2.10) : la joueuse comparée à elle-même. */
-  seasonSummary: SeasonSummary | null;
-}
-
-function ObjectivesPanel({ registrationId, objectives: initial }: { registrationId: string; objectives: PlayerObjective[] }) {
+export function ObjectivesPanel({ registrationId, objectives: initial, readOnly = false }: { registrationId: string; objectives: PlayerObjective[]; readOnly?: boolean }) {
   const [objectives, setObjectives] = useState(initial);
   const [newObjective, setNewObjective] = useState("");
   const [saving, setSaving] = useState(false);
@@ -60,26 +38,32 @@ function ObjectivesPanel({ registrationId, objectives: initial }: { registration
   };
 
   return (
-    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
-      <p className="admin-drawer-section-title">Objectifs individuels</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.6rem" }}>
+    <div className="pd-card">
+      <p className="pd-card__label">Objectifs individuels</p>
+      <ul className="pd-alerts" style={{ marginBottom: readOnly ? 0 : 12 }}>
         {objectives.map((o) => (
-          <div key={o.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "var(--adm-text-2)" }}>
-            <span>• {o.objective}</span>
-            <button onClick={() => remove(o.id)} style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer" }}>×</button>
-          </div>
+          <li key={o.id} data-tone="info" style={{ justifyContent: "space-between" }}>
+            <span style={{ flex: 1 }}>{o.objective}</span>
+            {!readOnly ? (
+              <button onClick={() => remove(o.id)} aria-label="Retirer l'objectif" style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer", minWidth: 32, minHeight: 32 }}>
+                <X size={14} aria-hidden />
+              </button>
+            ) : null}
+          </li>
         ))}
-        {objectives.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Aucun objectif fixé.</p>}
-      </div>
-      <div style={{ display: "flex", gap: "0.4rem" }}>
-        <input className="admin-input" placeholder="Nouvel objectif..." value={newObjective} onChange={(e) => setNewObjective(e.target.value)} style={{ flex: 1, fontSize: "0.75rem" }} />
-        <button className="admin-btn-ghost" onClick={add} disabled={saving} style={{ fontSize: "0.7rem" }}>Ajouter</button>
-      </div>
+        {objectives.length === 0 && <p className="pd-empty">Aucun objectif fixé.</p>}
+      </ul>
+      {!readOnly ? (
+        <div style={{ display: "flex", gap: 8 }}>
+          <input className="pd-search" placeholder="Nouvel objectif…" value={newObjective} onChange={(e) => setNewObjective(e.target.value)} style={{ flex: 1, minHeight: 40, fontSize: "0.88rem" }} />
+          <button className="pd-btn" onClick={add} disabled={saving || !newObjective.trim()}>Ajouter</button>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function RoutinesPanel({ registrationId, routines: initial, exercises }: { registrationId: string; routines: PlayerRoutine[]; exercises: Exercise[] }) {
+export function RoutinesPanel({ registrationId, routines: initial, exercises, readOnly = false }: { registrationId: string; routines: PlayerRoutine[]; exercises: Pick<Exercise, "id" | "title">[]; readOnly?: boolean }) {
   const [routines, setRoutines] = useState(initial);
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
@@ -87,9 +71,7 @@ function RoutinesPanel({ registrationId, routines: initial, exercises }: { regis
   const [exerciseIds, setExerciseIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const toggleExercise = (id: string) => {
-    setExerciseIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
+  const toggleExercise = (id: string) => setExerciseIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const add = async () => {
     if (!title.trim()) return;
@@ -118,119 +100,46 @@ function RoutinesPanel({ registrationId, routines: initial, exercises }: { regis
   };
 
   return (
-    <div style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "1.1rem" }}>
-      <p className="admin-drawer-section-title">Routine maison</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "0.6rem" }}>
+    <div className="pd-card">
+      <p className="pd-card__label">Routine maison</p>
+      <div style={{ display: "grid", gap: 8, marginBottom: readOnly ? 0 : 12 }}>
         {routines.map((r) => (
-          <div key={r.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "8px", padding: "0.6rem 0.8rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <strong style={{ fontSize: "0.78rem", color: "var(--adm-text)" }}>{r.title}</strong>
-              <button onClick={() => remove(r.id)} style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer" }}>×</button>
+          <div key={r.id} style={{ background: "var(--adm-bg)", borderRadius: "var(--adm-radius-sm)", padding: "10px 12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <strong style={{ fontSize: "0.88rem", color: "var(--adm-text)" }}>{r.title}</strong>
+              {!readOnly ? (
+                <button onClick={() => remove(r.id)} aria-label="Retirer la routine" style={{ background: "none", border: "none", color: "var(--adm-text-3)", cursor: "pointer", minWidth: 32, minHeight: 32 }}>
+                  <X size={14} aria-hidden />
+                </button>
+              ) : null}
             </div>
-            {r.exercise_ids.length > 0 && (
-              <p style={{ fontSize: "0.7rem", color: "var(--adm-text-2)", margin: "0.3rem 0 0" }}>
-                {r.exercise_ids.map((id) => exercises.find((e) => e.id === id)?.title ?? "Exercice").join(" · ")}
-              </p>
-            )}
-            {r.notes && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0.3rem 0 0", fontStyle: "italic" }}>{r.notes}</p>}
+            {r.exercise_ids.length > 0 && <p className="pd-coach__small" style={{ marginTop: 4 }}>{r.exercise_ids.map((id) => exercises.find((e) => e.id === id)?.title ?? "Exercice").join(" · ")}</p>}
+            {r.notes && <p className="pd-note" style={{ marginTop: 4 }}>{r.notes}</p>}
           </div>
         ))}
-        {routines.length === 0 && <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: 0 }}>Aucune routine assignée.</p>}
+        {routines.length === 0 && <p className="pd-empty">Aucune routine assignée.</p>}
       </div>
 
-      {showForm ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-          <input className="admin-input" placeholder="Titre (ex. Semaine du 6 octobre)" value={title} onChange={(e) => setTitle(e.target.value)} style={{ fontSize: "0.75rem" }} />
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+      {readOnly ? null : showForm ? (
+        <div style={{ display: "grid", gap: 8 }}>
+          <input className="pd-search" placeholder="Titre (ex. Semaine du 6 octobre)" value={title} onChange={(e) => setTitle(e.target.value)} style={{ minHeight: 40, fontSize: "0.88rem" }} />
+          <div className="pd-chips" style={{ maxHeight: 220, overflowY: "auto" }}>
             {exercises.map((ex) => (
-              <button
-                key={ex.id}
-                onClick={() => toggleExercise(ex.id)}
-                className={exerciseIds.includes(ex.id) ? "admin-btn-primary" : "admin-btn-ghost"}
-                style={{ fontSize: "0.68rem", padding: "0.25rem 0.55rem" }}
-              >
+              <button key={ex.id} type="button" onClick={() => toggleExercise(ex.id)} data-on={exerciseIds.includes(ex.id) || undefined}>
                 {ex.title}
               </button>
             ))}
-            {exercises.length === 0 && <p style={{ fontSize: "0.7rem", color: "var(--adm-text-3)", margin: 0 }}>Aucun exercice dans la bibliothèque pour l&apos;instant.</p>}
+            {exercises.length === 0 && <p className="pd-empty">Aucun exercice dans la bibliothèque pour l&apos;instant.</p>}
           </div>
-          <textarea className="admin-input" placeholder="Notes (optionnel)" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} style={{ fontSize: "0.75rem" }} />
-          <div style={{ display: "flex", gap: "0.4rem" }}>
-            <button className="admin-btn-primary" onClick={add} disabled={saving || !title.trim()} style={{ fontSize: "0.7rem" }}>Assigner</button>
-            <button className="admin-btn-ghost" onClick={() => setShowForm(false)} style={{ fontSize: "0.7rem" }}>Annuler</button>
+          <textarea className="pd-search" placeholder="Notes (facultatif)" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} style={{ padding: "10px 14px", fontSize: "0.88rem" }} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="pd-btn pd-btn--primary" onClick={add} disabled={saving || !title.trim()}>Assigner</button>
+            <button className="pd-btn" onClick={() => setShowForm(false)}>Annuler</button>
           </div>
         </div>
       ) : (
-        <button className="admin-btn-ghost" onClick={() => setShowForm(true)} style={{ fontSize: "0.7rem" }}>+ Nouvelle routine</button>
+        <button className="pd-btn" onClick={() => setShowForm(true)}>Nouvelle routine</button>
       )}
     </div>
-  );
-}
-
-export function CoachJoueurDetail({ coachName, player, evaluations, objectives, routines, exercises, attendanceHistory, seasonSummary }: Props) {
-  const presentCount = attendanceHistory.filter((a) => a.status === "present" || a.status === "late" || a.status === "left_early").length;
-
-  return (
-    <>
-      <CoachTopbar coachName={coachName} />
-      <div className="admin-content">
-        <div className="admin-section">
-          <p className="admin-section-title" style={{ margin: "0 0 0.3rem", fontSize: "1.1rem", textTransform: "none", letterSpacing: 0, color: "var(--adm-text)" }}>
-            {player.firstName} {player.lastName}
-          </p>
-          <p style={{ fontSize: "0.8rem", color: "var(--adm-text-2)", marginBottom: "0.5rem" }}>
-            Née {player.birthYear ?? "—"}{player.advancedGroup ? " · Groupe avancé" : ""} · {presentCount}/{attendanceHistory.length} présence(s)
-          </p>
-          <Link href={`/entraineur/joueuses/${player.registrationId}/bulletin`} className="admin-btn-ghost" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: "1.5rem", fontSize: "0.75rem" }}>
-            <ClipboardList size={14} aria-hidden /> Voir le bulletin de progression
-          </Link>
-
-          {seasonSummary && <SeasonSummaryCard summary={seasonSummary} firstName={player.firstName} />}
-
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
-            <ObjectivesPanel registrationId={player.registrationId} objectives={objectives} />
-            <RoutinesPanel registrationId={player.registrationId} routines={routines} exercises={exercises} />
-          </div>
-
-          <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Historique de présence ({attendanceHistory.length})</p>
-          <div className="admin-table-wrap" style={{ marginBottom: "1.5rem" }}>
-            <table className="admin-table">
-              <thead><tr><th>Date</th><th>Activité</th><th>Présence</th></tr></thead>
-              <tbody>
-                {attendanceHistory.map((a) => (
-                  <tr key={a.id}>
-                    <td>{new Date(a.activity.activity_date + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "short" })}</td>
-                    <td>{a.activity.activity_type}</td>
-                    <td>{ATTENDANCE_LABELS[a.status] ?? a.status}</td>
-                  </tr>
-                ))}
-                {attendanceHistory.length === 0 && <tr><td colSpan={3} className="admin-empty-text">Aucune présence enregistrée.</td></tr>}
-              </tbody>
-            </table>
-          </div>
-
-          <p className="admin-section-title" style={{ fontSize: "0.85rem", marginBottom: "0.75rem" }}>Évaluations ({evaluations.length})</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-            {evaluations.length === 0 && <p className="admin-empty-text">Aucune évaluation enregistrée.</p>}
-            {evaluations.map((ev) => (
-              <div key={ev.id} style={{ background: "var(--adm-surface)", border: "1px solid var(--adm-line)", borderRadius: "10px", padding: "0.9rem 1.1rem" }}>
-                <p style={{ fontSize: "0.72rem", color: "var(--adm-text-3)", margin: "0 0 0.4rem" }}>
-                  {new Date(ev.activity.activity_date + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}
-                  {" · "}{ev.activity.activity_type} · {ev.coach.first_name} {ev.coach.last_name}
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.5rem" }}>
-                  {Object.entries(ev.ratings).map(([crit, val]) => (
-                    <span key={crit} style={{ fontSize: "0.65rem", color: "var(--adm-accent)", background: "rgba(150,100,255,0.1)", padding: "0.15rem 0.45rem", borderRadius: "4px" }}>
-                      {crit}: {val}/5
-                    </span>
-                  ))}
-                </div>
-                {ev.comment && <p style={{ fontSize: "0.78rem", color: "var(--adm-text-2)", margin: 0, fontStyle: "italic" }}>&quot;{ev.comment}&quot;</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </>
   );
 }
