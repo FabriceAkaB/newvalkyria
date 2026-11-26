@@ -6,7 +6,7 @@ import { kioskPath } from "@/lib/survey-kiosk";
 export const metadata = { title: "Borne du terrain", robots: "noindex" };
 export const dynamic = "force-dynamic";
 
-const openHref = (p: { key: string; activityId: string | null }, vue: "pratique" | "sondage") =>
+const openHref = (p: { key: string; activityId: string | null }, vue: "pratique" | "sondage" | "tournoi") =>
   p.activityId ? `${kioskPath(p.activityId)}&vue=${vue}` : `/admin/borne/ouvrir?pratique=${encodeURIComponent(p.key)}&vue=${vue}`;
 
 /** Accueil de la borne (code 180180) : les pratiques du jour, chacune avec son plan et son sondage. Ouvrir une
@@ -25,7 +25,7 @@ export default async function KioskHome() {
           <header>
             <p className="mda-eyebrow" style={{ textTransform: "none" }}>{practices[0] ? dayLabel(practices[0].date) : "Aujourd'hui"}</p>
             <h1 className="mda-h1">Pratiques du jour</h1>
-            <p className="mda-lead">Ouvre la pratique pendant que tu as du réseau. Ensuite, le plan, les diapos et le sondage des filles restent dans la page, même hors réseau : ne la ferme pas.</p>
+            <p className="mda-lead">Ouvre la pratique pendant que tu as du réseau. Ensuite, le plan, les diapos, le sondage des filles et le tournoi restent dans la page, même hors réseau : ne la ferme pas.</p>
           </header>
           {practices.length === 0 ? (
             <div className="admin-stat-card"><p style={{ margin: 0 }}>Aucune pratique de l&apos;Académie aujourd&apos;hui ni dans les 3 prochains jours.</p></div>
@@ -47,6 +47,9 @@ export default async function KioskHome() {
                     </a>
                     <a href={openHref(p, "sondage")} className="admin-btn-ghost" style={{ textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
                       Sondage des filles
+                    </a>
+                    <a href={openHref(p, "tournoi")} className="admin-btn-ghost" style={{ textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+                      Tournoi
                     </a>
                   </div>
                 </div>

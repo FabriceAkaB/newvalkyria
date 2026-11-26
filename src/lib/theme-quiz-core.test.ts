@@ -107,3 +107,12 @@ describe("résultats", () => {
     expect(themeRateByWeek(rows)).toEqual([{ week: "2026-11-23", answered: 3, understood: 2, pct: 67 }]);
   });
 });
+
+describe("themeVerdict (80 %)", () => {
+  it("échec sous 80 %, compris à 80 % et plus, rien sans réponse", async () => {
+    const { themeVerdict } = await import("@/lib/theme-quiz-core");
+    expect(themeVerdict(79)).toBe("echec");
+    expect(themeVerdict(80)).toBe("compris");
+    expect(themeVerdict(null)).toBeNull();
+  });
+});

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 
 import { KioskPracticePlan, KioskTabs } from "@/components/kiosk-practice";
+import { PracticeTournament } from "@/components/practice-tournament";
 import { SurveyKiosk } from "@/components/survey-kiosk";
 import { getKioskPlan } from "@/lib/kiosk-practice-repo";
 import { getSurveyData } from "@/lib/practice-survey-repo";
+import { getTournamentContext } from "@/lib/practice-tournament-repo";
 import { signedPhotoUrl } from "@/lib/player-photos";
 import { checkKioskKey } from "@/lib/survey-kiosk";
 import { getThemeQuiz } from "@/lib/theme-quiz-repo";
@@ -33,7 +35,7 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
   // Finie : plaisir, fatigue et l'aide de la coach donnés (ou l'ancienne borne, avant le 20 nov. 2026).
   const done = data.attendance.filter((a: any) => a.practice_rating != null && a.fatigue != null && (a.coach_helped != null || a.learning != null)).map((a) => a.registration_id);
   // Les 3 choix sont calculés ici une fois et gardés dans la page : les mêmes pour toutes, même hors réseau.
-  const [plan, themeQuiz] = await Promise.all([getKioskPlan(activityId).catch(() => null), getThemeQuiz(activityId).catch(() => null)]);
+  const [plan, themeQuiz, tournament] = await Promise.all([getKioskPlan(activityId).catch(() => null), getThemeQuiz(activityId).catch(() => null), getTournamentContext(activityId).catch(() => null)]);
   const themeResults = Object.fromEntries(data.attendance.filter((a: any) => a.theme_correct === true || a.theme_correct === false).map((a: any) => [a.registration_id, a.theme_correct as boolean]));
   const survey = (
     <SurveyKiosk
@@ -48,8 +50,22 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
       themeResults={themeResults}
     />
   );
-  if (!plan) return survey;
-  // La pratique et le sondage dans la même page (JP, 18 nov. 2026) : une fois ouverte, tout marche sans réseau.
+  if (!plan && !tournament) return survey;
+  // La pratique, le sondage et le tournoi (JP, 26 nov. 2026) dans la même page : une fois ouverte, tout marche sans réseau.
   const when = `${new Date(`${String(data.activity.activity_date).slice(0, 10)}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })} · ${String(data.activity.start_time).slice(0, 5)}${data.activity.location ? ` · ${data.activity.location}` : ""}`;
-  return <KioskTabs initial={vue === "pratique" ? "pratique" : "sondage"} plan={<KioskPracticePlan plan={plan} title={data.label} when={when} />} survey={survey} />;
+  const planView = plan ? (
+    <KioskPracticePlan plan={plan} title={data.label} when={when} />
+  ) : (
+    <div style={{ background: "#fff", borderRadius: 16, padding: "1.1rem 1.2rem", border: "1px solid #e6e0ee" }}>
+      <p style={{ margin: 0, fontWeight: 700 }}>Le plan de cette pratique n&apos;est pas encore prêt.</p>
+    </div>
+  );
+  return (
+    <KioskTabs
+      initial={vue === "pratique" ? "pratique" : vue === "tournoi" && tournament ? "tournoi" : "sondage"}
+      plan={planView}
+      survey={survey}
+      tournament={tournament ? <PracticeTournament endpoint={`/api/borne/${activityId}/tournoi`} query={`?cle=${encodeURIComponent(cle!)}`} initial={tournament} /> : undefined}
+    />
+  );
 }

@@ -5,13 +5,15 @@ import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
 import type { KioskPlan } from "@/lib/kiosk-practice-repo";
 
-/** La borne (code 180180) : « La pratique » et « Sondage des filles » dans la même page. Une fois ouverte avec du
+/** La borne (code 180180) : « La pratique », « Sondage des filles » et « Tournoi » (JP, 26 nov. 2026) dans la même page. Une fois ouverte avec du
  *  réseau, tout reste lisible sans réseau : le plan est dans la page et les diapos sont téléchargées tout de suite. */
 
 const card = { background: "#fff", borderRadius: 16, padding: "1.1rem 1.2rem", border: "1px solid #e6e0ee" } as const;
 const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")} h ${String(m % 60).padStart(2, "0")}`;
 
-export function KioskTabs({ initial, plan, survey }: { initial: "pratique" | "sondage"; plan: ReactNode; survey: ReactNode }) {
+type KioskTab = "pratique" | "sondage" | "tournoi";
+
+export function KioskTabs({ initial, plan, survey, tournament }: { initial: KioskTab; plan: ReactNode; survey: ReactNode; tournament?: ReactNode }) {
   const [tab, setTab] = useState(initial);
   // En ligne au premier rendu (le serveur ne connaît pas le réseau de l'iPad), puis l'état réel du navigateur.
   const online = useSyncExternalStore(
@@ -26,7 +28,7 @@ export function KioskTabs({ initial, plan, survey }: { initial: "pratique" | "so
     () => navigator.onLine,
     () => true
   );
-  const btn = (key: "pratique" | "sondage", label: string) => (
+  const btn = (key: KioskTab, label: string) => (
     <button
       type="button"
       onClick={() => setTab(key)}
@@ -41,15 +43,17 @@ export function KioskTabs({ initial, plan, survey }: { initial: "pratique" | "so
       <div style={{ display: "flex", gap: 6, padding: 6, background: "#ece6f3", borderRadius: 16 }}>
         {btn("pratique", "La pratique")}
         {btn("sondage", "Sondage des filles")}
+        {tournament ? btn("tournoi", "Tournoi") : null}
       </div>
       {!online && (
         <p style={{ margin: 0, padding: "8px 12px", borderRadius: 10, background: "#fff4e0", color: "#7a4a00", fontSize: "0.9rem" }}>
-          Hors réseau : la pratique reste lisible et les réponses du sondage partent dès que le réseau revient. Ne recharge pas la page.
+          Hors réseau : la pratique reste lisible, et les réponses du sondage et les scores du tournoi partent dès que le réseau revient. Ne recharge pas la page.
         </p>
       )}
       {/* Les deux restent montés : changer d'onglet ne perd rien, même sans réseau. */}
       <div style={{ display: tab === "pratique" ? "block" : "none" }}>{plan}</div>
       <div style={{ display: tab === "sondage" ? "block" : "none" }}>{survey}</div>
+      {tournament ? <div style={{ display: tab === "tournoi" ? "block" : "none" }}>{tournament}</div> : null}
     </div>
   );
 }

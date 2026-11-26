@@ -4,6 +4,7 @@ import { Check, ChevronRight, Minus, X } from "lucide-react";
 import { wantsLabel } from "@/lib/practice-survey";
 import type { BlockSummary, HelperRank, ResultRow } from "@/lib/practice-survey-results-core";
 import type { SurveyBlock } from "@/lib/practice-survey-results-repo";
+import { THEME_FAIL_LABEL, THEME_PASS_PCT, themeVerdict } from "@/lib/theme-quiz-core";
 
 /** Résultats du sondage des filles, partagés par l'admin et le portail des éducateurs (JP, 25 nov. 2026) :
  *  classement des éducateurs, résumé, réponses individuelles, filtre de période. Jetons --adm-*, Lucide, sans émoji. */
@@ -72,21 +73,26 @@ export function HelperRanking({ ranking, viewerId, period = false, limit }: { ra
 
 /** Les chiffres d'une pratique ou d'une période, en tuiles. */
 export function SummaryTiles({ summary }: { summary: BlockSummary }) {
-  const tiles: { value: string; label: string; detail: string }[] = [
+  const tiles: { value: string; label: string; detail: string; bad?: boolean }[] = [
     { value: String(summary.respondents), label: "Filles qui ont répondu", detail: "sur la borne" },
     { value: fr(summary.pleasure), label: "Plaisir moyen", detail: "sur 10" },
     { value: fr(summary.fatigue), label: "Fatigue moyenne", detail: "1 = pleine d'énergie, 10 = épuisée" },
     { value: summary.coachHelp.pct === null ? "—" : `${summary.coachHelp.pct} %`, label: "Aidées ou encouragées par une coach", detail: summary.coachHelp.answered ? `${summary.coachHelp.yes} sur ${summary.coachHelp.answered}` : "pas de réponse" },
     { value: summary.peerHelp.pct === null ? "—" : `${summary.peerHelp.pct} %`, label: "Aidées par une autre fille", detail: summary.peerHelp.answered ? `${summary.peerHelp.yes} sur ${summary.peerHelp.answered}` : "pas de réponse" },
-    { value: summary.theme.pct === null ? "—" : `${summary.theme.pct} %`, label: "Ont compris le thème", detail: summary.theme.answered ? `${summary.theme.understood} sur ${summary.theme.answered}` : "question pas posée" }
+    {
+      value: summary.theme.pct === null ? "—" : `${summary.theme.pct} %`,
+      label: "Ont compris le thème",
+      detail: summary.theme.answered ? (themeVerdict(summary.theme.pct) === "echec" ? `${THEME_FAIL_LABEL} (sous ${THEME_PASS_PCT} %)` : `${summary.theme.understood} sur ${summary.theme.answered}`) : "question pas posée",
+      bad: themeVerdict(summary.theme.pct) === "echec"
+    }
   ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
       {tiles.map((t) => (
         <div key={t.label} className="mda-card" style={{ padding: 16, display: "grid", gap: 2, alignContent: "start" }}>
-          <span style={{ ...num, fontSize: "1.5rem", fontWeight: 600, color: "var(--adm-text)", letterSpacing: "-0.01em" }}>{t.value}</span>
+          <span style={{ ...num, fontSize: "1.5rem", fontWeight: 600, color: t.bad ? "var(--adm-bad)" : "var(--adm-text)", letterSpacing: "-0.01em" }}>{t.value}</span>
           <span style={{ fontSize: "0.8125rem", color: "var(--adm-text)", fontWeight: 500 }}>{t.label}</span>
-          <span style={{ fontSize: "0.75rem", color: "var(--adm-text-3)" }}>{t.detail}</span>
+          <span style={{ fontSize: "0.75rem", color: t.bad ? "var(--adm-bad)" : "var(--adm-text-3)", fontWeight: t.bad ? 600 : undefined }}>{t.detail}</span>
         </div>
       ))}
     </div>
@@ -169,7 +175,13 @@ export function SurveyBlockRow({ block, href, viewerId }: { block: SurveyBlock; 
             <span>Plaisir {fr(s.pleasure)}</span>
             <span>Fatigue {fr(s.fatigue)}</span>
             {s.coachHelp.pct !== null ? <span>Aidées par une coach {s.coachHelp.pct} %</span> : null}
-            {s.theme.pct !== null ? <span>Thème compris {s.theme.pct} %</span> : null}
+            {s.theme.pct !== null ? (
+              themeVerdict(s.theme.pct) === "echec" ? (
+                <span style={{ color: "var(--adm-bad)", fontWeight: 600 }}>{THEME_FAIL_LABEL} ({s.theme.pct} %)</span>
+              ) : (
+                <span>Thème compris {s.theme.pct} %</span>
+              )
+            ) : null}
           </span>
           <span style={{ fontSize: "0.8125rem", color: "var(--adm-text-3)" }}>
             {podium.length ? (

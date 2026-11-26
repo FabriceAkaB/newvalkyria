@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { dequeue, enqueue, parsePresenceQueue, parseQueue, presenceKey, queueKey, sendOutcome, type QueuedAnswer, type QueuedPresence } from "@/lib/kiosk-queue";
 import { KIOSK_QUESTIONS, SCALE_VALUES, type KioskQuestion } from "@/lib/practice-survey";
-import { isThemeCorrect, type ThemeQuiz } from "@/lib/theme-quiz-core";
+import { isThemeCorrect, THEME_FAIL_LABEL, THEME_PASS_PCT, themeVerdict, type ThemeQuiz } from "@/lib/theme-quiz-core";
 
 /** Borne de sondage sur l'iPad : la joueuse touche sa photo, répond aux 4 questions (une par écran : plaisir et
  *  fatigue sur 10, puis l'aide de sa coach et l'aide des autres, oui / non et qui), puis la
@@ -259,6 +259,7 @@ export function SurveyKiosk({ activityId, cle, title, players, coaches = [], don
       { key: "na", label: "Pas répondu", icon: <CircleHelp size={20} aria-hidden />, tone: "var(--adm-text-2, #5d566b)", soft: "var(--adm-surface-2, #f4f0f8)", list: here.filter((p) => themeResults[p.id] === undefined) }
     ];
     const answered = cols[0].list.length + cols[1].list.length;
+    const verdict = themeVerdict(answered ? Math.round((cols[0].list.length / answered) * 100) : null);
     return (
       <div style={{ display: "grid", gap: 16, fontFamily: "var(--adm-font, inherit)" }}>
         <div style={{ ...card, display: "grid", gap: 6 }}>
@@ -272,6 +273,11 @@ export function SurveyKiosk({ activityId, cle, title, players, coaches = [], don
           <p style={{ margin: 0, color: "var(--adm-text-2, #5d566b)" }}>
             {answered ? `${cols[0].list.length} sur ${answered} ont trouvé (${Math.round((cols[0].list.length / answered) * 100)} %).` : "Personne n'a encore répondu à cette question."} Autres choix proposés : {themeQuiz.choices.filter((c) => c !== themeQuiz.correct).join(" · ")}.
           </p>
+          {verdict ? (
+            <p style={{ margin: "4px 0 0", padding: "8px 12px", borderRadius: 10, fontWeight: 700, background: verdict === "echec" ? "var(--adm-bad-soft, #fdecea)" : "var(--adm-good-soft, #e8f5ee)", color: verdict === "echec" ? "var(--adm-bad, #b3261e)" : "var(--adm-good, #1f7a4d)" }}>
+              {verdict === "echec" ? `${THEME_FAIL_LABEL} : moins de ${THEME_PASS_PCT} % des filles l'ont trouvé.` : `Thème compris : ${THEME_PASS_PCT} % ou plus des filles l'ont trouvé.`}
+            </p>
+          ) : null}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
           {cols.map((c) => (

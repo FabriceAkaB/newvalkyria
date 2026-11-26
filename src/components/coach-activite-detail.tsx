@@ -8,6 +8,7 @@ import { EntityDocuments } from "@/components/admin-entity-documents";
 import { CoachPracticeDeck } from "@/components/coach-practice-deck";
 import { CoachChampionsCard } from "@/components/coach-champions-card";
 import { CoachTeamsCard } from "@/components/coach-teams-card";
+import { PracticeTournament } from "@/components/practice-tournament";
 import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrief";
 import { CoachIncidentCard } from "@/components/coach-incident-card";
 import { CoachPracticeJournal } from "@/components/coach-practice-journal";
@@ -1413,6 +1414,12 @@ export function CoachActiviteDetail({
                   players={participants.length ? participants : roster}
                   theme={themeForGroup(theme?.theme, activity.category ?? activity.title)}
                 />
+              ) : null}
+              {activity.activity_type === "Pratique" || activity.activity_type === "Camp" ? (
+                <div style={{ margin: "16px 0" }}>
+                  {/* Tournoi de fin de pratique (JP, 26 nov. 2026) : le même que sur la borne. */}
+                  <PracticeTournament endpoint={`/api/coach/activities/${activity.id}/tournoi`} />
+                </div>
               ) : null}
               {isPractice && !guest && isCoach ? <CoachPracticeJournal activityId={activity.id} blocks={journalBlocks} /> : null}
               {activity.activity_type !== "Match" && <CoachIncidentCard activityId={activity.id} />}

@@ -11,5 +11,5 @@ export default async function OpenKiosk({ searchParams }: { searchParams: Promis
   await requireAdmin({ roles: ["admin", "gerante", "borne"] });
   const { pratique, vue } = await searchParams;
   const id = pratique ? await openSurveyActivity(pratique) : null;
-  redirect(id ? `${kioskPath(id)}&vue=${vue === "sondage" ? "sondage" : "pratique"}` : "/admin/borne");
+  redirect(id ? `${kioskPath(id)}&vue=${vue === "sondage" || vue === "tournoi" ? vue : "pratique"}` : "/admin/borne");
 }

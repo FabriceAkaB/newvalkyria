@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AdminCoachActiviteDetail } from "@/components/admin-coach-activite-detail";
 import { PlannedExercisesCard } from "@/components/planned-exercises-card";
+import { PracticeTournament } from "@/components/practice-tournament";
 import { getPlannedExercises } from "@/lib/planned-exercises-repo";
 import { requireAdmin } from "@/lib/admin-auth";
 import { allInOneHref } from "@/lib/admin-my-practices";
@@ -71,6 +72,12 @@ export default async function AdminCoachActiviteDetailPage({ params }: { params:
             />
           </div>
         ) : null}
+      </div>
+    ) : null}
+    {!isMatch && ["Pratique", "Camp"].includes(String(activity.activity_type)) ? (
+      <div className="admin-content" style={{ paddingBottom: 0 }}>
+        {/* Tournoi de fin de pratique (JP, 26 nov. 2026) : le même que sur la borne et dans le portail. */}
+        <PracticeTournament endpoint={`/api/admin/coaching/tournoi/${id}`} />
       </div>
     ) : null}
     <AdminCoachActiviteDetail

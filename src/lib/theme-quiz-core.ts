@@ -207,3 +207,13 @@ export function themeRateByWeek(rows: ThemeRow[]): (ThemeRate & { week: string }
   }
   return [...by.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([week, rs]) => ({ week, ...rate(rs) }));
 }
+
+/** JP, 26 nov. 2026 : sous 80 % des filles qui ont trouvé le thème, c'est un échec de compréhension du thème. */
+export const THEME_PASS_PCT = 80;
+export const THEME_FAIL_LABEL = "Échec de compréhension du thème";
+
+/** « compris » à 80 % et plus, « echec » en dessous, null sans réponse. */
+export function themeVerdict(pct: number | null | undefined): "compris" | "echec" | null {
+  if (pct == null || !Number.isFinite(pct)) return null;
+  return pct >= THEME_PASS_PCT ? "compris" : "echec";
+}

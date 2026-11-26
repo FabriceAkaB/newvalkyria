@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check, CircleHelp, X } from "lucide-react";
 
-import { themeStatusOf, type ThemeStatus } from "@/lib/theme-quiz-core";
+import { THEME_FAIL_LABEL, THEME_PASS_PCT, themeStatusOf, themeVerdict, type ThemeStatus } from "@/lib/theme-quiz-core";
 
 /** « Qu'est-ce qu'on a travaillé aujourd'hui ? » dans l'admin (JP, 25 nov. 2026) : qui a compris le thème d'une
  *  pratique, et la part des filles qui l'ont trouvé, pratique par pratique. Jetons --adm-*, icônes Lucide. */
@@ -24,11 +24,11 @@ export function ThemePracticeBars({ practices }: { practices: { activityId: stri
             <small style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.theme ?? "Thème"}</small>
           </Link>
           <span className="svc-bar-track" aria-hidden>
-            <span className="svc-bar-fill" style={{ width: `${p.pct ?? 0}%`, display: "block" }} />
+            <span className="svc-bar-fill" style={{ width: `${p.pct ?? 0}%`, display: "block", ...(themeVerdict(p.pct) === "echec" ? { background: "var(--adm-bad)" } : {}) }} />
           </span>
           <span style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
             {p.pct ?? 0} %
-            <small>{p.understood} sur {p.answered}</small>
+            <small style={themeVerdict(p.pct) === "echec" ? { color: "var(--adm-bad)", fontWeight: 600 } : undefined}>{themeVerdict(p.pct) === "echec" ? "Échec" : `${p.understood} sur ${p.answered}`}</small>
           </span>
         </li>
       ))}
@@ -47,6 +47,7 @@ export function ThemeWhoCard({ theme, players }: { theme: string | null; players
   const answered = players.filter((p) => themeStatusOf(p.row) !== "pas-repondu");
   if (!theme && !answered.length) return null;
   const ok = players.filter((p) => themeStatusOf(p.row) === "compris").length;
+  const verdict = themeVerdict(answered.length ? Math.round((ok / answered.length) * 100) : null);
   return (
     <section className="mda-card" style={{ display: "grid", gap: 12 }}>
       <div>
@@ -55,6 +56,11 @@ export function ThemeWhoCard({ theme, players }: { theme: string | null; players
           {theme ? <>Thème : <strong style={{ color: "var(--adm-text)" }}>{theme}</strong>. </> : null}
           {answered.length ? `${ok} sur ${answered.length} l'ont trouvé parmi 3 choix sur la borne.` : "Pas encore de réponse sur la borne."}
         </p>
+        {verdict === "echec" ? (
+          <p style={{ margin: "8px 0 0", padding: "6px 10px", borderRadius: 8, background: "var(--adm-bad-soft)", color: "var(--adm-bad)", fontWeight: 600, fontSize: "0.875rem", display: "inline-block" }}>
+            {THEME_FAIL_LABEL} : moins de {THEME_PASS_PCT} % l&apos;ont trouvé.
+          </p>
+        ) : null}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         {COLS.map((c) => {

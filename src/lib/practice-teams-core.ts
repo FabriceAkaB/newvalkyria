@@ -57,12 +57,30 @@ export function groupCost(members: string[], pairs: Map<string, number>): number
 
 /** Répartit les joueuses en `n` groupes de tailles égales (à 1 près) en évitant les filles déjà ensemble :
  *  plusieurs essais au hasard, puis des échanges qui réduisent les répétitions ; on garde le meilleur. */
-export function makeGroups(players: string[], n: number, history: PastTeam[], seed = Date.now()): string[][] {
+export function makeGroups(players: string[], n: number, history: PastTeam[], seed = Date.now(), options?: { ratings?: Map<string, number>; balanceWeight?: number }): string[][] {
   const groups = Math.max(1, Math.min(n, players.length));
   if (!players.length) return [];
   const pairs = pairCounts(history);
   const rand = rng(seed);
-  const total = (gs: string[][]) => gs.reduce((s, g) => s + groupCost(g, pairs), 0);
+  // Tournoi (JP, 26 nov. 2026) : avec les notes des joueuses, chaque groupe coûte aussi l'écart entre sa force
+  // moyenne et celle de toutes les filles, multiplié par le poids de l'équilibre.
+  const ratings = options?.ratings;
+  const weight = options?.balanceWeight ?? 0;
+  const mean = ratings && players.length ? players.reduce((s, p) => s + (ratings.get(p) ?? 0), 0) / players.length : 0;
+  // Et deux fortes (ou deux plus faibles) dans le même groupe coûtent un peu : les meilleures sont réparties.
+  const stack = (g: string[]) => {
+    let c = 0;
+    for (let i = 0; i < g.length; i++)
+      for (let j = i + 1; j < g.length; j++) {
+        const a = (ratings!.get(g[i]) ?? mean) - mean;
+        const b = (ratings!.get(g[j]) ?? mean) - mean;
+        if (a * b > 0) c += a * b;
+      }
+    return c;
+  };
+  const cost = (g: string[]) =>
+    groupCost(g, pairs) + (ratings && weight && g.length ? weight * (Math.abs(g.reduce((s, p) => s + (ratings.get(p) ?? mean), 0) / g.length - mean) + 0.15 * stack(g)) : 0);
+  const total = (gs: string[][]) => gs.reduce((s, g) => s + cost(g), 0);
   let best: string[][] = [];
   let bestCost = Infinity;
   for (let attempt = 0; attempt < 40; attempt++) {
@@ -77,10 +95,10 @@ export function makeGroups(players: string[], n: number, history: PastTeam[], se
         for (let b = a + 1; b < groups; b++)
           for (let i = 0; i < gs[a].length; i++)
             for (let j = 0; j < gs[b].length; j++) {
-              const before = groupCost(gs[a], pairs) + groupCost(gs[b], pairs);
+              const before = cost(gs[a]) + cost(gs[b]);
               [gs[a][i], gs[b][j]] = [gs[b][j], gs[a][i]];
-              const after = groupCost(gs[a], pairs) + groupCost(gs[b], pairs);
-              if (after < before) improved = true;
+              const after = cost(gs[a]) + cost(gs[b]);
+              if (after < before - 1e-9) improved = true;
               else [gs[a][i], gs[b][j]] = [gs[b][j], gs[a][i]];
             }
     }
@@ -88,7 +106,7 @@ export function makeGroups(players: string[], n: number, history: PastTeam[], se
     if (c < bestCost) {
       best = gs.map((g) => [...g]);
       bestCost = c;
-      if (c === 0) break;
+      if (c < 1e-9) break;
     }
   }
   return best;
@@ -119,6 +137,14 @@ export function pickCaptains(groups: string[][], history: PastTeam[]): (string |
 
 /** Ce que la capitaine fait pendant la pratique, selon le thème de la semaine (sinon : la tâche de base). */
 const CAPTAIN_TASKS: { match: RegExp; task: string }[] = [
+  // JP, 26 nov. 2026 : la capitaine parle à ses coéquipières pour qu'elles lèvent la tête.
+  { match: /prise d.?info|prise de l.?information/i, task: "Parle sans arrêt à ta porteuse pour qu'elle lève la tête : nomme qui est libre (« Lianna est disponible ! »), « Reviens ! », « Seule, tourne ! », « Derrière toi ! »." },
+  { match: /aide au porteur/i, task: "Quand une coéquipière a le ballon, montre-lui où te trouver et appelle : « Je suis là, à côté ! » ; vérifie qu'elle a toujours une solution près d'elle." },
+  { match: /jeu à 2|jeu a 2|à 3\b/i, task: "Lance les une-deux : « Donne et va ! » ; à chaque passe, dis à la passeuse de repartir tout de suite." },
+  { match: /déviation|deviation/i, task: "Demande le ballon en 1 touche : « Remise ! », « Déviation ! » ; félicite chaque passe en une touche." },
+  { match: /intervalles|entre les lignes/i, task: "Montre l'espace entre deux adversaires et place-y une coéquipière : « Entre les deux ! », « Reçois et tourne ! »." },
+  { match: /vers l.?avant/i, task: "Avant chaque passe, crie « Regarde devant ! » et nomme celle qui est libre devant : la 1re idée, c'est vers l'avant." },
+  { match: /récupération|recuperation/i, task: "À la perte du ballon, nomme qui cadre et qui couvre : « Toi tu sors, moi je couvre ! »." },
   { match: /évaluation/i, task: "Encourage chaque coéquipière avant son test et rappelle-lui la consigne ; à la fin, dis à l'éducatrice qui s'est le plus améliorée." },
   { match: /transition offensive/i, task: "À chaque récupération, crie « But ! » et montre le but : ton équipe attaque tout de suite, en moins de 6 secondes." },
   { match: /transition défensive|changement de statut/i, task: "À chaque perte du ballon, crie « Presse ! » : la plus proche presse, les autres reviennent entre le ballon et le but." },
