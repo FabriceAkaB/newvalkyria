@@ -59,6 +59,9 @@ export async function GET(request: Request) {
   // De 8 h à 21 h : absences annoncées à l'avancé (pratiques de semaine) → filles de l'intermédiaire proposées à JP ;
   // les « oui » des parents sont ajoutés à la pratique dans MonClubSportif.
   const practiceInvites = hour >= 8 && hour < 22 ? await import("@/lib/practice-invites-repo").then((m) => m.runPracticeInvites()).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
+  // De 8 h à 23 h : la demande de vidéos de progression du jour (et des 3 jours d'avant) → tâche de JP
+  // « videos-progression:<date> » tant qu'il reste des filles sans vidéo ni absence, cochée toute seule quand tout est fait.
+  const progressVideos = hour >= 8 ? await import("@/lib/progress-videos-repo").then((m) => m.syncRecentVideoRequestTasks()).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" })) : null;
   // Toutes les heures : les enregistrements Veo « Newval … » prêts sont rangés (match → familles, pratique → éducateurs) ;
   // un match que Veo prépare encore est repris à l'heure suivante, jusqu'à ce qu'il soit disponible.
   const veo = await syncVeo().then((r) => ({ ok: r.ok, skipped: r.skipped, rangees: r.results.filter((x) => x.outcome === "rangee").length })).catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
@@ -67,5 +70,5 @@ export async function GET(request: Request) {
   const archive = await archiveVideos({ deadline: started + (maxDuration - 20) * 1000 })
     .then((r) => ({ done: r.done.length, progress: r.progress, errors: r.errors.map((e) => e.error) }))
     .catch((e) => ({ error: e instanceof Error ? e.message : "erreur" }));
-  return NextResponse.json({ ok: true, onboarding, tournaments, parentNews, weeklyMessage, emails, mcsPosts, surveyReminders, todayPresences, practiceInvites, exerciseRatings, reportNotices, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
+  return NextResponse.json({ ok: true, onboarding, tournaments, parentNews, weeklyMessage, emails, mcsPosts, surveyReminders, todayPresences, practiceInvites, progressVideos, exerciseRatings, reportNotices, bounces, synced, robot, reminders, tasks, month, attendance, veo, archive });
 }

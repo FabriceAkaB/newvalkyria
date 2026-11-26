@@ -57,6 +57,8 @@ async function collectNews(today: string): Promise<NewsItem[]> {
     .from("player_progress_videos")
     .select("id, registration_id, checkpoint, title, created_at")
     .eq("club_id", CLUB_ID)
+    // Seulement les vidéos d'étape (début, mi-saison, fin) : la famille ne voit pas les capsules « Autre ».
+    .not("checkpoint", "is", null)
     .gte("created_at", since);
   if (vErr) throw new Error(vErr.message);
 

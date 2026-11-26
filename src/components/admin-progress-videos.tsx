@@ -28,7 +28,7 @@ function putFile(url: string, file: File, onProgress: (p: number) => void): Prom
   });
 }
 
-interface Video { id: string; checkpoint: Checkpoint; title: string; note: string | null }
+interface Video { id: string; checkpoint: Checkpoint | null; title: string; note: string | null }
 
 /** Une case « moment de la saison » d'une fille : ses vidéos (voir, retirer) et le dépôt d'une nouvelle. */
 export function ProgressCell({ registrationId, name, checkpoint, videos, current, endpoint }: { registrationId: string; name: string; checkpoint: Checkpoint; videos: Video[]; current: boolean; endpoint?: string }) {

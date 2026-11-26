@@ -391,6 +391,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
           { href: "/admin/coaching/points", label: "Points et récompenses" },
           { href: "/admin/coaching/capitaines", label: "Capitaines et leadership" },
           { href: "/admin/coaching/progression-video", label: "Vidéos de progression" },
+          { href: "/admin/coaching/progression-video/demandes", label: "Demandes de vidéos du jour" },
           { href: "/admin/coaching/invitations", label: "Invitations à l'avancé" },
           { href: "/admin/coaching/blessures", label: "Blessures" },
           { href: "/admin/photos", label: "Photos des joueuses" },

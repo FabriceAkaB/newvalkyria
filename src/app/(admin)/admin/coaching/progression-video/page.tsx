@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { AdminTopbar } from "@/components/admin-topbar";
 import { ProgressCell } from "@/components/admin-progress-videos";
 import { Pill } from "@/components/mandalart/ui";
@@ -33,7 +35,7 @@ export default async function ProgressVideosPage() {
             <h1 className="mda-h1">{due.length ? `${missing} fille${missing > 1 ? "s" : ""} à filmer pour la ${CHECKPOINTS.find((c) => c.key === now)!.label.toLowerCase()}` : "Aucune fille à filmer"}</h1>
             <p className="mda-lead">
               Un court extrait (environ 30 secondes) de chaque fille, toujours le même exercice, à chaque moment de la saison : début, mi-saison et fin pour les petites (2016 et plus jeunes), mi-saison et fin pour les 2015 et plus vieilles. La famille le voit dans son espace (Progression), et à la fin, l&apos;avant / après.
-              {win ? ` En ce moment : du ${fr(win.from)} au ${fr(win.to)}.` : ""}
+              {win ? ` En ce moment : du ${fr(win.from)} au ${fr(win.to)}.` : ""} Toutes les vidéos d&apos;une fille, peu importe la date : clic sur son nom. Les capsules de chaque pratique : <Link href="/admin/coaching/progression-video/demandes">Demandes de vidéos du jour</Link>.
             </p>
           </header>
           {groups.map((g) => {
@@ -56,7 +58,7 @@ export default async function ProgressVideosPage() {
                     <tbody>
                       {list.map((r) => (
                         <tr key={r.registrationId}>
-                          <td style={{ fontWeight: 600 }}>{r.name}</td>
+                          <td style={{ fontWeight: 600 }}><Link href={`/admin/coaching/progression-video/joueuse/${r.registrationId}`} style={{ color: "var(--adm-text)" }}>{r.name}</Link></td>
                           {cps.map((c) => (
                             <ProgressCell key={c} registrationId={r.registrationId} name={r.name} checkpoint={c} current={c === now} videos={r.videos.filter((v) => v.checkpoint === c).map((v) => ({ id: v.id, checkpoint: v.checkpoint, title: v.title, note: v.note }))} />
                           ))}

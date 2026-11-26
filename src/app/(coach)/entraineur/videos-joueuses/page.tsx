@@ -42,6 +42,10 @@ export default async function VideographerPage() {
                 Un court extrait (environ 30 secondes, toujours le même exercice, même angle) de chaque fille. Dépose-le le jour même : la photo t&apos;aide à la reconnaître. Les petites (2016 et après) : début, mi-saison et fin ; les 2015 et plus vieilles : mi-saison et fin.
                 {win ? ` En ce moment : du ${fr(win.from)} au ${fr(win.to)}.` : ""} Quoi filmer d&apos;autre à chaque pratique : le <a href="/entraineur/guide-tournage">guide de tournage</a>.
               </p>
+              <a href="/entraineur/videos-joueuses/demandes" className="coach-card" style={{ marginTop: 16, display: "block", textDecoration: "none", color: "var(--adm-text)" }}>
+                <span className="coach-card__label">Demandes de vidéos du jour</span>
+                <span style={{ display: "block", fontWeight: 600, marginTop: 4 }}>Les filles de la pratique d&apos;aujourd&apos;hui : dépose leurs capsules ou marque-les absentes</span>
+              </a>
               {groups.map((g) => {
                 const list = rows.filter((r) => r.group === g);
                 const cps = list[0]?.checkpoints ?? [];
@@ -65,7 +69,7 @@ export default async function VideographerPage() {
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     {r.photoUrl ? <img src={r.photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : r.name.charAt(0)}
                                   </span>
-                                  <span style={{ fontWeight: 600 }}>{r.name}</span>
+                                  <a href={`/entraineur/videos-joueuses/joueuse/${r.registrationId}`} style={{ fontWeight: 600, color: "var(--adm-text)" }}>{r.name}</a>
                                 </div>
                               </td>
                               {cps.map((c) => (
