@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { CoachTopbar } from "@/components/coach-topbar";
+import { PayBankTiles } from "@/components/pay-bank";
 import { requireCoach } from "@/lib/coach-auth";
 import { getCoachPay } from "@/lib/coach-pay-repo";
 import { getCoach } from "@/lib/coaches-repo";
@@ -25,7 +26,7 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
   const coachId = await requireCoach();
   const offset = Math.min(Math.max(Number((await searchParams).avant ?? 0) || 0, 0), 12);
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
-  const [coach, { period, lines, summary: s }] = await Promise.all([getCoach(coachId), getCoachPay(coachId, today, offset)]);
+  const [coach, { period, lines, summary: s, bank }] = await Promise.all([getCoach(coachId), getCoachPay(coachId, today, offset)]);
   const days = [...new Set(lines.map((l) => l.date))];
   return (
     <>
@@ -46,7 +47,10 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
             {s.heldCents || s.plannedCents ? ` Si tout est fait : ${money(s.netIfAllCents)}.` : ""}
           </p>
 
-          <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
+          {!offset ? <PayBankTiles bank={bank} /> : null}
+
+          <p className="coach-card__label" style={{ margin: "20px 0 0" }}>Le détail de cette paie</p>
+          <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
             {days.map((d) => (
               <div key={d} className="coach-card" style={{ padding: "12px 16px" }}>
                 <p className="coach-card__label" style={{ marginBottom: 6 }}>{day(d, { weekday: "long", day: "numeric", month: "long" })}</p>
@@ -79,7 +83,8 @@ export default async function CoachPayPage({ searchParams }: { searchParams: Pro
               <ul className="coach-sub" style={{ margin: "6px 0 0", paddingLeft: 20, display: "grid", gap: 4 }}>
                 <li>Le temps de la pratique, de l&apos;heure de début à l&apos;heure de fin (ex. 18 h 00 à 19 h 25 = 1 h 25).</li>
                 <li>Payées dès que tu es « présent » dans MonClubSportif : c&apos;est ton punch. Le site le lit chaque soir.</li>
-                <li>Absent dans MonClubSportif = 0 $ pour cette pratique.</li>
+                <li>Absent dans MonClubSportif (ou « Je n&apos;étais pas là ») : la pratique est enlevée de ta paie.</li>
+                <li>Chaque rapport fini t&apos;envoie un courriel de confirmation avec les heures entrées dans ta paie.</li>
               </ul>
             </div>
 

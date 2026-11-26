@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
 
 import { isAdminRequest } from "@/lib/admin-auth";
+import { countsInPay } from "@/lib/coach-pay-core";
 import { filterPayrollRows, getPayrollRows, groupPayrollByCoach, type CoachPayrollTotal } from "@/lib/coach-payroll-data";
 import { jsonError } from "@/lib/http";
 
@@ -11,7 +12,7 @@ function csvEscape(value: string): string {
 }
 
 function buildCsv(rows: CoachPayrollTotal[]): string {
-  const header = ["Entraîneur", "Heures", "Taux moyen ($)", "Salaire ($)", "Payé ($)", "Reste à payer ($)", "Absences (0 $)"];
+  const header = ["Entraîneur", "Heures", "Taux moyen ($)", "Salaire ($)", "Payé ($)", "Reste à payer ($)"];
   const lines = [header.join(",")];
   for (const r of rows) {
     lines.push(
@@ -21,8 +22,7 @@ function buildCsv(rows: CoachPayrollTotal[]): string {
         (r.avgRateCents / 100).toFixed(2),
         (r.payCents / 100).toFixed(2),
         (r.paidCents / 100).toFixed(2),
-        (r.remainingCents / 100).toFixed(2),
-        String(r.absences)
+        (r.remainingCents / 100).toFixed(2)
       ].join(",")
     );
   }
@@ -38,8 +38,7 @@ async function buildXlsx(rows: CoachPayrollTotal[]): Promise<Buffer> {
     { header: "Taux moyen ($)", key: "rate", width: 16 },
     { header: "Salaire ($)", key: "pay", width: 14 },
     { header: "Payé ($)", key: "paid", width: 14 },
-    { header: "Reste à payer ($)", key: "remaining", width: 18 },
-    { header: "Absences (0 $)", key: "absences", width: 16 }
+    { header: "Reste à payer ($)", key: "remaining", width: 18 }
   ];
   sheet.getRow(1).font = { bold: true };
   for (const r of rows) {
@@ -49,8 +48,7 @@ async function buildXlsx(rows: CoachPayrollTotal[]): Promise<Buffer> {
       rate: Number((r.avgRateCents / 100).toFixed(2)),
       pay: Number((r.payCents / 100).toFixed(2)),
       paid: Number((r.paidCents / 100).toFixed(2)),
-      remaining: Number((r.remainingCents / 100).toFixed(2)),
-      absences: r.absences
+      remaining: Number((r.remainingCents / 100).toFixed(2))
     });
   }
   const arrayBuffer = await workbook.xlsx.writeBuffer();
@@ -68,8 +66,8 @@ function buildPdf(rows: CoachPayrollTotal[]): Promise<Buffer> {
     doc.fontSize(9).fillColor("#666").text(new Date().toLocaleDateString("fr-CA"), { align: "left" });
     doc.moveDown(1);
 
-    const colX = [40, 200, 262, 324, 394, 460, 522];
-    const headers = ["Entraîneur", "Heures", "Taux ($)", "Salaire ($)", "Payé ($)", "Reste ($)", "Absences"];
+    const colX = [40, 220, 290, 360, 440, 520];
+    const headers = ["Entraîneur", "Heures", "Taux ($)", "Salaire ($)", "Payé ($)", "Reste ($)"];
     doc.fontSize(10).fillColor("#000").font("Helvetica-Bold");
     const hy = doc.y;
     headers.forEach((h, i) => doc.text(h, colX[i], hy, { continued: false, width: i === 0 ? 150 : 62 }));
@@ -89,7 +87,6 @@ function buildPdf(rows: CoachPayrollTotal[]): Promise<Buffer> {
       doc.text((r.payCents / 100).toFixed(2), colX[3], y);
       doc.text((r.paidCents / 100).toFixed(2), colX[4], y);
       doc.text((r.remainingCents / 100).toFixed(2), colX[5], y);
-      doc.text(r.absences ? `${r.absences} (0 $)` : "—", colX[6], y);
       doc.moveDown(0.6);
       totalHours += r.hours;
       totalPay += r.payCents;
@@ -123,7 +120,8 @@ export async function GET(request: Request) {
   const paid = (searchParams.get("paid") as "paid" | "unpaid" | null) || undefined;
   const weekOnly = searchParams.get("weekOnly") === "1";
 
-  const allRows = await getPayrollRows();
+  // Séances où l'éducateur n'était pas là (absent, annulé) : enlevées de la paie (JP, 25 nov. 2026).
+  const allRows = (await getPayrollRows()).filter(countsInPay);
   const weekStartISO = weekOnly ? new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 86400000).toISOString().slice(0, 10) : undefined;
   const filtered = filterPayrollRows(allRows, { month, category, activityType, coachId, paid, weekStartISO });
   const grouped = groupPayrollByCoach(filtered);

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { AdminTopbar } from "@/components/admin-topbar";
+import { PayBankTable } from "@/components/pay-bank";
+import type { PayBank } from "@/lib/coach-pay-core";
 import { formatHours, startOfWeek } from "@/lib/coach-payroll";
 import { filterPayrollRows, groupPayrollByCoach, type PayrollRow } from "@/lib/coach-payroll-data";
 import { ACTIVITY_TYPES, type Coach } from "@/lib/coaches-repo";
@@ -14,6 +16,10 @@ interface Props {
   coaches: Coach[];
   /** Activités passées dont les heures sont retenues (présence ou rapport manquant), à régler avant de payer. */
   missing: (PayrollRow & { detail: string })[];
+  /** Banque d'heures de chaque éducateur (paie en cours, prochaine, accumulé, à venir). */
+  banks: { coachId: string; name: string; bank: PayBank }[];
+  /** Séances enlevées de la paie (absent ou annulé dans MonClubSportif). */
+  removed: number;
 }
 
 const shortDate = (iso: string) => new Date(`${String(iso).slice(0, 10)}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short" });
@@ -69,7 +75,7 @@ function MissingBeforePayroll({ missing }: { missing: Props["missing"] }) {
   );
 }
 
-export function AdminEntraineursPaie({ rows, coaches, missing }: Props) {
+export function AdminEntraineursPaie({ rows, coaches, missing, banks, removed }: Props) {
   const [month, setMonth] = useState("");
   const [category, setCategory] = useState("");
   const [activityType, setActivityType] = useState("");
@@ -121,10 +127,13 @@ export function AdminEntraineursPaie({ rows, coaches, missing }: Props) {
             <Link href="/admin/entraineurs" className="admin-btn-ghost" style={{ textDecoration: "none" }}>← Entraîneurs</Link>
           </div>
           <p style={{ fontSize: "0.78rem", color: "var(--adm-text-3)", marginBottom: "1.25rem" }}>
-            Heures × taux de chaque éducateur. Les heures d’une activité comptent quand l’éducateur a confirmé sa présence et rempli son rapport (présences et évaluations des joueuses).
+            Heures × taux de chaque éducateur. Les heures de terrain comptent dès que la présence de l’éducateur est confirmée dans MonClubSportif ; l’heure de rapport des coachs, quand le rapport du jour est fini.
+            {removed > 0 ? ` ${removed} séance${removed > 1 ? "s" : ""} où l’éducateur n’était pas là (absent ou annulé) ${removed > 1 ? "sont enlevées" : "est enlevée"} de la paie ; ${removed > 1 ? "elles restent" : "elle reste"} dans le Suivi des éducateurs.` : ""}
           </p>
 
           <MissingBeforePayroll missing={missing} />
+
+          <PayBankTable banks={banks} />
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.25rem" }}>
             <select className="admin-input" value={month} onChange={(e) => setMonth(e.target.value)}>
@@ -175,7 +184,6 @@ export function AdminEntraineursPaie({ rows, coaches, missing }: Props) {
                   <th>Payé</th>
                   <th>Reste</th>
                   <th>Retenu</th>
-                  <th>Absences</th>
                 </tr>
               </thead>
               <tbody>
@@ -190,13 +198,10 @@ export function AdminEntraineursPaie({ rows, coaches, missing }: Props) {
                     <td style={{ color: r.heldPayCents > 0 ? "var(--adm-warn)" : "var(--adm-text-3)" }}>
                       {r.heldPayCents > 0 ? `${formatHours(r.heldHours)} · ${formatCAD(r.heldPayCents / 100)}` : "—"}
                     </td>
-                    <td style={{ color: r.absences > 0 ? "var(--adm-bad)" : "var(--adm-text-3)" }} title="Absent dans MonClubSportif : pas payé">
-                      {r.absences > 0 ? `${r.absences} · 0 $` : "—"}
-                    </td>
                   </tr>
                 ))}
                 {payrollRows.length === 0 && (
-                  <tr><td colSpan={8} className="admin-empty-text">Aucun résultat pour ces filtres.</td></tr>
+                  <tr><td colSpan={7} className="admin-empty-text">Aucun résultat pour ces filtres.</td></tr>
                 )}
               </tbody>
               {payrollRows.length > 0 && (
@@ -209,7 +214,6 @@ export function AdminEntraineursPaie({ rows, coaches, missing }: Props) {
                     <td>{formatCAD(totalPaid / 100)}</td>
                     <td style={{ color: totalRemaining > 0 ? "var(--adm-warn)" : "var(--adm-good)" }}>{formatCAD(totalRemaining / 100)}</td>
                     <td>{formatCAD(payrollRows.reduce((s, r) => s + r.heldPayCents, 0) / 100)}</td>
-                    <td>{payrollRows.reduce((s, r) => s + r.absences, 0) || "—"}</td>
                   </tr>
                 </tfoot>
               )}

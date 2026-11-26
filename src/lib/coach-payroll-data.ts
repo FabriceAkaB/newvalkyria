@@ -42,6 +42,8 @@ export interface PayrollRow {
   reportHourCents: number;
   reminderSentAt: string | null;
   coachHasEmail: boolean;
+  /** Heures approuvées par JP (qui, quand), sinon null. */
+  approvedBy: string | null;
 }
 
 export interface PayrollFilters {
@@ -132,8 +134,10 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
     });
 
     const report = reports.get(a.activity_id) ?? null;
-    // Une activité déjà payée reste payée ; sinon les heures attendent la présence confirmée et le rapport complet.
-    const hold = a.paid ? null : payHold({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, confirmed: a.confirmed, report, coachId: a.coach_id });
+    // Une activité déjà payée reste payée ; des heures approuvées par JP comptent (le rapport n'est pas exigé) ;
+    // sinon les heures attendent la présence confirmée et le rapport complet.
+    const approved = Boolean(a.pay_approved_at) && a.status === "present";
+    const hold = a.paid || approved ? null : payHold({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, confirmed: a.confirmed, report, coachId: a.coach_id });
     // Heure de rapport des coachs : 1 h de plus par jour, gagnée quand les rapports du jour sont finis.
     const rh = daily.get(a.id) ?? { due: false, earned: false };
     const rhCents = Math.round(REPORT_HOUR * computed.rateCents);
@@ -170,7 +174,8 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
         : null,
       missingDetail: reportMissing(report, hasReportHour(a.coach.role) ? a.coach_id : undefined),
       reminderSentAt: a.reminder_sent_at ?? null,
-      coachHasEmail: Boolean(a.coach.email)
+      coachHasEmail: Boolean(a.coach.email),
+      approvedBy: approved ? a.pay_approved_by ?? "JP" : null
     };
   });
 }
@@ -234,10 +239,11 @@ export function computeCoachNotifications(rows: PayrollRow[], activities: CoachA
 }
 
 /** Avant chaque paie (P8.3.05) : chaque activité terminée dont les heures sont retenues — présence de
- *  l'éducateur pas confirmée ou rapport incomplet — de la plus ancienne à la plus récente. */
+ *  l'éducateur pas confirmée ou rapport incomplet — de la plus ancienne à la plus récente. Une ligne à 0 $ (ex. les
+ *  activités de JP, à taux 0) n'a rien à régler avant la paie : elle n'y est pas (JP, 25 nov. 2026). */
 export function missingBeforePayroll(rows: PayrollRow[], nowMs: number = Date.now()): PayrollRow[] {
   return rows
-    .filter((r) => r.hold && activityEndMs(String(r.activityDate).slice(0, 10), r.activityEnd) <= nowMs)
+    .filter((r) => r.hold && r.heldPayCents > 0 && activityEndMs(String(r.activityDate).slice(0, 10), r.activityEnd) <= nowMs)
     .sort((a, b) => `${a.activityDate} ${a.activityStart}`.localeCompare(`${b.activityDate} ${b.activityStart}`));
 }
 

@@ -13,6 +13,8 @@ export interface PayLine {
   state: "compte" | "retenu" | "prevu" | "absent";
   /** Pourquoi c'est retenu (ex. « rapport à faire »). */
   why?: string | null;
+  /** Déjà versé (séance marquée payée dans l'admin). */
+  paid?: boolean;
 }
 
 export interface Deduction {

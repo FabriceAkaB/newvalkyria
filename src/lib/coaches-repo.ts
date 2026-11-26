@@ -78,6 +78,9 @@ export interface CoachAssignment {
   /** Prise de connaissance de la pratique dans le portail : éléments vus (deck:…, block:…) et confirmation. */
   practice_read_items?: string[] | null;
   practice_read_at?: string | null;
+  /** Heures approuvées par JP : comptent pour la paie même si le rapport de la pratique n'est pas complet. */
+  pay_approved_at?: string | null;
+  pay_approved_by?: string | null;
   paid: boolean;
   paid_on: string | null;
   payment_method: string | null;
