@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { isAdminRequest } from "@/lib/admin-auth";
+import { bibleKey } from "@/lib/exercise-bank";
+import { draftForBible } from "@/lib/exercise-slide-core";
 import { readSlide } from "@/lib/exercise-slide-reader";
 import { createExerciseFromSlide, DuplicateExerciseError, setExerciseClassification } from "@/lib/exercise-slide-repo";
 import { jsonError } from "@/lib/http";
@@ -21,11 +23,15 @@ export async function POST(request: Request) {
   if (file.size > 4_000_000) return jsonError("Image trop lourde (4 Mo au plus)", 400);
   const text = String(form?.get("text") ?? "").slice(0, 20000);
   const fileName = String(form?.get("fileName") ?? file.name ?? "diapo").slice(0, 200);
+  // Bible où ranger l'exercice (dépôt lancé depuis une Bible) : New Valkyria par défaut.
+  const bible = bibleKey(form?.get("bible"));
 
   try {
     const data = Buffer.from(await file.arrayBuffer()).toString("base64");
-    const { draft, by } = await readSlide({ image: { data, mediaType: file.type as ImageType }, text, fileName });
-    const { id, imageUrl } = await createExerciseFromSlide(draft, file, { force: form?.get("force") === "1" });
+    const read = await readSlide({ image: { data, mediaType: file.type as ImageType }, text, fileName });
+    const draft = draftForBible(read.draft, bible, text);
+    const by = read.by;
+    const { id, imageUrl } = await createExerciseFromSlide(draft, file, { force: form?.get("force") === "1", bible });
     return NextResponse.json({ ok: true, id, imageUrl, by, draft: { title: draft.title, category: draft.category, exerciseType: draft.exerciseType } });
   } catch (error) {
     if (error instanceof DuplicateExerciseError) return NextResponse.json({ error: error.message, duplicateOf: error.existing }, { status: 409 });

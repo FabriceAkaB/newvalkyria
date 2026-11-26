@@ -5,7 +5,9 @@
  *  Règles pures, testées (exercise-book-core.test.ts). Aucune date de planification, aucune note d'éducateur nommé :
  *  la planification annuelle reste fermée aux éducateurs (coach-access-core.ts). */
 
-import { EXERCISE_CATEGORIES, EXERCISE_TYPES, placeLabel, typeLabel, venueLabel, type BankStatus } from "@/lib/exercise-bank";
+import { familyLabel, GESTURE_FAMILIES, PROGRESSION_STEPS, type Gesture } from "@/lib/coaching-method";
+import { bibleKey, EXERCISE_CATEGORIES, EXERCISE_TYPES, PSYCHOMOTOR_CATEGORIES, placeLabel, typeLabel, venueLabel, type BankStatus, type BibleKey } from "@/lib/exercise-bank";
+import { LEVEL_LABEL } from "@/lib/skill-tests";
 
 export interface BookDiagram {
   elements: { id: string; type: string; x: number; y: number; label?: string }[];
@@ -15,6 +17,10 @@ export interface BookDiagram {
 /** Un exercice tel que le livre et la grille le montrent (sérialisable, envoyé au navigateur). */
 export interface BookExercise {
   id: string;
+  /** « exercice » de la banque, ou « geste » de la bibliothèque de la méthode (Bible du ball mastery). */
+  kind: "exercice" | "geste";
+  /** Geste dont la fiche n'est pas encore validée par JP. */
+  draft: boolean;
   title: string;
   status: BankStatus;
   approved: boolean;
@@ -97,6 +103,7 @@ export interface BookSource {
   created_at?: string | null;
   jp_reference_at?: string | null;
   jp_reference_note?: string | null;
+  bible?: string | null;
   bank: { status: BankStatus; top: boolean; average: number | null; count: number };
 }
 
@@ -130,6 +137,8 @@ function diagramOf(d: unknown): BookDiagram | null {
 export function toBookExercise(e: BookSource): BookExercise {
   return {
     id: e.id,
+    kind: "exercice",
+    draft: false,
     title: e.title,
     status: e.bank.status,
     approved: e.bank.status === "approuve",
@@ -227,11 +236,17 @@ export function bookExercises(entries: BookSource[]): BookExercise[] {
   });
 }
 
-/** Dans un chapitre : par catégorie (type d'exercice, dans l'ordre de la séance), puis JP référence, les approuvés, la note, le titre. */
+const PASSPORT_ORDER = ["Passeport Bronze", "Passeport Argent", "Passeport Or", "Passeport Mauve"];
+/** Les gestes vont du bronze au mauve ; les exercices (sans niveau de passeport) ne sont pas touchés. */
+const passportRank = (e: BookExercise) => (e.kind === "geste" && e.level ? PASSPORT_ORDER.indexOf(e.level) : 9);
+
+/** Dans un chapitre : par catégorie (type d'exercice, dans l'ordre de la séance), puis JP référence, niveau du passeport
+ *  (gestes), les approuvés, la note, le titre. */
 export function compareInChapter(a: BookExercise, b: BookExercise): number {
   return (
     (TYPE_RANK.get(a.typeKey ?? "") ?? 99) - (TYPE_RANK.get(b.typeKey ?? "") ?? 99) ||
     Number(b.jpReference) - Number(a.jpReference) ||
+    passportRank(a) - passportRank(b) ||
     Number(b.approved) - Number(a.approved) ||
     Number(b.top) - Number(a.top) ||
     (b.average ?? -1) - (a.average ?? -1) ||
@@ -249,11 +264,11 @@ export interface BookChapter {
   types: string[];
 }
 
-/** Un chapitre par thème, dans l'ordre des gestes et thèmes de la banque ; « Autre » à la fin ; aucun chapitre vide. */
-export function bookChapters(list: BookExercise[]): BookChapter[] {
+/** Un chapitre par thème, dans l'ordre des thèmes de la Bible (`order`, sinon ceux de la banque) ; « Autre » à la fin ; aucun chapitre vide. */
+export function bookChapters(list: BookExercise[], order: readonly string[] = EXERCISE_CATEGORIES): BookChapter[] {
   const groups = new Map<string, BookExercise[]>();
   for (const e of list) groups.set(e.chapter, [...(groups.get(e.chapter) ?? []), e]);
-  const known = EXERCISE_CATEGORIES.filter((c) => c !== OTHER_CHAPTER) as readonly string[];
+  const known = order.filter((c) => c !== OTHER_CHAPTER);
   const keys = [...groups.keys()].sort((a, b) => {
     const rank = (k: string) => (k === OTHER_CHAPTER ? 1000 : known.includes(k) ? known.indexOf(k) : 500);
     return rank(a) - rank(b) || a.localeCompare(b, "fr");
@@ -280,8 +295,8 @@ export function bestExercises(list: BookExercise[], limit = 12): BookExercise[] 
 }
 
 /** Exercices JP référence : les phares de JP, rangés par thème (dans l'ordre des chapitres), puis par titre. */
-export function jpReferenceExercises(list: BookExercise[]): BookExercise[] {
-  const known = EXERCISE_CATEGORIES.filter((c) => c !== OTHER_CHAPTER) as readonly string[];
+export function jpReferenceExercises(list: BookExercise[], order: readonly string[] = EXERCISE_CATEGORIES): BookExercise[] {
+  const known = order.filter((c) => c !== OTHER_CHAPTER);
   const rank = (k: string) => (k === OTHER_CHAPTER ? 1000 : known.includes(k) ? known.indexOf(k) : 500);
   return list.filter((e) => e.jpReference).sort((a, b) => rank(a.chapter) - rank(b.chapter) || a.chapter.localeCompare(b.chapter, "fr") || a.title.localeCompare(b.title, "fr"));
 }
@@ -345,4 +360,68 @@ export function matchesGrid(e: BookExercise, f: { q?: string; chapter?: string; 
       .every((w) => hay.includes(w));
   }
   return true;
+}
+
+/* ── Plusieurs Bibles (JP, 26 nov. 2026) ─────────────────────────────────────── */
+
+export const ROUTINES_CHAPTER = "Routines";
+
+/** Ordre des chapitres d'une Bible. */
+export function bibleChapterOrder(bible: BibleKey): readonly string[] {
+  if (bible === "psychomotricite") return PSYCHOMOTOR_CATEGORIES;
+  if (bible === "ball-mastery") return [ROUTINES_CHAPTER, ...GESTURE_FAMILIES.map((f) => f.label)];
+  return EXERCISE_CATEGORIES;
+}
+
+/** Un geste de la bibliothèque de la méthode, comme une page de la Bible du ball mastery : exécution, 3 points clés,
+ *  erreurs fréquentes et progression en 4 étapes. Pas de note ni de statut : c'est un geste, pas un exercice noté. */
+export function gestureToBook(g: Gesture): BookExercise {
+  const steps = PROGRESSION_STEPS.map((s) => (g.progression?.[s.key]?.trim() ? `${s.label} : ${g.progression[s.key]!.trim()}` : null)).filter(Boolean);
+  const points = (g.key_points ?? []).map((k) => k.trim()).filter(Boolean);
+  return {
+    id: `geste-${g.id}`,
+    kind: "geste",
+    draft: !g.validated_at,
+    title: g.name,
+    status: "a-tester",
+    approved: false,
+    top: false,
+    average: null,
+    jpReference: false,
+    jpReferenceNote: null,
+    imageUrl: null,
+    diagram: null,
+    videoUrl: clean(g.video_url),
+    chapter: familyLabel(g.family),
+    typeKey: null,
+    type: "Geste",
+    place: null,
+    level: g.passport_level ? `Passeport ${LEVEL_LABEL[g.passport_level]}` : null,
+    ages: [],
+    venue: null,
+    players: null,
+    duration: null,
+    dimensions: null,
+    objective: null,
+    instructions: clean(g.execution),
+    coachingPoints: points.length ? points.join("\n") : null,
+    setups: [],
+    easier: null,
+    harder: null,
+    cognitive: null,
+    variants: null,
+    progression: steps.length ? steps.join("\n") : null,
+    mistakes: clean(g.common_mistakes),
+    material: null,
+    versions: []
+  };
+}
+
+/** Les exercices d'une Bible : seulement ceux qui y sont rangés (colonne `bible`, New Valkyria par défaut) ;
+ *  la Bible du ball mastery met ses exercices dans « Routines » et ajoute les gestes actifs de la méthode. */
+export function bibleExercises(entries: BookSource[], bible: BibleKey, gestures: Gesture[] = []): BookExercise[] {
+  const list = bookExercises(entries.filter((e) => bibleKey(e.bible) === bible));
+  if (bible !== "ball-mastery") return list;
+  const routines = list.map((e) => ({ ...e, chapter: ROUTINES_CHAPTER, versions: e.versions.map((v) => ({ ...v, chapter: ROUTINES_CHAPTER })) }));
+  return [...routines, ...gestures.filter((g) => g.active).map(gestureToBook)];
 }

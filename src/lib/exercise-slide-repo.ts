@@ -1,14 +1,15 @@
 import { createHash } from "node:crypto";
 
-import { DEFAULT_PLACE, EXERCISE_CATEGORIES, EXERCISE_TYPES, type ExerciseType } from "@/lib/exercise-bank";
+import { DEFAULT_PLACE, EXERCISE_CATEGORIES, EXERCISE_TYPES, PSYCHOMOTOR_CATEGORIES, type BibleKey, type ExerciseType } from "@/lib/exercise-bank";
 import { findDuplicateExercise, type SlideDraft } from "@/lib/exercise-slide-core";
 import { createExercise, setExerciseImage, type ExerciseInput } from "@/lib/exercises-repo";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 /** Ajout d'un exercice par sa diapo : la fiche est créée avec ce que la lecture a trouvé, la diapo devient son image. */
 
-export function draftToInput(d: SlideDraft): ExerciseInput {
+export function draftToInput(d: SlideDraft, bible: BibleKey = "valkyria"): ExerciseInput {
   return {
+    bible,
     title: d.title,
     objective: d.objective,
     category: d.category,
@@ -40,7 +41,7 @@ export class DuplicateExerciseError extends Error {
   }
 }
 
-export async function createExerciseFromSlide(draft: SlideDraft, image: File, opts: { force?: boolean } = {}): Promise<{ id: string; imageUrl: string }> {
+export async function createExerciseFromSlide(draft: SlideDraft, image: File, opts: { force?: boolean; bible?: BibleKey } = {}): Promise<{ id: string; imageUrl: string }> {
   if (!opts.force) {
     const imageHash = createHash("sha256").update(Buffer.from(await image.arrayBuffer())).digest("hex");
     const { data, error } = await (getSupabaseAdminClient() as any).from("exercises").select("id, title, image_hash");
@@ -48,7 +49,7 @@ export async function createExerciseFromSlide(draft: SlideDraft, image: File, op
     const dup = findDuplicateExercise({ title: draft.title, imageHash }, (data ?? []) as { id: string; title: string; image_hash: string | null }[]);
     if (dup) throw new DuplicateExerciseError({ id: dup.id, title: dup.title });
   }
-  const id = await createExercise(draftToInput(draft));
+  const id = await createExercise(draftToInput(draft, opts.bible));
   const imageUrl = await setExerciseImage(id, image);
   return { id, imageUrl };
 }
@@ -57,7 +58,7 @@ export async function createExerciseFromSlide(draft: SlideDraft, image: File, op
 export async function setExerciseClassification(id: string, patch: { title?: string; category?: string; exerciseType?: string | null }): Promise<void> {
   const row: Record<string, unknown> = { updated_at: new Date().toISOString(), content_updated_at: new Date().toISOString() };
   if (typeof patch.title === "string" && patch.title.trim()) row.title = patch.title.trim().slice(0, 120);
-  if (typeof patch.category === "string" && (EXERCISE_CATEGORIES as readonly string[]).includes(patch.category)) row.category = patch.category;
+  if (typeof patch.category === "string" && ([...EXERCISE_CATEGORIES, ...PSYCHOMOTOR_CATEGORIES] as string[]).includes(patch.category)) row.category = patch.category;
   if (patch.exerciseType === null || (typeof patch.exerciseType === "string" && EXERCISE_TYPES.some((t) => t.key === patch.exerciseType))) {
     row.exercise_type = patch.exerciseType;
     row.session_place = patch.exerciseType ? (DEFAULT_PLACE[patch.exerciseType as ExerciseType] ?? null) : null;

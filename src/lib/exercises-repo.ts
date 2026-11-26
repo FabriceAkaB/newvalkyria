@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { checklistSummary, compareBank, computeBankStatus, planningAvailability, type BankSummary, type RatingLite, type RatingScores } from "@/lib/exercise-bank";
+import { bibleKey, checklistSummary, compareBank, computeBankStatus, planningAvailability, type BankSummary, type RatingLite, type RatingScores } from "@/lib/exercise-bank";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 function db() {
@@ -91,6 +91,8 @@ export interface ExerciseFiche extends Exercise {
   /** Exercice phare de JP (« JP référence », 26 nov. 2026) : posé par JP seulement, distinct de la validation. */
   jp_reference_at?: string | null;
   jp_reference_note?: string | null;
+  /** Bible où l'exercice est rangé (JP, 26 nov. 2026). */
+  bible?: string | null;
 }
 
 export interface ExerciseInput {
@@ -121,6 +123,8 @@ export interface ExerciseInput {
   progression?: string | null;
   physicalMetrics?: string | null;
   author?: string | null;
+  /** Bible où l'exercice est rangé (valkyria, psychomotricite, ball-mastery). */
+  bible?: string | null;
 }
 
 /** Lit le corps JSON envoyé par la fiche (admin) ou le formulaire rapide (portail entraîneur). */
@@ -150,6 +154,7 @@ export function parseExerciseBody(body: Record<string, unknown>): ExerciseInput 
   ];
   for (const [key, field] of optional) if (field in body) (input as unknown as Record<string, unknown>)[key] = text(field);
   if (Array.isArray(body.ageGroups)) input.ageGroups = body.ageGroups.filter((a): a is string => typeof a === "string");
+  if (typeof body.bible === "string") input.bible = bibleKey(body.bible);
   return input;
 }
 
@@ -170,7 +175,7 @@ function toColumns(input: ExerciseInput) {
   const map: [keyof ExerciseInput, string][] = [
     ["exerciseType", "exercise_type"], ["sessionPlace", "session_place"], ["ageGroups", "age_groups"], ["venue", "venue"], ["setup57", "setup_5_7"], ["setup810", "setup_8_10"],
     ["setup1116", "setup_11_16"], ["variantEasier", "variant_easier"], ["variantHarder", "variant_harder"], ["variantCognitive", "variant_cognitive"],
-    ["progression", "progression"], ["physicalMetrics", "physical_metrics"], ["author", "author"]
+    ["progression", "progression"], ["physicalMetrics", "physical_metrics"], ["author", "author"], ["bible", "bible"]
   ];
   for (const [key, column] of map) if (input[key] !== undefined) extra[column] = input[key];
   return {

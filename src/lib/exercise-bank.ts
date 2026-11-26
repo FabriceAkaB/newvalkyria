@@ -20,7 +20,8 @@ export const EXERCISE_TYPES = [
   { key: "analytique", label: "Analytique (technique)" },
   { key: "jeu-reduit", label: "Jeu réduit à thème" },
   { key: "forme-jouee", label: "Forme jouée" },
-  { key: "physique", label: "Physique" }
+  { key: "physique", label: "Physique" },
+  { key: "psychomotricite", label: "Psychomotricité" }
 ] as const;
 export type ExerciseType = (typeof EXERCISE_TYPES)[number]["key"];
 
@@ -40,7 +41,62 @@ export const VENUES = [
 ] as const;
 export type Venue = (typeof VENUES)[number]["key"];
 
-export const AGE_GROUPS = ["U7", "U8", "U9", "U10", "U11", "U12", "U13", "U14+"] as const;
+export const AGE_GROUPS = ["U5", "U6", "U7", "U8", "U9", "U10", "U11", "U12", "U13", "U14+"] as const;
+
+/** Les Bibles d'exercices (JP, 26 nov. 2026) : chaque exercice est rangé dans une seule (colonne `bible`).
+ *  La Bible du ball mastery montre aussi la bibliothèque des gestes de la méthode (method_gestures). */
+export const BIBLES = [
+  { key: "valkyria", title: "La Bible New Valkyria", short: "New Valkyria", subtitle: "Les exercices de la méthode Valkyria, classés par thème." },
+  { key: "psychomotricite", title: "La Bible de la psychomotricité", short: "Psychomotricité", subtitle: "Les bases du mouvement des 4 à 10 ans : coordination, équilibre, latéralité, rythme et plus." },
+  { key: "ball-mastery", title: "La Bible du ball mastery", short: "Ball mastery", subtitle: "Les routines de ball mastery et la bibliothèque des gestes, du bronze au mauve." }
+] as const;
+export type BibleKey = (typeof BIBLES)[number]["key"];
+export const DEFAULT_BIBLE: BibleKey = "valkyria";
+export const bibleKey = (v: unknown): BibleKey => (BIBLES.some((b) => b.key === v) ? (v as BibleKey) : DEFAULT_BIBLE);
+export const bibleInfo = (v: unknown) => BIBLES.find((b) => b.key === bibleKey(v))!;
+
+/** Chapitres de la Bible de la psychomotricité (colonne `category`), dans l'ordre du livre. */
+export const PSYCHOMOTOR_CATEGORIES = [
+  "Coordination",
+  "Équilibre",
+  "Latéralité",
+  "Orientation dans l'espace",
+  "Rythme",
+  "Agilité et vitesse de réaction",
+  "Perception (vue, ouïe, toucher)",
+  "Motricité globale avec le ballon",
+  "Motricité fine des pieds",
+  "Jeux de collaboration"
+] as const;
+
+/** Les thèmes (chapitres) proposés pour une Bible. */
+export function categoriesForBible(bible: unknown): readonly string[] {
+  const key = bibleKey(bible);
+  if (key === "psychomotricite") return PSYCHOMOTOR_CATEGORIES;
+  if (key === "ball-mastery") return ["Ball mastery"];
+  return EXERCISE_CATEGORIES;
+}
+
+const PSYCHOMOTOR_WORDS: [string, RegExp][] = [
+  ["Jeux de collaboration", /collabor|coop[eé]r|ensemble|en [eé]quipe|partenaire|duo|chaine|cha[iî]ne/],
+  ["Perception (vue, ouïe, toucher)", /percept|yeux ferm|les yeux|ou[iï]e|toucher|son |sifflet|couleur|signal visuel|aveugle/],
+  ["Agilité et vitesse de réaction", /r[eé]action|r[eé]agir|agilit[eé]|vitesse|d[eé]part|signal/],
+  ["Rythme", /rythme|tempo|musique|cadence|frapp(e|er) des mains|battement/],
+  ["Latéralité", /lat[eé]ralit|gauche|droite|pied faible|c[oô]t[eé]/],
+  ["Orientation dans l'espace", /orientation|espace|direction|devant|derri[eè]re|labyrinthe|parcours/],
+  ["Équilibre", /[eé]quilibre|cloche-pied|sur un pied|statue|pos[eé]/],
+  ["Motricité fine des pieds", /orteil|pointe du pied|semelle|petites touches|fine/],
+  ["Motricité globale avec le ballon", /ballon|lancer|attraper|rouler|dribble|conduite/],
+  ["Coordination", /coordination|sauter|saut|bras et jambes|enchainer|encha[iî]ner/]
+];
+
+/** Chapitre de psychomotricité deviné d'après le texte d'une diapo (JP corrige d'un clic si besoin). */
+export function guessPsychomotorCategory(text: string): string {
+  const t = String(text ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const raw = String(text ?? "").toLowerCase();
+  for (const [cat, re] of PSYCHOMOTOR_WORDS) if (re.test(raw) || re.test(t)) return cat;
+  return "Coordination";
+}
 
 /** Organisation selon le nombre de joueuses (P1.3.14). */
 export const SIZE_BANDS = [
@@ -62,7 +118,8 @@ export const DEFAULT_PLACE: Partial<Record<ExerciseType, SessionPlace>> = {
   "ball-mastery": "ball-mastery",
   analytique: "technique",
   "jeu-reduit": "forme-jouee",
-  "forme-jouee": "forme-jouee"
+  "forme-jouee": "forme-jouee",
+  psychomotricite: "jeu-entree"
 };
 
 const DECISION_THEMES = ["prise de decision", "transition", "jeu entre les lignes", "prise d'information"];

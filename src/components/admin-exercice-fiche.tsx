@@ -12,7 +12,10 @@ import {
   AGE_GROUPS,
   APPROVAL_SCORE,
   DEFAULT_PLACE,
-  EXERCISE_CATEGORIES,
+  BIBLES,
+  bibleKey,
+  categoriesForBible,
+  type BibleKey,
   EXERCISE_LEVELS,
   EXERCISE_TYPES,
   MATERIAL_SUGGESTIONS,
@@ -36,6 +39,8 @@ import type { BankEntry, ExerciseDiagram, ExerciseRating, ExerciseUse } from "@/
 
 interface FormState {
   title: string;
+  /** Bible où l'exercice est rangé (JP, 26 nov. 2026). */
+  bible: string;
   exerciseType: string;
   sessionPlace: string;
   category: string;
@@ -66,9 +71,11 @@ interface FormState {
 
 const SETUP_FIELD: Record<(typeof SIZE_BANDS)[number]["key"], "setup57" | "setup810" | "setup1116"> = { setup_5_7: "setup57", setup_8_10: "setup810", setup_11_16: "setup1116" };
 
-function fromEntry(e: BankEntry | null): FormState {
+function fromEntry(e: BankEntry | null, defaultBible: BibleKey = "valkyria"): FormState {
+  const bible = e ? bibleKey(e.bible) : defaultBible;
   return {
     title: e?.title ?? "",
+    bible,
     exerciseType: e?.exercise_type ?? "",
     sessionPlace: e?.session_place ?? "",
     category: e?.category ?? "",
@@ -94,7 +101,8 @@ function fromEntry(e: BankEntry | null): FormState {
     progression: e?.progression ?? "",
     physicalMetrics: e?.physical_metrics ?? "",
     videoUrl: e?.video_url ?? "",
-    author: e?.author ?? (e ? "" : "JP")
+    author: e?.author ?? (e ? "" : "JP"),
+    ...(e ? {} : bible === "ball-mastery" ? { exerciseType: "ball-mastery", sessionPlace: "ball-mastery", category: "Ball mastery" } : bible === "psychomotricite" ? { exerciseType: "psychomotricite", sessionPlace: "jeu-entree" } : {})
   };
 }
 
@@ -135,9 +143,10 @@ function Field({ label, hint, wide, group, children }: { label: string; hint?: R
   );
 }
 
-function ExerciseForm({ entry, onDone, startAsNewVersion }: { entry: BankEntry | null; onDone: () => void; startAsNewVersion: boolean }) {
+function ExerciseForm({ entry, onDone, startAsNewVersion, defaultBible }: { entry: BankEntry | null; onDone: () => void; startAsNewVersion: boolean; defaultBible?: BibleKey }) {
   const router = useRouter();
-  const [f, setF] = useState<FormState>(() => fromEntry(entry));
+  const [f, setF] = useState<FormState>(() => fromEntry(entry, defaultBible));
+  const categories = categoriesForBible(f.bible);
   const [newVersion, setNewVersion] = useState(startAsNewVersion);
   const [versionNote, setVersionNote] = useState("");
   const [saving, setSaving] = useState(false);
@@ -232,11 +241,16 @@ function ExerciseForm({ entry, onDone, startAsNewVersion }: { entry: BankEntry |
               {SESSION_PLACES.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
             </select>
           </Field>
-          <Field label="Geste ou thème">
+          <Field label="Bible" hint="Où l'exercice est rangé pour les éducateurs.">
+            <select className="admin-input" value={f.bible} onChange={set("bible")}>
+              {BIBLES.map((b) => <option key={b.key} value={b.key}>{b.title}</option>)}
+            </select>
+          </Field>
+          <Field label={f.bible === "psychomotricite" ? "Chapitre" : "Geste ou thème"}>
             <select className="admin-input" value={f.category} onChange={set("category")}>
               <option value="">À choisir</option>
-              {EXERCISE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              {f.category && !(EXERCISE_CATEGORIES as readonly string[]).includes(f.category) ? <option value={f.category}>{f.category}</option> : null}
+              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              {f.category && !categories.includes(f.category) ? <option value={f.category}>{f.category}</option> : null}
             </select>
           </Field>
           <Field label="Auteur">
@@ -448,7 +462,7 @@ function ExerciseUses({ exerciseId, uses }: { exerciseId: string; uses: { upcomi
   );
 }
 
-export function AdminExerciceFiche({ entry, ratings, uses = null }: { entry: BankEntry | null; ratings: ExerciseRating[]; uses?: { upcoming: ExerciseUse[]; pastCount: number } | null }) {
+export function AdminExerciceFiche({ entry, ratings, uses = null, defaultBible }: { entry: BankEntry | null; ratings: ExerciseRating[]; uses?: { upcoming: ExerciseUse[]; pastCount: number } | null; defaultBible?: BibleKey }) {
   const router = useRouter();
   const [editing, setEditing] = useState(entry === null);
   const [asNewVersion, setAsNewVersion] = useState(false);
@@ -471,6 +485,7 @@ export function AdminExerciceFiche({ entry, ratings, uses = null }: { entry: Ban
             </header>
             <ExerciseForm
               entry={entry}
+              defaultBible={defaultBible}
               startAsNewVersion={asNewVersion}
               onDone={() => {
                 setEditing(false);

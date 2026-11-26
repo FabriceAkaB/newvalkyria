@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 
 import "./exercise-bible.css";
 
-import { EXERCISE_CATEGORIES, EXERCISE_TYPES } from "@/lib/exercise-bank";
+import { bibleInfo, categoriesForBible, EXERCISE_TYPES, type BibleKey } from "@/lib/exercise-bank";
 
 /** pdf.js chargé à la demande (seulement quand JP dépose un PDF), pour transformer chaque page en image et lire son texte. */
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
@@ -87,7 +87,7 @@ async function fromPdf(file: File): Promise<Prepared[]> {
 }
 
 /** Ajouter des exercices par leurs diapos : déposer, c'est créé, lu et rangé ; JP corrige le chapitre au besoin. */
-export function AdminSlideImport({ ai }: { ai: boolean }) {
+export function AdminSlideImport({ ai, bible = "valkyria" }: { ai: boolean; bible?: BibleKey }) {
   const [items, setItems] = useState<Item[]>([]);
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -99,6 +99,7 @@ export function AdminSlideImport({ ai }: { ai: boolean }) {
     form.append("image", new File([prep.blob], prep.name, { type: prep.blob.type }));
     form.append("text", prep.text);
     form.append("fileName", prep.name);
+    form.append("bible", bible);
     try {
       const res = await fetch("/api/admin/exercises/diapo", { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
@@ -145,10 +146,10 @@ export function AdminSlideImport({ ai }: { ai: boolean }) {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <header>
-        <p className="mda-eyebrow">Banque d&apos;exercices · ajout par diapo</p>
+        <p className="mda-eyebrow">{bibleInfo(bible).title} · ajout par diapo</p>
         <h1 className="mda-h1">Ajoute un exercice en déposant sa diapo</h1>
         <p className="mda-lead">
-          Une image (PNG, JPG) ou un PDF : chaque page devient un exercice, avec la diapo comme schéma. {ai ? "Claude lit la diapo et remplit la fiche (titre, thème, organisation, consignes, variantes)." : "Le site lit le texte du PDF et le nom du fichier pour le titre, le thème et le type."} L&apos;exercice est rangé dans son chapitre de la Bible ; corrige-le ici au besoin, puis complète la fiche.
+          Une image (PNG, JPG) ou un PDF : chaque page devient un exercice, avec la diapo comme schéma. {ai ? "Claude lit la diapo et remplit la fiche (titre, thème, organisation, consignes, variantes)." : "Le site lit le texte du PDF et le nom du fichier pour le titre, le thème et le type."} L&apos;exercice est rangé dans son chapitre de {bibleInfo(bible).title} ; corrige-le ici au besoin, puis complète la fiche. Tu peux en déposer plusieurs d&apos;un coup.
         </p>
       </header>
 
@@ -228,7 +229,8 @@ export function AdminSlideImport({ ai }: { ai: boolean }) {
                         <label className="xbk-muted" style={{ display: "grid", gap: 4 }}>
                           Chapitre (thème)
                           <select className="admin-input" value={item.category} onChange={(e) => void save(item, { category: e.target.value })}>
-                            {EXERCISE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                            {categoriesForBible(bible).map((c) => <option key={c} value={c}>{c}</option>)}
+                            {!categoriesForBible(bible).includes(item.category) ? <option value={item.category}>{item.category}</option> : null}
                           </select>
                         </label>
                         <label className="xbk-muted" style={{ display: "grid", gap: 4 }}>

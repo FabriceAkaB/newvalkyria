@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, Award, BookOpen, ChevronDown, ChevronLeft, ChevronRight, FilePlus2, ImageUp, LayoutGrid, LayoutList, ListOrdered, Maximize2, PencilLine, Plus, Search, Star, Trash2, X } from "lucide-react";
+import { Archive, Award, BookOpen, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, FilePlus2, Footprints, ImageUp, LayoutGrid, LayoutList, ListOrdered, Maximize2, PencilLine, Plus, Search, Shapes, Star, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -8,8 +8,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./exercise-bible.css";
 
 import { ExerciseDiagramView } from "@/components/exercise-diagram";
+import { BIBLES, bibleInfo, type BibleKey } from "@/lib/exercise-bank";
 import {
   bestExercises,
+  bibleChapterOrder,
   bookChapters,
   bookPages,
   chapterStarts,
@@ -59,14 +61,33 @@ function IllustratedPitch({ ex }: { ex: BookExercise }) {
   );
 }
 
+/** Un geste sans vidéo ni image : deux cônes, le ballon et son trajet en pointillé (pas un terrain : c'est un geste). */
+function IllustratedGesture({ ex }: { ex: BookExercise }) {
+  const h = hash(ex.id);
+  const bend = 14 + (h % 22);
+  const flip = h % 2 ? 1 : -1;
+  return (
+    <svg viewBox="0 0 200 70" className="xbk-pitch" role="img" aria-label={`Geste : ${ex.title}`}>
+      <rect x="1" y="1" width="198" height="68" rx="6" className="xbk-pitch-bg" />
+      <path d={`M70 50 l5 -10 l5 10 z`} className="xbk-pitch-cone" />
+      <path d={`M120 50 l5 -10 l5 10 z`} className="xbk-pitch-cone" />
+      <path d={`M40 ${35 + flip * 4} C 75 ${35 - flip * bend}, 125 ${35 + flip * bend}, 160 ${35 - flip * 4}`} className="xbk-pitch-pass" fill="none" />
+      <circle cx="160" cy={35 - flip * 4} r="5" className="xbk-pitch-ball" />
+      <circle cx="40" cy={35 + flip * 4} r="4.2" className="xbk-pitch-a" />
+    </svg>
+  );
+}
+
 export function ExerciseVisual({ ex, eager }: { ex: BookExercise; eager?: boolean }) {
   return (
-    <div className="xbk-visual">
+    <div className="xbk-visual" data-kind={ex.kind === "geste" && !ex.imageUrl ? "geste" : undefined}>
       {ex.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={ex.imageUrl} alt={`Schéma : ${ex.title}`} loading={eager ? "eager" : "lazy"} draggable={false} />
       ) : ex.diagram ? (
         <ExerciseDiagramView diagram={ex.diagram as unknown as ExerciseDiagram} />
+      ) : ex.kind === "geste" ? (
+        <IllustratedGesture ex={ex} />
       ) : (
         <IllustratedPitch ex={ex} />
       )}
@@ -97,6 +118,7 @@ function Lines({ text }: { text: string | null }) {
 function Badges({ ex }: { ex: BookExercise }) {
   return (
     <p className="xbk-badges">
+      {ex.kind === "geste" && ex.draft ? <span data-tone="warn">Fiche à valider par JP</span> : null}
       {ex.jpReference ? (
         <span data-tone="jp">
           <Award size={12} strokeWidth={2} aria-hidden /> JP référence
@@ -291,8 +313,25 @@ function DeleteControl({ ex }: { ex: BookExercise }) {
   );
 }
 
+/** Admin seulement : marquer JP référence et supprimer un exercice ; un geste se modifie dans la bibliothèque des gestes. */
+function AdminActions({ ex }: { ex: BookExercise }) {
+  if (ex.kind === "geste") {
+    return (
+      <Link href="/admin/coaching/gestes" className="admin-btn-ghost xbk-tool">
+        <PencilLine size={15} strokeWidth={1.75} aria-hidden /> Modifier le geste
+      </Link>
+    );
+  }
+  return (
+    <>
+      <JpReferenceControl key={`${ex.id}-${ex.jpReference}`} ex={ex} />
+      <DeleteControl key={`del-${ex.id}`} ex={ex} />
+    </>
+  );
+}
+
 /** Admin seulement : ajouter un exercice à la banque, par diapo (lue et rangée toute seule) ou en remplissant la fiche. */
-function AddExerciseMenu() {
+function AddExerciseMenu({ bible }: { bible: BibleKey }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -314,20 +353,29 @@ function AddExerciseMenu() {
       </button>
       {open ? (
         <div className="xbk-add-menu" role="menu">
-          <Link href="/admin/exercices/diapos" role="menuitem">
+          <Link href={`/admin/exercices/diapos?bible=${bible}`} role="menuitem">
             <ImageUp size={18} strokeWidth={1.75} aria-hidden />
             <span>
               <strong>Déposer des diapos</strong>
-              <small>Image ou PDF : chaque exercice est lu et rangé tout seul.</small>
+              <small>Une ou plusieurs images, ou un PDF de plusieurs pages (une page = un exercice) : rangés dans cette Bible.</small>
             </span>
           </Link>
-          <Link href="/admin/exercices/nouveau" role="menuitem">
+          <Link href={`/admin/exercices/nouveau?bible=${bible}`} role="menuitem">
             <FilePlus2 size={18} strokeWidth={1.75} aria-hidden />
             <span>
               <strong>Remplir une fiche</strong>
               <small>La fiche Valkyria complète, champ par champ.</small>
             </span>
           </Link>
+          {bible === "ball-mastery" ? (
+            <Link href="/admin/coaching/gestes" role="menuitem">
+              <Footprints size={18} strokeWidth={1.75} aria-hidden />
+              <span>
+                <strong>Ajouter un geste</strong>
+                <small>Dans la bibliothèque des gestes de la méthode : il apparaît ici.</small>
+              </span>
+            </Link>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -365,12 +413,12 @@ export function ExerciseSheet({ ex, eager }: { ex: BookExercise; eager?: boolean
         </Section>
       ) : null}
       {ex.instructions ? (
-        <Section label="Déroulement">
+        <Section label={ex.kind === "geste" ? "Exécution" : "Déroulement"}>
           <Lines text={ex.instructions} />
         </Section>
       ) : null}
       {ex.coachingPoints ? (
-        <Section label="Consignes clés">
+        <Section label={ex.kind === "geste" ? "Les 3 points clés" : "Consignes clés"}>
           <Lines text={ex.coachingPoints} />
         </Section>
       ) : null}
@@ -444,14 +492,15 @@ export function ExerciseSheet({ ex, eager }: { ex: BookExercise; eager?: boolean
 
 /* ── Le livre ─────────────────────────────────────────────────────────────── */
 
-function Cover({ total, chapters, best }: { total: number; chapters: number; best: number }) {
+function Cover({ total, chapters, best, bible }: { total: number; chapters: number; best: number; bible: BibleKey }) {
+  const info = bibleInfo(bible);
   return (
     <div className="xbk-cover">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/logo.png" alt="" width={64} height={76} className="xbk-cover-logo" />
       <p className="xbk-cover-eyebrow">Académie New Valkyria</p>
-      <h2 className="xbk-cover-title">La Bible New Valkyria</h2>
-      <p className="xbk-cover-sub">Les exercices de la méthode Valkyria, classés par thème.</p>
+      <h2 className="xbk-cover-title">{info.title}</h2>
+      <p className="xbk-cover-sub">{info.subtitle}</p>
       <dl className="xbk-cover-stats">
         <div>
           <dt>Exercices</dt>
@@ -517,9 +566,9 @@ function ChapterOpener({ chapter, onGo, pages }: { chapter: BookChapter; onGo: (
   );
 }
 
-function Page({ page, ctx }: { page: BookPage; ctx: { chapters: BookChapter[]; starts: Map<string, number>; pages: BookPage[]; total: number; best: number; onGo: (p: number) => void; ficheBase?: string } }) {
+function Page({ page, ctx }: { page: BookPage; ctx: { chapters: BookChapter[]; starts: Map<string, number>; pages: BookPage[]; total: number; best: number; onGo: (p: number) => void; ficheBase?: string; bible: BibleKey } }) {
   let body: React.ReactNode;
-  if (page.kind === "cover") body = <Cover total={ctx.total} chapters={ctx.chapters.length} best={ctx.best} />;
+  if (page.kind === "cover") body = <Cover total={ctx.total} chapters={ctx.chapters.length} best={ctx.best} bible={ctx.bible} />;
   else if (page.kind === "contents") body = <Contents chapters={ctx.chapters} starts={ctx.starts} onGo={ctx.onGo} />;
   else if (page.kind === "chapter") body = <ChapterOpener chapter={page.chapter} onGo={ctx.onGo} pages={ctx.pages} />;
   else
@@ -530,7 +579,7 @@ function Page({ page, ctx }: { page: BookPage; ctx: { chapters: BookChapter[]; s
             Chapitre {page.chapter.number} · {page.chapter.title}
             {page.exercise.type && page.exercise.type !== page.chapter.title ? ` · ${page.exercise.type}` : ""}
           </span>
-          {ctx.ficheBase ? (
+          {ctx.ficheBase && page.exercise.kind === "exercice" ? (
             <Link href={`${ctx.ficheBase}/${page.exercise.id}`} className="xbk-edit">
               <PencilLine size={14} strokeWidth={1.75} aria-hidden /> Modifier
             </Link>
@@ -538,8 +587,7 @@ function Page({ page, ctx }: { page: BookPage; ctx: { chapters: BookChapter[]; s
         </p>
         {ctx.ficheBase ? (
           <div className="xbk-admin-actions">
-            <JpReferenceControl key={`${page.exercise.id}-${page.exercise.jpReference}`} ex={page.exercise} />
-            <DeleteControl key={`del-${page.exercise.id}`} ex={page.exercise} />
+            <AdminActions ex={page.exercise} />
           </div>
         ) : null}
         <ExerciseSheet ex={page.exercise} eager />
@@ -565,7 +613,7 @@ function useWide(ref: React.RefObject<HTMLElement | null>, min: number) {
   return wide;
 }
 
-function Book({ pages, chapters, page, setPage, total, best, ficheBase }: { pages: BookPage[]; chapters: BookChapter[]; page: number; setPage: (p: number) => void; total: number; best: number; ficheBase?: string }) {
+function Book({ pages, chapters, page, setPage, total, best, ficheBase, bible }: { pages: BookPage[]; chapters: BookChapter[]; page: number; setPage: (p: number) => void; total: number; best: number; ficheBase?: string; bible: BibleKey }) {
   const box = useRef<HTMLDivElement>(null);
   const double = useWide(box, 960);
   const starts = useMemo(() => chapterStarts(pages), [pages]);
@@ -658,7 +706,7 @@ function Book({ pages, chapters, page, setPage, total, best, ficheBase }: { page
           onPointerCancel={() => (drag.current = null)}
         >
           {shown.map((i) => (
-            <Page key={i} page={pages[i]} ctx={{ chapters, starts, pages, total, best, onGo: go, ficheBase }} />
+            <Page key={i} page={pages[i]} ctx={{ chapters, starts, pages, total, best, onGo: go, ficheBase, bible }} />
           ))}
         </div>
         <button type="button" className="xbk-turn" data-side="next" onClick={() => turn(1)} disabled={atEnd} aria-label="Page suivante">
@@ -703,7 +751,8 @@ function Card({ ex, onOpen, showNote }: { ex: BookExercise; onOpen: () => void; 
 /** Une grande fiche du descriptif (JP, 26 nov. 2026) : la diapo entière et, à côté, l'explication, la progression et la
  *  limite (variantes), lisibles sans ouvrir la fiche. */
 function WideCard({ ex, onOpen, canMark }: { ex: BookExercise; onOpen: () => void; canMark: boolean }) {
-  const explanation = ex.instructions ?? ex.coachingPoints;
+  const gesture = ex.kind === "geste";
+  const explanation = gesture ? ex.instructions : ex.instructions ?? ex.coachingPoints;
   return (
     <article className="xbk-wide" data-jp={ex.jpReference || undefined} aria-label={ex.title}>
       <button type="button" className="xbk-wide-visual" onClick={onOpen} aria-label={`Ouvrir la fiche complète : ${ex.title}`}>
@@ -723,13 +772,23 @@ function WideCard({ ex, onOpen, canMark }: { ex: BookExercise; onOpen: () => voi
           </p>
         ) : null}
         {explanation ? (
-          <Section label="Explication">
+          <Section label={gesture ? "Exécution" : "Explication"}>
             <Lines text={explanation} />
           </Section>
         ) : null}
+        {gesture && ex.coachingPoints ? (
+          <Section label="Les 3 points clés">
+            <Lines text={ex.coachingPoints} />
+          </Section>
+        ) : null}
         {ex.progression ? (
-          <Section label="Progression">
+          <Section label={gesture ? "Progression en 4 étapes" : "Progression"}>
             <Lines text={ex.progression} />
+          </Section>
+        ) : null}
+        {gesture && ex.mistakes ? (
+          <Section label="Erreurs fréquentes">
+            <Lines text={ex.mistakes} />
           </Section>
         ) : null}
         {ex.easier || ex.harder ? (
@@ -754,8 +813,7 @@ function WideCard({ ex, onOpen, canMark }: { ex: BookExercise; onOpen: () => voi
           <button type="button" className="admin-btn-ghost xbk-tool" onClick={onOpen}>
             <Maximize2 size={15} strokeWidth={1.75} aria-hidden /> Fiche complète
           </button>
-          {canMark ? <JpReferenceControl key={`${ex.id}-${ex.jpReference}`} ex={ex} /> : null}
-          {canMark ? <DeleteControl key={`del-${ex.id}`} ex={ex} /> : null}
+          {canMark ? <AdminActions ex={ex} /> : null}
         </div>
       </div>
     </article>
@@ -881,13 +939,12 @@ function Modal({ ex, onClose, onBook, ficheBase }: { ex: BookExercise; onClose: 
             <button type="button" className="admin-btn-ghost xbk-tool" onClick={onBook}>
               <BookOpen size={16} strokeWidth={1.75} aria-hidden /> Voir dans la Bible
             </button>
-            {ficheBase ? (
+            {ficheBase && ex.kind === "exercice" ? (
               <Link href={`${ficheBase}/${ex.id}`} className="admin-btn-ghost xbk-tool">
                 <PencilLine size={16} strokeWidth={1.75} aria-hidden /> Modifier
               </Link>
             ) : null}
-            {ficheBase ? <JpReferenceControl key={`${ex.id}-${ex.jpReference}`} ex={ex} /> : null}
-            {ficheBase ? <DeleteControl key={`del-${ex.id}`} ex={ex} /> : null}
+            {ficheBase ? <AdminActions ex={ex} /> : null}
             <button type="button" className="xbk-close" onClick={onClose} aria-label="Fermer">
               <X size={20} strokeWidth={1.75} />
             </button>
@@ -901,12 +958,36 @@ function Modal({ ex, onClose, onBook, ficheBase }: { ex: BookExercise; onClose: 
 
 /* ── La page ───────────────────────────────────────────────────────────────── */
 
-/** La Bible New Valkyria : meilleurs exercices, le livre (une page par exercice, un chapitre par thème) et la grille. */
-export function ExerciseBible({ exercises, ficheBase }: { exercises: BookExercise[]; ficheBase?: string }) {
-  const chapters = useMemo(() => bookChapters(exercises), [exercises]);
+const BIBLE_ICON: Record<BibleKey, typeof BookOpen> = { valkyria: BookOpen, psychomotricite: Shapes, "ball-mastery": Dumbbell };
+
+/** Les 3 Bibles (JP, 26 nov. 2026) : un lien par Bible, avec son nombre d'exercices. */
+function BibleSwitcher({ bible, counts, basePath }: { bible: BibleKey; counts: Partial<Record<BibleKey, number>>; basePath: string }) {
+  return (
+    <nav className="xbk-bibles" aria-label="Les Bibles">
+      {BIBLES.map((b) => {
+        const Icon = BIBLE_ICON[b.key];
+        return (
+          <Link key={b.key} href={b.key === "valkyria" ? basePath : `${basePath}?bible=${b.key}`} aria-current={b.key === bible ? "page" : undefined}>
+            <Icon size={16} strokeWidth={1.75} aria-hidden />
+            <span>{b.short}</span>
+            {counts[b.key] !== undefined ? <small>{counts[b.key]}</small> : null}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+/** Une Bible : exercices JP référence, meilleurs exercices, le livre (une page par exercice, un chapitre par thème) et la grille.
+ *  `bible` choisit le titre, les chapitres et l'endroit où l'ajout range l'exercice ; `basePath` + `counts` montrent le sélecteur. */
+export function ExerciseBible({ exercises, ficheBase, bible = "valkyria", counts, basePath }: { exercises: BookExercise[]; ficheBase?: string; bible?: BibleKey; counts?: Partial<Record<BibleKey, number>>; basePath?: string }) {
+  const info = bibleInfo(bible);
+  const order = useMemo(() => bibleChapterOrder(bible), [bible]);
+  const pageKey = `${PAGE_KEY}:${bible}`;
+  const chapters = useMemo(() => bookChapters(exercises, order), [exercises, order]);
   const pages = useMemo(() => bookPages(chapters), [chapters]);
   const best = useMemo(() => bestExercises(exercises, 12), [exercises]);
-  const references = useMemo(() => jpReferenceExercises(exercises), [exercises]);
+  const references = useMemo(() => jpReferenceExercises(exercises, order), [exercises, order]);
   const approvedCount = exercises.filter((e) => e.approved).length;
   const [view, setView] = useState<"livre" | "grille">("livre");
   const [page, setPageState] = useState(0);
@@ -915,22 +996,25 @@ export function ExerciseBible({ exercises, ficheBase }: { exercises: BookExercis
   useEffect(() => {
     try {
       const v = localStorage.getItem(VIEW_KEY);
-      const p = parseInt(localStorage.getItem(PAGE_KEY) ?? "", 10);
+      const p = parseInt(localStorage.getItem(pageKey) ?? "", 10);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (v === "grille" || v === "livre") setView(v);
       if (Number.isFinite(p) && p > 0 && p < pages.length) setPageState(p);
     } catch {
       /* stockage indisponible : on part de la couverture */
     }
-  }, [pages.length]);
-  const setPage = useCallback((p: number) => {
-    setPageState(p);
-    try {
-      localStorage.setItem(PAGE_KEY, String(p));
-    } catch {
-      /* rien */
-    }
-  }, []);
+  }, [pages.length, pageKey]);
+  const setPage = useCallback(
+    (p: number) => {
+      setPageState(p);
+      try {
+        localStorage.setItem(pageKey, String(p));
+      } catch {
+        /* rien */
+      }
+    },
+    [pageKey]
+  );
   const choose = (v: "livre" | "grille") => {
     setView(v);
     try {
@@ -948,12 +1032,37 @@ export function ExerciseBible({ exercises, ficheBase }: { exercises: BookExercis
 
   return (
     <div className="xbk">
+      {basePath && counts ? <BibleSwitcher bible={bible} counts={counts} basePath={basePath} /> : null}
       {ficheBase ? (
         <div className="xbk-admin-bar">
-          <p className="xbk-muted">Ta banque, comme les éducateurs la voient. Tu es le seul à pouvoir ajouter, marquer et supprimer.</p>
-          <AddExerciseMenu />
+          <p className="xbk-muted">
+            <strong>{info.title}</strong>, comme les éducateurs la voient. Tu es le seul à pouvoir ajouter, marquer et supprimer.
+          </p>
+          <AddExerciseMenu bible={bible} />
         </div>
       ) : null}
+      {exercises.length === 0 ? (
+        <section className="xbk-empty-bible" aria-label={info.title}>
+          <Shapes size={28} strokeWidth={1.5} aria-hidden />
+          <h2 className="mda-h2" style={{ margin: 0 }}>{info.title} est vide pour l&apos;instant</h2>
+          {ficheBase ? (
+            <>
+              <p>Dépose tes exercices : une ou plusieurs diapos à la fois, ou un PDF de plusieurs pages (chaque page devient un exercice). Ils sont lus et rangés directement dans cette Bible, par chapitre.</p>
+              <span className="xbk-jp-form-actions" style={{ justifyContent: "center" }}>
+                <Link href={`/admin/exercices/diapos?bible=${bible}`} className="admin-btn-primary xbk-tool">
+                  <ImageUp size={16} strokeWidth={1.75} aria-hidden /> Déposer des diapos
+                </Link>
+                <Link href={`/admin/exercices/nouveau?bible=${bible}`} className="admin-btn-ghost xbk-tool">
+                  <FilePlus2 size={16} strokeWidth={1.75} aria-hidden /> Remplir une fiche
+                </Link>
+              </span>
+            </>
+          ) : (
+            <p>JP prépare cette Bible : les exercices arrivent bientôt.</p>
+          )}
+        </section>
+      ) : (
+        <>
       <section className="xbk-best" data-kind="jp" aria-label="Exercices JP référence">
         <div className="xbk-best-head">
           <h2 className="mda-h2" style={{ margin: 0 }}>
@@ -999,12 +1108,12 @@ export function ExerciseBible({ exercises, ficheBase }: { exercises: BookExercis
         </button>
       </div>
 
-      {exercises.length === 0 ? (
-        <p className="xbk-empty">La banque est vide pour l&apos;instant.</p>
-      ) : view === "livre" ? (
-        <Book pages={pages} chapters={chapters} page={Math.min(page, pages.length - 1)} setPage={setPage} total={exercises.length} best={approvedCount} ficheBase={ficheBase} />
+      {view === "livre" ? (
+        <Book pages={pages} chapters={chapters} page={Math.min(page, pages.length - 1)} setPage={setPage} total={exercises.length} best={approvedCount} ficheBase={ficheBase} bible={bible} />
       ) : (
         <Grid list={exercises} chapters={chapters} onOpen={setOpen} canMark={Boolean(ficheBase)} />
+      )}
+        </>
       )}
 
       {openEx ? <Modal ex={openEx} onClose={() => setOpen(null)} onBook={() => toBook(openEx.id)} ficheBase={ficheBase} /> : null}

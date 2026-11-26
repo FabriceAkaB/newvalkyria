@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { bestExercises, bookChapters, bookExercises, bookPages, chapterStarts, duplicateGroups, jpReferenceExercises, matchesGrid, pageOfExercise, spreadStart, turnPage, type BookSource } from "@/lib/exercise-book-core";
+import type { Gesture } from "@/lib/coaching-method";
+import { categoriesForBible, guessPsychomotorCategory, PSYCHOMOTOR_CATEGORIES } from "@/lib/exercise-bank";
+import { bestExercises, bibleChapterOrder, bibleExercises, bookChapters, bookExercises, bookPages, chapterStarts, duplicateGroups, gestureToBook, jpReferenceExercises, matchesGrid, pageOfExercise, ROUTINES_CHAPTER, spreadStart, turnPage, type BookSource } from "@/lib/exercise-book-core";
+import { draftForBible, type SlideDraft } from "@/lib/exercise-slide-core";
 
 const ex = (id: string, o: Partial<BookSource> = {}, bank: Partial<BookSource["bank"]> = {}): BookSource => ({
   id, title: `Exercice ${id}`, category: "Passe", exercise_type: "jeu-reduit", session_place: null, level: null, age_groups: ["U10"], venue: null,
@@ -173,5 +176,58 @@ describe("Bible : exercices JP référence", () => {
     expect(matchesGrid(a, { jp: true })).toBe(true);
     expect(matchesGrid(b, { jp: true })).toBe(false);
     expect(matchesGrid(a, { q: "traverse" })).toBe(true);
+  });
+});
+
+describe("Plusieurs Bibles", () => {
+  const gesture = (o: Partial<Gesture> = {}): Gesture => ({
+    id: "g1", name: "Right Foot Weave", family: "interieur-exterieur", passport_level: "bronze", execution: "Slalom pied droit.", key_points: ["Petites touches", " ", "Tête levée"],
+    common_mistakes: "Touches trop longues.", video_url: null, progression: { "sur-place": "Entre 2 cônes", "a-vitesse": "Chronométré" }, sort_order: 0, active: true, validated_at: null, ...o
+  });
+  const entries = [
+    ex("v", { category: "Passe" }),
+    ex("b", { category: "Ball mastery", exercise_type: "ball-mastery", bible: "ball-mastery" }),
+    ex("p", { category: "Équilibre", exercise_type: "psychomotricite", bible: "psychomotricite" }),
+    ex("x", { bible: "inconnue" })
+  ];
+
+  it("chaque exercice dans une seule Bible ; New Valkyria par défaut", () => {
+    expect(bibleExercises(entries, "valkyria").map((e) => e.id)).toEqual(["v", "x"]);
+    expect(bibleExercises(entries, "psychomotricite").map((e) => e.id)).toEqual(["p"]);
+  });
+
+  it("Bible du ball mastery : les routines, puis les gestes actifs de la méthode", () => {
+    const list = bibleExercises(entries, "ball-mastery", [gesture(), gesture({ id: "g2", name: "Ancien", active: false })]);
+    expect(list.map((e) => [e.id, e.chapter, e.kind])).toEqual([["b", ROUTINES_CHAPTER, "exercice"], ["geste-g1", "Intérieur / extérieur", "geste"]]);
+    expect(bookChapters(list, bibleChapterOrder("ball-mastery")).map((c) => c.title)).toEqual([ROUTINES_CHAPTER, "Intérieur / extérieur"]);
+  });
+
+  it("un geste devient une page : exécution, 3 points clés, erreurs, progression en étapes, à valider par JP", () => {
+    const g = gestureToBook(gesture());
+    expect(g.coachingPoints).toBe("Petites touches\nTête levée");
+    expect(g.progression).toBe("Sur place : Entre 2 cônes\nÀ vitesse : Chronométré");
+    expect(g.level).toBe("Passeport Bronze");
+    expect(g.draft).toBe(true);
+    expect(gestureToBook(gesture({ validated_at: "2026-11-26T00:00:00Z" })).draft).toBe(false);
+  });
+
+  it("psychomotricité : ses propres chapitres, dans l'ordre", () => {
+    expect(categoriesForBible("psychomotricite")).toBe(PSYCHOMOTOR_CATEGORIES);
+    const list = bibleExercises([ex("r", { category: "Rythme", bible: "psychomotricite" }), ex("c", { category: "Coordination", bible: "psychomotricite" })], "psychomotricite");
+    expect(bookChapters(list, bibleChapterOrder("psychomotricite")).map((c) => c.title)).toEqual(["Coordination", "Rythme"]);
+  });
+
+  it("diapo déposée dans une Bible : chapitre et type de cette Bible", () => {
+    const draft: SlideDraft = { title: "Le flamant rose", category: "Passe", exerciseType: "jeu-reduit", sessionPlace: "forme-jouee", level: null, ageGroups: [], objective: "Tenir sur un pied 10 secondes", dimensions: null, instructions: null, coachingPoints: null, variantEasier: null, variantHarder: null, variants: null, progression: null, material: null, durationMinutes: null, minPlayers: null, maxPlayers: null };
+    expect(draftForBible(draft, "psychomotricite")).toMatchObject({ category: "Équilibre", exerciseType: "psychomotricite", sessionPlace: "jeu-entree" });
+    expect(draftForBible(draft, "ball-mastery")).toMatchObject({ category: "Ball mastery", exerciseType: "ball-mastery" });
+    expect(draftForBible(draft, "valkyria")).toBe(draft);
+  });
+
+  it("devine le chapitre de psychomotricité d'après le texte", () => {
+    expect(guessPsychomotorCategory("Frapper des mains au rythme de la musique")).toBe("Rythme");
+    expect(guessPsychomotorCategory("Au signal, réagir et partir le plus vite possible")).toBe("Agilité et vitesse de réaction");
+    expect(guessPsychomotorCategory("Les yeux fermés, reconnaître le son du sifflet")).toBe("Perception (vue, ouïe, toucher)");
+    expect(guessPsychomotorCategory("Un exercice")).toBe("Coordination");
   });
 });

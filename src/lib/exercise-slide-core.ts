@@ -3,7 +3,7 @@
  *  Règles pures, testées (exercise-slide-core.test.ts) : lecture du texte de la diapo (sans IA) et nettoyage de la
  *  réponse de Claude quand la clé ANTHROPIC_API_KEY est en place (exercise-slide-reader.ts). */
 
-import { DEFAULT_PLACE, EXERCISE_CATEGORIES, EXERCISE_LEVELS, EXERCISE_TYPES, AGE_GROUPS, type ExerciseType } from "@/lib/exercise-bank";
+import { DEFAULT_PLACE, EXERCISE_CATEGORIES, EXERCISE_LEVELS, EXERCISE_TYPES, AGE_GROUPS, guessPsychomotorCategory, type BibleKey, type ExerciseType } from "@/lib/exercise-bank";
 
 export interface SlideDraft {
   title: string;
@@ -245,4 +245,15 @@ export function findDuplicateExercise<T extends { id: string; title: string; ima
     (title && title !== key("Nouvel exercice (diapo)") ? existing.find((e) => key(e.title) === title) : undefined) ??
     null
   );
+}
+
+/** Diapo déposée depuis une Bible (JP, 26 nov. 2026) : la psychomotricité prend ses propres chapitres (devinés d'après
+ *  le texte, corrigeables d'un clic) et le type « Psychomotricité » ; le ball mastery va dans « Ball mastery ». */
+export function draftForBible(draft: SlideDraft, bible: BibleKey, text = ""): SlideDraft {
+  if (bible === "psychomotricite") {
+    const all = [draft.title, draft.objective, draft.instructions, draft.coachingPoints, text].filter(Boolean).join("\n");
+    return { ...draft, category: guessPsychomotorCategory(all), exerciseType: "psychomotricite", sessionPlace: "jeu-entree" };
+  }
+  if (bible === "ball-mastery") return { ...draft, category: "Ball mastery", exerciseType: "ball-mastery", sessionPlace: "ball-mastery" };
+  return draft;
 }
