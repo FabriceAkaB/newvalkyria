@@ -478,6 +478,32 @@ export class McsSession {
     if (res.status >= 400) throw new McsRobotError(`Annulation refusée par MonClubSportif (${res.status}).`);
   }
 
+  /** Annule un match ou une activité avec le vrai bouton « Annuler » de MonClubSportif (l'événement reste, marqué
+   *  annulé, avec la raison), sans « Notifier les membres de l'équipe » (JP : jamais de notification). */
+  async cancelActivity(team: number, season: number, kind: "games" | "events", id: number, reason: string): Promise<void> {
+    const path = `/team/${team}/seasons/${season}/calendar/${kind}/${id}/cancel`;
+    const html = await this.page(path);
+    const fields = formFields(html, path).filter(([k]) => k !== "send_by_email" && k !== "button");
+    if (!fields.some(([k]) => k === MCS_FIELDS.csrf)) throw new McsRobotError("Formulaire d'annulation illisible (balises à revoir).");
+    const f = new URLSearchParams();
+    for (const [k, v] of fields) if (!/\[canceled_reason\]$/.test(k)) f.append(k, v);
+    f.set(kind === "games" ? "game[canceled_reason]" : "happening[canceled_reason]", reason);
+    const res = await this.request(path, { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Annulation refusée par MonClubSportif (${res.status}).`);
+  }
+
+  /** Supprime un match ou une activité (bouton « Supprimer » de MonClubSportif), sans « Notifier les membres de
+   *  l'équipe ». Seulement à la demande de JP (JP, 27 nov. 2026 : événements lointains, on supprime sans alerter). */
+  async deleteActivity(team: number, season: number, kind: "games" | "events", id: number): Promise<void> {
+    const path = `/team/${team}/seasons/${season}/calendar/${kind}/${id}`;
+    const html = await this.page(path);
+    const token = html.match(/<meta[^>]+name="csrf-token"[^>]+content="([^"]+)"/)?.[1] ?? html.match(/content="([^"]+)"[^>]+name="csrf-token"/)?.[1];
+    if (!token) throw new McsRobotError("Jeton de sécurité introuvable (balises à revoir).");
+    const f = new URLSearchParams({ _method: "delete", [MCS_FIELDS.csrf]: token });
+    const res = await this.request(path, { method: "POST", body: f });
+    if (res.status >= 400) throw new McsRobotError(`Suppression refusée par MonClubSportif (${res.status}).`);
+  }
+
   /** Activités où ce membre n'est pas encore assigné. */
   async missingAssignments(team: number, season: number, member: number): Promise<string[]> {
     return parseMemberAssignments(await this.page(MCS_PATHS.memberAssignments(team, season, member))).missing;
