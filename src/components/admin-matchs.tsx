@@ -7,6 +7,7 @@ import { effectiveCategories, restrictionLabel, totalsFor, type SlotGender } fro
 import { formatMoney } from "@/lib/private-programs";
 import type { MatchBooking, MatchSlot, MatchSlotRequest, MatchTeamProfile } from "@/lib/match-slots-repo";
 import { NV_OPPONENT_PRESETS, placeName } from "@/lib/match-slots-core";
+import { gameLabel, type McsGame } from "@/lib/match-opponents";
 import type { MatchLinks } from "@/lib/match-links";
 
 type Slot = MatchSlot & { available: boolean };
@@ -87,7 +88,7 @@ function payload(d: Draft, only?: Set<keyof Draft>): Record<string, unknown> {
 
 const EMPTY_BULK: Draft = { format: "", opponent: "", categories: [], allowRequests: true, preferred: "", restrictionNote: "", notes: "", deposit: "", balance: "", location: "", field: "" };
 
-export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; bookings: Booking[]; profiles: MatchTeamProfile[]; requests: (MatchSlotRequest & { slot: MatchSlot; profile: MatchTeamProfile })[]; links: Record<string, MatchLinks> }; origin: string }) {
+export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; bookings: Booking[]; profiles: MatchTeamProfile[]; requests: (MatchSlotRequest & { slot: MatchSlot; profile: MatchTeamProfile })[]; links: Record<string, MatchLinks>; away?: McsGame[] }; origin: string }) {
   const [data, setData] = useState(initial);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -413,6 +414,34 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
             </div>
           </div>
 
+          {/* ── Matchs à l'extérieur (JP, 27 nov. 2026) : dans MonClubSportif, mais sur aucune de nos plages ── */}
+          <div style={card}>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>Matchs à l&apos;extérieur ({(data.away ?? []).length})</p>
+            <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: "0 0 0.6rem" }}>Les matchs de nos équipes ajoutés dans MonClubSportif qui ne sont sur aucune de nos plages : nous jouons chez l&apos;adversaire (ou le match a été ajouté directement dans MonClubSportif). Rien à vendre ici.</p>
+            {(data.away ?? []).length === 0 ? (
+              <p className="admin-empty-text">Aucun match à l&apos;extérieur à venir.</p>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "640px" }}>
+                  <thead><tr>{["Date", "Notre équipe", "Match", "Lieu"].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
+                  <tbody>
+                    {(data.away ?? []).map((g, i) => (
+                      <tr key={`${g.team}-${g.date}-${g.start}-${i}`}>
+                        <td style={cell}>
+                          {new Date(g.date + "T12:00:00").toLocaleDateString("fr-CA", { weekday: "short", day: "numeric", month: "short" })}
+                          <br />{g.start ?? "?"}{g.end ? ` – ${g.end}` : ""}
+                        </td>
+                        <td style={cell}><strong style={{ color: "var(--adm-text)" }}>{g.team}</strong></td>
+                        <td style={cell}>{gameLabel(g.title)}</td>
+                        <td style={cell}>{g.location ?? <em style={{ color: "var(--adm-text-3)" }}>à préciser</em>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {/* ── Plages ── */}
           <div style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.7rem" }}>
@@ -480,7 +509,7 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                           <td style={cell}>{restr ?? <span style={{ color: "var(--adm-text-3)" }}>Aucune restriction</span>}{s.preferred_note ? <><br /><span style={{ color: "var(--adm-good)" }}>{s.preferred_note}</span></> : null}</td>
                           <td style={cell}>Acompte {formatMoney(s.price_cents)}<br />Solde {formatMoney(s.balance_due_cents)}</td>
                           <td style={cell}>
-                            {b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{logoImg(logoOf(b.org_key), 22)}{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : <span style={{ color: "var(--adm-good)" }}>Libre</span>}
+                            {b ? <span style={{ color: STATUS[b.status][1], fontWeight: 700 }}>{logoImg(logoOf(b.org_key), 22)}{b.status === "paid" ? "Vendue" : "En paiement"} — {b.org_name}</span> : s.on_hold ? <span style={{ color: "var(--adm-warn)", fontWeight: 700 }}>En attente{s.hold_note ? <span style={{ fontWeight: 400, color: "var(--adm-text-2)" }}> · {s.hold_note}</span> : null}</span> : <span style={{ color: "var(--adm-good)" }}>Libre</span>}
                             {data.links?.[s.id] && (
                               <span style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", marginTop: "0.35rem" }}>
                                 {!b && <button className="admin-btn-ghost" style={{ fontSize: "0.62rem" }} title={s.active ? "La plage est déjà choisie : le club remplit son équipe et paie, même hors de la catégorie prévue." : "Plage masquée de la page publique : seul le club qui reçoit ce lien peut la payer."} onClick={() => copy(data.links[s.id].pay, "Lien de paiement copié : envoyez-le au club qui veut ce match.")}>🔗 Lien de paiement</button>}
@@ -492,6 +521,22 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
                           <td style={cell}>
                             <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => { if (open) { setEditing(null); setDraft(null); } else { setEditing(s.id); setDraft(draftOf(s)); } }}>{open ? "Fermer" : "Modifier"}</button>{" "}
                             <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => call({ action: "slot_update", slotId: s.id, active: !s.active }, s.active ? "Plage masquée." : "Plage affichée.")}>{s.active ? "Masquer" : "Afficher"}</button>{" "}
+                            {!b && (
+                              <button
+                                className="admin-btn-ghost"
+                                style={{ fontSize: "0.66rem", color: s.on_hold ? "var(--adm-warn)" : undefined }}
+                                disabled={busy}
+                                title="En attente : la plage est retenue (discussion avec un club) et n'est plus offerte sur la page des clubs ; le lien de paiement direct marche encore."
+                                onClick={() => {
+                                  if (s.on_hold) return void call({ action: "slot_update", slotId: s.id, onHold: false }, "Plage remise en vente.");
+                                  const note = window.prompt("Pourquoi en attente ? (ex. : en discussion avec FC Laval) — facultatif", "");
+                                  if (note === null) return;
+                                  void call({ action: "slot_update", slotId: s.id, onHold: true, holdNote: note }, "Plage mise en attente.");
+                                }}
+                              >
+                                {s.on_hold ? "Remettre en vente" : "Mettre en attente"}
+                              </button>
+                            )}{" "}
                             {s.double_group && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem" }} disabled={busy} onClick={() => confirm("Dissocier cette double cédule ? Les deux plages redeviennent indépendantes.") && call({ action: "slot_unlink_double", slotId: s.id }, "Double cédule dissociée.")}>Dissocier</button>}{" "}
                             {!b && <button className="admin-btn-ghost" style={{ fontSize: "0.66rem", color: "var(--adm-bad)" }} disabled={busy} onClick={() => confirm("Supprimer cette plage ?") && call({ action: "slot_delete", slotId: s.id }, "Plage supprimée.")}>Supprimer</button>}
                           </td>

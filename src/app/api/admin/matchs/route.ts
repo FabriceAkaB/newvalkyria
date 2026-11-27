@@ -9,6 +9,7 @@ import { jsonError } from "@/lib/http";
 import { slotLinks } from "@/lib/match-links";
 import { areConsecutive, MATCH_FORMAT } from "@/lib/match-slots-core";
 import { cancelBookings, decideSlotRequest, getAllBookings, getAllSlotRequests, getAllTeamProfiles, getBookingsByIds, getSlotsWithAvailability, toEmailSlots } from "@/lib/match-slots-repo";
+import { getAwayMatches } from "@/lib/match-opponents-repo";
 import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -18,8 +19,8 @@ function db() {
 
 export async function GET() {
   if (!(await isAdminRequest())) return jsonError("Non autorisé", 401);
-  const [slots, bookings, profiles, requests] = await Promise.all([getSlotsWithAvailability({ includeInactive: true, includePast: true }), getAllBookings(), getAllTeamProfiles(), getAllSlotRequests()]);
-  return NextResponse.json({ slots, bookings, profiles, requests, links: slotLinks(slots, bookings) });
+  const [slots, bookings, profiles, requests, away] = await Promise.all([getSlotsWithAvailability({ includeInactive: true, includePast: true }), getAllBookings(), getAllTeamProfiles(), getAllSlotRequests(), getAwayMatches().catch(() => [])]);
+  return NextResponse.json({ slots, bookings, profiles, requests, away, links: slotLinks(slots, bookings) });
 }
 
 /** Convertit les champs d'édition d'une plage (corps de requête) en colonnes — seulement ceux fournis. */
@@ -33,6 +34,10 @@ function slotPatch(body: Record<string, any>): Record<string, unknown> {
   };
   const cents = (v: unknown) => Math.max(0, Math.round(Number(v) || 0));
   if (typeof body.active === "boolean") patch.active = body.active;
+  if (typeof body.onHold === "boolean") {
+    patch.on_hold = body.onHold;
+    patch.hold_note = body.onHold ? text(body.holdNote) : null;
+  }
   if (body.priceCents !== undefined) patch.price_cents = cents(body.priceCents);
   if (body.balanceDueCents !== undefined) patch.balance_due_cents = cents(body.balanceDueCents);
   if (body.format !== undefined) patch.match_format = text(body.format) ?? MATCH_FORMAT;

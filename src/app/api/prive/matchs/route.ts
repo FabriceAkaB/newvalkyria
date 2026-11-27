@@ -32,10 +32,12 @@ export async function GET(request: Request) {
   // Le lien direct marche aussi pour une plage pas encore en vente (masquée de la page) : elle n'apparaît qu'à ce club.
   const all = await getSlotsWithAvailability({ includeInactive: Boolean(directId) });
   // Une plage réservée (ou une double cédule dont une moitié l'est) disparaît de la page publique.
-  const blockedGroups = new Set(all.filter((s) => !s.available && s.double_group).map((s) => s.double_group));
   const directSlot = directId ? all.find((s) => s.id === directId) : null;
   const isDirect = (s: (typeof all)[number]) => Boolean(directSlot && (s.id === directSlot.id || (directSlot.double_group && s.double_group === directSlot.double_group)));
-  const slots = all.filter((s) => (s.active || isDirect(s)) && s.available && !(s.double_group && blockedGroups.has(s.double_group)));
+  // Une plage « en attente » reste payable par le club qui a reçu son lien direct.
+  const open = (s: (typeof all)[number]) => s.available || (isDirect(s) && s.openForDirect);
+  const blockedGroups = new Set(all.filter((s) => !open(s) && s.double_group).map((s) => s.double_group));
+  const slots = all.filter((s) => (s.active || isDirect(s)) && open(s) && !(s.double_group && blockedGroups.has(s.double_group)));
   return NextResponse.json({
     maxPerTeam: MAX_SLOTS_PER_TEAM,
     /** Lien direct : la plage visée, ou « taken » si elle n'est plus libre. */
@@ -68,7 +70,7 @@ export async function GET(request: Request) {
       request: isDirect(s) ? "approved" : (requests.find((r) => r.slot_id === s.id)?.status ?? null),
       direct: isDirect(s),
       notes: s.notes,
-      available: s.available
+      available: open(s)
     }))
   });
 }

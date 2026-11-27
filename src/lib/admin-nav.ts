@@ -300,6 +300,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
         description: "Plages de match offertes aux autres clubs, arbitres qui réservent leurs matchs, paie des arbitres, bilan financier de chaque match, et matchs et pratiques filmés (Veo) rangés pour les familles et les éducateurs.",
         tabs: [
           { href: "/admin/matchs", label: "Vente de matchs" },
+          { href: "/admin/matchs/adversaires", label: "Adversaires" },
           { href: "/admin/arbitres", label: "Arbitres et bilan", adminOnly: true },
           { href: "/admin/matchs/videos", label: "Matchs et pratiques filmés", adminOnly: true }
         ]

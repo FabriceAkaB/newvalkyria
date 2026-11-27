@@ -38,6 +38,10 @@ export interface MatchSlot {
   double_group: string | null;
   active: boolean;
   notes: string | null;
+  /** En attente (JP, 27 nov. 2026) : retenue (discussion avec un club), plus offerte sur la page des clubs ; seul le
+   *  lien de paiement direct la vend encore. */
+  on_hold?: boolean;
+  hold_note?: string | null;
 }
 
 export interface MatchBooking {
@@ -179,7 +183,7 @@ async function expireStale(): Promise<void> {
 
 /** Plages de match avec leur disponibilité. Une plage où l'équipe Valkyria du même âge a déjà un événement dans
  *  MonClubSportif n'est pas disponible (`mcsConflict` dit pourquoi) : on ne vend jamais un match impossible à jouer. */
-export async function getSlotsWithAvailability(options: { includeInactive?: boolean; includePast?: boolean } = {}): Promise<(MatchSlot & { available: boolean; mcsConflict: string | null })[]> {
+export async function getSlotsWithAvailability(options: { includeInactive?: boolean; includePast?: boolean } = {}): Promise<(MatchSlot & { available: boolean; mcsConflict: string | null; openForDirect: boolean })[]> {
   await expireStale();
   const supabase = db();
   const today = new Date().toISOString().slice(0, 10);
@@ -195,7 +199,8 @@ export async function getSlotsWithAvailability(options: { includeInactive?: bool
   return ((slots ?? []) as MatchSlot[]).map((s) => {
     const c = conflicts.get(s.id);
     const mcsConflict = c ? `${c.team} a déjà « ${c.event.title} » (${c.event.start ?? "toute la journée"}) dans MonClubSportif` : null;
-    return { ...s, available: !takenSet.has(s.id) && !c, mcsConflict };
+    // `openForDirect` : libre pour le lien de paiement direct, même « en attente ».
+    return { ...s, available: !takenSet.has(s.id) && !c && !s.on_hold, openForDirect: !takenSet.has(s.id) && !c, mcsConflict };
   });
 }
 
@@ -288,7 +293,7 @@ export async function reserveSlots(input: ReserveInput): Promise<{ bookings: Mat
   if ((slots ?? []).length !== slotIds.length) throw new MatchConflictError("Une des plages n'existe plus.");
   for (const s of slots as MatchSlot[]) {
     // Une plage masquée ne se paie que par le lien direct de l'académie.
-    if ((!s.active && !directIds.has(s.id)) || s.slot_date < today) throw new MatchConflictError("Une des plages n'est plus offerte.");
+    if (((!s.active || s.on_hold) && !directIds.has(s.id)) || s.slot_date < today) throw new MatchConflictError("Une des plages n'est plus offerte.");
     const elig = checkEligibility(s, { gender: input.teamGender, birthYear: input.teamBirthYear, birthYearTo: input.teamBirthYearTo ?? input.teamBirthYear, level: profile.team_level });
     // Une équipe non admissible d'office peut réserver si sa demande pour cette plage a été approuvée.
     if (!elig.ok && approvedSlotIds.has(s.id)) continue;
