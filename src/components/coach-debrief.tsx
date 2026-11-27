@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { DictateButton } from "@/components/coach-group-evaluation";
 import { DEBRIEF_POINT_MIN_WORDS, countWords, debriefPoints, isDebriefComplete } from "@/lib/coach-report";
 
 /** Retour sur la pratique (portail) : ce qu'on a bien fait, ce qu'on a moins bien fait, ce qu'on change la prochaine
@@ -74,6 +75,16 @@ export function CoachDebriefCard({ activityId, onStatus, required = true }: { ac
   };
   const others = (data?.debriefs ?? []).filter((d) => d.coachId !== data?.coachId);
   const okPoints = debriefPoints(payload.wentWell).length + debriefPoints(payload.toImprove).length;
+  // La dictée ajoute au texte déjà là (le micro envoie une phrase à la fois).
+  const appendPoint = (key: PointKey, i: 0 | 1, t: string) => {
+    setValues((prev) => {
+      const pair: [string, string] = [...prev[key]] as [string, string];
+      const cur = pair[i].trimEnd();
+      pair[i] = cur ? `${cur} ${t}` : `${t.charAt(0).toUpperCase()}${t.slice(1)}`;
+      return { ...prev, [key]: pair };
+    });
+    setState("idle");
+  };
   const setPoint = (key: PointKey, i: 0 | 1, v: string) => {
     setValues((prev) => {
       const pair: [string, string] = [...prev[key]] as [string, string];
@@ -99,7 +110,12 @@ export function CoachDebriefCard({ activityId, onStatus, required = true }: { ac
               return (
                 <label key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                   <span aria-hidden style={{ minWidth: 18, paddingTop: 10, fontWeight: 700, color: ok ? "var(--adm-good)" : "var(--adm-text-2)" }}>{ok ? "✓" : `${i + 1}.`}</span>
-                  <textarea className="admin-input" rows={2} style={{ flex: 1 }} value={v} placeholder={f.placeholders[i]} aria-label={`${f.label}, point ${i + 1}`} onChange={(e) => setPoint(f.key, i, e.target.value)} />
+                  <span style={{ flex: 1, display: "grid", gap: 4 }}>
+                    <textarea className="admin-input" rows={2} value={v} placeholder={f.placeholders[i]} aria-label={`${f.label}, point ${i + 1}`} onChange={(e) => setPoint(f.key, i, e.target.value)} />
+                    <span>
+                      <DictateButton label="Dicter" onText={(t) => appendPoint(f.key, i, t)} />
+                    </span>
+                  </span>
                 </label>
               );
             })}

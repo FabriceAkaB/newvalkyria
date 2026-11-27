@@ -8,6 +8,7 @@ import { EntityDocuments } from "@/components/admin-entity-documents";
 import { CoachPracticeDeck } from "@/components/coach-practice-deck";
 import { CoachChampionsCard } from "@/components/coach-champions-card";
 import { CoachTeamsCard } from "@/components/coach-teams-card";
+import { CoachGroupEvaluation, DictateButton } from "@/components/coach-group-evaluation";
 import { PracticeTournament } from "@/components/practice-tournament";
 import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrief";
 import { CoachIncidentCard } from "@/components/coach-incident-card";
@@ -720,6 +721,9 @@ function QuickEvaluation({
               }}
               onDrop={(e) => e.preventDefault()}
             />
+            <div style={{ marginTop: 6 }}>
+              <DictateButton onText={(t) => setNote((n) => (n.trim() ? `${n.trimEnd()}${/[.!?]$/.test(n.trim()) ? "" : "."} ${t.charAt(0).toUpperCase()}${t.slice(1)}` : `${t.charAt(0).toUpperCase()}${t.slice(1)}`))} />
+            </div>
           </div>
           {error && <p className="coach-error" role="alert">{error}</p>}
           <button className="coach-primary" disabled={!ready || saving} onClick={save}>
@@ -910,6 +914,23 @@ export function CoachActiviteDetail({
       alive = false;
     };
   }, [activity.id]);
+  // Façon d'évaluer, gardée sur l'appareil : tout le groupe d'un coup (par défaut) ou fille par fille.
+  const [evalMode, setEvalMode] = useState<"groupe" | "une">("groupe");
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("nv-eval-mode") === "une") setEvalMode("une");
+    } catch {
+      /* rien */
+    }
+  }, []);
+  const chooseEvalMode = (m: "groupe" | "une") => {
+    setEvalMode(m);
+    try {
+      localStorage.setItem("nv-eval-mode", m);
+    } catch {
+      /* rien */
+    }
+  };
   const [openId, setOpenId] = useState<string | null>(() => {
     const done = (id: string) => initialEvaluations.some((e) => e.registration_id === id && isQuickEvaluationComplete(e, String(activity.activity_date).slice(0, 10)));
     return roster.find((p) => PARTICIPATED.includes(attendance[p.registrationId] ?? "") && !done(p.registrationId))?.registrationId ?? null;
@@ -1127,13 +1148,28 @@ export function CoachActiviteDetail({
     <section style={{ marginBottom: 16 }}>
       <h2 className="coach-h2">Évaluation rapide · {evaluated}/{participants.length}</h2>
       <p className="coach-muted" style={{ margin: "-6px 0 12px" }}>
-        Moins de 2 minutes par fille : 3 notes de 1 à 5{bmMoves.length ? ", chaque geste du ball mastery de 1 à 10" : ""}, et une phrase sur ce que tu as vu (écrite pendant la pratique ou en regardant la vidéo).
+        3 notes de 1 à 5{bmMoves.length ? ", chaque geste du ball mastery de 1 à 10" : ""}, et une note sur ce que tu as vu (dictée au micro, pendant la pratique ou en regardant la vidéo).
         {observed.size ? ` Tes ${observed.size} joueuses à observer sont en premier.` : ""}
       </p>
       {bmSkipped ? (
         <p className="coach-muted" style={{ margin: "0 0 12px" }}>Ball mastery pas fait ce jour-là (« Exercices prévus : faits ? ») : pas de gestes à noter.</p>
       ) : null}
-      {[...participants].sort((a, b) => Number(!observed.has(a.registrationId)) - Number(!observed.has(b.registrationId))).map((p) => (
+      {/* Rapport plus fluide (JP, 27 nov. 2026) : tout le groupe d'un coup, un critère à la fois, ou fille par fille. */}
+      <div className="coach-seg" role="tablist" aria-label="Façon d'évaluer" style={{ marginBottom: 12 }}>
+        <button type="button" role="tab" aria-selected={evalMode === "groupe"} data-active={String(evalMode === "groupe")} onClick={() => chooseEvalMode("groupe")}>Tout le groupe d&apos;un coup</button>
+        <button type="button" role="tab" aria-selected={evalMode === "une"} data-active={String(evalMode === "une")} onClick={() => chooseEvalMode("une")}>Fille par fille</button>
+      </div>
+      {evalMode === "groupe" ? (
+        <CoachGroupEvaluation
+          activityId={activity.id}
+          activityDate={String(activity.activity_date).slice(0, 10)}
+          players={[...participants].sort((a, b) => Number(!observed.has(a.registrationId)) - Number(!observed.has(b.registrationId)) || a.firstName.localeCompare(b.firstName, "fr"))}
+          mine={mine}
+          gestureChoices={bmMoves}
+          bmSkipped={bmSkipped}
+          onSaved={(ev) => setMine((prev) => ({ ...prev, [ev.registration_id]: ev }))}
+        />
+      ) : [...participants].sort((a, b) => Number(!observed.has(a.registrationId)) - Number(!observed.has(b.registrationId))).map((p) => (
         <QuickEvaluation
           key={p.registrationId}
           activityId={activity.id}
