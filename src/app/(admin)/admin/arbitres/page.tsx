@@ -1,6 +1,6 @@
 import { AdminTopbar } from "@/components/admin-topbar";
 import { Pill } from "@/components/mandalart/ui";
-import { ActionButton, AddRefereeForm, CopyLink, CostsForm, PaidButton } from "@/components/referees-admin";
+import { ActionButton, AddRefereeForm, CopyLink, CostsForm, InternalMatchForm, PaidButton } from "@/components/referees-admin";
 import { requireAdmin } from "@/lib/admin-auth";
 import { env } from "@/lib/env";
 import { dateLong, listMatches, listReferees, matchFinance, refereeLink } from "@/lib/referees-repo";
@@ -27,6 +27,11 @@ export default async function RefereesPage() {
   const pending = referees.filter((r) => r.status === "en_attente");
   const sold = all.filter((m) => m.bookingStatus === "paid");
   const fin = sold.map((m) => ({ m, f: matchFinance(m) }));
+  // Matchs à l'interne (JP, 27 nov. 2026) : joués entre nos équipes, 0 $ encaissé, le terrain et les éducateurs restent des coûts.
+  const internal = all.filter((m) => m.internalTeams).map((m) => ({ m, f: matchFinance(m) }));
+  const internalCost = internal.reduce((t, { f }) => t + f.netCents, 0);
+  // Plages passées sans adversaire payé et pas encore marquées : à l'interne, ou pas jouées ?
+  const pastUnsold = played.filter((m) => m.bookingStatus !== "paid" && !m.internalTeams);
   const totals = fin.reduce(
     (t, { f }) => ({ rev: t.rev + f.revenueCents, field: t.field + f.fieldCents, ref: t.ref + f.refereeCents, coach: t.coach + f.coachCents, before: t.before + f.beforeCoachesCents, net: t.net + f.netCents }),
     { rev: 0, field: 0, ref: 0, coach: 0, before: 0, net: 0 }
@@ -38,7 +43,7 @@ export default async function RefereesPage() {
       <div className="admin-content">
         <div className="admin-section mda">
           <header>
-            <p className="mda-eyebrow">Matchs à Terrebonne · {soldUpcoming.length} match{soldUpcoming.length > 1 ? "s" : ""} vendu{soldUpcoming.length > 1 ? "s" : ""} à venir · {upcoming.length - soldUpcoming.length} plage{upcoming.length - soldUpcoming.length > 1 ? "s" : ""} encore à vendre</p>
+            <p className="mda-eyebrow">Matchs à Terrebonne · {soldUpcoming.length} match{soldUpcoming.length > 1 ? "s" : ""} vendu{soldUpcoming.length > 1 ? "s" : ""} à venir · {upcoming.filter((m) => m.bookingStatus !== "paid" && !m.internalTeams).length} plage{upcoming.filter((m) => m.bookingStatus !== "paid" && !m.internalTeams).length > 1 ? "s" : ""} encore à vendre{internal.length ? ` · ${internal.length} à l'interne` : ""}</p>
             <h1 className="mda-h1">{open + missing > 0 ? `${open + missing} poste${open + missing > 1 ? "s" : ""} d'arbitre à combler` : "Tous les matchs ont leurs arbitres"}</h1>
             <p className="mda-lead">Les arbitres réservent eux-mêmes leurs matchs avec leur lien personnel. Chaque réservation ajoute la paie de l'arbitre aux dépenses à payer (Revenus) ; vous la marquez payée après le virement.</p>
           </header>
@@ -128,7 +133,7 @@ export default async function RefereesPage() {
                         <div className="mda-task-meta">
                           <span>{m.field ?? m.location}</span>
                           <span>{m.ourTeam}</span>
-                          {m.opponent ? <span style={{ color: m.bookingStatus === "paid" ? "var(--adm-good)" : undefined }}>contre {m.opponent}{m.bookingStatus === "paid" ? ` · payé ${money(m.revenueCents)}${m.balanceDueCents ? ` + ${money(m.balanceDueCents)} à encaisser` : ""}` : ""}</span> : <span>Plage pas encore vendue</span>}
+                          {m.internalTeams ? <span style={{ color: "var(--adm-info)" }}>À l&apos;interne : {m.internalTeams} · 0 $</span> : m.opponent ? <span style={{ color: m.bookingStatus === "paid" ? "var(--adm-good)" : undefined }}>contre {m.opponent}{m.bookingStatus === "paid" ? ` · payé ${money(m.revenueCents)}${m.balanceDueCents ? ` + ${money(m.balanceDueCents)} à encaisser` : ""}` : ""}</span> : <span>Plage pas encore vendue</span>}
                         </div>
                       </div>
                       <span className="mda-tnum" style={{ fontSize: "0.85rem", color: f.netCents >= 0 ? "var(--adm-good)" : "var(--adm-text-3)" }} title="Revenu − terrain − arbitres − éducateurs">
@@ -150,6 +155,7 @@ export default async function RefereesPage() {
                         )
                       )}
                       {empty > 0 && m.bookingStatus === "paid" ? <ActionButton body={{ action: "open-match", slotId: m.id }} label={`Ouvrir ${empty} poste${empty > 1 ? "s" : ""}`} /> : null}
+                      {m.bookingStatus !== "paid" ? <InternalMatchForm slotId={m.id} current={m.internalTeams ?? null} ourTeam={m.ourTeam} /> : null}
                       {m.bookingStatus !== "paid" && m.assignments.length === 0 ? <span className="mda-muted" style={{ fontSize: "0.8rem" }}>Les postes s'ouvrent quand la plage est vendue.</span> : null}
                     </div>
                     <details style={{ marginTop: 8 }}>
@@ -162,6 +168,67 @@ export default async function RefereesPage() {
                 );
               })}
             </ul>
+          </section>
+
+          <section className="mda-card-flush">
+            <div className="mda-card-head">
+              <div>
+                <h2 className="mda-h2">Matchs à l&apos;interne · {internal.length} · 0 $ encaissé</h2>
+                <p className="mda-sub" style={{ margin: 0 }}>
+                  Les plages jouées entre nos équipes (aucun club n&apos;a payé). Le terrain, les arbitres réservés et les éducateurs restent des coûts{internal.length ? ` : ${signed(internalCost)} au total` : ""}.
+                </p>
+              </div>
+            </div>
+            {internal.length === 0 ? (
+              <p style={{ padding: "16px 20px", margin: 0, color: "var(--adm-text-3)" }}>Aucun match à l&apos;interne. Sur une plage pas vendue, touchez « Joué à l&apos;interne (0 $) ».</p>
+            ) : (
+              <div className="mda-scroll">
+                <table className="mda-table" style={{ minWidth: 720 }}>
+                  <thead>
+                    <tr>
+                      <th>Match</th>
+                      <th>Qui contre qui</th>
+                      <th className="r">Encaissé</th>
+                      <th className="r">Terrain</th>
+                      <th className="r">Arbitres</th>
+                      <th className="r">Éducateurs</th>
+                      <th className="r">Coût</th>
+                      <th aria-label="Modifier" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {internal.map(({ m, f }) => (
+                      <tr key={m.id}>
+                        <td>
+                          {dateLong(m.date)} · {m.start.replace(":", " h ")}
+                          <span className="mda-muted" style={{ display: "block", fontSize: "0.78rem" }}>{m.field ?? m.location}</span>
+                        </td>
+                        <td style={{ fontWeight: 600 }}>{m.internalTeams}</td>
+                        <td className="r">0 $</td>
+                        <td className="r">−{money(f.fieldCents)}</td>
+                        <td className="r">−{money(f.refereeCents)}</td>
+                        <td className="r">−{money(f.coachCents)}</td>
+                        <td className="r" style={{ fontWeight: 700, color: f.netCents >= 0 ? "var(--adm-good)" : "var(--adm-bad)" }}>{signed(f.netCents)}</td>
+                        <td><InternalMatchForm slotId={m.id} current={m.internalTeams ?? null} ourTeam={m.ourTeam} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {pastUnsold.length ? (
+              <div style={{ padding: "16px 20px", borderTop: "1px solid var(--adm-line)", display: "grid", gap: 10 }}>
+                <p className="mda-label" style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)" }}>Plages passées sans club payant · {pastUnsold.length} : jouées à l&apos;interne ?</p>
+                {pastUnsold.map((m) => (
+                  <div key={m.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+                    <span>
+                      {dateLong(m.date)} · {m.start.replace(":", " h ")} <span className="mda-muted">· {m.ourTeam}</span>
+                    </span>
+                    <InternalMatchForm slotId={m.id} current={null} ourTeam={m.ourTeam} />
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </section>
 
           <section className="mda-card-flush">

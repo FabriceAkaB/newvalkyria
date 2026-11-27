@@ -80,6 +80,8 @@ export interface MatchRow {
   refereeFeeCents: number;
   fieldCostCents: number;
   coachCostCents: number;
+  /** Match joué à l'interne, entre nos équipes (ex. « 2015 AV c. 2015 INT ») : 0 $ encaissé. Null = pas à l'interne. */
+  internalTeams?: string | null;
   assignments: (Assignment & { referee: Pick<Referee, "id" | "first_name" | "last_name" | "email" | "phone" | "interac_email"> | null })[];
 }
 
@@ -127,7 +129,8 @@ export async function listMatches(opts: { from?: string; to?: string } = {}): Pr
   const { data: paidRows } = await db().from("match_slot_bookings").select("slot_id").eq("status", "paid");
   const paidIds = Array.from(new Set(((paidRows ?? []) as any[]).map((r) => r.slot_id))).filter((id) => /^[0-9a-f-]{36}$/i.test(id));
   let q = db().from("match_slots").select("*").order("slot_date").order("start_time");
-  q = paidIds.length ? q.or(`active.eq.true,id.in.(${paidIds.join(",")})`) : q.eq("active", true);
+  // … et les matchs joués à l'interne (entre nos équipes), même retirés de la vente.
+  q = paidIds.length ? q.or(`active.eq.true,internal_teams.not.is.null,id.in.(${paidIds.join(",")})`) : q.or("active.eq.true,internal_teams.not.is.null");
   if (opts.from) q = q.gte("slot_date", opts.from);
   if (opts.to) q = q.lte("slot_date", opts.to);
   const { data: slots, error } = await q;
@@ -165,6 +168,7 @@ export async function listMatches(opts: { from?: string; to?: string } = {}): Pr
       refereeFeeCents: s.referee_fee_cents ?? 5000,
       fieldCostCents: s.field_cost_cents ?? 18650,
       coachCostCents: s.coach_cost_cents ?? 4000,
+      internalTeams: s.internal_teams ?? null,
       assignments: (assigns ?? [])
         .filter((a: any) => a.match_slot_id === s.id)
         .map((a: any) => ({ ...a, referee: (refs ?? []).find((r: any) => r.id === a.referee_id) ?? null }))
@@ -176,10 +180,25 @@ export async function listMatches(opts: { from?: string; to?: string } = {}): Pr
  *  Arbitres : les postes réservés à leur prix, plus les postes encore à combler au prix du match. */
 export function matchFinance(m: MatchRow) {
   const reserved = m.assignments.filter((a) => a.status === "reserve");
-  const refereeCents = reserved.reduce((s, a) => s + a.fee_cents, 0) + Math.max(0, m.refereesNeeded - reserved.length) * m.refereeFeeCents;
+  // Match à l'interne : on ne compte que les arbitres réellement réservés (pas de poste ouvert d'office).
+  const refereeCents = reserved.reduce((s, a) => s + a.fee_cents, 0) + (m.internalTeams ? 0 : Math.max(0, m.refereesNeeded - reserved.length) * m.refereeFeeCents);
   const revenueCents = m.revenueCents + m.balanceDueCents;
   const before = revenueCents - m.fieldCostCents - refereeCents;
   return { revenueCents, balanceDueCents: m.balanceDueCents, fieldCents: m.fieldCostCents, refereeCents, coachCents: m.coachCostCents, beforeCoachesCents: before, netCents: before - m.coachCostCents };
+}
+
+/** Marque une plage comme jouée à l'interne (qui contre qui), ou enlève la marque (null). Une plage à venir marquée
+ *  à l'interne sort de la vente ; démarquée, elle y revient. Refusé si un club a déjà payé la plage. */
+export async function setInternalMatch(slotId: string, teams: string | null): Promise<void> {
+  const { data: paid } = await db().from("match_slot_bookings").select("id").eq("slot_id", slotId).eq("status", "paid").limit(1);
+  if (teams && (paid ?? []).length) throw new Error("Un club a déjà payé cette plage : ce n'est pas un match à l'interne.");
+  const { data: slot } = await db().from("match_slots").select("slot_date").eq("id", slotId).maybeSingle();
+  if (!slot) throw new Error("Plage introuvable.");
+  const future = String(slot.slot_date).slice(0, 10) >= today();
+  const patch: Record<string, unknown> = { internal_teams: teams ? teams.trim().slice(0, 120) : null, internal_marked_at: teams ? new Date().toISOString() : null };
+  if (future) patch.active = !teams;
+  const { error } = await db().from("match_slots").update(patch).eq("id", slotId);
+  if (error) throw error;
 }
 
 export async function updateMatchCosts(slotId: string, patch: { referees_needed?: number; referee_fee_cents?: number; field_cost_cents?: number; coach_cost_cents?: number }) {

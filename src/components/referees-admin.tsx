@@ -163,3 +163,56 @@ export function PaidButton({ assignmentId, name, amount }: { assignmentId: strin
     </button>
   );
 }
+
+/** Match à l'interne (JP, 27 nov. 2026) : la plage a été jouée entre nos équipes, 0 $ encaissé. */
+export function InternalMatchForm({ slotId, current, ourTeam }: { slotId: string; current: string | null; ourTeam: string | null }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [teams, setTeams] = useState(current ?? (ourTeam ? `${ourTeam.replace(/^New Valkyria\s*[—-]\s*/i, "")} c. ` : ""));
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const send = async (value: string | null) => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      await post({ action: "internal", slotId, teams: value });
+      setOpen(false);
+      router.refresh();
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (current && !open)
+    return (
+      <span style={{ display: "inline-flex", gap: 8, alignItems: "center", flexWrap: "wrap", fontSize: "0.8rem" }}>
+        <button type="button" className="admin-btn-ghost" disabled={busy} onClick={() => setOpen(true)}>Modifier</button>
+        <button type="button" className="admin-btn-ghost" disabled={busy} onClick={() => send(null)}>Pas à l&apos;interne</button>
+        {msg ? <span style={{ color: "var(--adm-bad)" }}>{msg}</span> : null}
+      </span>
+    );
+  if (!open)
+    return (
+      <button type="button" className="admin-btn-ghost" onClick={() => setOpen(true)} style={{ fontSize: "0.8rem" }}>
+        Joué à l&apos;interne (0 $)
+      </button>
+    );
+  return (
+    <form
+      style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end", fontSize: "0.8rem", color: "var(--adm-text-2)" }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (teams.trim()) send(teams.trim());
+      }}
+    >
+      <label style={{ display: "grid", gap: 2 }}>
+        Qui contre qui
+        <input className="admin-input" style={{ width: 240 }} value={teams} placeholder="Ex. 2015 AV c. 2015 INT" onChange={(e) => setTeams(e.target.value)} autoFocus />
+      </label>
+      <button className="admin-btn-primary" disabled={busy || !teams.trim()}>Enregistrer</button>
+      <button type="button" className="admin-btn-ghost" onClick={() => setOpen(false)}>Annuler</button>
+      {msg ? <span style={{ color: "var(--adm-bad)" }}>{msg}</span> : null}
+    </form>
+  );
+}

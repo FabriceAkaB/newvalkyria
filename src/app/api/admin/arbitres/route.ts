@@ -13,6 +13,7 @@ import {
   releaseAssignment,
   sendOpenMatchesEmail,
   sendWelcomeEmail,
+  setInternalMatch,
   updateMatchCosts,
   updateReferee
 } from "@/lib/referees-repo";
@@ -30,7 +31,8 @@ const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("release"), assignmentId: z.string().uuid() }),
   z.object({ action: z.literal("cancel"), assignmentId: z.string().uuid() }),
   z.object({ action: z.literal("paid"), assignmentId: z.string().uuid(), note: z.string().max(300).nullable() }),
-  z.object({ action: z.literal("send-list"), refereeIds: z.array(z.string().uuid()).optional() })
+  z.object({ action: z.literal("send-list"), refereeIds: z.array(z.string().uuid()).optional() }),
+  z.object({ action: z.literal("internal"), slotId: z.string().uuid(), teams: z.string().trim().max(120).nullable() })
 ]);
 
 /** Arbitres (admin seulement) : liste des arbitres, postes ouverts, coûts des matchs, paiements. */
@@ -74,9 +76,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       case "send-list":
         return NextResponse.json({ ok: true, ...(await sendOpenMatchesEmail(b.refereeIds)) });
+      case "internal":
+        await setInternalMatch(b.slotId, b.teams || null);
+        return NextResponse.json({ ok: true });
     }
   } catch (err) {
     if (err instanceof ZodError) return jsonError("Données invalides", 400);
+    if (err instanceof Error && /déjà payé|introuvable/.test(err.message)) return jsonError(err.message, 422);
     console.error("Referees POST failed", err);
     return jsonError(err instanceof Error ? err.message : "Erreur", 500);
   }
