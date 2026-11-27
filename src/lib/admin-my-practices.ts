@@ -1,5 +1,5 @@
 import { CLUB_ID } from "@/lib/club";
-import { getActivityReports, TEAM_ACCESS_DAYS } from "@/lib/coach-portal-repo";
+import { getActivityReports } from "@/lib/coach-portal-repo";
 import { isBoysActivity, reportMissing, REPORT_REQUIRED_TYPES } from "@/lib/coach-report";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -46,7 +46,8 @@ export async function getMyPracticesToReport(now: Date = new Date()): Promise<My
   const coachId = await getAdminCoachId();
   if (!coachId) return [];
   const today = isoDay(now);
-  const from = shiftDay(today, -TEAM_ACCESS_DAYS.before);
+  // Les rapports à faire : aujourd'hui et les 2 jours d'avant (l'accès aux pratiques, lui, est de 30 jours).
+  const from = shiftDay(today, -2);
   const { data, error } = await db()
     .from("coach_activities")
     .select("id, activity_date, start_time, end_time, title, category, location, activity_type, organization")

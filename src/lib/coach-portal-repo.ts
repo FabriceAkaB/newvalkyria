@@ -61,9 +61,9 @@ export async function getCoachActivityById(coachId: string, activityId: string):
 /* ── Pratiques du jour : accès de toute l'équipe ─────────────────── */
 
 /** Fenêtre où toute l'équipe d'éducateurs (et JP) voit une pratique de l'Académie, même sans y être assignée :
- *  de 2 jours avant (rapport des 24 heures) jusqu'à la fin de la semaine en cours (la suivante dès le samedi) :
+ *  des 30 derniers jours (JP, 27 nov. 2026 : revoir la pratique, sa vidéo, évaluer) jusqu'à la fin de la semaine en cours (la suivante dès le samedi) :
  *  la méthode ne s'ouvre que semaine par semaine (coach-access-core.ts). `after` ne sert plus que de plafond. */
-export const TEAM_ACCESS_DAYS = { before: 2, after: 14 };
+export const TEAM_ACCESS_DAYS = { before: 30, after: 14 };
 const TEAM_ACCESS_TYPES = ["Pratique", "Camp"];
 const isoDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
 const shiftDay = (iso: string, n: number) => {

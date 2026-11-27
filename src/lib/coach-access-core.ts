@@ -1,10 +1,10 @@
 /** Ce que les éducateurs voient de la méthode (JP, 17 nov. 2026) : la méthode Valkyria est la propriété
  *  intellectuelle de l'académie, alors le plan des pratiques (diapos, exercices, guide) ne s'ouvre que pour la
  *  semaine en cours. Dès le samedi, la semaine suivante s'ouvre aussi pour préparer la pratique du lundi.
- *  Les pratiques passées restent ouvertes 14 jours (rapport, évaluations, retour). Les matchs ne sont pas visés.
+ *  Les pratiques passées restent ouvertes 30 jours (JP, 27 nov. 2026 : rapport, évaluations, retour, vidéo). Les matchs ne sont pas visés.
  *  Règles pures, testées (coach-access-core.test.ts). */
 
-export const PAST_OPEN_DAYS = 14;
+export const PAST_OPEN_DAYS = 30;
 const METHOD_TYPES = ["Pratique", "Camp"];
 
 const shift = (iso: string, n: number) => {
@@ -13,7 +13,7 @@ const shift = (iso: string, n: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-/** Fenêtre ouverte : du jour − 14 jusqu'au dimanche de la semaine (le dimanche suivant à partir du samedi). */
+/** Fenêtre ouverte : du jour − 30 jusqu'au dimanche de la semaine (le dimanche suivant à partir du samedi). */
 export function methodWindow(today: string): { from: string; to: string } {
   const dow = new Date(`${today}T12:00:00Z`).getUTCDay(); // 0 dimanche … 6 samedi
   const sunday = shift(today, (7 - dow) % 7); // le dimanche de cette semaine (aujourd'hui si on est dimanche)

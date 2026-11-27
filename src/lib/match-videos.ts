@@ -310,16 +310,17 @@ export async function videosForActivity(activityId: string): Promise<{ id: strin
   return [...own, ...((evening ?? []) as any[]).filter((v) => !own.some((o) => o.id === v.id))];
 }
 
-/** Vidéos des pratiques : ouvertes aux éducateurs pendant 14 jours après la pratique, puis fermées (JP, 18 nov. 2026).
+/** Vidéos des pratiques : ouvertes aux éducateurs pendant 30 jours après la pratique, puis fermées (JP, 18 nov. 2026 ;
+ *  30 jours au lieu de 14 depuis le 27 nov. 2026).
  *  Les matchs, eux, restent ouverts aux éducateurs en tout temps. */
-export const PRACTICE_VIDEO_DAYS = 14;
+export const PRACTICE_VIDEO_DAYS = 30;
 
 const practiceOpen = (v: MatchVideo, now = Date.now()) => {
   const d = v.match_date ?? String(v.created_at).slice(0, 10);
   return now - Date.parse(`${d}T12:00:00Z`) <= PRACTICE_VIDEO_DAYS * 86_400_000;
 };
 
-/** Lecteur pour un éducateur : tous les matchs ; une pratique pendant 14 jours (l'appelant donne aussi ses activités). */
+/** Lecteur pour un éducateur : tous les matchs ; une pratique pendant 30 jours (l'appelant donne aussi ses activités). */
 export async function playerDataForCoach(videoId: string, allowedActivityIds: string[]): Promise<PlayerData | null> {
   const v = await getVideo(videoId);
   if (!v || v.status !== "pret") return null;
@@ -328,7 +329,7 @@ export async function playerDataForCoach(videoId: string, allowedActivityIds: st
   return toPlayer(v);
 }
 
-/** La vidéothèque du portail des éducateurs : tous les matchs, et les pratiques des 14 derniers jours. */
+/** La vidéothèque du portail des éducateurs : tous les matchs, et les pratiques des 30 derniers jours. */
 export async function videosForCoach(): Promise<(FamilyVideo & { kind: "match" | "pratique"; closesOn: string | null })[]> {
   const all = await listMatchVideos();
   const open = all.filter((v) => v.status === "pret" && (v.kind === "match" || practiceOpen(v)));

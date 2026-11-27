@@ -7,7 +7,7 @@ const p = (d: string) => ({ activity_date: d, activity_type: "Pratique" });
 describe("plan des pratiques : semaine en cours seulement", () => {
   it("en semaine : jusqu'au dimanche", () => {
     // mardi 17 nov. 2026
-    expect(methodWindow("2026-11-17")).toEqual({ from: "2026-11-03", to: "2026-11-22" });
+    expect(methodWindow("2026-11-17")).toEqual({ from: "2026-10-18", to: "2026-11-22" });
     expect(isMethodOpen(p("2026-11-22"), "2026-11-17")).toBe(true);
     expect(isMethodOpen(p("2026-11-23"), "2026-11-17")).toBe(false);
   });
@@ -16,9 +16,9 @@ describe("plan des pratiques : semaine en cours seulement", () => {
     expect(methodWindow("2026-11-22").to).toBe("2026-11-29");
     expect(isMethodOpen(p("2026-11-23"), "2026-11-21")).toBe(true);
   });
-  it("les pratiques passées restent ouvertes 14 jours, les matchs toujours", () => {
-    expect(isMethodOpen(p("2026-11-03"), "2026-11-17")).toBe(true);
-    expect(isMethodOpen(p("2026-11-02"), "2026-11-17")).toBe(false);
+  it("les pratiques passées restent ouvertes 30 jours, les matchs toujours", () => {
+    expect(isMethodOpen(p("2026-10-18"), "2026-11-17")).toBe(true);
+    expect(isMethodOpen(p("2026-10-17"), "2026-11-17")).toBe(false);
     expect(isMethodOpen({ activity_date: "2026-12-20", activity_type: "Match" }, "2026-11-17")).toBe(true);
   });
   it("dit quand le plan s'ouvrira", () => {

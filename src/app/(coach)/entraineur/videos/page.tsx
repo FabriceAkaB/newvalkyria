@@ -11,7 +11,7 @@ const day = (iso: string | null) => (iso ? new Date(`${iso}T12:00:00Z`).toLocale
 const mins = (s: number | null) => (s ? `${Math.round(s / 60)} min` : "");
 
 /** Vidéothèque des éducateurs (JP, 18 nov. 2026) : tous nos matchs en tout temps, et les pratiques filmées pendant
- *  14 jours (le temps d'écrire ses notes sur les joueuses), puis elles se ferment. */
+ *  30 jours (le temps d'écrire ses notes sur les joueuses), puis elles se ferment. */
 export default async function CoachVideosPage() {
   const coachId = await requireCoach();
   const [coach, videos] = await Promise.all([getCoach(coachId), videosForCoach().catch(() => [])]);
