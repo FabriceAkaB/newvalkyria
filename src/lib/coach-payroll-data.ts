@@ -117,7 +117,8 @@ export async function getPayrollRows(): Promise<PayrollRow[]> {
   const daily = dailyReportHours(
     assignments.map((a) => {
       const granted = Boolean(a.report_hour_granted_at) && a.status === "present";
-      const r = a.paid ? { due: false, earned: false } : granted ? { due: true, earned: true } : reportHour({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, role: a.coach.role, coachId: a.coach_id, report: reports.get(a.activity_id) ?? null });
+      // Une séance déjà payée garde son heure de rapport (JP, 27 nov. 2026 : sinon le total versé paraissait plus bas).
+      const r = granted ? { due: true, earned: true } : reportHour({ activityDate: String(a.activity.activity_date).slice(0, 10), status: a.status, role: a.coach.role, coachId: a.coach_id, report: reports.get(a.activity_id) ?? null });
       return { key: a.id, coachId: a.coach_id, date: String(a.activity.activity_date).slice(0, 10), start: String(a.activity.start_time).slice(0, 5), ...r };
     })
   );
