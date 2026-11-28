@@ -350,12 +350,24 @@ export function dailyReportHours<T extends { key: string; coachId: string; date:
 }
 
 /** Ce qui manque au rapport d'un éducateur, en mots simples (portail, Ma paie, admin). */
+/** « stella ROY » → « Stella R. » */
+const shortName = (full: string) => {
+  const parts = String(full).trim().split(/\s+/);
+  const first = (parts[0] ?? "").toLowerCase().replace(/(^|-)\p{L}/gu, (c) => c.toUpperCase());
+  const last = parts.length > 1 ? `${parts[parts.length - 1].charAt(0).toUpperCase()}.` : "";
+  return [first, last].filter(Boolean).join(" ");
+};
+
 export function reportMissing(report: ReportStatus | null | undefined, coachId?: string): string[] {
   if (!report?.required) return [];
   const out: string[] = [];
   const n = (k: number, one: string, many: string) => `${k} ${k > 1 ? many : one}`;
   if (report.attendanceMissing.length) out.push(n(report.attendanceMissing.length, "présence à marquer", "présences à marquer"));
-  if (report.evaluationsMissing.length) out.push(n(report.evaluationsMissing.length, "évaluation à faire", "évaluations à faire"));
+  // Nommer les filles (JP, 28 nov. 2026 : Maéva ne voyait pas laquelle manquait) : prénom + initiale, 4 au plus.
+  if (report.evaluationsMissing.length) {
+    const who = report.evaluationsMissing.length <= 4 ? ` (${report.evaluationsMissing.map(shortName).join(", ")})` : "";
+    out.push(`${n(report.evaluationsMissing.length, "évaluation à faire", "évaluations à faire")}${who}`);
+  }
   if (report.strict && report.feedbackMissing.length) out.push(n(report.feedbackMissing.length, "fille sans sondage du jour", "filles sans sondage du jour"));
   const planned = plannedMissingLabel(report.plannedMissing ?? 0);
   if (planned) out.push(planned);

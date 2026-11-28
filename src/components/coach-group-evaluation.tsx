@@ -205,8 +205,15 @@ export function CoachGroupEvaluation({
     </section>
   );
 
+  // Les filles pas encore enregistrées, nommées (JP, 28 nov. 2026 : on doit voir tout de suite qui manque).
+  const pending = players.filter((p) => status[p.registrationId] !== "saved");
   return (
     <div>
+      {pending.length ? (
+        <p className="coach-card" style={{ margin: "0 0 12px", padding: "10px 14px", boxShadow: "inset 3px 0 0 var(--adm-warn)", color: "var(--adm-text)" }}>
+          Pas encore enregistrée{pending.length > 1 ? "s" : ""} : {pending.map((p) => `${first(p)} ${p.lastName.trim().charAt(0)}.${errors[p.registrationId] ? " (à corriger)" : ""}`).join(", ")}. Une fille s&apos;enregistre dès qu&apos;elle a ses 3 notes{!bmSkipped && gestureChoices.length ? ", chaque geste" : ""} et une note de {NOTE_MIN_WORDS} mots.
+        </p>
+      ) : null}
       <p className="coach-muted" style={{ margin: "0 0 12px" }}>
         Un critère à la fois pour tout le groupe, puis la note de chaque fille (dicte-la au micro). Chaque fille s&apos;enregistre toute seule dès qu&apos;elle est complète · {doneCount}/{players.length} enregistrées.
       </p>
