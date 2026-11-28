@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Archive, ArchiveRestore, Plus, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, ImagePlus, Plus, Trash2 } from "lucide-react";
 
 import { categoryLabel, type Opponent } from "@/lib/match-opponents";
 
@@ -23,7 +23,7 @@ async function post(body: Record<string, unknown>) {
 interface Draft {
   orgName: string;
   teamLabel: string;
-  gender: "filles" | "garcons" | "mixte";
+  gender: "" | "filles" | "garcons" | "mixte";
   birthYear: string;
   birthYearTo: string;
   level: string;
@@ -34,7 +34,7 @@ interface Draft {
   contactPhone: string;
   notes: string;
 }
-const EMPTY: Draft = { orgName: "", teamLabel: "", gender: "filles", birthYear: "2015", birthYearTo: "", level: "", players: "", count: "1", contactName: "", contactEmail: "", contactPhone: "", notes: "" };
+const EMPTY: Draft = { orgName: "", teamLabel: "", gender: "", birthYear: "", birthYearTo: "", level: "", players: "", count: "1", contactName: "", contactEmail: "", contactPhone: "", notes: "" };
 
 function TeamForm({ initial, lockClub, onDone, onCancel }: { initial: Draft; lockClub?: boolean; onDone: () => void; onCancel: () => void }) {
   const [d, setD] = useState<Draft>(initial);
@@ -53,8 +53,8 @@ function TeamForm({ initial, lockClub, onDone, onCancel }: { initial: Draft; loc
             action: "add",
             orgName: d.orgName,
             teamLabel: d.teamLabel,
-            gender: d.gender,
-            birthYear: Number(d.birthYear),
+            gender: d.gender || null,
+            birthYear: d.birthYear ? Number(d.birthYear) : null,
             birthYearTo: d.birthYearTo ? Number(d.birthYearTo) : null,
             level: d.level,
             players: d.players ? Number(d.players) : null,
@@ -87,14 +87,15 @@ function TeamForm({ initial, lockClub, onDone, onCancel }: { initial: Draft; loc
         <label style={label}>
           Genre
           <select className="admin-input" value={d.gender} onChange={set("gender")}>
+            <option value="">À préciser</option>
             <option value="filles">Filles</option>
             <option value="garcons">Garçons</option>
             <option value="mixte">Mixte</option>
           </select>
         </label>
         <label style={label}>
-          Année de naissance *
-          <input className="admin-input" required inputMode="numeric" value={d.birthYear} onChange={set("birthYear")} />
+          Année de naissance
+          <input className="admin-input" inputMode="numeric" value={d.birthYear} onChange={set("birthYear")} placeholder="à préciser" />
         </label>
         <label style={label}>
           Jusqu&apos;à (groupe de 2 ans)
@@ -251,6 +252,31 @@ export function AdminOpponents({ opponents, archives }: { opponents: Opponent[];
                   <button type="button" className="admin-btn-ghost" onClick={() => setAddTo(addTo === o.key ? null : o.key)} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                     <Plus size={15} aria-hidden /> Ajouter une équipe
                   </button>
+                ) : null}
+                {o.teams[0] ? (
+                  <label className="admin-btn-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                    <ImagePlus size={15} aria-hidden /> {o.logo ? "Changer le logo" : "Ajouter le logo"}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        e.target.value = "";
+                        if (!file) return;
+                        setBusy(o.key);
+                        setError(null);
+                        const fd = new FormData();
+                        fd.append("profileId", o.teams[0].id);
+                        fd.append("file", file);
+                        const res = await fetch("/api/admin/matchs/logo", { method: "POST", body: fd });
+                        const json = await res.json().catch(() => null);
+                        setBusy(null);
+                        if (!res.ok) setError(json?.error ?? "Logo refusé.");
+                        else router.refresh();
+                      }}
+                    />
+                  </label>
                 ) : null}
                 <button type="button" className="admin-btn-ghost" disabled={busy === o.key} onClick={() => act(o.key, { action: "archive", key: o.key, archived: !archives })} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                   {archives ? <ArchiveRestore size={15} aria-hidden /> : <Archive size={15} aria-hidden />}

@@ -28,8 +28,9 @@ export async function getOpponents(): Promise<Opponent[]> {
 export interface ManualTeamInput {
   orgName: string;
   teamLabel: string;
-  gender: "filles" | "garcons" | "mixte";
-  birthYear: number;
+  gender: "filles" | "garcons" | "mixte" | null;
+  /** Null : club ajouté sans catégorie connue (« à préciser »). */
+  birthYear: number | null;
   birthYearTo: number | null;
   level: string;
   players: number | null;
@@ -52,10 +53,10 @@ export async function addManualTeam(input: ManualTeamInput): Promise<void> {
     .insert({
       org_name: input.orgName.trim(),
       org_key: key,
-      team_label: input.teamLabel.trim() || `${input.gender === "garcons" ? "G" : "F"}${input.birthYear}`,
+      team_label: input.teamLabel.trim() || (input.birthYear ? `${input.gender === "garcons" ? "G" : "F"}${input.birthYear}` : "Équipes à préciser"),
       team_gender: input.gender,
       team_birth_year: input.birthYear,
-      team_birth_year_to: input.birthYearTo ?? input.birthYear,
+      team_birth_year_to: input.birthYear ? input.birthYearTo ?? input.birthYear : null,
       team_level: input.level.trim() || "À préciser",
       team_players: input.players,
       team_count: Math.max(1, Math.min(20, Math.round(input.count) || 1)),

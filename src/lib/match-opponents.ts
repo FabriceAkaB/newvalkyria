@@ -7,8 +7,8 @@ export interface OpponentTeamRow {
   org_name: string;
   org_key: string;
   team_label: string;
-  team_gender: string;
-  team_birth_year: number;
+  team_gender: string | null;
+  team_birth_year: number | null;
   team_birth_year_to: number | null;
   team_level: string;
   team_players: number | null;
@@ -52,8 +52,9 @@ export const GENDER_WORD: Record<string, string> = { filles: "Filles", garcons: 
 
 /** « Filles 2015 · AA » ou « Garçons 2014-2015 · Compétitif ». */
 export function categoryLabel(t: Pick<OpponentTeamRow, "team_gender" | "team_birth_year" | "team_birth_year_to" | "team_level">): string {
+  if (!t.team_birth_year) return "Catégorie à préciser";
   const years = t.team_birth_year_to && t.team_birth_year_to !== t.team_birth_year ? `${Math.min(t.team_birth_year, t.team_birth_year_to)}-${Math.max(t.team_birth_year, t.team_birth_year_to)}` : String(t.team_birth_year);
-  return [GENDER_WORD[t.team_gender] ?? t.team_gender, years, t.team_level].filter(Boolean).join(" · ");
+  return [t.team_gender ? GENDER_WORD[t.team_gender] ?? t.team_gender : null, years, t.team_level === "À préciser" ? null : t.team_level].filter(Boolean).join(" · ");
 }
 
 /** Regroupe les équipes et les réservations par club ; un club est archivé quand toutes ses équipes le sont. */

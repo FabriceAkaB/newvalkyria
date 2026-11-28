@@ -335,13 +335,13 @@ export function AdminMatchs({ initial, origin }: { initial: { slots: Slot[]; boo
 
           {/* ── Équipes ayant rempli le formulaire ── */}
           <div style={card}>
-            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>Équipes ayant rempli le formulaire ({data.profiles.length})</p>
+            <p style={{ fontWeight: 700, color: "var(--adm-text)", margin: "0 0 0.2rem" }}>Équipes ayant rempli le formulaire ({data.profiles.filter((p) => (p as { source?: string }).source !== "manuel").length})</p>
             <p style={{ fontSize: "0.74rem", color: "var(--adm-text-3)", margin: "0 0 0.6rem" }}>Une équipe doit remplir ce formulaire avant de pouvoir choisir une plage. Utile pour relancer celles qui n&apos;ont pas réservé.</p>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
                 <thead><tr>{["Académie / équipe", "Catégorie", "Niveau", "Contact", "Réservation", "Reçu le"].map((h) => <th key={h} style={{ ...cell, color: "var(--adm-text-2)", textAlign: "left", fontWeight: 600 }}>{h}</th>)}</tr></thead>
                 <tbody>
-                  {data.profiles.map((p) => {
+                  {data.profiles.filter((p) => (p as { source?: string }).source !== "manuel").map((p) => {
                     const booked = data.bookings.filter((b) => b.team_profile_id === p.id && b.status !== "cancelled").length;
                     return (
                       <tr key={p.id}>
