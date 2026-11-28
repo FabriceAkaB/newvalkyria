@@ -1,9 +1,9 @@
 import { CoachTopbar } from "@/components/coach-topbar";
-import { HelperRanking, SummaryTiles, SurveyBlockRow, SurveyPeriodFilter } from "@/components/survey-results";
+import { CoachOfMonthCard, HelperRanking, SummaryTiles, SurveyBlockRow, SurveyPeriodFilter } from "@/components/survey-results";
 import { requireCoach } from "@/lib/coach-auth";
 import { getCoach } from "@/lib/coaches-repo";
 import { parsePeriod } from "@/lib/practice-survey-results-core";
-import { getSurveyResults } from "@/lib/practice-survey-results-repo";
+import { getCoachOfMonthHistory, getSurveyResults } from "@/lib/practice-survey-results-repo";
 import { getRecentPracticesForSurvey } from "@/lib/practice-survey-repo";
 import { todayIso } from "@/lib/practices-repo";
 import { kioskPath } from "@/lib/survey-kiosk";
@@ -32,6 +32,7 @@ export default async function CoachSurveyPage({ searchParams }: { searchParams: 
   const [coach, practices] = await Promise.all([getCoach(coachId), getRecentPracticesForSurvey().catch(() => [])]);
   const active = Boolean(coach && coach.status !== "inactive");
   const results = active ? await getSurveyResults({ from: period.from, to: period.to > today ? today : period.to, group }).catch(() => null) : null;
+  const coachMonths = active ? await getCoachOfMonthHistory(today).catch(() => []) : [];
   const list = practices.filter((p) => p.daysLeft >= -1);
   return (
     <>
@@ -80,6 +81,7 @@ export default async function CoachSurveyPage({ searchParams }: { searchParams: 
                 <h2 className="coach-title" style={{ margin: 0 }}>Ce que les filles ont répondu</h2>
                 <p className="coach-sub" style={{ maxWidth: 680 }}>Toutes les pratiques de l&apos;Académie, même celles où tu n&apos;étais pas. Touche une pratique pour voir le classement, le résumé et la réponse de chaque fille.</p>
               </div>
+              <CoachOfMonthCard months={coachMonths} viewerId={coachId} />
               <section className="mda-card">
                 <SurveyPeriodFilter action="/entraineur/sondage" from={period.from} to={period.to} days={period.days} groups={results.groups} group={group} />
               </section>

@@ -153,3 +153,12 @@ export async function getSurveyBlock(activityId: string): Promise<{ block: Surve
   const results = await getSurveyResults({ from: day, to: day, activityId });
   return { block: results.blocks[0] ?? null, results };
 }
+
+/** Entraîneur du mois (JP, 27 nov. 2026) : un classement par mois depuis que la question existe (20 nov. 2026). */
+export async function getCoachOfMonthHistory(today: string): Promise<import("@/lib/coach-of-month").CoachOfMonth[]> {
+  const { coachOfMonthHistory } = await import("@/lib/coach-of-month");
+  const { getAdminCoachId } = await import("@/lib/admin-my-practices");
+  const [res, jp] = await Promise.all([getSurveyResults({ from: "2026-11-20", to: today }), getAdminCoachId().catch(() => null)]);
+  // JP ne concourt pas : l'entraîneur du mois se choisit dans son équipe.
+  return coachOfMonthHistory(res.blocks.map((b) => ({ date: b.date, ranking: b.ranking.filter((r) => r.coachId !== jp) })), today);
+}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { KioskPracticePlan, KioskTabs } from "@/components/kiosk-practice";
+import { CAUSERIE_TEXT, causerieDue } from "@/lib/coach-guide";
 import { PracticeTournament } from "@/components/practice-tournament";
 import { SurveyKiosk } from "@/components/survey-kiosk";
 import { getKioskPlan } from "@/lib/kiosk-practice-repo";
@@ -54,7 +55,7 @@ export default async function KioskPage({ params, searchParams }: { params: Prom
   // La pratique, le sondage et le tournoi (JP, 26 nov. 2026) dans la même page : une fois ouverte, tout marche sans réseau.
   const when = `${new Date(`${String(data.activity.activity_date).slice(0, 10)}T12:00:00`).toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long" })} · ${String(data.activity.start_time).slice(0, 5)}${data.activity.location ? ` · ${data.activity.location}` : ""}`;
   const planView = plan ? (
-    <KioskPracticePlan plan={plan} title={data.label} when={when} />
+    <KioskPracticePlan plan={plan} title={data.label} when={when} causerie={causerieDue(String(data.activity.activity_date)) ? CAUSERIE_TEXT : null} />
   ) : (
     <div style={{ background: "#fff", borderRadius: 16, padding: "1.1rem 1.2rem", border: "1px solid #e6e0ee" }}>
       <p style={{ margin: 0, fontWeight: 700 }}>Le plan de cette pratique n&apos;est pas encore prêt.</p>

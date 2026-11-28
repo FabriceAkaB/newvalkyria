@@ -102,7 +102,7 @@ function OfflineDeck({ deck }: { deck: KioskPlan["decks"][number] }) {
   );
 }
 
-export function KioskPracticePlan({ plan, title, when }: { plan: KioskPlan; title: string; when: string }) {
+export function KioskPracticePlan({ plan, title, when, causerie = null }: { plan: KioskPlan; title: string; when: string; causerie?: string | null }) {
   const total = plan.blocks.reduce((s, b) => s + b.minutes, 0);
   return (
     <div style={{ display: "grid", gap: 12 }}>
@@ -122,6 +122,13 @@ export function KioskPracticePlan({ plan, title, when }: { plan: KioskPlan; titl
           </p>
         )}
       </div>
+
+      {causerie ? (
+        <div style={{ ...card, borderLeft: "4px solid #5b2a86" }}>
+          <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#5b2a86" }}>Causerie aujourd&apos;hui · 5 minutes à la fin</p>
+          <p style={{ margin: "4px 0 0", color: "#1d1730" }}>{causerie}</p>
+        </div>
+      ) : null}
 
       {plan.decks.map((d) => <OfflineDeck key={d.id} deck={d} />)}
 

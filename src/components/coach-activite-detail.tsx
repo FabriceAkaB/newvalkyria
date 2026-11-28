@@ -14,6 +14,7 @@ import { CoachDebriefCard, PreviousDebriefCard } from "@/components/coach-debrie
 import { CoachIncidentCard } from "@/components/coach-incident-card";
 import { CoachPracticeJournal } from "@/components/coach-practice-journal";
 import { CoachGuideCard, PracticeTimer } from "@/components/coach-guide";
+import { CAUSERIE_MINUTES, CAUSERIE_TEXT, causerieDue } from "@/lib/coach-guide";
 import { exerciseGuideFallback, setupForGroup } from "@/lib/practice-plan-view";
 import { CoachExerciseRatings } from "@/components/coach-exercise-ratings";
 import { PlannedExercisesCard } from "@/components/planned-exercises-card";
@@ -303,8 +304,16 @@ function PracticeOfTheDay({ activity, theme, blocks, exercises, players, seen, o
   // Heure de début de chaque bloc : début de l'activité + durée des blocs précédents.
   const starts = blocks.map((_, i) => startAt + blocks.slice(0, i).reduce((s, b) => s + b.duration_minutes, 0));
 
+  // Causerie aux 2 semaines (JP, 27 nov. 2026) : seulement les pratiques de filles de l'Académie.
+  const causerie = !activity.organization && ["Pratique", "Camp"].includes(activity.activity_type) && !isBoysActivity(activity) && causerieDue(String(activity.activity_date));
   return (
     <div>
+      {causerie ? (
+        <div className="coach-card" style={{ marginBottom: 12, boxShadow: "inset 3px 0 0 var(--adm-accent)" }}>
+          <p className="coach-card__label">Causerie aujourd&apos;hui · {CAUSERIE_MINUTES} minutes à la fin</p>
+          <p style={{ margin: 0, color: "var(--adm-text)" }}>{CAUSERIE_TEXT}</p>
+        </div>
+      ) : null}
       {theme && (
         <div className="coach-card" style={{ marginBottom: 12 }}>
           <p className="coach-card__label">Thème de la semaine</p>

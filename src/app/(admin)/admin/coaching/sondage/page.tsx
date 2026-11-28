@@ -6,10 +6,10 @@ import { Pill } from "@/components/mandalart/ui";
 import { OpenSurveyButton } from "@/components/practice-survey";
 import { requireAdmin } from "@/lib/admin-auth";
 import { SurveyLines, SurveyRing } from "@/components/survey-charts";
-import { HelperRanking, SurveyBlockRow, SurveyPeriodFilter } from "@/components/survey-results";
+import { CoachOfMonthCard, HelperRanking, SurveyBlockRow, SurveyPeriodFilter } from "@/components/survey-results";
 import { ThemePracticeBars } from "@/components/theme-quiz-results";
 import { parsePeriod } from "@/lib/practice-survey-results-core";
-import { getSurveyResults } from "@/lib/practice-survey-results-repo";
+import { getCoachOfMonthHistory, getSurveyResults } from "@/lib/practice-survey-results-repo";
 import { getRecentPracticesForSurvey, getSurveyDashboard } from "@/lib/practice-survey-repo";
 import { todayIso } from "@/lib/practices-repo";
 import { kioskPath } from "@/lib/survey-kiosk";
@@ -32,10 +32,11 @@ export default async function SurveyListPage({ searchParams }: { searchParams: P
   const sp = await searchParams;
   const period = parsePeriod(sp, today);
   const group = sp.groupe?.trim() || null;
-  const [practices, results, dash] = await Promise.all([
+  const [practices, results, dash, coachMonths] = await Promise.all([
     getRecentPracticesForSurvey().catch(() => []),
     getSurveyResults({ from: period.from, to: period.to, group }).catch(() => null),
-    getSurveyDashboard().catch(() => null)
+    getSurveyDashboard().catch(() => null),
+    getCoachOfMonthHistory(today).catch(() => [])
   ]);
   const sum = results?.summary;
   // Le sondage se fait le soir même : le titre ne compte que les pratiques d'hier et d'aujourd'hui.
@@ -52,6 +53,8 @@ export default async function SurveyListPage({ searchParams }: { searchParams: P
             <h1 className="mda-h1">{toDo.length ? `${toDo.length} pratique${toDo.length > 1 ? "s" : ""} d'hier ou d'aujourd'hui à sonder` : recent.length ? "Les pratiques d'hier et d'aujourd'hui sont sondées" : "Aucune pratique hier ni aujourd'hui"}</h1>
             <p className="mda-lead">Ouvre la « Borne iPad » à la fin de la pratique : chaque fille touche sa photo et répond seule (plaisir, fatigue, « Ta coach t&apos;a-t-elle aidée ou encouragée ? » et laquelle, « Est-ce que quelqu&apos;un t&apos;a aidée ? » et qui, puis « Qu&apos;est-ce qu&apos;on a travaillé aujourd&apos;hui ? »). Ici : qui a aidé le plus de filles, le résumé et la réponse de chaque fille, pratique par pratique. Les éducateurs voient la même chose dans leur portail (Sondage des jeunes).</p>
           </header>
+
+          <CoachOfMonthCard months={coachMonths} />
 
           <section className="mda-card" style={{ display: "grid", gap: 14 }}>
             <SurveyPeriodFilter action="/admin/coaching/sondage" from={period.from} to={period.to} days={period.days} groups={results?.groups ?? []} group={group} />

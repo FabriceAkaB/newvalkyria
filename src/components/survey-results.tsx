@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Check, ChevronRight, Minus, X } from "lucide-react";
+import { Award, Check, ChevronRight, Minus, X } from "lucide-react";
 
+import type { CoachOfMonth } from "@/lib/coach-of-month";
 import { wantsLabel } from "@/lib/practice-survey";
 import type { BlockSummary, HelperRank, ResultRow } from "@/lib/practice-survey-results-core";
 import type { SurveyBlock } from "@/lib/practice-survey-results-repo";
@@ -280,5 +281,54 @@ export function SurveyBlockDetail({ block, coachNames, girlNames, viewerId, chil
         </div>
       </section>
     </>
+  );
+}
+
+/** Entraîneur du mois (JP, 27 nov. 2026) : celui que le plus de filles ont nommé à « Ta coach t'a-t-elle aidée ou
+ *  encouragée ? » ce mois-ci, puis l'historique des mois passés. */
+export function CoachOfMonthCard({ months, viewerId }: { months: CoachOfMonth[]; viewerId?: string }) {
+  if (!months.length) return null;
+  const [current, ...past] = months;
+  const names = (m: CoachOfMonth) => m.winners.map((w) => w.name).join(" et ");
+  return (
+    <section className="mda-card" style={{ display: "grid", gap: 14 }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <span aria-hidden style={{ width: 44, height: 44, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--adm-accent-soft)", color: "var(--adm-accent)", flex: "0 0 auto" }}>
+          <Award size={22} />
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: "0.8125rem", color: "var(--adm-text-2)" }}>
+            Entraîneur du mois · {current.label}
+            {current.inProgress ? " (en cours)" : ""}
+          </p>
+          <h2 className="mda-h2" style={{ margin: "2px 0 0" }}>
+            {current.winners.length ? names(current) : "Personne encore ce mois-ci"}
+            {current.winners.some((w) => w.coachId === viewerId) ? <span style={{ color: "var(--adm-accent)" }}> · c&apos;est toi !</span> : null}
+          </h2>
+          {current.winners[0] ? (
+            <p style={{ margin: "2px 0 0", fontSize: "0.875rem", color: "var(--adm-text-2)", ...num }}>
+              {plural(current.winners[0].helped, "fille")} {current.winners[0].helped > 1 ? "l'ont nommé" : "l'a nommé"} sur {plural(current.practices, "pratique sondée", "pratiques sondées")}
+              {current.winners[0].pct !== null ? ` · ${current.winners[0].pct} % des réponses` : ""}
+            </p>
+          ) : null}
+        </div>
+      </div>
+      <HelperRanking ranking={current.ranking} viewerId={viewerId} period limit={3} />
+      {past.length ? (
+        <div style={{ display: "grid", gap: 6 }}>
+          <p style={{ margin: 0, fontWeight: 600, color: "var(--adm-text)", fontSize: "0.875rem" }}>Les entraîneurs du mois</p>
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 4 }}>
+            {past.map((m) => (
+              <li key={m.month} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: "0.875rem", borderTop: "1px solid var(--adm-line)", paddingTop: 6 }}>
+                <span style={{ color: "var(--adm-text-2)", textTransform: "capitalize" }}>{m.label}</span>
+                <span style={{ fontWeight: 600, color: m.winners.some((w) => w.coachId === viewerId) ? "var(--adm-accent)" : "var(--adm-text)", ...num }}>
+                  {m.winners.length ? `${names(m)} · ${plural(m.winners[0].helped, "fille")}` : "—"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
   );
 }

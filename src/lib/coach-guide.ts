@@ -49,3 +49,21 @@ export function timerState(startedAtMs: number, nowMs: number, blocks: { title: 
   }
   return { index: blocks.length, remaining: 0, done: true };
 }
+
+/* ── Causerie aux 2 semaines (JP, 27 nov. 2026) ───────────────────── */
+
+/** La 1re semaine de causerie : celle du lundi 30 novembre 2026 ; ensuite une semaine sur deux (14 déc., 11 janv.,
+ *  25 janv., 8 févr., 22 févr. : les semaines où JP est au terrain). */
+export const CAUSERIE_FIRST_MONDAY = "2026-11-30";
+export const CAUSERIE_MINUTES = 5;
+export const CAUSERIE_TEXT =
+  "5 minutes assises en cercle, en personne avec JP : ce qu'elles aiment, ce qu'elles voudraient faire de plus, ce qui les dérange. Chaque fille peut parler, personne n'est obligée. JP note les idées et dit à la prochaine causerie ce qui a changé grâce à elles.";
+
+/** Cette pratique a-t-elle la causerie ? Une semaine sur deux depuis le 30 nov. 2026 (lundi au dimanche). */
+export function causerieDue(activityDate: string): boolean {
+  const d = Date.parse(`${activityDate.slice(0, 10)}T12:00:00Z`);
+  const start = Date.parse(`${CAUSERIE_FIRST_MONDAY}T12:00:00Z`);
+  if (!Number.isFinite(d) || d < start) return false;
+  const week = Math.floor((d - start) / (7 * 86_400_000));
+  return week % 2 === 0;
+}

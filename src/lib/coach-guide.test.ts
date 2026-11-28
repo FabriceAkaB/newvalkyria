@@ -20,3 +20,17 @@ describe("guide de l'éducateur", () => {
     expect(timerState(t0, 60 * 60_000, blocks).done).toBe(true);
   });
 });
+
+describe("causerie aux 2 semaines", () => {
+  it("une semaine sur deux depuis le 30 nov. 2026", async () => {
+    const { causerieDue } = await import("@/lib/coach-guide");
+    expect(causerieDue("2026-11-26")).toBe(false);
+    expect(causerieDue("2026-11-30")).toBe(true);
+    expect(causerieDue("2026-12-06")).toBe(true);
+    expect(causerieDue("2026-12-07")).toBe(false);
+    expect(causerieDue("2026-12-17")).toBe(true);
+    expect(causerieDue("2027-01-11")).toBe(true);
+    expect(causerieDue("2027-01-18")).toBe(false);
+    expect(causerieDue("2027-01-25")).toBe(true);
+  });
+});
